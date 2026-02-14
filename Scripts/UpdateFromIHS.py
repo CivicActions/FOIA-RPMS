@@ -32,6 +32,9 @@ import tempfile
 import textwrap
 import time
 import urllib.parse
+import shutil
+import tarfile
+import zipfile
 from datetime import datetime
 from pathlib import Path
 
@@ -40,6 +43,8 @@ try:
 except ImportError:
     print("ERROR: 'requests' package is required. Install with: pip install requests")
     sys.exit(1)
+
+import gzip
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -242,13 +247,29 @@ class KIDSParser:
     def parse(self):
         """Parse the KIDS file and extract components."""
         try:
-            # Try UTF-8 first, fall back to latin-1
-            try:
-                with open(self.filepath, 'r', encoding='utf-8') as f:
-                    content = f.read()
-            except UnicodeDecodeError:
-                with open(self.filepath, 'r', encoding='latin-1') as f:
-                    content = f.read()
+            path_str = str(self.filepath)
+            if path_str.endswith('.zip'):
+                content = self._read_zip()
+                if content is None:
+                    return False
+            elif path_str.endswith('.tar.gz'):
+                content = self._read_targz()
+                if content is None:
+                    return False
+            elif path_str.endswith('.gz'):
+                try:
+                    with gzip.open(self.filepath, 'rt', encoding='utf-8') as f:
+                        content = f.read()
+                except UnicodeDecodeError:
+                    with gzip.open(self.filepath, 'rt', encoding='latin-1') as f:
+                        content = f.read()
+            else:
+                try:
+                    with open(self.filepath, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                except UnicodeDecodeError:
+                    with open(self.filepath, 'r', encoding='latin-1') as f:
+                        content = f.read()
 
             lines = content.split('\n')
             self._parse_lines(lines)
@@ -256,6 +277,51 @@ class KIDSParser:
         except Exception as e:
             print(f"  Error parsing {self.filepath}: {e}")
             return False
+
+    def _read_targz(self):
+        """Read KIDS content from inside a tar.gz archive."""
+        try:
+            with tarfile.open(self.filepath, 'r:gz') as tf:
+                for member in tf.getmembers():
+                    if member.isfile():
+                        f = tf.extractfile(member)
+                        if f:
+                            raw = f.read()
+                            try:
+                                return raw.decode('utf-8')
+                            except UnicodeDecodeError:
+                                return raw.decode('latin-1')
+        except Exception as e:
+            print(f"  Error reading tar.gz {self.filepath}: {e}")
+            return None
+
+    def _read_zip(self):
+        """Read KIDS content from inside a zip archive."""
+        try:
+            with zipfile.ZipFile(self.filepath, 'r') as zf:
+                names = zf.namelist()
+                kids_name = None
+                for name in names:
+                    lower = name.lower()
+                    if lower.endswith('k') and not lower.endswith('/'):
+                        kids_name = name
+                        break
+                if not kids_name:
+                    for name in names:
+                        if not name.endswith('/'):
+                            kids_name = name
+                            break
+                if not kids_name:
+                    print(f"  No files found inside {self.filepath}")
+                    return None
+                raw = zf.read(kids_name)
+                try:
+                    return raw.decode('utf-8')
+                except UnicodeDecodeError:
+                    return raw.decode('latin-1')
+        except zipfile.BadZipFile:
+            print(f"  Bad zip file: {self.filepath}")
+            return None
 
     def _parse_lines(self, lines):
         """Parse KIDS build file line by line."""
@@ -354,6 +420,19 @@ class KIDSParser:
 class PackageMapper:
     """Map namespace prefixes to package directories using Packages.csv."""
 
+    # Prefixes not in Packages.csv that appear in IHS KIDS patches.
+    # These are IHS-specific packages or newer additions.
+    IHS_EXTRA_PREFIXES = {
+        'BLGU':  ('LAB ACCESSIONING', 'IHS Lab Accessioning'),
+        'BMAG':  ('IHS MODS TO IMAGING', 'IHS Mods To Imaging'),
+        'BPDM':  ('CONTROLLED DRUG EXPORT SYSTEM', 'Controlled Drug Export System'),
+        'BREH':  ('RPMS EHI EXPORT', 'RPMS EHI Export'),
+        'BUSR':  ('AUTHORIZATION/SUBSCRIPTION', 'Authorization Subscription'),
+        'MAGD':  ('IMAGING', 'Imaging'),
+        'MAGI':  ('IMAGING', 'Imaging'),
+        'MAGN':  ('IMAGING', 'Imaging'),
+    }
+
     def __init__(self, csv_path):
         self.prefix_to_dir = {}
         self.prefix_to_pkg = {}
@@ -375,6 +454,12 @@ class PackageMapper:
                         continue
                     self.prefix_to_dir[prefix.upper()] = current_dir
                     self.prefix_to_pkg[prefix.upper()] = current_pkg
+
+        # Add IHS-specific prefixes not in Packages.csv
+        for prefix, (pkg_name, dir_name) in self.IHS_EXTRA_PREFIXES.items():
+            if prefix not in self.prefix_to_dir:
+                self.prefix_to_dir[prefix] = dir_name
+                self.prefix_to_pkg[prefix] = pkg_name
 
     def get_package_dir(self, prefix):
         """Get the Packages/ subdirectory for a given namespace prefix."""
@@ -652,13 +737,11 @@ class RPMSUpdater:
             total_routines += routines_extracted
             total_globals += globals_extracted
 
+            applied_patches.append(pf)
+            self.state.mark_applied(pf.patch_id)
             if routines_extracted > 0 or globals_extracted > 0:
-                applied_patches.append(pf)
-                self.state.mark_applied(pf.patch_id)
                 print(f"    Extracted {routines_extracted} routines, {globals_extracted} globals")
             else:
-                # Still mark as applied even if nothing extracted (may be data-only)
-                self.state.mark_applied(pf.patch_id)
                 print(f"    No extractable routines/globals (may need KIDS install)")
 
         print(f"\n  Total: {total_routines} routines, {total_globals} globals from {len(applied_patches)} patches")
@@ -675,10 +758,25 @@ class RPMSUpdater:
         kids_copied = 0
         for pf in to_apply:
             src = self.staging / 'kids' / pf.name
-            dst = kids_repo_dir / pf.name
+            # Store decompressed text in the repo, not binary archives
+            base_name = pf.name
+            for ext in ('.tar.gz', '.gz', '.zip'):
+                if base_name.endswith(ext):
+                    base_name = base_name[:-len(ext)]
+                    break
+            dst = kids_repo_dir / base_name
             if src.exists() and not dst.exists():
-                import shutil
-                shutil.copy2(str(src), str(dst))
+                try:
+                    content = self._read_kids_file(src)
+                except Exception as e:
+                    print(f"  Warning: failed to decompress {pf.name}: {e}")
+                    content = None
+                if content is not None:
+                    with open(dst, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                else:
+                    # Fallback: copy as-is if we can't read it
+                    shutil.copy2(str(src), str(dst))
                 kids_copied += 1
 
             # Copy notes too
@@ -688,7 +786,6 @@ class RPMSUpdater:
                 nsrc = self.staging / 'notes' / notes_pf.name
                 ndst = notes_repo_dir / notes_pf.name
                 if nsrc.exists() and not ndst.exists():
-                    import shutil
                     shutil.copy2(str(nsrc), str(ndst))
 
         if kids_copied:
@@ -707,6 +804,91 @@ class RPMSUpdater:
         print("Done!")
         print("=" * 60)
 
+    def _read_kids_file(self, kids_path):
+        """Read a KIDS file, handling plain text, gzip, and zip compression.
+
+        Returns the file content as a string, or None on failure.
+        """
+        path_str = str(kids_path)
+
+        if path_str.endswith('.zip'):
+            return self._read_zip_kids(kids_path)
+        elif path_str.endswith('.tar.gz'):
+            return self._read_targz_kids(kids_path)
+        elif path_str.endswith('.gz'):
+            return self._read_gzip_kids(kids_path)
+        else:
+            return self._read_plain_kids(kids_path)
+
+    def _read_plain_kids(self, kids_path):
+        try:
+            with open(kids_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except UnicodeDecodeError:
+            with open(kids_path, 'r', encoding='latin-1') as f:
+                return f.read()
+
+    def _read_gzip_kids(self, kids_path):
+        try:
+            with gzip.open(kids_path, 'rt', encoding='utf-8') as f:
+                return f.read()
+        except UnicodeDecodeError:
+            with gzip.open(kids_path, 'rt', encoding='latin-1') as f:
+                return f.read()
+
+    def _read_targz_kids(self, kids_path):
+        """Extract and read a KIDS file from inside a tar.gz archive."""
+        try:
+            with tarfile.open(kids_path, 'r:gz') as tf:
+                # Find the KIDS file inside the tar
+                for member in tf.getmembers():
+                    if member.isfile():
+                        f = tf.extractfile(member)
+                        if f:
+                            try:
+                                return f.read().decode('utf-8')
+                            except UnicodeDecodeError:
+                                f.seek(0)
+                                return f.read().decode('latin-1')
+        except Exception as e:
+            print(f"    Error reading tar.gz {kids_path}: {e}")
+            return None
+
+    def _read_zip_kids(self, kids_path):
+        """Extract and read a KIDS file from inside a zip archive."""
+        try:
+            with zipfile.ZipFile(kids_path, 'r') as zf:
+                # Find the KIDS file inside the zip
+                # Prefer files ending in 'k', then any text file
+                names = zf.namelist()
+                kids_name = None
+                for name in names:
+                    lower = name.lower()
+                    if lower.endswith('k') and not lower.endswith('/'):
+                        kids_name = name
+                        break
+                if not kids_name:
+                    # Fall back to first non-directory entry
+                    for name in names:
+                        if not name.endswith('/'):
+                            kids_name = name
+                            break
+                if not kids_name:
+                    print(f"    No files found inside {kids_path}")
+                    return None
+
+                raw = zf.read(kids_name)
+                try:
+                    return raw.decode('utf-8')
+                except UnicodeDecodeError:
+                    return raw.decode('latin-1')
+        except zipfile.BadZipFile:
+            print(f"    Bad zip file: {kids_path}")
+            return None
+        except Exception as e:
+            print(f"    Error reading zip {kids_path}: {e}")
+            return None
+
     def _extract_from_kids(self, kids_path, pf):
         """Extract routines and globals from a KIDS file into the Packages/ tree.
 
@@ -719,12 +901,9 @@ class RPMSUpdater:
         globals_extracted = 0
 
         try:
-            try:
-                with open(kids_path, 'r', encoding='utf-8') as f:
-                    content = f.read()
-            except UnicodeDecodeError:
-                with open(kids_path, 'r', encoding='latin-1') as f:
-                    content = f.read()
+            content = self._read_kids_file(kids_path)
+            if content is None:
+                return 0, 0
         except Exception as e:
             print(f"    Error reading {kids_path}: {e}")
             return 0, 0
@@ -752,6 +931,11 @@ class RPMSUpdater:
             if not rtn_content.strip():
                 continue
 
+            # Sanitize routine name — skip if it contains non-printable chars
+            if not rtn_name.isprintable() or '\x00' in rtn_name or '/' in rtn_name:
+                print(f"    Skipping routine with invalid name: {rtn_name!r}")
+                continue
+
             # Determine package directory from routine prefix
             pkg_dir = self.mapper.get_routine_dir(rtn_name)
             dest_dir = self.repo_root / pkg_dir
@@ -771,6 +955,12 @@ class RPMSUpdater:
 
             # Clean global name for filename
             clean_name = gbl_name.lstrip('^').replace('(', '+').rstrip(',')
+            # Remove any non-printable characters
+            clean_name = ''.join(c for c in clean_name if c.isprintable())
+            if not clean_name or '/' in clean_name or '\x00' in clean_name:
+                print(f"    Skipping global with invalid name: {gbl_name!r}")
+                continue
+
             pkg_dir = self.mapper.get_global_dir(clean_name)
             dest_dir = self.repo_root / pkg_dir
             os.makedirs(dest_dir, exist_ok=True)
@@ -874,8 +1064,10 @@ class RPMSUpdater:
                 continue
 
             # Raw ZWR lines (^GLOBAL(subscript)=value)
-            if line.startswith('^') and '=' in line and '(' in line:
-                gbl_name = line.split('(')[0]
+            # Must match a valid M global name: ^<ALPHA><ALNUM...>(
+            m2 = re.match(r'^(\^[A-Z%][A-Z0-9.]*)\(', line)
+            if m2 and '=' in line:
+                gbl_name = m2.group(1)
                 if gbl_name not in globals_data:
                     globals_data[gbl_name] = []
                 globals_data[gbl_name].append(line)
@@ -919,7 +1111,8 @@ class RPMSUpdater:
         msg_lines = [
             f"Update from IHS FOIA patches ({datetime.now().strftime('%Y-%m-%d')})",
             "",
-            f"Applied {len(patch_ids)} patches from IHS RPMS FTP:",
+            f"Applied {len(patch_ids)} patches from IHS RPMS FTP",
+            f"({len(install_names)} with extractable routines/globals):",
             "",
         ]
         for name in install_names[:50]:  # Limit to 50 in message
