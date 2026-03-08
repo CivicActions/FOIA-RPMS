@@ -1,6 +1,5 @@
-XPDIJ ;SFISC/RSD - Install Job ;08/14/2008
- ;;8.0;KERNEL;**2,21,28,41,44,68,81,95,108,124,229,275,506**;Jul 10, 1995;Build 19
- ;Per VHA Directive  2004-038, this routine should not be modified.
+XPDIJ ;SFISC/RSD - Install Job ;06/01/2004  15:10
+ ;;8.0;KERNEL;**2,21,28,41,44,68,81,95,108,124,229,275**;Jul 10, 1995
 EN ;install all packages
  ;XPDA=ien of first package
  ;this is needed to restore XPDIJ1
@@ -27,8 +26,7 @@ EN ;install all packages
  ;
  ;Now do Master Build Post INIT.
  I '$D(XPDABORT),$D(XPDT("MASTER")) D
- .N XPDBLD,XPDGREF
- .S XPDBLD=$O(^XTMP("XPDI",XPDA,"BLD",0)),XPDGREF="^XTMP(""XPDI"","_XPDA_",""TEMP"")"
+ .S XPDBLD=$O(^XTMP("XPDI",XPDA,"BLD",0))
  .D POST^XPDIJ1
  ;ZTREQ tells taskman to delete task
  I $G(ZTSK) S ZTREQ="@" D
@@ -39,15 +37,9 @@ EN ;install all packages
  I $D(XPDABORT) D EXIT^XPDID("Install Aborted!!"),^%ZISC Q
  ;put option back in order
  I $P(XPDSET,U,2)]"" D ON^XQOO1($P(XPDSET,U,2)) K ^XTMP("XQOO",$P(XPDSET,U,2))
- ;check if menu rebuild is wanted (only if option has been added to any installs)
- ;XPDMENU is used to check that it is only done once
- S (Y,XPDMENU)=0
- F  S Y=$O(^XPD(9.7,"ASP",XPDA,Y)) Q:'Y  S %=$O(^(Y,0)) D:%  Q:XPDMENU
- .N XPDA,Y
- .S XPDA=%
- .I $$ANSWER^XPDIQ("XPO1") D BMES^XPDUTL(" Call MENU rebuild"),KIDS^XQ81 S XPDMENU=1
- .;There should be no reason to check other CPUs anymore, patch 496
- .Q
+ ;check if menu rebuild is wanted (only if option has been added)
+ I $$ANSWER^XPDIQ("XPO1") D
+ .D BMES^XPDUTL(" Call MENU rebuild"),KIDS^XQ81
  .;check if need to queue menu rebuild on other CPUs
  .D:$O(^XPD(9.7,XPDA,"VOL",0))
  ..N XPDU,XPDY,XPDV,XPDV0,ZTUCI,ZTCPU

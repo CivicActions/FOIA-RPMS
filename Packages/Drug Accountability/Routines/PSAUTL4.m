@@ -1,5 +1,5 @@
 PSAUTL4 ;BIR ISC/JMB-Verify Invoices Utility ; 8/19/97
- ;;3.0; DRUG ACCOUNTABILITY/INVENTORY INTERFACE;**3,21,48**; 10/24/97
+ ;;3.0; DRUG ACCOUNTABILITY/INVENTORY INTERFACE;**3,21,48,54,61,67**; 10/24/97;Build 15
  ;
  ;References to ^DIC(51.5 are covered by IA #1931
  ;References to ^PSDRUG( are covered by IA #2095
@@ -15,8 +15,8 @@ DRUG S PSADJ=+$O(^PSD(58.811,PSAIEN,1,PSAIEN1,1,PSALINE,1,"B","D",0))
  .S PSADJD=$S($P(PSANODE,"^",6)'="":$P(PSANODE,"^",6),1:$P(PSANODE,"^",2))
  .I PSADJD'?1.N S PSASUP=1
  .S PSADRG=$S(PSADJ&('PSASUP):$G(PSADJD),PSADJ&(PSASUP):0,1:+$P(PSADATA,"^",2))
- .I $G(PSADJD),$L(PSADJD)=+$L(PSADJD),$P($G(^PSDRUG(+PSADJD,0)),"^")'="" W "*"_$P($G(^PSDRUG(+PSADJD,0)),"^") S (PSADRG,PSA50IEN)=+PSADJD Q
- .I $G(PSADJD),$L(PSADJD)=+$L(PSADJD),$P($G(^PSDRUG(+PSADJD,0)),"^")="" S (PSADJ,PSADRG)=0 Q
+ .I $G(PSADJD),$L(PSADJD)=$L(+PSADJD),$P($G(^PSDRUG(+PSADJD,0)),"^")'="" W "*"_$P($G(^PSDRUG(+PSADJD,0)),"^") S (PSADRG,PSA50IEN)=+PSADJD Q
+ .I $G(PSADJD),$L(PSADJD)=$L(+PSADJD),$P($G(^PSDRUG(+PSADJD,0)),"^")="" S (PSADJ,PSADRG)=0 Q
  .W ?7,"**"_PSADJD S PSADJSUP=1,(PSADRG,PSA50IEN)=PSADJD
  I '$G(PSADJ) D
  .S (PSA50IEN,PSADRG)=$S(+$P(PSADATA,"^",2)&($P($G(^PSDRUG(+$P(PSADATA,"^",2),0)),"^")'=""):+$P(PSADATA,"^",2),1:0)
@@ -32,7 +32,7 @@ QTY W !,"Qty Invoiced: "
  ;Adj. Qty
  I $G(PSADJQ) S PSAQTY=PSADJQ W PSAQTY_" ("_$S($P(PSADATA,"^",3):$P(PSADATA,"^",3),$P(PSADATA,"^",3)=0:0,1:"Blank")_")"
  I '$G(PSADJQ) W $P(PSADATA,"^",3) S PSAQTY=$P(PSADATA,"^",3)
-UPC W:$P(PSADATA,"^",13)'="" ?38,"UPC: "_$P(PSADATA,"^",13)
+UPC S PSAUPC=$P(PSADATA,U,13) W:PSAUPC'="" ?38,"UPC: "_PSAUPC
 OU W !,"Order Unit  : "
  S PSAOU=$S(+$P(PSADATA,"^",4)&($P($G(^DIC(51.5,+$P(PSADATA,"^",4),0)),"^")'=""):+$P(PSADATA,"^",4),1:"")
  S PSATEMP=$G(^PSD(58.811,PSAIEN,1,PSAIEN1,1,PSALINE,2))
@@ -61,6 +61,13 @@ PRICE W !,"Unit Price  : $"
  ;
 VSN S:$D(PSADATA) PSAVSN=$P(PSADATA,"^",12) ;*48
  W ?38,"VSN: "_$S(PSAVSN'="":PSAVSN,1:"Blank"),!
+ ;bgn *67
+ S PSAP67=$G(^PSD(58.811,PSAIEN,1,PSAIEN1,3,PSALINE,0))
+ W !,"PV-Drug-Description  : ",$S($P(PSAP67,"^",1)'="":$P(PSAP67,"^",1),1:"Unknown")
+ W ?55,"PV-DUOU  : ",$S($P(PSAP67,"^",4)'="":$P(PSAP67,"^",4),1:"Unknown")
+ W !,"PV-Drug-Generic Name : ",$S($P(PSAP67,"^",2)'="":$P(PSAP67,"^",2),1:"Unknown")
+ W ?55,"PV-UNITS : ",$S($P(PSAP67,"^",3)'="":$P(PSAP67,"^",3),1:"Unknown"),!
+ ;end *67
 VDU S PSADUOU=+$P(PSATEMP,"^"),PSAREORD=+$P(PSATEMP,"^",2),PSASUB=+$P(PSATEMP,"^",3),PSASTOCK=+$P(PSATEMP,"^",4)
  W !,"Dispense Units: "_$S($P($G(^PSDRUG(+PSADRG,660)),"^",8)'="":$P($G(^PSDRUG(+PSADRG,660)),"^",8),1:"Blank")
 VDUOU W !,"Dispense Units Per Order Unit: "_$S(+PSADUOU:+PSADUOU,+PSASUB&(+$P($G(^PSDRUG(+PSADRG,1,PSASUB,0)),"^",7)):+$P($G(^PSDRUG(+PSADRG,1,PSASUB,0)),"^",7),1:"Blank"),!

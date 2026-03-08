@@ -1,5 +1,5 @@
 ABMECS2 ; IHS/ASDST/DMJ - ELECTRONIC CLAIMS SUBMISSION ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;Original;DMJ;01/02/96 4:18 PM
  ;
  ; IHS/ASDS/DMJ - 03/01/01 - V2.4 P5 - NOIS HQW-0301-100010
@@ -34,7 +34,8 @@ START ;
 FILE ;
  ; File bills to 3P TX STATUS FILE
  S ABMINS("IEN")=$P(ABMER(ABMSEQ),U)       ; Active Insurer IEN
- S ABMITYP=$P(^AUTNINS(ABMINS("IEN"),2),U) ; Insurance type
+ ;S ABMITYP=$P(^AUTNINS(ABMINS("IEN"),2),U) ; Insurance type  ;abm*2.6*10 HEAT73780
+ S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMINS("IEN"),".211","I"),1,"I") ; Insurance type  ;abm*2.6*10 HEAT73780
  S ABMBTYPE=$P(ABMER(ABMSEQ),U,2)          ; Bill type
  ; Loop through locations in TMP global created by EMCREAT^ABMECDSP
  S ABMLOC=""

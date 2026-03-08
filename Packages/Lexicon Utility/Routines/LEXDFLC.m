@@ -1,12 +1,6 @@
-LEXDFLC ;ISL/KER - Default Filter - Create ;04/21/2014
- ;;2.0;LEXICON UTILITY;**80**;Sep 23, 1996;Build 10
- ;               
- ; Global Variables
- ;    None
- ;               
- ; External References
- ;    None
- ;               
+LEXDFLC ; ISL Default Filter - Create              ; 09-23-96
+ ;;2.0;LEXICON UTILITY;;Sep 23, 1996;Build 15
+ ;
  ; Entry:  S X=$$EN^LEXDFLC
  ;
  ; Function returns a multi piece string

@@ -1,5 +1,5 @@
-APCLP81B ; IHS/CMI/LAB - get dm audit values ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLP81B ;IHS/CMI/LAB -  get dm audit values
+ ;;3.0;IHS PCC REPORTS;**21**;FEB 05, 1997
  ;
 TD(P,EDATE) ;EP
  NEW APCL,X,E,B,%DT,Y,TDD,D,LTD,G,C,Z,T

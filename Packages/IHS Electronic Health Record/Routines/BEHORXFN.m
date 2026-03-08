@@ -1,4 +1,4 @@
-BEHORXFN ;MSC/IND/DKM/PLS - Supporting calls for EHR ;23-Jul-2015 21:20;PLS
+BEHORXFN ;MSC/IND/DKM/PLS - Supporting calls for EHR ;29-May-2018 15:11;MGH
  ;;1.1;BEH COMPONENTS;**009005,009006,009007,009008,009011,009012,009013**;Sep 18, 2007
  ;=================================================================
  ; RPC: BEHORXFN FINISH
@@ -8,7 +8,7 @@ BEHORXFN ;MSC/IND/DKM/PLS - Supporting calls for EHR ;23-Jul-2015 21:20;PLS
  ;  DATA returned as:
  ;    Drug[1] ^ Rx #[2] ^ ExpDate[3] ^ RefRem[4] ^ Issue Date[5] ^ Status[6] ^
  ;    Days Supply[7] ^ Quantity[8] ^ Provider IEN~Name[9] ^ PharmID[10] ^ OrderID[11] ^
- ;    LastFill[12] ^ PharmSite[13] ^ NDC[14] ^ RXNORM[15] ^ Process State[16] ^ External Pharmacy[17]
+ ;    LastFill[12] ^ PharmSite[13] ^ NDC[14] ^ RXNORM[15] ^ Process State[16] ^ External Pharmacy[17] ^ DSIG[18]
  ;   <"\" or " "><Instruction Text>  where "\" indicates a new line
  ;
 FINISH(DATA,DFN,ORIFN) ;
@@ -28,6 +28,7 @@ FINISH(DATA,DFN,ORIFN) ;
  S $P(RXINFO,U,15)=$$GETRXNRM(+ORIFN,PSIFN)
  S $P(RXINFO,U,16)=$$PSTATE(PSIFN)
  S $P(RXINFO,U,17)=$$EPHARM(PSIFN)
+ S $P(RXINFO,U,18)=$$GETDSIG(+ORIFN)
  D ADDOUT(RXINFO)
  S INST(1)=" "_$P(RXINFO,U),Y=1
  S:$L($P(RXINFO,U,8)) INST(1)=INST(1)_"  Qty: "_$P(RXINFO,U,8)
@@ -73,7 +74,7 @@ PRINTLOG(DATA,ORIFN,PRINTER,ACTION,COM) ;
  ;    Days Supply[12] ^ Quantity[13] ^ Chronic[14] ^ Issued[15] ^
  ;    Rx #[16] ^ Provider IEN~Name[17] ^ Status Reason[18] ^ DEA Handling[19] ^
  ;    Pharmacy Site[20] ^ Indication ICD~Text[21] ^ DAW[22] ^ NVOA[23] ^ NDC[24] ^ RXNORM[25] ^
- ;    Process State[26] ^ External Pharmacy[27]
+ ;    Process State[26] ^ External Pharmacy[27] ^ DSIG[28]
  ;
  ;   <"\" or " "><Instruction Text>  where "\" indicates a new line
 GETRXS(DATA,DFN,DAYS) ;
@@ -84,8 +85,8 @@ GETRXS(DATA,DFN,DAYS) ;
  D OCL^PSOORRL(DFN,$$FMADD^XLFDT(DT,-DAYS),"")
  S ILST=0,INDEX=""
  F  S INDEX=$O(^TMP("PS",$J,INDEX),-1) Q:'INDEX  D
- .N INSTRUCT,COMMENTS,FIELDS,NVSDT,TYPE,IND,CMF,RXN,PRV,REASON,DEA,IFN,DAW,J,K,X,NDC,RXNORM,ATF,EPHARM,TDRUG
- .S (INSTRUCT,COMMENTS,IND,CMF,RXN,REASON,DEA,DAW,NDC,RXNORM,ATF,EPHARM)=""
+ .N INSTRUCT,COMMENTS,FIELDS,NVSDT,TYPE,IND,CMF,RXN,PRV,REASON,DEA,IFN,DAW,J,K,X,NDC,RXNORM,ATF,EPHARM,TDRUG,DSIG
+ .S (INSTRUCT,COMMENTS,IND,CMF,RXN,REASON,DEA,DAW,NDC,RXNORM,ATF,EPHARM,DSIG)=""
  .S FIELDS=^TMP("PS",$J,INDEX,0),PRV=$TR($G(^("P",0)),U,"~")
  .S IFN=+$P(FIELDS,U,8),X=$O(^OR(100,IFN,4.5,"ID","DRUG",0))
  .S:X X=+$G(^OR(100,IFN,4.5,X,1))
@@ -111,6 +112,7 @@ GETRXS(DATA,DFN,DAYS) ;
  ..S RXNORM=$P(RXNORM,U,1)
  ..S ATF=$$PSTATE(+$$GETPSIFN(IFN))
  ..S EPHARM=$$EPHARM(+$$GETPSIFN(IFN))
+ ..S DSIG=$$GETDSIG(IFN)
  ..S J=$P($P(FIELDS,U),";")
  ..I J["R" D
  ...S RXN=$P($G(^PSRX(+J,0)),U),J=$G(^(2)),K=+$G(^("STA"))
@@ -134,7 +136,7 @@ GETRXS(DATA,DFN,DAYS) ;
  ..S NDC=$$GET1^DIQ(50,TDRUG,31)
  .S:$D(COMMENTS(1)) COMMENTS(1)="\"_COMMENTS(1)
  .S:$P(FIELDS,U,9)="HOLD" REASON=$$HLDRSN(IFN)
- .D ADDOUT("~"_TYPE_U_$P(FIELDS,U,1,12)_U_CMF_U_$P(FIELDS,U,15)_U_RXN_U_PRV_U_REASON_U_DEA_U_$S(IFN:$$LOC^APSPFNC2(IFN),1:"")_U_IND_U_DAW_U_$$NVOA()_U_NDC_U_RXNORM_U_ATF_U_EPHARM)
+ .D ADDOUT("~"_TYPE_U_$P(FIELDS,U,1,12)_U_CMF_U_$P(FIELDS,U,15)_U_RXN_U_PRV_U_REASON_U_DEA_U_$S(IFN:$$LOC^APSPFNC2(IFN),1:"")_U_IND_U_DAW_U_$$NVOA()_U_NDC_U_RXNORM_U_ATF_U_EPHARM_U_DSIG)
  .S J=0
  .F  S J=+$O(INSTRUCT(J)) Q:'J  D ADDOUT(INSTRUCT(J))
  .F  S J=+$O(COMMENTS(J)) Q:'J  D ADDOUT("t"_COMMENTS(J))
@@ -159,11 +161,16 @@ UDINST(Y) ;
  Q
  ; Assembles instructions for an outpatient prescription
 OPINST(Y) ;
- N I,X
+ N I,X,J,EARLY
+ S EARLY=""
  S X=FIELDS
  S Y(1)=" "_$P(X,U,2),Y=1
  S:$L($P(X,U,12)) Y(1)=Y(1)_"  Qty: "_$P(X,U,12)
  S:$L($P(X,U,11)) Y(1)=Y(1)_" for "_$P(X,U,11)_" days"
+ S J=$P($P(X,U),";")
+ I J["P" D
+ .S EARLY=$$VALUE^ORCSAVE2(IFN,"EARLIEST")
+ .I +EARLY S Y(1)=Y(1)_ " Earliest Fill Date: "_$$FMTE^XLFDT(EARLY)
  D SETMULT(.Y,"SIG")
  I Y=1 D
  .D SETMULT(.Y,"SIO")
@@ -310,10 +317,14 @@ PSTATE(PSIFN) ;EP-
  ; Return external pharmacy information
 EPHARM(PSIFN) ;EP-
  Q $$GET1^DIQ(52,PSIFN,9999999.24,"I")_";"_$$GET1^DIQ(52,PSIFN,9999999.24)
+ ; Return digital signature status of order
+GETDSIG(ORIFN) ;EP-
+ Q $$GET1^DIQ(100.008,"1,"_ORIFN_",",4,"I")=7
  ; Get pharmacy IFN from order IFN
 GETPSIFN(ORIFN) ;
  N PKG,PSIFN
  S PKG=+$P($G(^OR(100,+ORIFN,0)),U,14),PSIFN=$P($G(^(4)),U)
+ I +PSIFN'=PSIFN Q ""  ;allow only prescriptions
  Q $S('PSIFN!(PKG'=$O(^DIC(9.4,"C","PSO",0))):"",1:PSIFN)
  ; RPC: BEHORXFN SETCMF
  ; Set chronic med flag for one or more prescriptions

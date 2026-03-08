@@ -1,5 +1,5 @@
 APCLAPI ; IHS/CMI/LAB - visit data ; 25 Feb 2011  11:02 AM
- ;;2.0;IHS PCC SUITE;**6,8,11,14,16**;MAY 14, 2009;Build 9
+ ;;2.0;IHS PCC SUITE;**6,8,11,14,16,23**;MAY 14, 2009;Build 17
  ;
 LASTALC(APCLPDFN,APCLBD,APCLED,APCLFORM) ;PEP - date of last alcohol screen
  ;  Return the last recorded alcohol screening value:

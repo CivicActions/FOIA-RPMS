@@ -1,5 +1,5 @@
 BIPATVW2 ;IHS/CMI/MWR - ADD/EDIT/DELETE VISITS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**10**;MAY 30,2015
+ ;;8.5;IMMUNIZATION;**10,25,26,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;BIB PROTOTYPE; JAN 31,2015
  ;;  ADD, EDIT, DELETE VISITS VIA LIST MANAGER.
@@ -54,12 +54,11 @@ ADDIMM ;EP
  ;---> Do NOT stuff VFC default if patient is not < 19 years old.
  ;I $$BENTYP^BIUTL11(BIDFN,2)="01" S BI("P")=4
  ;--> If patient was less than 19yrs set default=V01 and quit.
- ;Q:($$AGE^BIUTL1(BIDFN,1,BIDATE)>18)
  ;
  ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
  ;---> If patient is adult, set Eligibility default="V01".
  D
- .I $$AGE^BIUTL1(BIDFN,1)<19,$$BENTYP^BIUTL11(BIDFN,2)="01" S BI("P")=4 Q
+ .I $P($$AGE^BIUTL1(BIDFN,1),U)<19,$$BENTYP^BIUTL11(BIDFN,2)="01" S BI("P")=4 Q
  .;---> Otherwise patient is adult, set default="V01" and quit.
  .S BI("P")=1
  ;**********
@@ -213,7 +212,7 @@ EDITIMM ;EP
  .S BI("QQ")=$P(Y,V,30)     ;Date VIS Presented to Patient.
  .S BI("EE")=$P(Y,V,31)     ;Admin/shot Date ONLY (not Visit); can be null.
  .;**********
- .;X ^O
+ .S BI("OO")=$P(Y,V,32)     ;ordering provider
  .;
  .S DR="[BI FORM-IMM VISIT ADD/EDIT]"
  ;

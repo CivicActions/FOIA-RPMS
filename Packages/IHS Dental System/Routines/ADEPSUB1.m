@@ -1,18 +1,24 @@
 ADEPSUB1 ; IHS/HQT/MJL - PRINT SUBROUTINES ;  [ 08/01/2001  1:06 PM ]
- ;;6.0;ADE;**9**;APRIL 1999
+ ;;6.0;ADE;**9,38**;MAR 25, 1999;Build 158
+ ;;IHS/OIT/GAB 11.2022 File 3,6,16 Removal - Patch 38
  ;
 DDS() ;EP - Returns "1/0"
  ;AND SETS UP ARRAY ADEDNAM(DFN)="DENTIST,NAME"
  N ADEDDS,ADEJ
  S ADEDDS=""
  S ADEJ=0
- F  S ADEJ=$O(^DIC(6,ADEJ)) Q:'+ADEJ  D
- . I $D(^DIC(6,ADEJ,0)),$P(^DIC(6,ADEJ,0),U,4)]"",$D(^DIC(7,$P(^DIC(6,ADEJ,0),U,4),9999999)),+^DIC(7,$P(^DIC(6,ADEJ,0),U,4),9999999)=52 D
+ ;F  S ADEJ=$O(^DIC(6,ADEJ)) Q:'+ADEJ  D ;/IHS/OIT/GAB PATCH 38: Commented line for File200 update
+ F  S ADEJ=$O(^VA(200,ADEJ)) Q:'+ADEJ  D
+ . ;I $D(^DIC(6,ADEJ,0)),$P(^DIC(6,ADEJ,0),U,4)]"",$D(^DIC(7,$P(^DIC(6,ADEJ,0),U,4),9999999)),+^DIC(7,$P(^DIC(6,ADEJ,0),U,4),9999999)=52 D
+ . ;/IHS/OIT/GAB PATCH 38: Commented line above and added below line for File200 update
+ . I $D(^VA(200,ADEJ,0)),$P($G(^VA(200,ADEJ,"PS")),U,5)]"",$D(^DIC(7,$P($G(^VA(200,ADEJ,"PS")),U,5),9999999)),+^DIC(7,$P($G(^VA(200,ADEJ,"PS")),U,5),9999999)=52 D
  . . ;I ADEDDS="" S ADEDDS=ADEJ Q
  . . ;S $P(ADEDDS,",",$L(ADEDDS,",")+1)=ADEJ
- . . Q:'$D(^DIC(16,ADEJ,0))
+ . . ;Q:'$D(^DIC(16,ADEJ,0))    ;/IHS/OIT/GAB PATCH 38 - Commented this line and added below line for File200 update
+ . . Q:'$D(^VA(200,ADEJ,0))
  . . S ADEDDS=1
- . . S ADEDNAM(ADEJ)=$P(^DIC(16,ADEJ,0),U)
+ . . ;S ADEDNAM(ADEJ)=$P(^DIC(16,ADEJ,0),U)  ;/IHS/OIT/GAB PATCH 38 - Commented this line and added below line for File200 update
+ . . S ADEDNAM(ADEJ)=$P($G(^VA(200,ADEJ,0)),U)
  I ADEDDS="" Q 0
  ;F ADEJ=1:1:$L(ADEDDS,",") S ADEDNAM($P(ADEDDS,",",ADEJ))=$P(^DIC(16,$P(ADEDDS,",",ADEJ),0),U)
  ;S ADEDDS="1^"_ADEDDS
@@ -23,10 +29,15 @@ HYG() ;EP - Returns "1/0^DFN,DFN,DFN"
  N ADEHYG,ADEJ,ADEK,ADEL
  S ADEHYG=""
  S ADEJ=0
- F  S ADEJ=$O(^DIC(6,ADEJ)) Q:'+ADEJ  D
- . I $D(^DIC(6,ADEJ,0)),$P(^DIC(6,ADEJ,0),U,4)]"",$D(^DIC(7,$P(^DIC(6,ADEJ,0),U,4),9999999)),+^DIC(7,$P(^DIC(6,ADEJ,0),U,4),9999999)=46 D
- . . Q:'$D(^DIC(16,ADEJ,0))
- . . S ADEHNAM(ADEJ)=$P(^DIC(16,ADEJ,0),U)
+ ;F  S ADEJ=$O(^DIC(6,ADEJ)) Q:'+ADEJ  D  ;/IHS/OIT/GAB PATCH 38 - Commented this line and added below line for File200 update
+ F  S ADEJ=$O(^VA(200,ADEJ)) Q:'+ADEJ  D
+ . ;I $D(^DIC(6,ADEJ,0)),$P(^DIC(6,ADEJ,0),U,4)]"",$D(^DIC(7,$P(^DIC(6,ADEJ,0),U,4),9999999)),+^DIC(7,$P(^DIC(6,ADEJ,0),U,4),9999999)=46 D
+ . ;/IHS/OIT/GAB PATCH 38: Commented line above and added below line for File200 update
+ . I $D(^VA(200,ADEJ,0)),$P($G(^VA(200,ADEJ,"PS")),U,5)]"",$D(^DIC(7,$P($G(^VA(200,ADEJ,"PS")),U,5),9999999)),+^DIC(7,$P($G(^VA(200,ADEJ,"PS")),U,5),9999999)=46 D
+ . . ;Q:'$D(^DIC(16,ADEJ,0)) ;/IHS/OIT/GAB PATCH 38 - Commented this line and the next and added below 2 lines for File200 update
+ . . ;S ADEHNAM(ADEJ)=$P(^DIC(16,ADEJ,0),U)
+ . . Q:'$D(^VA(200,ADEJ,0))
+ . . S ADEHNAM(ADEJ)=$P($G(^VA(200,ADEJ,0)),U)
  . . I ADEHYG="" S ADEHYG=ADEJ Q
  . . S $P(ADEHYG,",",$L(ADEHYG,",")+1)=ADEJ Q
  I ADEHYG="" Q 0

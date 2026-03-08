@@ -1,5 +1,5 @@
 BIDU1 ;IHS/CMI/MWR - DUE LIST/LETTERS, HELP; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**26**;OCT 24,2011;Build 33
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  DUE LISTS/LETTERS, HELP.
  ;
@@ -33,7 +33,18 @@ TEXT1(BITEXT) ;EP
  ;;which to view Due Lists and Master Lists, and to print Due Letters.
  ;;
  ;;There are 13 items or "parameters" on the screen that you may
- ;;change in order to select for a specific group of patients.
+ ;;change in order to select for a specific group of patients and
+ ;;choose what addtional information you would like printed on the
+ ;;report or letter.
+ ;;
+ ;;Items 1-10 and 13 allow you to select what group of patients
+ ;;to include.
+ ;;Item 12 allows you to select how to sort the listing.
+ ;;Item 11 ADDITIONAL INFORMATION allows you to select additional 
+ ;;data elements to include on the list or in the letter. When you
+ ;;choose item 11, type a ? to get a list of the additional data
+ ;;items available.
+ ;;
  ;;To change an item, enter its left column number (1-12) at the
  ;;prompt on the bottom of the screen.  Use "?" at any prompt where
  ;;you would like help or more information on the parameter you are

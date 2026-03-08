@@ -1,5 +1,6 @@
-DIFROM4 ;SFISC/XAK-CREATES 'INIT3' ;2:49 PM  25 Sep 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROM4 ;SFISC/XAK-CREATES 'INIT3' ;10:40 AM  11 Feb 1993 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S DNAME=E_3,DIRS=E_4,DL=0,(DH,Q)=" ;"
  K ^UTILITY($J) F DD=1:1 S X=$T(TXT+DD) Q:X=""  S ^UTILITY($J,DD,0)=$E(X,4,999) S:$E(X,4,5)="OR" ^(0)=^(0)_DIRS
@@ -16,7 +17,6 @@ TXT ;
  ;; I $D(^DIC(19.1,0))#2,($P(^(0),U)?1"SECUR".E)!($P(^(0),U)="KEY") S (DIC,DLAYGO)=19.1,N="KEY" D ADD K ^UTILITY("DIFROM",$J)
  ;; I $D(^DIC(9.8,0))#2,^(0)?1"ROUTINE^".E S (DIC,DLAYGO)=9.8,N="RTN" D ADD
  ;; S DIC=.5,DLAYGO=0,N="FUN" D ADD
- ;; I $P($G(^DIC(8994,0)),U)="REMOTE PROCEDURE" S (DIC,DLAYGO)=8994,N="REM" D ADD
  ;; S DIC("S")="I $P(^(0),U,4)=DIFL" F N="DIPT","DIBT","DIE" S DIC=U_N_"(" D ADD
  ;; K DIC("S") S N="DIST(.404,",DIC=U_N,DLAYGO=.404 D ADD
  ;; S DIC("S")="I $P(^(0),U,8)=DIFL",N="DIST(.403,",DIC=U_N,DLAYGO=.403 D ADD

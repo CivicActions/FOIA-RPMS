@@ -1,0 +1,98 @@
+ACHSADEX ; IHS/OIT/FCJ - DOCUMENT DISPLAY WITH EXPORT DATES ;  [ 03/29/2005  3:10 PM ]
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**29,32**;JUN 11, 2001;Build 39
+ ;Display export dates for document
+ ;ACHS*3.1*29 7.1.2021 IHS.OIT.FCJ NEW ROUTINE
+ ;ACHS*3.1*32 12.5.2024 IHS.OIT.FCJ CHG FF BECAUSE DEVICES SETUP INCORRECTLY
+ ;
+ ;
+ST ;SET DATA
+ I ACHSORDN'="" S ACHSDOFY=$P(^ACHSF(DUZ(2),"D",ACHSDIEN,0),U,27)
+ I ACHSORDN="" S ACHSDOFY=ACHSACFY
+ I ACHSORDN'="" S ACHSCTYP=$S($P($G(^ACHSF(DUZ(2),"D",ACHSDIEN,2)),U,9)'="":$P(^ACHSF(DUZ(2),"D",ACHSDIEN,2),U,9),1:"")
+ I $D(ACHSCTYP),ACHSCTYP'="" S ACHSCTYP=$P(^ACHSCTYP(ACHSCTYP,0),U,2)
+ I ACHSORDN="" S ACHSCTYP=""
+ S ACHSDHHS="HHSI"_$P($G(^ACHSF(DUZ(2),0)),U,11)_ACHSDOFY_$E(ACHSORDN,3,5)_$E(ACHSORDN,7,11)_ACHSCTYP
+REFN ;REFERRAL NUMBER
+ S (ACHSREF,ACHSREFN)=""
+ S ACHSREF=$P($G(^ACHSF(DUZ(2),"D",ACHSDIEN,2)),U,7)
+ I +ACHSREF S ACHSREFN=$P(^BMCREF(ACHSREF,0),U,2)_$P($G(^BMCREF(ACHSREF,1)),U)
+ W @IOF,"Form # ",$S(ACHSTYP=1:"43",ACHSTYP=2:"57",ACHSTYP=3:"64",1:"") W:ACHSREFT]"" ?55,"REF TYPE" W:ACHSORDN]"" ?68,"Order No."
+ S T=$S(ACHSTYP=1:"Hospital Service",ACHSTYP=2:"Dental Service",ACHSTYP=3:"Outpatient Service",1:"")
+ W !,$$FMTE^XLFDT(ACHSODT),?80-$L(T)\2,T,?59,ACHSREFT,?79-$L(ACHSORDN),ACHSORDN,!
+ W ?44,"HHS Order No:",?79-$L(ACHSDHHS),ACHSDHHS
+ W !,$$REPEAT^XLFSTR("-",80)
+ ;
+ ;PRINT EXPORT DATA
+ D DOCX
+ W !,$$REPEAT^XLFSTR("-",80)
+ ;GET ARRAY VARS SET UP FOR 
+ D ALL^ACHSUDF
+ I $D(^AUPNPAT(DFN,11)) S X=$P($G(^AUPNPAT(DFN,11)),U,8) I X,$D(^AUTTTRI(X,0)) S A(4)=$P($G(^AUTTTRI(X,0)),U)
+ ;
+ W !,$E($G(A(1)),14,24) W:+ACHSREFN " Ref #: ",ACHSREFN    ;HRN,REF#
+ W ?40,"|"
+ W ?42,$E($G(A(1)),1,13)               ;FAC
+ ;
+ W !,$E($G(A(2)),1,37)                 ;PAT NAME
+ W ?40,"|"
+ W ?42,$G(A(6))                        ;EST DOS
+ ;
+ S X=$$DOB^AUPNPAT(DFN,"I"),DOB=$S('X:"        ",1:$E(X,4,5)_"-"_$E(X,6,7)_"-"_($E(X,1,3)+1700))
+ W !,DOB                               ;DOB
+ W " ",$$SEX^AUPNPAT(DFN)                  ;SEX
+ W ?40,"|"
+ W ?42,$G(A(7))                        ;DX
+ ;
+ W !,$G(A(9))                          ;INS
+ W ?40,"|"
+ W ?42,$G(A(10))                       ;HOSP ORD #
+ ;
+ W !,A(4)                              ;TRIBE NAME
+ W ?40,"|"
+ W ?42,"Estimated Charge: ",$G(E(9))   ;EST CHARGE
+ ;
+ W !,$$REPEAT^XLFSTR("-",80)
+ ;
+ W !,$G(C(4))                          ;AUTH DATES 
+ W ?40,"|"
+ W ?42,$E($G(D(1)),1,37)               ;VENDOR
+ ;
+ W !,"SCC: ",$G(F(8))                  ;SCC
+ W ?40,"|"
+ W ?42,$E($G(D(2)),1,37)               ;VENDOR ADDRESS
+ ;
+ W !,"DCR Acct. = ",$P($G(^ACHS(9,DUZ(2),"RN")),U,ACHSDCR)
+ W ?40,"|"
+ W ?42,$E($G(D(3)),1,37)               ;VENDOR CITY/STATE/ZIP
+ ;
+ W !,"CAN/OBJ: ",$G(F(7))," / ",$G(F(9),"N/A"),"  ",$G(ACHSCOPT,"N/A")
+ W ?40,"|"
+ W ?42,$E($G(D(4)),1,37)               ;IEN
+ W ?56,$E($G(F(6)),1,20)               ;CONTRACT TYPE
+ ;
+ W ! W:$G(A(8))["---" "Actual DOS:" W $G(A(8)),"  DESTINATION: "_D(5)
+ W ?40,"|"
+ ;
+ W !,$$REPEAT^XLFSTR("-",80)
+ K A,B,C,D,E,F,DOB,ACHSREF,ACHSREFN
+ Q
+ ;
+DOCX ;EXPORT DATES FOR DOCUMENTS
+ ;SEARCH FOR EXPORTS FOR DOCUMENT
+ N ACHSODTE,ACHSTXFL,ACHSXIEN,ACHSTXF,ACHSEXTY,ACHSEXDT
+ S ACHSODTE=ACHSODT-1,ACHSTXFL=0
+ F  S ACHSODTE=$O(^ACHSTXST("C",ACHSODTE)) Q:ACHSODTE=""  D
+ .Q:'$D(^ACHSTXST("C",ACHSODTE,DUZ(2)))
+ .S ACHSXIEN=0
+ .F  S ACHSXIEN=$O(^ACHSTXST("C",ACHSODTE,DUZ(2),ACHSXIEN)) Q:ACHSXIEN'?1N.N  D
+ ..I $D(^ACHSTXST(DUZ(2),1,ACHSXIEN,2,"B",ACHSDIEN)) D
+ ...S ACHSEXDT=$$FMTE^XLFDT(ACHSODTE)
+ ...S ACHSEXTY=$P(^ACHSTXST(DUZ(2),1,ACHSXIEN,0),U,21)
+ ...S ACHSEXTY=$S(ACHSEXTY="B":"Re-export UFMS/FI",ACHSEXTY="F":"Re-export FI",ACHSEXTY="U":"Re-export UFMS",ACHSEXTY="S":"Re-export Stat",1:"Export")
+ ...F L1=1:1:3 S ACHSTXF(L1)=""
+ ...I $D(^ACHSTXST(DUZ(2),1,ACHSXIEN,1)) S L=1 F L1=1:1:3 I $P(^ACHSTXST(DUZ(2),1,ACHSXIEN,1),L1)'="" S ACHSTXF(L)=$P(^ACHSTXST(DUZ(2),1,ACHSXIEN,1),U,L1),L=L+1
+ ...W !,ACHSEXTY,": ",ACHSEXDT F L1=1:1:3 W:ACHSTXF(L1)'="" ?39,"FILE: ",ACHSTXF(L1)   ;ACHS*3.1*32 MVD FF TO BEG OF LINE INSTEAD OF END
+ ...S ACHSTXFL=1
+ I 'ACHSTXFL W !,"PO has not been Exported."
+ Q
+ ;

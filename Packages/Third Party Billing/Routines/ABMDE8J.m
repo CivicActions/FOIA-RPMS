@@ -1,13 +1,14 @@
-ABMDE8J ; IHS/ASDST/DMJ - Page 8 - SUPPLIES ; 
- ;;2.6;IHS Third Party Billing System;**2**;NOV 12, 2009
+ABMDE8J ; IHS/SD/SDR - Page 8 - SUPPLIES ; 
+ ;;2.6;IHS Third Party Billing System;**2,28,30**;NOV 12, 2009;Build 585
  ;
- ; IHS/DSD/LSL - 09/01/98 - Patch 2 - NOIS NDA-0898-180038
- ;             0.00 charges on HCFA because version 2.0 does not assume
- ;             1 for units.  Modify code to set units to 1 if not
- ;             already defined.
- ; IHS/SD/SDR - v2.5 p11 - NPI
- ; IHS/SD/SDR - v2.6 CSV
- ; IHS/SD/SDR - abm*2.6*2 - 3PMS10003A - Modified to call ABMFEAPI
+ ;IHS/DSD/LSL 09/01/98 2.5*2 NOIS NDA-0898-180038 0.00 charges on HCFA because version 2.0 does not assume
+ ;   1 for units.  Modify code to set units to 1 if not already defined.
+ ;IHS/SD/SDR v2.5 p11 NPI
+ ;
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*2 3PMS10003A Modified to call ABMFEAPI
+ ;IHS/SD/SDR 2.6*28 CR10648 Added prompt for CPT Narrative and default to CPT description if setup in NARR option
+ ;IHS/SD/SDR 2.6*30 CR8870 Updated display so it won't wrap if units are maxed out, including 3 decimal places
  ;
 DISP K ABMZ,DIC
  S ABMZ("TITL")="CHARGE MASTER",ABMZ("PG")="8J"
@@ -20,12 +21,20 @@ DISP K ABMZ,DIC
  S ABMZ("ITEM")="Supply Item",ABMZ("DIC")="^ABMCM("
  S ABMZ("X")="X",(ABM("FEE"),ABMZ("TOTL"))=0
  D HD G LOOP
-HD W !?5,"REVN",?75,"TOTAL"
- W !?5,"CODE",?31,"ITEM",?65,"QTY",?74,"CHARGE"
- W !,ABMZ("=")
+HD ;
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;W !?5,"REVN",?75,"TOTAL"
+ ;W !?5,"CODE",?31,"ITEM",?65,"QTY",?74,"CHARGE"
+ ;W !,ABMZ("=")
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ W !?5,"REVN",?70,"TOTAL"
+ W !?5,"CODE",?31,"ITEM",?62,"QTY",?69,"CHARGE"
+ W !?5,"====",?10,"=================================================",?60,"======",?67,"============"
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  Q
 LOOP S (ABMZ("LNUM"),ABMZ("NUM"),ABMZ(1),ABM)=0 F ABM("I")=1:1 S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),45,ABM)) Q:'ABM  S ABM("X")=ABM,ABMZ("NUM")=ABM("I") D PC1
- I ABMZ("NUM")>0 W !,?72,"========",!?5,"TOTAL",?71,$J("$"_($FN(ABMZ("TOTL"),",",2)),9)
+ ;I ABMZ("NUM")>0 W !,?72,"========",!?5,"TOTAL",?71,$J("$"_($FN(ABMZ("TOTL"),",",2)),9)  ;abm*2.6*30 IHS/SD/SDR CR8870
+ I ABMZ("NUM")>0 W !,?67,"=============",!?5,"TOTAL",?66,$J("$"_($FN(ABMZ("TOTL"),",",2)),13)  ;abm*2.6*30 IHS/SD/SDR CR8870
  I +$O(ABME(0)) S ABME("CONT")="" D ^ABMDERR K ABME("CONT")
  G XIT
  ;
@@ -39,10 +48,17 @@ EOP I $Y>(IOSL-8) D PAUSE^ABMDE1,HD
  I $P(ABM("X0"),"^",2) D
  .W ?5,"CHARGE DATE: "
  .W $$CDT^ABMDUTL($P(ABM("X0"),"^",2)),!
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;W ?6,$P(ABM("X0"),"^",5)
+ ;W ?12,$E($P(^ABMCM(+ABM("X0"),0),U),1,50)
+ ;W ?65,$J(ABMZ("UNIT"),3)
+ ;W ?72,$J($FN(($P(ABM("X0"),U,4)*ABMZ("UNIT")),",",2),8)
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
  W ?6,$P(ABM("X0"),"^",5)
- W ?12,$E($P(^ABMCM(+ABM("X0"),0),U),1,50)
- W ?65,$J(ABMZ("UNIT"),3)
- W ?72,$J($FN(($P(ABM("X0"),U,4)*ABMZ("UNIT")),",",2),8)
+ W ?12,$E($P(^ABMCM(+ABM("X0"),0),U),1,46)
+ W ?60,$$FMT^ABMERUTL(ABMZ("UNIT"),"6R")
+ W ?67,$J($FN(($P(ABM("X0"),U,4)*ABMZ("UNIT")),",",2),13)
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  S ABMZ("TOTL")=(ABMZ("UNIT")*$P(ABM("X0"),U,4))+ABMZ("TOTL")
  Q
 XIT K ABM,ABMMODE
@@ -68,6 +84,7 @@ E ;EDIT EXISTING ENTRY
  .S DA=$P(ABMZ(Y),"^",2)
  .S ABMZ("ITEM")=$P(^ABMDCLM(DUZ(2),DA(1),45,DA,0),U)
  S DIE="^ABMDCLM(DUZ(2),DA(1),45,"
+ S ABMZ("DA")=DA
  S DR=".02//"_$$SDT^ABMDUTL(ABMP("VDT"))
  D ^DIE Q:$D(Y)
  S DR=".03//1"
@@ -79,8 +96,22 @@ E ;EDIT EXISTING ENTRY
  .S DR=".05//"_$P(^ABMCM(ABMZ("ITEM"),0),"^",2)
  .D ^DIE
  S ABMZ("HCPCS")=$P($$CPT^ABMCVAPI(+$P(^ABMCM(ABMZ("ITEM"),0),U,3),ABMP("VDT")),U,2)  ;CSV-c
- S DR=".07//"_ABMZ("HCPCS")
+ ;S DR=".07//"_ABMZ("HCPCS")  ;abm*2.6*28 IHS/SD/SDR CR10648
+ ;D ^DIE Q:$D(Y)  ;abm*2.6*28 IHS/SD/SDR CR10648
+ ;start new abm*2.6*28 IHS/SD/SDR CR10648
+ S ABMZ("SVCPT")=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),45,DA,0)),U,7)
+ S DR=".07//"_$S(ABMZ("HCPCS")'="NO SUCH ENTRY":ABMZ("HCPCS"),1:"")
  D ^DIE Q:$D(Y)
+ I ABMZ("SVCPT")'=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),45,DA,0)),U,7) D
+ .S DR="22////@"
+ .D ^DIE
+ I $P($G(^ABMDCLM(DUZ(2),DA(1),45,DA,0)),U,7)'="" D
+ .S ABMCNCK=$O(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,"B",$P($G(^ABMDCLM(DUZ(2),DA(1),45,DA,0)),U,7),0))
+ .I +$G(ABMCNCK)=0 Q
+ .I $P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,ABMCNCK,0)),U,2)="Y" S DR="22CPT Narrative"  ;abm*2.6*28 IHS/SD/SDR CR10648
+ .I $P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,ABMCNCK,0)),U,3)="Y" S DR=DR_"//"_$P($$CPT^ABMCVAPI($P($G(^ABMDCLM(DUZ(2),DA(1),45,DA,0)),U,7),ABMP("VDT")),U,3)
+ .D ^DIE Q:$D(Y)
+ ;end new abm*2.6*28 IHS/SD/SDR CR10648
  S ABM("X0")=^ABMDCLM(DUZ(2),DA(1),45,DA,0)
  I (^ABMDEXP(ABMMODE(10),0)["HCFA")!(^ABMDEXP(ABMMODE(10),0)["CMS") D
  .D DX^ABMDEMLC

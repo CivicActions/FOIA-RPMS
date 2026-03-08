@@ -1,5 +1,5 @@
-PSJHL9 ;BIR/LDT-VALIDATE INCOMING HL7 DATA/CREATE NEW ORDER ;08 Jul 99 / 10:50 AM
- ;;5.0; INPATIENT MEDICATIONS ;**1,18,31,42,47,50,63,72,75,58,80,110,111,134**;16 DEC 97;Build 124
+PSJHL9 ;BIR/LDT-VALIDATE INCOMING HL7 DATA/CREATE NEW ORDER ;30-May-2024 22:05;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**1,18,31,42,47,50,63,72,75,58,80,110,111,134,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^PSDRUG is supported by DBIA# 2192.
  ; Reference to ^PS(50.7 is supported by DBIA# 2180.
@@ -7,6 +7,8 @@ PSJHL9 ;BIR/LDT-VALIDATE INCOMING HL7 DATA/CREATE NEW ORDER ;08 Jul 99 / 10:50 A
  ; Reference to ^PS(55 is supported by DBIA# 2191.
  ; Reference to ^ORERR is supported by DBIA# 2187.
  ; Reference to ^ORHLESC is supported by DBIA# 4922.
+ ;
+ ; Modified - IHS/MSC/PLS - 05/30/2024 - Line VALID+8 - FID 103810
  ;
 VALID ;
  I APPL="",PSITEM="" S PSREASON="Missing or invalid Orderable Item" D ERROR Q
@@ -16,7 +18,9 @@ VALID ;
  S:APPL="" APPL="IP"
  I APPL'="F" D
  .I $G(SCHEDULE)]"" N X S X=SCHEDULE D  S SCHEDULE=X
- ..I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!($L($P(X,"@"))>70)!($L($P(X,"@",2))>119)!($L(X)<1)!(X["P RN")!(X["PR N") S X="" Q
+ ..;P1035 - FID 103810
+ ..;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!($L($P(X,"@"))>70)!($L($P(X,"@",2))>119)!($L(X)<1)!(X["P RN")!(X["PR N") S X="" Q
+ ..I X[""""!($A(X)=45)!(X?.E1C.E)!($L($P(X,"@"))>70)!($L($P(X,"@",2))>119)!($L(X)<1)!(X["P RN")!(X["PR N") S X="" Q
  ..I X?.E1L.E S X=$$ENLU^PSGMI(X)
  ..S X=$$TRIM^XLFSTR(X,"R"," ")
  ..I X["Q0" S X="" Q
@@ -93,7 +97,7 @@ STRIP ;Strips spaces off the end of instructions.
  I $E(X,$L(X))=" " F  S X=$E(X,1,$L(X)-1) Q:$E(X,$L(X))'=" "
  Q
  ;
-ORTYP(MDRT,DDRG)        ;Entry point to determine order type for 53.1
+ORTYP(MDRT,DDRG) ;Entry point to determine order type for 53.1
  ;MDRT=Med Route from 51.2, DDRG=Dispense Drug
  I '$G(DDRG) S ORTYP="" Q ORTYP
  I '$D(^PSDRUG(+DDRG,2)) S ORTYP="" Q ORTYP
@@ -108,11 +112,11 @@ ORTYP(MDRT,DDRG)        ;Entry point to determine order type for 53.1
  I $P(^PSDRUG(DDRG,2),"^",3)["U",$P(^PS(51.2,MDRT,0),"^",6)'=1 S ORTYP="UP" Q ORTYP
  S ORTYP="" Q ORTYP
  ;
-TRYAGAIN(MDRT,OI)       ;
+TRYAGAIN(MDRT,OI) ;
  ;MDRT=Med Route from 51.2, OI=Orderable Item
  N ORTYPI,ORTYPU,ORTYPP
  S ORTYP="",ORTYPI=0,ORTYPU=0,ORTYPP=0
- N DDRG S DDRG=0 F  S DDRG=$O(^PSDRUG("ASP",OI,DDRG)) Q:'DDRG  D 
+ N DDRG S DDRG=0 F  S DDRG=$O(^PSDRUG("ASP",OI,DDRG)) Q:'DDRG  D
  .I $G(^PSDRUG(DDRG,"I"))]"" Q:^PSDRUG(DDRG,"I")'>DT
  .S ORTYP=$$ORTYP(MDRT,DDRG)  D
  ..I ORTYP["I" S ORTYPI=ORTYPI+1
@@ -121,7 +125,7 @@ TRYAGAIN(MDRT,OI)       ;
  S ORTYP=$S(ORTYPU>ORTYPI:"U",1:"I") S ORTYP=ORTYP_$S(ORTYPP>0:"P",1:"N")
  Q ORTYP
  ;
-STOP(REQST,DURA)   ;
+STOP(REQST,DURA) ;
  ;REQST=Requested start date, DURA=Duration from CPRS
  I DURA["L",DURA?1A1".".N S DAYS=$$DAY($E(REQST,1,5)),DURA="H"_((DAYS*$P(DURA,"L",2))*24)
  I DURA["L",DURA?1A.1N.N1"."1N.N D  Q STOP
@@ -133,7 +137,7 @@ STOP(REQST,DURA)   ;
  I +DURA=DURA,DURA["." S DURA="H"_(DURA*24)
  S STOP=$$FMADD^XLFDT(REQST,$S(DURA["W":$P(DURA,"W",2)*7,DURA["D":$P(DURA,"D",2),+DURA=DURA:+DURA,1:""),$S(DURA["H":$P(DURA,"H",2),1:""),$S(DURA["M":$P(DURA,"M",2),1:""),$S(DURA["S":$P(DURA,"S",2),1:""))
  Q STOP
-ZQDATE(DATE,MONTHS)  ;BUMP DATE BY A MONTH (OR SO)
+ZQDATE(DATE,MONTHS) ;BUMP DATE BY A MONTH (OR SO)
  ;;
  S X=$E($P(DATE,"."),1,5)+($E($P(DATE,"."),4,5)>(12-MONTHS)*88+MONTHS)_$E($P(DATE,"."),6,7) F  D ^%DT Q:Y>0  S X=X-1
  S NEWDATE=X_"."_$P(DATE,".",2)

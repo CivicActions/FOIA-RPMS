@@ -152,9 +152,9 @@ GREET ;;To add to mail message.
  ;;You need do nothing in response to this message.
  ;;  
  ;;Questions about this patch, which is a product of the RPMS DBA
- ;;can be directed to the DIR/RPMS
- ;;Help Desk.
- ;;Please refer to patch "ACHS*3.1*5".
+ ;;(George T. Huggins, 520-670-4871), can be directed to the DIR/RPMS
+ ;;Support Center, at 505-248-4371, or via e-mail to
+ ;;"hqwhd@mail.ihs.gov".  Please refer to patch "ACHS*3.1*5".
  ;;  
  ;;###;NOTE: This line indicates the end of text in this message.
  ;

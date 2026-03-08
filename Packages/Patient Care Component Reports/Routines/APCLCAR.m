@@ -1,19 +1,19 @@
-APCLCAR ; IHS/CMI/LAB - california area GPRA ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCAR ; IHS/CMI/LAB - california area GPRA ;  [ 01/10/05  4:03 PM ]
+ ;;3.0;IHS PCC REPORTS;**12,14,16,21**;FEB 05, 1997
  ;
  ;
  W:$D(IOF) @IOF
  W !!,$$CTR("California Annual Utilization Report of Primary Care Clinics",80)
 INTRO ;
  W !!,"This report will provide data for the California State Annual Utilization",!,"Report of Primary Care Clinics",!
- W !,$$CTR("Updated for the 2008 Report",80),!!
+ W !,$$CTR("Updated for 2007 Report",80),!!
  D EXIT
 Y ;fiscal year
  K DIR
  S APCLVDT=""
- W !,"Enter the Calender Year of interest.  Use a 4 digit year, e.g. 2008, 2007"
+ W !,"Enter the Calender Year of interest.  Use a 4 digit year, e.g. 2007, 2006"
  S DIR(0)="D^::EP"
- S DIR("A")="Enter Calendar year (e.g. 2008)"
+ S DIR("A")="Enter Calendar year (e.g. 2007)"
  S DIR("?")="This report is compiled for a period.  Enter a valid date."
  D ^DIR
  K DIC
@@ -29,7 +29,7 @@ VLOC ;get visit location of encounter
  I Y=1 G CHKTAX
 LOC1 ;enter location
  S X="LOCATION OF ENCOUNTER",DIC="^AMQQ(5,",DIC(0)="FM",DIC("S")="I $P(^(0),U,14)" D ^DIC K DIC,DA I Y=-1 W "OOPS - QMAN NOT CURRENT - QUITTING" G EXIT
- D PEP^AMQQGTX0(+Y,"APCLLOCT(")
+ D ^AMQQGTX0(+Y,"APCLLOCT(")
  I '$D(APCLLOCT) G VLOC
  I $D(APCLLOCT("*")) K APCLLOCT
 CHKTAX ;check taxonomies
@@ -48,9 +48,6 @@ CPTL ;
  I $D(DIRUT) G FEE
  I Y S APCLCPTR=1
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G CPTL
  S XBRP="PRINT^APCLCARP",XBRC="PROC^APCLCAR1",XBRX="EXIT^APCLCAR",XBNS="APCL"
  D ^XBDBQUE
  D EXIT

@@ -1,5 +1,5 @@
 XTHC10 ;HCIOFO/SG - HTTP 1.0 CLIENT ;12/07/2011
- ;;7.3;TOOLKIT;**123,566**;Apr 25, 1995;Build 9
+ ;;7.3;TOOLKIT;**123,566**;Apr 25, 1995;Build 5
  ;
  Q
  ;

@@ -1,5 +1,5 @@
-ABME8BHT ; IHS/ASDST/DMJ - 837 BHT Segment    ;    
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8BHT ; IHS/ASDST/DMJ - 837 BHT Segment    ;    [ 10/07/2003  4:09 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1,4**;APR 05, 2002
  ;Beginning of Hierarchical Transaction
  ;
 START ;START HERE

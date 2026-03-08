@@ -1,0 +1,36 @@
+APSPPAL2 ;IHS/MSC/PLS - Pickup Activity Log Support ;15-May-2024 15:32;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1035**;Sep 23, 2004;Build 39
+ ;FID 99319
+EN ; -- main entry point for APSP PICKUP LOG VIEWER
+ D EN^VALM("APSP PICKUP LOG VIEWER")
+ Q
+ ;
+HDR ; -- header code
+ K VALMHDR S HDR=^TMP("PSOHDR",$J,1,0)
+ S:^TMP("PSOHDR",$J,8,0) X=IORVON_"<A>"_IORVOFF,HDR=$$SETSTR^VALM1(X,HDR,80-$L(X),80) S VALMHDR(1)=HDR
+ I '(^TMP("PSOHDR",$J,8,0)) S PSONOAL="" D ALLERGY^PSOORUT2 I PSONOAL'="" D  K PSONOAL
+ .S X=IORVON_"<NO ALLERGY ASSESSMENT>"_IORVOFF,HDR=$$SETSTR^VALM1(X,HDR,80-$L(X),80) S VALMHDR(1)=HDR
+ S HDR="  PID: "_$$FMTSSN^APSPFUNC(^TMP("PSOHDR",$J,2,0))_"  (HRN: "_$G(VA("PID"))_")"
+ S VALMHDR(2)=$$SETSTR^VALM1("Ht(cm): "_^TMP("PSOHDR",$J,7,0),HDR,52,27)
+ S HDR="  DOB: "_^TMP("PSOHDR",$J,3,0)_" ("_^TMP("PSOHDR",$J,4,0)_")"
+ S VALMHDR(3)=$$SETSTR^VALM1(" Wt(kg): "_^TMP("PSOHDR",$J,6,0),HDR,51,28)
+ S HDR="  SEX: "_$E(^TMP("PSOHDR",$J,5,0),1,45)  ;IHS/MSC/PLS - 10/11/07 - CHANGED 44 TO 45
+ S VALMHDR(4)=HDR
+ S $P(VALMHDR(5)," ",26)="  "_$E(^TMP("PSOHDR",$J,5,0),48,80)  ;IHS/MSC/PLS - 10/11/07 - CHANGED 30 TO 26
+ Q
+ ;
+INIT ; -- init variables and list array
+ S VALM("TITLE")="Rx Pickup Log"
+ S VALMCNT=APSPIDX
+ Q
+ ;
+HELP ; -- help code
+ S X="?" D DISP^XQORM1 W !!
+ Q
+ ;
+EXIT ; -- exit code
+ S VALMBCK="Q" Q
+ ;
+EXPND ; -- expand code
+ Q
+ ;

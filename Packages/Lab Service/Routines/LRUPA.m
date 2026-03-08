@@ -1,5 +1,5 @@
 LRUPA ;AVAMC/REG/WTY - LAB ACCESSION LIST:DATE & TEST ;9/25/00 [ 04/14/2003  2:18 PM ]
- ;;5.2T9;LR;**1002,1018**;Nov 17, 2004
+ ;;5.2;LR;**1002,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**72,248**;Sep 27, 1994
  ;
  ;Reference to ^%DT supported by IA #10003

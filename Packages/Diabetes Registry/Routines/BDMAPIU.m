@@ -1,5 +1,5 @@
 BDMAPIU ; IHS/CMI/LAB - visit data ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,4,6,8**;JUN 14, 2007;Build 53
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,4,6,8,17**;JUN 14, 2007;Build 138
  ;IHS/TUCSON/LAB - added G parameter to provider call
  ;
  ;
@@ -364,3 +364,24 @@ AGE(P,I,D) ;EP
  D ^%DTC
  Q X
  ;
+LASTDX(P,T,BDATE,EDATE) ;EP
+ I '$G(P) Q ""
+ ;RETURN BDMDX4=1 or 0^dx code^date found^IEN OF ICD CODE^IEN OF V POV
+ NEW BDMDX1,BDMDX2,BDMDX3,BDMDX4,BDMTX5,BDMDXBD,BDMDXED
+ S (BDMDX1,BDMDX2,BDMDX3,BDMDX4,BDMTX5)=""
+ I $G(BDATE)="" S BDATE=$P(^DPT(P,0),U,3)  ;if no date then set to DOB
+ I $G(EDATE)="" S EDATE=DT  ;if no end date then set to today
+ S BDMTX5=$O(^ATXAX("B",T,0))  ;get taxonomy ien
+ I BDMTX5="" Q ""  ;not a valid taxonomy
+ S BDMDX4=""  ;return value
+ S BDMDXBD=9999999-BDATE,BDMDXED=9999999-EDATE  ;get inverse date and begin at edate-1 and end when greater than begin date
+ S BDMDX1=BDMDXED-1 F  S BDMDX1=$O(^AUPNVPOV("AA",P,BDMDX1)) Q:BDMDX1=""!(BDMDX1>BDMDXBD)!(BDMDX4]"")  D
+ .S BDMDX2=0 F  S BDMDX2=$O(^AUPNVPOV("AA",P,BDMDX1,BDMDX2)) Q:BDMDX2'=+BDMDX2!(BDMDX4]"")  D
+ ..S BDMDX3=$P($G(^AUPNVPOV(BDMDX2,0)),U)
+ ..Q:BDMDX3=""  ;bad xref
+ ..Q:'$D(^ICD9(BDMDX3))
+ ..Q:'$$ICD^ATXCHK(BDMDX3,BDMTX5,9)
+ ..S BDMDX4=1_"^"_$P($$ICDDX^ICDEX(BDMDX3),U,2)_"^"_(9999999-BDMDX1)_"^"_BDMDX3_"^"_BDMDX2
+ ..Q
+ .Q
+ Q BDMDX4

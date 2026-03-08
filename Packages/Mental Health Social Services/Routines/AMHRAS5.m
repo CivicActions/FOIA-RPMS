@@ -1,5 +1,5 @@
 AMHRAS5 ; IHS/CMI/LAB - list refusals ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;4.0;IHS BEHAVIORAL HEALTH;**11,12**;JUN 02, 2010;Build 46
  ;
  ;
 INFORM ;
@@ -15,11 +15,13 @@ INFORM ;
  W !,"user.  Alcohol Screening is defined as any of the following documented:"
  W !?5,"- Alcohol Screening Exam (Exam code 35)"
  W !?5,"- Measurements: AUDC, AUDT, CRFT"
- W !?5,"- Health Factor with Alcohol/Drug Category (CAGE)"
- W !?5,"- Diagnoses V79.1, 29.1"
+ W !?5,"- Any CAGE [F018-F022] or CAGE-AID [F210-F214] Health Factor"
+ W !?5,"- Any TAPS-Alcohol Health Factor [F175-F179]"
+ W !?5,"- Diagnoses 29.1"
  W !?5,"- Education Topics: AOD-SCR, CD-SCR"
- W !?5,"- CPT Codes: 99408, 99409, G0396, G0397, H0049"
- W !?5,"- refusal of exam code 35"
+ W !?5,"- CPT 99408, 99409, G0396, G0397, G0442, G0443, G2011, G2196, G2197, H0049,"
+ W !?5,"  H0050, 3016F [BGP ALCOHOL SCREENING CPTS]"
+ W !?5,"- refusal of exam code 35 (Alcohol Screening exam)"
  D PAUSE^AMHLEA
  W !,"This report will tally the visits by age, gender, screening result,"
  W !,"provider (either exam provider, if available, or primary provider on the "
@@ -55,13 +57,14 @@ STMP ;
 TALLY ;which items to tally
  K AMHRTALL
  W !!,"Please select which items you wish to tally on this report:",!
- W !?3,"0)  Do not include any Tallies",?40,"6)  Date of Screening"
- W !?3,"1)  Result of Screening",?40,"7)  Primary Provider on Visit"
- W !?3,"2)  Gender",?40,"8)  Designated MH Provider"
- W !?3,"3)  Age of Patient",?40,"9)  Designated SS Provider"
- W !?3,"4)  Provider who Screened",?40,"10) Designated ASA/CD Provider"
- W !?3,"5)  Clinic",?40,"11) Designated Primary Care Provider"
- K DIR S DIR(0)="L^0:11",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
+ W !?3,"0)  Do not include any Tallies",?40,"7)  Primary Provider on Visit"
+ W !?3,"1)  Type/Result of Screening",?40,"8)  Designated MH Provider"
+ W !?3,"2)  Gender",?40,"9)  Designated SS Provider"
+ W !?3,"3)  Age of Patient",?40,"10) Designated ASA/CD Provider"
+ W !?3,"4)  Provider who Screened",?40,"11) Designated Primary Care Provider"
+ W !?3,"5)  Clinic",?40,"12) Race"
+ W !?3,"6)  Date of Screening",?40,"13) Ethnicity"
+ K DIR S DIR(0)="L^0:13",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G DATES
  I Y="" G DATES
  S AMHRTALL=Y
@@ -82,7 +85,7 @@ LIST ;
 LIST1 ;
  S AMHRSORT=""
  W !
- S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN"
+ S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN;Q:Race;E:Ethnicity"
  S DIR("A")="How would you like the list to be sorted",DIR("B")="H"
  KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G LIST
@@ -91,9 +94,16 @@ DEMO ;
  D DEMOCHK^AMHUTIL1(.AMHDEMO)
  I AMHDEMO=-1 G LIST
 ZIS ;
- S XBRP="PRINT^AMHRAS5P",XBRC="PROC^AMHRAS5",XBRX="XIT^AMHRAS5",XBNS="AMHR"
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
+ I $D(DIRUT) G XIT
+ I $G(Y)="B" D BROWSE,XIT Q
+ S XBRP="PRINT^AMHRAS5P",XBRC="PROC^AMHRAS5",XBRX="XIT^AMHRAS5",XBNS="AMH"
  D ^XBDBQUE
  D XIT
+ Q
+BROWSE ;
+ S XBRP="VIEWR^XBLM(""^AMHRAS5P"")"
+ S XBNS="AMH",XBRC="PROC^AMHRAS5",XBRX="XIT^AMHRAS5",XBIOP=0 D ^XBDBQUE
  Q
 XIT ;
  D EN^XBVK("AMHR")
@@ -123,6 +133,8 @@ PROC ;
  ..S AMHRCNT=AMHRCNT+1
  ..S ^XTMP("AMHRAS5",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)=""
  ..S ^XTMP("AMHRAS5",AMHRJ,AMHRH,"VSTS",AMHRCNT)=AMHSCR
+ ..S $P(^XTMP("AMHRAS5",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ ..S $P(^XTMP("AMHRAS5",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
 PCC ;
  Q:'AMHREXPC
  S AMHRSD=$$FMADD^XLFDT(AMHRBD,-1),AMHRSD=AMHRSD_".9999"
@@ -144,6 +156,8 @@ PCC ;
  ..S AMHRCNT=AMHRCNT+1
  ..S ^XTMP("AMHRAS5",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)=""
  ..S ^XTMP("AMHRAS5",AMHRJ,AMHRH,"VSTS",AMHRCNT)=AMHSCR
+ ..S $P(^XTMP("AMHRAS5",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ ..S $P(^XTMP("AMHRAS5",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
  ;now go through refusals in pcc
  S AMHRRIEN=0 F  S AMHRRIEN=$O(^AUPNPREF(AMHRRIEN)) Q:AMHRRIEN'=+AMHRRIEN  D
  .Q:'$D(^AUPNPREF(AMHRRIEN,0))
@@ -174,6 +188,8 @@ PCC ;
  .S $P(T,U,15)=DFN
  .S $P(T,U,20)="PCC"
  .S ^XTMP("AMHRAS5",AMHRJ,AMHRH,"VSTS",AMHRCNT)=T
+ .S $P(^XTMP("AMHRAS5",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ .S $P(^XTMP("AMHRAS5",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
  Q
  ;
  ;

@@ -1,0 +1,3 @@
+XMANON ;(WASH ISC)/CAP - * OBSOLETE * ;12/12/97  15:36
+ ;;7.1;MailMan;**7,50**;Jun 02, 1994
+ Q

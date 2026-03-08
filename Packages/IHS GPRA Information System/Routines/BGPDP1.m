@@ -1,5 +1,5 @@
-BGPDP1 ; IHS/CMI/LAB - print ind 1 ;
- ;;7.0;IHS CLINICAL REPORTING;;JAN 24, 2007
+BGPDP1 ; IHS/CMI/LAB - print ind 1 ;   [ 08/19/02  3:09 PM ]
+ ;;1.0;IHS GPRA REPORTING;**1**;JUN 12, 2002
  ;
  ;
 I1 ;EP ; diabetes prevalence

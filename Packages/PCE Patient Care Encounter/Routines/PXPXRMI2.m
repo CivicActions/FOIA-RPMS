@@ -1,5 +1,5 @@
-PXPXRMI2 ; SLC/PKR - Build indexes for the V files (continued). ;28-Apr-2015 14:34;DU
- ;;1.0;PCE PATIENT CARE ENCOUNTER;**119,1009**;Aug 12, 1996;Build 3
+PXPXRMI2 ; SLC/PKR - Build indexes for the V files (continued). ;29-Oct-2012 10:36;DU
+ ;;1.0;PCE PATIENT CARE ENCOUNTER;**119,1009**;Aug 12, 1996;Build 24
  ;DBIA 4113 supports PXRMSXRM entry points.
  ;DBIA 4114 supports setting and killing ^PXRMINDX
  ;===============================================================
@@ -29,8 +29,7 @@ VPED ;Build the indexes for V PATIENT ED.
  .. S TEXT="Processing entry "_IND
  .. D MES^XPDUTL(TEXT)
  . I IND#10000=0 W "."
- . ;IHS/MSC/MGH Put a $G around it p1003
- . S TEMP=$G(^AUPNVPED(DAS,0))
+ . S TEMP=^AUPNVPED(DAS,0)
  . S EDU=$P(TEMP,U,1)
  . I EDU="" D  Q
  .. S ETEXT=DAS_" missing education topic"
@@ -97,8 +96,7 @@ VPOV ;Build the indexes for V POV.
  .. S TEXT="Processing entry "_IND
  .. D MES^XPDUTL(TEXT)
  . I IND#10000=0 W "."
- . ;IHS/MSC/MGH Put a $G around it p1003
- . S TEMP=$G(^AUPNVPOV(DAS,0))
+ . S TEMP=^AUPNVPOV(DAS,0)
  . S POV=$P(TEMP,U,1)
  . I POV="" D  Q
  .. S ETEXT=DAS_" missing POV (ICD9)"
@@ -167,8 +165,7 @@ VSK ;Build the indexes for V SKIN TEST.
  .. S TEXT="Processing entry "_IND
  .. D MES^XPDUTL(TEXT)
  . I IND#10000=0 W "."
- . ;IHS/MSC/MGH Put a $G around it p1003
- . S TEMP=$G(^AUPNVSK(DAS,0))
+ . S TEMP=^AUPNVSK(DAS,0)
  . S SK=$P(TEMP,U,1)
  . I SK="" D  Q
  .. S ETEXT=DAS_" missing skin test"
@@ -235,8 +232,7 @@ VXAM ;Build the indexes for V EXAM.
  .. S TEXT="Processing entry "_IND
  .. D MES^XPDUTL(TEXT)
  . I IND#10000=0 W "."
- . ;IHS/MSC/MGH Put a $G around it p1003
- . S TEMP=$G(^AUPNVXAM(DAS,0))
+ . S TEMP=^AUPNVXAM(DAS,0)
  . S EXAM=$P(TEMP,U,1)
  . I EXAM="" D  Q
  .. S ETEXT=DAS_" missing exam"

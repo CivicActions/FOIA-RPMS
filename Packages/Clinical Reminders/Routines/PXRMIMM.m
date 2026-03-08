@@ -1,6 +1,7 @@
-PXRMIMM ; SLC/PKR - Handle immunization findings. ;29-Feb-2012 09:25;DU
- ;;2.0;CLINICAL REMINDERS;**1001**;Feb 04, 2005;Build 21
+PXRMIMM ; SLC/PKR - Handle immunization findings. ;18-Nov-2024 09:25;DU
+ ;;2.0;CLINICAL REMINDERS;**1001,1016**;Feb 04, 2005;Build 32
  ;IHS/MSC/MGH Patch 1001 wrap lookup with $G
+ ;IHS/MSC/MIR Patch 1016 GETDATA+3 and VIMMADD
  ;
  ;=======================================================
 EVALFI(DFN,DEFARR,ENODE,FIEVAL) ;Evaluate immunization findings.
@@ -22,6 +23,7 @@ EVALTERM(DFN,FINDPA,ENODE,TERMARR,TFIEVAL) ;Evaluate immunization terms.
 GETDATA(DAS,FIEVT) ;Return data, for a specified V Immunization entry.
  ;DBIA #4250
  D VIMM^PXPXRM(DAS,.FIEVT)
+ D VIMMADD(DAS,.FIEVT) ;Additional fields return
  Q
  ;
  ;=======================================================
@@ -75,3 +77,8 @@ OUTPUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the clinical
  S NLINES=NLINES+1,TEXT(NLINES)=""
  Q
  ;
+VIMMADD(DA,DATA) ;Additional fields return
+ N FL S FL=9000010.11
+ S DATA("OREDERED BY")=$$GET1^DIQ(FL,DA,1202)
+ S DATA("VIS PRESENTED")=$$GET1^DIQ(FL,DA,.17)
+ Q

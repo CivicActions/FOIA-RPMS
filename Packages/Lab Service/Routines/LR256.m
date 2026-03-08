@@ -1,5 +1,5 @@
 LR256 ;slc/dcm - Environment check routine for patch 256 ;4/19/00  14:35
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**256**;Sep 27, 1994
  ;
 PARAM ;Install new parameter value at package level

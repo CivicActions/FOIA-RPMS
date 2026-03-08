@@ -1,5 +1,5 @@
-RAHLR1A ;HISC/GJC - Generate Common Order (ORM) Message ;11/10/99  10:42
- ;;5.0;Radiology/Nuclear Medicine;**47**;Mar 16, 1998;Build 21
+RAHLR1A ;HISC/GJC IHS/OIT/NST - Generate Common Order (ORM) Message ; 3 Mar 2025  12:07 PM
+ ;;5.0;Radiology/Nuclear Medicine;**47,1012**;Mar 16, 1998;Build 11
  ;
  ;
  ;Integration Agreements
@@ -101,10 +101,32 @@ OBRPRC ;OBR segment
  ;Transportation Mode OBR-30 75.1;19
  S RAZTMODE=$P(RAZORD,U,19)
  S RAOBR(31)=$S(RAZTMODE="a":"WALK",RAZTMODE="w":"WHLC",RAZTMODE="s":"CART",RAZTMODE="p":"PORT",1:"")
+ ;
+ ;IHS/OIT/NST 20240830 Patch 1012 
+ N BRAOIFN,BRACLIND,BRACI,BRACI2,BRAICDN,BRAICDT
+ S:'$D(RACN0) RACN0=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))
+ S BRAOIFN=+$P(RACN0,"^",11)
+ S BRACI=$$GET1^DIQ(75.1,BRAOIFN,91)  ; ICD Code e.g. S82.00
+ S BRACI2=$TR(BRACI,".","")           ; e.g. S82
+ S BRACLIND=$$ICDDX^ICDEX(BRACI,DT)   ; ICD string
+ S BRAICDN=$P(BRACLIND,U,4)           ; ICD Name  e.g., ANKLE FRACTURE
+ S BRAICDT=$S($P(BRACLIND,U,20)=1:"I9",$P(BRACLIND,U,20)=30:"I10",1:"")  ; ICD Type  e.g., I10
+ ;
  ;Reason for Study OBR-31
+ S $P(RAOBR(32),HLCS,1)=BRACI2  ; IHS/OIT/NST BRA*5.0*1012
  S $P(RAOBR(32),HLCS,2)=$S($L(RAZORD1):RAZORD1,1:"See Clinical History:")
  ;build the OBR segment
  D BLSEG^RAHLRU1("OBR",.RAOBR)
+ ;
+DG1 ; IHS/OIT/NST patch 1012 Add 'DG1' Segment for clinical indication
+ ;DG1||I10|S82^ANKLE FRACTURE^I10|ANKLE FRACTURE||
+ N BRADG1
+ S BRADG1(3)=BRAICDT
+ S BRADG1(4)=BRACI2_$E(HLECH)_BRAICDN_$E(HLECH)_BRAICDT
+ S BRADG1(5)=BRAICDN
+ D BLSEG^RAHLRU1("DG1",.BRADG1)
+ ; end IHS/OIT/NST patch 1012
+ ;
  ;build the ZDS segment
  D ZDS(RADTI,RACNI,RAZDAYCS)
  ;
@@ -175,7 +197,7 @@ OBXALL ;Compile 'OBX' Segment for Allergies
  S RAOBX(2)=$G(RAXX)
  S RAOBX(3)="TX",RAOBX(4)="A"_$E(HLECH)_"ALLERGIES"_$E(HLECH)_"L"
  S RAOBX(12)="O",(I,J)=0
- I $D(GMRAL)#2 D 
+ I $D(GMRAL)#2 D
  .F  S I=$O(PI(I)) Q:'I  D
  ..S J=J+1,FT=PI(I),RAOBX(2)=RAXX+J,RAOBX(6)=$$ESCAPE^RAHLRU(FT)
  ..D BLSEG^RAHLRU1("OBX",.RAOBX)
@@ -191,6 +213,13 @@ OBXTCOM ;Compile 'OBX' segment for tech comments
  .S RAOBX(2)=RAXX+J,RAOBX(6)=$$ESCAPE^RAHLRU(FT)
  .D BLSEG^RAHLRU1("OBX",.RAOBX)
  .Q
+ ;
+ ;IHS/BJI/DAY - Patch 1005 - Add HL7 OBX segment for SNOMED & LOINC
+ I $T(^BRASNOW),$$HLPARM^BRASNOW() D
+ .D HLSNO^BRASNOW
+ .D HLLOI^BRASNOW
+ ;End Patch
+ ;
 EXIT ;clean up symbol table are return to RAHLR1
  K RAOBX,RAXX,GMRAL,RAOBR,RAZCPT,RAZDIV,RAZIEN,RAZILOC,RAZITYPE,RAZMODAL
  K RAZNME,RAZPHONE,RAZPMOD,RAZTMODE

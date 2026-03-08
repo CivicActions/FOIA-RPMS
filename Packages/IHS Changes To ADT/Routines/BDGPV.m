@@ -1,5 +1,5 @@
 BDGPV ; IHS/ANMC/LJF - PROVIDER INQUIRY ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
  NEW BDGPV,BDGPVN,DEF,SCR,BDGSRT
  S DEF=$S($D(^XUSEC("PROVIDER",DUZ)):$$GET1^DIQ(200,DUZ,.01),1:"")
@@ -79,7 +79,13 @@ INPT ; find all inpatients for this provider
  .... S BDGCA=^TMP("BDGPV1",$J,CAT,SRT,NAME,DFN)   ;corresp adm ien
  .... ;
  .... ; build lines and put into display array
- .... S LINE=$J(BDGCNT,2)_") "_$E(NAME,1,18)
+ .... ;202307 77894 maw p1022 PPN
+ .... N PRF
+ .... S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ .... S LINE=$J(BDGCNT,2)_") "_$G(PRF)
+ .... D SET(LINE,.VALMCNT,BDGCNT,"IP"_U_DFN_U_BDGCA)
+ .... S LINE=""
+ .... ;S LINE=$J(BDGCNT,2)_") "_$E(NAME,1,18)
  .... S LINE=$$PAD(LINE,24)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)
  .... S LINE=$$PAD(LINE,33)_$S(BDGSRT="W":$$SRV,1:$$WRD)      ;wrd/srv
  .... S LINE=$$PAD(LINE,41)_$G(^DPT(DFN,.101))                ;room-bed 

@@ -1,5 +1,5 @@
 ABSPOSFC ; IHS/FCS/DRS - Set up ABSP() ;    [ 09/12/2002  10:09 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,15,16,40,50**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,15,16,40,50**;JUN 21, 2001;Build 131
  ;----------------------------------------------------------------------
  ;----------------------------------------------------------------------
  Q
@@ -236,14 +236,16 @@ INSMBRNM()  ; Member #
  S ABSPMNUM=""
  S:PINSTYPE="PRVT" ABSPMNUM=$G(^AUPNPRVT(PINSDA,11,PINSDA1,2))
  Q ABSPMNUM
-OLDGETMDPOL()  ;Updated policy number lookup for Medicare D elig.
- ;IHS/SD/RLT - 01/24/06 - Patch 15 - begin
- N POL,MDPOL
- S POL=$P($G(^AUPNMCR(PINSDA,0)),U,3)         ;original Medicare policy#
- S MDPOL=""
- S:MDIEN'="" MDPOL=$P($G(^AUPNMCR(PINSDA,11,MDIEN,0)),U,6)
- S:MDPOL'="" POL=MDPOL             ;use Medicare D policy# if elig found
- Q POL
+ /*
+ OLDGETMDPOL()  ;Updated policy number lookup for Medicare D elig.
+  ;IHS/SD/RLT - 01/24/06 - Patch 15 - begin
+  N POL,MDPOL
+  S POL=$P($G(^AUPNMCR(PINSDA,0)),U,3)         ;original Medicare policy#
+  S MDPOL=""
+  S:MDIEN'="" MDPOL=$P($G(^AUPNMCR(PINSDA,11,MDIEN,0)),U,6)
+  S:MDPOL'="" POL=MDPOL             ;use Medicare D policy# if elig found
+  Q POL
+ */
  ;IHS/SD/RLT - 01/24/06 - Patch 15 - end
 GETMDPOL() ;EP  ; /IHS/OIT/RAM ; 15 DEC 2017 ; Total rewrite to account for Medicare Bendficiary Identifier, or MBI.
  ; /IHS/OIT/RAM ; 21 MAR 18 ; update to # logic - scan for Medicare Part D first, return that from the original area if it exists.

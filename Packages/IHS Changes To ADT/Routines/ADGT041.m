@@ -1,4 +1,4 @@
-ADGT041 ; ;04/08/09
+ADGT041 ; ;07/21/08
  D DE G BEGIN
 DE S DIE="^ADGDS(D0,""DS"",",DIC=DIE,DP=9009012.01,DL=2,DIEL=1,DU="" K DG,DE,DB Q:$O(^ADGDS(D0,"DS",DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,1) S:%]"" DE(2)=% S %=$P(%Z,U,2) S:%]"" DE(3)=% S %=$P(%Z,U,3) S:%]"" DE(6)=%,DE(20)=% S %=$P(%Z,U,4) S:%]"" DE(7)=% S %=$P(%Z,U,5) S:%]"" DE(8)=% S %=$P(%Z,U,6) S:%]"" DE(9)=% S %=$P(%Z,U,7) S:%]"" DE(5)=%

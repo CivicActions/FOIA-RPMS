@@ -1,5 +1,5 @@
-XMJMBULL ;ISC-SF/GMB-Manual Bulletin ;08/08/2000  14:11
- ;;8.0;MailMan;;Jun 28, 2002
+XMJMBULL ;ISC-SF/GMB-Manual Bulletin ;06/30/98  06:31
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces BULL^XMB (ISC-WASH/THM/RWF/CAP)
  ; Entry points used by MailMan options (not covered by DBIA):
  ; BULLETIN  XMPOST
@@ -8,7 +8,7 @@ BULLETIN ; Manually post a bulletin
  S XMABORT=0
  D WHICH(.XMBIEN,.XMBNAME,.XMABORT) Q:XMABORT
  D GETPARMS(XMBIEN,.XMPARM,.XMINSTR,.XMABORT) Q:XMABORT
- D BULLETIN^XMKPO($G(XMDUZ,DUZ),XMBNAME,XMBIEN,.XMPARM,"","",.XMINSTR)
+ D BULLETIN^XMKPO(XMDUZ,XMBNAME,XMBIEN,.XMPARM,"","",.XMINSTR)
  Q
 WHICH(XMBIEN,XMBNAME,XMABORT) ;
  N DIC
@@ -18,7 +18,7 @@ WHICH(XMBIEN,XMBNAME,XMABORT) ;
  S XMBNAME=$P(Y,U,2)
  Q
 GETPARMS(XMBIEN,XMPARM,XMINSTR,XMABORT) ;
- N I,XMREC,XMI,DIR,Y,X,DIRUT,XMNOW
+ N I,XMREC,XMI,DIR,Y,X,DIRUT
  S I=0
  F  S I=$O(^XMB(3.6,XMBIEN,1,I)) Q:'I  D  Q:XMABORT
  . S XMREC=^XMB(3.6,XMBIEN,1,I,0)
@@ -28,24 +28,16 @@ GETPARMS(XMBIEN,XMPARM,XMINSTR,XMABORT) ;
  . . S XMREC=$P(XMREC,"|",1)_$P(XMREC,"|",3,999)
  . . I XMI<0!(XMI>100) D  Q
  . . . S XMABORT=1
- . . . W !,$$EZBLD^DIALOG(34661,XMI) ; '|1|' is not a valid parameter.  Aborting!
+ . . . W !,"Aborting!  '",XMI,"' is not a valid parameter."
  . . Q:$D(XMPARM(XMI))
- . . S DIR("A")=$$EZBLD^DIALOG(34660,XMI) ; Enter parameter |1|
+ . . S DIR("A")="Enter parameter "_XMI
  . . S DIR(0)="F^1:30"
- . . S DIR("??")="^D HELP^XMJMBULL"
  . . D ^DIR I $D(DIRUT) S XMABORT=1 Q
  . . S XMPARM(XMI)=Y
  Q:XMABORT
- S DIR("A")=$$EZBLD^DIALOG(34662) ; When do you want to send the bulletin?"
- S XMNOW=$$EZBLD^DIALOG(37007) ; NOW
- S DIR("B")=XMNOW
- S DIR(0)="DA^NOW::EFTX"
+ S DIR("A")="Enter posting date/time"
+ S DIR("B")="NOW"
+ S DIR(0)="D^NOW::EFTX"
  D ^DIR I $D(DIRUT) S XMABORT=1 Q
- S:X'=XMNOW XMINSTR("LATER")=Y
- Q
-HELP ;
- I '$D(^XMB(3.6,XMBIEN,4,XMI,1,1,0)) Q
- N I
- S I=0
- F  S I=$O(^XMB(3.6,XMBIEN,4,XMI,1,I)) Q:'I  W !,^(I,0)
+ S:X'="NOW" XMINSTR("LATER")=$$FMTH^XLFDT(Y)
  Q

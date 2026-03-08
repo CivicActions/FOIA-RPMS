@@ -1,14 +1,14 @@
 BQIPLCR ;PRXM/HC/ALA-Create Panel Functions ; 18 Oct 2005  3:45 PM
- ;;2.3;ICARE MANAGEMENT SYSTEM;**1,3,4**;Apr 18, 2012;Build 66
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**3,5**;Mar 01, 2021;Build 20
  ;
  Q
  ;
 APTM(DFN) ;EP - Add patient record manually
- NEW DIC,DIE,BQIPTUP,IENS,DA,RESULT
+ NEW DIC,DIE,BQIPTUP,IENS,DA,RESULT,DLAYGO
  S DA(2)=OWNR,DA(1)=PLIEN
  S (X,DINUM)="`"_DFN
- S DIC="^BQICARE("_DA(2)_",1,"_DA(1)_",40,",DIC(0)="LN"
- S DLAYGO=90505.04,DIC(0)="LN"
+ S DIC="^BQICARE("_DA(2)_",1,"_DA(1)_",40,",DIC(0)="FLN"
+ S DLAYGO=90505.04,DIC(0)="FLN"
  I '$D(^BQICARE(DA(2),1,DA(1),40,0)) S ^BQICARE(DA(2),1,DA(1),40,0)="^90505.04P^^"
  D ^DIC
  I +Y=-1 S RESULT=-1 Q
@@ -26,11 +26,11 @@ APTM(DFN) ;EP - Add patient record manually
  Q
  ;
 APMTC(CDATA,CTYP,CDFN) ;EP - Add a patient's matched criteria
- NEW DIC,DIE,DA,MTC
+ NEW DIC,DIE,DA,MTC,DLAYGO
  S DA(3)=OWNR,DA(2)=PLIEN,DA(1)=CDFN,X=CTYP
- I $G(^BQICARE(DA(3),1,DA(2),40,DA(1),0))="" Q
- S DIC="^BQICARE("_DA(3)_",1,"_DA(2)_",40,"_DA(1)_",5,",DIC(0)="LN"
- S DLAYGO=90505.18,DIC(0)="LN"
+ I $G(^BQICARE(DA(3),1,DA(2),40,DA(1),0))="" D APT^BQIPLCR(CDFN)
+ S DIC="^BQICARE("_DA(3)_",1,"_DA(2)_",40,"_DA(1)_",5,",DIC(0)="FLN"
+ S DLAYGO=90505.18,DIC(0)="FLN"
  I '$D(^BQICARE(DA(3),1,DA(2),40,DA(1),5,0)) S ^BQICARE(DA(3),1,DA(2),40,DA(1),5,0)="^90505.18^^"
  D ^DIC
  I +Y=-1 Q
@@ -38,12 +38,13 @@ APMTC(CDATA,CTYP,CDFN) ;EP - Add a patient's matched criteria
  ; update the records
  K DA
  S DA(4)=OWNR,DA(3)=PLIEN,DA(2)=CDFN,DA(1)=MTC
- S DIC="^BQICARE("_DA(4)_",1,"_DA(3)_",40,"_DA(2)_",5,"_DA(1)_",1,",DIC(0)="LN"
- S DLAYGO=90505.181,DIC(0)="LN"
+ S DIC="^BQICARE("_DA(4)_",1,"_DA(3)_",40,"_DA(2)_",5,"_DA(1)_",1,",DIC(0)="FLN"
+ S DLAYGO=90505.181,DIC(0)="FLN"
  I '$D(^BQICARE(DA(4),1,DA(3),40,DA(2),5,DA(1),1,0)) S ^BQICARE(DA(4),1,DA(3),40,DA(2),5,DA(1),1,0)="^90505.181^^"
  S CDA="" F  S CDA=$O(@CDATA@(CTYP,CDFN,CDA)) Q:CDA=""  D
  . S X=CDA
- . D ^DIC S DA=+Y I DA=-1 Q
+ . D ^DIC S DA=+Y
+ . I DA=-1 K DO,DD D FILE^DICN S DA=+Y I DA=-1 Q
  . ;M ^BQICARE(DA(4),1,DA(3),40,DA(2),5,DA(1),1,DA)=@CDATA@(CTYP,CDFN,CDA)
  Q
  ;
@@ -61,10 +62,10 @@ RPTM(DFN) ;EP - Remove patient record manually
  Q
  ;
 APT(DFN) ;EP - Add patient
- NEW DIC,DIE,BQIPTUP,DA,IENS,X
+ NEW DIC,DIE,BQIPTUP,DA,IENS,X,DLAYGO
  S DA(2)=OWNR,DA(1)=PLIEN,(X,DINUM)=DFN
  S DIC="^BQICARE("_DA(2)_",1,"_DA(1)_",40,",DIE=DIC
- S DLAYGO=90505.04,DIC(0)="L",DIC("P")=DLAYGO
+ S DLAYGO=90505.04,DIC(0)="FL",DIC("P")=DLAYGO
  I '$D(^BQICARE(DA(2),1,DA(1),40,0)) S ^BQICARE(DA(2),1,DA(1),40,0)="^90505.04P^^"
  K DO,DD D FILE^DICN
  I +Y=-1 Q
@@ -153,7 +154,7 @@ CRPNL(DATA,OWNR,PLIEN,PLNM,PLDES,SRCNM,SRC,FSOURCE,AUFL,STATUS,ASSOC,IPCPL,PCAT)
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BQIPLCR D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  ; Create owner if new to iCare - If unable to do so - error
- I '$$OWNR^BQIPLUSR(OWNR) S BMXSEC="Unable to create panel" Q
+ I '$$OWNR^BQIPLUTL(OWNR) S BMXSEC="Unable to create panel" Q
  ;
  ; Check that panel name is unique
  I PLNM'="" D  Q:$G(BMXSEC)'=""
@@ -197,7 +198,7 @@ FILE ;File new panel
  N DA,X,DINUM,DIC,DIE,DLAYGO
  S DA(1)=OWNR,X=PLNM,DLAYGO=90505.01
  S DIC="^BQICARE("_DA(1)_",1,",DIE=DIC
- S DIC(0)="L",DIC("P")=DLAYGO
+ S DIC(0)="FL",DIC("P")=DLAYGO
  K DO,DD D FILE^DICN
  S (DA,PLIEN)=+Y
  I PLIEN=-1 S BMXSEC="Error encountered while filing panel." Q
@@ -380,15 +381,16 @@ TMPL(OWNR,PLIEN) ;EP - Copy template information into new panel
  . S TMPLT=$$GET1^DIQ(90505.015,IENS,.02,"I")
  . ;
  . ;Lookup/Define new entry
+ . NEW DA,IENS,X,DIC
  . S DA(2)=OWNR,DA(1)=PLIEN
  . S X=TMPLN
- . S DIC(0)="L",DIC="^BQICARE("_DA(2)_",1,"_DA(1)_",4,"
+ . S DIC(0)="FL",DIC="^BQICARE("_DA(2)_",1,"_DA(1)_",4,"
  . D ^DIC
  . S:+Y>0 DA=+Y
  . S IENS=$$IENS^DILF(.DA)
  . ;
  . ;Insert TYPE
- . S BQDATA(90505.14,IENS,".02")=TMPLT
- . ;
+ . S BQDATA(90505.14,IENS,".02")=TMPLT,BQDATA(90505.14,IENS,.03)=1
  . ;File update
  . I $D(BQDATA) D FILE^DIE("","BQDATA","ERROR")
+ Q

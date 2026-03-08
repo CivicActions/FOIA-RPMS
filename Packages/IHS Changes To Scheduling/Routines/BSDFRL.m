@@ -1,5 +1,5 @@
 BSDFRL ; IHS/ANMC/LJF - IHS FILE ROOM LIST ;  
- ;;5.3;PIMS;**1007,1008**;DEC 01, 2006
+ ;;5.3;PIMS;**1007,1008,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw 11/22/2006 PATCH 1007 added code in GETAPPT,GATHER,SORTS for item 1007.07
  ;cmi/anch/maw 2/5/2007 PATCH 1007 added code in GATHER to look for appt on same day and print if there
@@ -140,20 +140,31 @@ GETAPPT ; -- for clinic, get appts & chart requests for date
  .. I BSDSRT="T" S SORT=TERM                       ;terminal digit sort
  .. ;
  .. ; set display line
- .. S LINE=$J(HRCN,7)_"  "_$E($$GET1^DIQ(2,+NODE,.01),1,20)      ;pat
+ .. ;202307 77892 maw p1022 PPN
+ .. N PRF
+ .. S PRF=$$GETPREF^AUPNSOGI(+NODE,"E",1)
+ .. S LINE=$J(HRCN,7)_"  "_$G(PRF)      ;pat
+ .. ;S LINE=$J(HRCN,7)_"  "_$E($$GET1^DIQ(2,+NODE,.01),1,20)      ;pat
  .. ;S LINE=$$PAD(LINE,33)_"DOB: "_$$DOB(+NODE)                  ;dob  cmi/anch/maw 11/5/2006 removed dob item 1007.09 patch 1007
- .. S LINE=$$PAD(LINE,33)_$$GET1^DIQ(44,BSDCLN,.01)              ;cln name cmi/anch/maw 11/5/2006 new line item 1007.09 patch 1007
+ .. S LINE=$$PAD(LINE,48)_"@@@@@"_$$GET1^DIQ(44,BSDCLN,.01)              ;cln name cmi/anch/maw 11/5/2006 new line item 1007.09 patch 1007
+ .. ;S LINE=$$PAD(LINE,33)_"@@@@@"_$$GET1^DIQ(44,BSDCLN,.01)              ;cln name cmi/anch/maw 11/5/2006 new line item 1007.09 patch 1007
+ .. ;S LINE=$$PAD(LINE,33)_$$GET1^DIQ(44,BSDCLN,.01)              ;cln name cmi/anch/maw 11/5/2006 new line item 1007.09 patch 1007
  .. ;S LINE=LINE_"  "_$E($$GET1^DIQ(44,BSDCLN,.01),1,15)         ;cln name cmi/anch/maw 11/5/2006 orig line item 1007.09 patch 1007
  .. I BSDSUB="S" D                                               ;appt time
  ... ;I $P(NODE,U,9)="C" S LINE=$$PAD(LINE,65)_"**CANCELLED**"
- ... I $P(NODE,U,9)="C" S LINE=$$PAD(LINE,58)_"*CANCELLED*"      ;IHS/ITSC/LJF 1/8/2004
+ ... I $P(NODE,U,9)="C" S LINE=$$PAD(LINE,68)_"*CANCELLED*"      ;IHS/ITSC/LJF 1/8/2004
+ ... ;I $P(NODE,U,9)="C" S LINE=$$PAD(LINE,58)_"*CANCELLED*"      ;IHS/ITSC/LJF 1/8/2004
  ... ;E  S LINE=$$PAD(LINE,68)_"at "_$P($$FMTE^XLFDT(BSDT),"@",2)  ;cmi/anch/maw 11/5/2006 orig line item 1007.09 patch 1007
- ... E  S LINE=$$PAD(LINE,58)_$P($$FMTE^XLFDT(BSDT),"@",2)  ;cmi/anch/maw 11/5/2006 new line item 1007.09 patch 1007
- ... S LINE=$$PAD(LINE,68)_$$INSUR^BDGF2(BSDDFN,$P(BSDT,"."))  ;cmi/anch/maw 11/7/2006 new line added for insurance item 1007.09 patch 1007
+ ... E  S LINE=$$PAD(LINE,78)_$P($$FMTE^XLFDT(BSDT),"@",2)  ;cmi/anch/maw 11/5/2006 new line item 1007.09 patch 1007
+ ... ;E  S LINE=$$PAD(LINE,58)_$P($$FMTE^XLFDT(BSDT),"@",2)  ;cmi/anch/maw 11/5/2006 new line item 1007.09 patch 1007
+ ... S LINE=$$PAD(LINE,88)_$$INSUR^BDGF2(BSDDFN,$P(BSDT,"."))  ;cmi/anch/maw 11/7/2006 new line added for insurance item 1007.09 patch 1007
+ ... ;S LINE=$$PAD(LINE,68)_$$INSUR^BDGF2(BSDDFN,$P(BSDT,"."))  ;cmi/anch/maw 11/7/2006 new line added for insurance item 1007.09 patch 1007
  .. ;I BSDSUB="C" S LINE=$$PAD(LINE,58)_"Cht Req"                 ;chart req cmi/anch/maw 11/7/2006 orig line
  .. I BSDSUB="C" D  ;chart req
- ... S LINE=$$PAD(LINE,58)_"Cht Req"                 ;chart req cmi/anch/maw 11/7/2006 new line for item 1007.09 patch 1007
- ... S LINE=$$PAD(LINE,68)_$$INSUR^BDGF2(BSDDFN,$P(BSDT,"."))  ;cmi/anch/maw 11/7/2006 new line added for insurance item 1007.09 patch 1007
+ ... S LINE=$$PAD(LINE,78)_"Cht Req"                 ;chart req cmi/anch/maw 11/7/2006 new line for item 1007.09 patch 1007
+ ... S LINE=$$PAD(LINE,88)_$$INSUR^BDGF2(BSDDFN,$P(BSDT,"."))  ;cmi/anch/maw 11/7/2006 new line added for insurance item 1007.09 patch 1007
+ ... ;S LINE=$$PAD(LINE,58)_"Cht Req"                 ;chart req cmi/anch/maw 11/7/2006 new line for item 1007.09 patch 1007
+ ... ;S LINE=$$PAD(LINE,68)_$$INSUR^BDGF2(BSDDFN,$P(BSDT,"."))  ;cmi/anch/maw 11/7/2006 new line added for insurance item 1007.09 patch 1007
  .. ;
  .. S ^TMP("BSDFRL1",$J,SORT,TERM,+NODE,BSDT)=LINE
  .. ;
@@ -165,6 +176,7 @@ PRINT ; -- print to paper
  ;IHS/ITSC/WAR 7/30/04 PATCH #1001
  ;U IO D HDR NEW X
  U IO NEW BSDLN
+ N LN,LN2
  I BSDSRT="T" D HEADING
  I BSDSRT="U" D HEADING  ;cmi/anch/maw 10/29/2007 patch 1008
  ;S X=0 F  S X=$O(^TMP("BSDFRL",$J,X)) Q:'X  D
@@ -174,7 +186,12 @@ PRINT ; -- print to paper
  . I ^TMP("BSDFRL",$J,BSDLN,0)["**",BSDSRT'="U" D HEADING  ;cmi/anch/maw 10/29/2007 patch 1008
  . I $Y>(IOSL-4) D HEADING
  . ;W !,^TMP("BSDFRL",$J,X,0)
- . W !,^TMP("BSDFRL",$J,BSDLN,0)
+ . ;202307 77892 maw p1022 PPN
+ . S LN=$P($G(^TMP("BSDFRL",$J,BSDLN,0)),"@@@@@")
+ . S LN2=$P($G(^TMP("BSDFRL",$J,BSDLN,0)),"@@@@@",2)
+ . W !,LN
+ . W !,?33,LN2
+ . ;W !,^TMP("BSDFRL",$J,BSDLN,0)
  ;PATCH #1001 END OF CHANGES
  D ^%ZISC,EXIT
  Q

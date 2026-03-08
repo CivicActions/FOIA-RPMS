@@ -1,6 +1,7 @@
-PXRMDIN ; SLC/PKR - Handle inpatient med findings. ;02/10/2010
- ;;2.0;CLINICAL REMINDERS;**4,12,17**;Feb 04, 2005;Build 102
+PXRMDIN ; SLC/PKR - Handle inpatient med findings. ;10-Apr-2025 06:50
+ ;;2.0;CLINICAL REMINDERS;**4,12,17,1016**;Feb 04, 2005;Build 32
  ;DBIA #5187 for PSSCLINR
+ ;IHS/MSC/MIR 04/10/2025 Patch 1016  DOSEUNIT was added
  ;
  ;===============================================
 GETDATA(DAS,FIEVT) ;Return data for an inpatient drug finding.
@@ -10,6 +11,7 @@ GETDATA(DAS,FIEVT) ;Return data for an inpatient drug finding.
  S FIEVT("START DATE")=FIEVT("START") K FIEVT("START")
  S FIEVT("STOP DATE")=FIEVT("STOP") K FIEVT("STOP")
  S FIEVT("DURATION")=$$DURATION^PXRMDATE(FIEVT("START DATE"),FIEVT("STOP DATE"))
+ S FIEVT("DOSE UNIT")=$$DOSEUNIT
  Q
  ;
  ;===============================================
@@ -50,3 +52,23 @@ OUTPUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the clinical
  S NLINES=NLINES+1,TEXT(NLINES)=""
  Q
  ;
+DOSEUNIT(DAS) ; Dose Unit Definition
+ N DFN,F,ON,X,TYP,DOSEUN
+ S DFN=$P(DAS,";"),DOSEUN=""
+ S F=$S($P(DAS,";",2)["P":"^PS(53.1,",$P(DAS,";",2)=5:"^PS(55,DFN,5,",1:"^PS(55,"_DFN_",""IV"",")
+ S ON=$P(DAS,";",3)_$S($P(DAS,";",2)="IV":"V",$P(DAS,";",2)=5:"U",1:"P")
+ I ON'["P" Q:'$D(@(F_+ON_")")) ""  D @$S(ON["U":"UDDSUN",1:"IVDSUN") Q DOSEUN
+ S X=$G(^PS(53.1,+ON,0)) Q:$P(X,U,15)'=DFN ""  S TYP=$P(X,U,4) D @$S(TYP="U":"UDDSUN",1:"IVDSUN")
+ Q DOSEUN
+ ;
+UDDSUN ; Dose Unit for UD
+ S DOSEUN=P($G(@(F_+ON_",.2)")),U,6) I DOESUN'="" Q
+ N DOSE S DOSE=$P($G(@(F_+ON_",.2)")),U,2) Q:DOSE=+DOSE!'DOSE
+ N DOSEUN,I S DOSEUN=""
+ F I=$L(DOSE):-1:1 Q:$E(DOSE,I)=" "!($E(DOSE,I)?1N)  S DOSEUN=$E(DOSE,I)_DOSEUN
+ Q
+IVDSUN ; Dose Unit for IV
+ N DOSE S DOSE=$P($G(@(F_+ON_",.2)")),U,2) Q:DOSE=+DOSE!'DOSE
+ N DOSEUN,I S DOSEUN=""
+ F I=$L(DOSE):-1:1 Q:$E(DOSE,I)=" "!($E(DOSE,I)?1N)  S DOSEUN=$E(DOSE,I)_DOSEUN
+ Q

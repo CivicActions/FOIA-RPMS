@@ -1,5 +1,5 @@
 BQITNPH ;PRXM/HC/ALA-Nephropathy Definition ; 12 Apr 2006  2:13 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;1.1;ICARE MANAGEMENT SYSTEM;**3**;Apr 03, 2008
  Q
  ;
 DEF(TTGLOB) ;EP -- Nephropathy Definition

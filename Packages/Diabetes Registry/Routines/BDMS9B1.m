@@ -1,5 +1,5 @@
 BDMS9B1 ; IHS/CMI/LAB - DIABETIC CARE SUMMARY SUPPLEMENT 12 Jan 2011 12:27 PM ; [ 12 Jan 2011 12:27 PM ]
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**3,4,5,6,7,8,9,10,11,12**;JUN 14, 2007;Build 51
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19**;JUN 14, 2007;Build 159
  ;
  Q:'$G(APCHSPAT)
  S BDMSPAT=APCHSPAT
@@ -33,7 +33,7 @@ HEAD1 ;
  W:$D(IOF) @IOF
  W !,BDMSHDR,!
  W !,"Diabetes Patient Care Summary - continued"
- W !,"Patient: ",$P(^DPT(BDMSPAT,0),U),"  HRN: ",$$HRN^AUPNPAT(BDMSPAT,DUZ(2)),!
+ W !,"Patient: ",$$GETPREF^AUPNSOGI(BDMSPAT,"E",1),"  HRN: ",$$HRN^AUPNPAT(BDMSPAT,DUZ(2)),!
  Q
 EP2(BDMSDFN) ;PEP - PASS DFN get back array of patient care summary
  ;at this point you are stuck with ^TMP("APCHS",$J,"DCS"
@@ -58,39 +58,36 @@ DATE1(D) ;
 SETARRAY ;set up array containing dm care summary
  ;CHECK TO SEE IF START1^APCLDF EXISTS
  S BDMJOB=$J,BDMBTH=$H
- ;D UNFOLDTX^BDMUTL(2016)
  I '$D(BDMSCVD) S BDMSCVD="S:Y]"""" Y=+Y,Y=$E(Y,4,5)_""/""_$S($E(Y,6,7):$E(Y,6,7)_""/"",1:"""")_$E(Y,2,3)"
  S X="APCLDF" X ^%ZOSF("TEST") I '$T Q
  S X="DIABETES PATIENT CARE SUMMARY",$E(X,40)="Report Date:  "_$$DATE(DT) D S(X)
- S X="Patient: "_$E($P(^DPT(BDMSDFN,0),U),1,28),$E(X,40)="HRN: "_$$HRN^AUPNPAT(BDMSDFN,DUZ(2)) D S(X,1)
+ S X="Patient: "_$$GETPREF^AUPNSOGI(BDMSDFN,"E",1),$E(X,68)="HRN: "_$$HRN^AUPNPAT(BDMSDFN,DUZ(2)) D S(X,1)
  I $$DOD^AUPNPAT(BDMSDFN)]"" S X="DATE OF DEATH: "_$$DATE($$DOD^AUPNPAT(BDMSDFN)) D S(X,1),S(" ")
  S X="Age:  "_$$AGE^BDMAPIU(BDMSDFN,1,DT)_" (DOB "_$$DATE($$DOB^AUPNPAT(BDMSDFN))_")",$E(X,40)="Sex: "_$$VAL^XBDIQ1(2,BDMSDFN,.02) D S(X)
  S X="CLASS/BEN: "_$$VAL^XBDIQ1(9000001,BDMSDFN,1111),$E(X,40)="Designated PCP: "_$E($$DPCP(BDMSDFN),1,25) D S(X)
  S X="Date of DM Diagnosis: "_$$DOO(BDMSDFN) D S(X,1) ;S Y=$$DMPN(BDMSDFN),$E(X,58)="DM Problem #: "_$S(Y]"":Y,1:"*NONE RECORDED*") D S(X,1)
- S X=$$TYPE^BDMDG16(BDMSDFN,,DT) D S("Diabetes type: (1 or 2): "_X)
+ S X=$$TYPE^BDMDL16(BDMSDFN,,DT) D S("Diabetes type: (1 or 2): "_X)
  S X="" I '$$NOTREG(BDMSDFN) S X="**NOT ON DIABETES REGISTER**"
  D GETHWB(BDMSDFN)
- S X="BMI: "_BDMX("BMI"),$E(X,12)="Last Height:  "_$$STRIP^XLFSTR($J(BDMX("HT"),5,2)," ")_$S(BDMX("HT")]"":" inches",1:""),$E(X,40)=BDMX("HTD") D S(X,1)
- S X="",$E(X,12)="Last Weight:  "_$S(BDMX("WT")]"":BDMX("WT")\1,1:"")_$S(BDMX("WT")]"":" lbs",1:""),$E(X,40)=BDMX("WTD") D S(X)
- S BDMTOBC="",BDMTOBS=$$TOBACCO^BDMDG1T(BDMSDFN,$$DOB^AUPNPAT(BDMSDFN),DT)
+ S X="BMI: "_BDMX("BMI"),$E(X,12)="Last Height:  " S:BDMX("HT") X=X_$$STRIP^XLFSTR($J(BDMX("HT"),5,2)," ")_$S(BDMX("HT")]"":" inches",1:""),$E(X,42)=BDMX("HTD") D S(X,1)
+ S X="",$E(X,12)="Last Weight:  "_$S(BDMX("WT")]"":BDMX("WT")\1,1:"")_$S(BDMX("WT")]"":" lbs",1:""),$E(X,42)=BDMX("WTD") D S(X)
+ S BDMTOBC="",BDMTOBS=$$TOBACCO^BDMDL1S(BDMSDFN,$$DOB^AUPNPAT(BDMSDFN),DT)
  D S("Tobacco Use:",1)
  S X="   Last Screened: "_$$DATE($P(BDMTOBS,U,3)) D S(X)
  S X="   Current Status: "_$P($P($G(BDMTOBS),U,2),"  ",2,99) D S(X)
- ;I BDMTOBS="" S X="   Last Scree:  NOT DOCUMENTED" D S(X,1)
- ;I $G(BDMTOBC)]"" S X="              "_$P(BDMTOBC,U,1) D S(X)
  ;COUNSELED?
- S X="",$E(X,15)="Counseled in the past year?  " D
- .I $E(BDMTOBS),$E(BDMTOBS)'=1 S X=X_"N/A" Q
- .S Y=$$CESS^BDMDG11(BDMSDFN,$$FMADD^XLFDT(DT,-365),DT)
- .I $E(Y)=1 S X=X_$P(Y,"  ",2,999) Q
- .I $E(Y)=2 S X=X_"No" Q
- D S(X)
- S X=$$LASTHF^BDMSMU(BDMSDFN,"ELECTRONIC NICOTINE DELIV SYSTEM (ENDS)","X",$$DOB^AUPNPAT(BDMSDFN),DT) ; (BDMSDFN,$$DOB^AUPNPAT(BDMSDFN),DT)
- D S("Electronic Nicotine Delivery System (ENDS) use:",1)
+ S X="",$E(X,7)="Tobacco cessation counseling/education received in the past year: " D
+ .I $E(BDMTOBS),$E(BDMTOBS)'=1 S X=X_"N/A" D S(X) Q
+ .S Y=$$CESS^BDMDL11(BDMSDFN,$$FMADD^XLFDT(DT,-365),DT)
+ .I $E(Y)=1 D S(X) D S("         "_$P(Y,"  ",2,999)) Q
+ .I $E(Y)=2 S X=X_"No" D S(X) Q
+ ;D S(X)
+ S X=$$LASTHF^BDMSMU(BDMSDFN,"C019","X",$$DOB^AUPNPAT(BDMSDFN),DT) ; (BDMSDFN,$$DOB^AUPNPAT(BDMSDFN),DT)
+ D S("Electronic Nicotine Delivery Systems (ENDS)",1)
  S Y="   Last Screened: "_$S($P(X,U,2)="":" Never",1:$$DATE($P(X,U,2))) D S(Y)
  S Y="   Current Status: "_$P(X,U,1) D S(Y) ;I $P(X,U,1)=1 D S("              "_$P(X,U,3))
- S X="HTN Diagnosed:  "_$$HTN(BDMSDFN) D S(X,1)
- S X="CVD Diagnosed:  "_$P($$CVD^BDMDG12(BDMSDFN,DT),"  ",2,999) D S(X)
+ S X="HTN Diagnosed ever:  "_$P($$HTNDX^BDMDL13(BDMSDFN,DT),"  ",2) D S(X,1)
+ S X="CVD Diagnosed ever:  "_$P($$CVD^BDMDL12(BDMSDFN,DT),"  ",2,999) D S(X)
  S B=$$BP(BDMSDFN)
  S X="Last 3 BP:      "_$P($G(BDMX(1)),U,2),$E(X,26)=$$DATE($P($G(BDMX(1)),U)) D S(X)
  S X="(non ER)" I $D(BDMX(2)) S $E(X,17)=$P(BDMX(2),U,2),$E(X,26)=$$DATE($P(BDMX(2),U)) D S(X)
@@ -98,7 +95,7 @@ SETARRAY ;set up array containing dm care summary
  S BDMSBEG=$$FMADD^XLFDT(DT,-(6*30.5))
  S %=$$ACE^BDMS9B4(BDMSDFN,BDMSBEG)
  S X="",X="ACE Inhibitor or ARB prescribed (in past 6 months): "
- I $E(%)="N" S $E(X,50)=% D S(X,1) I 1
+ I $E(%)="N" S $E(X,53)=% D S(X,1) I 1
  E  D S(X) S X="   "_% D S(X)
  K BDMSX
  S BDMSBEG=$$FMADD^XLFDT(DT,-180)
@@ -110,9 +107,9 @@ SETARRAY ;set up array containing dm care summary
  ;statin
  S X=""
  S BDMSBEG=$$FMADD^XLFDT(DT,-180)
- S Y=$$STATIN^BDMDG16(BDMSDFN,BDMSBEG,DT)
+ S Y=$$STATIN^BDMDL16(BDMSDFN,BDMSBEG,DT)
  S X="Statin prescribed (in past 6 months):"
- I $E(Y)=2 S $E(X,50)=$P(Y,"  ",2,99) D S(X)
+ I $E(Y)=2 S $E(X,40)=$P(Y,"  ",2,99) D S(X)
  I $E(Y)=1 D S(X) S X="   "_$P(Y,"  ",2,99) D S(X)
  I $E(Y)=3 D S(X) S X="   Statin Note: "_$P(Y,"  ",2,99) D S(X)
  ;
@@ -120,16 +117,17 @@ M12 ;
  ;determine date range
  S BDMSBEG=$$FMADD^XLFDT(DT,-365)
  S X="Exams (in past 12 months):" D S(X,1)
- S X="   Foot:",$E(X,13)=$P($$DFE^BDMDG17(BDMSDFN,BDMSBEG,DT,"H"),"  ",2,99) D S(X)
- S X="   Eye:",$E(X,13)=$P($$EYE^BDMDG17(BDMSDFN,BDMSBEG,DT,"H"),"  ",2,99) D S(X)
- S X="   Dental:",$E(X,13)=$P($$DENTAL^BDMDG17(BDMSDFN,BDMSBEG,DT,"H"),"  ",2,99) D S(X)
+ S X="   Foot:",$E(X,13)=$P($$DFE^BDMDL17(BDMSDFN,BDMSBEG,DT,"H"),"  ",2,99) D S(X)
+ S X="   Eye:",$E(X,13)=$P($$EYE^BDMDL17(BDMSDFN,BDMSBEG,DT,"H"),"  ",2,99) D S(X)
+ S X="   Dental:",$E(X,13)=$P($$DENTAL^BDMDL17(BDMSDFN,BDMSBEG,DT,"H"),"  ",2,99) D S(X)
  K BDMSTEX,BDMSDAT,BDMX
- S BDMDEPP=$$DEPDX^BDMDG12(BDMSDFN,$$FMADD^XLFDT(DT,-365),DT)
+ S BDMDEPP=$$DEPDX^BDMDL12(BDMSDFN,$$FMADD^XLFDT(DT,-365),DT)
  S BDMDEPP=$P(BDMDEPP,"  ",2,99)
- S BDMDEPS=$$DEPSCR^BDMDG12(BDMSDFN,$$FMADD^XLFDT(DT,-365),DT)
+ S BDMDEPS=$$DEPSCR^BDMDL12(BDMSDFN,$$FMADD^XLFDT(DT,-365),DT)
  S BDMDEPS=$P(BDMDEPS,"  ",2,99)
- S X="Depression - Active problem: "_BDMDEPP D S(X,1)
- S X="",$E(X,14)="If no, screened in past year:  "_$S($E(BDMDEPP,1)="N":BDMDEPS,1:"") D S(X)
+ S X="Depression:" D S(X,1)
+ S X="   Screened in past year:  "_BDMDEPS D S(X)
+ S X="   Active diagnosis in past year: "_BDMDEPP D S(X)
  D MORE^BDMS9B2
  S X=$P(^DPT(BDMSDFN,0),U),$E(X,35)="DOB: "_$$DOB^AUPNPAT(BDMSDFN,"S"),$E(X,55)="Chart #"_$$HRN^AUPNPAT(BDMSDFN,DUZ(2),2) D S(X,1) ;IHS/CMI/LAB - X,3 to X,2
  Q
@@ -157,24 +155,7 @@ S1 ;
  S %=$P(^TMP("APCHS",$J,"DCS",0),U)+1,$P(^TMP("APCHS",$J,"DCS",0),U)=%
  S ^TMP("APCHS",$J,"DCS",%)=X
  Q
-HTN(P) ;
- ;check problem list OR must have 3 diagnoses
- N T S T=$O(^ATXAX("B","SURVEILLANCE HYPERTENSION",0))
- I 'T Q ""
- N X,Y,I S (X,Y,I)=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(I)  D
- .Q:'$D(^AUPNPROB(X,0))
- .Q:$P(^AUPNPROB(X,0),U,12)="D"
- .Q:$P(^AUPNPROB(X,0),U,12)="I"
- .S Y=$P(^AUPNPROB(X,0),U) I $$ICD^BDMUTL(Y,"SURVEILLANCE HYPERTENSION",9) S I=1 Q
- .I $P($G(^AUPNPROB(X,800)),U,1)]"",$$SNOMED^BDMUTL($$LE^BDMS9B2(),"PXRM ESSENTIAL HYPERTENSION",$P(^AUPNPROB(X,800),U,1)) S I=1
- I I Q "Yes"
- NEW BDMX
- S BDMX=""
- S X=P_"^LAST 3 DX [SURVEILLANCE HYPERTENSION" S E=$$START1^APCLDF(X,"BDMX(") G:E HTNX I $D(BDMX(3)) S BDMX="Yes"
- I $G(BDMX)="" S BDMX="No"
-HTNX ;
- Q BDMX
-DMPN(P) ;return problem number of firt encountered DM problem
+DMPN(P) ;return problem number of first encountered DM problem
  I '$G(P) Q ""
  NEW T S T=$O(^ATXAX("B","SURVEILLANCE DIABETES",0))
  I 'T Q ""
@@ -207,7 +188,7 @@ BP(P) ;last 3 BPs
 BPX ;
  K BDMD,BDMC
  Q BDMX
-GETHWB(P)  ;get last height, height date, weight, weight date and BMI for patient P, return in BDMX("HT"),BDMX("HTD"),BDMX("WT"),BDMX("WTD"),BDMX("BMI")
+GETHWB(P)  ;EP ;get last height, height date, weight, weight date and BMI for patient P, return in BDMX("HT"),BDMX("HTD"),BDMX("WT"),BDMX("WTD"),BDMX("BMI")
  K BDMX
  NEW BDMWV
  S BDMX("HT")="",BDMX("HTD")="",BDMX("WT")="",BDMX("WTD")="",BDMX("BMI")="",BDMX("WC")="",BDMX("WCD")=""
@@ -216,11 +197,11 @@ LASTHT ;
  Q:'$D(^AUPNVMSR("AC",P))
  NEW BDMY
  S %=P_"^LAST MEAS HT" NEW X S E=$$START1^APCLDF(%,"BDMY(") S BDMX("HT")=$$STRIP^XLFSTR($J($P($G(BDMY(1)),U,2),5,2)," "),BDMX("HTD")=$$DATE($P($G(BDMY(1)),U))
- ;S BDMX("HT")=$S(BDMX("HT")]"":$J(BDMX("HT"),2,0),1:"")
+ ;
 LASTWT ;
  K BDMY S %=P_"^LAST MEAS WT" NEW X S E=$$START1^APCLDF(%,"BDMY(") S BDMX("WT")=$P($G(BDMY(1)),U,2)\1,BDMX("WTD")=$$DATE($P($G(BDMY(1)),U)),BDMWV=$P($G(BDMY(1)),U,5)
 LASTWC ;
- ;K BDMY S %=P_"^LAST MEAS WC" NEW X S E=$$START1^APCLDF(%,"BDMY(") S BDMX("WC")=$P($G(BDMY(1)),U,2),BDMX("WCD")=$$DATE($P($G(BDMY(1)),U))
+ ;
 BMI ;
  I $$AGE^AUPNPAT(P)<19,(BDMX("WTD")'=BDMX("HTD")) Q
  I BDMX("WT")=""!('BDMX("HT")) Q
@@ -229,7 +210,7 @@ BMI ;
  NEW X K BDMY S %=P_"^LAST DX [BGP PREGNANCY DIAGNOSES 2;DURING "_BDMX("WTD")_"-"_BDMX("WTD") S E=$$START1^APCLDF(%,"BDMY(")
  I $D(BDMY(1)) Q
  S %=""
- ;S W=BDMX("WT")*.45359,H=(BDMX("HT")*0.0254),H=(H*H),%=(W/H),%=$J(%,4,1)
+ ;
  S H=(BDMX("HT")*BDMX("HT")),W=BDMX("WT"),%=(W/H)*703,%=$J(%,4,1)
  S BDMX("BMI")=%
  Q
@@ -296,7 +277,7 @@ DEPPL(P,BDATE,EDATE) ;EP
  .;S I=+$$CODEN^ICDCODE(I,80)
  .S I=+$$CODEN^BDMUTL(I,80)  ;cmi/maw 05/14/2014 patch 8 ICD-10
  .Q:I=""
- .Q:'$$ICD^BDMUTL(I,T,9)
+ .Q:'$$ICD^ATXAPI(I,T,9)
  .Q:$P(^AMHPPROB(X,0),U,12)'="A"
  .;S G="Yes - BH Problem List "_$P(^ICD9(I,0),U)  cmi/anch/maw 8/27/2007 orig line
  .S G="Yes - BH Problem List "_$P($$ICDDX^BDMUTL(I,,,"I"),U,2)  ;cmi/anch/maw 8/27/2007 code set versioning
@@ -329,3 +310,20 @@ DEPPL(P,BDATE,EDATE) ;EP
  ..Q
  I BDM>1 Q "Yes, 2 or more dxs in past year"
  Q "No"
+HTN(P) ;
+ ;check problem list OR must have 3 diagnoses
+ N T S T=$O(^ATXAX("B","SURVEILLANCE HYPERTENSION",0))
+ I 'T Q ""
+ N X,Y,I S (X,Y,I)=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(I)  D
+ .Q:'$D(^AUPNPROB(X,0))
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"
+ .Q:$P(^AUPNPROB(X,0),U,12)="I"
+ .S Y=$P(^AUPNPROB(X,0),U) I $$ICD^BDMUTL(Y,"SURVEILLANCE HYPERTENSION",9) S I=1 Q
+ .I $P($G(^AUPNPROB(X,800)),U,1)]"",$$SNOMED^BDMUTL($$LE^BDMS9B2(),"PXRM ESSENTIAL HYPERTENSION",$P(^AUPNPROB(X,800),U,1)) S I=1
+ I I Q "Yes"
+ NEW BDMX
+ S BDMX=""
+ S X=P_"^LAST 3 DX [SURVEILLANCE HYPERTENSION" S E=$$START1^APCLDF(X,"BDMX(") G:E HTNX I $D(BDMX(3)) S BDMX="Yes"
+ I $G(BDMX)="" S BDMX="No"
+HTNX ;
+ Q BDMX

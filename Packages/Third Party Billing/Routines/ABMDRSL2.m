@@ -1,17 +1,16 @@
 ABMDRSL2 ; IHS/ASDST/DMJ - Selective Report Parameters-PART 3 ;
- ;;2.6;IHS 3P BILLING SYSTEM;**14,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**14,21,32**;NOV 12, 2009;Build 621
  ;Original;TMD;
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 12
- ;   Added code so only brief and statistical will be asked
- ;   for pending report
+ ;IHS/SD/SDR 2.5*8 Task 12 Added code so only brief and statistical will be asked for pending report
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - 2.6*14 - ICD10 009 - Updated reports to look for ICD10 codes
- ;IHS/SD/SDR - 2.6*14 - HEAT165197 (CR3109) - Added code for $$NUM to validate alphanumeric values
- ;IHS/SD/SDR - 2.6*21 - HEAT140244 - Made change so extended report will print for cancelled claims report
- ;IHS/SD/SDR - 2.6*21 - HEAT214020 - Updated prompts for ICD-9 codes to actually say ICD-9, not just ICD
- ;IHS/SD/SDR - 2.6*21 - HEAT241429 - Added prompt for PRINTER vs COMMA-DELIMITED
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*14 ICD10 009 Updated reports to look for ICD10 codes
+ ;IHS/SD/SDR 2.6*14 HEAT165197 (CR3109) Added code for $$NUM to validate alphanumeric values
+ ;IHS/SD/SDR 2.6*21 HEAT140244 Made change so extended report will print for cancelled claims report
+ ;IHS/SD/SDR 2.6*21 HEAT214020 Updated prompts for ICD-9 codes to actually say ICD-9, not just ICD
+ ;IHS/SD/SDR 2.6*21 HEAT241429 Added prompt for PRINTER vs COMMA-DELIMITED
+ ;IHS/SD/SR 2.6*32 CR11501 For PRRP Employee Productivity Report made report types brief, summary, and validator
  ;
 PTYP ;EP
  K DIR
@@ -29,6 +28,7 @@ RTYP ;EP
  K DIR
  S DIR(0)="SO^1:BRIEF LISTING (80 Width);2:EXTENDED LISTING (132 Width);3:STATISTICAL SUMMARY ONLY"_$S($D(ABM("COST")):";4:ITEMIZED COST REPORT",1:"")
  I $G(ABM("REASON"))="PEND" S DIR(0)="SO^1:BRIEF LISTING (80 Width);2:STATISTICAL SUMMARY ONLY"
+ I $G(ABM("EMPP"))="EMP" S DIR(0)="SO^1:BRIEF LISTING (80 Width);2:STATISTICAL SUMMARY ONLY;3:VALIDATOR (delimited HFS file)"
  S DIR("A")="Select TYPE of LISTING to Display"
  D ^DIR
  K DIR
@@ -38,8 +38,27 @@ RTYP ;EP
  K ABM(132)
  ;I $D(ABM("REASON")),(Y=2) S (Y,ABM("RTYP"))=3 ;abm*2.6*21 IHS/SD/SDR HEAT140244
  I $D(ABM("REASON")),$G(ABM("REASON"))="PEND",(Y=2) S (Y,ABM("RTYP"))=3 ;abm*2.6*21 IHS/SD/SDR HEAT140244
- I Y=2 S ABM(132)="" Q
+ ;I Y=2 S ABM(132)="" Q  ;abm*2.6*32 IHS/SD/SDR CR11501
+ I (($G(ABM("EMPP"))'="EMP")&(Y=2)) S ABM(132)="" Q  ;abm*2.6*32 IHS/SD/SDR CR11501
  I Y>2,+$G(ABMP("TYP"))'=0 S ABM(132)=""
+ ;start new abm*2.6*32 IHS/SD/SDR CR11501
+ K ABMPATH,ABMFN
+ I $G(ABM("EMPP"))="EMP" D
+ .Q:Y<3
+ .D ^XBFMK
+ .S DIR(0)="F"
+ .S DIR("A")="Enter Path"
+ .S DIR("B")=$P($G(^ABMDPARM(DUZ(2),1,4)),"^",7)
+ .D ^DIR K DIR
+ .I $G(Y)["^" S POP=1 Q
+ .S ABMPATH=$S($G(Y)="":ABMPATH,1:Y)
+ .D ^XBFMK
+ .S DIR(0)="F"
+ .S DIR("A")="Enter filename"
+ .D ^DIR K DIR
+ .I $G(Y)["^" S POP=1 Q
+ .S ABMFN=Y
+ ;end new abm*2.6*32 IHS/SD/SDR CR11501
  Q
  ;
 DX ;EP
@@ -141,23 +160,59 @@ PX ;EP
  W !!,"ENTRY of CPT PROCEDURE RANGE:",!,"============================="
  ;
 PLOW ;
- S DIR(0)="PO^81:QEAM"
+ ;start old abm*2.6*29 IHS/SD/SDR CR10669
+ ;S DIR(0)="PO^81:QEAM"
+ ;S DIR("A")="Low CPT Code"
+ ;D ^DIR
+ ;K DIR
+ ;Q:$D(DIRUT)
+ ;G PLOW:+Y<1
+ ;S ABMY("PX",1)=$P($$CPT^ABMCVAPI(+Y,""),U,2)  ;CSV-c
+ ;end old start new abm*2.6*29 IHS/SD/SDR CR10669
+ S (X,Y)=0
+ K ^TMP($J,"ABM","CPT")
+ S X=0 F  S X=$O(^ICPT(X)) Q:'X  S ^TMP($J,"ABM","CPT",$P(^ICPT(X,0),U))=$P(^ICPT(X,0),U,2)
+ S TGBL="^TMP($J,"_""""_"ABM"_""""_","_""""_"CPT"_""""_",X)"
+ S DIR(0)="F^^I '$D(@TGBL) S Y=-1 W "" ??"""
  S DIR("A")="Low CPT Code"
+ S DIR("?")="Enter a valid CPT code"
  D ^DIR
  K DIR
  Q:$D(DIRUT)
- G PLOW:+Y<1
- S ABMY("PX",1)=$P($$CPT^ABMCVAPI(+Y,""),U,2)  ;CSV-c
+ G PLOW:((+Y<1)&('$D(@TGBL)))
+ S ABMY("PX",1)=Y
+ ;end new abm*2.6*29 IHS/SD/SDR CR10669
  ;
 PHI ;
- S DIR(0)="PO^81:QEAM"
+ ;start old abm*2.6*29 IHS/SD/SDR CR10669
+ ;S DIR(0)="PO^81:QEAM"
+ ;S DIR("A")="High CPT Code"
+ ;D ^DIR
+ ;K DIR
+ ;G PX:$D(DIRUT)
+ ;G PHI:+Y<1
+ ;S ABMY("PX",2)=$P($$CPT^ABMCVAPI(+Y,""),U,2)  ;CSV-c
+ ;I ABMY("PX",1)>ABMY("PX",2) W !!,*7,"INPUT ERROR: Low CPT Code is Greater than than the High, TRY AGAIN!",!! G PX
+ ;end old start new abm*2.6*29 IHS//SD/SDR CR10669
+ S DIR(0)="F^^I '$D(@TGBL) S Y=-1 W "" ??"""
  S DIR("A")="High CPT Code"
+ S DIR("?")="Enter a valid CPT code"
  D ^DIR
  K DIR
  G PX:$D(DIRUT)
- G PHI:+Y<1
- S ABMY("PX",2)=$P($$CPT^ABMCVAPI(+Y,""),U,2)  ;CSV-c
+ G PHI:((+Y<1)&('$D(@TGBL)))
+ S ABMY("PX",2)=Y
+ ;start new abm*2.6*32 IHS/SD/SDR CR11501
+ I $G(ABM("EMPP"))="EMP" D  I ABMPFLG=1 G PX
+ .S ABMPFLG=0
+ .S ABMY("CPX",1)=$$NUM^ABMCVAPI(ABMY("PX",1))
+ .S ABMY("CPX",2)=$$NUM^ABMCVAPI(ABMY("PX",2))
+ .I (ABMY("CPX",1)>ABMY("CPX",2)) S ABMPFLG=1 W !!,*7,"INPUT ERROR: Low CPT Code is Greater than than the High, TRY AGAIN!",!!
+ Q:$G(ABM("EMPP"))="EMP"
+ ;end new abm*2.6*32 IHS/SD/SDR CR11501
  I ABMY("PX",1)>ABMY("PX",2) W !!,*7,"INPUT ERROR: Low CPT Code is Greater than than the High, TRY AGAIN!",!! G PX
+ K ^TMP($J,"ABM","CPT")
+ ;end new abm*2.6*29 IHS/SD/SDR CR10669
  Q
  ;
  ;start new abm*2.6*21 IHS/SD/SDR HEAT241429

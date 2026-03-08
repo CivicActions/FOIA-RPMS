@@ -1,5 +1,5 @@
 ABSPOSCC ; IHS/FCS/DRS - Set up ABSP() ;      [ 05/09/2003  9:37 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**1,4,6,9,11,15,16,17,19,20,21,29,37,40,42,46,47**;JUN 01, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**1,4,6,9,11,15,16,17,19,20,21,29,37,40,42,46,47,52,53**;JUN 01, 2001;Build 131
  ;---
  ; IHS/SD/lwj 03/12/02  some insurers are requiring the entire
  ; untranslated value as the cardholder id - new array budget
@@ -154,6 +154,11 @@ GETINFO(DIALOUT,PATIEN,VSTIEN,PINS,INSIEN) ;EP
  ;S:PINSTYPE="RR" ABSP("Patient","Railroad DOB")=$$RRDOB^ABSPOSCG
  S:PINSTYPE="RR" ABSP("Patient","Medicare DOB")=$$RRDOB^ABSPOSCG
  ;
+ ; /IHS/OIT/RAM ; P52 ; Need to get DOB from Policy Holder file, if it exists.
+ I PINSTYPE="PRVT" D
+ . N T,T2 S T=$$INS3PPH,T2=$$INSREL ; /IHS/OIT/RAM ; Get the private insurer EIN and the relationship to the policy holder.
+ . I T&(T2=1) S ABSP("Patient","Policy DOB")=$P($G(^AUPN3PPH(T,0)),U,19) ; Policy holder DOB, but only if self. Don't get policy holder DOB if spouse/child/etc.
+ ;  S:PINSTYPE="PRVT" ABSP("Patient","Policy DOB")=$P($G(^AUPNPRVT(PINSDA,11,PINSDA1,0)),U)
  ;"RX" mode containing date filled
  ; (All of the prescriptions are the same date filled
  ;  because they're all for the same visit.  We assume.)
@@ -367,5 +372,9 @@ SWTYPE(D)          ;EP - from ABSPOSC4 - given pointer to dial-out
  I $P(X,U,3)]"" Q $P(X,U,3)
  I $P(X,U)["NDC" Q "NDC"
  I $P(X,U)["ENVOY" Q "ENVOY"
+ I $P(X,U)["HTTP" Q "HTTP"
  D IMPOSS^ABSPOSUE("P","TI","Bad switch type for dialout "_D,,"SWTYPE",$T(+0))
  Q "" ; should never happen
+ ; /IHS/OIT/RAM ; 25 MAR 24 ; ADD NEW FORM OF CONNECTIVITY OF HTTP POST; WEIRD ERROR WHEN THIS COMMENT WAS IN-LINE.
+ ;
+ 

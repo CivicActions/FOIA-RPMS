@@ -1,9 +1,9 @@
-XMJMCODE ;ISC-SF/GMB-Message En/Decryption ;08/24/2001  10:56
- ;;8.0;MailMan;;Jun 28, 2002
+XMJMCODE ;ISC-SF/GMB-Message En/Decryption ;06/07/99  09:48
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces ^XME,^XME1 (ISC-WASH/CAP/THM)
 ENCMSG(XMZ) ; Encode a message
  N I
- W:$G(XMIA) !,$$EZBLD^DIALOG(34615) ; Scrambling...
+ W:$G(XMIA) !,"Scrambling..."
  S I=.999999
  F  S I=$O(^XMB(3.9,XMZ,2,I)) Q:I'>0  S ^(0)=$$ENCSTR(^XMB(3.9,XMZ,2,I,0))
  Q
@@ -12,12 +12,6 @@ ENCSTR(XMCLEAR) ; Encode a string
  S XMCODED=""
  F I=1:1:$L(XMCLEAR) S XMCODED=XMCODED_$C($F(XMSECURE(I#XMSECURE+1),$E(XMCLEAR,I))+30)
  Q XMCODED
-DECMSG(XMZ) ; Decode a message
- N I
- W:$G(XMIA) !,$$EZBLD^DIALOG(34616) ; UnScrambling...
- S I=.999999
- F  S I=$O(^XMB(3.9,XMZ,2,I)) Q:I'>0  S ^(0)=$$DECSTR(^XMB(3.9,XMZ,2,I,0))
- Q
 DECSTR(XMCODED) ; Decode a string
  N I,XMCLEAR
  S XMCLEAR=""
@@ -27,44 +21,36 @@ CRE8KEY(XMKEY,XMHINT,XMABORT) ;
  D ASKKEY(.XMKEY,.XMABORT) Q:XMABORT
  N DIR,X,Y
  S DIR(0)="3.9,1.8"
- S DIR("A")=$$EZBLD^DIALOG(34617) ; Enter Scramble Hint
+ S DIR("A")="Enter Scramble Hint"
  D ^DIR I $D(DUOUT)!$D(DTOUT) S XMABORT=1 Q
  S XMHINT=Y
  Q
 KEYOK(XMZ,XMHINT) ; Ask user for key and make sure it's right
  N XMKEY,XMTRY,XMOK,XMABORT
- U IO(0)
- W !!,$$EZBLD^DIALOG(34624) ; This message has been secured with a password:
- D NOGOID^XMJMP2(XMZ,$G(^XMB(3.9,XMZ,0)))
- I " "[XMHINT D
- . W !,$$EZBLD^DIALOG(34620.1) ; There is no scramble hint.
- E  D
- . ; The scramble hint is: '_XMHINT_'
- . W !,$$EZBLD^DIALOG(34620,XMHINT)
+ I " "'[XMHINT D
+ . U IO(0)
+ . W !,"This message was scrambled with the scramble hint: '",XMHINT,"'"
  S (XMOK,XMABORT)=0
  F XMTRY=1:1:3 D  Q:XMOK!XMABORT
  . D ASKKEY(.XMKEY,.XMABORT) Q:XMABORT
  . I $$GOODKEY(XMZ,XMKEY) S XMOK=1 Q
- . W $C(7),$$EZBLD^DIALOG(34621,XMTRY) ; "   Not the proper password.  Strike _XMTRY_.
- I 'XMOK,'XMABORT W $$EZBLD^DIALOG(34622) ; "  Yer out!
+ . W "   Not the proper password.  Strike ",XMTRY,".",*7
+ I 'XMOK,'XMABORT W "  Yer out!"
  I 'XMOK!XMABORT K XMSECURE
  Q 'XMABORT&XMOK
 ASKKEY(XMKEY,XMABORT) ;
  F  D  Q:XMKEY'="?"!XMABORT
- . W !,$$EZBLD^DIALOG(34618) ; "Enter Scramble Password: "
- . X ^%ZOSF("EOFF") R XMKEY:15 S:'$T XMKEY=U X ^%ZOSF("EON") U IO
+ . X ^%ZOSF("EOFF")
+ . R !,"Enter Scramble Password: ",XMKEY:15 S:'$T XMKEY=U
+ . X ^%ZOSF("EON")
+ . U IO
  . I XMKEY[U S XMABORT=1 Q
- . I $L(XMKEY)>2,$L(XMKEY)<21 S XMKEY=$$UP^XLFSTR(XMKEY) Q:$L(XMKEY)+1'=$L(XMKEY,$E(XMKEY))
+ . I $L(XMKEY)>2,$L(XMKEY)<21 Q
  . S XMKEY="?"
- . ;The scramble password is a secret code which must be entered by the
- . ;reader in order to see the message.  Upper and lower case characters
- . ;are treated the same.  (The password is not case sensitive.)
- . ;The password must be from 3 to 20 characters long, and may not be
- . ;just one repeating character.
- . W !
- . D BLD^DIALOG(34619,"","","XMTEXT","F")
- . D MSG^DIALOG("WH","","","","XMTEXT")
- . W !
+ . W !!,"The scramble password is a secret code which must be entered by the reader in"
+ . W !,"order to see the message.  Upper and lower case characters are treated the"
+ . W !,"same.  (The password is not case sensitive.)"
+ . W !,"It must be from 3 to 20 characters long.",!
  Q
 GOODKEY(XMZ,XMKEY) ; Function checks key and make sure it's right.
  ; If it is, XMSECURE is defined, and function returns 1;

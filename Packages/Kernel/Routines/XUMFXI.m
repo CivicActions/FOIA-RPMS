@@ -1,5 +1,5 @@
 XUMFXI ;ISS/RAM - MFS build message ;06/28/00
- ;;8.0;KERNEL;**299,382**;Jul 10, 1995
+ ;;8.0;KERNEL;**299**;Jul 10, 1995
  ;
  ; This routine is the Master File Server HL7 message builder API.
  ; The routine will generate messages for both trigger events and
@@ -97,20 +97,10 @@ BUILD ; -- build message
  ;
 MFK ; -- master file acknowledgement
  ;
- N X,I,I1,I2
+ N X
  S X="MSA"_HLFS_$S(ERROR:"AE",1:"AA")_HLFS_HL("MID")_HLFS_$P(ERROR,U,2)
  S ^TMP(MTYP,$J,CNT)=X
  S CNT=CNT+1
- ;
- S I1="",I=0
- F  S I1=$O(^TMP("XUMF ERROR",$J,I1)) Q:'$L(I1)  D
- .S I2="" F  S I2=$O(^TMP("XUMF ERROR",$J,I1,I2)) Q:'$L(I2)  D
- ..S X=$G(^(I2))
- ..Q:'$L(X)
- ..S I=I+1
- ..S X="ERR"_HLFS_I_HLFS_$S($O(^TMP("XUMF ERROR",$J,I1))!$O(^TMP("XUMF ERROR",$J,I1,I2)):1,1:0)_HLFS_X
- ..S ^TMP(MTYP,$J,CNT)=X
- ..S CNT=CNT+1
  ;
  Q
  ;

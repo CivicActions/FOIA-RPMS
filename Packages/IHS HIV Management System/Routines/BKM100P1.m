@@ -1,5 +1,5 @@
 BKM100P1 ;PRXM/HC/ALA-BKM 1.00 Patch 1 ; 27 Sep 2006  10:29 AM
- ;;2.0;HIV MANAGEMENT SYSTEM;;May 29, 2009
+ ;;1.0;HIV MANAGEMENT SYSTEM;**1**;Sep 29, 2006
  ;
 CND ;  Check candidate list and remove entries
  NEW DFN,MED,DFLG,STAT,TAX
@@ -10,7 +10,7 @@ CND ;  Check candidate list and remove entries
  . S MED=0,DFLG=0
  . F  S MED=$O(^BKM(90451.2,DFN,3,MED)) Q:'MED  D  Q:DFLG
  .. S TAX=$P(^BKM(90451.2,DFN,3,MED,0),U,3)
- .. I TAX="BKMV EI MEDS"!(TAX="BKMV NNRTI MEDS")!(TAX="BKMV NRTI MEDS")!(TAX="BKMV PI MEDS") S DFLG=1 Q
+ .. I TAX="BKMV FI MEDS"!(TAX="BKMV NNRTI MEDS")!(TAX="BKMV NRTI MEDS")!(TAX="BKMV PI MEDS") S DFLG=1 Q
  . I DFLG D
  .. NEW DA,DIK
  .. S DA=DFN,DIK="^BKM(90451.2," D ^DIK
@@ -18,7 +18,7 @@ CND ;  Check candidate list and remove entries
 TX ;  Check taxonomies
  NEW TAX,DIC,X,TDA,Y
  S DIC="^ATXAX(",DIC(0)="Z"
- S TAX="BKMV EI MEDS",X=TAX D ^DIC S TDA=+Y
+ S TAX="BKMV FI MEDS",X=TAX D ^DIC S TDA=+Y
  I TDA'=-1 D
  . NEW DA,VALUE
  . S DA(1)=TDA,DA=0

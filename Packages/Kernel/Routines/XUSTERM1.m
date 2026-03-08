@@ -1,5 +1,5 @@
-XUSTERM1 ;SEA/WDE - DEACTIVATE USER ;06/08/09  15:06
- ;;8.0;KERNEL;**102,180,208,222,274,313,332,360,384,436,514**;Jul 10, 1995;Build 14
+XUSTERM1 ;SEA/WDE - DEACTIVATE USER ;10:48 AM  13 May 2005
+ ;;8.0;KERNEL;**102,180,208,222,274,313,332,360**;Jul 10, 1995
 ENALL ;Interactive scan all
  S U="^",DTIME=$G(DTIME,60)
  W !!,"This option can purge all access & verify codes, mail baskets, messages,",!,"authorized senders access, keys, and electronic signature codes of users who have been terminated."
@@ -15,9 +15,8 @@ QUE W !,"Do you wish to have this queued for a later time "
  I %=0 K X,XUVE Q
  ;Fall thru if user doesn't queue
 CHECK ;Entry point for taskman.
- N XUDT540,XUDT90,XUDT30,FDA,XUDT,XUAAW
+ N XUDT540,XUDT90,XUDT30,FDA,XUDT
  S U="^",DT=$$DT^XLFDT(),XUDT90=$$HTFM^XLFDT($H-90,1),XUDT30=$$HTFM^XLFDT($H-30,1)
- S XUAAW=+$P($G(^XTV(8989.3,1,3)),U,4) ;Academic Waiver
  S XUDT540=$$HTFM^XLFDT($H-540,1) ;*p332
  S XUDA=.6,XUVE=$G(XUVE,0)
  F  S XUDA=$O(^VA(200,XUDA)) Q:XUDA'>0  S XUJ=$G(^(XUDA,0)) D
@@ -41,15 +40,14 @@ DISUSER(XUDA) ;Set DISUSER flag and reason, Remove last menu option
  Q
  ;
 AUSER(XUDA) ;If DISUSERed and Last Sign > 540[18Mo.*30] days, then remove"AUSER" xref
- I $D(^XUSEC("XUORES",XUDA)) Q  ;Owner of XUORES key ;p*436
+ I '$D(^VA(200,"AUSER")) Q  ;xref not defined
  N Q S Q=$P($G(^VA(200,XUDA,1.1)),U) ;Get last sign-on
- I $L(Q),Q<XUDT540 K ^VA(200,"AUSER",$P(XUJ,U),XUDA) ;*p360;*p384
+ ;I $L(Q),Q<XUDT540 K ^VA(200,"AUSER",$P(XUJ,U),XUDA) ;*p360
  Q
  ;
- ;If site has an Academic Affiliation Waiver the last sign-on moves to 90 days from 30.
 NOSIGNON() ;Check last signon. Return 1 if should disable account
  N Q S Q=$P($G(^VA(200,XUDA,1.1)),U) ;Get last sign-on
- I $L(Q),Q>$S('XUAAW:XUDT30,1:XUDT90) Q 0 ;Last sign-on within 30/90 days VA Handbook 6500 ;p514
+ I $L(Q),Q>XUDT90 Q 0 ;Last sign-on within 90 days
  S Q=$P($G(^VA(200,XUDA,1.1)),U,4) ;Get last Edit date
  I $L(Q),Q>XUDT30 Q 0 ;User edited in last 30 days
  S Q=$P($G(^VA(200,XUDA,1)),U,7) ;Create Date
@@ -103,14 +101,4 @@ DQ1 ;Terminate one person.
  S XUJ=$G(^VA(200,XUDA,0)),XUDT=$P(XUJ,U,11) I XUDT,(XUDT'>DT) D
  . S XUVE=0 D GET I 'XUEMP D ACT
  . Q
- Q
- ;
-SEND ; send deactivated message to assigned mail group
- K XMB,XMY
- S XMB(1)=$P(XUJ,"^",1)
- S XMB(2)=$$GET1^DIQ(200,XUDA,8)
- S XMB(3)=$$GET1^DIQ(200,XUDA,29)
- S XMB(4)=$$FMTE^XLFDT(XUDT)
- S XMB="XUSERDEAC" D ^XMB:$D(^XMB(3.6,"B",XMB))
- K XMB
  Q

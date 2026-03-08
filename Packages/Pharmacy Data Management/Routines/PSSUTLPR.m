@@ -1,5 +1,5 @@
 PSSUTLPR ;BIR/RTR-Pre release utility routine ;02/14/00
- ;;1.0;PHARMACY DATA MANAGEMENT;**34,47**;9/30/97
+ ;;1.0;PHARMACY DATA MANAGEMENT;**34**;9/30/97
  ;
 TEXT ;Text for pre-release report
  W !!,"The current Orderable Item structure keeps Additives and Solutions matched to",!,"Orderable Items flagged for IV use. All Dispense Drugs are currently matched to",!,"Orderable Items that are not flagged for IV Use. This was done"
@@ -34,11 +34,10 @@ NOUN ;Enter/edit Nouns
  S PSSDOSE=+Y
 NOUNA W !!?2,"Dosage Form => ",$P($G(^PS(50.606,+PSSDOSE,0)),"^"),! K DIC S DA(1)=PSSDOSE,DIC="^PS(50.606,"_PSSDOSE_",""NOUN"",",DIC(0)="QEAMLZ" D  D ^DIC I Y<1!($D(DUOUT))!($D(DTOUT)) G NOUNC
  .S DIC("W")="W ""  ""_$P($G(^PS(50.606,PSSDOSE,""NOUN"",+Y,0)),""^"",2)"
- S PSSNOUN=+Y,PSSOTH=$S($P($G(^PS(59.7,1,40.2)),"^"):1,1:0)
- K DIE S DA(1)=PSSDOSE,DA=PSSNOUN,DR=".01;S:'$G(PSSOTH) Y=""@1"";3;@1;1;2",DIE="^PS(50.606,"_PSSDOSE_",""NOUN"","
- D ^DIE K DIE,PSSOTH G:'$D(Y)&('$D(DTOUT)) NOUNA
-NOUNC W ! K DIE,PSSOTH S DA=PSSDOSE,DIE="^PS(50.606,",DR="10" D ^DIE K DIE G NOUN
-NOUNQ W ! K DIC,DR,DIE,PSSDOSE,PSSNOUN,PSSOTH
+ S PSSNOUN=+Y
+ K DIE S DA(1)=PSSDOSE,DA=PSSNOUN,DR=".01;1;2",DIE="^PS(50.606,"_PSSDOSE_",""NOUN""," D ^DIE K DIE G:'$D(Y)&('$D(DTOUT)) NOUNA
+NOUNC W ! K DIE S DA=PSSDOSE,DIE="^PS(50.606,",DR="10" D ^DIE K DIE G NOUN
+NOUNQ W ! K DIC,DR,DIE,PSSDOSE,PSSNOUN
  Q
 CHECK ;Check for running conversion
  S PSSNOCON=0

@@ -1,10 +1,6 @@
-XMP2 ;(WASH ISC)/GM/CAP-PackMan Print/Install/Summarize/Compare ;04/17/2002  11:07
- ;;8.0;MailMan;;Jun 28, 2002
- ; Entry points used by MailMan options (not covered by DBIA):
- ; XC     XMPCOM - Compare message
- ; XI     XMPINS - Install message
- ; XP     XMPPRT - Print message
- ; XS     XMPSUM - Summarize message
+XMP2 ;(WASH ISC)/GM/CAP-PRNT/INSTLL/SUM/COMP PACKMAN ;08/18/98  09:13
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**24,66**;Jun 02, 1994
  ;;XMP2 IS INSTALLED AS XMP2Z TO AVOID CLOBBER ERRORS / FILE AS XMP2
  Q
  ;
@@ -31,7 +27,7 @@ P2 I $Y+5>IOSL K DIR S DIR(0)="E" D:'$D(ZTQUEUED) ^DIR:$E(IOST)="C"&$S('$D(XMP):
 XT S XMP2="T" G 1
  ;
 XP S XMP2="P"
-1 I $D(XMLOAD) W $C(7),!,"YOU CAN NOT PRINT a message while you are creating it." Q
+1 I $D(XMLOAD) W *7,!,"YOU CAN NOT PRINT a message while you are creating it." Q
  S XCF=1 D MM,SP G SC
  ;
 XR S XMP2="R" G 0
@@ -60,7 +56,7 @@ S S XCN=.999 G ENTR^XMP2A:XMP2="R",ENTT^XMP2A:XMP2="T" I '$D(XMR) S XMR=^XMB(3.9
  ;
 S1 Q:$E(X,1,5)="$END "!($E(X,1,5)'?1"$"3U1" ")
  I XMP2="I",$P(XMR,U,7)["X",$E(X,1,9)'="$END ROU ",$E(X,1,5)'="$ROU " S XMOUT=1 Q
- S T=$E(X,2,4),A=$T(@T) I A="" W $C(7),"Unknown identifier '",A,"'" K A Q
+ S T=$E(X,2,4),A=$T(@T) I A="" W *7,"Unknown identifier '",A,"'" K A Q
  W:XCF=1 @IOF W !,"Line ",XCN,?10,"Message #"_XMZ,?29 W:XCF $P(",Unloading,Comparing,Verifying",",",XCF) W " ",$P(A,";;",2),"  ",$E(X,5,999)
  I XCF=0 D:$E(A,1,3)="KID" K2 Q
  S A=$P($T(@T+XCF),";;",2,999) I A=";" W !,"Not implemented yet" Q
@@ -120,7 +116,7 @@ COMP D NT Q:$E(X)="$"
  ;
 ROU ;;Routine
  ;;S %1=1 D PP
- ;;S X=$P(X," ",2) S:X="XMP2" X="XMP2Z" S DIE="^XMB(3.9,XMZ,2," X ^%ZOSF("SAVE") W:X="XMP2Z" !,$C(7),"CHANGE NAME OF ROUTINE XMP2Z TO XMP2"
+ ;;S X=$P(X," ",2) S:X="XMP2" X="XMP2Z" S DIE="^XMB(3.9,XMZ,2," X ^%ZOSF("SAVE") W:X="XMP2Z" !,*7,"CHANGE NAME OF ROUTINE XMP2Z TO XMP2"
  ;;D LOAD^XMPC
  ;;G BEG
 DDD ;;Data Dictionary

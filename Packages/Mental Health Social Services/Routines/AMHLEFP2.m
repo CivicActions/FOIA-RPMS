@@ -1,8 +1,8 @@
-AMHLEFP2 ; IHS/CMI/LAB - MENTAL HLTH ROUTINE 22 Aug 2007 6:11 PM ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**1,4,5,6**;JUN 02, 2010;Build 10
+AMHLEFP2 ; IHS/CMI/LAB - MENTAL HLTH ROUTINE ;
+ ;;4.0;IHS BEHAVIORAL HEALTH;**1,4,5,6,11**;JUN 02, 2010;Build 27
 DGSECE ;
  NEW X S X=$P(^AMHREC(AMHR,0),U,8)
- I X,$G(AMHDOLOG) D  ;this should only be done if in GUI group, R&S group form print and Print forms for a set of patients
+ I X,$G(AMHDOLOG) D
  .NEW AMHRESU
  .D PTSEC^AMHUTIL2(.AMHRESU,X,0)
  .I '$G(AMHRESU(1)) Q
@@ -16,7 +16,7 @@ DGSECE ;
  I AMHEFT="S" D PRINT1(AMHR) Q
  I AMHEFT="W" S AMHEFT="F",AMHNOINT=1 D PRINT1(AMHR) K AMHEFT Q
  Q
-S(Y,F,C,T) ;set up array
+S(Y,F,C,T) ;
  NEW %
  I '$G(F) S F=0
  I '$G(T) S T=0
@@ -32,7 +32,7 @@ S1 ;
  S %=$P(^TMP("AMHS",$J,"DCS",0),U)+1,$P(^TMP("AMHS",$J,"DCS",0),U)=%
  S ^TMP("AMHS",$J,"DCS",%)=X
  Q
-PRINT1(AMHR) ;EP - CALLED FROM LAST VISIT DISPLAY
+PRINT1(AMHR) ;EP
  NEW C,AMHX,H,AMHR0,AMHSTOP,AMHTC,AMHTDLT,AMHTDOO,AMHTF,AMHTICL,AMHTILN,AMHTNRQ,AMHTQ,AMHTTXT,F,AMHPAGE
  S AMHPAGE=1
  S AMHIOSL=$S($G(AMHGUI):55,1:IOSL)
@@ -55,7 +55,7 @@ DEMOPRT ;
  .W !,^TMP("AMHS",$J,"DCS",AMHX)
  .Q
  Q
-EP2(AMHR,FLAG) ;EP ; up array in ^TMP
+EP2(AMHR,FLAG) ;EP
  ;
  I $G(AMHR)="" Q
  I '$D(^AMHREC(AMHR)) Q
@@ -120,7 +120,7 @@ SUB1 ;
  .I $P(^AMHREC(AMHR,11),U,16)]"" S X="",$E(X,30)=$$VAL^XBDIQ1(9002011,AMHR,1116) D S(X)
  .S X="",$E(X,30)="Signed: "_$P($$FMTE^XLFDT($P(^AMHREC(AMHR,11),U,12)),"@",1)_" "_$P($$FMTE^XLFDT($P(^AMHREC(AMHR,11),U,12)),"@",2) D S(X)
  S X=$TR($J("",79)," ","_") D S(X)
-AIII ;axis iii patch 1
+AIII ;
  I AMHEFT'="S" D
  .Q:'$O(^AMHREC(AMHR,53,0))
  .I $$DSMCS^AMHUTIL1(DUZ(2),$P($P(AMHR0,U),"."))'=4  ;DSM IV ONLY
@@ -156,21 +156,21 @@ POV ;
  .Q
  F I=C:1:3 S X="" D S(X)
  S X=$TR($J("",79)," ","_") D S(X)
-TMP ;treated med problems
+TMP ;
  I $D(^AMHRTMDP("AD",AMHR)) D
  .S X="",$E(X,3)="TREATED MEDICAL PROBLEMS:" D S(X)
  .S (AMHX,C)=0 F  S AMHX=$O(^AMHRTMDP("AD",AMHR,AMHX)) Q:AMHX'=+AMHX  D
  ..S X="",$E(X,3)=$P(^AUTNPOV($P(^AMHRTMDP(AMHX,0),U),0),U) D S(X)
  ..Q
  .S X=$TR($J("",79)," ","_") D S(X)
-A4 ;AXIS IV/V
+A4 ;
  G:$$DSMCS^AMHUTIL1(DUZ(2),$P($P(AMHR0,U),"."))'=4 IPV
  I $O(^AMHREC(AMHR,61,0))!($P(AMHR0,U,14)]"") D
  .S X="",$E(X,3)="AXIS IV:  " S Y=0 F  S Y=$O(^AMHREC(AMHR,61,Y)) Q:Y'=+Y  S I=$P(^AMHREC(AMHR,61,Y,0),U) S $E(X,14)=$P(^AMHTAXIV(I,0),U)_" - "_$P(^AMHTAXIV(I,0),U,2) D S(X) S X=""
  .S X="",$E(X,3)="AXIS V:  "_$P(AMHR0,U,14) S:$P($G(^AMHREC(AMHR,11)),U,15)]"" X=X_"  GAF Scale Type: "_$$VAL^XBDIQ1(9002011,AMHR,1115) D S(X)
  .S X=$TR($J("",79)," ","_") D S(X)
  .Q
-IPV ;EXAM
+IPV ;
  K AMHZZZ
  I AMHEFT="S" G MEAS
  I $P($G(^AMHREC(AMHR,14)),U)="",$P($G(^AMHREC(AMHR,14)),U,2)="",$P($G(^AMHREC(AMHR,15)),U)="" G ALCSCR  ;no ipv exam
@@ -188,9 +188,14 @@ DEPSCR ;
  S X="",$E(X,3)="Depression Screen Comment: "_$$VAL^XBDIQ1(9002011,AMHR,1701) D S(X)
  S AMHZZZ=""
 SRSCR ;
- I $P($G(^AMHREC(AMHR,14)),U,7)="",$P($G(^AMHREC(AMHR,14)),U,8)="",$P($G(^AMHREC(AMHR,19)),U)="" G MEAS  ;no DEP exam
+ I $P($G(^AMHREC(AMHR,14)),U,7)="",$P($G(^AMHREC(AMHR,14)),U,8)="",$P($G(^AMHREC(AMHR,19)),U)="" G SSCR  ;no SRA exam
  S X="",$E(X,3)="Suicide Risk Assessment: "_$$VAL^XBDIQ1(9002011,AMHR,1407)_"  Provider: "_$$VAL^XBDIQ1(9002011,AMHR,1408) D S(X,1)
  S X="",$E(X,3)="Suicide Risk Assessment Comment: "_$$VAL^XBDIQ1(9002011,AMHR,1901) D S(X)
+ S AMHZZZ=""
+SSCR ;
+ I $P($G(^AMHREC(AMHR,14)),U,9)="",$P($G(^AMHREC(AMHR,14)),U,10)="",$P($G(^AMHREC(AMHR,20)),U)="" G MEAS  ;no SSCR exam
+ S X="",$E(X,3)="Suicide Screening: "_$$VAL^XBDIQ1(9002011,AMHR,1409)_"  Provider: "_$$VAL^XBDIQ1(9002011,AMHR,1410) D S(X,1)
+ S X="",$E(X,3)="Suicide Screening Comment: "_$$VAL^XBDIQ1(9002011,AMHR,2001) D S(X)
  S AMHZZZ=""
 MEAS ;
  I $D(AMHZZZ) S X=$TR($J("",79)," ","_") D S(X)
@@ -251,7 +256,7 @@ DEMO ;EP demographics
 TIUDSP ;
  D TIUDSP^AMHLEFP3
  Q
-PRTTXT ; GENERALIZED TEXT PRINTER
+PRTTXT ;
  S AMHTDLT=1,AMHTILN=80-AMHTICL-1
  F AMHTQ=0:0 S:AMHTNRQ]""&(($L(AMHTNRQ)+$L(AMHTTXT)+2)<255) AMHTTXT=$S(AMHTTXT]"":AMHTTXT_"; ",1:"")_AMHTNRQ,AMHTNRQ="" Q:AMHTTXT=""  D PRTTXT2
  K AMHTILN,AMHTDLT,AMHTF,AMHTC,AMHTTXT,AMHTDOO
@@ -267,7 +272,7 @@ FF ;EP
  I '$G(AMHGUI),$E(IOST)="C",IO=IO(0) W ! S DIR(0)="EO" D ^DIR K DIR I Y=0!(Y="^")!($D(DTOUT)) S AMHQUIT=1 Q
  I $E(IOST)'="C" Q:'$P(AMHR0,U,8)  W !!,$TR($J(" ",79)," ","*"),!,$E($P(^DPT($P(AMHR0,U,8),0),U),1,25),?27,"HRN: " D
  .S H=$P($G(^AUPNPAT($P(AMHR0,U,8),41,DUZ(2),0)),U,2)
- .W H,?38,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(AMHR0,U,8),0),U,3),"2D"),?52,"SSN: ",$$SSN^AMHUTIL($P(AMHR0,U,8)),?67,$$FMTE^XLFDT($P($P(AMHR0,U),"."))
+ .W H,?41,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(AMHR0,U,8),0),U,3),"2D"),?67,$$FMTE^XLFDT($P($P(AMHR0,U),"."))
  W:$D(IOF) @IOF
  W:$G(AMHGUI) "ZZZZZZZ",!
  W ! S AMHPAGE=AMHPAGE+1 W ?48,$$FMTE^XLFDT($P(AMHR0,U)),?72,"Page "_AMHPAGE,!

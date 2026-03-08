@@ -1,6 +1,10 @@
-BTIULO11 ;IHS/ITSC/LJF - IHS OBJECTS ADDED IN PATCHES;26-Mar-2014 17:11;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1006,1012,1013**;NOV 04, 2004;Build 33
+BTIULO11 ;IHS/ITSC/LJF - IHS OBJECTS ADDED IN PATCHES;27-Oct-2023 16:08
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1006,1012,1013,1021,1028,1029**;NOV 04, 2004;Build 34
  ;IHS/MSC/MGH line up number of labs and only display test name
+ ;Patch 1021 changed to look at 30 visits
+ ;IHS/MSC/MIR misspelling in line CLIA+21 - patch 1028 - 02/07/2023
+ ;IHS/MSC/MIR added PREFNAM and PREFNAM1 - patch 1029 - 10/23/2023 Feature 75970
+ ;IHS/MSC/MIR added CELL - patch 1029 - 10/24/2023 Feature 95856
  ;
 NLAB(DFN,TIUTST,TIUCNT) ;EP; -- returns last # of current lab result for single test;PATCH 1001
  ; TIUTST = lab test name;  TIUCNT = # of test results to return
@@ -10,13 +14,13 @@ NLAB(DFN,TIUTST,TIUCNT) ;EP; -- returns last # of current lab result for single 
  S LAB=$O(^LAB(60,"B",TIUTST,0)) I LAB="" Q ""
  S CAPTION=$E(TIUTST,1,30)_":"
  S (VDT,CNT)=0
- F  S VDT=$O(^AUPNVLAB("AA",DFN,LAB,VDT)) Q:('VDT)!(CNT>100)  D
+ F  S VDT=$O(^AUPNVLAB("AA",DFN,LAB,VDT)) Q:('VDT)!(CNT>30)  D
  . S IEN=0
- . F  S IEN=$O(^AUPNVLAB("AA",DFN,LAB,VDT,IEN)) Q:'IEN!(CNT>100)  D
+ . S CNT=CNT+1
+ . F  S IEN=$O(^AUPNVLAB("AA",DFN,LAB,VDT,IEN)) Q:'IEN  D
  .. K TIU D ENP^XBDIQ1(9000010.09,IEN,".03:.05;1109;1201","TIU(")
  .. Q:TIU(.04)=""                       ;skip if not resulted
  .. S DATE=$S(TIU(1201)]"":TIU(1201),1:TIU(.03))
- .. S CNT=CNT+1                         ;increment counter
  .. S DATA="   "_DATE
  .. S ARR(DATE,IEN)=$J(TIU(.04),8)_"  "_TIU(.05)
  S CNT=0,DATE=""
@@ -55,9 +59,10 @@ CLIA(DFN,TIUTST,TIUCNT) ;EP; -- returns last # of current lab result for single 
  S LAB=$O(^LAB(60,"B",TIUTST,0)) I LAB="" Q ""
  S CAPTION="Last "_TIUCNT_" "_$E(TIUTST,1,30)_": "
  S (VDT,CNT)=0
- F  S VDT=$O(^AUPNVLAB("AA",DFN,LAB,VDT)) Q:('VDT)!(CNT=TIUCNT)  D
+ F  S VDT=$O(^AUPNVLAB("AA",DFN,LAB,VDT)) Q:('VDT)!(CNT>30)  D
  . S IEN=0
- . F  S IEN=$O(^AUPNVLAB("AA",DFN,LAB,VDT,IEN)) Q:'IEN!(CNT=TIUCNT)  D
+ . S CNT=CNT+1                         ;increment counter
+ . F  S IEN=$O(^AUPNVLAB("AA",DFN,LAB,VDT,IEN)) Q:'IEN  D
  .. K TIU    ;D ENP^XBDIQ1(9000010.09,IEN,".03:.05;1109;1201","TIU(")
  .. D GETS^DIQ(9000010.09,IEN_",","**","IE","TIU(","ERR")
  .. S IEN2=IEN_","
@@ -65,7 +70,7 @@ CLIA(DFN,TIUTST,TIUCNT) ;EP; -- returns last # of current lab result for single 
  .. Q:RES=""                       ;skip if not resulted
  .. S DATE=TIU(9000010.09,IEN2,1201,"I")
  .. S VDATE=TIU(9000010.09,IEN2,.03,"I")
- .. S DATE2=$S(DATE]"":TIU(9000010.09,IEN2,1201,"E"),1:TIU(900010.09,IEN2,.03,"E"))
+ .. S DATE2=$S(DATE]"":TIU(9000010.09,IEN2,1201,"E"),1:TIU(9000010.09,IEN2,.03,"E"))
  .. S ABN=$G(TIU(9000010.09,IEN2,.05,"E"))
  .. S UNIT=$G(TIU(9000010.09,IEN2,1101,"E"))
  .. S LO=$G(TIU(9000010.09,IEN2,1104,"E"))
@@ -76,7 +81,6 @@ CLIA(DFN,TIUTST,TIUCNT) ;EP; -- returns last # of current lab result for single 
  .. S COMM=$G(TIU(9000010.09,IEN2,1301,"E"))
  .. S COMM2=$G(TIU(9000010.09,IEN2,1302,"E"))
  .. S COMM3=$G(TIU(9000010.09,IEN2,1303,"E"))
- .. S CNT=CNT+1                         ;increment counter
  .. S LGTH=$L($G(TIU(9000010.09,IEN2,.05))) ;PATCH 1003
  .. S ARR(DATE,IEN)=RES_" "_UNIT_" "_ABN_U_DATE2_U_LO_U_HI_U_SPEC_U_RESDT_U_COMM_U_COMM2_U_COMM3_U_PRV
  S CNT=0,LCNT=0,DATE=""
@@ -117,3 +121,17 @@ CLIA(DFN,TIUTST,TIUCNT) ;EP; -- returns last # of current lab result for single 
  I '$D(^TMP("BTIULO",$J)) S ^TMP("BTIULO",$J,1,0)=CAPTION_"No Results Found"
  Q "~@^TMP(""BTIULO"",$J)"
  ;
+PREFNAM(DFN) ; Full Name with Preferred name
+ N PREFNAM,FULNM,VADM
+ S FULNM=$$NAME^TIULO(DFN)
+ S PREFNAM=$$GET1^DIQ(9000001,DFN,9001)
+ S PREFNAM=FULNM_$S($L(PREFNAM):" - ",1:"")_PREFNAM_$S($L(PREFNAM):"*",1:"")
+ Q PREFNAM
+PREFNAM1(DFN) ;Preferred name
+ N PREFNAM
+ S PREFNAM=$$GET1^DIQ(9000001,DFN,9001)
+ Q PREFNAM
+CELL(DFN) ; Cell Phone
+ N CELL Q:'$G(DFN) ""
+ S CELL=$$GET1^DIQ(2,DFN,.134)
+ Q CELL

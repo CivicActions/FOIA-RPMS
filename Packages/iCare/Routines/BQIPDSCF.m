@@ -1,120 +1,12 @@
 BQIPDSCF ;VNGT/HS/BEE-Panel Description Utility ; 7 Apr 2008  4:28 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**1,4,6,7**;Mar 01, 2021;Build 14
  ;
-FILTER(OWNR,PLIEN,FPARMS) ;EP - Include filter description
- ;
- ; Retrieve all filters for this panel and return as a string in filter order
- ; as defined in the ICARE DEFINITIONS file (90506.03,.1)
- ;
- N DA,FIEN,FIENS,FSOURCE,FN,MN
- ;
- S DA(1)=OWNR,DA=PLIEN,FIENS=$$IENS^DILF(.DA)
- S FSOURCE=$$GET1^DIQ(90505.01,FIENS,.14,"E")
- ;
- ;Quit if filter turned off
- I FSOURCE="" Q ""
- ;
- S FIEN=$$PP^BQIDCDF(FSOURCE) ; Filter ien
- I FIEN=-1 S BMXSEC="Filter SOURCE was not found" Q ""
- ;
- ;Get each filter from panel definition
- S FN=0 F  S FN=$O(^BQICARE(OWNR,1,PLIEN,15,FN)) Q:'FN  D
- . NEW DA,IENS,FNAME,VALUE,PEXE,PTYP,PORD,VALUE,ASTR,PMAP,OFNAME
- . S DA(2)=OWNR,DA(1)=PLIEN,DA=FN,IENS=$$IENS^DILF(.DA)
- . S (OFNAME,FNAME)=$$GET1^DIQ(90505.115,IENS,.01,"E") Q:FNAME=""
- . S PTYP=$$PTYP^BQIDCDF(FSOURCE,FNAME) Q:PTYP=""
- . S PORD=$$PORD^BQIDCDF(FSOURCE,FNAME) Q:PORD=""
- . S VALUE=$$GVAL(PTYP,90505.115,IENS,FSOURCE,FNAME)
- . ;
- . ;Pull associate parameters
- . S ASTR=$$ASPARM^BQIPDSCL(FN)
- . ;
- . ;Call any defined executable
- . S PMAP=$$PMAP^BQIDCDF(FSOURCE,FNAME) I VALUE]"",PMAP]"" D MAP^BQIPDSCM(FSOURCE,PMAP,.VALUE,.FNAME)
- . S PEXE=$$PEXE^BQIDCDF(FSOURCE,FNAME) I VALUE]"",PEXE]"" X PEXE
- . ;
- . ;Save single value
- . I VALUE]"" D  Q
- .. I $G(ASTR)="",FNAME="LAB",$G(VALUE)'="",VALUE["^" S VALUE=$P(VALUE,"^",1)
- .. I $G(ASTR)="",FNAME="MEAS",$G(VALUE)'="",VALUE["^" S VALUE=$P(VALUE,"^",1)
- .. I $G(ASTR)'="" D
- ... NEW RES
- ... I ASTR["NUMLAB" D
- .... S RES=$P(VALUE,U,2),VALUE=$P(VALUE,U,1)
- .... S VALUE=VALUE_" is"_$$LBRS^BQIPDSC1(ASTR)
- ... NEW RES
- ... I ASTR["NUMMEAS" D
- .... S RES=$P(VALUE,U,2),VALUE=$P(VALUE,U,1)
- .... S VALUE=VALUE_" is"_$$MSRS^BQIPDSC2(ASTR)
- ... I ASTR["SETLAB" D
- .... S RES=$P(VALUE,U,2),VALUE=$P(VALUE,U,1),ASTR=$P(ASTR,"SETLAB",2)
- .... NEW LVAL,NVAL
- .... S VALUE=VALUE_" is "
- .... S ASTR=$TR(ASTR,$C(28),""),NVAL=$L(ASTR,$C(29))
- .... F I=1:1:NVAL S LVAL=$P(ASTR,$C(29),I) I LVAL'="" S VALUE=VALUE_$$SCD^BQIUL2(RES,LVAL)_$S(NVAL>1:" or ",1:"")
- ... S VALUE=$$TKO^BQIUL1(VALUE," or ")
- ... I ASTR["SETMEAS" D
- .... ;S RES=$P(VALUE,U,2),VALUE=$P(VALUE,U,1),ASTR=$P(ASTR,"SETMEAS",2)
- .... S ASTR=$P(ASTR,"SETMEAS",2)
- .... NEW LVAL,NVAL,AN
- .... S AN=$O(^BQI(90507.2,"B",VALUE,"")) I AN'="" S RES=$G(^BQI(90507.2,AN,2))
- .... I AN="" S AN=$O(^BQI(90507.2,"C",VALUE,"")) I AN'="" S RES=$G(^BQI(90507.2,AN,2))
- .... S VALUE=VALUE_" is "
- .... S ASTR=$TR(ASTR,$C(28),""),NVAL=$L(ASTR,$C(29))
- .... F I=1:1:NVAL S LVAL=$P(ASTR,$C(29),I) I LVAL'="" S VALUE=VALUE_$$SCD^BQIUL2(RES,LVAL)_$S(NVAL>1:" or ",1:"")
- ... S VALUE=$$TKO^BQIUL1(VALUE," or ")
- .. S FPARMS(PORD,FNAME,$$TRUNC^BQIPDSCM(VALUE))=""
- . ;
- . ;Save multiple values
- . S MN=0 F  S MN=$O(^BQICARE(OWNR,1,PLIEN,15,FN,1,MN)) Q:'MN  D
- .. NEW DA,IENS,VALUE
- .. S DA(3)=OWNR,DA(2)=PLIEN,DA(1)=FN,DA=MN,IENS=$$IENS^DILF(.DA)
- .. S FNAME=OFNAME
- .. S VALUE=$$GMVAL(PTYP,90505.1151,IENS,FSOURCE,FNAME)
- .. ;
- .. ;Pull associate parameters
- .. S ASTR=$$ASMPARM^BQIPDSCL(MN)
- .. ;
- .. ;Call any defined executable
- .. I VALUE]"",PMAP]"" D MAP^BQIPDSCM(FSOURCE,PMAP,.VALUE,.FNAME)
- .. I VALUE]"",PEXE]"" X PEXE
- .. ;
- .. ;Save multiple value
- .. I VALUE]"" D
- ... I $G(ASTR)="",FNAME="LAB",$G(VALUE)'="",VALUE["^" S VALUE=$P(VALUE,"^",1)
- ... I $G(ASTR)="",FNAME="MEAS",$G(VALUE)'="",VALUE["^" S VALUE=$P(VALUE,"^",1)
- ... I $G(ASTR)'="" D
- .... NEW RES
- .... I ASTR["NUMLAB" D
- ..... S RES=$P(VALUE,U,2),VALUE=$P(VALUE,U,1)
- ..... S VALUE=VALUE_" is"_$$LBRS^BQIPDSC1(ASTR)
- .... NEW RES
- .... I ASTR["NUMMEAS" D
- ..... S RES=$P(VALUE,U,2),VALUE=$P(VALUE,U,1)
- ..... S VALUE=VALUE_" is"_$$MSRS^BQIPDSC2(ASTR)
- .... I ASTR["SETLAB" D
- ..... S RES=$P(VALUE,U,2),VALUE=$P(VALUE,U,1),ASTR=$P(ASTR,"SETLAB",2)
- ..... S VALUE=VALUE_" is "
- ..... NEW LVAL,NVAL
- ..... S ASTR=$TR(ASTR,$C(28),""),NVAL=$L(ASTR,$C(29))
- ..... F I=1:1:NVAL S LVAL=$P(ASTR,$C(29),I) I LVAL'="" S VALUE=VALUE_$$SCD^BQIUL2(RES,LVAL)_$S(NVAL>1:" or ",1:"")
- .... ;S VALUE=$$TKO^BQIUL1(VALUE," or ")
- .... I ASTR["SETMEAS" D
- ..... ;S RES=$P(VALUE,U,2),VALUE=$P(VALUE,U,1),ASTR=$P(ASTR,"SETMEAS",2)
- ..... S ASTR=$P(ASTR,"SETMEAS",2)
- ..... NEW LVAL,NVAL,AN
- ..... S AN=$O(^BQI(90507.2,"B",VALUE,"")) I AN'="" S RES=$G(^BQI(90507.2,AN,2))
- ..... I AN="" S AN=$O(^BQI(90507.2,"C",VALUE,"")) I AN'="" S RES=$G(^BQI(90507.2,AN,2))
- ..... S VALUE=VALUE_" is "
- ..... S ASTR=$TR(ASTR,$C(28),""),NVAL=$L(ASTR,$C(29))
- ..... F I=1:1:NVAL S LVAL=$P(ASTR,$C(29),I) I LVAL'="" S VALUE=VALUE_$$SCD^BQIUL2(RES,LVAL)_$S(NVAL>1:" or ",1:"")
- .... S VALUE=$$TKO^BQIUL1(VALUE," or ")
- ... S FPARMS(PORD,FNAME,$$TRUNC^BQIPDSCM(VALUE))=""
+FILTER(OWNR,PLIEN,FPARMS,FPORDN,FPORDO) ;EP - Include filter description
+ D FILTER^BQIPDSCB(OWNR,PLIEN,.FPARMS,.FPORDN,.FPORDO)
  Q
  ;
 GVAL(PTYP,FILN,IENS,SRC,NM) ; EP - Get value of parameter/filter
- N VALUE,BQFIL,PEXE,LABR
- ;
+ N VALUE,BQFIL,PEXE,LABR,VL
  ;Table
  I PTYP="T" D
  . S VALUE=$$GET1^DIQ(FILN,IENS,.03,"E")
@@ -123,39 +15,73 @@ GVAL(PTYP,FILN,IENS,SRC,NM) ; EP - Get value of parameter/filter
  .. S PGL="^"_$P(VALUE,";",2),PGL=$$TKO^BQIUL1(PGL,"(")
  .. S VALUE=$P(@PGL@($P(VALUE,";",1),0),U,1)
  . S BQFIL=$$FILN^BQIDCDF(SRC,NM) Q:BQFIL=""
- . I NM="LAB",VALUE'="" S LABR=$$LSET^BQIDCAH3(VALUE)
+ . I BQFIL=9002318.4&((NM="RFSNOM")!(NM="CDSNOM")) D  Q
+ .. NEW IDD
+ .. I VALUE="" Q
+ .. S IDD=$O(^BSTS(9002318.4,"C",36,VALUE,"")) I IDD="" S VALUE="" Q
+ .. S VALUE=$G(^BSTS(9002318.4,IDD,1))
+ . I NM="LAB",VALUE'="",VALUE'["_" S LABR=$$LSET^BQIDCAH3(VALUE)
+ . I NM="LAB",VALUE'="",VALUE["_" S LABR=$$LSET^BQIDCAH3($P(VALUE,"_",2))
  . I NM="MEAS",VALUE'="" S VALUE=$$GET1^DIQ(BQFIL,VALUE_",",.01,"E") Q
+ . I NM="VACC",VALUE'="" S VALUE=$$GET1^DIQ(BQFIL,VALUE_",",.02,"E") Q
+ . I NM="GPMEAS",VALUE'="" S VL=$O(^BQI(90506.1,"B",VALUE,"")) I VL'="" S VALUE=$P(^BQI(90506.1,VL,0),"^",3)
  . S VALUE=$$GET1^DIQ(BQFIL,VALUE_",",.01,"E")
  ;
  ;Non-table
- I PTYP'="T" S VALUE=$$GET1^DIQ(FILN,IENS,.02,"E")
+ I PTYP'="T" D
+ . S VALUE=$$GET1^DIQ(FILN,IENS,.02,"E")
+ . I NM="LAB",VALUE'="",VALUE'["_" S LABR=$$LSET^BQIDCAH3(VALUE)
+ . I NM="LAB",VALUE'="",VALUE["_" S LABR=$$LSET^BQIDCAH3($P(VALUE,"_",2))
+ . I NM="GPMEAS",VALUE'="" S VL=$O(^BQI(90506.1,"B",VALUE,"")) I VL'="" S VALUE=$P(^BQI(90506.1,VL,0),"^",3)
  I PTYP="D" S VALUE=$$UP^XLFSTR($$FMTE^XLFDT(VALUE,1))
- I PTYP="R" D
- . ;No longer needs converted
- . ;S VALUE=$$DATE^BQIUL1(VALUE)
- . ;S VALUE=$$UP^XLFSTR($$FMTE^XLFDT(VALUE,1))
- ;
- Q VALUE_$S($G(LABR)'="":"^"_LABR,1:"")
+ Q VALUE_$S($G(LABR)'="":"|"_LABR,1:"")
  ;
 GMVAL(PTYP,FILN,IENS,SRC,NM) ; EP - Get value for multiples
- N VALUE,BQFIL,LABR
+ N VALUE,BQFIL,LABR,VL
  I PTYP="T" D
  . S VALUE=$$GET1^DIQ(FILN,IENS,.02,"E")
  . S BQFIL=$$FILN^BQIDCDF(SRC,NM) Q:BQFIL=""
- . I NM="LAB",VALUE'="" S LABR=$$LSET^BQIDCAH3(VALUE)
- . ;I NM="MEAS" Q
+ . I BQFIL=9002318.4&((NM="RFSNOM")!(NM="CDSNOM"))  D  Q
+ .. NEW IDD
+ .. I VALUE="" Q
+ .. S IDD=$O(^BSTS(9002318.4,"C",36,VALUE,"")) I IDD="" S VALUE="" Q
+ .. S VALUE=$G(^BSTS(9002318.4,IDD,1))
+ . ;B:NM="LAB"
+ . ;I NM="LAB",VALUE'="",VALUE'["_" S LABR=$$LSET^BQIDCAH3(VALUE)
+ . ;I NM="LAB",VALUE'="",VALUE["_" S LABR=$$LSET^BQIDCAH3($P(VALUE,"_",2))
+ . I NM="VACC",VALUE'="" S VALUE=$$GET1^DIQ(BQFIL,VALUE_",",.02,"E") Q
+ . I NM="GPMEAS",VALUE'="" S VL=$O(^BQI(90506.1,"B",VALUE,"")) I VL'="" S VALUE=$P(^BQI(90506.1,VL,0),"^",3)
  . S VALUE=$$GET1^DIQ(BQFIL,VALUE,.01,"E")
- I PTYP'="T" S VALUE=$$GET1^DIQ(FILN,IENS,.01,"E")
- Q VALUE_$S($G(LABR)'="":"^"_LABR,1:"")
+ I PTYP'="T" D
+ . S VALUE=$$GET1^DIQ(FILN,IENS,.01,"E")
+ . I NM="LAB" S LABR=$$LSET^BQIDCAH3($P(VALUE,"_",2))
+ . ;I NM="LAB",VALUE'="",VALUE'["_" S LABR=$$LSET^BQIDCAH3(VALUE)
+ . ;I NM="LAB",VALUE'="",VALUE["_" S LABR=$$LSET^BQIDCAH3($P(VALUE,"_",2))
+ . I NM="GPMEAS",VALUE'="" S VL=$O(^BQI(90506.1,"B",VALUE,"")) I VL'="" S VALUE=$P(^BQI(90506.1,VL,0),"^",3)
+ Q VALUE_$S($G(LABR)'="":"|"_LABR,1:"")
  ;
-DLM(FPARMS,FLD) ;EP - Determine delimiter between multiple entries
- NEW PORD,FND,FNAME,FENT
- S (FND,PORD)="" F  S PORD=$O(FPARMS(PORD)) Q:'PORD  S FNAME="" F  S FNAME=$O(FPARMS(PORD,FNAME)) Q:FNAME=""  I FNAME=FLD D  Q
- . S FENT="" F  S FENT=$O(FPARMS(PORD,FNAME,FENT)) Q:FENT=""  D
- .. S FPARMS(PORD,FNAME,FENT)=$S($G(VALUE)="&":" AND ",1:" OR ")
+DLM(FPARMS,FNAME,FLD) ;EP - Determine delimiter between multiple entries
+ NEW OVAL,OR
+ S OVAL=$O(FPARMS(PORD,FNAME,"")),VALUE=""
+ S OPER=$S(OVAL="&":", AND ",1:", OR ")
+ I FLD="PROB" D
+ . I '$D(FPORDN("PROB")),$D(FPORDN("PROBS")) S FLD="PROBS"
+ NEW PORD,FENT,OFNAME
+ S (FND,PORD)="" F  S PORD=$O(FPARMS(PORD)) Q:'PORD  D
+ . S OFNAME="" F  S OFNAME=$O(FPARMS(PORD,OFNAME)) Q:OFNAME=""  D
+ .. I OFNAME=FLD D  Q
+ ... S FENT="" F  S FENT=$O(FPARMS(PORD,OFNAME,FENT)) Q:FENT=""  D
+ .... I OFNAME="LAB",FENT["_" D  Q
+ ..... S OR=FENT I FENT["|" S OR=$P(OR,"|",1)
+ ..... I FPARMS(PORD,FLD,FENT)'["_" S VALUE=VALUE_FPARMS(PORD,FLD,FENT)_OPER Q
+ ..... I FPARMS(PORD,FLD,FENT)["_" S IDD=$P(^LAB(60,$P(OR,"_",2),0),"^",1),VALUE=VALUE_IDD_OPER
+ .... I OFNAME="PROBS",FENT?.N D  Q
+ ..... S IDD=$$CID(FENT,36),VALUE=VALUE_IDD_OPER
+ .... S VALUE=VALUE_FPARMS(PORD,OFNAME,FENT)_OPER
+ S VALUE=$$TKO^BQIUL1(VALUE,OPER)
  Q
  ;
-AGE ; Format FPARMS("AGE") or FMPARMS("AGE")
+AGE(FVAL,VALUE) ; Format FPARMS("AGE") or FMPARMS("AGE")
  NEW AGE,EXT,OP,AGE1,AGE2
  I '$D(FPARMS(PORD,"AGE")) D  Q
  . S AGE=$G(VALUE)
@@ -208,103 +134,96 @@ DXCAT ;EP - Diagnosis Category
  S VALUE=STR
  Q
  ;
-DEC ;EP - Format Patient status
- ;Save everything under deceased
- S PORD=$$PORD^BQIDCDF(FSOURCE,"DEC") Q:PORD=""
+DEC(FVAL,VALUE) ;EP - Format Patient status
  ;Deceased
- I FNAME="DEC" D
- . NEW PORD,DECDT,DECFDT,DECTDT
- . S VALUE=$S($G(VALUE)="Y":"Deceased",1:"")
- . Q:VALUE=""
- . ;Tack on Deceased information
- . ;Deceased from date
- . S DECFDT=$$GETVAL(OWNR,PLIEN,"DECFDT")
- . I DECFDT]"" S VALUE=VALUE_" (Range from date "_$$FMTE^BQIUL1(DECFDT)
- . ;Deceased thru date
- . S DECTDT=$$GETVAL(OWNR,PLIEN,"DECTDT")
- . I DECTDT]"" S VALUE=VALUE_$S(VALUE["Range":" thru date ",1:" (Range thru date ")_$$FMTE^BQIUL1(DECTDT)
- . I VALUE["(" S VALUE=VALUE_")"
+ I FNAME="DEC" S VALUE=$S($G(FVAL)="Y":"are Deceased",1:"")
+ I FNAME="DECFDT" S VALUE="from "_FVAL
+ I FNAME="DECTDT" S VALUE="thru "_FVAL
+ I FNAME="DECCOD" D
+ . NEW FN,CD,CIEN,CDATE
+ . S FN=FPORDN("DECCOD"),VALUE=""
+ . S CD="" F  S CD=$O(FPARMS(FN,FNAME,CD)) Q:CD=""  D
+ .. S CIEN=$O(^ICD9("BA",CD_" ","")) I CIEN="" Q
+ .. S CDATE=$O(^ICD9(CIEN,68,"B",""),-1) I CDATE="" Q
+ .. S CN=$O(^ICD9(CIEN,68,"B",CDATE,"")) I CN="" Q
+ .. S VALUE=VALUE_^ICD9(CIEN,68,CN,1)_", "
+ . S VALUE=$$TKO^BQIUL1(VALUE,", ")
  ;
  ;Living
- I FNAME="LIV" S VALUE=$S($G(VALUE)="Y":"Living",1:"") S:VALUE]"" FNAME="DEC"
+ I FNAME="LIV" S VALUE=$S($G(FVAL)="Y":"are Living",1:"")
  ;
  ;Inactive
- I FNAME="INAC" S VALUE=$S($G(VALUE)="Y":"Inactive",1:"") S:VALUE]"" FNAME="DEC"
+ I FNAME="INAC" S VALUE=$S($G(FVAL)="Y":"are Inactive",1:"")
  ;
  ;DEMO
- I FNAME="DEMO" S VALUE=$S($G(VALUE)="E":"Exclude",$G(VALUE)="O":"Only",1:"Include")_" DEMO " S:VALUE]"" FNAME="DEC"
+ I FNAME="DEMO" S VALUE=$S($G(FVAL)="E":"Excludes",$G(FVAL)="O":"are Only",1:"Includes")_" DEMO patients"
  Q
  ;
-PLIDEN ; Format FPARMS("PLIDEN") or FMPARMS("PLIDEN")
- Q:$G(VALUE)=""
- ;
+PLIDEN(FVAL,VALUE) ; Format FPARMS("PLIDEN") or FMPARMS("PLIDEN")
  NEW PLOWNR,PLNAME
- S PLOWNR=$P(VALUE,$C(26)) S:PLOWNR]"" PLOWNR=$$GET1^DIQ(200,PLOWNR_",",.01,"E")
- S:PLOWNR]"" PLOWNR="(Owner: "_PLOWNR_")"
- S PLNAME=$P(VALUE,$C(26),2)
- ;
- S VALUE=PLNAME_$S(PLNAME]"":" ",1:"")_PLOWNR
- Q
- I $D(FPARMS("PLIDEN")) D
- . S PLOWNR=$P(FPARMS("PLIDEN"),$C(26),1),PLOWNR=$$GET1^DIQ(200,PLOWNR_",",.01,"E")
- . S FPARMS("PLIDEN")=$P(FPARMS("PLIDEN"),$C(26),2)_" "_PLOWNR
- I $D(FMPARMS("PLIDEN")) D
- . N PLIEN,PLARR
- . S PLIEN=""
- . F  S PLIEN=$O(FMPARMS("PLIDEN",PLIEN)) Q:PLIEN=""  D
- .. S PLOWNR=$P(PLIEN,$C(26),1),PLOWNR=$$GET1^DIQ(200,PLOWNR_",",.01,"E")
- .. S PLARR($P(PLIEN,$C(26),2)_" "_PLOWNR)=""
- . K FMPARMS("PLIDEN")
- . M FMPARMS("PLIDEN")=PLARR
+ S VALUE=""
+ I FNAME="PLIDEN" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S PLOWNR=$P(OR,$C(26),1),PLNAME=$P(OR,$C(26),2)
+ ... S PLOWNR=$$GET1^DIQ(200,PLOWNR_",",.01,"E")
+ ... I PLOWNR'="" S PLOWNR="(Owner: "_PLOWNR_")"
+ ... S VALUE=VALUE_PLNAME_$S(PLNAME]"":" ",1:"")_PLOWNR_", "
+ S VALUE=$$TKO^BQIUL1(VALUE,", ")
  Q
  ;
-LABTX(VALUE) ;EP - Assemble LABTX value
- NEW X,DIC,Y,IEN,VAL,LABTST,LTST
- I VALUE="" Q
- S X=VALUE,DIC="^ATXLAB(" D ^DIC
- S VALUE="Lab Taxonomy "_VALUE
- I Y="-1" Q
- S IEN=+Y_",",VAL=""
- D GETS^DIQ(9002228,IEN,"2101*","E","LABTST")
- S LTST="" F  S LTST=$O(LABTST(9002228.02101,LTST)) Q:LTST=""  D
- . S VAL=VAL_$S(VAL="":" (Lab Tests ",1:", ")_$G(LABTST(9002228.02101,LTST,".01","E"))
- S:VAL["(" VAL=VAL_")"
- S VALUE=VALUE_VAL
- Q
- ;
-MEDTX(VALUE) ;EP - Assemble MEDTX value
- NEW X,DIC,Y,IEN,VAL,MED,MTST,MD,FILE
- I VALUE="" Q
- S X=VALUE,DIC="^ATXAX(" D ^DIC
- S VALUE="Medication Taxonomy "_VALUE
- I Y="-1" Q
- S IEN=+Y_",",VAL=""
- D GETS^DIQ(9002226,IEN,".15;2101*","IE","MED")
- S FILE=$G(MED(9002226,IEN,.15,"I")) Q:FILE=""
- S MTST="" F  S MTST=$O(MED(9002226.02101,MTST)) Q:MTST=""  D
- . S MD=$G(MED(9002226.02101,MTST,".01","E")) Q:MD=""
- . S MD=$$GET1^DIQ(FILE,MD_",",.01,"E")
- . S VAL=VAL_$S(VAL="":" (Medications ",1:", ")_MD
- S:VAL["(" VAL=VAL_")"
- S VALUE=VALUE_VAL
- Q
- ;
-PRBTX(VALUE) ;EP - Assemble PROBTX value
- NEW X,DIC,Y,IEN,VAL,PROB,PTST,PB,FILE
- I VALUE="" Q
- S X=VALUE,DIC="^ATXAX(" D ^DIC
- S VALUE="Problem Taxonomy "_VALUE
- I Y="-1" Q
- S IEN=+Y_",",VAL=" ("
- D GETS^DIQ(9002226,IEN,".15;2101*","IE","PROB")
- S FILE=$G(PROB(9002226,IEN,.15,"I")) Q:FILE=""
- S PTST="" F  S PTST=$O(PROB(9002226.02101,PTST)) Q:PTST=""  D
- . S PB=$G(PROB(9002226.02101,PTST,".01","E")) Q:PB=""
- . S VAL=VAL_$$TKO^BQIUL1(PB," ")_", "
+LABTX(FVAL,VALUE) ;EP - Assemble lab taxonomy values
+ NEW TREF,VAL,MD,CT,LEN
+ I FVAL="" Q
+ S TREF=$NA(^XTMP("BQIPDSC",$J)) K @TREF
+ D BLD^BQITUTL(FVAL,.TREF,"L")
+ S VALUE="Taxonomy "_FVAL,LEN=1
+ S VAL=" : (",MD=""
+ F  S MD=$O(@TREF@(MD)) Q:MD=""!(LEN>255)  D
+ . S VAL=VAL_@TREF@(MD)_", ",LEN=$L(VAL)
  S VAL=$$TKO^BQIUL1(VAL,", ")
+ I LEN>255 S VAL=$$TRUNC^BQIPDSCM(VAL)
  S:VAL["(" VAL=VAL_")"
  S VALUE=VALUE_VAL
  Q
+ ;
+TAX(FVAL,VALUE) ;EP - Assemble Taxonomy values
+ NEW TREF,VAL,MD,CT,LEN
+ I FVAL="" Q
+ S TREF=$NA(^XTMP("BQIPDSC",$J)) K @TREF
+ D BLD^BQITUTL(FVAL,.TREF)
+ S VALUE="Taxonomy "_FVAL,LEN=1
+ S VAL=": (",MD=""
+ F  S MD=$O(@TREF@(MD)) Q:MD=""!(LEN>255)  D
+ . S VAL=VAL_$P(@TREF@(MD),"^",1)_", ",LEN=$L(VAL)
+ S VAL=$$TKO^BQIUL1(VAL,", ")
+ I LEN>255 S VAL=$$TRUNC^BQIPDSCM(VAL)
+ S:VAL["(" VAL=VAL_")"
+ S VALUE=VALUE_VAL
+ Q
+ ;
+SNOM(FVAL,VALUE) ;EP - Assemble SNOMED subset
+ NEW BQILIST,BQTY,OK,BQSN,CODE,LIEN
+ S BQILIST=$NA(^TMP("BQISNOMG",$J)) K @BQILIST
+ S BQTY=$S($E(FVAL,1,4)="RXNO":1552,1:36)
+ S OK=$$SUBLST^BSTSAPI(BQILIST,FVAL_"^"_BQTY_"^1")
+ S VALUE=$S(BQTY=1552:"RXNORM ",1:"SNOMED ")_FVAL,LEN=1
+ S VAL=": ("
+ S BQSN=0
+ F  S BQSN=$O(@BQILIST@(BQSN)) Q:BQSN=""!(LEN>255)  D
+ . S CODE=$P(@BQILIST@(BQSN),"^",1),DESC=$P(@BQILIST@(BQSN),"^",3)
+ . S LIEN=$O(^BSTS(9002318.4,"C",BQTY,CODE,""))
+ . I $P(^BSTS(9002318.4,LIEN,0),"^",16)=1 Q
+ . S VAL=VAL_DESC_", ",LEN=$L(VAL)
+ S VAL=$$TKO^BQIUL1(VAL,", ")
+ I LEN>255 S VAL=$$TRUNC^BQIPDSCM(VAL)
+ S:VAL["(" VAL=VAL_")"
+ S VALUE=VALUE_VAL
+ Q
+ ;
+CID(CODE,BQTY) ;Concept ID
+ S LIEN=$O(^BSTS(9002318.4,"C",BQTY,CODE,""))
+ Q $P($G(^BSTS(9002318.4,LIEN,1))," (",1)
  ;
 GETVAL(OWNR,PLIEN,FLD) ;EP - Retrieve Single field value
  N DECIEN,DA,IEN,IENS
@@ -312,7 +231,7 @@ GETVAL(OWNR,PLIEN,FLD) ;EP - Retrieve Single field value
  S DA(2)=OWNR,DA(1)=PLIEN,DA=IEN,IENS=$$IENS^DILF(.DA)
  Q $$GET1^DIQ(90505.115,IENS,.02,"I")
  ;
-ICD(ICDIEN) ;EP - Return ICD Information
+ICD(FVAL,VALUE) ;EP - Return ICD Information
  NEW ICD
  S ICD=""
  ;Pull appropriate ICD-9/ICD-10 code
@@ -338,8 +257,8 @@ ICD(ICDIEN) ;EP - Return ICD Information
  .. S ICD=$P(STR,U,4)_U_$P(STR,U,2)
  Q $S(ICD]"":($P(ICD,U)_" ("_$P(ICD,U,2)_")"),1:"")
  ;
-PRST(VALUE) ;EP - Problem statuses
+PRST(PVAL) ;EP - Problem statuses
  NEW FILE,FLD
- S FILE=9000011,FLD=.12
- S VALUE=$$STC^BQIUL2(FILE,FLD,VALUE)
- Q
+ S FILE=9000011,FLD=.12,PVALUE=""
+ S PVALUE=$$STC^BQIUL2(FILE,FLD,PVAL)
+ Q PVALUE

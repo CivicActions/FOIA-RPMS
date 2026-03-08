@@ -1,29 +1,29 @@
-BEHOVMIN ;MSC/IND/DKM - Installation Support ;16-Jul-2014 10:21;MGH
- ;;1.1;BEH COMPONENTS;**001002,001005,001006,001010**;Mar 20, 2007
+BEHOVMIN ;MSC/IND/DKM - Installation Support ;12-Nov-2020 10:31;PLS
+ ;;1.1;BEH COMPONENTS;**001002,001005,001006,001010,001013**;Mar 20, 2007
  ;=================================================================
 PREINIT ;EP - Preinitialization
- ;D BEHMSR("02 SATURATION","O2 SATURATION")
  Q
 POSTINIT ;EP - Postinitialization
+ S $P(^BEHOVM(90460.01,2,0),U,8)=3  ; Set Display SD for WT
  ;N LP,CLS
  ;F LP=0:1 S CLS=$P($T(CANENTER+LP),";;",2) Q:'$L(CLS)  D
  ;.D ADD^XPAR("CLS."_CLS,"BEHOVM DATA ENTRY",,"YES")
  ;D ADD^XPAR("PKG","BEHOVM USE VMSR",,$G(DUZ("AG"))="I")
  ;D REGMENU^BEHUTIL("BEHOVM MAIN",,"VIT")
- N ZTDESC,ZTIO,ZTRTN,ZTSAVE,ZTSK,DIR
- S ZTRTN="BMI^BEHOVMIN",ZTIO="",ZTSAVE("DUZ")=""
- S ZTDESC="Store BMI on historical wts."
- D ^%ZTLOAD
- I $G(ZTSK) D
- .K ^XTMP("BEHVMBMI")
- .N X,X1,X2 S X1=DT,X2=30
- .D C^%DTC
- .S ^XTMP("BEHVMBMI",0)=X_"^"_DT_"^"
- .S ^XTMP("BEHVMBMI","COUNT")=0
- .W !!,"A task has been queued in the background."
- .W !,"  The task number is "_$G(ZTSK)_"."
- .W !,"  To check on the status of the task, in programmer mode "
- .W !,"    type D STATUS^BEHOVMIN"
+ ;N ZTDESC,ZTIO,ZTRTN,ZTSAVE,ZTSK,DIR
+ ;S ZTRTN="BMI^BEHOVMIN",ZTIO="",ZTSAVE("DUZ")=""
+ ;S ZTDESC="Store BMI on historical wts."
+ ;D ^%ZTLOAD
+ ;I $G(ZTSK) D
+ ;.K ^XTMP("BEHVMBMI")
+ ;.N X,X1,X2 S X1=DT,X2=30
+ ;.D C^%DTC
+ ;.S ^XTMP("BEHVMBMI",0)=X_"^"_DT_"^"
+ ;.S ^XTMP("BEHVMBMI","COUNT")=0
+ ;.W !!,"A task has been queued in the background."
+ ;.W !,"  The task number is "_$G(ZTSK)_"."
+ ;.W !,"  To check on the status of the task, in programmer mode "
+ ;.W !,"    type D STATUS^BEHOVMIN"
  Q
  ; Rename .01 field of BEH Measurement file
 BEHMSR(X,Y) ;

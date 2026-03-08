@@ -1,5 +1,5 @@
-PSIVUTL ;BIR/MLM-IV UTILITIES ;29-May-2012 14:37;PLS
- ;;5.0; INPATIENT MEDICATIONS ;**69,58,81,85,1009,110,133,1015**;16 DEC 97;Build 62
+PSIVUTL ;BIR/MLM-IV UTILITIES ;05-Apr-2023 18:42;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**69,58,81,85,1009,110,133,1015,1033**;16 DEC 97;Build 34
  ;
  ; Reference to ^DD("DD" is supported by DBIA 10017.
  ; Reference to ^PS(50.7 is supported by DBIA 2180.
@@ -11,6 +11,7 @@ PSIVUTL ;BIR/MLM-IV UTILITIES ;29-May-2012 14:37;PLS
  ;
  ;Modified - IHS/MSC/PLS - 08/20/10 - Line IVDRGSC+3
  ;                         09/13/10 - Line DRGSC+5,IVDRGSC+3
+ ;                         04/04/23 - Line DOW+5
 DRGSC(Y,PSJSCT) ; Called to set DIC("S") when selecting  Orderable Items.
  N OK,ND,NDU,NDI S OK=0
  S ND=$G(^PS(50.7,+Y,0))
@@ -126,7 +127,9 @@ DOW(SCHED) ;
  N P9,PSIVX,X S PSIVX=0 S P9=SCHED
  ; Use schedule validator
  S X=SCHED D DW^PSGS0 I $G(X)="" Q 0
- I +$O(^PS(51.1,"APPSJ",SCHED,0)) S PSIVX=1 S P9=$P(SCHED,"@") F X=1:1:$L(P9,"-") D  Q:'$G(PSIVX)
+ ;IHS/MSC/PLS - p1033
+ ;I +$O(^PS(51.1,"APPSJ",SCHED,0)) S PSIVX=1 S P9=$P(SCHED,"@") F X=1:1:$L(P9,"-") D  Q:'$G(PSIVX)
+ I +$O(^PS(51.1,"APPSJ",SCHED,0)) S PSIVX=1 S P9=$P($TR(SCHED,",","-"),"@") F X=1:1:$L(P9,"-") D  Q:'$G(PSIVX)
  . I '("MON,TUE,WED,THU,FRI,SAT,SUN"[$P(P9,"-",X)) S PSIVX=0 Q
  Q:PSIVX +PSIVX
  I '$D(^PS(51.1,"APPSJ",SCHED)) S PSIVX=1,P9=$P(SCHED,"@") F X=1:1:$L(P9,"-") D  Q:'$G(PSIVX)

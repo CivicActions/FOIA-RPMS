@@ -1,5 +1,5 @@
-PSIVORC2 ;BIR/MLM-PROCESS INCOMPLETE IV ORDER - CONT ;22 OCT 97 / 3:16 PM
- ;;5.0; INPATIENT MEDICATIONS ;**29,49,50,65,58,85,101,110,127,151**;16 DEC 97
+PSIVORC2 ;BIR/MLM-PROCESS INCOMPLETE IV ORDER - CONT ;20-Jan-2023 3:16 PM
+ ;;5.0; INPATIENT MEDICATIONS ;**29,49,50,65,58,85,101,110,127,151,1029,1033**;16 DEC 97;Build 34
  ;
  ; Reference to ^ORD(101 is supported by DBIA #872
  ; Reference to ^PS(51.2 is supported by DBIA #2178
@@ -8,6 +8,7 @@ PSIVORC2 ;BIR/MLM-PROCESS INCOMPLETE IV ORDER - CONT ;22 OCT 97 / 3:16 PM
  ; Reference to ^PS(52.7 is supported by DBIA #2173.
  ; Reference to EN1^ORCFLAG is supported by DBIA #3620.
  ; Reference to ^PSSLOCK is supported by DBIA #2789
+ ; Modified - IHS/MSC/MIR-01/12/2022 - ACTIVE+2,+11,CALLBOP - Patch 1029, CALLBOP1 - Patch 1033
  ;
 EDCHK ;Update or create new order in 55.
  D CKORD D:'$G(PSJIVORF) ORPARM^PSIVOREN I 'PSJIVORF W !,"Either the Inpatient Medications or the IV Medications package is not on, please check the Order Parameters file" Q
@@ -18,7 +19,7 @@ EDCHK ;Update or create new order in 55.
  Q:$$NONVF()
 ACTIVE ;
  S PSJCOM=P("PRNTON")
- I PSJCOM D VFYIV^PSJCOMV Q
+ I PSJCOM D VFYIV^PSJCOMV N PSJORD S PSJORD=+$O(^PS(55,PSGP,"IV","A"),-1) D CALLBOP Q
  S P("RES")=$P($G(^PS(53.1,+ON,0)),U,24)
  I P("RES")="R" S P("NEWON")=P("OLDON") S PSJOSTOP="" D RUPDATE^PSIVOREN(DFN,ON,P(2))
  I P("RES")'="R" S PSJORD=ON,P(17)="A",ORSTS=6,PSJORNP=P(6) D SETNEW^PSIVORFB S P("NEWON")=ON55 D @$S(PSIVCHG:"NEWORD",1:"OLDORD")
@@ -27,6 +28,7 @@ ACTIVE ;
  D ENLBL^PSIVOPT(2,DUZ,DFN,3,+ON55,"N")
  I $G(^PS(55,DFN,"IV",+ON55,4)) D EN1^PSJHL2(DFN,"ZV",ON55)
  L -^PS(53.1,+$G(PSJORD)) L -^PS(55,DFN,"IV",+ON55)
+ N PSJORD S PSJORD=+ON55 D CALLBOP ;IHS/MSC/MIR - 12/17/21 - Call Automated Dispensing System if present
  Q
  ;
 CKORD ;Check if new order is to be created.
@@ -163,4 +165,11 @@ RESET ;Reset PSIVOI("DILIST") for additives with quick codes
  S PSIVOI("DILIST",0)=CNT_"^*^0^"
  S XX=0 F  S XX=$O(LYN(XX)) Q:'XX  S PSIVOI("DILIST",XX,0)=LYN(XX)
  K LYN
+ Q
+ ; Call Automated Dispensing System if present
+CALLBOP ;
+ D:$$PATCH^XPDUTL("BOP*1.0*4") NEW1^BOPCAP
+ Q
+CALLBOP1 ;
+ D:$$PATCH^XPDUTL("BOP*1.0*4") EDIT1^BOPCP2
  Q

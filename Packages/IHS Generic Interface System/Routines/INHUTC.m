@@ -1,5 +1,5 @@
-INHUTC ;bar; 23 Jul 97 15:02; Criteria Mgmt and Execution API 
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHUTC ;ihs/cmi/maw - Criteria Mgmt and Execution API 
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  ;;COPYRIGHT 1997 SAIC
  ;
@@ -220,7 +220,7 @@ RESOLV(INIEN) ; Resolve transaction and errors associated with it
  . I "^C^K^E"'[("^"_INSTAT) S INIEN(INUIF)="0^Status not COMPLETE, ERROR, or NEG ACK" Q
  . L +^INTHU(INUIF):0 E  S INIEN(INUIF)="0^Cannot lock entry" Q
  . ; mark complete and update log, resolve all errors
- . D ULOG^INHU(INUIF,"C","Marked complete by user "_$P(^DIC(3,DUZ,0),U)_" through API")
+ . D ULOG^INHU(INUIF,"C","Marked complete by user "_$P(^VA(200,DUZ,0),U)_" through API")
  . S INIEN(INUIF)="1^"_INUIF
  Q
  ;

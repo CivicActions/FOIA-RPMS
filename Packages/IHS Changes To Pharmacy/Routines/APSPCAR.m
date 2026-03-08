@@ -1,0 +1,303 @@
+APSPCAR ; IHS/MSC/PLS - EPCS AUDIT REPORT ;12-Mar-2019 17:04;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1023**;Sep 23, 2004;Build 121
+ ;
+ ; IHS/MSC/PLS - 08/11/2017 - New Report
+EN ;EP
+ N APSPBD,APSPED,APSPBDF,APSPEDF,APSPDIV,APSPRTYP,APSPQ,APSPDSUB,APSPDCLS
+ N APSPDCT,APSPDCTN,APSPDRG,APSPDET,APSPSORT,STATS,APSPXML,APSPPRV
+ N APSPETOT,APSPPAT,APSPRTOT,APSPPOP,APSPATMP,APSPTMR,APSPBAK,APSPUSR,APSPEACT
+ S APSPDIV="",APSPDRG="",APSPQ=0,APSPDSUB=0,APSPXML=0,APSPPRV="",APSPUSR=""
+ S APSPETOT=1,APSPPAT="",APSPATMP=1,APSPBAK=1,APSPTMR=1,APSPEACT=1
+ W @IOF
+ W !!,"EPCS Audit Report"
+ D ASKDATES^APSPUTIL(.APSPBD,.APSPED,.APSPQ,$$FMADD^XLFDT(DT,-1),$$FMADD^XLFDT(DT,-1))
+ Q:APSPQ
+ S APSPBDF=$P($TR($$FMTE^XLFDT(APSPBD,"5Z"),"@"," "),":",1,2)
+ S APSPEDF=$P($TR($$FMTE^XLFDT(APSPED,"5Z"),"@"," "),":",1,2)
+ S APSPBD=APSPBD-.01,APSPED=APSPED+.99
+ S APSPDIV=$$DIR^APSPUTIL("Y","Would you like all divisions","Yes",,.APSPQ)
+ Q:APSPQ
+ I APSPDIV D
+ .S APSPDIV="*"
+ E  D  Q:APSPQ
+ .S APSPDIV=$$GETIEN^APSPUTIL(4,"Select Division: ")
+ .;S:APSPPOP APSPPQ
+ Q:APSPQ
+ D  Q:APSPQ
+ .S APSPDCLS=$$DIR^APSPUTIL("S^1:C-II;2:C-II through C-V;3:C-III through C-V","Med Class Types",2,,.APSPQ)
+ .Q:APSPQ
+ .S APSPDSUB=1  ;$$DIR^APSPUTIL("Y","Secondary sort by medication name",,,.APSPQ)
+ .S APSPDCT(1)="2",APSPDCT(2)="2345",APSPDCT(3)="345"
+ .S APSPDCTN(1)="C-II",APSPDCTN(2)="C-II through C-V",APSPDCTN(3)="C-III through C-V"
+ ;S APSPRTYP=+$$DIR^APSPUTIL("S^1:Summary;2:Detail","Report Type",2,,.APSPQ)
+ ;Q:APSPQ
+ D  Q:APSPQ
+ .S APSPATMP=$$DIR^APSPUTIL("S^1:Include order attempts;2:Exclude order attempts;3:Only order attempts","Order Attempts",2,,.APSPQ)
+ D:'$$ISEXCLU()  Q:APSPQ
+ .S APSPTMR=+$$DIR^APSPUTIL("S^1:Include tampered entries;2:Exclude tampered entries;3:Only tampered entries","Tampered entries",2,,.APSPQ)
+ D:'$$ISEXCLU()  Q:APSPQ
+ .S APSPBAK=$$DIR^APSPUTIL("S^1:Include pharmacy entries;2:Exclude pharmacy entries;3:Only pharmacy entries","Pharmacy order entry",2,,.APSPQ)
+ ;
+ S APSPRTYP=+$$DIR^APSPUTIL("S^1:Summary;2:Detail","Report Type",2,,.APSPQ)
+ Q:APSPQ
+ ;
+ S APSPDET=APSPRTYP>1
+ S APSPSORT=+$$DIR^APSPUTIL($$GSORTSTR(),"Sort report by",$S(APSPDET:3,1:""),,.APSPQ)
+ Q:APSPQ
+ S APSPPAT="*"
+ I APSPSORT=4 D
+ .S APSPPAT=$$DIR^APSPUTIL("Y","Would you like all patients","Yes",,.APSPQ)
+ .Q:APSPQ
+ .I APSPPAT D
+ ..S APSPPAT="*"
+ .E  D  Q:APSPQ
+ ..S APSPPAT=+$$DIR^APSPUTIL("9000001,.01","Select Patient: ",,,.APSPQ)
+ Q:APSPQ
+ S APSPPRV="*"
+ I APSPSORT=5 D
+ .S APSPPRV=$$DIR^APSPUTIL("Y","Would you like all prescribers","Yes",,.APSPQ)
+ .Q:APSPQ
+ .I APSPPRV D
+ ..S APSPPRV="*"
+ .E  D  Q:APSPQ
+ ..S APSPPRV=+$$DIR^APSPUTIL("52,4","Select Prescriber: ",,,.APSPQ)
+ Q:APSPQ
+ S APSPUSR="*"
+ I APSPSORT=6 D
+ .S APSPUSR=$$DIR^APSPUTIL("Y","Would you like all Event Actors","Yes",,.APSPQ)
+ .Q:APSPQ
+ .I APSPUSR D
+ ..S APSPUSR="*"
+ .E  D  Q:APSPQ
+ ..S APSPUSR=+$$DIR^APSPUTIL("9009036,.06","Select Event Actor: ",,,.APSPQ)
+ Q:APSPQ
+ S APSPXML=+$$DIR^APSPUTIL("S^1:Standard Report;2:Data Export","Output Mode",1,,.APSPQ)
+ Q:APSPQ
+ S APSPXML=APSPXML=2
+ S:APSPXML&APSPDET APSPETOT=+$$DIR^APSPUTIL("Y","Export report totals","No",,.APSPQ)
+ Q:APSPQ
+ S:APSPXML&APSPDET APSPEACT=+$$DIR^APSPUTIL("Y","Export ALL activity for audit record","No",,.APSPQ)
+ D DEV
+ Q
+DEV ;
+ N XBRP,XBNS
+ S XBRP="OUT^APSPCAR"
+ S XBNS="APS*"
+ D ^XBDBQUE
+ Q
+OUT ;EP
+ U IO
+ K ^TMP($J)
+ D FIND(APSPBD,APSPED,"E",$G(APSPDCLS))  ;
+ D SORT
+ D PRINT^APSPCAR1
+ K ^TMP($J)
+ Q
+ ;
+FIND(SDT,EDT,XREF,DCLS) ;EP
+ N RXIEN,ACTIEN,RTSDT,FILLDT,A0,FDTLP,IEN,CMOP,AUD0,AUDIEN
+ S FDTLP=SDT-.01
+ S CMOP=""
+ F  S FDTLP=$O(^APSPCSA(XREF,FDTLP)) Q:'FDTLP!(FDTLP>EDT)  D
+ .S AUDIEN=0
+ .F  S AUDIEN=$O(^APSPCSA(XREF,FDTLP,AUDIEN)) Q:'AUDIEN  D
+ ..Q:'$$PATVRY(AUDIEN,APSPPAT)  ;check patient
+ ..Q:'$$DIVVRY(AUDIEN,APSPDIV)  ;check division
+ ..Q:'$$DCVRY(APSPDCLS,AUDIEN)  ;Quit if Med Class search and med doesn't match class
+ ..Q:'$$PRVVRY(AUDIEN,APSPPRV)  ;check provider
+ ..Q:'$$ATMPVRY(AUDIEN,APSPATMP)  ;check attempts
+ ..Q:'$$TMRVRY(AUDIEN,APSPTMR)  ;check tampered entries
+ ..Q:'$$BAKVRY(AUDIEN,APSPBAK)  ;check for backdoor entries
+ ..Q:'$$USRVRY(AUDIEN,APSPUSR)  ;check event actor
+ ..D SET(AUDIEN)
+ Q
+ ;
+SORT ;EP -
+ Q
+ ; Set data into ^TMP global for output
+SET(AIEN) ;EP
+ N LSTDSPDT,NODE0,NODE2,NODE3,DIV,DCLS,RTSDATE,DRUG,AUDDT,RIFLG,FTYPE
+ N PNM,DFN,OPRV,OPRVNM,NXT,RXIEN,ORDIEN,ATMPT,DRGNM
+ N AUDUSR,AUDUSRNM
+ S NXT=$O(^TMP($J,"DATA",$C(1)),-1)
+ S NXT=NXT+1
+ S NODE0=^APSPCSA(AIEN,0)
+ S NODE2=$G(^APSPCSA(AIEN,2))
+ S AUDDT=$P(NODE0,U,4)
+ S ORDIEN=$P(NODE0,U,2)
+ S RXIEN=$P(NODE0,U,5)
+ S RXIEN=$S(RXIEN:RXIEN,1:"None")
+ S DRUG=$$GETDRG(AIEN)
+ S DFN=$P(NODE0,U)
+ S PNM=$$GET1^DIQ(2,DFN,.01)
+ S ATMPT=$$ISATMPT(AIEN)
+ I ATMPT D
+ .S DRGNM=$$GETOI(AIEN,1)
+ .S DCLS=$$GETOICLS($$GETOI(AIEN))
+ E  D
+ .S DRGNM=$P(^PSDRUG(DRUG,0),U)
+ .S DCLS=+$P(^PSDRUG(DRUG,0),U,3)
+ S DCLS=$$CVTDCLS(DCLS)
+ S DIV=+$P(NODE0,U,9)
+ S OPRV=$P(NODE0,U,3)
+ S OPRVNM=$$GET1^DIQ(200,OPRV,.01)
+ S:'$L(OPRVNM) OPRVNM="NONAME PROVIDER"
+ S AUDUSR=$P(NODE0,U,6)
+ S AUDUSRNM=$$GET1^DIQ(200,AUDUSR,.01)
+ S:'$L(AUDUSRNM) AUDUSRNM="NONAME USER"
+ ;                1       2         3          4                 5          6               7         8        9              10        11        12        13         14
+ ;Format: Audit IEN^Date Entered^Order IEN^Prescription IEN^Patient IEN^Prescriber IEN^Drug Class^Drug Name^AutoFinished^Pharmacy IEN^Drug IEN^Division^Audit User IEN^Tampered^
+ S ^TMP($J,"DATA",NXT)=AIEN_U_AUDDT_U_ORDIEN_U_RXIEN_U_DFN_U_OPRV_U_DCLS_U_DRGNM_U_$P(NODE2,U)_U_$P(NODE2,U,2)_U_DRUG_U_DIV_U_AUDUSR_U_$$CHKTMR(AIEN)
+ S DRGNM=$$UP^XLFSTR(DRGNM)
+ S ^TMP($J,"XREF",DIV,"AUDDT",AUDDT,DRGNM,NXT)=""
+ S ^TMP($J,"XREF",DIV,"DRUG",DRGNM,AUDDT,NXT)=""
+ S ^TMP($J,"XREF",DIV,"S-DRUG",DRGNM,NXT)=""
+ ;S ^TMP($J,"XREF",DIV,"S-AUDDT",AUDDT,DRGNM,NXT)=""
+ S ^TMP($J,"XREF",DIV,"DCLS",DCLS,DRGNM,AUDDT,NXT)=""
+ S ^TMP($J,"XREF",DIV,"PAT",PNM,AUDDT,DRGNM,NXT)=""
+ S ^TMP($J,"XREF",DIV,"PRV",OPRVNM,DRGNM,AUDDT,NXT)=""
+ S ^TMP($J,"XREF",DIV,"USR",AUDUSRNM,AUDDT,DRGNM,NXT)=""
+ S:$G(RXIEN) ^TMP($J,"XREF","RX",RXIEN)=NXT
+ S:$$CHKTMR(AIEN) ^TMP($J,"XREF",DIV,"TMR",AIEN)=NXT  ;Tampered
+ S:$$ISATMPT(AIEN) ^TMP($J,"XREF",DIV,"ATMP",AIEN)=NXT  ;Attempt
+ S:$$ISBAKO(AIEN) ^TMP($J,"XREF",DIV,"BAK",AIEN)=NXT  ;Backdoor
+ Q
+ ; Return boolean flag indicating prescription drug matches selected report drug class
+ ; Input:  DCLS - Drug Class based on input selected by user
+ ;         AUDIEN - Audit IEN
+DCVRY(DCLS,AUDIEN) ;EP
+ N RXRTSDT,DRGIEN,DCLSVAL
+ I $$ISATMPT(AUDIEN) Q $$ERXOI^APSPFNC6($$GETOI(AUDIEN),APSPDCT(APSPDCLS))
+ S DRGIEN=$$GETDRG(AUDIEN)
+ Q:'$D(^PSDRUG(DRGIEN,0)) 0 ; Check for missing drug entry
+ S DCLSVAL=$P(^PSDRUG(DRGIEN,0),U,3)
+ Q APSPDCT(DCLS)[+DCLSVAL
+ ; Return boolean flag indicating valid division
+DIVVRY(AUDIEN,DIV) ;EP
+ Q:DIV="*" 1
+ Q DIV=+$P(^APSPCSA(AUDIEN,0),U,9)
+ ; Return boolean flag indicating valid provider
+PRVVRY(AUDIEN,PRV) ;EP
+ Q:PRV="*" 1
+ Q PRV=$P(^APSPCSA(AUDIEN,0),U,3)
+ ; Return boolean flag indicating valid user
+USRVRY(AUDIEN,USR) ;EP
+ Q:USR="*" 1
+ Q USR=$P(^APSPCSA(AUDIEN,0),U,6)
+ ; Return boolean flag indicating valid patient
+PATVRY(AUDIEN,PAT) ;EP
+ Q:PAT="*" 1
+ Q +$P($G(^APSPCSA(AUDIEN,0)),U)=PAT
+ ;Check for an attempt record
+ATMPVRY(AUDIEN,ATMP) ;EP
+ N RET
+ S RET=$$ISATMPT(AUDIEN)
+ Q:ATMP=1 1
+ Q:ATMP=2 'RET
+ Q RET
+ ;
+ISATMPT(AUDIEN) ;EP
+ Q $P(^APSPCSA(AUDIEN,0),U,2)=""&($P($G(^APSPCSA(AUDIEN,1,1,0)),U)="AT")
+ ;Get orderable item
+ ; FLG = 1 return name
+GETOI(AUDIEN,FLG) ;EP
+ Q $$GET1^DIQ(9009036.01,"1,"_AUDIEN_",",2.1,$S($G(FLG):"",1:"I"))
+ ;Check for a tampered record
+TMRVRY(AUDIEN,TMR) ;EP
+ N RET
+ S RET=$$CHKTMR(AUDIEN)
+ Q:TMR=1 1
+ Q:TMR=2 'RET
+ Q RET
+ ;Has Record been tampered with
+CHKTMR(AUDIEN) ;EP
+ N RET
+ D CHKLOG^APSPCSA(.RET,AUDIEN,0)
+ Q +$G(RET(0))
+ ;Check for Pharmacy entered order
+BAKVRY(AUDIEN,BAK) ;EP
+ N RET
+ S RET=$$ISBAKO(AUDIEN)
+ Q:BAK=1 1
+ Q:BAK=2 'RET
+ Q RET
+ ;Pharmacy entered order
+ISBAKO(AUDIEN) ;EP
+ N RXIEN
+ S RXIEN=$P(^APSPCSA(AUDIEN,0),U,5)
+ Q:'RXIEN 0
+ Q +$$GET1^DIQ(52,$P(^APSPCSA(AUDIEN,0),U,5),311,"I")
+CVTDCLS(DCLS) ;EP
+ Q:DCLS=2 "C-II"
+ Q:DCLS=3 "C-III"
+ Q:DCLS=4 "C-IV"
+ Q:DCLS=5 "C-V"
+ Q "C-UNKNOWN"
+ ; Returns IEN of associated prescription if available or Order
+GETDRG(AUDIEN) ;EP
+ N ORD,RX,DRGIEN
+ S ORD=$P(^APSPCSA(AUDIEN,0),U,2)
+ S RX=$P(^APSPCSA(AUDIEN,0),U,5)
+ I RX D
+ .S DRGIEN=$P(^PSRX(RX,0),U,6)
+ E  S DRGIEN=$$VALUE^ORCSAVE2(+ORD,"DRUG")
+ Q +$G(DRGIEN)
+ ;Return class of first drug associated with Orderable Item
+GETOICLS(OIIEN) ;
+ N PSOI,DRG,RET
+ S RET="NA"
+ S PSOI=+$P($G(^ORD(101.43,+OIIEN,0)),U,2)
+ S DRG=$O(^PSDRUG("ASP",PSOI,0))
+ I DRG D
+ .S RET=+$P(^PSDRUG(DRG,0),U,3)
+ Q RET
+ ;Return sort prompt string
+GSORTSTR() ;EP
+ N SORT
+ S SORT="S^1:Medication;2:Event Date;"
+ S:APSPDET SORT=SORT_"3:Med Schedule/Med Name;4:Patient;5:Prescriber;6:Event Actor"
+ Q SORT
+ ;
+ISEXCLU() ;EP
+ Q (APSPATMP=3)!(APSPTMR=3)!(APSPBAK=3)
+ ;Entry point called by APSP AUDIT REPORT TASK option to autorun with defaults
+ENTSK ;EP-
+ N APSPBD,APSPBDF,APSPDCLS,APSPDCTN,APSPDET,APSPDIV
+ N APSPDRG,APSPDSUB,APSPED,APSPEDF,APSPETOT,APSPPAT,APSPPRV,APSPQ
+ N APSPRTYP,APSPSORT,APSPXML,APSPATMP,APSPEMR,APSPBAK
+ N LP,X
+ S APSPBD=$$FMADD^XLFDT(DT,-1)
+ S APSPBDF=$P($TR($$FMTE^XLFDT(APSPBD,"5Z"),"@"," "),":",1,2)
+ S APSPBD=APSPBD-.01
+ S APSPDCLS=2
+ S APSPDCT(1)="2",APSPDCT(2)="2345",APSPDCT(3)="345"
+ S APSPDCTN(1)="C-II",APSPDCTN(2)="C-II through C-V",APSPDCTN(3)="C-III through C-V"
+ S APSPDET=1
+ S APSPDIV="*"
+ S APSPDRG=""
+ S APSPDSUB=1
+ S APSPED=$$FMADD^XLFDT(DT,-1)
+ S APSPEDF=$P($TR($$FMTE^XLFDT(APSPED,"5Z"),"@"," "),":",1,2)
+ S APSPED=APSPED+.99
+ S APSPETOT=1
+ S APSPPAT="*"
+ S APSPPRV="*"
+ S APSPUSR="*"
+ S APSPATMP=1
+ S APSPQ=0
+ S APSPRTYP=2
+ S APSPSORT=3
+ S APSPXML=0
+ S APSPEACT=0
+ S APSPTMR=1
+ S APSPBAK=1
+ D OUT^APSPCAR
+ Q
+AUTOQ ;EP - ENTRY POINT FOR AUTO QUEUEING OF APSP CS AUDIT REPORT TASK OPTION
+ Q:'$$FIND1^DIC(19,"","MX","APSP CS AUDIT REPORT TASK")
+ I $$FIND1^DIC(19.2,"","MX","APSP CS AUDIT REPORT TASK") D
+ .D EDIT^XUTMOPT("APSP CS AUDIT REPORT TASK")
+ E  D
+ .D RESCH^XUTMOPT("APSP CS AUDIT REPORT TASK","","","24H","L")
+ .D EDIT^XUTMOPT("APSP CS AUDIT REPORT TASK")
+ Q

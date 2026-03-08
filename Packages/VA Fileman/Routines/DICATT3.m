@@ -1,77 +1,35 @@
-DICATT3 ;SFISC/COMPUTED FIELDS ;11:27 AM  24 May 2001 [ 12/09/2003  4:25 PM ]
- ;;22.0;VA FileMan;**76,1002**;Mar 30, 1999
+DICATT3 ;SFISC/XAK-COMPUTED FIELDS ;1/11/91  2:21 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
- K DIRUT,DTOUT D COMP I $P(^DD(A,DA,0),U,2)["C" G N^DICATT
- S DTOUT=1 G CHECK^DICATT
- ;
-COMP N DIR,DICOMPX,DISPEC,DICMIN,DIL,DIJ,DIE,DIDEC
- S DISPEC=$P($G(^DD(A,DA,0)),U,2)
- S DIR(0)="FU",DIR("A")="'COMPUTED-FIELD' EXPRESSION"
- I O,$D(^DD(A,DA,9.1)) S DIR("B")=^(9.1)
- S DIR("?")="^D DICATT3^DIQQ"
- D ^DIR Q:$D(DIRUT)
- I $D(DIR("B")),DIR("B")=Y G GETTYPE
- K DICOMPX S DICOMPX=""
- S DICMIN=Y,DQI="Y("_A_","_DA_",",DICMX="X DICMX",DICOMP="?I"
- D ^DICOMP I '$D(X) W $C(7),"  ...??" G 6
+6 W !!,"'COMPUTED-FIELD' EXPRESSION: " I O,$D(^DD(A,DA,9.1)) S (X,Y)=^(9.1),%=$L(X)>19 W X W:'% "// " I % D RW^DIR2 W ! G 61
+ R X:DTIME,! S:'$T X=U,DTOUT=1
+61 K DICOMPX S DICOMPX="" I U[X G:X=U N^DICATT:O,CHECK^DICATT G 6:'O D DEC:$P($P(O,U,2),"J",1)="C" G N^DICATT
+ G DICATT3^DIQQ:X?."?" S Z=X,DQI="Y("_A_","_DA_",",DICMX="X DICMX",DICOMP="?I"
+ D ^DICOMP I '$D(X) W $C(7),"  ...",I,"??" G 6
  I DUZ(0)="@" W !,"TRANSLATES TO THE FOLLOWING CODE:",!,X,!
  I Y["m" W !,"FIELD IS 'MULTIPLE-VALUED'!",!
  I O,$D(^DD(A,DA,9.01))!(DICOMPX]"") D ACOMP
- S DISPEC=$E("D",Y["D")_$E("B",Y["B")_"C"_$S(Y'["m":"",1:"m"_$E("w",Y["w"))_$S(Y["p":"p"_$S($P(Y,"p",2):+$P(Y,"p",2),1:""),1:"")_$S(Y'["B":"",1:"J1")
- S ^DD(A,DA,0)=F_U_DISPEC_"^^ ; ^"_X,^(9)=U,^(9.1)=DICMIN,^(9.01)=DICOMPX
- F Y=9.2:0 Q:'$D(X(Y))  S ^(Y)=X(Y),Y=$O(X(Y))
- K X,DICOMPX
-GETTYPE K DIR S DIR(0)="SBA^S:STRING;N:NUMERIC;B:BOOLEAN;D:DATE;m:MULTIPLE;p:POINTER;mp:MULTIPLE POINTER"
- S DIR("A")="TYPE OF RESULT: "
- S DIR("B")=$P($E(DIR(0),$F(DIR(0),$$TYPE(DISPEC)_":"),99),";")
- D ^DIR I $D(DIRUT) G END
- S DISPEC=$TR(Y,"SN") I Y="B"!(Y="D") D P(Y) G END
- I Y["p" D POINT G END
- S DIJ="",DIE=$P($P(O,U,2),"J",2) F J=0:0 S N=$E(DIE) Q:N?.A  S DIE=$E(DIE,2,99),DIJ=DIJ_N
- S DIDEC=$P(DIJ,",",2),DIL=$S(DIJ:+DIJ,1:8)
- I DISPEC'["m" D DEC:Y="N" I '$D(DIRUT) D LEN
-END I O S DI=A D PZ^DIU0 Q
- D SDIK^DICATT22
-6 Q  ;leave this here
- ;
- ;
-DEC N DG,O,M
-FRAC K DIR S DIR("A")="NUMBER OF FRACTIONAL DIGITS TO OUTPUT: "
- I DIDEC]"" S DIR("B")=DIDEC
- S DIR("?")="Enter the number of decimal digits that should normally appear in the result."
- S DIR(0)="NAO^0:14:0" D ^DIR Q:$D(DIRUT)  S DIDEC=Y
- S DG=" S X=$J(X,0,",M=$P(^DD(A,DA,0),DG),%=M_DG_DIDEC_")"'=^(0)+1
- W !,"SHOULD VALUE ALWAYS BE INTERNALLY ROUNDED TO ",DIDEC," DECIMAL PLACE",$E("S",DIDEC'=1)
- D YN^DICN G FRAC:'% Q:%'>0  S ^DD(A,DA,0)=M_$P(DG_DIDEC_")",U,%)
-S S DQI="Y(",O=$D(^(9.02)),X=^(9.1) K DICOMPX,^(9.02) Q:'$D(^(9.01))
- F Y=1:1 S M=$P(^(9.01),";",Y) Q:M=""  S DICOMPX(1,+M,+$P(M,U,2))="S("""_M_""")",DICOMPX=""
- Q:Y<2  I X'["/",X'["\" Q:X'["*"  Q:Y<3
- D ^DICOMP Q:$D(X)-1
- S %=2-O W !,"WHEN TOTALLING THIS FIELD, SHOULD THE SUM BE COMPUTED FROM",!?7,"THE SUMS OF THE COMPONENT FIELDS" D YN^DICN
- I %=1 S ^DD(A,DA,9.02)=X_" S Y=X"
- S:%<1 DIRUT=1
- Q
- ;
-LEN K DIR
- S DIR(0)="NAO^1::0",DIR("A")="LENGTH OF FIELD: ",DIR("B")=DIL
- S DIR("?")="Maximum number of character expected to be output."
- D ^DIR Q:$D(DIRUT)
- D P($P(DISPEC,"J")_"J"_Y_$E(",",DIDEC]"")_DIDEC_DIE) Q
- ;
-POINT K DIR
- S DIR(0)="P^1:QEF",DIR("A")="POINT TO WHAT FILE"
- S DIR("S")="I $$OKFILE^DICOMPX(Y,""W"")"
- S X=$P($P(^DD(A,DA,0),U,2),"p",2) I 'X S X=$P($P(O,U,2),"p",2)
- I X,$D(^DIC(+X,0)) S DIR("B")=$P(^(0),U)
- D ^DIR I '$D(DIRUT) S $P(DISPEC,"p",2)=+Y D P(DISPEC)
- Q
- ;
-P(C) S $P(^DD(A,DA,0),U,2)="C"_$TR(C,"C^") Q
+ S (Y,DATE)=$E("D",Y["D")_$E("B",Y["B")_"C"_$S(Y'["m":"",1:"m"_$E("w",Y["w")),^DD(A,DA,0)=F_U_Y_"^^ ; ^"_X,^(9)=U,^(9.1)=Z,^(9.01)=DICOMPX
+ F Y=9.2:.1 Q:'$D(X(Y))  S ^(Y)=X(Y)
+ K X,DICOMPX D SDIK^DICATT22:'O,DEC:DATE="C" I O S DI=A D PZ^DIU0
+ K DATE G N^DICATT
  ;
 ACOMP ;SET/KILL ACOMP NODES
- N X,I I $G(^DD(A,DA,9.01))]"" S X=^(9.01) X ^DD(0,9.01,1,1,2)
+ N X,I I $D(^DD(A,DA,9.01)),^(9.01)]"" S X=^(9.01) X ^DD(0,9.01,1,1,2)
  I DICOMPX]"" S X=DICOMPX X ^DD(0,9.01,1,1,1)
  Q
- ;
-TYPE(S) ;
- Q $S(S["D":"D",S["B":"B",S["mp":"mp",S["m":"m",S["p":"p",S'["J":"S",S[",":"N",1:"S") ;figure out TYPE OF RESULT
+DEC S C=$P(^DD(A,DA,0),U,2),Y="",Z=$P(C,"J",2) F J=0:0 S N=$E(Z,1) Q:N?.A  S Z=$E(Z,2,99),Y=Y_N
+ W !,"NUMBER OF FRACTIONAL DIGITS TO OUTPUT (ONLY ANSWER IF NUMBER-VALUED): " S N=$P(Y,",",2),E=$S(Y:+Y,1:8) I N]"" W N,"// "
+ R DG:DTIME S:'$T DTOUT=1 Q:DG[U!'$T  S N=$S(DG="":N,DG="@":"",1:DG) G S:N="",DICATT31^DIQQ:N'?1N
+ I C?1"D".E S C=$E(C,2,99),^(0)=$P(^(0),U,1)_U_C_U_$P(^(0),U,3,99)
+ S DG=" S X=$J(X,0,",M=$P(^(0),DG,1),%=M_DG_N_")"'=^(0)+1 W !,"SHOULD VALUE ALWAYS BE INTERNALLY ROUNDED TO ",N," DECIMAL PLACE",$E("S",N'=1) D YN^DICN G DEC:'% Q:%'>0  S ^(0)=M_$P(DG_N_")",U,%)
+S S DQI="Y(",O=$D(^(9.02)),X=^(9.1) K DICOMPX,^(9.02) G J:'$D(^(9.01))
+ F Y=1:1 S M=$P(^(9.01),";",Y) Q:M=""  S DICOMPX(1,+M,+$P(M,U,2))="S("""_M_""")",DICOMPX=""
+ G J:Y<2 I X'["/",X'["\" G J:X'["*",J:Y<3
+ D ^DICOMP G J:$D(X)-1
+ S %=2-O W !,"WHEN TOTALLING THIS FIELD, SHOULD THE SUM BE COMPUTED FROM",!?7,"THE SUMS OF THE COMPONENT FIELDS" D YN^DICN
+ I %=1 S ^DD(A,DA,9.02)=X_" S Y=X"
+J K DICOMPX Q:$D(DTOUT)  W !,"LENGTH OF FIELD: ",E,"// " R DG:DTIME S:'$T DTOUT=1 Q:DG[U!'$T  I DG,DG\1=DG S E=DG G 0
+ I DG]"" W !,"MAXIMUM NUMBER OF CHARACTERS" G J
+0 S ^(0)=$P(^DD(A,DA,0),U,1)_U_$P(C,"J",1)_"J"_E_$E(",",N]"")_N_Z_U_$P(^(0),U,3,99)

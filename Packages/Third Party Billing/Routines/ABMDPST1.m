@@ -1,5 +1,8 @@
 ABMDPST1 ; IHS/SD/SDR - Pending Claims Status Report ; JUN 29, 2005
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**31**;NOV 12, 2009;Build 615
+ ;IHS/SD/SDR 2.6*31 CR10341 Changed how reasons write to save space; now it is reasoncode-desc;
+ ;  also updated to write list of reasons at the bottom.  Fixed Status Updater header to print
+ ;  in the right place, after subtotals, not before.
  ;
 PRINT ;EP for printing data
  K ABM("LOCATION TEMP"),ABM("PS UPDATER TEMP"),ABM("VISIT TEMP")
@@ -32,26 +35,39 @@ PRINT ;EP for printing data
  .;
  .;DO SUB HEADERS
  .I $G(ABM("LOCATION TEMP"))'=ABM("LOCATION NAME") D:$G(ABM("LOCATION TEMP"))'="" SUBHDR,TOTHDR W !?3,"Visit Location: ",$G(ABM("LOCATION NAME")) S ABM("LOCATION TEMP")=ABM("LOCATION NAME")
- .I $G(ABM("PS UPDATER TEMP"))'=ABM("PS UPDATER") W !?6,"Status Updater: ",$G(ABM("PS UPDATER")) S ABM("PS UPDATER TEMP")=ABM("PS UPDATER")
+ .;I $G(ABM("PS UPDATER TEMP"))'=ABM("PS UPDATER") W !?6,"Status Updater: ",$G(ABM("PS UPDATER")) S ABM("PS UPDATER TEMP")=ABM("PS UPDATER")  ;abm*2.6*31 IHS/SD/SDR CR11834
+ .I $G(ABM("PS UPDATER TEMP"))'=ABM("PS UPDATER") W !!?6,"Status Updater: ",$G(ABM("PS UPDATER")) S ABM("PS UPDATER TEMP")=ABM("PS UPDATER")  ;abm*2.6*31 IHS/SD/SDR CR11834
  .I ABMY("SORT")="V" I $G(ABM("VISIT TEMP"))'=ABM("VISIT TYPE") D:$G(ABM("VISIT TEMP"))'="" SUBHDR W !?5,"Visit Type: "_$P(^ABMDVTYP(ABM("VISIT TYPE"),0),U) S ABM("VISIT TEMP")=ABM("VISIT TYPE")
  .I ABMY("SORT")="C" I $G(ABM("CLINIC TEMP"))'=ABM("CLINIC") D:$G(ABM("CLINIC TEMP"))'="" SUBHDR W !?5,"    Clinic: "_$G(ABM("CLINIC")) S ABM("CLINIC TEMP")=ABM("CLINIC")
- .I $G(ABM("ACTIVE INSURER TEMP"))'=$G(ABM("I")) W !?11,"Active Insurer: ",$P($G(^AUTNINS(ABM("I"),0)),U) S ABM("ACTIVE INSURER TEMP")=ABM("I")
- .W !!
- .W $E(ABM("PATIENT"),1,16)               ;pat name
- .W ?18,ABM("HRN")                        ;hrn
- .W ?26,ABM("CLAIM")                      ;claim number
+ .;I $G(ABM("ACTIVE INSURER TEMP"))'=$G(ABM("I")) W !?11,"Active Insurer: ",$P($G(^AUTNINS(ABM("I"),0)),U) S ABM("ACTIVE INSURER TEMP")=ABM("I")  ;abm*2.6*31 IHS/SD/SDR CR10341
+ .I $G(ABM("ACTIVE INSURER TEMP"))'=$G(ABM("I")) W !!?11,"Active Insurer: ",$P($G(^AUTNINS(ABM("I"),0)),U) S ABM("ACTIVE INSURER TEMP")=ABM("I")  ;abm*2.6*31 IHS/SD/SDR CR10341
+ .;W !!  ;abm*2.6*31 IHS/SD/SDR CR10341
+ .W !  ;abm*2.6*31 IHS/SD/SDR CR10341
+ .W $E(ABM("PATIENT"),1,16)  ;pat name
+ .W ?18,ABM("HRN")           ;hrn
+ .W ?26,ABM("CLAIM")         ;claim number
  .W ?34,$$SDT^ABMDUTL(ABM("VISIT DATE"))  ;visit date
- .W ?46,ABM("CLINIC")                     ;clinic
- .K ^UTILITY($J,"W")
- .S DIWL=60,DIWR=79
- .S DIWF="WC19"
- .S X=ABM("PS REASON")                    ;reason
- .D ^DIWP
- .D ^DIWW
+ .W ?46,ABM("CLINIC")        ;clinic
+ .;start old abm*2.6*31 IHS/SD/SDR CR10341
+ .;K ^UTILITY($J,"W")
+ .;S DIWL=60,DIWR=79
+ .;S DIWF="WC19"
+ .;S X=ABM("PS REASON")  ;reason
+ .;D ^DIWP
+ .;D ^DIWW
+ .;end old start new abm*2.6*31 IHS/SD/SDR CR10341
+ .W ?59,$E(ABM("PS REASON"),1,20)
+ .S ABM("REASLST",+ABM("PS REASON"))=""
+ .;end new abm*2.6*31 IHS/SD/SDR CR10341
  .S ABM("SUB CNT")=$G(ABM("SUB CNT"))+1
  .S ABM("TOTAL CNT")=$G(ABM("TOTAL CNT"))+1
  D SUBHDR
  D TOTHDR
+ ;start new abm*2.6*31 IHS/SD/SDR CR10341
+ I $D(ABM("REASLST")) D HD W " (cont)",!!,"REASONS:"
+ S ABM=""
+ F  S ABM=$O(ABM("REASLST",ABM)) Q:($G(ABM)="")  W !?4,ABM_"-"_$P($G(^ABMPSTAT(ABM,0)),U)
+ ;end new abm*2.6*31 IHS/SD/SDR CR10341
  W !!,"E N D  O F  R E P O R T"
  D PAZ^ABMDRUTL
  Q
@@ -66,12 +82,15 @@ HDB S ABM("PG")=ABM("PG")+1,ABM("I")="" D WHD^ABMDRHD
 SUBHDR Q:'ABM("SUB CNT")
  W !?27,"------"
  W !?16,"Subtotal:",?27,ABM("SUB CNT")
+ W !  ;abm*2.6*31 IHS/SD/SDR CR10341
  S ABM("SUB CNT")=0
  Q
  ;
 TOTHDR Q:'ABM("TOTAL CNT")
  W !?27,"------"
  W !?19,"Total:",?27,ABM("TOTAL CNT")
+ W !  ;abm*2.6*31 IHS/SD/SDR CR10341
+ S ABM("ACTIVE INSURER TEMP")=""  ;abm*2.6*31 IHS/SD/SDR CR10341
  S ABM("TOTAL CNT")=0
  Q
 XIT ;EXIT POINT

@@ -1,5 +1,5 @@
 BDGADD1 ; IHS/ANMC/LJF - A&D DETAILED PRINT CONT. ;  [ 07/01/2002  10:18 AM ]
- ;;5.3;PIMS;**1003,1013**;MAY 28, 2004
+ ;;5.3;PIMS;**1003,1013,1022**;MAY 28, 2004;Build 18
  ;IHS/ITSC/LJF 6/2/2005 PATCH 1003 adjusted code under Deaths to match other sections
  ;                                 added code for mulitple admits and discharges
  ;ihs/cmi/maw  9/14/2011 PATCH 1013 added day surgery
@@ -32,7 +32,13 @@ ADMITS ; build array of admits
  ..... S DATA=^TMP("BDGAD",$J,SUB,SUB2,NAME,DFN,IFN)
  ..... ;
  ..... ; PATCH 1003 added extra . to lines below
- ..... S LINE=$E($$GET1^DIQ(2,DFN,.01),1,25)
+ ..... ;202307 77894 maw p1022 PPN
+ ..... N PRF
+ ..... S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ ..... S LINE=$G(PRF)
+ ..... D SET(LINE,.VALMCNT)
+ ..... S LINE=""
+ ..... ;S LINE=$E($$GET1^DIQ(2,DFN,.01),1,25)
  ..... S LINE=$$PAD(LINE,27)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)           ;chart
  ..... S LINE=$$PAD(LINE,35)_$P(DATA,U,4)                             ;age
  ..... S LINE=$$PAD(LINE,40)_$E($$GET1^DIQ(9000001,DFN,1118),1,15)    ;community
@@ -66,7 +72,12 @@ TRANSFER ; loop through transfers (ward and service)
  .... ;
  .... S DATA=^TMP("BDGAD",$J,SUB,NAME,DFN,IFN)
  .... ; old ward/srv -> new ward/srv
- .... S LINE=$$PAD($E(NAME,1,17),20)         ;name
+ .... N PRF
+ .... S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ .... S LINE=$G(PRF)
+ .... D SET(LINE,.VALMCNT)
+ .... S LINE=""
+ .... ;S LINE=$$PAD($E(NAME,1,17),20)         ;name
  .... S LINE=LINE_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)   ;chart #
  .... S LINE=$$PAD(LINE,30)_$$GET1^DIQ(FILE,+$P(DATA,U),FIELD)
  .... S LINE=$$PAD(LINE,35)_"-> "_$$GET1^DIQ(FILE,$P(DATA,U,2),FIELD)
@@ -86,7 +97,12 @@ DEATHS ; Now display any deaths
  .. ;
  .. ;IHS/ITSC/LJF 6/2/2005 PATCH 1003 changed columns around to match other sections
  .. S DATA=^TMP("BDGAD",$J,"DEATH",NAME,DFN)
- .. S LINE=$$PAD($E($$GET1^DIQ(2,DFN,.01),1,17),25)                 ;name
+ .. N PRF
+ .. S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ .. S LINE=$G(PRF)
+ .. D SET(LINE,.VALMCNT)
+ .. S LINE=""
+ .. ;S LINE=$$PAD($E($$GET1^DIQ(2,DFN,.01),1,17),25)                 ;name
  .. S LINE=$$PAD(LINE,27)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)            ;chart#
  .. S LINE=$$PAD(LINE,35)_$P(DATA,U,4)                              ;age
  .. S LINE=$$PAD(LINE,40)_$E($$GET1^DIQ(9000001,DFN,1118),1,20)     ;com

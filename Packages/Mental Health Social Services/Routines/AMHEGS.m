@@ -1,5 +1,5 @@
 AMHEGS ; IHS/CMI/LAB - REVIEW SF BY DATE 05 Feb 2010 2:57 PM ; 
- ;;4.0;IHS BEHAVIORAL HEALTH;**8**;JUN 02, 2010;Build 7
+ ;;4.0;IHS BEHAVIORAL HEALTH;**8,11**;JUN 02, 2010;Build 27
  ;
  ;
 START ;
@@ -27,12 +27,12 @@ GATHER ;
  .S DFN=$P(^AMHGROUP(AMHNG,51,AMHX,0),U)
  .S AMHY="",AMHLINE=AMHLINE+1
  .S AMHY=AMHLINE_") "
- .S $E(AMHY,6)=$P(^DPT(DFN,0),U)
- .S $E(AMHY,40)=$P(^DPT(DFN,0),U,2)
- .S $E(AMHY,43)=$$AGE^AUPNPAT(DFN,DT)
- .S $E(AMHY,48)=$$DATE($P(^DPT(DFN,0),U,3))
- .S $E(AMHY,60)=$$HRN^AUPNPAT(DFN,DUZ(2))
- .S Y=$$REC(DFN,AMHNG) S $E(AMHY,70)=$S(Y:"yes",1:"no")
+ .S $E(AMHY,6)=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ .S $E(AMHY,50)=$P(^DPT(DFN,0),U,2)
+ .S $E(AMHY,53)=$$AGE^AUPNPAT(DFN,DT)
+ .S $E(AMHY,58)=$$DATE($P(^DPT(DFN,0),U,3))
+ .S $E(AMHY,70)=$$HRN^AUPNPAT(DFN,DUZ(2))
+ .S Y=$$REC(DFN,AMHNG) S $E(AMHY,78)=$S(Y:"yes",1:"no")
  .S ^TMP($J,"AMHEGS",AMHLINE,0)=AMHY,^TMP($J,"AMHEGS","IDX",AMHLINE,AMHLINE)=AMHX
  Q
 REC(P,G) ;does this patient have a record in MHSS for this group
@@ -51,7 +51,7 @@ CTR(X,Y) ;EP - Center X in a field Y wide.
  ;----------
 HDR ; -- header code
  S VALMHDR(1)="Group Entry"
- S X="",$E(X,6)="Patient Name",$E(X,39)="Sex",$E(X,43)="Age",$E(X,50)="DOB",$E(X,60)="HRN",$E(X,66)="Record Added"
+ S X="",$E(X,6)="Patient Name",$E(X,49)="Sex",$E(X,53)="Age",$E(X,60)="DOB",$E(X,70)="HRN",$E(X,78)="Record Added"
  S VALMHDR(2)=X
  Q
  ;
@@ -218,7 +218,7 @@ ADDNS ;EP
  S AMHADPTV=1
  S AMHQUIT=0,AMHACTN=1
  W !,"Creating new record..." K DD,D0,DO,DINUM,DIC,DA,DR
- S DIC(0)="EL",DIC="^AMHREC(",DLAYGO=9002011,DIADD=1,X=AMHDATE,DIC("DR")=".08////^S X=$G(AMHPAT);.02///"_AMHPTYPE_";.03///^S X=DT;.19////"_DUZ_";.33////"_AMHVTYPE_";.28////"_DUZ_";.22///A;.21///^S X=DT"_";1111////1"
+ S DIC(0)="EL",DIC="^AMHREC(",DLAYGO=9002011,DIADD=1,X=AMHDATE,DIC("DR")=".08////^S X=$G(AMHPAT);.02///"_AMHPTYPE_";.03///^S X=DT;.19////"_DUZ_";.33////"_AMHVTYPE_";.28////"_DUZ_";.22///A;.21///^S X=DT"_";1111////1;.34///1"
  D FILE^DICN K DIC,DR,DIE,DIADD,DLAYGO,X,D0
  I Y=-1 W !!,$C(7),$C(7),"Behavioral Health Record is NOT complete!!  Deleting Record.",! D PAUSE Q
  ;update multiple of user last update/date edited

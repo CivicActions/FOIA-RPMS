@@ -1,5 +1,5 @@
 AMHLETP1 ; IHS/CMI/LAB - treatment plan update ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**1,4**;JUN 18, 2010;Build 28
+ ;;4.0;IHS BEHAVIORAL HEALTH;**1,4,11**;JUN 02, 2010;Build 27
  ;
 HS ;EP - Display Patient Profile
  S AMHPAT=DFN
@@ -215,7 +215,7 @@ PAUSE ;EP
  Q
 HEADER ;
  W:$D(IOF) @IOF
- W !,$TR($J(" ",80)," ","-"),!,"Patient Name:  ",$P(^DPT(DFN,0),U),"   DOB:  ",$$FTIME^VALM1($P(^DPT(DFN,0),U,3)),"  Sex:  ",$$VAL^XBDIQ1(2,DFN,.02),!,$TR($J(" ",80)," ","-")
+ W !,$TR($J(" ",80)," ","-"),!,"Patient Name: ",$$GETPREF^AUPNSOGI(DFN,"E",1),"  DOB:  ",$$FTIME^VALM1($P(^DPT(DFN,0),U,3)),"  Sex: ",$$VAL^XBDIQ1(2,DFN,.02),!,$TR($J(" ",80)," ","-")
  Q
 EXIT ;
  D TERM^VALM0

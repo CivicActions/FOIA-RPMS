@@ -1,5 +1,5 @@
-AMHRAS2 ; IHS/CMI/LAB - list refusals ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHRAS2 ; IHS/CMI/LAB - list refusals ; 17 Sep 2024  2:55 PM
+ ;;4.0;IHS BEHAVIORAL HEALTH;**11,12**;JUN 02, 2010;Build 46
  ;
  ;
 INFORM ;
@@ -11,11 +11,13 @@ INFORM ;
  W !,"user.  Alcohol Screening is defined as any of the following documented:"
  W !?5,"- Alcohol Screening Exam (Exam code 35)"
  W !?5,"- Measurements: AUDC, AUDT, CRFT"
- W !?5,"- Health Factor with Alcohol/Drug Category (CAGE)"
- W !?5,"- Diagnoses V79.1, 29.1"
+ W !?5,"- Any CAGE [F018-F022] or CAGE-AID [F210-F214] Health Factor"
+ W !?5,"- Any TAPS-Alcohol Health Factor [F175-F179]"
+ W !?5,"- Diagnoses 29.1"
  W !?5,"- Education Topics: AOD-SCR, CD-SCR"
- W !?5,"- CPT Codes: 99408, 99409, G0396, G0397, H0049"
- W !?5,"- refusal of exam code 35"
+ W !?5,"- CPT 99408, 99409, G0396, G0397, G0442, G0443, G2011, G2196, G2197, H0049,"
+ W !?5,"  H0050, 3016F [BGP ALCOHOL SCREENING CPTS]"
+ W !?5,"- refusal of exam code 35 (Alcohol Screening exam)"
  W !,"This report will tally the visits by age, gender, screening result,"
  W !,"provider (either exam provider, if available, or primary provider on the "
  W !,"visit), clinic, date of screening, designated PCP, MH Provider, SS Provider"
@@ -44,13 +46,14 @@ DATES K AMHRED,AMHRBD
 TALLY ;which items to tally
  K AMHRTALL
  W !!,"Please select which items you wish to tally on this report:",!
- W !?3,"0)  Do not include any Tallies",?40,"6)  Date of Screening"
- W !?3,"1)  Type/Result of Screening",?40,"7)  Primary Provider on Visit"
- W !?3,"2)  Gender",?40,"8)  Designated MH Provider"
- W !?3,"3)  Age of Patient",?40,"9)  Designated SS Provider"
- W !?3,"4)  Provider who Screened",?40,"10) Designated ASA/CD Provider"
- W !?3,"5)  Clinic",?40,"11) Designated Primary Care Provider"
- K DIR S DIR(0)="L^0:11",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
+ W !?3,"0)  Do not include any Tallies",?40,"7)  Primary Provider on Visit"
+ W !?3,"1)  Type/Result of Screening",?40,"8)  Designated MH Provider"
+ W !?3,"2)  Gender",?40,"9)  Designated SS Provider"
+ W !?3,"3)  Age of Patient",?40,"10) Designated ASA/CD Provider"
+ W !?3,"4)  Provider who Screened",?40,"11) Designated Primary Care Provider"
+ W !?3,"5)  Clinic",?40,"12) Race"
+ W !?3,"6)  Date of Screening",?40,"13) Ethnicity"
+ K DIR S DIR(0)="L^0:13",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G DATES
  I Y="" G DATES
  S AMHRTALL=Y
@@ -71,7 +74,7 @@ LIST ;
 LIST1 ;
  S AMHRSORT=""
  W !
- S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN"
+ S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN;Q:Race;E:Ethnicity"
  S DIR("A")="How would you like the list to be sorted",DIR("B")="H"
  KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G LIST
@@ -80,9 +83,16 @@ DEMO ;
  D DEMOCHK^AMHUTIL1(.AMHDEMO)
  I AMHDEMO=-1 G LIST
 ZIS ;
- S XBRP="PRINT^AMHRAS2P",XBRC="PROC^AMHRAS2",XBRX="XIT^AMHRAS2",XBNS="AMHR"
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
+ I $D(DIRUT) G XIT
+ I $G(Y)="B" D BROWSE,XIT Q
+ S XBRP="PRINT^AMHRAS2P",XBRC="PROC^AMHRAS2",XBRX="XIT^AMHRAS2",XBNS="AMH"
  D ^XBDBQUE
  D XIT
+ Q
+BROWSE ;
+ S XBRP="VIEWR^XBLM(""^AMHRAS2P"")"
+ S XBNS="AMH",XBRC="PROC^AMHRAS2",XBRX="XIT^AMHRAS2",XBIOP=0 D ^XBDBQUE
  Q
 XIT ;
  D EN^XBVK("AMHR")
@@ -111,6 +121,8 @@ PROC ;
  ..S AMHRCNT=AMHRCNT+1
  ..S ^XTMP("AMHRAS2",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)=""
  ..S ^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",AMHRCNT)=AMHSCR
+ ..S $P(^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ ..S $P(^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
 PCC ;
  Q:'AMHREXPC
  S AMHRSD=$$FMADD^XLFDT(AMHRBD,-1),AMHRSD=AMHRSD_".9999"
@@ -131,6 +143,8 @@ PCC ;
  ..S AMHRCNT=AMHRCNT+1
  ..S ^XTMP("AMHRAS2",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)=""
  ..S ^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",AMHRCNT)=AMHSCR
+ ..S $P(^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ ..S $P(^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
  ;now go through refusals in pcc
  S AMHRRIEN=0 F  S AMHRRIEN=$O(^AUPNPREF(AMHRRIEN)) Q:AMHRRIEN'=+AMHRRIEN  D
  .Q:'$D(^AUPNPREF(AMHRRIEN,0))
@@ -160,6 +174,8 @@ PCC ;
  .S $P(T,U,15)=DFN
  .S $P(T,U,20)="PCC"
  .S ^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",AMHRCNT)=T
+ .S $P(^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ .S $P(^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
  Q
  ;
 BHSCR(V) ;EP - is there a screening?  return in R
@@ -173,28 +189,26 @@ BHSCR(V) ;EP - is there a screening?  return in R
  I R]"" Q R
  ;get exam
  S E=$P($G(^AMHREC(V,14)),U,3)
- I E]"" S R=$$BHRT^AMHRAS1(V,"ALCOHOL SCREENING EXAM",$$VAL^XBDIQ1(9002011,V,1403),P,$P($G(^AMHREC(V,14)),U,4),$P($G(^AMHREC(V,16)),U,1))
+ I E]"" S R=$$BHRT^AMHRAS1(V,"ALCOHOL SCREENING",$$VAL^XBDIQ1(9002011,V,1403),P,$P($G(^AMHREC(V,14)),U,4),$P($G(^AMHREC(V,16)),U,1))
  I R]"" Q R
- ;get health factor
- S X=0 F  S X=$O(^AMHRHF("AD",V,X)) Q:X'=+X  D
+ S X=0 F  S X=$O(^AMHRHF("AD",V,X)) Q:X'=+X!(R]"")  D
  .S M=$$VALI^XBDIQ1(9002011.08,X,.01)
- .I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U)="ALCOHOL/DRUG" S R=$$BHRT^AMHRAS1(V,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(V,811)),U,1))
+ .I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C001"!($P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C036")!($P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C029") D  Q
+ ..S R=$$BHRT^AMHRAS1(V,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(V,811)),U,1)) Q
  I R]"" Q R
- ;get pov
- S X=0 F  S X=$O(^AMHRPRO("AD",V,X)) Q:X'=+X  D
+ S X=0 F  S X=$O(^AMHRPRO("AD",V,X)) Q:X'=+X!(R]"")  D
  .S M=$$VAL^XBDIQ1(9002011.01,X,.01)
  .I M="29.1"!(M="V79.1") S R=$$BHRT^AMHRAS1(V,M,"",P,$$VALI^XBDIQ1(9002011.01,X,1204))
  I R]"" Q R
- ;get education
- S X=0 F  S X=$O(^AMHREDU("AD",V,X)) Q:X'=+X  D
+ S X=0 F  S X=$O(^AMHREDU("AD",V,X)) Q:X'=+X!(R]"")  D
  .S M=$$VAL^XBDIQ1(9002011.05,X,.01)
  .I M="CD-SCR"!(M="AOD-SCR") S R=$$BHRT^AMHRAS1(V,M,"",P,$$VALI^XBDIQ1(9002011.05,X,.04),$P($G(^AMHREDU(V,11)),U,1))
  I R]"" Q R
- ;get CPTs
- S X=0 F  S X=$O(^AMHRPROC("AD",V,X)) Q:X'=+X  D
+ S X=0 F  S X=$O(^AMHRPROC("AD",V,X)) Q:X'=+X!(R]"")  D
  .S M=$$VALI^XBDIQ1(9002011.04,X,.01)
  .Q:'$$ICD^ATXCHK(M,$O(^ATXAX("B","BGP ALCOHOL SCREENING CPTS",0)),1)
- .S R=$$BHRT^AMHRAS1(V,"CPT: "_$$VAL^XBDIQ1(9002011.04,X,.01),"",P,"")
+ .S J="" I $$ICD^ATXCHK(M,$O(^ATXAX("B","BGP ALCOHOL POSITIVE SCRN CPTS",0)),1) S J=" (POS)"
+ .S R=$$BHRT^AMHRAS1(V,"CPT: "_$$VAL^XBDIQ1(9002011.04,X,.01)_J,"",P,"")
  I R]"" Q R
  Q R
  ;
@@ -220,7 +234,7 @@ PCCSCR(V) ;EP - is there a screening?  return in R
  ;get health factor
  S X=0 F  S X=$O(^AUPNVHF("AD",V,X)) Q:X'=+X  D
  .S M=$$VALI^XBDIQ1(9000010.23,X,.01)
- .I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U)="ALCOHOL/DRUG" D
+ .I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C001"!($P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C029")!($P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C036") D
  ..S T=D_U_$$VAL^XBDIQ1(9000010.23,X,.01)_U_U_V_U_9000010.23_U_X
  ..S R=$$PCCV^AMHRAS1(T,P)
  I R]"" Q R
@@ -242,7 +256,8 @@ PCCSCR(V) ;EP - is there a screening?  return in R
  S X=0 F  S X=$O(^AUPNVCPT("AD",V,X)) Q:X'=+X  D
  .S M=$$VALI^XBDIQ1(9000010.18,X,.01)
  .Q:'$$ICD^ATXCHK(M,$O(^ATXAX("B","BGP ALCOHOL SCREENING CPTS",0)),1)
- .S T=D_U_M_U_U_V_U_9000010.18_U_X
+ .S J="" I $$ICD^ATXCHK(M,$O(^ATXAX("B","BGP ALCOHOL POSITIVE SCRN CPTS",0)),1) S J=" (POS)"
+ .S T=D_U_"CPT: "_$$VAL^XBDIQ1(9000010.18,X,.01)_J_U_U_V_U_9000010.18_U_X
  .S R=$$PCCV^AMHRAS1(T,P)
  I R]"" Q R
  Q R

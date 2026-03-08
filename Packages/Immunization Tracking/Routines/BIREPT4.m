@@ -1,10 +1,11 @@
 BIREPT4 ;IHS/CMI/MWR - REPORT, TWO-YR-OLD RATES; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**3**;SEP 10,2012
+ ;;8.5;IMMUNIZATION;**17,26**;OCT 24,2011;Build 33
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW TWO-YR-OLD IMMUNIZATION RATES REPORT, WRITE HEADERS, ETC.
  ;;  PATCH 1: Exclude patients whose Inactive Date=Not in Register.  CHKSET+35
  ;;  PATCH 3: Extensive edits to allow Hx of Chickenpox to count for Varicella.
  ;;           CHKSET+60, CHKSET+209
+ ;;  PATCH 17: GDIT/HS/BEE 01/15/19;BI*8.5*17;CR#7454-Two-Yr Report Rotavirus Enhancement
  ;
  ;----------
 GETPATS(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIQDT,BIAGRPS,BISITE,BIUP) ;EP
@@ -96,7 +97,7 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP) ;EP
  Q:BIRETERR]""
  ;
  ;---> Add refusals, if any.
- N Z D CONTRA^BIUTL11(BIDFN,.Z,1) I $O(Z(0)) S BITMP("REFUSALS",BIDFN)=""
+ N Z D REFUSAL^BIUTL13(BIDFN,.Z) I $O(Z(0)) S BITMP("REFUSALS",BIDFN)=""
  ;
  ;********** PATCH 3, v8.5, SEP 10,2012, IHS/CMI/MWR
  ;---> Check for Hx of Chicken Pox (as a reason for contra to Var & MMRV.)
@@ -107,8 +108,14 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP) ;EP
  .N BICHXDT D
  ..;---> Get the date of Chickenpox contraindication.
  ..I $D(Z(21)) S BICHXDT=$P(Z(21),U,2) Q
- ..I $D(Z(21)) S BICHXDT=$P(Z(94),U,2)
- .Q:'BICHXDT
+ ..;
+ ..;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ ..;---> Correct CVX match for MMRV.
+ ..;I $D(Z(21)) S BICHXDT=$P(Z(94),U,2)
+ ..I $D(Z(94)) S BICHXDT=$P(Z(94),U,2)
+ .;Q:'BICHXDT
+ .Q:'$G(BICHXDT)
+ .;**********
  .;
  .N BIAGE,J,K S J=1
  .F K=1:1 S BIAGE=$P(BIAGRPS,",",K) Q:'BIAGE  D
@@ -128,10 +135,16 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP) ;EP
  ;
  ;---> BIHIB local array by date gets built; if the first two were CVX 49's (IEN=127)
  ;---> then patient will only need 3 Hibs to be UTD.
- N BIHIB,BIROT,I,Y
+ ;GDIT/HS/BEE 01/15/19;BI*8.5*17;CR#7454-Two-Yr Report Rotavirus Enhancement
+ ;Initialize ROTA subvariables
+ ;N BIHIB,BIROT,I,Y,BIROTA
+ N BIHIB,BIROT,BIROT1,BIROT5,I,Y,BIROTA
  ;
  ;---> BIROT gets set=1 if there were 2 CVX 119's (IEN=225)--patient is UTD for Rota.
+ ;GDIT/HS/BEE 01/15/19;BI*8.5*17;CR#7454-Two-Yr Report Rotavirus Enhancement
+ ;Now splitting out ROTA1 and ROTA5 - See CKROTA^BIREPT2 tag for ROTA UTD calculations
  S BIROT=0
+ S (BIROT1,BIROT5)=0
  ;
  ;---> Loop through "^"-pieces of Imm History, getting data.
  F I=1:1 S Y=$P(BIHX,U,I) Q:Y=""  D
@@ -154,18 +167,26 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP) ;EP
  .;---> Quit if this Vaccine Group should not be included.
  .Q:'($$VGROUP^BIUTL2(BIVGRP,8))
  .;
+ .;GDIT/HS/BEE 01/15/19;BI*8.5*17;CR#7454-Two-Yr Report Rotavirus Enhancement
+ .;If this was a ROTA1/ROTA5 split out to custom groups
+ .I BIVGRP=15 S BIVGRP=$S(BIIEN=225:140,BIIEN=222:135,1:BIVGRP)
+ .;
  .;---> Set BIDOSE=Dose# (increment by 1's to assign highest/latest dose#)
  .S BIDOSE=1,Q=0
  .F  Q:Q  D
  ..I $D(BIHX(BIVGRP,BIDOSE)) S BIDOSE=BIDOSE+1 Q
  ..S BIHX(BIVGRP,BIDOSE)="",Q=1
  .;
- .;
  .;---> If this was a Hib, store it in local array for UTD eval.
  .I BIVGRP=3 S BIHIB(BIVDAT,BIIEN)=""
  .;
  .;---> If this was a Rotarix, increment its counter.
- .S:BIIEN=225 BIROT=BIROT+1
+ .;GDIT/HS/BEE 01/15/19;BI*8.5*17;CR#7454-Two-Yr Report Rotavirus Enhancement
+ .;Track ROTA1/ROTA5 and all others separately
+ .;S:BIIEN=225 BIROT=BIROT+1
+ .S:BIVGRP=15 BIROT=BIROT+1
+ .S:BIIEN=225 BIROT1=BIROT1+1
+ .S:BIIEN=222 BIROT5=BIROT5+1
  .;
  .;---> Set this immunization in the STATS array for each Age (A)
  .;---> by which the patient had already received it (cumulative).
@@ -314,8 +335,11 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP) ;EP
  .Q:'$D(BIHX(11,4,A))
  .Q:'$D(BIHX(9,2,A))
  .;Q:'$D(BIHX(15,3,A))
+ .; GDIT/HS/BEE 01/15/19;BI*8.5*17;CR#7454-Two-Yr Report Rotavirus Enhancement
+ .; Now checking for either 2 Rota 119's (Rota-1) OR 3 Rota 116's (Rota-5)/Other ROTA
  .;---> If you don't have 2 Rota 119's, then quit if you don't have 3 Rotas.
- .I BIROT<2 Q:'$D(BIHX(15,3,A))
+ .;I BIROT<2 Q:'$D(BIHX(15,3,A))
+ .I '$$CKROTA^BIREPT2(BIROT,BIROT1,BIROT5) Q
  .D COMBO("1|4^2|3^6|1^3|3^4|3^7|1^11|4^9|2^15|3",A)
  ;
  ;---> 4-DTP, 3-OPV, 1-MMR, 3-HIB, 3-HEPB, 1-VAR, 4-PNE, 2-HEPA, 3-ROTA, 2-FLU  vvv83
@@ -333,7 +357,11 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP) ;EP
  .Q:'$D(BIHX(11,4,A))
  .Q:'$D(BIHX(9,2,A))
  .;Q:'$D(BIHX(15,3,A))
- .I BIROT<2 Q:'$D(BIHX(15,3,A))
+ .; GDIT/HS/BEE 01/15/19;BI*8.5*17;CR#7454-Two-Yr Report Rotavirus Enhancement
+ .; Now checking for either 2 Rota 119's (Rota-1) OR 3 Rota 116's (Rota-5)/Other ROTA
+ .;---> If you don't have 2 Rota 119's, then quit if you don't have 3 Rotas.
+ .;I BIROT<2 Q:'$D(BIHX(15,3,A))
+ .I '$$CKROTA^BIREPT2(BIROT,BIROT1,BIROT5) Q
  .Q:'$D(BIHX(10,2,A))
  .D COMBO("1|4^2|3^6|1^3|3^4|3^7|1^11|4^9|2^15|3^10|2",A)
  ;

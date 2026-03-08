@@ -1,6 +1,6 @@
-XQOO ;SEATTLE/LUKE - Out Of Order, Man ;9/13/96  09:21
- ;;8.0;KERNEL;**10,21,47,520**;Jul 03, 1995;Build 11
- ;Per VHA Directive  2004-038, this routine should not be modified.
+XQOO ;SEATTLE/LUKE - Out Of Order, Man ;05/28/96  10:50 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1001,1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**10,21,29**;Jul 03, 1995
 INIT(XQSET) ;Call for Out-of-order set creation, called by KIDS
  ;
  ;The variable XQSET should be null if this is the first pass
@@ -51,13 +51,11 @@ ASK ;Get options to mark
  I XQ?.E1"*" S XQSTART=$E(XQ,1,$L(XQ)-1),XQEND=XQSTART_$C(127) D FIND G ASK
  ;Get a range of options allowing for name with hyphens in them
  I XQ?1E.E1"-"1E.E S XQRNG=0 D  G:'XQRNG ASK
- .;Name has hyphen, echo back the name and quit
- .S X=XQ,DIC=XQFIL,DIC(0)="EZ" D ^DIC I Y>0 S XQ=$P(Y,U,2),XQRNG=1 Q
- .;It is a range, build prompt to verify range
+ .S X=XQ,DIC=XQFIL,DIC(0)="Z" D ^DIC S:Y'<0 XQ=$P(Y,U,2) I Y>0 S XQRNG=1 Q
  .W ! K DIR S DIR("A")="Do mean the "_$S(XQFIL=19:"options",1:"protocols")_" from "_$P(XQ,"-")_" to "_$P(XQ,"-",2)_"? (Y/N)",DIR(0)="YA" D ^DIR K DIR I Y S (XQN,XQSTART)=$P(XQ,"-",1),XQEND=$P(XQ,"-",2) D FIND
  .Q
  ;
- I XQ'?1E.E1"-"1E.E S X=XQ,DIC=XQFIL,DIC(0)="MEZ" D ^DIC S:Y'<0 XQ=$P(Y,U,2) I Y<0 W " ??",*7 G ASK
+ I XQ'?1E.E1"-"1E.E S X=XQ,DIC=XQFIL,DIC(0)="MEZ" D ^DIC S:Y'<0 XQ=$P(Y,U,2) I Y<0 W !," ??",*7 G ASK
  I XQDEL K ^XTMP("XQOO",XQSET,XQFIL,+Y) G ASK
  S:$E(Y(0),1,4)'="XQOO" ^XTMP("XQOO",XQSET,XQFIL,+Y)=$P(Y(0),U)_U_$P(Y(0),U,2) G ASK
  ;
@@ -119,7 +117,7 @@ OUT ;Clean up
  ;
  I '$D(XPDNM),'$D(^XTMP("XQOO",XQSET,0)),$D(^XTMP("XQOO",XQSET)) D
  .;Temporary Fix: ^ at protocol prompt leaves partial set (no 0th node)
- .S DIR(0)="Y",DIR("B")="YES"
+ .S DIR(0)="Y",DIR("B")="Y"
  .S DIR("A")="Delete this set of options? (Y/N) "
  .D ^DIR
  .I Y K ^XTMP("XQOO",XQSET)
@@ -127,10 +125,10 @@ OUT ;Clean up
  .Q
  ;
  I '$D(XPDNM),$D(^XTMP("XQOO",XQSET,0)) D
- .S DIR(0)="Y",DIR("B")="NO"
+ .S DIR(0)="Y",DIR("B")="N"
  .S DIR("A")="Should I mark these options/protocols out-of-order now? (Y/N) "
  .D ^DIR I Y D OFF^XQOO1(XQSET)
  .Q
  ;
- K %,%Y,DIRUT,XQ,XQDEL,XQEND,XQFIL,XQFIL0,XQH,XQI,XQINI,XQK,XQM,XQMESS,XQN,XQON,XQON0,XQRNG,XQSTART,XQSWTCH,XQT,XQX,X,Y
+ K %,%Y,XQ,XQDEL,XQEND,XQFIL,XQFIL0,XQI,XQINI,XQK,XQMESS,XQN,XQON,XQON0,XQRNG,XQSTART,XQSWTCH,Y
  Q

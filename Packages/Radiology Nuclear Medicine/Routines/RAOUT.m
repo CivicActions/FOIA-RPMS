@@ -1,5 +1,5 @@
-RAOUT ;HISC/CAH,FPT,GJC AISC/TMP,RMO-Outside Film Option ;9/12/94  11:13
- ;;5.0;Radiology/Nuclear Medicine;**31**;Mar 16, 1998
+RAOUT ;HISC/CAH,FPT,GJC AISC/TMP,RMO IHS/OIT/BT -Outside Film Option ;11/30/2022  13:33
+ ;;5.0;Radiology/Nuclear Medicine;**31,1010**;Mar 16, 1998
 1 ;;Add Films to Registry
  D SET^RAPSET1 I $D(XQUIT) K XQUIT Q
  S DIC(0)="AEMQL" D ^RADPA K DIC G Q1:Y<0 S (RADFN,DA)=+Y,DIE="^RADPT(",DR="[RA OUTSIDE ADD]" D ^DIE K DE,DQ,DIE,DR D Q1 W ! G 1
@@ -22,7 +22,7 @@ Q3 K %,%DT,%DUZ,%W,%X,%Y,%Y1,C,D,D0,D1,D2,DA,DDER,DIE,DR,I,RADFN,X,Y Q
 5 ;;Outside Films Profile
  S DIC(0)="AEMQ" D ^RADPA K DIC G Q5:Y<0 S RALL=1,RADFN=+Y
 PROF S ZTRTN="START^RAOUT",ZTSAVE("RADFN")="",ZTSAVE("RALL")="" D ZIS^RAUTL K IOP G Q5:RAPOP
-START G Q5:'$D(^DPT(RADFN,0)) S RANME=^(0),RASSN=$$SSN^RAUTL,RANME=$P(RANME,"^")
+START G Q5:'$D(^DPT(RADFN,0)) S RASSN=$$SSN^RAUTL,RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1)
  U IO S RAPG=0 D HD I '$D(^RADPT(RADFN,"O")) W !!,"No outside films have been registered for this patient." G Q5
  F RAI=0:0 S RAI=$O(^RADPT(RADFN,"O",RAI)) Q:RAI'>0  I $D(^(RAI,0)) S Y=^(0) I RALL!('$P(Y,"^",3))!($P(Y,"^",3)>DT) D PRT
 Q5 K C,I,J,POP,RAPG,RAPOP,RAI,RADFN,RALL,RASSN,RANME,X,Y D CLOSE^RAUTL ;Q
@@ -38,6 +38,7 @@ REM F J=1:60:240 S Y=$E(X,J,J+60) Q:Y']""  W !,$S(J=1:"Remarks   : ",1:""),?12,Y
 HD ; Header
  S RAPG=RAPG+1 W:$E(IOST,1,2)="C-" @IOF
  I $E(IOST,1,2)="P-",(RAPG>1) W @IOF
- W "Patient: ",RANME,"  ",RASSN,?55,"Run Date: " S Y=DT D DT^DIO2
+ W "Patient: ",RANME,"  ",RASSN
+ W:$L(RANME)<21 ?55 W:$L(RANME)>20 ! W "Run Date: " S Y=DT D DT^DIO2
  W !!?15,"*****  Outside Films Profile  *****",$S(RALL=0:"   (Films NOT Returned only)",1:"") W ! S I="",$P(I,"-",80)="" W I
  Q

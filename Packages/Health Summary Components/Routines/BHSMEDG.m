@@ -1,5 +1,5 @@
-BHSMEDG ;IHS/CIA/MGH - Health Summary for V MED file ;01-May-2014 11:06;DU
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,6,9**;March 17, 2006;Build 16
+BHSMEDG ;IHS/CIA/MGH - Health Summary for V MED file ;1-Dec-2024 11:06
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,6,9,21**;March 17, 2006;Build 45
  ;===================================================================
  ;Taken from APCHS71
  ; IHS/TUCSON/LAB - PART 7 OF APCHS -- SUMMARY PRODUCTION COMPONENTS ;  [ 01/20/04  8:46 PM ]
@@ -9,11 +9,12 @@ BHSMEDG ;IHS/CIA/MGH - Health Summary for V MED file ;01-May-2014 11:06;DU
  ;Patch 1 changes prescribed at to dispensed at as in IHS patch 15
  ;Patch 2 changes for patch 16
  ;Patch 6 - Updates for non-VA meds and med review
+ ; IHS/MSC/MIR  11/18/2024  MEDS+3 has been updated for "Hold" status Feature 115724 (BHS patch 21)
  ;====================================================================
 MEDS ;EP - called from component -  <SETUP>
  N BHSPAT,X,Y,Z
  S BHSPAT=DFN
- I '$D(^AUPNVMED("AC",BHSPAT)) S BHST="MEDICATION",BHSFN=50 D DISPREF^BHSRAD Q
+ I '$D(^AUPNVMED("AC",BHSPAT)),'$D(^PS(55,BHSPAT,"P","A")) S BHST="MEDICATION",BHSFN=50 D DISPREF^BHSRAD Q
  D CKP^GMTSUP Q:$D(GMTSQIT)
  ; <BUILD>
  S Y="",Z=""

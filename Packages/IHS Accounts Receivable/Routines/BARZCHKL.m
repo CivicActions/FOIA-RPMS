@@ -1,0 +1,297 @@
+BARZCHKL ; IHS/SD/LSL - Look up Collection Information for Insurance Company by Check Number ;
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**30,31**;OCT 26, 2005;Build 90
+ ;
+ ; *** TESTING - AEF *** 3130215
+ ; THIS ROUTINE IS COPIED FROM BARCHKLU AND MODIFIED TO ADD THE AMOUNT 
+ ; ADJUSTED COLUMN
+ ;
+ ; IHS/SD/LSL - 11/14/02 - V1.7 - NOIS XCA-0802-200093
+ ;      Modify code that $O thru the "D" x-ref to check for checks
+ ;      in all upper case if check entered in lower case and lower case
+ ;      check fails.
+ ;;IHS/SD/CPC - BAR*1.8*30 CR10550 Check number field updates
+ ; ********************************************************************
+ ;
+ ;** Collection Batch information by check number
+ ;** option Check Posting Summary (CPS)**
+ ;BAR*1.8*31 IHS/OIT/FCJ CR#9729
+ ;
+ONE ;EP
+ N DIC,BARCHKNO,BARCBDA,BARITMNO,BARCLID,BARCTDN
+ N DIR,V,X,Y,Z,ZS,TEST,ASKEND
+ ;
+ ; -------------------------------
+ASK W !!
+ ;BAR*1.8*30 CR10550  START
+ K DIR,DIC,V,X,Y,Z,ZS,TEST,ASKEND
+ S DIR(0)="FAO^1:50"
+ S DIR("A")="Select Check Number: "
+ S DIR("?")="Enter a full or partial check number."
+ S DIR("??")="^D CHKLIST^BARCHKU1"
+ D ^DIR
+ I $D(DUOUT)!$D(DTOUT)!$D(DIROUT)!(Y="") D EXIT Q
+ ;I $L(X)>20 S X=""""_X_""""
+ ;S X=X_" "
+ N ITM    ;BAR*1.8*31 IHS/OIT/FCJ CR#9729
+ S TEST=X,X="",Z=0
+ K DIR
+ S DIR(0)=""
+ F  S X=$O(^BARCOL(DUZ(2),"D",X)) Q:X']""  I $E(X,1,$L(TEST))=TEST D
+ .S V=""
+ .F  S V=$O(^BARCOL(DUZ(2),"D",X,V)) Q:V']""  D
+ ..S Y=""
+ ..F  S Y=$O(^BARCOL(DUZ(2),"D",X,V,Y)) Q:Y']""  D
+ ...;TEST()=CHECK NO^COLL BATCH IEN^COLL BATCH NAME^COLL BATCH ITEM NUM^COLLECTION ID^TDN/IPAC
+ ...;TEST()=CHECK NO^COLL BATCH IEN^COLL BATCH NAME^COLL BATCH ITEM NUM^COLLECTION ID^TDN/IPAC^COL BATCH ITEM^BATCH STATUS
+ ...S Z=Z+1,TEST(Z)=X_U_V_U_$$GET1^DIQ(90051.01,V,.01,"E")_U_Y_U_$$GET1^DIQ(90051.01,V,2,"E")_U_$$GET1^DIQ(90051.01,V,28,"E")
+ ...S ITM=$P(^BARCOL(DUZ(2),V,1,Y,0),U)    ;BAR*1.8*31 IHS/OIT/FCJ CR#9729
+ ...S TEST(Z)=TEST(Z)_U_"ITEM "_ITM_U_$$VAL^XBDIQ1(90051.1101,"V,Y",17)   ;BAR*1.8*31 IHS/OIT/FCJ CR#9729
+ ...;S DIR("L",Z)=Z_":  "_X_":  "_$P(^BARCOL(DUZ(2),V,0),U,1) ;BAR*1.8*30
+ ...;S DIR(0)=DIR(0)_Z_": "_X_";" ;BAR*1.8*30
+ I Z<1 W "??",! G ASK
+ I Z>1 S T=Z,ZS=1 F Z=1:1:T D
+ .Q:$D(ASKEND)
+ .;S DIR("L",Z)=Z_":  "_$P(TEST(Z),U)_":  "_$P(TEST(Z),U,3)
+ .S DIR("L",Z)=Z_":  "_$P(TEST(Z),U)_":  "_$P(TEST(Z),U,3)_" "_$P(TEST(Z),U,7)_" "_$P(TEST(Z),U,8)   ;BAR*1.8*31 IHS/OIT/FCJ CR#9729
+ .S DIR(0)=DIR(0)_Z_": "_$P(TEST(Z),U)_";"
+ .I Z#5=0!(Z=T) D
+ ..Q:$D(ASKEND)
+ ..S DIR("L")=DIR("L",Z) K DIR("L",Z)
+ ..S:Z<T DIR("A",1)="Press <RETURN> to see more, '^' to exit this list, OR"
+ ..S:Z=T DIR("A",1)="Press <RETURN> or '^' to exit this list, OR"
+ ..S DIR("A")="CHOOSE "_ZS_" - "_Z
+ ..S DIR(0)="SO^"_$E(DIR(0),1,$L(DIR(0))-1)_"^K:X>Z X"
+ ..D ^DIR
+ ..S ZS=Z+1
+ ..I Y>1!(Y=1) S TEST=$P(TEST(Y),U),ASKEND=1 Q
+ ..I Y<0!$D(DUOUT)!$D(DTOUT)!$D(DIROUT) S ASKEND=1 Q
+ ..I Y<1,(Z'=1) K DIR("L") S DIR(0)="" Q
+ I $D(DUOUT)!$D(DTOUT)!$D(DIROUT) D EXIT Q
+ I Z=1 S Y=Z
+ I 'Y D EXIT Q
+ S BARCHKNO=$P(TEST(Y),U,1)
+ S BARCBDA=$P(TEST(Y),U,2)
+ S BARCBNM=$P(TEST(Y),U,3)
+ S BARITMNO=$P(TEST(Y),U,4)  ;BAR*1.8*31 IHS/OIT/FCJ CR#9729
+ S BARCLID=$P(TEST(Y),U,5)
+ S BARCTDN=$P(TEST(Y),U,6)
+ ;S DIC=$$DIC^XBDIQ1(90051.01)
+ ;S DIC(0)="nEQZ"
+ ;S D="D"
+ ;S X="12345"
+ ;S DIC("A")="Select Check Number: "
+ ;D IX^DIC
+ ;I X=" " W !,"  Must enter a Check Number " G ASK
+ ;Q:+Y<0
+ ;S BARCHKNO=X   
+ ;S BARCBDA=+Y
+ ;S BARCBNM=$P(Y,U,2)
+ ;S BARCHKNO=$E(X,1,50)
+ ;I $F(BARCHKNO,"  ")>0 S BARCHKNO=$E(BARCHKNO,1,$F(BARCHKNO,"  ")-3)
+ ;I $E(BARCHKNO,$L(BARCHKNO))=" " S BARCHKNO=$E(BARCHKNO,$L(BARCHKNO)-1)
+ ;I '$D(^BARCOL(DUZ(2),BARCBDA,1,"C",BARCHKNO)) D
+ ;.S BARCHKNO=$$UPC^BARUTL(BARCHKNO)
+ ;.S BARCHKNO=$O(^BARCOL(DUZ(2),BARCBDA,1,"C",BARCHKNO))
+ ;.S X=$$PRTFMTEX^BARCHKU1(BARCHKNO,51)
+  ;BAR*1.8*30 10550 END
+ ;BAR*1.8*31 IHS/OIT/FCJ CR#9729 commented out next section BARITMNO IS SET ABOVE AND ITEM DISPLAYED
+ ;S BARITMNO=0
+ ;S BARITMNO=$O(^BARCOL(DUZ(2),BARCBDA,1,"C",BARCHKNO,BARITMNO))
+ ;I BARITMNO="" D  I BARITMNO="" K BARCBDA,BARITMNO,BARCHKNO G ASK
+ ;. S BARCHKNO=$$UPC^BARUTL(X)
+ ;. S BARCBDA=+Y
+ ;. S BARITMNO=0
+ ;. S BARITMNO=$O(^BARCOL(DUZ(2),"D",X,BARCBDA,BARITMNO))
+ ;. I BARITMNO="" W !,"Couldn't find ITEM for this CHECK NUMBER.  Please select again."
+ ;BAR*1.8*30 10550 END
+ ;I '$D(^BARCOL(DUZ(2),BARCBDA,1,BARITMNO,0)) D  G ASK
+ ;. W !,"PROBLEM WITH THIS ITEM SET UP CONTACT YOUR SUPPORT PERSONNEL"
+ ;. K BARCBDA,BARITMNO,BARCHKNO
+ ;I '$D(^BARCOL(DUZ(2),BARCBDA,1,BARITMNO,1)) D  G ASK
+ ;. W !,"PROBLEM WITH THIS ITEM SET UP CONTACT YOUR SUPPORT PERSONNEL"
+ ;. K BARCBDA,BARITMNO,BARCHKNO
+ ;I '$D(^BARCOL(DUZ(2),BARCBDA,1,BARITMNO,2)) D  G ASK
+ ;. W !,"PROBLEM WITH THIS ITEM SET UP CONTACT YOUR SUPPORT PERSONNEL"
+ ;. K BARCBDA,BARITMNO,BARCHKNO
+ ;BAR*1.8*31 IHS/OIT/FCJ CR#9729 END OF CHANGES
+ S (BARCKAMT,BARINSNM,BARITMPD,BARITMBL,BARITMUD,BARITMUA,BARITMRF)=0
+ S BARCKAMT=$P(^BARCOL(DUZ(2),BARCBDA,1,BARITMNO,1),"^")
+ S BARINSNM=$P(^BARCOL(DUZ(2),BARCBDA,1,BARITMNO,2),"^")
+ S BARITMST=$E($$VAL^XBDIQ1(90051.1101,"BARCBDA,BARITMNO",17),1,3)   ;BAR*1.8*31 IHS/OIT/FCJ CR#9729
+ S BARITMPD=$$VAL^XBDIQ1(90051.1101,"BARCBDA,BARITMNO",18)
+ S BARITMBL=$$VAL^XBDIQ1(90051.1101,"BARCBDA,BARITMNO",19)
+ S BARITMUD=$P(^BARCOL(DUZ(2),BARCBDA,1,BARITMNO,1),"^",3)
+ S BAR23=1
+ S BARITMUA=$$ITT^BARCBC(BARCBDA,BARITMNO,"UN-ALLOCATED")
+ K BAR23
+ S BARITMRF=$$ITT^BARCBC(BARCBDA,BARITMNO,"REFUND")*-1
+ I $L(TEST)<$L(BARCHKNO) W $E(BARCHKNO,$L(TEST),$L(BARCHKNO)-$L(TEST))
+ W "  ",BARCBNM,"  ",BARCLID,"  ",BARCTDN,!
+ I $L(BARCHKNO)<13 W !,"Check No: ",BARCHKNO,?25,"From: ",$E(BARINSNM,1,30),?63,"For: ",$J(BARCKAMT,10,2),!    ;Item Check # BAR*1.8*30 CR10550
+ E  W !,"Check No: ",BARCHKNO,!," From: ",$E(BARINSNM,1,30),?33," For: ",$J(BARCKAMT,10,2),!
+ K DIR
+ S DIR(0)="Y"
+ S DIR("A")="  CORRECT "
+ S DIR("B")="YES"
+ D ^DIR
+ K DIR
+ I Y'=1 G ASK
+ D PRINT
+ D EXIT
+ Q
+ ; *********************************************************************
+ ;
+HEADER ;
+ I IOSL=6000 D
+ .W $$EN^BARVDF("IOF")
+ .W !?5,"Collection Batch: ",BARCBNM
+ .W ?50,"Item Number: ",BARITMNO
+ .W ?68,"Status: ",BARITMST     ;BAR*1.8*31 IHS/OIT/FCJ CR#9729
+ .W !,"Check Number: ",BARCHKNO
+ .I $L(BARCHKNO)>40 W !,"Issued By: ",BARINSNM  ;Item Check # BAR*1.8*30 CR10550
+ .E  W ?32,"Issued By: ",BARINSNM
+ .W !,"Check Amount: ",$J(BARCKAMT,10,2)
+ .W ?27,"Amount Posted : ",$J(BARITMPD,10,2)
+ .W ?55,"Balance : ",$J(BARITMBL,10,2)
+ .W !,"Un-Allocated: ",$J(BARITMUA,10,2)
+ .W ?55,"Refunded: ",$J(BARITMRF,10,2),!
+ .W !,"Patient Name",?15,"3P Bill DT",?24,"Bill Name",?42,"DOS",?60,"Paid Amt.",?70,"Adjust",!  ;adjusted columns, added Adjust
+ .D EBARPG
+ I IOSL<6000 D BARHDR
+ ;
+ ; -------------------------------
+DETAILS ;
+ ; Collect information on what bills this check applied to
+ S BARBCNT=0
+ S (BARDTTM,BARCHKPD)=0
+ F  S BARDTTM=$O(^BARTR(DUZ(2),"AD",BARCBDA,BARDTTM)) Q:BARDTTM'>0  D  Q:($G(DIROUT)!$G(DUOUT)!$G(DTOUT)!$G(DROUT))
+ .I $P(^BARTR(DUZ(2),BARDTTM,0),"^",15)'=BARITMNO Q
+ .I '$D(^BARTR(DUZ(2),BARDTTM,1)) Q
+ .I $P(^BARTR(DUZ(2),BARDTTM,1),"^")'=40 Q
+ .S (BARBLDA,BARBLPT,BARPDAMT)=0
+ .S (BARBLNM,BARBLPTN)=""
+ .S BARPDAMT=$P(^BARTR(DUZ(2),BARDTTM,0),U,2)
+ .S BARBLDA=$P(^BARTR(DUZ(2),BARDTTM,0),U,4)
+ .S BARBLPT=$P(^BARTR(DUZ(2),BARDTTM,0),U,5)
+ .S BARBLPTN=$E($$VAL^XBDIQ1(90050.01,BARBLDA,101),1,25)
+ .S BARDOSB=$$VALI^XBDIQ1(90050.01,BARBLDA,102)
+ .S BARDOSE=$$VALI^XBDIQ1(90050.01,BARBLDA,103)
+ .S BARDOSEF=$$FMTE^XLFDT(BARDOSE,2)  ;AEF - MM/DD/YY FORMAT
+ .S BARDOSBF=$$FMTE^XLFDT(BARDOSB,2)  ;AEF - MM/DD/YY FORMAT
+ .S BARBLNM=$E($$VAL^XBDIQ1(90050.01,BARBLDA,.01),1,15)
+ .S BAR3PAP=$P($$FMTE^XLFDT($P($G(^BARBL(DUZ(2),BARBLDA,0)),U,18),2),"@")  ;AEF - MM/YY/DD FORMAT
+ .S D0=BARDTTM,BZXADJ=$$ADJ^BARTR   ;AEF - NEW LINE
+ .W !,$E(BARBLPTN,1,14)  ;AEF - CHANGED LENGTH FROM 18 TO 14
+ .W ?15,BAR3PAP  ;AEF - CHANGED COLUMN FROM 19 TO 15
+ .W ?24,$E(BARBLNM,1,17)  ;AEF - CHANGED COLUMN FROM 30 TO 24
+ .W ?42,BARDOSBF_"-"_BARDOSEF  ;AEF - CHANGED COLUMN FROM 48 TO 42
+ .W ?60,$J(BARPDAMT,10,2)  ;AEF - CHANGED COLUMN FROM 70 TO 60
+ .W ?72,$J($G(BZXADJ),8,2)  ;AEF - ADD ADJUSTMENT
+ .S BARBCNT=BARBCNT+1
+ .S BARCHKPD=BARCHKPD+BARPDAMT
+ .S BZXTADJ=$G(BZXTADJ)+$G(BZXADJ)  ;AEF - NEW LINE
+ .D PG
+ .Q
+ W !!?27,"Bill Count: ",BARBCNT,?50,"TOTALS:",?60,$J(BARCHKPD,10,2),?72,$J($G(BZXTADJ),8,2),!  ;AEF - ADDED ADJ
+ D EBARPG
+ I $E(IOST)="C",IOT["TRM" D EOP^BARUTL(0)
+ Q
+ ; *********************************************************************
+ ;
+PRINT ;**Print   
+ ;
+ ; GET DEVICE (QUEUEING ALLOWED)
+ S Y=$$DIR^XBDIR("S^P:PRINT Output;B:BROWSE Output on Screen","Do you wish to ","P","","","",1)
+ K DA
+ Q:$D(DIRUT)
+ I Y="B" D  Q
+ . S XBFLD("BROWSE")=1
+ . S BARIOSL=IOSL
+ . S IOSL=600
+ . D VIEWR^XBLM("HEADER^BARZCHKL")
+ . D FULL^VALM1
+ . W $$EN^BARVDF("IOF")
+ .D CLEAR^VALM1  ;clears out all list man stuff
+ .K XQORNEST,VALMKEY,VALM,VALMAR,VALMBCK,VALMBG,VALMCAP,VALMCNT,VALMOFF
+ .K VALMCON,VALMDN,VALMEVL,VALMIOXY,VALMLFT,VALMLST,VALMMENU,VALMSGR
+ .K VALMUP,VALMWD,VALMY,XQORS,XQORSPEW,VALMCOFF
+ .;
+ .; ------------------------------
+DEVE .;
+ .S IOSL=BARIOSL
+ .K BARIOSL
+ .Q
+ S XBRP="HEADER^BARZCHKL"
+ S XBNS="BAR*"
+ S XBRX="EXIT^BARZCHKL"
+ D ^XBDBQUE
+ENDJOB Q
+ ; *********************************************************************
+PG ;**page controller      
+BARPG ;EP PAGE CONTROLLER   
+ ; This utility uses variables BARPG("HDR"),BARPG("DT"),BARPG("LINE"),BARPG("PG")
+ ; kill variables by D EBARPG
+ ;
+ Q:($Y<(IOSL-6))!($G(DOUT)!$G(DFOUT))
+ S:'$D(BARPG("PG")) BARPG("PG")=0
+ S BARPG("PG")=BARPG("PG")+1
+ I $E(IOST)="C",IOT["TRM" D EOP^BARUTL(0)  Q:($G(DIROUT)!$G(DUOUT)!$G(DTOUT)!$G(DROUT))
+ ;
+ ; -------------------------------
+Q ;
+ Q:($G(DIROUT)!$G(DUOUT)!$G(DTOUT)!$G(DROUT))
+ ;
+ ; -------------------------------
+BARHDR ; Write the Report Header
+ S BARPG("HDR")="Check Posting Summary"
+ W:$Y @IOF
+ W !
+ Q:'$D(BARPG("HDR"))
+ S:'$D(BARPG("LINE")) $P(BARPG("LINE"),"-",IOM-2)=""
+ S:'$D(BARPG("PG")) BARPG("PG")=1
+ I '$D(BARPG("DT")) D
+ . S %H=$H
+ . D YX^%DTC
+ . S BARPG("DT")=Y
+ U IO
+ W ?(IOM-$L(BARPG("HDR"))/2),BARPG("HDR")
+ W !?(IOM-75),BARPG("DT"),?(IOM-15),"PAGE: ",BARPG("PG")
+ W ! F I=1:1:IOM W "-"   ;AEF
+ ;
+ ; -------------------------------
+BARHD ;EP
+ ; Write column header / message
+ W !?5,"Collection Batch: ",BARCBNM
+ W ?50,"Item Number: ",BARITMNO
+ W ?68,"Status: ",BARITMST     ;BAR*1.8*31 IHS/OIT/FCJ CR#9729
+ W !,"Check Number: ",BARCHKNO
+ I $L(BARCHKNO)>30 W !,"Issued By:  ",BARINSNM  ;Item Check # BAR*1.8*30 CR10550
+ E  W ?32,"Issued By: ",BARINSNM
+ W !,"Check Amount: ",$J(BARCKAMT,10,2)
+ W ?27,"Amount Posted : ",$J(BARITMPD,10,2)
+ W ?55,"Balance : ",$J(BARITMBL,10,2),!
+ W "Un-Allocated: ",$J(BARITMUA,10,2)
+ W ?55,"Refunded: ",$J(BARITMRF,10,2),!
+ W !,"Patient Name"
+ W ?15,"Bill DT"  ;AEF - CHANGED COLUMN FROM 19 TO 15. REMOVED "3P"
+ W ?24,"Bill Name"  ;AEF - CHANGED COLUMN FROM 30 TO 24
+ W ?42,"DOS"  ;AEF - CHANGED COLUMN FROM 48 TO 42
+ W ?62,"Paid Amt"  ;AEF - CHANGED COLUMN FROM 70 TO 60, REMOVED LINE FEED
+ W ?74,"Adjust"  ;AEF - NEW LINE
+ W !  ;AEF - NEW LINE
+ I ($G(DIROUT)!$G(DUOUT)!$G(DTOUT)!$G(DROUT)) S BARQUIT=1
+ Q
+ ; *********************************************************************
+ ;
+EBARPG ;
+ K BARPG("LINE"),BARPG("PG"),BARPG("HDR"),BARPG("DT")
+ Q
+ ; *********************************************************************
+ ;
+EXIT ; Exit routine
+ K BAR3PAP,BARBCNT,BARBLDA,BARBLNM,BARBLPT,BARBLPTN,BARCBDA,BARCBNM,BARCHKNO
+ K BARCHKPD,BARCKAMT,BARDOSB,BARDOSBF,BARDOSE,BARDOSEF,BARDTTM,BARINSNM
+ K BARITMBL,BARITMNO,BARITMPD,BARITMRF,BARITMUA,BARITMUD,BARPDAMT
+ K BARPSAT,BARSITE,BARSPAR,BARTOT,BZXADJ
+ K DIR,DR,I,J,T,TEST,V,X,Y,Z,ZS
+ Q

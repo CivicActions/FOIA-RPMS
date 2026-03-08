@@ -1,19 +1,26 @@
-ABME5L16 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS Third Party Billing System;**6,9,10,11**;NOV 12, 2009;Build 133
+ABME5L16 ; IHS/SD/SDR - Header 
+ ;;2.6;IHS Third Party Billing System;**6,9,10,11,30,31,37**;NOV 12, 2009;Build 739
  ;Header Segments
+ ;IHS/SD/SDR 2.6*30 CR8876 -Made change to set ABMLOOP var so it will be set appropriately for each OTHER SUBSCRIBER; was wrong the second time
+ ;  through so the relationship code was coming up wrong in the SBR segment, setting everything to 18 for SELF
+ ;IHS/SD/AML 2.6*31 CR10374 Include ABM*EAF segment
+ ;IHS/SD/SDR 2.6*37 ADO76009 Updated EAF check to include the PI multiple 
  ;
 START ;START HERE
- S ABMLOOP=2320
+ ;S ABMLOOP=2320  ;abm*2.6*30 IHS/SD/SDR CR8876
  D PAYED^ABMUTLP
  N ABMI
  S ABMI=0
  F  S ABMI=$O(ABMP("INS",ABMI)) Q:'ABMI  D
  .S ABMLINE=ABMP("INS",ABMI)
  .I $P(ABMLINE,U)=ABMP("INS")!($P(ABMLINE,"^",11)=ABMP("INS")),$P(ABMLINE,"^",3)="I" Q
+ .S ABMLOOP=2320  ;abm*2.6*30 IHS/SD/SDR CR8876
  .D EP^ABME5SBR(ABMI)
  .D WR^ABMUTL8("SBR")
+ .S ABMM=$S(+$P($G(ABMP("INS",ABMI)),U,8)'=0:$P(ABMP("INS",ABMI),U,8),1:1)  ;abm*2.6*37 IHS/SD/SDR ADO76009
  .F ABML="OA","PR","CO" D
- ..Q:'$D(ABMP(+ABMLINE,ABML))  ;quit if no data for insurer in ABMP adj array
+ ..;Q:'$D(ABMP(+ABMLINE,ABML))  ;quit if no data for insurer in ABMP adj array  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ..Q:'$D(ABMP(+ABMLINE,ABMM,ABML))  ;quit if no data for insurer in ABMP adj array  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ..D EP^ABME5CAS
  ..D WR^ABMUTL8("CAS")
  .;start old code abm*2.6*9 NOHEAT
@@ -22,15 +29,23 @@ START ;START HERE
  .;.D EP^ABME5AMT("D")
  .;.D WR^ABMUTL8("AMT")
  .;end old code
- .I ($G(ABMP("PAYED",+ABMLINE))!($P($G(^ABMNINS(ABMP("LDFN"),+ABMLINE,0)),U,11)="Y")) D
+ .;I ($G(ABMP("PAYED",+ABMLINE))!($P($G(^ABMNINS(ABMP("LDFN"),+ABMLINE,0)),U,11)="Y")) D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .I ($G(ABMP("PAYED",+ABMLINE,ABMM))!($P($G(^ABMNINS(ABMP("LDFN"),+ABMLINE,0)),U,11)="Y")) D  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ..D EP^ABME5AMT("D")
  ..D WR^ABMUTL8("AMT")
  .;start new code abm*2.6*10 COB billing
  .;I ABMPSQ'=1,$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+ABMP("INS"),".211","I"),1,"I")="R" D
- ..S ABMAMT=0
- ..D EP^ABME5AMT("B6")
+ .;.S ABMAMT=0
+ .;.D EP^ABME5AMT("B6")
+ .;.D WR^ABMUTL8("AMT")
+ .;.;end new code abm*2.6*10 COB billing
+ .;
+ .;start new abm*2.6*31 IHS/SD/AML CR10374
+ .;I $G(ABMP(+ABMLINE,"EAF"))'="" D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .I $G(ABMP(+ABMLINE,ABMM,"EAF"))'="" D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ..D EP^ABME5AMT("EAF")
  ..D WR^ABMUTL8("AMT")
- ..;end new code abm*2.6*10 COB billing
+ .;end new abm*2.6*31 IHS/SD/AML CR10374
  .D ^ABME5OI
  .D WR^ABMUTL8("OI")
  .;

@@ -1,5 +1,5 @@
 BQITBMI ;PRXM/HC/ALA-Calculate BMI value ; 04 Apr 2006  1:22 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;1.1;ICARE MANAGEMENT SYSTEM;**3**;Apr 03, 2008
  ;
  ;**Program Description**
  ; This program calculates BMI and other measurements for a patient
@@ -29,8 +29,6 @@ FD ;  Find data
  F  S DATE=$O(^AUPNVMSR("AA",BDFN,BHT,DATE)) Q:DATE=""!(DATE>EDATE)  D  Q:QFL
  . S IEN=""
  . F  S IEN=$O(^AUPNVMSR("AA",BDFN,BHT,DATE,IEN)) Q:IEN=""!(QFL)  D
- .. ; if the new ENTERED IN ERROR field exists, exclude the record if it is marked as an error
- .. I $$VFIELD^DILFD(9000010.01,2) Q:$$GET1^DIQ(9000010.01,IEN_",",2,"I")=1
  .. S HT=$P(^AUPNVMSR(IEN,0),U,4),HDATE=DATE
  .. S HVISIT=$P(^AUPNVMSR(IEN,0),U,3),HIEN=IEN
  .. I $P($G(^AUPNVSIT(HVISIT,0)),U,11)=1 Q
@@ -46,8 +44,6 @@ FD ;  Find data
  F  S DATE=$O(^AUPNVMSR("AA",BDFN,BWT,DATE)) Q:DATE=""!(DATE>EDATE)  D  Q:QFL
  . S IEN=""
  . F  S IEN=$O(^AUPNVMSR("AA",BDFN,BWT,DATE,IEN)) Q:IEN=""!(QFL)  D
- .. ; if the new ENTERED IN ERROR field exists, exclude the record if it is marked as an error
- .. I $$VFIELD^DILFD(9000010.01,2) Q:$$GET1^DIQ(9000010.01,IEN_",",2,"I")=1
  .. S WT=$P(^AUPNVMSR(IEN,0),U,4),WDATE=DATE
  .. S WVISIT=$P(^AUPNVMSR(IEN,0),U,3),WIEN=IEN
  .. I $P($G(^AUPNVSIT(WVISIT,0)),U,11)=1 Q
@@ -134,6 +130,20 @@ OW(BDFN,BBMI,AGE) ;EP - overweight
  I BBMI'<$P(^APCLBMI(R,0),U,4),BBMI<$P(^APCLBMI(R,0),U,5) Q 1
  Q 0
  ;
+WC(BDFN,TMFRAME) ;EP -- Waist Circumference
+ ;  Get the waist circumference for a patient and a time frame
+ ;Input
+ ;  BDFN - Patient IEN
+ ;  TMFRAME - Time frame in relative date format
+ ;
+ ;   If no time frame passed in, default to 60 months (5 years)  
+ I $G(TMFRAME)="" S TMFRAME="T-60M"
+ S BDATE=$$DATE^BQIUL1(TMFRAME),BDATE=$$FMTE^XLFDT(BDATE),EDATE=$$FMTE^XLFDT(DT)
+ NEW BQIPRY
+ S %=BDFN_"^LAST MEAS WC;DURING "_BDATE_"-"_EDATE
+ S E=$$START1^APCLDF(%,"BQIPRY(")
+ Q $P($G(BQIPRY(1)),U,2)_U_$P($G(BQIPRY(1)),U,5)_U_$P($P($G(BQIPRY(1)),U,4),";",1)
+ ;
 BP(BDFN,TMFRAME) ;EP -- Blood Pressure for a single patient
  ;  Get the Mean Blood Pressure value for a patient and a time frame
  ;Input
@@ -153,8 +163,6 @@ BP(BDFN,TMFRAME) ;EP -- Blood Pressure for a single patient
  . S IEN=""
  . F  S IEN=$O(^AUPNVMSR("AA",BDFN,BTYP,DATE,IEN),-1) Q:IEN=""!(QFL)  D
  .. S VISIT=$P(^AUPNVMSR(IEN,0),U,3) I VISIT="" Q
- .. ; if the new ENTERED IN ERROR field exists, exclude the record if it is marked as an error
- .. I $$VFIELD^DILFD(9000010.01,2) Q:$$GET1^DIQ(9000010.01,IEN_",",2,"I")=1
  .. I $P(^AUPNVSIT(VISIT,0),U,8)=BCLN Q
  .. I $P(^AUPNVSIT(VISIT,0),U,11)=1 Q
  .. S CT=CT+1
@@ -197,8 +205,6 @@ ABP(TMFRAME,TPGLOB) ;EP -- Blood Pressure for all patients
  .. S MIEN=""
  .. F  S MIEN=$O(^AUPNVMSR("AD",VISIT,MIEN),-1) Q:MIEN=""  D
  ... I $$GET1^DIQ(9000010.01,MIEN_",",.01,"I")'=BTYP Q
- ... ; if the new ENTERED IN ERROR field exists, exclude the record if it is marked as an error
- ... I $$VFIELD^DILFD(9000010.01,2) Q:$$GET1^DIQ(9000010.01,MIEN_",",2,"I")=1
  ... S DFN=$$GET1^DIQ(9000010.01,MIEN_",",.02,"I") I DFN="" Q
  ... S RESULT=$$GET1^DIQ(9000010.01,MIEN_",",.04,"E") I RESULT="" Q
  ... ;I $G(@TMDATA@(DFN))'<3 Q
@@ -252,8 +258,6 @@ ABMI(TMFRAME,TPGLOB) ;EP - Get BMIs for all patients
  .. F  S MIEN=$O(^AUPNVMSR("AD",VISIT,MIEN),-1) Q:MIEN=""  D
  ... S BTYP=$$GET1^DIQ(9000010.01,MIEN_",",.01,"I")
  ... I BTYP'=BHT,BTYP'=BWT Q
- ... ; if the new ENTERED IN ERROR field exists, exclude the record if it is marked as an error
- ... I $$VFIELD^DILFD(9000010.01,2) Q:$$GET1^DIQ(9000010.01,MIEN_",",2,"I")=1
  ... S DFN=$$GET1^DIQ(9000010.01,MIEN_",",.02,"I") I DFN="" Q
  ... S CAGE=$$AGE^BQIAGE(DFN)
  ... ; Patients younger than 2 years cannot have BMI calculated. 
@@ -316,4 +320,24 @@ ABMI(TMFRAME,TPGLOB) ;EP - Get BMIs for all patients
  .. S $P(@TPGLOB@(DFN,"CRITERIA","BMI-Height","V",HVISIT,HIEN),U,1)=$P(^AUPNVSIT(HVISIT,0),U,1)
  .. S $P(@TPGLOB@(DFN,"CRITERIA","BMI-Weight","V",WVISIT,WIEN),U,1)=$P(^AUPNVSIT(WVISIT,0),U,1)
  K @TMDATA
+ Q
+ ;
+AWC(TMFRAME,TPGLOB) ;EP - Get waist circumferences for all patients
+ ; Input
+ ;   TMFRAME - Timeframe for search
+ ;   TPGLOB  - Temporary global
+ NEW BDATE,EDATE,TMDATA,BTYP,IEN,DATE,VISIT,MIEN,DFN,RESULT
+ S BDATE=$$DATE^BQIUL1(TMFRAME),EDATE=DT
+ S BTYP=$$FIND1^DIC(9999999.07,,"X","WC")
+ S DATE=BDATE
+ F  S DATE=$O(^AUPNVSIT("B",DATE)) Q:DATE=""!((DATE\1)>EDATE)  D
+ . S VISIT=""
+ . F  S VISIT=$O(^AUPNVSIT("B",DATE,VISIT)) Q:VISIT=""  D
+ .. I $$GET1^DIQ(9000010,VISIT_",",.11,"I")=1 Q
+ .. S MIEN=""
+ .. F  S MIEN=$O(^AUPNVMSR("AD",VISIT,MIEN)) Q:MIEN=""  D
+ ... I $$GET1^DIQ(9000010.01,MIEN_",",.01,"I")'=BTYP Q
+ ... S DFN=$$GET1^DIQ(9000010.01,MIEN_",",.02,"I") I DFN="" Q
+ ... S RESULT=$$GET1^DIQ(9000010.01,MIEN_",",.04,"E") I RESULT="" Q
+ ... S @TPGLOB@(DFN,DATE)=RESULT_"^"_VISIT_"^"_MIEN_"^9000010.01"
  Q

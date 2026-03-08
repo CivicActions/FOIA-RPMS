@@ -1,23 +1,17 @@
-DIOS ;SFISC/GFT,TKW-BUILD SORT LOGIC ;12:07 PM  5 Aug 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**6**;Mar 30, 1999
+DIOS ;SFISC/GFT,TKW-BUILD SORT LOGIC ;9/2/94  11:19 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  D INIT S ^UTILITY($J,"DX")=DX,^("F")="^UTILITY($J,0,"_DCC_U_(DPP+1)
  F X=-1:0 S X=$O(DX(X)) Q:X=""  S ^UTILITY($J,"DX",X)=DX(X)
 C K DX F DL=1:1:DPP S DX=+DPP(DL),V(DX,2)=DL,X=DP,(DPQ,DJ)=0,Z(DL)="" D A S X=999-$P($G(DPP(DL,"SER")),U,2),Y(DPQ,DX,X,$E($P(DPP(DL),U,2,3),1,30))=DL
- F DL=1:1:DPP D  I D5,DE>0,$D(DE(DL))=1 S DE(DL)=DE(DL)-(DE\D5) S:DE(DL)<4 DE(DL)=4
- .K % S Z=Z(DL)
-U .F %=1:1 S D="",Y=$P(Z,",",%) Q:Y=""  D
- ..S %(%)="D"_V(Y) I $D(V(Y,9)) F I=1:1:%-1 S DIOS=$P(Z,",",I),%(I)="$$SUB^DIOS("_DIOS_")"
- ..F I=1:1:% S D=D_","_%(I) I I=1 S D=D_","_DL
- ..S DX(Y,U)=D_"))"
- K DIOS S I=DP G GO
+ F DL=1:1:DPP K %,DIOS S Z=Z(DL),%=0 D U I D5,DE>0,$D(DE(DL))=1 S DE(DL)=DE(DL)-(DE\D5) S:DE(DL)<4 DE(DL)=4
+ S I=DP G GO
  ;
-SUB(F) ;
- N S,L
- S L="",S=-1
- F  S L=$O(J(L)) Q:L=""  I J(L)=F,$D(I(L,0)) S S=I(L,0) Q
- Q S
+U S D="",%=%+1,Y=$P(Z,C,%) Q:Y=""
+ S %(%)="D"_V(Y) I $D(V(Y,9)) F I=1:1:%-1 S %(I)="I("_V($P(Z,C,I))_",0)"
+ F I=1:1:% S D=D_C_%(I) I I=1 S D=D_C_DL
+ S DX(Y,U)=D_"))" G U
  ;
 A S W=$D(DPP(DL,X)),V(X)=DJ,Z(DL)=Z(DL)_X_C G ^DIOS1:'W
  I W=1 S Z=X,V=DPP(DL,X),DJ=DJ+1,DPQ=DPQ+1,X=$O(DPP(DL,X)) S:X="" X=-1 S:+V'=V V=Q_V_Q S:$S($D(^DD(X,0,"UP")):^("UP")-Z,1:1) X=DX K J(DJ,X) S:J'<DJ&$D(J(DJ)) J=DJ-1 S J(DJ,X)=DL,V(X,1)=V,V(X,0)=Z,I(Z,X)=DL G A
@@ -76,8 +70,7 @@ SETU ;FILE A LINE TO ^TMP FOR LATER INCLUSION IN ROUTINE
  Q
  ;
 INIT S:'$D(L) L=1 I $G(IO)=IO(0),L'=0,($G(IOST)=""!($G(IOST)?1"C".E)) D WAIT^DICD
- S I=^DD("OS",DISYS,0),J=$P(I,U,7),DIOS=$S(J:J,1:63),J=$P(I,U,3),DE=$S(J:J,$G(^DD("SUB")):^("SUB"),1:255)
- K I,J,Z S J=99,Q="""",DE=DPP*8-DE+23,D5=0
+ K I,J,Z S J=99,Q="""",DE=DPP*8-$S($D(^DD("SUB")):^("SUB"),1:127)+23,D5=0,DIOS=$P(^DD("OS",DISYS,0),U,7) S:'DIOS DIOS=63
  Q
  ;
 DIO1 K %,I,J,P G ^DIO1

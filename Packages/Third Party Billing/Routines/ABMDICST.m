@@ -1,20 +1,26 @@
 ABMDICST ; IHS/SD/TPF - Pending Claims Status Report ; JUN 29, 2005
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**31**;NOV 12, 2009;Build 615
  ;
- ; IHS/SD/SDR - V2.5 P10 - IM21520
- ;    Added code to allow no date range selection
+ ;IHS/SD/SDR 2.5*10 IM21520 Added code to allow no date range selection
+ ;
+ ;IHS/SD/SDR 2.6*31 CR11834 Updated report to ask for pending date range; changed to look through only claims
+ ;  with a Pending status instead of all claims
  ;
 EN ;EP - PENDING CLAIMS STATUS REPORT
  K ABM,ABMY
  S ABM("RTYP")=1,ABM("RTYP","NM")="BRIEF LISTING (80 Width)"
- S ABM("STA")="P"
+ ;S ABM("STA")="P"  ;abm*2.6*31 IHS/SD/SDR CR11834
+ S ABM("STA")="H"  ;abm*2.6*31 IHS/SD/SDR CR11834
  ;cancelled claims
- S ABM("DT")="V"    ;by visit date
+ ;S ABM("DT")="V"    ;by visit date  ;abm*2.6*31 IHS/SD/SDR CR11834
+ S ABMY("DT")="H"  ;by pended date  ;abm*2.6*31 IHS/SD/SDR CR11834
  S ABM("SORT")="C"
  S ABM("L")=DUZ(2)
  S ABM("STA","NM")="PENDING STATUS"
  S ABM("REASON")="PEND"  ;flag for RTYP^ABMDRSL2 to not ask for EXTENDED
-SEL S ABM("NODX")="" D ^ABMDRSEL Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
+SEL ;
+ S ABM("NODX")=""
+ D ^ABMDRSEL Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
  S ABM("HD",0)="PENDING CLAIMS STATUS LISTING"
  D ^ABMDRHD
  S ABMQ("RC")="COMPUTE^ABMDICST",ABMQ("RX")="POUT^ABMDRUTL",ABMQ("NS")="ABM"
@@ -27,15 +33,21 @@ COMPUTE ;EP - Entry Point for Setting up Data
  D SLOOP
  Q
 SLOOP ;EP - LOOP TO PULL PENDING CLAIMS
- I $D(ABMY("DT")) D  Q
+ ;I $D(ABMY("DT")) D  Q  ;abm*2.6*31 IHS/SD/SDR CR11834
+ I $G(ABMY("DT"))="V" D  Q  ;abm*2.6*31 IHS/SD/SDR CR11834
  .S ABM("RD")=ABMY("DT",1)-1
  .F  S ABM("RD")=$O(^ABMDCLM(DUZ(2),"AD",ABM("RD"))) Q:'+ABM("RD")!($P(ABM("RD"),".")>ABMY("DT",2))  D
  ..S ABM=""
  ..F  S ABM=$O(^ABMDCLM(DUZ(2),"AD",ABM("RD"),ABM)) Q:'ABM  D DATA
- S ABMP=0
- F  S ABMP=$O(^ABMDCLM(DUZ(2),"AS",ABMP)) Q:ABMP=""  D
- .S ABM=0
- .F  S ABM=$O(^ABMDCLM(DUZ(2),"AS",ABMP,ABM)) Q:'ABM  D DATA
+ ;start old abm*2.6*31 IHS/SD/SDR CR11834
+ ;S ABMP=0
+ ;F  S ABMP=$O(^ABMDCLM(DUZ(2),"AS",ABMP)) Q:ABMP=""  D
+ ;.S ABM=0
+ ;.F  S ABM=$O(^ABMDCLM(DUZ(2),"AS",ABMP,ABM)) Q:'ABM  D DATA
+ ;end old start new abm*2.6*31 IHS/SD/SDR CR11834
+ S ABM=0
+ F  S ABM=$O(^ABMDCLM(DUZ(2),"AS","P",ABM)) Q:'ABM  D DATA
+ ;end new abm*2.6*31 IHS/SD/SDR CR11834
  Q
  ;
 DATA ;EP - COMPILE DATA FOR PENDING CLAIM STATUS

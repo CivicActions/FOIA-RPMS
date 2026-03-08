@@ -1,5 +1,5 @@
 ATXTAXE ; IHS/CMI/LAB - DISPLAY IND LISTS ;
- ;;5.1;TAXONOMY;**11**;FEB 04, 1997;Build 48
+ ;;5.1;TAXONOMY;**11,61**;FEB 04, 1997;Build 133
  ;; ;
 EP ;EP - CALLED FROM OPTION
  D EN
@@ -10,7 +10,8 @@ EOJ ;EP
  Q
  ;; ;
 EN ;EP -- main entry point for
- S DIE="^ATXAX(",DR=".02;5101;1101",DA=ATXTAXI D ^DIE
+ I ATXFILE'=60 S DIE="^ATXAX(",DR=".02;5101;1101",DA=ATXTAXI D ^DIE
+ I ATXFILE=60 S DIE="^ATXLAB(",DR=".02",DA=ATXTAXI D ^DIE
  ;
  D EN^VALM("ATX TAXONOMY GENERIC EDIT")
  D CLEAR^VALM1
@@ -90,8 +91,8 @@ REM ;
  D FULL^VALM1
  W !
  I ATXFILE=60,$P(^ATXLAB(ATXTAXI,0),U,22) W !!,"The ",$P(^ATXLAB(ATXTAXI,0),U)," Taxonomy is READ ONLY.",!,"You can not update it." D PAUSE G REMX
- I ATXFILE'=60,$P(^ATXAX(ATXTAXI,0),U,22) W !!,"The ",$P(^ATXAX(ATXTAXI,0),U)," Taxonomy is READ ONLY.",!,"You can not update it." D PAUSE G REMX
- I ATXFILE'=60,$P(^ATXAX(ATXTAXI,0),U,5)'=DUZ W !!,"You are not the creator of the ",$P(^ATXAX(ATXTAXI,0),U)," Taxonomy.",!,"Sorry, but you cannot edit it." D PAUSE G REMX
+ I DUZ'=2881,ATXFILE'=60,$P(^ATXAX(ATXTAXI,0),U,22) W !!,"The ",$P(^ATXAX(ATXTAXI,0),U)," Taxonomy is READ ONLY.",!,"You can not update it." D PAUSE G REMX   ;CMBA ONLY!!!!!  LORI
+ I DUZ'=2881,ATXFILE'=60,$P(^ATXAX(ATXTAXI,0),U,5)'=DUZ W !!,"You are not the creator of the ",$P(^ATXAX(ATXTAXI,0),U)," Taxonomy.",!,"Sorry, but you cannot edit it." D PAUSE G REMX    ;CMBA ONLY!!!! LORI
  I ATXFILE=60,$P(^ATXLAB(ATXTAXI,0),U,5)'=DUZ W !!,"You are not the creator of the ",$P(^ATXLAB(ATXTAXI,0),U)," Taxonomy.",!,"Sorry, but you cannot edit it." D PAUSE G REMX
  W ! K DIR
  NEW ATXREMM
@@ -122,8 +123,8 @@ ADD ;EP - add an item to the selected list - called from a protocol
  D FULL^VALM1
  W !
  I ATXFILE=60,$P(^ATXLAB(ATXTAXI,0),U,22) W !!,"The ",$P(^ATXLAB(ATXTAXI,0),U)," is READ ONLY.",!,"You can not update it." D PAUSE G ADDX
- I ATXFILE'=60,$P(^ATXAX(ATXTAXI,0),U,22) W !!,"The ",$P(^ATXAX(ATXTAXI,0),U)," is READ ONLY.",!,"You can not update it." D PAUSE G ADDX
- I ATXFILE'=60,$P(^ATXAX(ATXTAXI,0),U,5)'=DUZ W !!,"You are not the creator of the ",$P(^ATXAX(ATXTAXI,0),U)," Taxonomy.",!,"Sorry, but you cannot edit it." D PAUSE G ADDX
+ I DUZ'=2881,ATXFILE'=60,$P(^ATXAX(ATXTAXI,0),U,22) W !!,"The ",$P(^ATXAX(ATXTAXI,0),U)," is READ ONLY.",!,"You can not update it." D PAUSE G ADDX      ;CMBA ONLY!!!! LORI
+ I DUZ'=2881,ATXFILE'=60,$P(^ATXAX(ATXTAXI,0),U,5)'=DUZ W !!,"You are not the creator of the ",$P(^ATXAX(ATXTAXI,0),U)," Taxonomy.",!,"Sorry, but you cannot edit it." D PAUSE G ADDX  ;CMBA ONLY!!!!!  LORI
  I ATXFILE=60,$P(^ATXLAB(ATXTAXI,0),U,5)'=DUZ W !!,"You are not the creator of the ",$P(^ATXLAB(ATXTAXI,0),U)," Taxonomy.",!,"Sorry, but you cannot edit it." D PAUSE G ADDX
  I ATXFILE=60 D LABADD G ADDX
  I ATXFILE=80 D ICD9ADD G ADDX

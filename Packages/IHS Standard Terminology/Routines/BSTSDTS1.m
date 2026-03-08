@@ -1,5 +1,5 @@
 BSTSDTS1 ;GDIT/HS/BEE-Standard Terminology DTS Calls/Processing ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**5,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
@@ -210,7 +210,7 @@ RUPDATE(NMID,ROUT) ;EP-Add/Update RXNORM
  ;RXNORM Only
  I $G(NMID)'=1552 Q 1
  ;
- N GL,CONCDA,BSTSC,INMID,ERROR,TCNT,I,CVRSN,ST,NROUT,TLIST,STYPE,RTR
+ N GL,CONCDA,BSTSC,INMID,ERROR,TCNT,I,CVRSN,ST,NROUT,TLIST,STYPE,RTR,TERMNSP,TERMSTS
  ;
  S GL=$NA(^TMP("BSTSCMCL",$J,1))
  S ROUT=$G(ROUT,"")
@@ -229,7 +229,8 @@ RUPDATE(NMID,ROUT) ;EP-Add/Update RXNORM
  S CVRSN=$$GET1^DIQ(9002318.1,INMID_",",.04,"I")
  ;
  ;Retired?
- I CONCDA]"",'$$RET^BSTSDTS3(CONCDA,CVRSN,GL) Q 0
+ ;GDIT/HS/BEE;02/05/2024;FEATURE#96140;Handle inactives - No longer retiring
+ ;I CONCDA]"",'$$RET^BSTSDTS3(CONCDA,CVRSN,GL) Q 0
  ;
  ;None found - create new
  I CONCDA="" S CONCDA=$$NEWC^BSTSDTS0()
@@ -251,6 +252,9 @@ RUPDATE(NMID,ROUT) ;EP-Add/Update RXNORM
  S BSTSC(9002318.4,CONCDA_",",.04)=CVRSN
  S BSTSC(9002318.4,CONCDA_",",.12)=DT
  S BSTSC(9002318.4,CONCDA_",",1)=$G(@GL@("FSN",1))
+ ;
+ ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives - concept status
+ S BSTSC(9002318.4,CONCDA_",",.16)=$S($G(@GL@("STS"))="I":1,1:0)
  ;
  ;Save ISA
  I $D(@GL@("ISA"))>1 D
@@ -329,7 +333,7 @@ RUPDATE(NMID,ROUT) ;EP-Add/Update RXNORM
  ;
  S STYPE="" F  S STYPE=$O(@GL@("SYN",STYPE)) Q:STYPE=""  S TCNT="" F  S TCNT=$O(@GL@("SYN",STYPE,TCNT)) Q:TCNT=""  D
  . ;
- . N TERM,TYPE,DESC,BSTST,ERROR,TMIEN,AIN
+ . N TERM,TYPE,DESC,BSTST,ERROR,TMIEN,AIN,TRMSTS,TRMNSP
  . ;
  . ;Pull values
  . S TERM=$G(@GL@("SYN",STYPE,TCNT,1)) Q:TERM=""
@@ -337,14 +341,18 @@ RUPDATE(NMID,ROUT) ;EP-Add/Update RXNORM
  . ;Limit to 244
  . S TERM=$E(TERM,1,244)
  . ;
+ . ;GDIT/HS/BEE;02/05/24;FEATURE#96140;Handle inactives - don't quit if inactive
  . ;Quit if found
- . I $D(TLIST(TERM)) Q
- . S TLIST(TERM)=""
+ . ;I $D(TLIST(TERM)) Q
+ . ;S TLIST(TERM)=""
+ . S TERMSTS=$P($G(@GL@("SYN",STYPE,TCNT,0)),U,7)
  . ;
  . S TYPE=$P($G(@GL@("SYN",STYPE,TCNT,0)),U,2)
  . S TYPE=$S(TYPE=1:"P",1:"S")
  . I TERM=$G(@GL@("FSN",1)) S TYPE="F"
  . S DESC=$P($G(@GL@("SYN",STYPE,TCNT,0)),U) Q:DESC=""
+ . ;GDIT/HS/BEE;02/05/24;FEATURE#96140;Handle inactives - Namespace and status
+ . S TERMNSP=$P($G(@GL@("SYN",STYPE,TCNT,0)),U,6)
  . S AIN=$$EP2FMDT^BSTSUTIL($P($G(@GL@("SYN",STYPE,TCNT,0)),U,3))
  . ;
  . ;Look up entry
@@ -365,6 +373,9 @@ RUPDATE(NMID,ROUT) ;EP-Add/Update RXNORM
  . S BSTST(9002318.3,TMIEN_",",.06)=AIN
  . S BSTST(9002318.3,TMIEN_",",.1)=DT
  . S BSTST(9002318.3,TMIEN_",",.11)="N"
+ . ;GDIT/HS/BEE;12/1/2022;FEATURE#96140;Handle inactives - Namespace and status
+ . S BSTST(9002318.3,TMIEN_",",.13)=TERMSTS
+ . S BSTST(9002318.3,TMIEN_",",.14)=TERMNSP
  . D FILE^DIE("","BSTST","ERROR")
  . ;
  . ;Reindex - needed for custom indices
@@ -373,8 +384,9 @@ RUPDATE(NMID,ROUT) ;EP-Add/Update RXNORM
  .. S DIK="^BSTS(9002318.3,",DA=TMIEN
  .. D IX^DIK
  ;
+ ;GDIT/HS/BEE;02/05/2024;FEATURE#9140;Handle inactives - No longer retiring
  ;Need to check for retired concepts again since it may have just been added
- S RTR=$$RET^BSTSDTS3(CONCDA,CVRSN,GL)
+ ;S RTR=$$RET^BSTSDTS3(CONCDA,CVRSN,GL)
  ;
  Q $S($D(ERROR):"0^Update Failed",1:1)
  ;
@@ -424,6 +436,13 @@ DILKP(OUT,BSTSWS) ;EP - DTS4 Search Call - Drug Ingredient Lookup
  .. ;Look to see if concept logged
  .. S CONC=$$CONC^BSTSDTS0(DTSID,.BSTSWS,1,1)
  .. I CONC]"" D  Q
+ ... ;
+ ... ;GDIT/HS/BEE;FEATURE#123640;Filter out inactive RxNorm
+ ... ;Skip Inactive RxNorms
+ ... NEW CIEN
+ ... S CIEN=$O(^BSTS(9002318.4,"C",1552,CONC,"")) Q:'CIEN
+ ... I $$GET1^DIQ(9002318.4,CIEN_",",.16,"I") Q
+ ... ;
  ... S RCNT=$G(RCNT)+1,@OUT@(RCNT)=CONC_U_DTSID
  ;
  Q STS

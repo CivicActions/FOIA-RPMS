@@ -1,5 +1,5 @@
-BQIUL1 ;PRXM/HC/DLS - Miscellaneous BQI Utilities ; 26 Oct 2005  9:43 AM
- ;;2.4;ICARE MANAGEMENT SYSTEM;**2**;Apr 01, 2015;Build 10
+BQIUL1 ;GDIT/HCSD/ALA - Miscellaneous BQI Utilities ; 26 Oct 2005  9:43 AM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**2**;Mar 01, 2021;Build 13
  ;
  Q
  ;
@@ -136,7 +136,7 @@ TMPFL(MODE,UID,DFN) ;EP - Open to 'R'ead, Open to 'W'rite, 'C'lose or 'D'elete
  ;
 CMSI(X) ;EP - CMS Register Lookup
  NEW DIC
- S DIC(0)=$S($G(X)="":"AENZ",1:"NZ")
+ S DIC(0)=$S($G(X)="":"AEFNZ",1:"FNZ")
  S DIC="^ACM(41.1," D ^DIC
  S X=$P(Y,U,2) K:+Y<0 X
  Q
@@ -181,6 +181,14 @@ PROB(PIEN) ; EP - Return date/time from Problem
  I VISDTM="" S VISDTM=$$GET1^DIQ(9000011,PIEN,.03,"I")
  Q VISDTM
  ;
+PROBO(PIEN) ;EP - Return Date of Onset from Problem
+ NEW DOO
+ S DOO=$$GET1^DIQ(9000011,PIEN,.13,"I")
+ I DOO="" S DOO=$$GET1^DIQ(9000011,PIEN,.08,"I")
+ ; if for some reason DATE ENTERED doesn't exist, look at DATE LAST MODIFIED.
+ I DOO="" S DOO=$$GET1^DIQ(9000011,PIEN,.03,"I")
+ Q DOO
+ ;
 PROV(VIEN) ;EP - Check for Hospital Primary Provider
  NEW DGADM,MIEN,PROV
  S PROV=0
@@ -221,3 +229,13 @@ VTWR(BQIDFN) ; EP - Find any visits in the last 2 years for patient
  .. S FLAG=1,QFL=1
  .. S VSDTM=$P($G(^AUPNVSIT(VIEN,0)),U,1)
  Q FLAG_U_VIEN_U_VSDTM
+ ;
+REM(STR,VAL) ;EP - Remove a value from a string
+ ;
+ I $G(STR)="" Q STR
+ I $G(VAL)="" Q STR
+ ;
+ NEW NSTR,LVAL,BQD
+ S NSTR="",LS=$L(STR)
+ F I=1:1:LS S BQD=$E(STR,I,I) I BQD'=VAL S NSTR=NSTR_BQD
+ Q NSTR

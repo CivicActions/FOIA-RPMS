@@ -1,5 +1,5 @@
-%ZTLOAD2 ;SEA/RDS-TaskMan:  Queue, Part 2 ;12/10/08  07:23
- ;;8.0;KERNEL;**1,67,118,275,339,446**;Jul 10, 1995;Build 44
+%ZTLOAD2 ;SEA/RDS-TaskMan:  Queue, Part 2 ;06/17/2004  12:20
+ ;;8.0;KERNEL;**1,67,118,275**;Jul 10, 1995
  ;
 REJECT(MSG) ;GET--reject bad task
  I '$D(ZTQUEUED) W !,"QUEUE INFORMATION MISSING - NOT QUEUED",!,MSG
@@ -7,8 +7,7 @@ REJECT(MSG) ;GET--reject bad task
  ;
 BADDEV(MSG) ;GET--Reject task because of device issue.
  I '$D(ZTQUEUED) W !,"Queueing not allowed to device -- NOT QUEUED",!,MSG
-EXIT ;Report back to app.
- S %ZTLOAD("ERROR")=MSG
+EXIT S %ZTLOAD("ERROR")=MSG
  Q
  ;
 RESTRCT ;GET--flag tasks with output restricted from certain times; check.
@@ -57,14 +56,8 @@ SPOOL ;DEVICE--for predefined ZTIO spool device, pick up IO("DOC") if missing
  ;
 ASKSTOP ;e.f. Called from ASKSTOP^%ZTLOAD
  ;Ask a task to stop. Unschedule if not started.
- N % S ZTSK=+$G(ZTSK) I ZTSK<1 Q "0^BAD TASK NUMBER"
- L +^%ZTSK(ZTSK):10 I '$T Q "0^Busy"
- S %=$$AKS
- L -^%ZTSK(ZTSK)
- Q %
- ;
-AKS() ;Locked before called
  N ZT1,ZT2,ZTDTH,%ZTIO
+ L +^%ZTSK(ZTSK):10 I '$T Q "0^Busy"
  S ZTSK(0)=$G(^%ZTSK(ZTSK,0)),ZTSK(.1)=$G(^(.1))
  I ZTSK(0)="" Q "1^Task missing"
  S $P(^%ZTSK(ZTSK,.1),U,10)=$S($D(ZTNAME)#2:ZTNAME,1:$G(DUZ,.5))
@@ -73,4 +66,5 @@ AKS() ;Locked before called
  S ZTDTH=$$H3^%ZTM($P(ZTSK(0),U,6))
  K ^%ZTSCH(ZTDTH,ZTSK) ;Remove from schedule
  S %ZTIO=$O(^%ZTSK(ZTSK,.26,"")) I %ZTIO]"" D DQ^%ZTM4 ;Remove from device lists.
+ L -^%ZTSK(ZTSK)
  Q "2^Unscheduled"

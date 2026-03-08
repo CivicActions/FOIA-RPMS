@@ -1,5 +1,5 @@
-ABSPOS1 ; IHS/UNK/UNK ; less commonly called subroutines [ 10/13/2000  9:06 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**49**;JUN 21, 2001;Build 38
+ABSPOS1 ; IHS/UNK/UNK - less commonly called subroutines ; [ 10/13/2000  9:06 AM ]
+ ;;1.0;PHARMACY POINT OF SALE;**49**;JUN 21, 2001;Build 131
  Q
 PRINTALL ; print all patients' results  ABSB POS RXE P1 PRINT ALL
  N IO I '$$DEVICE G PRINT99
@@ -267,7 +267,8 @@ HDRA ; display for which one patient?
  D ^DIC W !
  G HDR9:$G(DUOUT)!$G(DTOUT),HDRA:(Y<1)  S PAT=+Y
  W !,"Enter the number of DAYS to go back to find"
- W !,"Point of Sale activity for ",$P(Y(0),U),"."
+ ;W !,"Point of Sale activity for ",$P(Y(0),U),"."
+ W !,"Point of Sale activity for ",$P(Y(0),U)_$$PPN1^ABSPUTL(+Y),"."  ;IHS/GDIT/AEF 3240110 - ABSP*1.0*53 FID 77888
  W ! S X=^TMP("ABSPOS",$J,"PATIENT TIME")
  ; /IHS/OIT/RAM ; 16 OCT 2017 ; CR#09828 Changes the amount of time we can back-bill payers; change
  ;     1 year limit to a new field in the ABSP SETUP file with that parameter. Default is now 6 years.

@@ -1,5 +1,5 @@
-VENPCCME ; IHS/OIT/GIS - PCC+ ENVIRONMENT CHECKER ;
- ;;2.6;PCC+;;NOV 12, 2007
+VENPCCME ; IHS/ITSC/GIS - PCC+ ENVIRONMENT CHECKER ;
+ ;;2.5;PCC+;**2**;JAN 15, 2006
  ;
  ; CONTAINS 2.5 UPDATES
  ; 
@@ -110,7 +110,7 @@ OS() ; EP - RETURN THE OPERATING SYSTEM INFO
  D OS1(V,O)
  Q 0
  ; 
-OS1(V,O) ; EP - MORE OD INFO
+OS1(V,O) ; 
  W !,"Checking computing environment..."
  W !?3,"PCC+ Version: ",+$P($T(+2^VENPCCME),";;",2)
  W !?3,"MUMPS: ",V

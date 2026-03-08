@@ -1,5 +1,5 @@
 BDMDR2 ; IHS/CMI/LAB - patients w/o dm on problem list ; 05 Mar 2015  1:15 PM
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,3,8,9,10**;JUN 14, 2007;Build 12
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,3,8,9,10,13,19**;JUN 14, 2007;Build 159
  ;
  ;
 START ;
@@ -23,9 +23,10 @@ GETINFO ;
  Q
 R ;
  S BDMREG=""
- S DIC="^ACM(41.1,",DIC(0)="AEMQ",DIC("A")="Enter the Name of the Register: " D ^DIC
- I Y=-1 W !,"No register selected." S BDMQUIT="" Q
- S BDMREG=+Y
+ D REG^BDMFUTIL
+ ;S DIC="^ACM(41.1,",DIC(0)="AEMQ",DIC("A")="Enter the Name of the Register: " D ^DIC
+ I $G(BDMRDA)="" W !,"No register selected." S BDMQUIT="" Q
+ S BDMREG=BDMRDA
  ;get status
  S BDMSTAT=""
  S DIR(0)="Y",DIR("A")="Do you want to select register patients with a particular status",DIR("B")="Y" KILL DA D ^DIR KILL DIR
@@ -38,7 +39,7 @@ R ;
  Q
 ZIS ;
  S BDMTEMP=""
- S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="P" KILL DA D ^DIR KILL DIR
+ S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="B" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) D EXIT Q
  S BDMTEMP=Y
  ;call to XBDBQUE
@@ -112,6 +113,7 @@ DMPROB(P) ;is DM on problem list 1=yes 0=no
  .Q
  Q G
 PRINT ;EP - called from xbdbque
+ D LOG^BUSAAPI("O","P","P",$S($G(XQY0)]"":$P(XQY0,U),1:"BDMDR2"),"DM REPORT NO DOO")
  S BDM80D="-------------------------------------------------------------------------------"
  S BDMPG=0,BDMIOSL=$S($G(BDMGUI):55,1:IOSL)
  D HEAD

@@ -1,6 +1,6 @@
-XUSNPI ;OAK_BP/BDT - NATIONAL PROVIDER IDENTIFIER ;6/3/08  13:51
- ;;8.0;KERNEL;**410,416,480**; July 10, 1995;Build 38
- ;;Per VHA Directive 2004-038, this routine should not be modified
+XUSNPI ;OAK_BP/BDT - NATIONAL PROVIDER IDENTIFIER; 8/10/06
+ ;;8.0;KERNEL;**410**; July 10, 1997;Build 27
+ ;;
 ADDNPI(XUSQI,XUSIEN,XUSNPI,XUSDATE,XUSTATUS) ;
  ;;==============================================================
  ;; Update the Effective Date, Status & NPI trio.
@@ -8,7 +8,7 @@ ADDNPI(XUSQI,XUSIEN,XUSNPI,XUSDATE,XUSTATUS) ;
  ;; XUSIEN  : Internal Entry Number. Required.
  ;; XUSNPI  : National Provider Identifier. Required.
  ;; XUSDATE : Active Date. Required.
- ;;
+ ;; 
  ;; If successful, return XUSRTN = IEN of new 42 sub-file entry.
  ;; Else return XUSRTN = "-1^ErrorMessage".
  ;; =============================================================
@@ -23,8 +23,7 @@ ADDNPI(XUSQI,XUSIEN,XUSNPI,XUSDATE,XUSTATUS) ;
  I 'XUSFNB Q "-1^No File #"
  S XUSFNB=XUSFNB_".42"
  I $G(XUSIEN)'>0 Q "-1^Invalid IEN"
- ;I (XUSIEN?.N)=0 Q "-1^Invalid IEN"
- I ((XUSIEN?.N)!(XUSIEN?.N1"."1N.N))=0 Q "-1^Invalid IEN"
+ I (XUSIEN?.N)=0 Q "-1^Invalid IEN"
  N XUIENCK S XUIENCK=XUSROOT_XUSIEN_","_0_")" I '$D(@XUIENCK) Q "-1^Invalid IEN"
  I '$$CHKDGT(XUSNPI) Q "-1^Invalid NPI"
  I '$$CHKDT(XUSQI,XUSIEN,XUSDATE) Q "-1^Invalid Effective Date"
@@ -36,7 +35,7 @@ ADDNPI(XUSQI,XUSIEN,XUSNPI,XUSDATE,XUSTATUS) ;
  ;------------------------------------------------------------------
  N ZZ,XUSRTN,ERRMSG,XUSX S ERRMSG=""
  S XUSX=XUSROOT_XUSIEN_","_"""NPISTATUS"""_")"
- ; Update Effective Date #42 multiple fields
+ ; Update Effective Date #42 multiple fields 
  S XUSFNB=$P(XUSROOT,"(",2)
  S XUSFNB=+$P(XUSFNB,",") I XUSFNB S XUSFNB=XUSFNB_".042"
  S ZZ(1,XUSFNB,"+2,"_XUSIEN_",",.01)=XUSDATE
@@ -54,15 +53,14 @@ NPI(XUSQI,XUSIEN,XUSDATE) ; Retrieve the NPI value for a qualified identifier en
  ;; XUSQI   : Qualified Identifier, Required. For examble: Individual_ID Or Organization_ID
  ;; XUSIEN  : Internal Entry Number of file #4 or #200. Required.
  ;; XUSDATE : Active Date. Not Required. Default: 'Today'.
- ;;
+ ;; 
  ;; If current NPI exists, return XUSRTN = 'NPI^EffectiveDate^Status'
  ;; If invalid XUSQI or XUSIEN, return '-1^ErrorMessage'
  ;; Else return 0
  ;; =============================================================
  ; check valid inputs
  I $G(XUSIEN)'>0 Q "-1^Invalid IEN"
- ;I (XUSIEN?.N)=0 Q "-1^Invalid IEN"
- I ((XUSIEN?.N)!(XUSIEN?.N1"."1N.N))=0 Q "-1^Invalid IEN"
+ I (XUSIEN?.N)=0 Q "-1^Invalid IEN"
  I $G(XUSDATE)="" S XUSDATE=$$NOW^XLFDT
  N X,Y,%DT S %DT="T",X=XUSDATE D ^%DT I Y'=XUSDATE Q "-1^Invalid Effective Date"
  ;-----------------------------------
@@ -84,15 +82,15 @@ NPI(XUSQI,XUSIEN,XUSDATE) ; Retrieve the NPI value for a qualified identifier en
  I '$D(@XUSRTN) Q "-1^Invalid IEN"
  I $P($G(@XUSRTN),"^",2)=1 S XUSTAT="Active"
  Q $P($G(@XUSRTN),"^",3)_"^"_$P($G(@XUSRTN),"^",1)_"^"_XUSTAT
- ;
+ ;       
 QI(XUSNPI) ; Retrieve the ALL qualified indentifier entity for an NPI value.
  ;;================================================
  ;; XUSNPI  : National Provider Identifier. Required
- ;;
+ ;; 
  ;; If qualified identified entity exists, return
  ;; 'QualifiedIdentifier^IEN^EffectiveDate^Status;'
  ;; If more than one records found, they are separated by ";"
- ;; Else return 0
+ ;; Else return 0        
  ;;================================================
  ; check valid NPI
  I '$$CHKDGT(XUSNPI) Q "0^Invalid NPI"
@@ -163,16 +161,17 @@ CKDIGIT(XUSNPI) ;
  Q $E(XUSCDIG,$L(XUSCDIG))
  ;
 CHKDT(XUSQI,XUSIEN,XUSDATE) ; Check Date
+ ;;============================================================================
  ;;  XUSQI   : Qualified Identifier. Required. For examble: "Individual_ID"
  ;;  XUSIEN  : Internal Entry Number. Required.
- ;;  XUSDATE : The Effective Date value to test. Must be FM date. Required.
- ;;
+ ;;  XUSDATE : The Effective Date value to test. Must be FM date. Required. 
+ ;;  
  ;;  If input passes date comparison, return 1.
  ;;  Else return 0.
- ;
+ ;;============================================================================
+ ; 
  I $G(XUSIEN)'>0 Q "0^Invalid IEN."
- ;I (XUSIEN?.N)=0 Q "0^Invalid IEN."
- I ((XUSIEN?.N)!(XUSIEN?.N1"."1N.N))=0 Q "-1^Invalid IEN"
+ I (XUSIEN?.N)=0 Q "0^Invalid IEN."
  N X,Y,%DT S %DT="T",X=$G(XUSDATE) D ^%DT I Y'=XUSDATE Q "0^Invalid Effective Date. Must be FM Date/Time."
  ;-----------------------------------
  N XUSROOT,XUSDA
@@ -185,15 +184,3 @@ CHKDT(XUSQI,XUSIEN,XUSDATE) ; Check Date
  N XUIENCK S XUIENCK=XUSROOT_XUSIEN_","_0_")" I $D(@XUIENCK)'>0 Q "0^Invalid IEN."
  S XUSROOT=XUSROOT_XUSIEN_","_"""NPISTATUS"""_","_"""B"""_","_"""A"""_")",XUSDA=$O(@XUSROOT,-1)
  Q (XUSDATE'<XUSDA)
- ;
-GETRLNPI(XUSIEN) ; Return field indicating blanket release of NPI
- ;; XUSIEN  : Internal Entry Number of person in file 200. Required
- ;; Output: -1^error message or contents of AUTHORIZE RELEASE OF NPI field.
- S XUSIEN=+$G(XUSIEN) I $G(^VA(200,XUSIEN,0))="" Q "-1^Invalid IEN"
- N X
- S X=$$NPI^XUSNPI("Individual_ID",XUSIEN)
- I (X'>0)!($P(X,U,3)'="Active") Q "-1^User has no active NPI"
- S X=$P($G(^VA(200,XUSIEN,"NPI")),U,3)
- S:X="" X=0
- Q X
- ;

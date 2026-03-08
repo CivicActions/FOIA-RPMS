@@ -1,13 +1,12 @@
 BARRCHK1 ; IHS/SD/LSL - Report Utility 2 to Check Parms ;12/19/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,7,10,19,20,23**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,7,10,19,20,23,33**;OCT 26, 2005;Build 133
  ; MODIFIED XTMP FILE NAME TO TMP TO MEET SAC REQUIREMENTS;MRS:BAR*1.8*7 IM29892
  ;CREATED BECAUSE BARRCHK WAS GREATER THAN 15K
- ; TMM 08/18/10 V1.8*19 
- ;      Fix issue - Adjustments not displaying on TSR report
- ; TMM 08/19/10 V1.8*19
- ;      TSR report should display A/R Account from A/R Transaction, not from A/R Bill
- ; P.OTTIS MAR 2013 ADDED NEW INS TYPE
- ; P.OTTIS SEP 2013,OCT 2013 BETA YAK: FIXED BARTR("BI")
+ ;TMM 1.8*19 08/18/10 Fix issue - Adjustments not displaying on TSR report
+ ;TMM 1.8*19 08/19/10 TSR report should display A/R Account from A/R Transaction, not from A/R Bill
+ ;P.OTTIS MAR 2013 ADDED NEW INS TYPE
+ ;P.OTTIS SEP 2013,OCT 2013 BETA YAK: FIXED BARTR("BI")
+ ;IHS/SD/SDR 1.8*33 ADO60817 Changed BARTR("DT") to use new DATE/TIME field instead of .01 which is now date/time/counter
  Q
  ;
 TRANS ;EP - CALLED FROM BARRCHK
@@ -31,7 +30,8 @@ TRANS ;EP - CALLED FROM BARRCHK
  .S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN ADJUSTMENT CATEGORY",$P(BARTR(0),U))=BARTR("ADJ CAT")
  I $D(BARY("TRANS TYPE","ADJ TYPE")),'$D(BARY("TRANS TYPE","ADJ TYPE",BARTR("ADJ TYPE"))) D  Q    ;TMM*1.8*19
  .S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN ADJ TYPE",$P(BARTR(0),U))=BARTR("ADJ TYPE")
- S BARTR("DT")=$P(BARTR(0),U)           ; Transaction date/time
+ ;S BARTR("DT")=$P(BARTR(0),U)     ;Transaction date/time  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ S BARTR("DT")=$P(BARTR(0),U,18)   ;Transaction date/time  ;bar*1.8*33 IHS/SD/SDR ADO60817
  S BARTR("B")=$P(BARTR(0),U,14)         ; A/R Collection batch IEN
  K BARTR("B DT")
  I BARTR("B")'="" D
@@ -81,7 +81,7 @@ TRANS ;EP - CALLED FROM BARRCHK
  S BAR("V")=$P(BAR(10),U,14)             ; Visit type (3P Visit Type)
  S BAR("C")=$P(BAR(10),U,12)             ; Clinic  (Clinic Stop File)
  S BAR("DS")=$$GET1^DIQ(90050.01,BAR,23)   ; Discharge Service (#)
- S BARTMP=BARTR("I")	
+ S BARTMP=BARTR("I")
  S BARTR("BI")=$$GETBI(BARTMP) ; Insurer Type / BILLING ENTITY CODE
  I $G(BARTR("BI"))=""  S BARTR("BI")="No Billing Entity"
  I BARTR("BI")'="No Billing Entity" D

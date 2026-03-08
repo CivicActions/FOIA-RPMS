@@ -1,5 +1,5 @@
 BARMAWO2 ; IHS/SD/LSL - Automatic Write-Off 2000 - Reversal ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**28**;OCT 26, 2005;Build 92
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**28,33**;OCT 26, 2005;Build 133
  ;
  ; IHS/ASDS/LSL - 09/07/01 - Routine created
  ;     Reverse all transactions of transaction type 43 (Adjustment)
@@ -12,6 +12,7 @@ BARMAWO2 ; IHS/SD/LSL - Automatic Write-Off 2000 - Reversal ;
  ;  without review and possible changes.  Routine EN^BARMAWO6 should be used instead.  A
  ;  quit has been added to this routine so it can't be accidentally run.
  ; *********************************************************************
+ ;IHS/SD/SDR 1.8*33 ADO60817 - Updated to use xref since DINUM was removed, even though this routine shouldn't be used
  Q
  ;
 EN ; EP - IHS/DIT/CPC 1.8*28 CR 8349 START
@@ -91,14 +92,24 @@ TRANS ;
  ; 12/18/2000 @ 7:00 used because this is when first AWO coding was
  ; completed. Code 501 did not exist before then.
  S BARDTTR=3001228.07
- F  S BARDTTR=$O(^BARTR(DUZ(2),BARDTTR)) Q:('+BARDTTR!(BARDTTR>BARNOW))  D ISITAWO
+ ;F  S BARDTTR=$O(^BARTR(DUZ(2),BARDTTR)) Q:('+BARDTTR!(BARDTTR>BARNOW))  D ISITAWO  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+ F  S BARDTTR=$O(^BARTR(DUZ(2),"C",BARDTTR)) Q:('+BARDTTR!(BARDTTR>BARNOW))  D
+ .S BARTRDFN=0
+ .F  S BARTRDFN=$O(^BARTR(DUZ(2),"C",BARDTTR,BARTRDFN)) Q:'BARTRDFN  D ISITAWO
+ ;end new bar*1.8*33 IHS/SD/SDR ADO60817
  Q
  ; *********************************************************************
  ;
 ISITAWO ;
  ; Check to see if trans is AWO 2000
- S BARTR(0)=$G(^BARTR(DUZ(2),BARDTTR,0))    ; A/R Transaction 0 node
- S BARTR(1)=$G(^BARTR(DUZ(2),BARDTTR,1))    ; A/R Transaction 1 node
+ ;start old bar*1.8*33 IHS/SD/SDR ADO60817
+ ;S BARTR(0)=$G(^BARTR(DUZ(2),BARDTTR,0))    ; A/R Transaction 0 node
+ ;S BARTR(1)=$G(^BARTR(DUZ(2),BARDTTR,1))    ; A/R Transaction 1 node
+ ;end old start new bar*1.8*33 IHS/SD/SDR ADO60817
+ S BARTR(0)=$G(^BARTR(DUZ(2),BARTRDFN,0))    ; A/R Transaction 0 node
+ S BARTR(1)=$G(^BARTR(DUZ(2),BARTRDFN,1))    ; A/R Transaction 1 node
+ ;end new bar*1.8*33 IHS/SD/SDR ADO60817
  I $P(BARTR(1),U)=43,$P(BARTR(1),U,2)=3,$P(BARTR(1),U,3)=501 D
  . D REVERSE
  . D ROLLBILL

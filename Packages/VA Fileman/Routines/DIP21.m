@@ -1,12 +1,13 @@
-DIP21 ;SFISC/XAK-PRINT TEMPLATE ;8/6/96  17:23
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIP21 ;SFISC/XAK-PRINT TEMPLATE ;9/29/94  08:41 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  D D S DIC(0)=$E("E",'$D(FLDS)!''L)_"QZSI"
  S DIC("S")="I $D(^(""F""))"_$S($G(DIAR)=4:",$D(^(1))",$G(DDXP)=2:",$P(^(0),U,8)=7",$G(DDXP)=4:",$P(^(0),U,8)=3",1:"")_" "_DIC("S") S:$G(DDXP)=4 DIC("W")=""
  D IX^DIC K DIC S:(+Y=.01&(DUZ(0)'="@")) DICSS=$$ACC(8) I Y<0 G Q^DIP:$D(DTOUT),^DIP2:L,^DIP2:'$D(FLDS),Q^DIP
  I L,+Y=.01 K DPQ(DK) S DIQ(0)="" D C^DII G:$D(DIRUT) Q^DIP
  I L,Y'<1,(('$P(^DIPT(+Y,0),U,8))!($G(DDXP)=2&($P(^DIPT(+Y,0),U,8)=7))) D W:DUZ(0)'="@" I  S %=2 W !,"WANT TO EDIT '",$P(Y,U,2),"' TEMPLATE" D YN^DICN G ED^DIP23:%=1
- K:'$D(^("DNP")) DNP S DIPT=+Y,DALL=1,DHD=$S($D(DHD)#2:DHD,$D(^("H")):^("H"),1:""),DC(0)=+Y I $D(^("SUB")),^("SUB") S:'$G(DPP(0)) DISH=1
+ K:'$D(^("DNP")) DNP S DIPT=+Y,DALL=1,DHD=$S($D(DHD)#2:DHD,$D(^("H")):^("H"),1:""),DC(0)=+Y I $D(^("SUB")),^("SUB") S DISH=1
  D F I $G(^DIPT(+Y,"ROU"))[U,$$ROUEXIST^DILIBF($P(^("ROU"),U,2)) S DIPZ=+Y G PAGE^DIP3:DHD="@"
  Q:$D(DTOUT)  G H^DIP3
 F ;
@@ -28,7 +29,7 @@ PUT ;
  I DE]"" S ^DIPT(+Y,"F",S+1)=DE
  I $G(DDXP)=2 S DDXPFDTM=+Y G Q^DIP
  I $D(DIAR) S DIARP=+Y
-SUB I DHD="@" W !,"DO YOU ALWAYS WANT TO SUPPRESS SUBHEADERS WHEN PRINTING TEMPLATE" S %=1 D YN^DICN G DIP21^DIQQQ:'%,Q^DIP:%<0 I %=1 S ^DIPT(+Y,"SUB")=1 S:'$G(DPP(0)) DISH=1
+SUB I DHD="@" W !,"DO YOU ALWAYS WANT TO SUPPRESS SUBHEADERS WHEN PRINTING TEMPLATE" S %=1 D YN^DICN G DIP21^DIQQQ:'%,Q^DIP:%<0 I %=1 S ^DIPT(+Y,"SUB")=1,DISH=1
  I 'DA,$D(^DD("OS",DISYS,"ZS")) S X=DA,DMAX=^DD("ROU") D ENDIP^DIPZ I $D(^DIPT(DIPZ,"H")) S DHD=^("H")
 OUT G PAGE^DIP3
  ;

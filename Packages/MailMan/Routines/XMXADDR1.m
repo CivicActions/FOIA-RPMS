@@ -1,177 +1,216 @@
-XMXADDR1 ;ISC-SF/GMB-XMXADDR (cont.) ;05/21/2002  07:00
- ;;8.0;MailMan;;Jun 28, 2002
+XMXADDR1 ;ISC-SF/GMB- XMXADDR (continued) ;03/13/99  11:57
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+CHKPARM(XMADDR,XMSTRIKE,XMPREFIX,XMLATER) ;
+ I $E(XMADDR,1)="-" D
+ . S XMSTRIKE=1
+ . S XMADDR=$E(XMADDR,2,999)
+ E  S XMSTRIKE=0
+ I $E(XMADDR,1)=" "!($E(XMADDR,$L(XMADDR))=" ") S XMADDR=$$STRIP^XMXUTIL1(XMADDR)
+ I $P(XMADDR,"@",1)="" D  Q
+ . S XMERROR="Null address"
+ . I $G(XMIA) W !,XMERROR
+ I $E(XMADDR,1)'="""",XMADDR[":" D  Q
+ . D PREFIX(.XMADDR,.XMPREFIX,.XMLATER)
+ . I XMSTRIKE,XMLATER="?" S XMLATER=""
+ S XMPREFIX=""
+ S XMLATER=""
+ Q
+PREFIX(XMADDR,XMPREFIX,XMLATER) ;
+ N XMPRE
+ S XMPRE=$P(XMADDR,":",1)
+ I XMPRE="" D  Q
+ . S XMERROR="Null recipient type"
+ . I $G(XMIA) W !,XMERROR
+ S (XMLATER,XMPREFIX)=""
+ S XMPRE=$$UP^XLFSTR(XMPRE)
+ I $P(XMPRE,"@",1)["L",'$D(XMRESTR("NET RECEIVE")) D
+ . D LATER($P(XMPRE,"@",2,99),.XMLATER)
+ . S XMPRE=$TR($P(XMPRE,"@",1),"L")
+ D:XMPRE'="" RTYPE(XMPRE,.XMPREFIX)
+ I $D(XMERROR),$D(XMRESTR("NET RECEIVE")),+$$FACILITY^XMR1A($P(XMADDR,"@",2))'=^XMB("NUM") K XMERROR Q
+ S XMADDR=$P(XMADDR,":",2)
+ Q
+LATER(XMWHEN,XMLATER) ; (XMWHEN=user-supplied date/time)
+ I $G(XMIA),XMWHEN="" S XMLATER="?" Q
+ D DT^DILF("FTX",XMWHEN,.XMLATER,XMINLATR)
+ Q:XMLATER>0
+ S XMLATER=$S($G(XMIA):"?",1:"")
+ Q
+RTYPE(XMPRE,XMPREFIX) ;
+ N XMINTRNL
+ D CHK^DIE(3.91,6.5,"",XMPRE,.XMINTRNL)
+ I XMINTRNL="^" D  Q
+ . S XMERROR="Invalid recipient type '"_XMPRE_"'"
+ . I $G(XMIA) W !,XMERROR
+ S XMPREFIX=XMINTRNL
+ Q
+QLATER(XMFULL,XMLATER) ;
+ N DIR,Y
+ W !
+ S DIR(0)="DO^"_XMINLATR_":"_XMAXLATR_":EXT"
+ S DIR("A",1)="Later Delivery must be at least 5 minutes from now."
+ S DIR("A")="When Later"
+ S DIR("B")=$$MMDT^XMXUTIL1($$FMADD^XLFDT($$NOW^XLFDT,"","",5)) ; (in 5 minutes)
+ S DIR("B")=$P(DIR("B")," ",1,3)_"@"_$P(DIR("B")," ",4)
+ ;S DIR("??")="Response must be no earlier than "_$$MMDT^XMXUTIL1(XMINLATR)
+ D ^DIR I $D(DIRUT) D  Q
+ . S XMLATER=""
+ . S XMERROR="Up-arrow out of later date"
+ . W !,XMFULL," removed from recipient list."
+ S XMLATER=Y
+ W:$E(XMFULL,1,2)="G." !!,">> Remember, you won't be able to 'minus' anyone from the group. <<"
+ Q
+SERVER(XMADDR,XMSTRIKE,XMPREFIX,XMLATER,XMFULL) ;
+ N XMG
+ S XMADDR=$P(XMADDR,".",2,99)
+ I $G(XMIA) D
+ . N DIC,X
+ . S X=XMADDR
+ . S DIC="^DIC(19,"
+ . S DIC(0)="FEZ"
+ . D ^DIC
+ . I Y<0 D  Q
+ . . S XMERROR="Invalid server name"
+ . . W !,XMERROR
+ . S XMG=+Y
+ E  D
+ . S XMG=$$FIND1^DIC(19,"","OQ",XMADDR) I 'XMG S XMERROR="Server "_$S($D(DIERR):"ambiguous.",1:"not found.")
+ Q:$D(XMERROR)
+ S XMFULL="S."_$P(^DIC(19,XMG,0),U,1)
+ D SETEXP^XMXADDR(XMFULL,XMG,XMSTRIKE,XMPREFIX,XMLATER)
+ Q
+DEVICE(XMADDR,XMSTRIKE,XMPREFIX,XMLATER,XMFULL) ;
+ N XMG
+ S XMADDR=$P(XMADDR,".",2,99)
+ I $G(XMIA) D
+ . N DIC,X
+ . S X=XMADDR
+ . S DIC="^%ZIS(1,"   ; file 3.5
+ . S DIC(0)="EF"
+ . D ^DIC
+ . I Y<0 D  Q
+ . . S XMERROR="Invalid device name"
+ . . W !,XMERROR
+ . S XMG=+Y
+ . S XMADDR=$P(Y,U,2)
+ E  D
+ . S XMG=$$FIND1^DIC(3.5,"","OQ",XMADDR) I 'XMG S XMERROR="Device "_$S($D(DIERR):"ambiguous.",1:"not found.") Q
+ . S XMADDR=$P(^%ZIS(1,XMG,0),U,1)
+ Q:$D(XMERROR)
+ I XMADDR["P-MESSAGE" D  Q
+ . S XMERROR="You may not use P-MESSAGE in an address."
+ . I $G(XMIA) W !,XMERROR
+ S XMFULL="D."_XMADDR
+ D SETEXP^XMXADDR(XMFULL,XMG,XMSTRIKE,XMPREFIX,XMLATER)
+ Q
 PERSON(XMDUZ,XMADDR,XMSTRIKE,XMPREFIX,XMLATER,XMG,XMFULL) ;
- N XMSCREEN,XMNOTFND
+ N XMSCREEN,XMNOTFND,XMINDEX,I
+ S XMINDEX="B" ; "B^BB^C^D" = name^alias^initial^nickname            
+ F I="BB","C","D" S:$D(^VA(200,I)) XMINDEX=XMINDEX_U_I
  S XMADDR=$$UP^XLFSTR(XMADDR)
  S XMSCREEN="I $L($P(^(0),U,3)),$D(^XMB(3.7,+Y,2))"  ; User must have an access code & mailbox
- ; "B^BB^C^D" = name^alias^initial^nickname            
- S XMG=$$FIND1^DIC(200,"","O",$S(+XMADDR=XMADDR:"`"_XMADDR,1:XMADDR),"B^BB^C^D",XMSCREEN)
+ S XMG=$$FIND1^DIC(200,"","OQ",$S(+XMADDR=XMADDR:"`"_XMADDR,1:XMADDR),XMINDEX,XMSCREEN)
  I XMG D  Q
- . S XMFULL=$$NAME^XMXUTIL(XMG)
+ . S XMFULL=$P(^VA(200,XMG,0),U,1)
  . Q:XMG'=.6
  . D CHKSHARE
  . S:XMLATER XMLATER="?"  ; Can't 'later' to SHARED,MAIL
- S XMNOTFND=$S($D(DIERR):39018,1:39019) ;Addressee ambiguous. / Addressee not found.
+ S XMNOTFND=$S($D(DIERR):"ambiguous",1:"not found")
  I +XMADDR=XMADDR D  Q
- . D SETERR^XMXADDR4(0,"",XMNOTFND)
+ . S XMERROR="Addressee "_XMNOTFND_"."
  ; Not found in NEW PERSON file, see if there's a MAIL NAME
  I $D(^XMB(3.7,"C")) D  Q:XMG
  . S XMSCREEN="I $L($P(^VA(200,+Y,0),U,3))"  ; User must have an access code
  . S XMG=$$FIND1^DIC(3.7,"","OQ",XMADDR,"C",XMSCREEN) Q:'XMG
- . S XMFULL=$$NAME^XMXUTIL(XMG)
+ . S XMFULL=$P(^VA(200,XMG,0),U,1)
  ; Not a Mail Name, see if it's in the Remote User Directory.
- N XMINDEX,I,XMG
  S XMINDEX="" F I="B","F" S:$D(^DIC(4.2997,I)) XMINDEX=XMINDEX_U_I
  I XMINDEX'="" D  Q:XMG
  . S XMINDEX=$E(XMINDEX,2,99)
  . S XMG=$$FIND1^DIC(4.2997,"","OQ",XMADDR,XMINDEX) Q:'XMG
  . S XMADDR=$P(^XMD(4.2997,XMG,0),U,7)
- . D CHKREM(XMG,XMADDR) Q:$D(XMERROR)
  . D REMDT(XMG)
- . D REMOTE^XMXADDR3(XMDUZ,XMADDR,XMSTRIKE,XMPREFIX,XMLATER,.XMFULL)
- D SETERR^XMXADDR4(0,"",XMNOTFND)
+ . D REMOTE(XMDUZ,XMADDR,XMSTRIKE,XMPREFIX,XMLATER,.XMFULL)
+ S XMERROR="Addressee "_XMNOTFND_"."
  Q
 CHKSHARE ;
  I $G(XMINSTR("FLAGS"))["X"!($G(XMRESTR("FLAGS"))["X") D  Q
- . ;Closed messages may not be sent to SHARED,MAIL.
- . D SETERR^XMXADDR4(0,"",39020)
+ . S XMERROR="Closed messages may not be sent to SHARED,MAIL."
  I $G(XMINSTR("FLAGS"))["C"!($G(XMRESTR("FLAGS"))["C") D  Q
- . ;Confidential messages may not be sent to SHARED,MAIL.
- . D SETERR^XMXADDR4(0,"",39021)
+ . S XMERROR="Confidential messages may not be sent to SHARED,MAIL."
+ Q
+BRODCAST(XMSTRIKE,XMPREFIX,XMLATER,XMFULL) ;
+ I DUZ'=.5,'$D(^XUSEC("XMSTAR",DUZ)) D  Q
+ . S XMERROR="Only the postmaster or holders of the XMSTAR key may broadcast messages."
+ . W:$G(XMIA) !,XMERROR
+ S XMFULL="* (Broadcast to all local users)"
+ W:$G(XMIA) $E(XMFULL,2,99)
+ D SETEXP^XMXADDR(XMFULL,"",XMSTRIKE,XMPREFIX,XMLATER)
  Q
 REMDT(XMG) ;
  N XMFDA
  S XMFDA(4.2997,XMG_",",6)=$E(DT,1,5)  ; Date (YYYMM) remote address last used
  D FILE^DIE("","XMFDA")
  Q
-IPERSON(XMDUZ,XMADDR,XMSTRIKE,XMPREFIX,XMLATER,XMG,XMFULL) ;
- N DIC,D,X,Y,XMINDEX
- S XMADDR=$$UP^XLFSTR(XMADDR)
- S DIC("S")="I $L($P(^(0),U,3)),$D(^XMB(3.7,+Y,2))"  ; User must have an access code & mailbox
- I XMSTRIKE S DIC("S")=DIC("S")_",$D(^TMP(""XMY"",$J,+Y))" ; If '-', must already have been chosen
- S DIC("W")="I Y'=DUZ D USERINFO^XMXADDR1(Y)"
- S DIC="^VA(200,"
- S DIC(0)="FEZMN"  ; If user enters a DUZ, ask "OK?"
- S X=XMADDR
- ;S DIC(0)="FEZM"  ; If user enters a DUZ, do NOT ask "OK?"
- ;S X=$S(XMADDR=+XMADDR:"`"_XMADDR,1:XMADDR)
- S (XMINDEX,D)="B^BB^C^D" ; name^alias^initial^nickname
- D MIX^DIC1
- I Y>0 D  Q
- . S XMG=+Y
- . S XMFULL=$$NAME^XMXUTIL(XMG) ; $P(Y,U,2)
- . Q:XMSTRIKE
- . ; Sending to yourself, and ask bskt, and not creating a forwarding address
- . I XMG=XMDUZ,$G(XMINSTR("ADDR FLAGS"))'["X",XMV("ASK BSKT") D
- . . N XMK,XMDIC
- . . S XMDIC("B")=$$EZBLD^DIALOG(37005) ;IN
- . . D SELBSKT^XMJBU(XMDUZ,$$EZBLD^DIALOG(39022),"L",.XMDIC,.XMK) ;Select basket to send to:
- . . I XMK=U D SETERR^XMXADDR4(0,"",39014) Q  ;No basket selected.
- . . S XMINSTR("SELF BSKT")=XMK
- . E  I XMG=.6 D
- . . D CHKSHARE
- . . I $D(XMERROR) D WRIERR^XMXADDR4("!") Q
- . . D ASKSHARE(.XMINSTR)
- . I $D(XMERROR) W !,XMFULL,$$EZBLD^DIALOG(39015) ;removed from recipient list.
- I $D(DUOUT)!$D(DTOUT) D  Q  ;up-arrow out. / time out.
- . D SETERR^XMXADDR4(0,"",$S($D(DUOUT):37000,1:37001))
- D NOTFOUND(XMADDR,XMINDEX)
- I XMADDR=+XMADDR D SETERR^XMXADDR4(0,"",39002) Q  ;Not found.
- W !,$C(7),$$EZBLD^DIALOG(39026),XMADDR ;Checking for MAIL NAME:
- S X=XMADDR
- K DIC("S"),DIC("W")
- S DIC(0)="FEZ"
- S D="C"
- S DIC="^XMB(3.7,"
- D IX^DIC
- I Y>0 D  Q
- . S XMG=+Y
- . S XMFULL=Y(0,0)
- I $D(DUOUT)!$D(DTOUT) D  Q  ;up-arrow out. / time out.
- . D SETERR^XMXADDR4(0,"",$S($D(DUOUT):37000,1:37001))
- ; Not a Mail Name, see if it's in the Remote User Directory.
- N XMFIND,DIR,XMG
- S XMFIND=X
- W !
- D BLD^DIALOG(39025,"","","DIR(""A"")") ; Not a local user; want to check the Remote User Directory?
- S DIR(0)="Y",DIR("B")=$$EZBLD^DIALOG(39053) ; No
- D BLD^DIALOG(39025.1,"","","DIR(""?"")")
- D ^DIR
- I 'Y W !
- E  D  Q:$D(XMG)
- . S X=XMFIND  ;Not a local user; checking Remote User Directory
- . W !,$C(7),$$EZBLD^DIALOG(39027),X
- . S DIC(0)="MFEVZ"
- . S D="B^F"
- . S DIC="^XMD(4.2997,"
- . D MIX^DIC1 Q:Y<0
- . S XMG=+Y
- . S XMADDR=$P(Y(0),U,7)
- . D CHKREM(XMG,XMADDR) Q:$D(XMERROR)
- . D REMDT(XMG)
- . W !,$$EZBLD^DIALOG(39028),XMADDR ;Routing to Remote Address:
- . D REMOTE^XMXADDR3(XMDUZ,XMADDR,XMSTRIKE,XMPREFIX,.XMLATER,.XMFULL) ;Q:$D(XMERROR)
- I $D(DUOUT)!$D(DTOUT) D  Q  ;up-arrow out. / time out.
- . D SETERR^XMXADDR4(0,"",$S($D(DUOUT):37000,1:37001))
- ; Not in Remote User Directory, see if it's a Mail Group
- S DIC="^XMB(3.8,"
- S D="B"
- S DIC(0)="O"
- D IX^DIC
- I Y>0 D  Q  ;Enter 'G.groupname' to identify a mail group
- . D SETERR^XMXADDR4(1,"!",39029)
- D SETERR^XMXADDR4(1,"",39002) ;Not found.
+REMOTE(XMDUZ,XMADDR,XMSTRIKE,XMPREFIX,XMLATER,XMFULL) ;
+ ; XMVIA    IEN of domain in ^DIC(4.2 via which the msg will be sent
+ ; XMVIAN   Name of domain via which the msg will be sent
+ ; XMDOMAIN Domain of the addressee
+ ; XMNAME   Name of the addressee
+ N XMVIA,XMVIAN,XMDOMAIN,XMNAME
+ S:XMADDR["<"!(XMADDR[" ") XMADDR=$$REMADDR(XMADDR)
+ S XMNAME=$P(XMADDR,"@",1)
+ I XMNAME="" D  Q
+ . S XMERROR="Null addressee"
+ . I $G(XMIA) W !,XMERROR
+ S XMDOMAIN=$P(XMADDR,"@",2,99)
+ I XMDOMAIN="" D  Q
+ . I XMNAME["!" S XMERROR="You must specify a reachable uunet host."
+ . E  S XMERROR="Null domain"
+ . I $G(XMIA) W !,XMERROR
+ ; find out the full domain name, and
+ ; whether the domain is valid, and if so, via which entry in DIC(4.2
+ D DNS^XMXADDRD(XMDUZ,.XMDOMAIN,.XMVIA,.XMVIAN) Q:$D(XMERROR)
+ I XMDOMAIN=^XMB("NETNAME") D  ; the full domain name = the local domain
+ . N XMQUOTED
+ . S:XMNAME?1""""1.E1"""" XMNAME=$E(XMNAME,2,$L(XMNAME)-1),XMQUOTED=1
+ . D LOCAL^XMXADDR(XMDUZ,XMNAME,XMSTRIKE,XMPREFIX,.XMLATER,.XMFULL)
+ . Q:'$D(XMERROR)
+ . Q:$G(XMQUOTED)
+ . Q:".G.g.D.d.S.s."[("."_$E(XMNAME,1,2))
+ . N XMSAVE
+ . S XMSAVE=XMNAME
+ . S XMNAME=$TR(XMNAME,"._+",", .")
+ . Q:XMSAVE=XMNAME
+ . K XMERROR
+ . W:$G(XMIA) !,"Checking: ",XMNAME
+ . D LOCAL^XMXADDR(XMDUZ,XMNAME,XMSTRIKE,XMPREFIX,.XMLATER,.XMFULL)
+ E  D
+ . I $D(XMRESTR("NONET")) D  Q
+ . . S XMERROR="Messages longer than "_XMRESTR("NONET")_" may not be sent across the network."
+ . . W:$G(XMIA) !,XMERROR
+ . ; I XMDOMAIN?.E1".VA.GOV" D
+ . ;. ; Check the address before the @ to find any obvious errors
+ . ; Now transform spaces, commas, and periods in XMNAME
+ . S XMFULL=XMNAME_"@"_XMDOMAIN
+ . I XMLATER="?" D QLATER(XMFULL,.XMLATER) Q:$D(XMERROR)
+ . D SETEXP^XMXADDR(XMFULL,XMVIA,XMSTRIKE,XMPREFIX,XMLATER)
  Q
-ASKSHARE(XMINSTR) ;
- N XMK,XMDIC
- S XMDIC("B")=$$EZBLD^DIALOG(37005) ;IN
- D SELBSKT^XMJBU(.6,$$EZBLD^DIALOG(39022),"L",.XMDIC,.XMK) ;Select basket to send to:
- I XMK=U D SETERR^XMXADDR4(0,"",39014) Q  ;No basket selected.
- N DIR,X,Y
- S DIR("A")=$$EZBLD^DIALOG(39023) ;Enter Termination Date
- S DIR("B")="T+30"
- S DIR(0)="D^"_DT_"::ENX"
- ;Messages sent to SHARED,MAIL must have a delete date, so
- ;they may be automatically removed from SHARED,MAIL's mailbox.
- D BLD^DIALOG(39024,"","","DIR(""?"")")
- S DIR("??")="^D HELP^%DTC"
- D ^DIR
- I $D(DIRUT) D SETERR^XMXADDR4(0,"",37002) Q  ;up-arrow or time out.
- S XMINSTR("SHARE BSKT")=XMK
- S XMINSTR("SHARE DATE")=Y
- Q
-CHKREM(DA,XMADDR) ; Is the remote address really local?
- S XMADDR=$$UP^XLFSTR($P(XMADDR,"@",2))
- I $$FIND1^DIC(4.2,"","QO",XMADDR,"B^C")'=^XMB("NUM") Q
- N DIK
- S DIK="^XMD(4.2997,"
- D ^DIK
- I '$G(XMIA) D SETERR^XMXADDR4(0,"",39002) Q  ;Not found.
- D SETERR^XMXADDR4(1,"!",39028.1) ; Remote address is really local.  Deleting it.
- Q
-USERINFO(XMDUZ) ;
- N %
- W:XMV("SHOW DUZ") " (DUZ ",XMDUZ,")"
- S %=$P($G(^VA(200,XMDUZ,5)),U,1)  ; Service/Section
- I % S %=$P($G(^DIC(49,%,0)),U,1) W:$L(%)+$X+1>79 !,?4 W " ",%," "
- S %=$P($G(^XMB(3.7,XMDUZ,"L"),$$EZBLD^DIALOG(38002)),U,1) ;Never
- W:$L(%)+$X+20>79 !,?4 W $$EZBLD^DIALOG(38003),% ;Last used MailMan:
- S %=$G(^XMB(3.7,XMDUZ,0))
- I $L($P(%,U,2)) W !,?5,$$EZBLD^DIALOG(38004),$P(%,U,2),$S($P(%,U,8):$$EZBLD^DIALOG(38005),1:$$EZBLD^DIALOG(38006)) ;Forwarding Address: / Local Delivery is ON / Local Delivery is OFF
- S %=$G(^XMB(3.7,XMDUZ,"B")) W:%'="" !,?10,%
- Q
-NOTFOUND(XMADDR,XMINDEX) ;
- N XMI,XMREC
- S XMI=$$FIND1^DIC(200,"","O",$S(+XMADDR=XMADDR:"`"_XMADDR,1:XMADDR),XMINDEX)
- I 'XMI W $C(7),$$EZBLD^DIALOG(39030) Q  ;Not found in NEW PERSON file.
- ; found user, but missing access/verify/mailbox
- S XMREC=^VA(200,XMI,0)
- I $D(^XMB(3.7,XMI,2)),$P(XMREC,U,3)'="" Q
- N XMPARM,XMTEXT
- S XMPARM(1)=$$NAME^XMXUTIL(XMI)
- S XMPARM(2)=$S($P(XMREC,U,3)'="":$$EZBLD^DIALOG(39034),$D(^XMB(3.7,XMI,2)):$$EZBLD^DIALOG(39032),1:$$EZBLD^DIALOG(39033)) ;a mailbox / an access code or a mailbox / an access code
- ;If |1| is the person you're trying to address, you can't,
- ;because |1| doesn't have |2|.
- D BLD^DIALOG(39031,.XMPARM,"","XMTEXT","F")
- D MSG^DIALOG("WH","","","","XMTEXT")
- Q
+REMADDR(XMADDR) ;
+ I XMADDR["<" Q $TR($P($P(XMADDR,">",1),"<",2,99),"<")  ; handles <addr> and <<addr>>
+ Q:XMADDR'[" " XMADDR
+ I $E(XMADDR,1)=" "!($E(XMADDR,$L(XMADDR))=" ") S XMADDR=$$STRIP^XMXUTIL1(XMADDR)
+ I XMADDR'["""",XMADDR'["(" Q XMADDR
+ I XMADDR["""@" D  Q XMADDR
+ . ; "first last"@domain
+ . N I,J,XMDOM
+ . S I=$F(XMADDR,"""@")
+ . S XMDOM=$E(XMADDR,I,999)
+ . S XMDOM=$P(XMDOM," ",1)
+ . S J=$F(XMADDR,"""")
+ . S XMADDR=$E(XMADDR,J-1,I-J)_"@"_XMDOM
+ ; last.first@domain (first last)
+ N I
+ F I=1:1:$L(XMADDR," ") Q:$P(XMADDR," ",I)["@"
+ S XMADDR=$P(XMADDR," ",I)
+ Q XMADDR

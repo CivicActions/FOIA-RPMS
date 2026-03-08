@@ -1,5 +1,5 @@
 BQIDCDF ;PRXM/HC/ALA-Predefined Panel Definition ; 24 Oct 2005  6:21 PM
- ;;2.3;ICARE MANAGEMENT SYSTEM;**3,4**;Apr 18, 2012;Build 66
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**3**;Mar 01, 2021;Build 32
  ;
  Q
  ;
@@ -43,7 +43,7 @@ PP(SOURCE) ;EP - Get the IEN of a predefined panel
  ;  SOURCE - Predefined panel name
  ;
  NEW X,Y,DIC
- S DIC(0)="NZ",X=SOURCE,DIC="^BQI(90506,"
+ S DIC(0)="FNZ",X=SOURCE,DIC="^BQI(90506,"
  D ^DIC
  Q +Y
  ;

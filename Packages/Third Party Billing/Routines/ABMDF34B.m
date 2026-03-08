@@ -1,32 +1,61 @@
 ABMDF34B ; IHS/SD/SDR - ADA 2012 Dental Export -part 3 ;    
- ;;2.6;IHS Third Party Billing;**11,13,21**;NOV 12, 2009;Build 379
- ;IHS/SD/SDR - 2.6*13 - VMBP RQMT_95 - Updated to put VA STATION NUMBER in box 2.
+ ;;2.6;IHS Third Party Billing;**11,13,21,31**;NOV 12, 2009;Build 615
+ ;IHS/SD/SDR 2.6*13 VMBP RQMT_95 Updated to put VA STATION NUMBER in box 2.
+ ;IHS/SD/SDR 2.6*31 CR8833 SEL^ABMDE2X resets the insurer type so need it set back before it does any checks with it; also
+ ;  made change so OTHER COVERAGE fields will be populated with secondary if primary insurer billed, and previously billed
+ ;  insurer if not primary (so it will print primary for secondary billed, secondary for tertiary billed, etc)
+ ;IHS/SD/SDR 2.6*31 CR10351 Removed dash from FLs 50 and 55 for state license#
  ;
 INS ;Ins Info
- S ABM("I")=0
- F  S ABM("I")=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABM("I"))) Q:'ABM("I")  D
- .S ABM=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABM("I"),0))
- .S ABM=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABM,0),U)
- .I ABM'=ABMP("INS") D  Q
- ..I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABM,0)),U,3)="U" Q
- ..S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM,".211","I"),1,"I")
- ..I ABMITYP="N"!(ABMITYP="I") Q  ;ben/non-ben don't count
- ..S Y=ABM
- ..S ABMP("GL")="^ABMDBILL(DUZ(2),"_ABMP("BDFN")_","
- ..D SEL^ABMDE2X
- ..Q:$G(ABMP("INS2"))=""
- ..S $P(ABMF(14),U)=$P($P(ABMV("X2"),U),";",2)  ;(5)
- ..S $P(ABMF(16),U)=$P(ABMV("X2"),U,7)  ;(6)
- ..I ABMITYP="P" D
- ...S ABMPIEN=$O(^AUPNPRVT(ABMP("PDFN"),11,"B",ABMP("INS2"),0))
- ...Q:+ABMPIEN=0
- ...S $P(ABMF(14),U)=$P($G(^AUPN3PPH($P($G(^AUPNPRVT(ABMP("PDFN"),11,ABMPIEN,0)),U,8),0)),U)  ;(5)
- ...S $P(ABMF(16),U)=$P($G(^AUPN3PPH($P($G(^AUPNPRVT(ABMP("PDFN"),11,ABMPIEN,0)),U,8),0)),U,19)  ;(6)
- ..I ABMITYP="D" D
- ...S $P(ABMF(14),U)=$P($G(^DPT(ABMP("PDFN"),0)),U)  ;(5)
- ...S $P(ABMF(16),U)=$P($G(^DPT(ABMP("PDFN"),0)),U,3)  ;(6)
- ..I $$GET1^DIQ(9999999.18,ABMP("INS2"),".25","I")="" S $P(ABMF(12),U,2)="X"  ;Other Coverage (Medical) (4)
- ..I $$GET1^DIQ(9999999.18,ABMP("INS2"),".25","I")="O" S $P(ABMF(12),U)="X"  ;Other Coverage (Dental) (4)
+ ;start old abm*2.6*31 IHS/SD/SDR CR8833
+ ;S ABM("I")=0
+ ;F  S ABM("I")=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABM("I"))) Q:'ABM("I")  D
+ ;.S ABM=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABM("I"),0))
+ ;.S ABM=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABM,0),U)
+ ;.I ABM'=ABMP("INS") D  Q
+ ;..I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABM,0)),U,3)="U" Q
+ ;..S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM,".211","I"),1,"I")
+ ;..I ABMITYP="N"!(ABMITYP="I") Q  ;ben/non-ben don't count
+ ;..S Y=ABM
+ ;..S ABMP("GL")="^ABMDBILL(DUZ(2),"_ABMP("BDFN")_","
+ ;..D SEL^ABMDE2X
+ ;..S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM,".211","I"),1,"I") ;abm*2.6*31 IHS/SD/SDR CR8833
+ ;..Q:$G(ABMP("INS2"))=""
+ ;..S $P(ABMF(14),U)=$P($P(ABMV("X2"),U),";",2)  ;(5)
+ ;..S $P(ABMF(16),U)=$P(ABMV("X2"),U,7)  ;(6)
+ ;..I ABMITYP="P" D
+ ;...S ABMPIEN=$O(^AUPNPRVT(ABMP("PDFN"),11,"B",ABMP("INS2"),0))
+ ;...Q:+ABMPIEN=0
+ ;...S $P(ABMF(14),U)=$P($G(^AUPN3PPH($P($G(^AUPNPRVT(ABMP("PDFN"),11,ABMPIEN,0)),U,8),0)),U)  ;(5)
+ ;...S $P(ABMF(16),U)=$P($G(^AUPN3PPH($P($G(^AUPNPRVT(ABMP("PDFN"),11,ABMPIEN,0)),U,8),0)),U,19)  ;(6)
+ ;..I ABMITYP="D" D
+ ;...S $P(ABMF(14),U)=$P($G(^DPT(ABMP("PDFN"),0)),U)  ;(5)
+ ;...S $P(ABMF(16),U)=$P($G(^DPT(ABMP("PDFN"),0)),U,3)  ;(6)
+ ;..I $$GET1^DIQ(9999999.18,ABMP("INS2"),".25","I")="" S $P(ABMF(12),U,2)="X"  ;Other Coverage (Medical) (4)
+ ;..I $$GET1^DIQ(9999999.18,ABMP("INS2"),".25","I")="O" S $P(ABMF(12),U)="X"  ;Other Coverage (Dental) (4)
+ ;end old start new abm*2.6*31 IHS/SD/SDR CR8833
+ I +$G(ABMSINS) D
+ .S ABM=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U)
+ .S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM,".211","I"),1,"I")
+ .I ABMITYP="N"!(ABMITYP="I") Q  ;ben/non-ben don't count
+ .S Y=ABM
+ .S ABMP("GL")="^ABMDBILL(DUZ(2),"_ABMP("BDFN")_","
+ .D SEL^ABMDE2X
+ .S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM,".211","I"),1,"I") ;abm*2.6*31 IHS/SD/SDR CR8833
+ .Q:$G(ABMP("INS2"))=""
+ .S $P(ABMF(14),U)=$P($P(ABMV("X1"),U),";",2)  ;(5)
+ .S $P(ABMF(16),U)=$P(ABMV("X1"),U,7)  ;(6)
+ .I ABMITYP="P" D
+ ..S ABMPIEN=$O(^AUPNPRVT(ABMP("PDFN"),11,"B",ABMP("INS2"),0))
+ ..Q:+ABMPIEN=0
+ ..S $P(ABMF(14),U)=$P($G(^AUPN3PPH($P($G(^AUPNPRVT(ABMP("PDFN"),11,ABMPIEN,0)),U,8),0)),U)  ;(5)
+ ..S $P(ABMF(16),U)=$P($G(^AUPN3PPH($P($G(^AUPNPRVT(ABMP("PDFN"),11,ABMPIEN,0)),U,8),0)),U,19)  ;(6)
+ .I ((ABMITYP="D")!(ABMITYP="R")) D
+ ..S $P(ABMF(14),U)=$P($G(^DPT(ABMP("PDFN"),0)),U)  ;(5)
+ ..S $P(ABMF(16),U)=$P($G(^DPT(ABMP("PDFN"),0)),U,3)  ;(6)
+ .I $$GET1^DIQ(9999999.18,ABMP("INS2"),".25","I")="" S $P(ABMF(12),U,2)="X"  ;Other Coverage (Medical) (4)
+ .I $$GET1^DIQ(9999999.18,ABMP("INS2"),".25","I")="O" S $P(ABMF(12),U)="X"  ;Other Coverage (Dental) (4)
+ ;end new abm*2.6*31 IHS/SD/SDR CR8833
  S $P(ABMF(1),U)="X"  ;stmt/actual svcs (1)
  I $P($G(^AUTNINS(ABMP("INS"),2)),"^")="D"&($P($G(^ABMDVTYP(ABMP("VTYP"),0)),U)["EPSDT") S $P(ABMF(2),U)="X"  ;EPSDT/Title 19(1)
 BNODES ; Bill nodes
@@ -115,14 +144,16 @@ PRV ;
  .S $P(ABMF(56),U,2)=$S($P($$NPI^XUSNPI("Individual_ID",$P(ABM("A"),U,2)),U)>0:$P($$NPI^XUSNPI("Individual_ID",$P(ABM("A"),U,2)),U),1:"")  ;Dent NPI (54)
  .I $P($G(^AUTTLOC(ABMP("LDFN"),0)),U,2)="AIDC",((ABMP("INS")=1722)!($P($G(^AUTNINS(ABMP("INS"),0)),U)["DELTA DENTAL")) S $P(ABMF(56),U,2)=""
  .I $P($G(^AUTNINS(ABMP("INS"),0)),U)["MEDICAID UTAH" S $P(ABMF(56),U,2)=$S($P($$NPI^XUSNPI("Organization_ID",ABMP("LDFN")),U)>0:$P($$NPI^XUSNPI("Organization_ID",ABMP("LDFN")),U),1:"")  ;Fac NPI for UTAH MEDICAID (54)
- .S $P(ABMF(59),U,2)=$$SLN^ABMEEPRV($P(ABM("A"),U,2))  ;Dent Lic(55)
+ .;S $P(ABMF(59),U,2)=$$SLN^ABMEEPRV($P(ABM("A"),U,2))  ;Dent Lic(55)  ;abm*2.6*31 IHS/SD/SDR CR10351
+ .S $P(ABMF(59),U,2)=$TR($$SLN^ABMEEPRV($P(ABM("A"),U,2)),"-")  ;Dent Lic(55)  ;abm*2.6*31 IHS/SD/SDR CR10351
  .I $P($G(^AUTTLOC(ABMP("LDFN"),0)),U,2)="AIDC" D
  ..I ((ABMP("INS")=1722)!($P($G(^AUTNINS(ABMP("INS"),0)),U)["DELTA DENTAL")) S $P(ABMF(57),U,2)=""
  ..S $P(ABMF(59),U,2)=""
  ..I ABMP("INS")=5 S $P(ABMF(59),U,2)="NM008A76"
  ..I $P($G(^AUTNINS(ABMP("INS"),0)),U)["UNITED CONCORDIA" S $P(ABMF(59),U,2)=601046
  ..I $P($G(^AUTNINS(ABMP("INS"),0)),U)["DELTA DENTAL" S $P(ABMF(59),U,2)=8886
- .S $P(ABMF(56),U,3)=$$SLN^ABMEEPRV($P(ABM("A"),U,2))  ;(55)
+ .;S $P(ABMF(56),U,3)=$$SLN^ABMEEPRV($P(ABM("A"),U,2))  ;(55)  ;abm*2.6*31 IHS/SD/SDR CR10351
+ .S $P(ABMF(56),U,3)=$TR($$SLN^ABMEEPRV($P(ABM("A"),U,2)),"-")  ;(55)  ;abm*2.6*31 IHS/SD/SDR CR10351
  .I $P($G(^AUTTLOC(ABMP("LDFN"),0)),U,2)="AIDC" D
  ..I (ABMP("INS")=1722)!($P($G(^AUTNINS(ABMP("INS"),0)),U)["DELTA DENTAL") S $P(ABMF(56),U,3)=$S(ABMP("INS")=5:"NM008A76",ABMP("INS")["UNITED CONCORDIA":601046,($P($G(^AUTNINS(ABMP("INS"),0)),U)["DELTA DENTAL"):8886,1:"")
  .S $P(ABMF(60),U,4)=ABM("PNUM")  ;Prov#(58)

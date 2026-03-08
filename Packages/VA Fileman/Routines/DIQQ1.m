@@ -1,5 +1,6 @@
-DIQQ1 ;SFISC/TKW-NONDESTRUCTIVE ONLINE HELP FOR FIELDS ;4/4/95  09:16
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIQQ1 ;SFISC/TKW-NONDESTRUCTIVE ONLINE HELP FOR FIELDS ;4/4/95  09:16 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**3**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 EN(DP,D,X) ; DP=file no.,D=field no.,X="?" or "??"
  Q:'$G(DP)  Q:'$G(D)  Q:$G(X)'?1"?"."?"

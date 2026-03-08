@@ -1,9 +1,9 @@
 BQITDUTL ;APTIV/HC/ALA-Diagnostic Tag Utilities ; 25 Feb 2008  2:30 PM
- ;;2.5;ICARE MANAGEMENT SYSTEM;**1**;May 24, 2016;Build 17
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**7**;Mar 01, 2021;Build 14
  ;
 CMP(BQIDFN,BQITAG) ;EP - Compare data
  NEW BQIFN,BQIFAC,BQIDID,BQIRN,BQIREC,BQIRDT,BQIREX,BQIIEN,ADD
- NEW BQIFIL,BQIVPR,FLAG
+ NEW BQIFIL,BQIVPR,FLAG,BQITDATE
  S FLAG=0,THCFL=$P(^BQI(90506.2,BQITAG,0),U,10)
  I $G(^BQIPAT(BQIDFN,20,BQITAG,0))="" Q FLAG
  S BQIDID=$P(^BQIPAT(BQIDFN,20,BQITAG,0),U,2)
@@ -24,7 +24,8 @@ CMP(BQIDFN,BQITAG) ;EP - Compare data
  .. S FLAG=$$CHKR()
  .. Q
  . I BQIFAC[" Tag" S FLAG=$$CHKR()
- Q FLAG
+ I 'FLAG Q FLAG
+ Q FLAG_"^"_$O(^BQIPAT(BQIDFN,20,BQITAG,1,"AC",""))
  ;
 CHKR() ; Check for record
  NEW BQIIFACT,BQIISR,BQIIFAC,BQIITG,BQIIVPR,BQII
@@ -57,13 +58,14 @@ NCR(BQIDFN,BQITAG) ;EP - If no criteria found, check if patient is already
  . I 'THCFL D  Q
  .. I $$REG(BQIDFN,BQITAG)=1 Q
  .. ; Pregnant tag
- .. I BQITAG=16 S OK=0 D  Q:OK
- ... ; If 'accepted' and no evidence of delivery, miscarriage or abortion, quit
- ... I RSTAT="A" D
+ .. I BQITAG=16 D
+ ... ; If 'accepted' and no evidence of delivery, miscarriage or abortion, check date identified as pregnant
+ ... ; if more than one year ago, set to No Longer Valid
+ ... I RSTAT="A"!(RSTAT="P") D
  .... S NPREG=$$EPG^BQITD13(BQIDFN)
- .... I 'NPREG S OK=1 Q
+ .... I 'NPREG D PREGC
  .... I NPREG S MESG="NO LONGER PREGNANT"
- .. D EN^BQITDPRC(.TGDATA,BQIDFN,BQITAG,"V",,MESG,3) Q
+ .... D EN^BQITDPRC(.TGDATA,BQIDFN,BQITAG,"V",,$G(MESG),10) Q
  . ;S LOK=$$LOW(BQIDFN,BQITAG)
  . S HOK=$$HIGH(BQIDFN,BQITAG)
  . ; If higher tag and it's active, superseded
@@ -74,6 +76,30 @@ NCR(BQIDFN,BQITAG) ;EP - If no criteria found, check if patient is already
  . ;I BQITAG=9,HOK,$P(HOK,U,3)'=1 D EN^BQITDPRC(.TGDATA,BQIDFN,BQITAG,"A",,"SYSTEM UPDATE",5) Q
  . D EN^BQITDPRC(.TGDATA,BQIDFN,BQITAG,"V",,"SYSTEM UPDATE",3)
  Q
+ ;
+PREGC ; Check pregnancy
+ NEW BQTM,EDATE,REVPER,BQTIME,AGE,CTRIM,PEDD
+ S CTRIM=$$TRIM^BQIRGPG(BQIDFN),AGE=$$AGE^BQIAGE(BQIDFN,"")
+ I AGE<9 S MESG="Age not valid. Check record." Q
+ I '$$PFAC() S MESG="Data not valid." Q
+ S PEDD=$P($G(^AUPNREP(BQIDFN,13)),"^",11)
+ S BQTIME=$P($G(^BQI(90508,1,16)),U,2)
+ S BQTM=(BQTIME*30.4167),EDATE=DT,REVPER=$$FMADD^XLFDT(EDATE,-(BQTM))
+ I PEDD<REVPER S MESG="Probably Not Pregnant anymore" Q
+ I $$FMDIFF^XLFDT(DT,$P(^BQIREG(RIEN,0),"^",4)\1,1)>365 S MESG="Probably Not Pregnant anymore" Q
+ Q
+ ;
+PFAC() ; Pregnancy factor check
+ NEW FIEN,PIEN,DIEN,POV,DXN,PTAX
+ S POV=1
+ S FIEN="",FIEN=$O(^BQIREG(RIEN,5,"B",FIEN))
+ I FIEN'="" S PIEN=$P(^BQIFACT(FIEN,0),"^",7)
+ I $G(PIEN)'="" S DIEN=$P($G(^AUPNVPOV(PIEN,0)),"^",1)
+ ;I $G(DIEN)'="" S POV=$P(^ICD9(DIEN,0),"^",1)_"  "_$$ICD9^BQIUL3(DIEN,,4)
+ I $G(DIEN)'="" S DXN=$P(^ICD9(DIEN,0),"^",1)_" "
+ S PTAX=$O(^ATXAX("B","BQI PREGNANCY DXS","")) I PTAX="" Q 0
+ I $G(DXN)'="",'$D(^ATXAX(PTAX,"B",DXN)) S POV=0
+ Q POV
  ;
 ACT(RDFN) ;PEP - Check for any active tags
  NEW ACT,RIEN,CSTAT
@@ -97,8 +123,8 @@ ATAG(RDFN,RTAG) ;EP - Is this tag active for this patient
  S TGDT=$P($G(^BQIPAT(RDFN,0)),U,6)
  S STAT=$$ACST(RGSTAT)
  I 'STAT Q STAT
- Q STAT_U_$S($P(STAT,U,2)="A":RGDT,1:TGDT)
- ;Q $$ACST(RGSTAT)
+ ;Q STAT_U_$S($P(STAT,U,2)="A":RGDT,1:TGDT)
+ Q STAT_U_RGDT
  ;
 CTAG(RDFN,RTAG) ;EP - Current tag status
  NEW TGN,RGIEN,RGSTAT,RGDT,STAT,TGDT

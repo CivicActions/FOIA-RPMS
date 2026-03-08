@@ -1,5 +1,5 @@
-XMXAPIB ;ISC-SF/GMB-Mailbox and Mail Basket APIs ;04/17/2002  14:07
- ;;8.0;MailMan;;Jun 28, 2002
+XMXAPIB ;ISC-SF/GMB- Mailbox and Mail Basket APIs ;05/26/99  09:31
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; All entry points covered by DBIA 2723.
  ; XMDUZ   User's DUZ, or enough of user's name for a positive ID
  ; XMK     Basket number, or enough of a name for a positive ID

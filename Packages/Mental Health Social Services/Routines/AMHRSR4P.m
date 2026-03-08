@@ -1,5 +1,5 @@
 AMHRSR4P ; IHS/CMI/LAB - list refusals ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**8**;JUN 02, 2010;Build 7
+ ;;4.0;IHS BEHAVIORAL HEALTH;**8,11**;JUN 02, 2010;Build 27
  ;
  ;
 PRINT ;EP - called from xbdbque
@@ -38,6 +38,10 @@ PRINT1 ;
  D SS
  Q:$$END
  D CD
+ Q:$$END
+ D RACE
+ Q:$$END
+ D ETHN
  Q:$$END
  K ^TMP($J)
  I AMHRLIST D LIST
@@ -170,6 +174,32 @@ DATE ;
  .S Y=$L($$FMTE^XLFDT(AMHRX)),Y=38-Y W !?Y,$$FMTE^XLFDT(AMHRX),?40,$J($$COM($G(^TMP($J,AMHRX)),0),8),?55,$$PER(^TMP($J,AMHRX),AMHRTOT) K ^TMP($J,AMHRX)
  Q
  ;
+RACE ;
+ Q:'$D(AMHRTALL(2))
+ ;TALLY BY GENDER OF PATIENT
+ K AMHRRES S X=0 F  S X=$O(^XTMP("AMHRSR4",AMHRJ,AMHRH,"PTS",X)) Q:X'=+X  D
+ .S D=$O(^XTMP("AMHRSR4",AMHRJ,AMHRH,"PTS",X,""),-1) S AMHRY=^XTMP("AMHRSR4",AMHRJ,AMHRH,"PTS",X,D)
+ .S R=$P(AMHRY,U,25) S AMHRRES(R)=$G(AMHRRES(R))+1
+ W !
+ W !,"                              By Race",!
+ S AMHRX="" F  S AMHRX=$O(AMHRRES(AMHRX)) Q:AMHRX=""!($D(AMHRQUIT))  D
+ .Q:$$END
+ .S Y=$L(AMHRX),Y=38-Y W !?Y,AMHRX,?40,$J($$COM($G(AMHRRES(AMHRX)),0),8),?55,$$PER(AMHRRES(AMHRX),AMHRTOT) K AMHRRES(AMHRX)
+ .Q
+ Q
+ETHN ;
+ Q:'$D(AMHRTALL(2))
+ ;TALLY BY GENDER OF PATIENT
+ K AMHRRES S X=0 F  S X=$O(^XTMP("AMHRSR4",AMHRJ,AMHRH,"PTS",X)) Q:X'=+X  D
+ .S D=$O(^XTMP("AMHRSR4",AMHRJ,AMHRH,"PTS",X,""),-1) S AMHRY=^XTMP("AMHRSR4",AMHRJ,AMHRH,"PTS",X,D)
+ .S R=$P(AMHRY,U,26) S AMHRRES(R)=$G(AMHRRES(R))+1
+ W !
+ W !,"                            By Ethnicity",!
+ S AMHRX="" F  S AMHRX=$O(AMHRRES(AMHRX)) Q:AMHRX=""!($D(AMHRQUIT))  D
+ .Q:$$END
+ .S Y=$L(AMHRX),Y=38-Y W !?Y,AMHRX,?40,$J($$COM($G(AMHRRES(AMHRX)),0),8),?55,$$PER(AMHRRES(AMHRX),AMHRTOT) K AMHRRES(AMHRX)
+ .Q
+ Q
 PER(N,D) ;return % of n/d
  I 'D Q "0%"
  NEW Z
@@ -268,6 +298,8 @@ LIST ;EP - called from xbdbque
  ....W:AMHRC'=1 ! W ?8,$$VAL^XBDIQ1(9002011.01,AMHRX,.01),?17,$E($$VAL^XBDIQ1(9002011.01,AMHRX,.04),1,60)
  ..W !?3,"Primary Provider on Visit: ",?31,$P(AMHRY,U,2)
  ..W !?3,"     Provider who screened: ",?31,$P(AMHRY,U,16)
+ ..W !?3,"                     Race: ",?31,$P(AMHRY,U,25)
+ ..W !?3,"                Ethnicity: ",?31,$P(AMHRY,U,26)
  ..I 'AMHRDP W ! Q
  ..K AMHRZ S X=$$VAL^XBDIQ1(9002011.55,DFN,.02) I X]"" S AMHRZ("MENTAL HEALTH")=X
  ..S X=$$VAL^XBDIQ1(9002011.55,DFN,.03) I X]"" S AMHRZ("SOCIAL SERVICES")=X
@@ -315,6 +347,12 @@ T ;
  S %=$$HRN^AUPNPAT(DFN,DUZ(2))
  S %=%+10000000,%=$E(%,7,8)_"-"_+$E(%,2,8)
  S AMHRSORV=%
+ Q
+Q ;
+ S AMHRSORV=$$RACE^AMHUTIL2(DFN)
+ Q
+E ;
+ S AMHRSORV=$$ETHN^AMHUTIL2(DFN)
  Q
 DT(D) ;EP
  I D="" Q ""

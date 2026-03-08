@@ -1,5 +1,5 @@
-APCLP9 ; IHS/CMI/LAB - Routine to create bulletin ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLP9 ; IHS/CMI/LAB - Routine to create bulletin ; [ 03/23/01 11:33 AM ]
+ ;;3.0;IHS PCC REPORTS;**9**;FEB 15, 1997
  ;;
  ; The following line prevents the "Disable Options..." and "Move
  ; Routines..." questions from being asked during the install.

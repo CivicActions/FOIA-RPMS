@@ -1,7 +1,5 @@
-XMBGRP ;ISC-SF/GMB-Mail Group APIs ;04/17/2002  07:44
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/JL,CAP
- ;
+XMBGRP ;(WASH ISC)/JL,CAP-MAIL GROUP API ;05/22/99  10:47
+ ;;7.1;MailMan;**13,36,56,50**;Jun 02, 1994
  ; Entry points (DBIA 1146):
  ; $$DM  Delete local members from a mail group.
  ; $$MG  Create a mail group or add members to an existing mail group.
@@ -151,7 +149,7 @@ NOTIFY(XMMSG,XMQUIET) ; Notification
  S XMTEXT(4)=XMMSG
  I XMQUIET D SENDMSG(.XMTEXT) Q
  F I=1:1:4 W !,XMTEXT(I)
- W !,$C(7)
+ W !,*7
  Q
 SENDMSG(XMTEXT) ;
  N XMY,XMDUZ,XMSUB

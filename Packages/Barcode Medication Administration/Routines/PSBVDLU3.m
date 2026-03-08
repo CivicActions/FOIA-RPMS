@@ -1,5 +1,5 @@
-PSBVDLU3 ;BIRMINGHAM/TEJ-BCMA VDL UTILITIES 3 ; 27 Aug 2008  9:06 PM
- ;;3.0;BAR CODE MED ADMIN;**13,38,28,50**;Mar 2004;Build 78
+PSBVDLU3 ;BIRMINGHAM/TEJ-BCMA VDL UTILITIES 3 ;03-Jan-2023 14:16;DU
+ ;;3.0;BAR CODE MED ADMIN;**13,38,28,50,1033**;Mar 2004;Build 34
  ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
  ;
  ;This routine file has been created to serve as a container
@@ -12,7 +12,9 @@ PSBVDLU3 ;BIRMINGHAM/TEJ-BCMA VDL UTILITIES 3 ; 27 Aug 2008  9:06 PM
  ; File 52.6/436
  ; File 52.7/437
  ;
-IVPTAB(PSBORTYP,PSBIVTYP,PSBINTSY,PSBCHMTY,PSBPUSH)  ;
+ ; Modified - IHS/MSC/PLS - 01/03/23 - Added check for Ordering Location
+ ;
+IVPTAB(PSBORTYP,PSBIVTYP,PSBINTSY,PSBCHMTY,PSBPUSH) ;
  ;
  ; This function will return
  ; the value 1 (one) if the
@@ -45,15 +47,15 @@ IVPTAB(PSBORTYP,PSBIVTYP,PSBINTSY,PSBCHMTY,PSBPUSH)  ;
  ;
 SHOVDL(DFN,BDATE,OTDATE,PSBTAB) ;
  ;
- ; This function will find orders such as discontinued or expired infusing IV bags 
+ ; This function will find orders such as discontinued or expired infusing IV bags
  ; or discontinued or expired "given" patches.  Recognizing these types of orders
- ; will allow these orders to be displayed on the VDL and permits the user to take 
+ ; will allow these orders to be displayed on the VDL and permits the user to take
  ; action on them.  This routine determines if such orders exist for patient,
  ; time, and "BCMA VDL tab."  This routine is an "extention" to the API EN^PSJBCMA.
  ;
  ; INPUT Parameters:
  ;    DFN           (req)   Patient Internal File Number.
- ;    BDATE         (opt)   Start searching for "order stop" after this date. 
+ ;    BDATE         (opt)   Start searching for "order stop" after this date.
  ;    OTDATE        (opt)   Include One-Time orders from this date.
  ;    PSBTAB        (opt)   "UDTAB" or "IVTAB" - expedites process if specific tab
  ;                            is given.
@@ -67,7 +69,7 @@ SHOVDL(DFN,BDATE,OTDATE,PSBTAB) ;
  ; any active Patch orders to show on VDL?
  S PSBFLG=0
  I $G(^TMP("PSJ",$J,1,0))=-1 D
- .;  
+ .;
  .; Check the indexice for given patches or infusing IVs
  .;
  .; Check APATCH
@@ -190,6 +192,17 @@ SCANFAIL(RESULTS,PSBPARAM) ;  TEJ 05/12/2006  BCMA-Managing Scanning Failures (M
  ;
  ; Changed the ward+room delimiter from / to $.
  S PSB2=" *UNIDENTIFIABLE PATIENT* " I +$G(PSB1)>0 S PSB2=$$GET1^DIQ(2,PSB1_",",.1)_"$"_$$GET1^DIQ(2,PSB1_",",.101)
+ ;
+ ;UPDATE 2019.7.15 jtc - use ordering location if ward is blank
+ I PSB2="$" D
+ .N TMPIENS,TMPONUM
+ .S TMPIENS=+PSB8_","_PSB1 ; ORDER NUMBER in PHARMACY PATIENT file , DFN
+ .I $F(PSB8,"U")>0 S TMPONUM=$$GET1^DIQ(55.06,TMPIENS,66)  ; ORDER FILE entry in UNIT DOSE subscript
+ .I $F(PSB8,"V")>0 S TMPONUM=$$GET1^DIQ(55.01,TMPIENS,110) ; ORDER FILE entry in IV subscript
+ .I $G(TMPONUM)]"" S PSB2=$$GET1^DIQ(100,+TMPONUM,6)_"$"   ; PATIENT LOCATION (i.e. Hospital Location) in ORDER file
+ .K TMPIENS,TMPONUM
+ ;END UPDATE 2019.7.15 jtc
+ ;
  S PSB3=$P(PSBDAT,"^",3) I PSB3="Manual Medication Entry" S PSBMMEN=1
  S PSB4=$S($P(PSBDAT,"^",5)="W":"Wristband",$P(PSBDAT,"^",5)="M":"Medication",1:" *UNDEFINED* ")
  I PSB4="Medication"&($D(PSBDAT1)) D
@@ -248,7 +261,7 @@ CLEANMSF ;
  ;
 SCANCNT(PSBTYP) ;
  ;  Routine to count total scans (NO MAIL)
- ;  Input: PSBTYP - "WSCN"/"MSCN"/"MMME"/"MKEY"/"WKEY"  
+ ;  Input: PSBTYP - "WSCN"/"MSCN"/"MMME"/"MKEY"/"WKEY"
  D CLEAN^DILF
  N PSBNEW1
  S PSBNEW1="+1"

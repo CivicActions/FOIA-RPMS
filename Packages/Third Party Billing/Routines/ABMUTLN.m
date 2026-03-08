@@ -1,8 +1,13 @@
-ABMUTLN ; IHS/ASDST/DMJ - NAME UTILITIES ;    
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009;Build 379
+ABMUTLN ; IHS/SD/SDR - NAME UTILITIES ;    
+ ;;2.6;IHS 3P BILLING SYSTEM;**31**;NOV 12, 2009;Build 615
  ;Original;DMJ;02/07/96 12:33 PM
  ;
- ;IHS/SD/SDR - v2.5 p10 - IM20000 Added code to look at Card Name for Policy Holder
+ ;IHS/SD/SDR 2.5*10 IM20000 Added code to look at Card Name for Policy Holder
+ ;
+ ;IHS/SD/SDR 2.6*31 CR8851 Added check if loop 2010CA and the relationship isn't self, write name
+ ;  from Patient file, not Medicaid Eligible file
+ ;IHS/SD/SDR 2.6*31 CR8848 PAT and NM1 change.  It was using the primary insurer or insurer type everytime, so if the patient
+ ;  had a secondary insurer with a different NAME the name from primary was showing up, not the secondary name
  ;
 LNM(X,Y) ;PEP - last name
  ;x=file
@@ -87,16 +92,19 @@ FILE ;retrieve from file
  D STRIP
  Q
 PAT ; Patient name
- S ABMP("ITYPE")=$G(ABMP("ITYPE"))
+ ;S ABMP("ITYPE")=$G(ABMP("ITYPE"))  ;abm*2.6*31 IHS/SD/SDR CR8848
+ S ABMP("ITYPE")=$P($G(ABMP("INS",ABMPST)),U,2)  ;abm*2.6*31 IHS/SD/SDR CR8848
  ; if insurer type is Medicare FI
  I ABMP("ITYPE")="R" D
  .; if insurer name contains "MEDICARE"
- .I $P(^AUTNINS(ABMP("INS"),0),U)["MEDICARE" D
+ .;I $P(^AUTNINS(ABMP("INS"),0),U)["MEDICARE" D  ;abm*2.6*31 IHS/SD/SDR CR8848
+ .I $P(^AUTNINS($P(ABMP("INS",ABMPST),U),0),U)["MEDICARE" D  ;abm*2.6*31 IHS/SD/SDR CR8848
  ..; Medicare Patient name from MEDICARE ELIGIBLE
  ..S ABME("NM")=$P($G(^AUPNMCR(ABMPDFN,21)),U)
  ..S ABME("DOB")=$P($G(^AUPNMCR(ABMPDFN,21)),"^",2) ; DOB
  .; If insurer name contains "RAILROAD"
- .I $P(^AUTNINS(ABMP("INS"),0),U)["RAILROAD" D
+ .;I $P(^AUTNINS(ABMP("INS"),0),U)["RAILROAD" D  ;abm*2.6*31 IHS/SD/SDR CR8848
+ .I $P(^AUTNINS($P(ABMP("INS",ABMPST),U),0),U)["RAILROAD" D  ;abm*2.6*31 IHS/SD/SDR CR8848
  ..; Railroad Patient name from RAILROAD ELIGIBLE
  ..S ABME("NM")=$P($G(^AUPNRRE(ABMPDFN,21)),U)
  ..S ABME("DOB")=$P($G(^AUPNRRE(ABMPDFN,21)),"^",2) ; DOB
@@ -104,6 +112,7 @@ PAT ; Patient name
  ; if insurer type is Medicaid FI
  I ABMP("ITYPE")="D"!(ABMP("ITYPE")="K") D
  .Q:'$G(ABMCDNUM)
+ .I ((ABMP("REL")'=18)&(ABMLOOP="2010CA")) Q  ;abm*2.6*31 IHS/SD/SDR CR8851
  .S ABME("NM")=$P($G(^AUPNMCD(ABMCDNUM,21)),U) ; Pat name
  .S ABME("DOB")=$P($G(^AUPNMCD(ABMCDNUM,21)),"^",2) ; dob
  ;

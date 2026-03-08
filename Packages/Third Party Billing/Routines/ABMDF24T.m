@@ -1,5 +1,5 @@
-ABMDF24T ; IHS/ASDST/DMJ - Test NCPDP Print Alignment ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF24T ; IHS/ASDST/DMJ - Test NCPDP Print Alignment ;  [ 04/11/2003  10:40 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**3**;APR 05, 2002
  ;
 TEST ;EP - enter here
  K ABMFP

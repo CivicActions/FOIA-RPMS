@@ -1,5 +1,5 @@
 BLRALAF ;DAOU/ALA-Set Lab Results Flag 
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LR;**1013,1015**;Nov 18, 2002
  ;
  ;**Program Description**

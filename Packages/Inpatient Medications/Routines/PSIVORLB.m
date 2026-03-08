@@ -1,11 +1,12 @@
-PSIVORLB ;BIR/MLM-PRINT OUT LABELS ;03-Apr-2013 14:13;PLS
- ;;5.0; INPATIENT MEDICATIONS ;**58,184,1015**;16 DEC 97;Build 62
+PSIVORLB ;BIR/MLM-PRINT OUT LABELS ;01-Feb-2024 11:16;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**58,184,1015,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^PS(52.6 is supported by DBIA 1231.
  ; Reference to ^PS(52.7 is supported by DBIA 2173.
  ;
  ; Modified - IHS/CIA/PLS - 12/05/03 - Line RE+4
  ;          - IHS/MSC/PB  - 2/11/13  - Line INF+7 to INF+10 and Line Tag OFFSET added to print the Beyond Use Date data to the sample iv label
+ ;            IHS/MSC/PLS - 02/01/2024 - Added reference to GETHLOC FID 99318
 ENX ;Print example label
  D FULL^VALM1
  S PSIVFLAG=1,PSIVRM=$P(PSIVSITE,U,13) S:PSIVRM<1 PSIVRM=30 D:$E(P("OT"))="I" ORFLDS^PSIVEDT1 W:$E(P("OT"))'="I" !,"Med Route: ",$P(P("MR"),U,2),!
@@ -17,7 +18,9 @@ RE ;
  W DFN,!
  ; IHS/CIA/PLS - 12/05/03 - Commented out next line and changed from SSN to HRN
  ;S X=$S(P("PON")["V":"["_+P("PON")_"]",1:"")_$P($P(VADM(2),U,2),"-",3)_"  "_$S(+VAIN(4):$P(VAIN(4),U,2),1:"Opt IV")_"  "_$E(DT,4,5)_"/"_$E(DT,6,7)_"/"_$E(DT,2,3) D P
- S X=$S(P("PON")["V":"["_+P("PON")_"]",1:"")_$G(VA("BID"))_"  "_$S(+VAIN(4):$P(VAIN(4),U,2),1:"Opt IV")_"  "_$E(DT,4,5)_"/"_$E(DT,6,7)_"/"_$E(DT,2,3) D P
+ ; IHS/MSC/PLS - 02/01/2024 - p1035
+ ;S X=$S(P("PON")["V":"["_+P("PON")_"]",1:"")_$G(VA("BID"))_"  "_$S(+VAIN(4):$P(VAIN(4),U,2),1:"Opt IV")_"  "_$E(DT,4,5)_"/"_$E(DT,6,7)_"/"_$E(DT,2,3) D P
+ S X=$S(P("PON")["V":"["_+P("PON")_"]",1:"")_$G(VA("BID"))_"  "_$S(+VAIN(4):$P(VAIN(4),U,2),1:$$GETHLOC^PSIVLABR(.P))_"  "_$E(DT,4,5)_"/"_$E(DT,6,7)_"/"_$E(DT,2,3) D P
  S X=VADM(1) S:$P(PSIVSITE,U,9) X=X_"  "_$S(VAIN(5)]"":VAIN(5),1:"NF") D P S X=" " D P
  I $D(PSIVFLAG) F PSIV=0:0 S PSIV=$O(DRG("AD",PSIV)) Q:'PSIV  S Y=DRG("AD",PSIV),X=$S($P(Y,U,2)]"":$P(Y,U,2),1:"*********")_" "_$P(Y,U,3)_" " S:$P(Y,U,4)]"" X=X_" ("_$P(Y,U,4)_")" D P,MESS
  G:$D(PSIVFLAG) SOL

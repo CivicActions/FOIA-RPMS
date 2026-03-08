@@ -1,5 +1,6 @@
-DII1 ;SFISC/XAK-OTHER OPTIONS ;7/25/96  14:15
- ;;22.0;VA FileMan;;Mar 30, 1999
+DII1 ;SFISC/XAK-OTHER OPTIONS ;7/25/96  14:15 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**30**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 0 S DIC="^DOPT(""DII1"","
  G OPT:$D(^DOPT("DII1",9)) S ^(0)="OTHER OPTION^1.01" K ^("B")

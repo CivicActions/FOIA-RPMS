@@ -1,8 +1,8 @@
-DINIT120 ;SFISC/MKO-SORT TEMPLATE FILE ;1:13 PM  13 Nov 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINIT120 ;SFISC/TKW - INITIALIZE V21 SORT TEMPLATE DD NODES ;11/4/94  09:44 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
- G ^DINIT121
 Q Q
  ;;^DIC(.401,0,"GL")
  ;;=^DIBT(
@@ -19,17 +19,13 @@ Q Q
  ;;^DIC(.401,"%D",4,0)
  ;;=running the search.
  ;;^DD(.401,0)
- ;;=FIELD^^491620^21
+ ;;=FIELD^^1819^18
  ;;^DD(.401,0,"DDA")
  ;;=N
  ;;^DD(.401,0,"DI")
  ;;=^
  ;;^DD(.401,0,"DT")
- ;;=2960910
- ;;^DD(.401,0,"ID","WRITE")
- ;;=N D,D1,D2 S D2=^(0) S:$X>30 D1(1,"F")="!" S D=$P(D2,U,2) S:D D1(2)="("_$$FMTE^DILIBF(D)_")",D1(2,"F")="?30" S D=$P(D2,U,5) S:D D1(3)=" User #"_D,D1(3,"F")="?50" S D=$P(D2,U,4) S:D D1(4)=" File #"_D,D1(4,"F")="?59" D EN^DDIOL(.D1)
- ;;^DD(.401,0,"ID","WRITE1")
- ;;=N D1 S D1=$S($D(^DIBT(+Y,2)):"SORT",$D(^("DIS")):"SEARCH",$D(^(1)):"INQ",1:"") D EN^DDIOL(D1,"","?73")
+ ;;=2931221
  ;;^DD(.401,0,"ID","WRITED")
  ;;=I $G(DZ)?1"???".E N % S %=0 F  S %=$O(^DIBT(Y,"%D",%)) Q:%'>0  I $D(^(%,0))#2 D EN^DDIOL(^(0),"","!?5")
  ;;^DD(.401,0,"IX","B",.401,.01)
@@ -56,30 +52,6 @@ Q Q
  ;;=X "S %=$P("_DIC_"DA,0),U,4) K:$L(%) "_DIC_"""F""_+%,X,DA)"
  ;;^DD(.401,.01,3)
  ;;=2-30 CHARACTERS
- ;;^DD(.401,2,0)
- ;;=DATE CREATED^D^^0;2^S %DT="ET" D ^%DT S X=Y K:Y<1 X
- ;;^DD(.401,3,0)
- ;;=READ ACCESS^F^^0;3^I DUZ(0)'="@" F I=1:1:$L(X) I DUZ(0)'[$E(X,I) K X Q
- ;;^DD(.401,4,0)
- ;;=FILE^P1'I^DIC(^0;4^Q
- ;;^DD(.401,4,1,0)
- ;;=^.1^1^1
- ;;^DD(.401,4,1,1,0)
- ;;=^^^MUMPS
- ;;^DD(.401,4,1,1,1)
- ;;=X "S %=$P("_DIC_"DA,0),U,1),"_DIC_"""F""_+X,%,DA)=1"
- ;;^DD(.401,4,1,1,2)
- ;;=Q
- ;;^DD(.401,5,0)
- ;;=USER #^N^^0;5^Q
- ;;^DD(.401,6,0)
- ;;=WRITE ACCESS^F^^0;6^I DUZ(0)'="@" F I=1:1:$L(X) I DUZ(0)'[$E(X,I) K X Q
- ;;^DD(.401,7,0)
- ;;=DATE LAST USED^D^^0;7^S %DT="EX" D ^%DT S X=Y K:Y<1 X
- ;;^DD(.401,8,0)
- ;;=TEMPLATE TYPE^S^1:ARCHIVING SEARCH;^0;8^Q
- ;;^DD(.401,8,3)
- ;;=Enter a 1 if this is an ARCHIVING SEARCH template (i.e., used to store lists of records to be archived) as opposed to a normal SEARCH or SORT template
  ;;^DD(.401,9,0)
  ;;=SEARCH COMPLETE DATE^D^^QR;1^S %DT="ESTXR" D ^%DT S X=Y K:Y<1 X
  ;;^DD(.401,9,3)
@@ -100,8 +72,6 @@ Q Q
  ;;=Filled in automatically by the FileMan search option.
  ;;^DD(.401,9,"DT")
  ;;=2921124
- ;;^DD(.401,10,0)
- ;;=DESCRIPTION^.4012^^%D;0
  ;;^DD(.401,11,0)
  ;;=TOTAL RECORDS SELECTED^NJ10,0^^QR;2^K:+X'=X!(X>9999999999)!(X<1)!(X?.E1"."1N.N) X
  ;;^DD(.401,11,3)
@@ -124,54 +94,8 @@ Q Q
  ;;=Filled in automatically by the FileMan search option.
  ;;^DD(.401,11,"DT")
  ;;=2921125
- ;;^DD(.401,15,0)
- ;;=SEARCH SPECIFICATIONS^.4011^^O;0
- ;;^DD(.401,1620,0)
- ;;=SORT FIELDS^CmJ50^^ ; ^N DPP D DIBT^DIPT
  ;;^DD(.401,1621,0)
  ;;=SORT FIELD DATA^.4014^^2;0
- ;;^DD(.401,1622,0)
- ;;=BY(0)^FX^^BY0;1^K:$L(X)>30!($L(X)<3)!'(X?1.ANP1"(".ANP) X
- ;;^DD(.401,1622,3)
- ;;=Enter the static part of a global.  The leading up-arrow can be omitted.
- ;;^DD(.401,1622,21,0)
- ;;=^^4^4^2960911^^
- ;;^DD(.401,1622,21,1,0)
- ;;=Enter the static, unchanging part of an open global reference for either a
- ;;^DD(.401,1622,21,2,0)
- ;;=global or a cross-reference that contains the list of record numbers to
- ;;^DD(.401,1622,21,3,0)
- ;;=sort through on the first pass.  The leading up-arrow can be omitted.  
- ;;^DD(.401,1622,21,4,0)
- ;;=For example:  DIZ(662001,"A", or TMP("NMSP",$J,
- ;;^DD(.401,1622,23,0)
- ;;=^^1^1^2960911^^^^
- ;;^DD(.401,1622,23,1,0)
- ;;=Equivalent to the BY(0) input variable to programmer call EN1^DIP.
- ;;^DD(.401,1622,"DT")
- ;;=2960924
- ;;^DD(.401,1623,0)
- ;;=L(0)^NJ1,0^^BY0;2^K:+X'=X!(X>8)!(X<1)!(X?.E1"."1N.N) X
- ;;^DD(.401,1623,3)
- ;;=Type a Number between 1 and 8, 0 Decimal Digits
- ;;^DD(.401,1623,21,0)
- ;;=^^4^4^2960911^^^
- ;;^DD(.401,1623,21,1,0)
- ;;=Enter the total number of subscripts that must be sorted through on the
- ;;^DD(.401,1623,21,2,0)
- ;;=global referenced by BY(0), including 1 for the record number.  Ex., to
- ;;^DD(.401,1623,21,3,0)
- ;;=sort through the "B" x-ref, we sort through the cross-referenced value
- ;;^DD(.401,1623,21,4,0)
- ;;=itself, then the record number, so L(0)=2.
- ;;^DD(.401,1623,23,0)
- ;;=^^1^1^2960911^^^
- ;;^DD(.401,1623,23,1,0)
- ;;=Equivalent to the L(0) input variable to programmer call EN1^DIP.
- ;;^DD(.401,1623,"DT")
- ;;=2960828
- ;;^DD(.401,1624,0)
- ;;=SORT RANGE DATA FOR BY(0)^.4011624^^BY0D;0
  ;;^DD(.401,1815,0)
  ;;=ROUTINE INVOKED^F^^ROU;E1,13^K:$L(X)>5!($L(X)<5) X
  ;;^DD(.401,1815,3)
@@ -186,3 +110,21 @@ Q Q
  ;;=routines are re-created each time the sort/print runs.  These characters
  ;;^DD(.401,1815,21,4,0)
  ;;=are concatenated with the next available number from the COMPILED ROUTINE
+ ;;^DD(.401,1815,21,5,0)
+ ;;=file to create the routine name.
+ ;;^DD(.401,1815,21,6,0)
+ ;;=  If this node is present, a new compiled sort routine will be created
+ ;;^DD(.401,1815,21,7,0)
+ ;;=during the FileMan sort/print.
+ ;;^DD(.401,1815,23,0)
+ ;;=^^3^3^2930331^^^
+ ;;^DD(.401,1815,23,1,0)
+ ;;=A routine beginning with these characters is created during the FileMan
+ ;;^DD(.401,1815,23,2,0)
+ ;;=sort/print.  The routine is then called from DIO2 to do the sort, rather
+ ;;^DD(.401,1815,23,3,0)
+ ;;=than executing code from the local DY, DZ and P arrays.
+ ;;^DD(.401,1815,"DT")
+ ;;=2930416
+ ;;^DD(.401,1816,0)
+ ;;=PREVIOUS ROUTINE INVOKED^F^^ROUOLD;E1,13^K:$L(X)>4!($L(X)<4)!'(X?1"DISZ") X

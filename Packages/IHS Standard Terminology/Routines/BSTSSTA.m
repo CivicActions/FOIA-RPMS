@@ -1,13 +1,12 @@
 BSTSSTA ;GDIT/HSCD/ALA-Check status of a Web Service ; 27 Mar 2015  11:35 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;**1**;Dec 01, 2016;Build 36
+ ;;2.0;IHS STANDARD TERMINOLOGY;**1,3,5,7**;Dec 01, 2016;Build 8
  ;
 EN ; EP
- ; Select an existing web service and run sample calls for testing
  ;
  NEW DIC,Y,DIR,QUIT,DEBUG,SR,RES,IADT,SCNT,RESULT,DLAYGO,CT,%H
  NEW DIROUT,DIRUT,DTOUT,DUOUT,STS,SERV,SDATA,DTSON,BSTUP,%I,ERROR
  ;
- ;First Select the web service
+ ;Select web service
 SRV ;EP
  W !!
  S DIC="^BSTS(9002318.2,",DIC(0)="AEMNZ"
@@ -18,14 +17,14 @@ SRV ;EP
  S IADT=$$GET1^DIQ(9002318.2,SERV_",",".1","I")
  I IADT]"",IADT<DT W !!,"This Web Service is not Active",! H 2 G SRV
  ;
-DSP ;EP - Display information
+DSP ;EP - Display info
  ;
  NEW BSTSRPT
  ;
- ;Retrieve status information
+ ;status
  D STATUS(SERV,.BSTSRPT)
  ;
- ;Write formfeed
+ ;FF
  I $G(IOF)]"" W @IOF
  ;
  D EN^DDIOL(.BSTSRPT)
@@ -46,10 +45,10 @@ DSP ;EP - Display information
  I $G(DTOUT)!$G(DUOUT)!$G(DIROUT)!$G(DIRUT) G SRV
  S ANS=+Y
  ;
- ;Refresh Display
+ ;Refresh Dsp
  I ANS=1 G DSP
  ;
- ;Check Link and Enable
+ ;Check Link/Enable
  I ANS=2 D  G DSP
  . NEW SDATA,DTSON
  . S SDATA=^BSTS(9002318.2,SERV,0)
@@ -57,11 +56,13 @@ DSP ;EP - Display information
  . I DTSON="" D CHK Q
  . S BSTUP(9002318.2,SERV_",",.13)="@"
  . S BSTUP(9002318.2,SERV_",",3)="@"
+ . S BSTUP(9002318.2,SERV_",",4.04)=0
  . D FILE^DIE("","BSTUP","ERROR")
+ . D DAYCHK^BSTSVOF1(1)  ;Run daily checks
  . D ELOG^BSTSVOFL($$GET1^DIQ(200,DUZ_",",".01","E")_" turned on DTS link from BSTS STS option")
  . D CHK
  ;
- ;Turn off the DTS Link
+ ;Turn off
  I ANS=3 D  G DSP
  . NEW DIR,X,Y,DTOUT,DUOUT,DIROUT,DIRUT
  . S DIR("A")="Turn off the DTS link until"
@@ -73,61 +74,67 @@ DSP ;EP - Display information
  . D FILE^DIE("","BSTUP","ERROR")
  . D ELOG^BSTSVOFL($$GET1^DIQ(200,DUZ_",",".01","E")_" turned off DTS link from BSTS STS option")
  ;
- ;Edit Server Settings
+ ;Edit Settings
  I ANS=4 D  G DSP
- . NEW DIE,DA,DR
- . S DIE="^BSTS(9002318.2,",DA=SERV,DR=".14;.12;.15;.05;.16"
+ . ;GDIT/HS/BEE 04/29/19;BSTS*2.0*3;CR#8841;Handle turned off daily checks
+ . NEW DIE,DA,DR,ODCHK,NDCHK
+ . S ODCHK=$$GET1^DIQ(9002318.2,SERV_",",4.04,"I")
+ . ;GDIT/HS/BEE;FEATURE#111545;BSTS*2.0*7;Remove logging
+ . ;S DIE="^BSTS(9002318.2,",DA=SERV,DR=".14;.12;.15;.05;.16;.17;4.04;4.05;4.06"
+ . S DIE="^BSTS(9002318.2,",DA=SERV,DR=".14;.12;.15;.05;.17;4.04;4.06"
  . D ^DIE
+ . S NDCHK=$$GET1^DIQ(9002318.2,SERV_",",4.04,"I")
+ . I ODCHK'=NDCHK D
+ .. I ODCHK,'NDCHK D DAYCHK^BSTSVOF1(1) Q  ;Re-enable perform checks
+ .. I NDCHK,'ODCHK D DEQUE("CHECK^BSTSVRSN") Q  ;Disabled - de-queue
  ;
- ;Other Options
+ ;Other Opts
  I ANS=5 D DSP1
  ;
  G DSP
  ;
- ;Prompt for other option
+ ;Prompt for other opt
 DSP1 NEW DIR,X,Y,DTOUT,DUOUT,DIROUT,DIRUT,ANS
  W !!,"Other options menu"
- S DIR(0)="LO^1:6"
+ S DIR(0)="LO^1:5"
  S DIR("A")="Select number or return to quit"
  S DIR("A",1)=" "
  S DIR("A",2)="1.  Run daily update checks"
  S DIR("A",3)="2.  Kick off background process now"
  S DIR("A",4)="3.  Terminate current background process"
  S DIR("A",5)="4.  BSTS reporting..."
- S DIR("A",6)="5.  Retrieve Search History from DTS"
- S DIR("A",7)="6.  Retrieve Log History from DTS"
- S DIR("A",8)=" "
+ ;S DIR("A",6)="5.  Retrieve Search History from DTS"
+ S DIR("A",6)="5.  Retrieve Log History from DTS"
+ ;S DIR("A",8)="7.  Retrieve Concept Selection History from DTS"
+ S DIR("A",7)=" "
  D ^DIR
  I Y="" Q
  I $G(DTOUT)!$G(DUOUT)!$G(DIROUT)!$G(DIRUT) Q
  S ANS=+Y
  ;
- ;Run daily update checks
+ ;Run daily checks
  I ANS=1 D  G DSP1
  . W !!,"Running update checks. This may take a minute or two"
  . D DAYCHK^BSTSVOF1(1) W !!,"Daily update checks completed" H 3
  ;
- ;Kick off a daily background process
+ ;Kick off daily proc
  I ANS=2 D START G DSP1
  ;
- ;Terminate current background process
+ ;Terminate current proc
  I ANS=3 D STOP G DSP1
  ;
  ;BSTS Reporting
  I ANS=4 D DSP^BSTSDSP(SERV) G DSP1
  ;
- ;Retrieve search history
- I ANS=5 D SRSTRING G DSP1
- ;
- ;Retrieve log history
- I ANS=6 D LGHST^BSTSAPIL G DSP1
+ ;Retrieve log hist
+ I ANS=5 D LGHST^BSTSAPIL G DSP1
  ;
  Q
  ;
- ;Start a background process
+ ;Start background proc
 START NEW RUN,TRY
  ;
- ;First see if a process is running
+ ;First see if process running
  S RUN="" D
  . L +^XTMP("BSTSPROCQ",1):1 E  S RUN=1 Q
  . L -^XTMP("BSTSPROCQ",1)
@@ -137,20 +144,19 @@ START NEW RUN,TRY
  . L -^TMP("BSTSICD2SMD")
  I RUN=1 W !!,"A background process is currently running" H 3 Q
  ;
- ;Job the process
+ ;Job proc
  D JOBNOW^BSTSVOFL
  ;
- ;See if it started
+ ;Started?
  W !!,"Attempting to start the background process. This may take several minutes"
  S RUN="" F TRY=1:1:90 D  H 1 Q:RUN
  . ;
  . W "."
  . ;
- . ;See if started
  . L +^XTMP("BSTSPROCQ",1):1 E  S RUN=1 Q
  . L -^XTMP("BSTSPROCQ",1)
  ;
- ;Display status
+ ;Display sts
  I RUN=1 W !!,"Background process has been started" H 3 Q
  E  D
  . W !!,"The background process has been queued but has either not started"
@@ -161,10 +167,10 @@ START NEW RUN,TRY
  ;
  Q
  ;
- ;Terminate the current background process
+ ;Terminate current process
 STOP NEW TRY,STOP,RUN
  ;
- ;First see if a process is running
+ ;First see if running
  S RUN="" D
  . L +^XTMP("BSTSPROCQ",1):1 E  S RUN=1 Q
  . L -^XTMP("BSTSPROCQ",1)
@@ -174,11 +180,11 @@ STOP NEW TRY,STOP,RUN
  . L -^TMP("BSTSICD2SMD")
  I RUN="" W !!,"No background process is currently running" H 3 Q
  ;
- ;Set flag to stop the process
+ ;Set flag to stop
  S ^XTMP("BSTSLCMP","QUIT")=1
  S ^XTMP("BSTSPROCQ","QUIT")=1
  ;
- ;Check if process stopped
+ ;Check if stopped
  W !!,"Attempting to stop the process"
  ;
  S STOP="" F TRY=1:1:90 D  H 1 Q:STOP
@@ -204,7 +210,7 @@ STOP NEW TRY,STOP,RUN
  . K ^XTMP("BSTSLCMP","QUIT")
  . K ^XTMP("BSTSPROCQ","QUIT")
  ;
- ;Display status
+ ;Display sts
  I STOP W !!,"Background process has been terminated"
  E  D
  . W !!,"Background process is still running but has been queued to stop."
@@ -212,22 +218,25 @@ STOP NEW TRY,STOP,RUN
  ;
  Q
  ;
-CHK ;EP - Check the server status
+CHK ;EP - Check server sts
  NEW STS,BSTUP
  S STS=$$CALL^BSTSTST(SERV,"COMMON COLD","")
  Q
  ;
-FRMT(VALUE) ;EP - Format the data
+FRMT(VALUE) ;EP - Format data
  S VALUE=$E(" ",$L(VALUE))_VALUE
  Q VALUE
  ;
-STATUS(SERV,BSTSRPT) ;Set up Server Status Display
+STATUS(SERV,BSTSRPT) ;Set up Server Status Disp
  ;
  I '+$G(SERV) Q
  ;
- NEW SDATA,DTSON,CT
+ NEW SDATA,DTSON,CT,BACK,DABLE,CABLE,SHIDE
  ;
  S SDATA=^BSTS(9002318.2,SERV,0)
+ S DABLE=$$GET1^DIQ(9002318.2,SERV_",",4.04,"E")
+ S CABLE=$$GET1^DIQ(9002318.2,SERV_",",4.05,"E")
+ S SHIDE=$$GET1^DIQ(9002318.2,SERV_",",4.06,"I")
  S DTSON=$P(SDATA,"^",13)
  I DTSON="" D
  . D CHK
@@ -250,11 +259,20 @@ STATUS(SERV,BSTSRPT) ;Set up Server Status Display
  S CT=CT+1,BSTSRPT(CT,"F")="?25",BSTSRPT(CT)=$S(DTSON="":"N/A",1:$$GET1^DIQ(9002318.2,SERV_",",3,"E"))
  ;
  ;Check if any processes are running
+ S BACK=0
  L +^BSTS(9002318.1,0):0 E  D
+ . S BACK=1
  . S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="Background process: "
  . S CT=CT+1,BSTSRPT(CT,"F")="?25",BSTSRPT(CT)=$P($G(^XTMP("BSTSLCMP",0)),U,3)
  . I $G(^XTMP("BSTSLCMP","STS"))]"" S CT=CT+1,BSTSRPT(CT,"F")="!?25",BSTSRPT(CT)=$G(^XTMP("BSTSLCMP","STS"))
  L -^BSTS(9002318.1,0)
+ ;
+ ;Check if process stopped
+ I BACK=0,$D(^XTMP("BSTSLCMP","STS")) D
+ . S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="**Stopped update process: "
+ . S CT=CT+1,BSTSRPT(CT,"F")="?25",BSTSRPT(CT)=$P($G(^XTMP("BSTSLCMP",0)),U,3)
+ . I $G(^XTMP("BSTSLCMP","STS"))]"" S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)=$G(^XTMP("BSTSLCMP","STS"))
+ . S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="**Use option 2 under the Other Options menu to restart**"
  ;
  ;Check if Description Id Population Utility is running
  L +^XTMP("BSTSCFIX"):0 E  D
@@ -277,8 +295,12 @@ STATUS(SERV,BSTSRPT) ;Set up Server Status Display
  . S CT=CT+1,BSTSRPT(CT,"F")="?25",BSTSRPT(CT)="Installation conversion process is running"
  L -^TMP("BSTSPBFH")
  ;
- S CT=CT+1,BSTSRPT(CT,"F")="!!",BSTSRPT(CT)="Current Server Settings: "
+ S CT=CT+1,BSTSRPT(CT,"F")="!!",BSTSRPT(CT)="Current Server Settings: "_$S(SHIDE=1:"HIDDEN",1:"")
  S CT=CT+1,BSTSRPT(CT)=" "
+ ;
+ ;Do not display if hidden
+ I SHIDE=1 Q
+ ;
  S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="CHECK FOR CONNECTION AFTER: "
  S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$S($P(SDATA,"^",14)="":"60 minutes (default)",1:$$FRMT($P(SDATA,"^",14))_" minutes")
  S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="CONNECTION TIMEOUT OVERRIDE: "
@@ -287,8 +309,20 @@ STATUS(SERV,BSTSRPT) ;Set up Server Status Display
  S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$S($P(SDATA,"^",15)="":"60 seconds (default)",1:$$FRMT($P(SDATA,"^",15))_" seconds")
  S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="TIMEOUT OVERRIDE: "
  S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$S($P(SDATA,"^",5)="":"60 seconds (default)",1:$$FRMT($P(SDATA,"^",5))_" seconds")
- S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="ENABLE SEARCH LOGGING: "
- S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$S($P(SDATA,"^",16):"YES",1:"NO")
+ ;GDIT/HS/BEE;FEATURE#111545;BSTS*2.0*7;Remove logging
+ ;S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="ENABLE SEARCH LOGGING: "
+ ;S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$S($P(SDATA,"^",16):"YES",1:"NO")
+ S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="NIGHTLY PROCESS START TIME: "
+ S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$P(SDATA,"^",17)
+ S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="DAILY UPDATE CHECKS: "
+ S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$S(DABLE]"":DABLE,1:"ENABLED")
+ ;GDIT/HS/BEE;FEATURE#111545;BSTS*2.0*7;Remove logging
+ ;S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="CONCEPT SELECTION LOGGING: "
+ ;GDIT/HS/BEE;02/19/2024;FEATURE#78681;Enable concept logging fix
+ ;S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$S(CABLE]"":CABLE,1:"ENABLED")
+ ;S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$S(CABLE]"":CABLE,1:"NO")
+ S CT=CT+1,BSTSRPT(CT,"F")="!?5",BSTSRPT(CT)="HIDE CUSTOM SETTINGS: "
+ S CT=CT+1,BSTSRPT(CT,"F")="?35",BSTSRPT(CT)=$S(SHIDE=1:"YES",1:"NO")
  ;
  Q
  ;
@@ -301,10 +335,10 @@ SRSTRING ;Return list of search strings
  ;
  W !!,"DISPLAY BSTS SEARCH STRINGS USED"
  ;
- ;Get From Date
+ ;From Date
  S FRDT=$$DATE^BSTSDSP("From Date","T-7") Q:'FRDT
  ;
- ;Get To Date
+ ;To Date
  S TODT=$$DATE^BSTSDSP("To Date","T",FRDT) Q:'TODT
  ;
  ;Get maximum search results to display
@@ -312,12 +346,12 @@ SRSTRING ;Return list of search strings
  ;
  S ENSPACE=36
  ;
- ;Get the server information
+ ;Get server information
  S ESERV=$$WSERVER^BSTSWSV(.SERVERS,"") Q:'ESERV
  S SRV=$O(SERVERS(0)) Q:'SRV
  M BSTSWS=SERVERS(SRV)
  ;
- ;Get the site
+ ;Get site
  S SIEN=$O(^AUTTSITE(0)) Q:'+SIEN
  S SNUM=$$GET1^DIQ(9999999.39,SIEN_",",.01,"I") Q:SNUM=""
  ;
@@ -330,7 +364,7 @@ SRSTRING ;Return list of search strings
  S RNAME="",EXEC="S RNAME=$"_"ZNSPACE" X EXEC
  S BSTSWS("RNAME")=RNAME
  ;
- ;Pull the search list
+ ;Pull search list
  S STS=$$SRCNT^BSTSCMCL(.BSTSWS,.RES)
  ;
  ;Get device
@@ -362,15 +396,39 @@ SRSTRING ;Return list of search strings
  S CT=CT+1,BSTSRPT(CT)=" "
  S CT=CT+1,BSTSRPT(CT)="<END OF REPORT>"
  ;
- ;Display the report
+ ;Display report
  D EN^DDIOL(.BSTSRPT)
  ;
- ;Close the device
+ ;Close device
  D ^%ZISC
  ;
  I $D(IOST),IOST["C-",'$D(DIRUT),'$D(DTOUT) D
  . NEW DIR,X,Y
  . W ! S DIR(0)="E",DIR("A")="Press 'Return to continue'" D ^DIR
+ ;
+ Q
+ ;
+DEQUE(TASK) ;De-Queue definition task
+ ;
+ I $TR($G(TASK),U)="" Q
+ ;
+ NEW ZT1,ZTS,TAG,RTN
+ ;
+ S TAG=$P(TASK,U)
+ S RTN=$P(TASK,U,2)
+ ;
+ ;Get Taskman Processes
+ S ZT1=$$H3^%ZTM($H) F  S ZT1=$O(^%ZTSCH(ZT1)) Q:'ZT1  D
+ . S ZTS=0 F  S ZTS=$O(^%ZTSCH(ZT1,ZTS)) Q:'ZTS  D
+ .. ;
+ .. NEW TASKND
+ .. ;
+ .. ;Get task
+ .. S TASKND=$G(^%ZTSK(ZTS,0)) Q:TASKND=""
+ .. I ($P(TASKND,U)'=TAG)!($P(TASKND,U,2)'=RTN) Q
+ .. ;
+ .. ;De-Queue task
+ .. S ZTSK=ZTS D KILL^%ZTLOAD
  ;
  Q
  ;

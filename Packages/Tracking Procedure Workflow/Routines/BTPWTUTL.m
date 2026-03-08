@@ -1,0 +1,17 @@
+BTPWTUTL ;GDIT/HS/ALA-Search Utility ; 31 Jul 2024  4:45 PM
+ ;;1.2;CARE MANAGEMENT EVENT TRACKING;**6**;Jul 07,2017;Build 14
+ ;
+ ;
+SUIC ; EP - Find all Acute Positive Suicide screenings
+ NEW EXN,ORD,XN,EDFN,VSDT,VISIT,PRCN
+ S EXN=$O(^AUTTEXAM("B","SUICIDE SCREENING EXAM","")) Q:EXN=""
+ S ORD=1,PRCN=72
+ S XN="" F  S XN=$O(^AUPNVXAM("B",EXN,XN)) Q:XN=""  D
+ . I $P(^AUPNVXAM(XN,0),"^",4)="" Q
+ . I $P(^AUPNVXAM(XN,0),"^",4)'="AP" Q
+ . S EDFN=$P($G(^AUPNVXAM(XN,0)),"^",2),VISIT=$P(^(0),"^",3) I VISIT="" Q
+ . I EDFN="" Q
+ . S VSDT=$P($G(^AUPNVSIT(VISIT,0)),"^",1) I VSDT="" Q
+ . S VSDT=VSDT\1
+ . S ^XTMP("BTPWPRC",EDFN,PRCN,VSDT,ORD,VISIT,XN)="^9000010.13^V EXAM"
+ Q

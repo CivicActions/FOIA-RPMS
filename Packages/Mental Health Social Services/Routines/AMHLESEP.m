@@ -1,5 +1,5 @@
-AMHLESEP ; IHS/CMI/LAB - calls from within screenman ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLESEP ; IHS/CMI/LAB - calls from within screenman ; [ 02/21/2007  3:29 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4,6,8**;JAN 27, 2003
  ;
 HED ;EP - display last
  ;DISPLAY 2 YRS WORTH OF EXAMS FROM MHSS/PCC

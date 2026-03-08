@@ -1,12 +1,12 @@
-XMKPLQ ;ISC-SF/GMB-Post local msgs to correct queues ;07/28/2000  14:34
- ;;8.0;MailMan;;Jun 28, 2002
+XMKPLQ ;ISC-SF/GMB-Post local msgs to correct queues ;02/10/99  07:47
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces ^XMADJF0, ZTSK^XMADGO (ISC-WASH/CAP)
 GO ;
  ; Variables provided through TASKMAN:  XMHANG
  N XMACTIVE,XMUID,XMQLIST,XMTSTAMP,XMGROUP,XMCNT,XMQUEUE,XMREC
- I $D(ZTQUEUED) S ZTREQ="@"
+ S:$D(ZTQUEUED) ZTREQ="@"
  L +^XMBPOST("POST_Mover"):1 E  Q
- I $D(ZTQUEUED) S %=$$PSET^%ZTLOAD(ZTSK)
+ S %=$$PSET^%ZTLOAD(ZTSK)
  S XMACTIVE=$$TSTAMP^XMXUTIL1
  F  D  Q:$P($G(^XMB(1,1,0)),U,16)
  . D GETQ(.XMQLIST) ; Get new parameters for grouping
@@ -29,7 +29,7 @@ GO ;
  . . S XMACTIVE=$$TSTAMP^XMXUTIL1
  . H XMHANG
  L -^XMBPOST("POST_Mover")
- I $D(ZTQUEUED) D PCLEAR^%ZTLOAD(ZTSK)
+ D PCLEAR^%ZTLOAD(ZTSK)
  Q
 GETQ(XMQLIST) ;
  N X
@@ -70,7 +70,7 @@ ZTSK ; START Delivery Background Processes
  . . Q:$D(^XMBPOST(XMGROUP,XMQUEUE))<10  ; Quit if nothing in queue
  . . L +^XMBPOST(XMGROUP,XMQUEUE):1 E  Q  ; If node locked, there is already one running
  . . S (ZTSAVE("XMGROUP"),ZTSAVE("XMQUEUE"),ZTSAVE("XMHANG"))=""
- . . S ZTDESC=$$EZBLD^DIALOG($S(XMGROUP="M":36230,1:36231),XMQUEUE) ; MailMan: Message/Response Delivery Queue |1|
+ . . S ZTDESC="MailMan "_$S(XMGROUP="M":"Message",1:"Response")_" Queue "_XMQUEUE
  . . S ZTRTN="GO^XMTDL"
  . . D TASKIT(ZTRTN,ZTDESC,.ZTSAVE) H 0 ; Start a job, Give TaskMan a chance to start it (hang)
  . . L -^XMBPOST(XMGROUP,XMQUEUE)
@@ -91,8 +91,21 @@ CHKQ ; Input transform for file 4.3, fields 241 and 242
  F I=1:1:$L(X,",")-1 I $P(X,",",I)'<$P(X,",",I+1) K X Q
  Q
 HELPQ ; Executable help for file 4.3, fields 241 and 242
- ;You determine the number of delivery queues (10 max.) ...
- N XMTEXT
- D BLD^DIALOG(36232,"","","XMTEXT","F")
- D MSG^DIALOG("WM","",79,"","XMTEXT")
+ W !,"You determine the number of delivery queues (10 max.) by what you enter in"
+ W !,"this field.  Each number designates a queue boundary and a boundary of the"
+ W !,"number of recipients per message which a queue may handle."
+ W !!,"By creating more than one delivery queue, messages with approximately the"
+ W !,"same number of recipients will queue up together.  Each delivery queue is"
+ W !,"handled by a separate task.  In this way, a message with many recipients"
+ W !,"won't hold up the delivery of a message with few recipients."
+ W !!,"For example:"
+ W !,"A null entry means there will be one queue into which all messages are placed."
+ W !!,"If you enter '10' it means that there will be two queues."
+ W !,"The first will deliver messages with fewer than 10 recipients."
+ W !,"The second will deliver messages with 10 or more recipients."
+ W !!,"If you enter '50,100,200' there will be four (4) queues."
+ W !,"The first will deliver messages with fewer than 50 recipients."
+ W !,"The second will deliver messages with from 50 to 99 recipients."
+ W !,"The third will deliver messages with from 100 to 199 recipients."
+ W !,"The fourth will deliver messages with 200 or more recipients."
  Q

@@ -1,9 +1,9 @@
 BQITUTL ;PRXM/HC/ALA-Diagnoses Category Utility Program ; 02 Mar 2006  1:21 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**1,3,5,7**;Mar 01, 2021;Build 14
  Q
  ;
 BLD(TAX,REF,BQTTYP) ;PEP - Build a taxonomy
- NEW BQTXN
+ NEW BQTXN,FLREF
  ;Input
  ;  TAX - Taxonomy name
  ;  REF - reference where list will reside
@@ -16,34 +16,39 @@ BLD(TAX,REF,BQTTYP) ;PEP - Build a taxonomy
  I BQTTYP="L" S BQTXN=$O(^ATXLAB("B",TAX,""))
  E  S BQTXN=$O(^ATXAX("B",TAX,0))
  I BQTXN="" Q
+ S FLREF=$S(BQTTYP="":$P(^ATXAX(BQTXN,0),"^",15),1:60)
+ I FLREF=9999999.64 D  Q
+ . NEW IEN
+ . S IEN=$O(^ATXAX(BQTXN,21,"B","")) I IEN'?.N D BLDTAX^ATXAPI(TAX,REF,BQTXN,BQTTYP) Q
+ . S IEN="" F  S IEN=$O(^ATXAX(BQTXN,21,"B",IEN)) Q:IEN=""  S @REF@(IEN)=$P(^AUTTHF(IEN,0),"^",1)
  D BLDTAX^ATXAPI(TAX,REF,BQTXN,BQTTYP)
  K BQTTYP,BQQY
  Q
  ;
-BLDSV(FILEREF,VAL,TARGET) ;PEP - Add a single value to a taxonomy
+BLDSV(FILEREF,TVAL,TARGET) ;PEP - Add a single value to a taxonomy
  ;Description
  ;  Use this if no taxonomy was given but an individual code
  ;Input
  ;  FILEREF - File where the code resides
- ;  VAL - Value
+ ;  TVAL - Value
  ;  TARGET - reference where entry is to be placed
  ;
  ; The LOINC x-ref in LAB does not use the check digit (piece 2).
- I FILEREF=95.3 S FILE="^LAB(60)",INDEX="AF",VAL=$P(VAL,"-")
+ I FILEREF=95.3 S FILE="^LAB(60)",INDEX="AF",TVAL=$P(TVAL,"-")
  I FILEREF=80 S FILE="^ICD9",INDEX="BA"
  I FILEREF=80.1 S FILE="^ICD0",INDEX="BA"
  I FILEREF=81 S FILE="^ICPT",INDEX="BA"
- S END=VAL
+ S END=TVAL_$S(FILEREF=95.3:TVAL,1:TVAL_" ")
  ;
  ; Backup one entry so loop can find all the entries in the range.
- S VAL=$O(@FILE@(INDEX,VAL),-1)
- F  S VAL=$O(@FILE@(INDEX,VAL)) Q:VAL=""  Q:$$CHECK(VAL,END)  D
+ S TVAL=$O(@FILE@(INDEX,TVAL),-1)
+ F  S TVAL=$O(@FILE@(INDEX,TVAL)) Q:TVAL=""  Q:$$CHECK(TVAL,END)  D
  .S IEN=""
- .F  S IEN=$O(@FILE@(INDEX,VAL,IEN)) Q:IEN=""  D
+ .F  S IEN=$O(@FILE@(INDEX,TVAL,IEN)) Q:IEN=""  D
  ..S NAME=$P($G(@FILE@(IEN,0)),U,1)
  ..S @TARGET@(IEN)=NAME
  ;
- K FILEREF,FILE,INDEX,VAL,END,NAME,IEN,TARGET
+ K FILEREF,FILE,INDEX,TVAL,END,NAME,IEN
  Q
  ;
 SNOM(SUB,REF) ;PEP - Build a SNOMED subset
@@ -67,7 +72,7 @@ ARY(DEF,REF) ;EP - Build an array from a definition
  ;  DEF - Definition name
  ;  REF - array name
  ;
- NEW IEN,BN,BDXN,DIC,X,Y,DATA
+ NEW IEN,BN,BDXN,DIC,X,Y,DATA,ADD,REM
  S DIC(0)="NZ",X=DEF,DIC="^BQI(90506.2,"
  D ^DIC
  S BDXN=+Y I BDXN<1 Q
@@ -81,6 +86,13 @@ ARY(DEF,REF) ;EP - Build an array from a definition
  .. I $P(DATA,U,11)=1 Q
  .. ; Exclude the SEARCH ORDER field and only take pieces 2-10
  .. S @REF@(BN)=$P(DATA,U,2,10)
+ .. I $D(^BQI(90506.2,BDXN,5,IEN,1)) D
+ ... S ADD="",CD="" F  S CD=$O(^BQI(90506.2,BDXN,5,IEN,1,"B",CD)) Q:CD=""  S ADD=ADD_CD_"|"
+ ... S ADD=$$TKO^BQIUL1(ADD,"|")
+ .. I $D(^BQI(90506.2,BDXN,5,IEN,2)) D
+ ... S REM="",CD="" F  S CD=$O(^BQI(90506.2,BDXN,5,IEN,2,"B",CD)) Q:CD=""  S REM=REM_CD_"|"
+ ... S REM=$$TKO^BQIUL1(REM,"|")
+ .. S $P(@REF@(BN),"^",10)=$G(ADD),$P(@REF@(BN),"^",11)=$G(REM)
  Q
  ;
 GDF(BQDN,BQREF) ;EP - Get basic Definition information
@@ -146,3 +158,20 @@ EXAM(BQDFN,EXAM) ;EP - Get exam
  .. I VISIT'="" S VDATE=$P(^AUPNVSIT(VISIT,0),U,1)\1
  .. S VALUE="1^"_VDATE_U_RESULT_U_VISIT_U_IEN,QFL=1
  Q VALUE
+ ;
+RXNM(BQISUB,REF) ; EP - Get drugs for RXNORM subset
+ NEW BQILIST,BQSN,RI,CODE,LIEN,RXN,DN
+ I $E(BQISUB,1,4)'="RXNO" Q
+ I $E(BQISUB,1,4)="RXNO" S BQTY=1552
+ S BQILIST=$NA(^TMP("BQISNSB",$J)) K @BQILIST
+ S OK=$$SUBLST^BSTSAPI(BQILIST,BQISUB_"^"_BQTY_"^1")
+ ;
+ S BQSN=0,RI=0
+ F  S BQSN=$O(@BQILIST@(BQSN)) Q:BQSN=""  D
+ . S CODE=$P(@BQILIST@(BQSN),"^",1)
+ . S LIEN=$O(^BSTS(9002318.4,"C",BQTY,CODE,""))
+ . S RXN=$P(^BSTS(9002318.4,LIEN,0),"^",2)
+ . S DN="" F  S DN=$O(^PSDRUG("RXCUI",RXN,DN)) Q:DN=""  D
+ .. S RI=RI+1,@REF@(DN)=$P(^PSDRUG(DN,0),"^",1)
+ K @BQILIST
+ Q

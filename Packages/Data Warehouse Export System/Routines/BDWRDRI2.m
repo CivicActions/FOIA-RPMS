@@ -1,5 +1,5 @@
 BDWRDRI2 ; IHS/CMI/LAB - INIT FOR DW EXPORT ;
- ;;1.0;IHS DATA WAREHOUSE;**1,2,4**;JAN 23, 2006;Build 24
+ ;;1.0;IHS DATA WAREHOUSE;**1,2,4,11**;JAN 24, 2006;Build 14
  ;IHS/CMI/LAB - patch 1 XTMP
  ;
 START ;
@@ -100,7 +100,7 @@ GENLOG ; GENERATE NEW LOG ENTRY
 INFORM ;EP - INFORM OPERATOR WHAT IS GOING TO HAPPEN
  Q:$D(ZTQUEUED)
  W !!,"This routine will generate IHS Data Warehouse HL7 messages"
- W !,"for visits posted between a specified range of dates.  You may ""^"" out at any",!,"prompt and will be ask to confirm your entries prior to generating transactions."
+ W !,"for visits posted between a specified range of dates.  You may ""^"" out at any",!,"prompt and will be asked to confirm your entries prior to generating transactions."
  Q
  ;
 CURRUN ;EP - COMPUTE DATES FOR CURRENT RUN

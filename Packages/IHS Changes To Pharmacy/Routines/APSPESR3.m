@@ -1,0 +1,108 @@
+APSPESR3 ; IHS/MSC/JSM - PROVIDER SPI REPORT ;30-Jan-2025 13:36;JM
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1035**;Sep 23, 2004;Build 39
+ ;
+EN ;EP
+ N APSPINCL,APSPQ
+ S APSPINCL="",APSPQ=0
+ W @IOF
+ W !!,"Provider SPI report"
+ S APSPINCL=$$DIR^APSPUTIL("Y","Would you like to include Service Levels","No",,.APSPQ)
+ Q:APSPQ
+ D DEV
+ Q
+DEV ;
+ N XBRP,XBNS
+ S XBRP="OUT^APSPESR3"
+ S XBNS="APS*"
+ D ^XBDBQUE
+ Q
+OUT ;EP
+ K ^TMP("APSPESR3",$J)
+ D FIND($G(APSPINCL))
+ D PRINT
+ Q
+ ;
+FIND(APSPINCL) ;EP
+ N PRV,SPI,APSPPRV,APSPLIST,NUM,NODE,IEN,SLVLTEXT,CNT,EOL
+ S PRV=0
+ ;Loop File #200 for Providers
+ F  S PRV=$O(^VA(200,PRV)) Q:'PRV  D
+ .Q:('$D(^VA(200,PRV,0)))!($P($G(^(0)),U,3)="")  ;Bad entry or user does not have and ACCESS CODE
+ .Q:$P($G(^VA(200,PRV,"PS")),U)=""  ; Not a provider
+ .S SPI=$$SPI^APSPES1(+PRV)  ;Get SPI number
+ .Q:$G(SPI)=""  ;Does not have SPI number
+ .S CNT=1,APSPLIST=""
+ .I $G(APSPINCL) D  Q:APSPLIST=""
+ ..D GETLST^XPAR(.APSPPRV,"USR.`"_+PRV,"APSP NCPDP USER SERVICE LEVEL")
+ ..I $D(APSPPRV)=1 D SET(PRV,SPI,APSPLIST,1)
+ ..S EOL="",EOL=$O(APSPPRV(EOL),-1)
+ ..Q:EOL=""
+ ..S NUM=0 F  S NUM=$O(APSPPRV(NUM)) Q:NUM=""  D
+ ...S NODE=$G(APSPPRV(NUM)),IEN=$P(NODE,U,1),SLVLTEXT=$$GET1^DIQ(9009033.75,IEN,.01)
+ ...I $L(APSPLIST)+$L(SLVLTEXT)+2<(IOM-53) S:+$P(NODE,U,2) APSPLIST=APSPLIST_$S($G(APSPLIST)'="":", ",1:"")_SLVLTEXT
+ ...E  D
+ ....S:NUM<EOL+1 APSPLIST=APSPLIST_","
+ ....D SET(PRV,SPI,APSPLIST,CNT)
+ ....S APSPLIST=SLVLTEXT,CNT=CNT+1
+ ..;D SET(PRV,SPI,APSPLIST,CNT)
+ .D SET(PRV,SPI,APSPLIST,CNT)
+ Q
+ ;
+PRINT ;EP
+ N APSPPG,DFLG
+ S (APSPPG,DFLG)=0
+ D HDR
+ D PRINT1
+ W:'DFLG !,"No data found..."
+ Q
+ ;
+PRINT1 ;Print the line
+ N NAME,SPINUM,LVLTXT,VAL,SUB
+ S NAME="" F  S NAME=$O(^TMP("APSPESR3",$J,NAME)) Q:NAME=""  D
+ .S SUB="" F  S SUB=$O(^TMP("APSPESR3",$J,NAME,SUB)) Q:'SUB  D
+ ..S DFLG=1
+ ..S VAL=^TMP("APSPESR3",$J,NAME,SUB)
+ ..S:SUB=1 SPINUM=$P(VAL,U,1)
+ ..I APSPINCL S LVLTXT=$P(VAL,U,$S(SUB=1:2,1:1))
+ ..W:SUB=1 !,NAME,?38,SPINUM,?53,$S(APSPINCL:LVLTXT,1:"")
+ ..W:SUB>1 !,?53,LVLTXT
+ ..D PRINT2
+ Q
+ ; Check page length
+PRINT2 ;EP
+ N DIR
+ Q:$E(IOST)'="C"
+ I $Y+4>IOSL D
+ .K DIRUT,DFOUT,DLOUT,DTOUT,DUOUT
+ .S DIR(0)="E" D ^DIR
+ .D HDR
+ Q
+ ; Set data into ^TMP global for output
+SET(PROVIEN,SPINUM,SLVLTEXT,SUB) ;EP
+ N PROVNAME
+ S PROVNAME=$$GET1^DIQ(200,PROVIEN,.01)
+ S ^TMP("APSPESR3",$J,PROVNAME,SUB)=$S(SUB=1:SPINUM_U,1:"")_SLVLTEXT
+ Q
+ ;
+HDR ;EP
+ W @IOF
+ S APSPPG=APSPPG+1
+ W !,"Provider SPI Report",?35,$P($TR($$FMTE^XLFDT($$NOW^XLFDT,"5Z"),"@"," "),":",1,2),?(IOM-10),"Page: "_APSPPG
+ W !,"Report Criteria: Providers with SPI number"
+ W !,?5,"Include Service Levels?: "_$S(APSPINCL=1:"Yes",1:"No")
+ ;W !,$TR($J("",80)," ","-")
+ D DASH
+ D HDR1
+ Q
+ ;
+HDR1 ;Print out header
+ I APSPINCL=1 D
+ .W !,"Provider",?38,"SPI",?53,"Service Level"
+ I APSPINCL=0 D
+ .W !,"Provider",?38,"SPI"
+ Q
+ ;
+DASH ;EP
+ N DASH
+ W ! F DASH=1:1:IOM W "-"
+ Q

@@ -1,5 +1,5 @@
 BSDPVD ; IHS/ANMC/LJF - PROVIDER'S DAILY SCHEDULE ; 
- ;;5.3;PIMS;**1005**;MAY 28, 2004
+ ;;5.3;PIMS;**1005,1022**;MAY 28, 2004;Build 18
  ;IHS/OIT/LJF 03/09/2006 PATCH 1005 screen out cancelled appointments
  ;
  NEW BSDVW,BSDPRV,BSDDT
@@ -62,7 +62,11 @@ INIT ; -- init variables and list array
  ... S ENDTM=$P($$FMTE^XLFDT($$FMADD^XLFDT(DATE,0,0,$P(DATA,U,2))),"@",2)
  ... S LINE=LINE_"-"_ENDTM_$TR($P(DATA,U,6),"O","*")            ;end time/overbk
  ... S LINE=$$PAD(LINE,17)_$E(CLN,1,11)                         ;end time & clinic
- ... S LINE=$$PAD(LINE,30)_$E($$NAMEPRT^BDGF2(+DATA,0),1,18)    ;patient
+ ... ;202307 77892 maw p1022 PPN
+ ... S LINE=$$PAD(LINE,30)_$$GETPREF^AUPNSOGI(+DATA,"E",1)    ;patient
+ ... ;S LINE=$$PAD(LINE,30)_$E($$NAMEPRT^BDGF2(+DATA,0),1,18)    ;patient
+ ... D SET(LINE,+DATA_U_$P(DATA,U,5)_U_DATE,.BSDCNT,.BSDLN)
+ ... S LINE=""
  ... S LINE=$$PAD(LINE,50)_$E($P(DATA,U,4),1,29)                ;appt info
  ... ;
  ... ; add extra lines if end time diff hour from last appt

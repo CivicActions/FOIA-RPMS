@@ -1,11 +1,15 @@
 ABMDTCPT ; IHS/ASDST/DMJ - Table Maintenance of CPT CODES ; 
- ;;2.6;IHS Third Party Billing System;**3,21**;NOV 12, 2009;Build 379
- ;IHS/SD/SDR - 2.6*21 HEAT266454 - Added option back into TPB so users can add/edit/delete revenue code only.  No editing should be done to CPT codes themselves.
+ ;;2.6;IHS Third Party Billing System;**3,21,29**;NOV 12, 2009;Build 562
+ ;IHS/SD/SDR 2.6*21 HEAT266454 - Added option back into TPB so users can add/edit/delete revenue code only.  No editing should be done to CPT codes themselves.
+ ;IHS/SD/SDR 2.6*29 CR10669 Made change to prompt so only CPTs without INACTIVE FLAG are editable
  ;
 ENT K ABM
  ;K DIR S DIR(0)="SO^1:EDIT EXISTING CPT CODE;2:ADD NEW CPT CODE",DIR("A")="Select DESIRED ACTION",DIR("B")=1 D ^DIR K DIR G XIT:'Y!$D(DIRUT),ADD:Y=2  ;abm*2.6*3 NOHEAT
  ;
-SEL W !! K DIC S DIC="^ICPT(",DIC("A")="Select CPT CODE to Edit: ",DIC(0)="QEAM" D ^DIC K DIC
+SEL ;
+ ;W !! K DIC S DIC="^ICPT(",DIC("A")="Select CPT CODE to Edit: ",DIC(0)="QEAM" D ^DIC K DIC  ;abm*2.6*29 IHS/SD/SDR CR10669
+ W !!  ;abm*2.6*29 IHS/SD/SDR CR10669
+ K DIC S DIC="^ICPT(",DIC("S")="I $$CHKCPT^ABMDUTL(Y)'=0",DIC("A")="Select CPT CODE to Edit: ",DIC(0)="QEAMI" D ^DIC K DIC  ;abm*2.6*29 IHS/SD/SDR CR10669
  G XIT:X=""!$D(DUOUT)!$D(DTOUT)
  I +Y<1 G SEL
  S ABM("DFN")=+Y,ABM("MODE")=0

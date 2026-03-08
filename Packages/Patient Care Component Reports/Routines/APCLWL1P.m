@@ -1,5 +1,5 @@
-APCLWL1P ; IHS/CMI/LAB - CLINIC HOURLY WORKLOAD REPORT ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLWL1P ; IHS/OHPRD/TMJ - CLINIC HOURLY WORKLOAD REPORT ;  [ 03/01/00  6:56 AM ]
+ ;;3.0;IHS PCC REPORTS;**7**;FEB 05, 1997
 DOC ;This routine is the "printing" part of the Clinic Hourly Workload
  ;report.  Called from the APCLWL11 routine.
  ;

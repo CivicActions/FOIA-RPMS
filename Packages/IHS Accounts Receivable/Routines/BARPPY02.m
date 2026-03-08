@@ -1,8 +1,10 @@
 BARPPY02 ; IHS/SD/TMM - PREPAYMENT RECEIPTS MAY 11,2010 ; 05/11/2010
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**19**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,30,35**;OCT 26, 2005;Build 187
  ;
- ; IHS/SD/TMM 06/18/10 1.8*19 Add Prepayment functionality.
- ; *********************************************************************
+ ;IHS/SD/TMM 1.8*19 06/18/10 Add Prepayment functionality.
+ ;IHS/SD/CPC 1.8*30 CR10550 Adjust Check Number maximum 
+ ;IHS/SD/SDR 1.8*35 ADO60910 Updated to display PPN preferred name
+ ;*********************************************************************
  Q
  ;
 RECEIPT(BARRIEN) ;  Print Receipt Y/N?
@@ -78,7 +80,9 @@ PRTRECPT ; Receipt output
  W !,"RECEIPT NO:  ",BARCPT,?39,"PAYMENT RECEIVE DATE:  "_BARPMTDT     ;receipt line 8
  W !,"PAYMENT TYPE:  ",BARPMTY1               ;receipt line 9
  S BARTMP=$S(BARPMTYP="CK":"CHECK NUMBER :  ",BARPMTYP="CA":"",1:"CARD TYPE:  ")
- W !,BARTMP_BARPMTY2,?39,"AMOUNT: $  ",$FN(BARPPAMT,",",2)  ;receipt line 10
+ ;W !,BARTMP_BARPMTY2,?39,"AMOUNT: $  ",$FN(BARPPAMT,",",2)  ;receipt line 10
+ W:$L(BARTMP_BARPMTY2)<37 !,BARTMP_BARPMTY2,?39,"AMOUNT: $  ",$FN(BARPPAMT,",",2)  ;receipt line 10  ;BAR*1.8*30 CR10550
+ W:$L(BARTMP_BARPMTY2)>36 !,BARTMP_BARPMTY2,!,"AMOUNT: $  ",$FN(BARPPAMT,",",2)  ;receipt line 10    ;BAR*1.8*30 CR10550
  W !,"PAYMENT FOR DOS:  ",BARPPDOS            ;receipt line 11
  W !                                         ;receipt line 12
  N CT F CT=1:1:4 I $D(BARCMT(CT)) W !,BARCMT(CT)  ;receipt line 13
@@ -93,6 +97,7 @@ REPRINT ;  Re-print receipt
  S DIC("B")="Enter Receipt Number, Patient, DOS, Receipt Date:  "
  S DIC="^BARPPAY(DUZ(2),"
  S DIC(0)="AEZQM"
+ S DIC("W")="D DICWPP^BARUTL0"  ;bar*1.8*35 IHS/SD/SDR ADO60910
  D ^DIC
  Q:Y'>0
  S BARPPIEN=+Y

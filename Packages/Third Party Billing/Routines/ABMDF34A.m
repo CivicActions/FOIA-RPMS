@@ -1,6 +1,11 @@
 ABMDF34A ; IHS/SD/SDR - ADA 2012 Dental Export -part 2 ;    
- ;;2.6;IHS 3P BILLING SYSTEM;**11**;NOV 12, 2009;Build 133
+ ;;2.6;IHS 3P BILLING SYSTEM;**11,31**;NOV 12, 2009;Build 615
  ;********************************************
+ ;IHS/SD/SDR 2.6*31 CR8833 Updated OTHER COVERAGE to:
+ ;  When billing primary insurer, the secondary insurer should be in the other coverage fields.
+ ;  When billing secondary the other coverage fields should be populated with primary insurer info.
+ ;  When billing tertiary put secondary insurer in the other coverage field.
+ ;  Also fixed FL10-relationship; it doesn't look like it has ever worked right, using the X12 code
 ENT ; EP for getting data
  S ABMP("B0")=^ABMDBILL(DUZ(2),ABMP("BDFN"),0)  ;3P Bill 0 node
  S ABMP("INS")=$P(ABMP("B0"),U,8)  ;Active ins
@@ -28,16 +33,37 @@ BADDR ;
  S ABMF(9)=ABMF(9)_"  "_$P(ABMCSZ,U,3)  ;Zip(3)
  K ABMCSZ,ABMSTATE
  ;2ndary info
- S ABMPIIEN=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"B",ABMP("INS"),0))
+ ;S ABMPIIEN=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"B",ABMP("INS"),0))  ;abm*2.6*31 IHS/SD/SDR CR10351
+ ;start new abm*2.6*31 IHS/SD/SDR CR10351
+ S ABMT("I")=0
+ S ABMPIIEN=0
+ F  S ABMT("I")=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMT("I"))) Q:'ABMT("I")  D  Q:ABMPIIEN
+ .I (($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMT("I"),0)),U)'=ABMP("INS"))&($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMT("I"),0)),U,11)'=ABMP("INS"))) Q  ;not our insurer/replacement insurer
+ .S ABMPIIEN=ABMT("I")
+ ;end new abm*2.6*31 IHS/SD/SDR CR10351
  K ABMSCNT,ABMSINS,ABMP("INS2")
  I +$G(ABMPIIEN)'=0 D
  .S ABMPINS=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMPIIEN,0)),U,2)  ;get priority of active ins
  .S ABMIFLG=0
  .S ABMSCNT=ABMPINS
- .F  S ABMSCNT=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT)) Q:+ABMSCNT=0  D  Q:ABMIFLG=1
- ..S ABMSINS=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT,0))
- ..I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U,3)="U" K ABMSINS Q  ;unbillable
- ..S ABMIFLG=1
+ .;start old abm*2.6*31 IHS/SD/SR CR8833
+ .;F  S ABMSCNT=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT)) Q:+ABMSCNT=0  D  Q:ABMIFLG=1
+ .;.S ABMSINS=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT,0))
+ .;.I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U,3)="U" K ABMSINS Q  ;unbillable
+ .;.S ABMIFLG=1
+ .;end old start new abm*2.6*31 IHS/SD/SDR CR8833
+ .I ABMPINS=1 D
+ ..F  S ABMSCNT=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT)) Q:+ABMSCNT=0  D  Q:ABMIFLG=1
+ ...S ABMSINS=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT,0))
+ ...I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U,3)="U" K ABMSINS Q  ;unbillable
+ ...S ABMIFLG=1
+ .;
+ .I ABMPINS>1 D
+ ..F  S ABMSCNT=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT),-1) Q:+ABMSCNT=0  D  Q:ABMIFLG=1
+ ...S ABMSINS=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT,0))
+ ...I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U,3)="U" K ABMSINS Q  ;unbillable
+ ...S ABMIFLG=1
+ ;end new abm*2.6*31 IHS/SD/SDR CR8833
  I $G(ABMSINS)'="" S ABMP("INS2")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U)
  I $G(ABMP("INS2"))'="" D
  .S ABMPISAV=ABMP("INS")
@@ -70,14 +96,20 @@ BADDR ;
  ..I $P($G(^AUPN3PPH(+ABMX("PH"),0)),U,8)="F" S $P(ABMF(16),U,3)="X"  ;sex(7)
  ..S $P(ABMF(16),U,4)=$P($G(^AUPN3PPH(+ABMX("PH"),0)),U,4)  ;Pol#(8)
  ..;rel (10)
- ..I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS2"),".211","I"),1,"I")="P" D
+ ..;I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS2"),".211","I"),1,"I")="P" D  ;abm*2.6*31 IHS/SD/SDR CR8833
+ ..I ("^D^R^"'[("^"_$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS2"),".211","I"),1,"I")_"^")) D  ;abm*2.6*31 IHS/SD/SDR CR8833
+ ...N ABMSINS  ;abm*2.6*31 IHS/SD/SDR CR8833
  ...S ABMSINS=$O(^AUPNPRVT(ABMP("PDFN"),11,"B",ABMP("INS2"),0))
  ...S ABMP("REL")=$P($G(^AUTTRLSH($P($G(^AUPNPRVT(ABMP("PDFN"),11,ABMSINS,0)),U,5),0)),U,5)
- ...I ABMP("REL")=17 S $P(ABMF(18),U,2)="X"
- ...I ABMP("REL")="01" S $P(ABMF(18),U,3)="X"
- ...I ABMP("REL")=18 S $P(ABMF(18),U,4)="X"
- ...I ABMP("REL")'=17&(ABMP("REL")'=18)&(ABMP("REL")'="01") S $P(ABMF(18),U,5)="X"
- .I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS2"),".211","I"),1,"I")="D" D
+ ...;I ABMP("REL")=17 S $P(ABMF(18),U,2)="X"  ;abm*2.6*31 IHS/SD/SDR CR8833
+ ...I ABMP("REL")=18 S $P(ABMF(18),U,2)="X"  ;self  ;abm*2.6*31 IHS/SD/SDR CR8833
+ ...I ABMP("REL")="01" S $P(ABMF(18),U,3)="X"  ;spouse
+ ...;I ABMP("REL")=18 S $P(ABMF(18),U,4)="X"  ;abm*2.6*31 IHS/SD/SDR CR8833
+ ...I ("^17^19^05^07^"[("^"_ABMP("REL")_"^")) S $P(ABMF(18),U,4)="X"  ;dependent  ;abm*2.6*31 IHS/SD/SDR CR8833
+ ...;I ABMP("REL")'=17&(ABMP("REL")'=18)&(ABMP("REL")'="01") S $P(ABMF(18),U,5)="X"  ;abm*2.6*31 IHS/SD/SDR CR8833
+ ...I ("^17^19^05^07^18^01^"'[("^"_ABMP("REL")_"^")) S $P(ABMF(18),U,5)="X"  ;other  ;abm*2.6*31 IHS/SD/SDR CR8833
+ .;I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS2"),".211","I"),1,"I")="D" D  ;abm*2.6*31 IHS/SD/SDR CR8833
+ .I "^D^R^"[("^"_$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS2"),".211","I"),1,"I")_"^") D  ;abm*2.6*31 IHS/SD/SDR CR8833
  ..I $P($G(^DPT(+ABMP("PDFN"),0)),U,2)="M" S $P(ABMF(16),U,2)="X"  ;sex(7)
  ..I $P($G(^DPT(+ABMP("PDFN"),0)),U,2)="F" S $P(ABMF(16),U,3)="X"  ;sex(7)
  ..S:(+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U,6)'=0) $P(ABMF(16),U,4)=$P($G(^AUPNMCD($P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0),U,6),0)),U,3)  ;Policy#(8)

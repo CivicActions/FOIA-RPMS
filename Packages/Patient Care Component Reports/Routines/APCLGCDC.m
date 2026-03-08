@@ -1,5 +1,5 @@
-APCLGCDC ; IHS/CMI/LAB - APCL Visits to General and Dental Clinic (Same Day) ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLGCDC ;IHS/CMI/MAW - APCL Visits to General and Dental Clinic (Same Day) [ 12/16/2003  2:52 PM ]
+ ;;3.0;IHS PCC REPORTS;**5,16**;FEB 05, 1997
  ;IHS/CMI/LAB - new report per task order
  ;
  ;this routine will print a list of visits that had a general clinic
@@ -11,9 +11,6 @@ MAIN ;-- this is the main routine driver
  D DTR G XIT:Y<0
  S XBRP="PRT^APCLGCDC",XBRC="SORT^APCLGCDC"
  S XBRX="XIT^APCLGCDC",XBNS="APCL"
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G MAIN
  D ^XBDBQUE
  D XIT
  Q
@@ -47,7 +44,6 @@ SORT ;-- get loop through the visit file
  . S APCLDFN=0 F  S APCLDFN=$O(^AUPNVSIT("B",APCLDA,APCLDFN)) Q:APCLDFN=""  D
  .. Q:'$D(^AUPNVSIT(APCLDFN,0))
  .. Q:$P(^AUPNVSIT(APCLDFN,0),U,5)=""
- .. Q:$$DEMO^APCLUTL($P(^AUPNVSIT(APCLDFN,0),U,5),$G(APCLDEMO))
  .. Q:$P(^AUPNVSIT(APCLDFN,0),U,8)=""
  .. I $$CHKLOC^APCLOCCK(APCLLOC,$P(^AUPNVSIT(APCLDFN,0),U,6))=0 Q
  .. S APCLVDT=$P(APCLDA,".")
@@ -90,11 +86,12 @@ XHDR W @IOF
 XIT ;-- kill variables and quit
  K APCLBDT,APCLCLN,APCLDA,APCLDEN,APCLDESC,APCLDFN,APCLEDT,APCLGEN
  K APCLPAT,APCLSEDT,APCDTP,APCLTV,APCLVDT,APCLXP,APCLXV,APCLSBDT
- K X,X1,X2,XBNS,XBRC,XBRP,XBRX,XI,Y,APCLTP
+ K DT14,X,X1,X2,XBNS,XBRC,XBRP,XBRX,XI,Y,APCLTP
  K ^TMP("APCLGCDC",$J)
  Q
  ;
 DT14() ;-- return 14 days in the future
  S X1=DT,X2=+14 D C^%DTC
+ S DT14=X
  Q X
  ;

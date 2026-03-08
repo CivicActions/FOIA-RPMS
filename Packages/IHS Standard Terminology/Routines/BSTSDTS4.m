@@ -1,5 +1,5 @@
 BSTSDTS4 ;GDIT/HS/BEE-Standard Terminology DTS Calls/Processing ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3,4,7,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
@@ -255,9 +255,15 @@ SCODE(BSTSWS,ACODE) ;Retrieve list of concepts in subsets and refresh
  ;BSTSWS - Array of connection settings
  ;ACODE - If 1 do no process items here
  ;
- NEW SLIST,DLIST,SBCNT,MFAIL,FWAIT,TRY,FCNT,STS,ABORT,ERSLT,LENTRY,REVIN,X1,X2,X,RUNSTRT,TR
+ NEW SLIST,DLIST,SBCNT,MFAIL,FWAIT,TRY,FCNT,STS,ABORT,ERSLT,LENTRY,REVIN,X1,X2,X,RUNSTRT,TR,BIPROG
  ;
  S ACODE=$G(ACODE)
+ ;
+ ;Retrieve restart information
+ S BIPROG=$G(BSTSWS("BIPROG"))
+ ;
+ ;Update tracker
+ I 'ACODE S $P(^XTMP("BSTSLCMP","UPD"),U,4,5)="SCODE^BSTSDTS4"
  ;
  ;Get the current date
  S RUNSTRT=DT
@@ -268,7 +274,9 @@ SCODE(BSTSWS,ACODE) ;Retrieve list of concepts in subsets and refresh
  ;
  S SLIST=$NA(^XTMP("BSTSLCMP")) ;Returned List
  S DLIST=$NA(^TMP("BSTSCMCL",$J))
- K @DLIST
+ I $P(BIPROG,U,6)<10 D
+ . K @DLIST
+ . S $P(^XTMP("BSTSLCMP","UPD"),U,6)="10"
  ;
  ;Retrieve Failover Variables
  S MFAIL=$$FPARMS^BSTSVOFL()
@@ -284,10 +292,10 @@ SCODE(BSTSWS,ACODE) ;Retrieve list of concepts in subsets and refresh
  . K ^XTMP("BSTSLCMP","STS")
  ;
  ;Get list of concepts in subsets
- S ^XTMP("BSTSLCMP","STS")="Generating a list of concepts in subsets"
+ I $P(BIPROG,U,6)<20 S ^XTMP("BSTSLCMP","STS")="Generating a list of concepts in subsets"
  ;
  ;BSTS*1.0*8;Extra error handling
- F TR=1:1:60 D  I +STS Q
+ S STS=1 I $P(BIPROG,U,6)<20 F TR=10:10:60 D  I +STS Q
  .S (ABORT,FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS!(STS="0^") Q
  .. D RESET^BSTSWSV1  ;Reset the DTS link to on
  .. S STS=$$SCODE^BSTSCMCL(.BSTSWS,.ERSLT) I +STS!(STS="0^") Q
@@ -301,17 +309,19 @@ SCODE(BSTSWS,ACODE) ;Retrieve list of concepts in subsets and refresh
  ;Quit on failure
  I +STS=0 Q 0
  ;
- ;Merge results to second scratch global
- S SBCNT=0 F  S SBCNT=$O(@DLIST@(SBCNT)) Q:'SBCNT  D
- . NEW DTSID,LAST
- . S DTSID=$P(@DLIST@(SBCNT),U) Q:DTSID=""
- . I $D(@SLIST@("DTS",DTSID)) Q
- . S LAST=$O(@SLIST@("A"),-1)+1
- . S @SLIST@(LAST)=@DLIST@(SBCNT)
- . S @SLIST@("DTS",DTSID)=LAST
+ I $P(BIPROG,U,6)<20 D
+ . S SBCNT=0 F  S SBCNT=$O(@DLIST@(SBCNT)) Q:'SBCNT  D
+ .. NEW DTSID,LAST
+ .. S DTSID=$P(@DLIST@(SBCNT),U) Q:DTSID=""
+ .. I $D(@SLIST@("DTS",DTSID)) Q
+ .. S LAST=$O(@SLIST@("A"),-1)+1
+ .. S @SLIST@(LAST)=@DLIST@(SBCNT)
+ .. S @SLIST@("DTS",DTSID)=LAST
  ;
  ;Do not process if part of main update
  I ACODE Q 1
+ ;
+ S $P(^XTMP("BSTSLCMP","UPD"),U,6)="20"
  ;
  ;Get last entry
  S LENTRY=$O(@SLIST@("A"),-1)
@@ -346,8 +356,65 @@ SCODE(BSTSWS,ACODE) ;Retrieve list of concepts in subsets and refresh
  ... I ABORT=1 S ^XTMP("BSTSLCMP","QUIT")=1 D ELOG^BSTSVOFL("SNOMED SUBSET REFRESH FAILED ON DETAIL LOOKUP: "_DTSID)
  ... S FCNT=0
  ;
- ;Clear status
- K ^XTMP("BSTSLCMP","STS")
+ ;Mark as error or complete
+ I 'STS S ^XTMP("BSTSLCMP","QUIT")=1
+ S:'$D(^XTMP("BSTSLCMP","QUIT")) $P(^XTMP("BSTSLCMP","UPD"),U,6)=200
  ;
  I 'STS Q 0
  Q 1
+ ;
+ICD9(CONCDA,GL) ;Save ICD9 to SNOMED Mapping
+ ;
+ ;Clear out existing entries
+ D
+ . NEW SB
+ . S SB=0 F  S SB=$O(^BSTS(9002318.4,CONCDA,13,SB)) Q:'SB  D
+ .. NEW DA,DIK
+ .. S DA(1)=CONCDA,DA=SB
+ .. S DIK="^BSTS(9002318.4,"_DA(1)_",13," D ^DIK
+ ;
+ ;Now save mappings
+ I $D(@GL@("RICD9"))>1 D
+ . ;
+ . NEW SB
+ . S SB="" F  S SB=$O(@GL@("RICD9",SB)) Q:SB=""  D
+ .. ;
+ .. NEW DIC,X,Y,DA,X,Y,IENS,DLAYGO
+ .. S DA(1)=CONCDA
+ .. S DIC(0)="LX",DIC="^BSTS(9002318.4,"_DA(1)_",13,"
+ .. S X=$P($G(@GL@("RICD9",SB)),U) Q:X=""
+ .. S DLAYGO=9002318.413 D ^DIC
+ ;
+ Q
+ ;
+SUB(CONCDA,GL,BSTSC) ;Save Subsets
+ ;
+ ;Clear out existing entries
+ D
+ . NEW SB
+ . S SB=0 F  S SB=$O(^BSTS(9002318.4,CONCDA,4,SB)) Q:'SB  D
+ .. NEW DA,DIK
+ .. S DA(1)=CONCDA,DA=SB
+ .. S DIK="^BSTS(9002318.4,"_DA(1)_",4," D ^DIK
+ I $D(@GL@("SUB"))>1 D
+ . ;
+ . NEW SB
+ . S SB="" F  S SB=$O(@GL@("SUB",SB)) Q:SB=""  D
+ .. ;
+ .. NEW DIC,X,Y,DA,X,Y,IENS,DLAYGO,STYP,SID
+ .. S DA(1)=CONCDA
+ .. S DIC(0)="LX",DIC="^BSTS(9002318.4,"_DA(1)_",4,"
+ .. S X=$P($G(@GL@("SUB",SB)),U) Q:X=""
+ .. I X="IHS PROBLEM ALL SNOMED" S BSTSC(9002318.4,CONCDA_",",.15)="Y"
+ .. S DLAYGO=9002318.44 D ^DIC
+ .. I +Y<0 Q
+ .. S DA=+Y
+ .. S IENS=$$IENS^DILF(.DA)
+ .. ;GDIT/HS/BEE;FEATURE#112749;Retrieve expression based subset information
+ .. S STYP=$P($G(@GL@("SUB",SB)),U,4)
+ .. S SID=$P($G(@GL@("SUB",SB)),U,5)
+ .. S BSTSC(9002318.44,IENS,".02")=$$DTS2FMDT^BSTSUTIL($P($G(@GL@("SUB",SB)),U,2))
+ .. S BSTSC(9002318.44,IENS,".04")=$S(STYP]"":STYP,1:"@")
+ .. S BSTSC(9002318.44,IENS,".05")=$S(SID]"":SID,1:"@")
+ ;
+ Q

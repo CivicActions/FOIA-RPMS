@@ -1,5 +1,5 @@
 ABSPOS57 ; IHS/FCS/DRS - 9002313.57 utils ;        [ 04/17/2002  11:36 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**1,12,35,36,44**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**1,12,35,36,44,52**;JUN 01, 2001;Build 131
  Q
  ; Numerous little $$'s are here ; each assumes IEN57 is defined
  ; Originally copied from ABSPOSQ where it was for IEN57
@@ -200,7 +200,7 @@ REJCODES ; rejection codes for IEN03
  K X S X=""
  N I,J S (I,J)=0
  F  S I=$O(^ABSPR(IEN03,1000,POS,511,I)) Q:'I  D
- . N A S A=$P(^ABSPR(IEN03,1000,POS,511,I,0),U) Q:'A
+ . N A S A=$P(^ABSPR(IEN03,1000,POS,511,I,0),U) Q:A=""  ; /IHS/OIT/RAM ; P52 ; REJECT CODES ARE NO LONGER NUMERIC ONLY, PLAN FOR ALPHANUMERIC.
  . S A=$O(^ABSPF(9002313.93,"B",A,0)) Q:'A
  . S A=^ABSPF(9002313.93,A,0)
  . S:X]"" X=X_"," S X=X_$P(A,U)
@@ -231,7 +231,7 @@ GETVER() ; check for 5.1 clm - need to rmv field ids
  ;
 STRIP51 ;remove field ids for NCPDP 5.1,D.0 flds
  N FLDLST
- S FLDLST="101,102,103,104,109,110,201,202,401,"
+ S FLDLST="101,102,103,104,109,110,201,202,401,510,511," ; /IHS/OIT/RAM ; P52 ; ADD FIELDS THAT DON'T HAVE A FIELD ID.
  Q:FLDLST[F_","
  S X=$E(X,3,$L(X))
  Q

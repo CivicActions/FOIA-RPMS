@@ -1,5 +1,5 @@
-PSORENW ;BIR/SAB-renew main driver ;22-Jan-2013 17:42;DU
- ;;7.0;OUTPATIENT PHARMACY;**11,27,30,46,71,96,100,130,1004,1009,1010,148,206,1014,1016**;DEC 1997;Build 74
+PSORENW ;BIR/SAB- renew main driver ;20-Mar-2018 09:10;DU
+ ;;7.0;OUTPATIENT PHARMACY;**11,27,30,46,71,96,100,130,1004,1009,1010,148,206,1014,1016,1023**;DEC 1997;Build 121
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External references L, UL, PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
  ;External reference to LK^ORX2 and ULK^ORX2 supported by DBIA 867
@@ -10,6 +10,8 @@ PSORENW ;BIR/SAB-renew main driver ;22-Jan-2013 17:42;DU
  ;           IHS/MSC/JDS - 01/25/2011 - Line OERR+5
  ;                       - 10/25/2011 - Line OERR+1,OERR+8
  ;           IHS/MSC/PB  - 01/22/2013 - Line OERR+5 added for external rx screen during renew
+ ;           IHS/MSC/MGH -12/15/2017 -  Line RENEW+24 for EPCS
+ ;           IHS/MSC/MGH -03/19/2018 -  Line OERR+14
 ASK ;
  K PSORENW("FILL DATE") D FILLDT^PSODIR2(.PSORENW) S:$G(PSORENW("DFLG")) VALMSG="Renew Rx request canceled",VALMBCK="R"
  I PSORENW("DFLG")!('$D(PSORENW("FILL DATE"))) S PSORENW("QFLG")=1,PSORENW("DFLG")=0 G ASKX
@@ -32,7 +34,7 @@ EOJ ;
  Q
 OERR ;entry for renew backdoor
  I $$LMREJ^PSOREJU1($P(PSOLST(ORN),"^",2),,.VALMSG,.VALMBCK) Q
- N APSPDRG
+ N APSPDRG,DEACLS
  ;ISH/MSC/PB - Screen added in P1016 to check for external Rx. If external, Rx can't be renewed, must be copied and a new Rx created. 1/22/13
  I $E($P($G(^PSRX($P(PSOLST(ORN),"^",2),0)),"^",1))="X" D  Q
  .W !,"An external Rx can't be Renewed in RPMS Prescription Processing."
@@ -48,6 +50,10 @@ OERR ;entry for renew backdoor
  ;IHS/MSC/MGH Text for REM medication. Patch 1013
  S APSPDRG=$P($G(^PSRX($P(PSOLST(ORN),"^",2),0)),"^",6)
  I +APSPDRG D REMMSG^APSPFUNC(APSPDRG)
+ I +APSPDRG S DEACLS=+$P($G(^PSDRUG(APSPDRG,0)),U,3)
+ I (DEACLS>0&(DEACLS<6))&('$D(^XUSEC("PSORPH",DUZ))) D  Q
+ .W $C(7),!!,"Must have PSORPH key to do renewals on controlled substances"
+ .D ULPAT
  S PSOBCKDR=1,PSOFROM="NEW",PSORENW("OIRXN")=$P(PSOLST(ORN),"^",2),PSOOPT=3,(PSORENW("DFLG"),PSORENW("QFLG"),PSORX("DFLG"))=0
  S PSONEW("DAYS SUPPLY")=$P(^PSRX(PSORENW("OIRXN"),0),"^",8),PSONEW("# OF REFILLS")=$P(^(0),"^",9)
  D FULL^VALM1,ASK D:PSORENW("QFLG") KLIB^PSORENW1 D:PSORENW("QFLG") ULPAT D:PSORENW("QFLG") PSOUL^PSSLOCK($P(PSOLST(ORN),"^",2)) G:PSORENW("QFLG") EOJ D ^PSORENW0
@@ -60,6 +66,7 @@ RENEW(PLACER,PSOCPDRG,DAYS) ;passes flag to CPRS for front door renews
  ;-1=couldn't find order, 0=unable to renew, 1=renewable
  ;Placer=Pharmacy number
  N PSOSURX,PSORFRM,PSOLC,PSODRG,PSODRUG0,RXN,ST,PSONEWOI,PSOOLDOI,PSOIFLAG,PSOINA
+ N SSNUM,OIEN
  I $G(PLACER)["S"!('$G(PLACER)) Q "-1^Not a Valid Outpatient Medication Order."
  S RXN=PLACER I '$D(^PSRX(RXN,0)) Q "-1^Not a Valid Outpatient Medication Order."
  S RX0=^PSRX(RXN,0),PSODRG=+$P(^PSRX(RXN,0),"^",6),ST=+^("STA"),PSODRUG0=^PSDRUG(PSODRG,0)
@@ -79,7 +86,12 @@ RENEW(PLACER,PSOCPDRG,DAYS) ;passes flag to CPRS for front door renews
  I PSONOSIG Q "0^Non-Renewable, missing Sig."
  I $P($G(^PSDRUG(PSODRG,2)),"^",3)'["O" Q "0^Drug is No longer used by Outpatient Pharmacy."
  I $G(^PSDRUG(PSODRG,"I"))]"",DT>$G(^("I")) Q "0^This Drug has been Inactivated."
- I ($P(PSODRUG0,"^",3)[1)!($P(PSODRUG0,"^",3)[2)!($P(PSODRUG0,"^",3)["W") Q "0^Non-Renewable "_$S($P(PSODRUG0,"^",3)["A":"Drug Narcotic.",1:"Drug.")
+ ;IHS/MSC/MGH EPCS changes - narcotics can be renewed in eRX
+ S SS=$$GET1^DIQ(52,RXN,9999999.24,"I")
+ I +$G(CIA("UID")) S SS=0
+ I (+SS)&($P(PSODRUG0,"^",3)[1) Q "0^Non-Renewable "_$S($P(PSODRUG0,"^",3)["A":"Drug Narcotic.",1:"Drug.")
+ I (+SS=0)&((($P(PSODRUG0,"^",3)[1)!($P(PSODRUG0,"^",3)[2)!($P(PSODRUG0,"^",3)["W"))) Q "0^Non-Renewable "_$S($P(PSODRUG0,"^",3)["A":"Drug Narcotic.",1:"Drug.")
+ ;END MODS
  I $D(^PS(53,+$P(RX0,"^",3),0)),'$P(^(0),"^",5) Q "0^Non-Renewable Prescription."
  S PSOLC=$P(RX0,"^"),PSOLC=$E(PSOLC,$L(PSOLC)) I $A(PSOLC)'<90 Q "0^Max number of renewals (26) has been reached."
  I ST,ST'=2,ST'=5,ST'=6,ST'=11,ST'=12,ST'=14 Q "0^Prescritpion is in a Non-Renewable Status."

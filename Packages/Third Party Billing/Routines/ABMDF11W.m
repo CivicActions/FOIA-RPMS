@@ -1,5 +1,5 @@
 ABMDF11W ; IHS/ASDST/DMJ - PRINT UB92 ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**8**;APR 05, 2002
  ; Original;LSL; June 20, 1997
  ;
  ; IHS/ASDS/LSL - 04/05/00 - V2.4 Patch 1 - NOIS NCA-0300-180046
@@ -69,7 +69,9 @@ PROV ;EP - PROVIDER INFORMATION
  ..S ABMPRV=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),41,ABMPRVNO,0),"^",1)
  ..S ABMPCNT=ABMPCNT+1     ; Increment provider count
  ..Q:ABMPCNT>3             ; only 1st 3 providers
- ..S ABM("PRV",ABMPCNT)=$P($G(^VA(200,ABMPRV,20)),"^",2)  ; Provider name
+ ..;S ABM("PRV",ABMPCNT)=$P($G(^VA(200,ABMPRV,0)),"^",1)  ; Provider name  ;IM13944
+ ..S ABM("PRV",ABMPCNT)=$P($G(^VA(200,ABMPRV,20)),"^",2)  ; Provider name  ;IM13944
+ ..;S ABM("PRV",ABMPCNT)=$TR(ABM("PRV",ABMPCNT),","," ")  ;IM13944
  ..S $P(ABM("PRV",ABMPCNT),U,2)=""
  ..; If Medicare FI, find provider UPIN
  ..I ABMP("ITYPE")="R" D
@@ -83,5 +85,5 @@ PROV ;EP - PROVIDER INFORMATION
  ..S:$P(ABM("PRV",ABMPCNT),"^",2)]"" $P(ABM("PRV",ABMPCNT),"^")=$P(ABM("PRV",ABMPCNT),"^",2)_"  "_$P(ABM("PRV",ABMPCNT),"^")
  ..S ABMVST=$P($G(^AUTTLOC(+ABMP("LDFN"),0)),"^",23)  ; state IEN
  ..S:ABMVST="" ABMVST=$P($G(^AUTTLOC(+ABMP("LDFN"),0)),"^",14)
- ..S $P(ABM("PRV",ABMPCNT),"^",3)=$$SLN^ABMERUTL(ABMPRV,ABMVST)  ; Provider State License number
+ ..S $P(ABM("PRV",ABMPCNT),"^",3)=$$SLN^ABMERUTL(ABMPRV,ABMVST)  ; Provider State Liscense number
  Q

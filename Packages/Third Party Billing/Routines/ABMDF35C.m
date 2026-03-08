@@ -1,8 +1,11 @@
 ABMDF35C ; IHS/SD/SDR - Set HCFA1500 (02/12) Print Array ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**13,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**13,21,31,33,37**;NOV 12, 2009;Build 739
  ;IHS/SD/SDR 2.6*21 HEAT298958 PROPERTY/CASUALTY PATIENT NUMBER prints in box 1A.  PROPERTY/CASUALTY CLAIM NUMBER should print in box 11B.
  ;  If no PROPERTY/CASUALTY CLAIM NUMBER, print the CASE NUMBER in box 11B.
- ;
+ ;IHS/SD/SDR 2.6*31 CR8848 Defaulted FLs 4 and 7 to the patient if they are blank; usually happens when the insurer was manually added
+ ;  to page2 of the claim editor.
+ ;IHS/SD/SDR 2.6*33 ADO60181/CR11622 Updated so FL11a will only print for M or F; if the SEX is blank or UNKNOWN then leave 11a blank
+ ;IHS/SD/SDR 2.6*37 ADO76009 Corrected bill amount when flat rate; it was multiplying by units twice
  ; *********************************************************************
  ;
  D VAR
@@ -27,7 +30,7 @@ INS Q:'$D(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABM("XIEN"),0))  S ABM("INSCO")=$P(^(
  I ABM("INSCO")=$P(ABMP("B0"),U,8),$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABM("XIEN"),0),"^",3)="I" D
  .D ^ABMDE2X1
  .I $D(ABMP("FLAT")) D
- ..S $P(ABMP("FLAT"),U)=+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U)  ;bill amt
+ ..;S $P(ABMP("FLAT"),U)=+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U)  ;bill amt  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ..S:ABMP("VTYP")=111 $P(ABMP("FLAT"),U)=$P(ABMP("FLAT"),U)/$P(ABMP("FLAT"),U,3)
  .S ABMP("EXP")=35
 PAYOR S Y=ABM("INSCO") D SEL^ABMDE2X
@@ -73,7 +76,12 @@ PRIM ;
  .;I $P(ABMF(11),U,2)="",($P(ABMV("X3"),U,7)]"") S $P(ABMF(11),U,2)=$P(ABMV("X3"),U,7)_"/"_$P(ABMV("X3"),U,6)  ;abm*2.6*13 exp mode 35
  .I $P(ABMF(11),U,2)="",($P(ABMV("X3"),U,7)]""!$P(ABMV("X3"),U,6)]"") S $P(ABMF(11),U,2)=$S($P(ABMV("X3"),U,7)]"":$P(ABMV("X3"),U,7)_"/",1:"")_$P(ABMV("X3"),U,6)  ;abm*2.6*13 exp mode 35
  .S $P(ABMF(13),U,4)=$P(ABMV("X2"),U,7)
- .I $P(ABMV("X2"),U,6)]"" S $P(ABMF(13),U,$S($P(ABMV("X2"),U,6)="F":6,1:5))="X"
+ .;I $P(ABMV("X2"),U,6)]"" S $P(ABMF(13),U,$S($P(ABMV("X2"),U,6)="F":6,1:5))="X"  ;abm*2.6*33 IHS/SD/SDR CR11622
+ .;start new abm*2.6*33 IHS/SD/SDR CR11622
+ .I $P(ABMV("X2"),U,6)]"" D
+ ..I $P(ABMV("X2"),U,6)="M" S $P(ABMF(13),U,5)="X"
+ ..I $P(ABMV("X2"),U,6)="F" S $P(ABMF(13),U,6)="X"
+ .;end new abm*2.6*33 IHS/SD/SDR CR11622
  .S $P(ABMF(5),U,6)=$P(ABMV("X2"),U,3)
  .;start old code abm*2.6*13 remove box 8
  .;S $P(ABMF(7),U,6)=$P($P(ABMV("X2"),U,4),", ")
@@ -90,6 +98,16 @@ PRIM ;
  .I ABM("RLSH")>0&(ABM("RLSH")<4) S ABM("RLSH")=ABM("RLSH")+1
  .E  S ABM("RLSH")=$S(ABM("RLSH")=5:4,1:5)
  .S $P(ABMF(5),U,ABM("RLSH"))="X"
+ ;start new abm*2.6*31 IHS/SD/SDR CR8848
+ ;default to patient if no policy holder
+ I $P(ABMF(3),U,5)="" D
+ .S $P(ABMF(3),U,5)=$P($G(^DPT(ABMP("PDFN"),0)),U)  ;pt name FL4
+ .S $P(ABMF(5),U,6)=$P($G(^DPT(ABMP("PDFN"),.11)),U)  ;pt address FL7
+ .S $P(ABMF(7),U,3)=$P($G(^DPT(ABMP("PDFN"),.11)),U,4)  ;pt city FL7
+ .S $P(ABMF(7),U,4)=$P($G(^DIC(5,$P($G(^DPT(ABMP("PDFN"),.11)),U,5),0)),U,2)  ;pt state FL7
+ .S $P(ABMF(9),U,3)=$P($G(^DPT(ABMP("PDFN"),.11)),U,6)  ;pt zip FL7
+ .S $P(ABMF(9),U,4)=$P($G(^DPT(ABMP("PDFN"),.13)),U)  ;pt phone FL7
+ ;end new abm*2.6*31 IHS/SD/SDR CR8848
  I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,13)'="" S $P(ABMF(15),U,4)="Y4 "_$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,13)  ;abm*2.6*13 box 11B
  I ($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),4)),U,8)'="")&($P(ABMF(1),U,8)="") S $P(ABMF(1),U,8)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),4)),U,8)  ;abm*2.6*21 IHS/SD/SDR HEAT298958
  Q

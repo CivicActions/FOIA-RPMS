@@ -1,5 +1,9 @@
 BARBAD1 ; IHS/SD/LSL - Posting and Adjustments ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,21**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,21,31,32,35**;OCT 26, 2005;Build 187
+ ;
+ ;IHS.OIT.FCJ 1.8*31 11.4.2020 CR#6156 MODIFIED TO SORT/DISPLAY BY CLINIC OR VISIT
+ ;IHS/SD/SDR 1.8*32 ADO76300 Fixed so lookup will only be done on bill# and other bill identifier xrefs
+ ;IHS/SD/SDR 1.8*35 ADO60910 Updated to display PPN preferred name
  ;
 EN() ; EP
  ; Batch Posting entry
@@ -55,7 +59,9 @@ SELBILL ; EP
  ; IHS/SD/PKD 10/22/10 Selection Display-more info
  S DIC("W")="D DISP^BARPUTL"
  S DIC(0)="AEMQZ"
- D ^DIC
+ ;D ^DIC ;bar*1.8*32 IHS/SD/SDR ADO76300
+ S D="B^G"  ;bar*1.8*32 IHS/SD/SDR ADO76300
+ D MIX^DIC1 ;bar*1.8*32 IHS/SD/SDR ADO76300
  Q:+Y<0
  Q:$D(DTOUT)!$D(DIROUT)!$D(DUOUT)!(Y="")!(Y=" ")
  S BARPAT=$P(^BARBL(DUZ(2),+Y,1),"^",1)
@@ -87,7 +93,7 @@ GETBIL ;EP
  W "  ",BARPAT(0)
  S BARZ=BARPAT_"^"_BARSTART_"^"_BAREND
  Q
- ; *********************************************************************
+ ;*********************************************
  ;
 ASKPAT ;EP - select patient
  ;IHS/SD/TPF BAR*1.8*21 8/3/2011 HEAT20490
@@ -98,6 +104,7 @@ ASKPAT ;EP - select patient
  S DIC(0)="IAEMQZ"
  S DIC("S")="Select Patient: "
  S DIC("S")="I $D(^BARBL(DUZ(2),""ABC"",Y))"
+ S DIC("W")="D DICWPAT^BARUTL0(1)"  ;bar*1.8*35 IHS/SD/SDR ADO60910
  D ^DIC
  K DIC
  Q:+Y<0
@@ -108,8 +115,18 @@ ASKPAT ;EP - select patient
  D GETDOS
  I '$G(BAROK) K BARPAT Q
  S BARZ=BARPAT_"^"_BARSTART_"^"_BAREND
+ ;BAR*1.8*31 11.4.2020 IHS.OIT.FCJ CR#6156
+ D SORT^BARPUTL
+ I $D(DUOUT) S BARQ=0 K BARZ F I=1:1 D  Q:BARQ
+ .D GETDOS
+ .I $G(BAROK) D  Q
+ ..D SORT^BARPUTL
+ ..I $D(DUOUT) K BAROUT,BAROK Q
+ ..E  S BARZ=BARPAT_"^"_BARSTART_"^"_BAREND,BARQ=1
+ .E  S BARQ=1 K DUOUT Q
+ ;BAR*1.8*31 11.4.2020 IHS.OIT.FCJ CR#6156 END CHANGES
  Q
- ; *********************************************************************
+ ;*********************************************
  ;
 GETDOS ; EP
  ; dates of service

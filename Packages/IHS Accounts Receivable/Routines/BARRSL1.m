@@ -1,32 +1,28 @@
 BARRSL1 ; IHS/SD/LSL - Selective Report Parameters-PART 2 ; 12/19/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,10,16,19,20,23,24**;OCT 26,2005;Build 69
- ; IHS/SD/TMM 7/20/10 1.8*19 Add Group Plan to A/R Statistical report.
- ;     When selecting A/R STATISTICAL REPORT by Billing Entity prompt
- ;             user for Group Plans to include in report data.
- ;     FIXPMS10019 #1 - TSR report, Add Adjustment inclusion 
- ;             parameter: "Sent To  Collections" 
- ;     Resolve UNDEFINED error <UNDEFINED>S4+12^DICL2 
- ;     Add STATUS CHANGE as Selection Type for TSR report
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,10,16,19,20,23,24,29,35**;OCT 26,2005;Build 187
+ ;IHS/SD/TMM 7/20/10 1.8*19 Add Group Plan to A/R Statistical report. When selecting A/R STATISTICAL REPORT by Billing Entity prompt
+ ;  user for Group Plans to include in report data. FIXPMS10019 #1 - TSR report, Add Adjustment inclusion parameter: "Sent To  Collections"
+ ;  Resolve UNDEFINED error <UNDEFINED>S4+12^DICL2. Add STATUS CHANGE as Selection Type for TSR report
  ;
- ; IHS/SD/POTT 12/12 ADDED SELECTION OF CODING DX VERSION ICD-9 / ICD-10 - BAR1.8*23
- ; IHS/SD/POTT 03/13 ADDED NEW VA billing - BAR1.8*23
- ; IHS/SD/POTT 06/13 FIXED FLAWS IN SELECTING ICD9/10 DX - BAR1.8*23
- ; IHS/SD/POTT 07/13 DO NOT ALLOW SELECT ICD10 WHEN INFRASTRUCTURE NOT PRESENT - BAR1.8*23
- ; IHS/SD/POTT HEAT150941 02/09/14 Allow ALL DX9/10 - BAR1.8*24
- ;                        if no DX selected: show ALL DX of ALL available coding systems
- ;                        fixed escape from report after pressing ^ in DX prompts
- ; ;;;IHS/SD/POTT ICD-10 SANDBOX TESTING: FIXED ERR MESSAGE Low Diagnosis is Greater than the High IF DXLO=DXHI - BAR1.8*??
- ; IHS/SD/POTT BETA FIXED RETURN TO SELECT INCLUSION PARAMETERS: BAR1.8*24
+ ;IHS/SD/POT 1.8*23 12/12 ADDED SELECTION OF CODING DX VERSION ICD-9/ICD-10
+ ;IHS/SD/POT 1.8*23 03/13 ADDED NEW VA billing
+ ;IHS/SD/POT 1.8*23 06/13 FIXED FLAWS IN SELECTING ICD9/10 DX
+ ;IHS/SD/POT 1.8*23 07/13 DO NOT ALLOW SELECT ICD10 WHEN INFRASTRUCTURE NOT PRESENT
+ ;IHS/SD/POT 1.8*24 HEAT150941 02/09/14 Allow ALL DX 9/10; if no DX selected: show ALL DX of ALL available coding systems
+ ;   fixed escape from report after pressing ^ in DX prompts
+ ;;;IHS/SD/POT 1.8*?? ICD-10 SANDBOX TESTING: FIXED ERR MESSAGE Low Diagnosis is Greater than High IF DXLO=DXHI
+ ;IHS/SD/POT 1.8*24 BETA FIXED RETURN TO SELECT INCLUSION PARAMETERS
+ ;IHS/SD/SDR 1.8*35 ADO60910 Updated for PPN preferred name display
  ;
  Q
- ; ******
+ ;******
  ;
 TRANTYP ; EP
- D TRANTYP^BARRSL4 ;ASK FOR TRANSACTION TYPE
+ D TRANTYP^BARRSL4 ;ASK FOR TRANS TYPE
  Q
  ; 
 LOC ; EP
- ; Select Location inclusion parameters
+ ;Select Location inclusion parameters
  W !
  K DIC,BARY("LOC")
  S DIC="^BAR(90052.05,DUZ(2),"
@@ -39,12 +35,12 @@ LOC ; EP
  S BARY("LOC")=+Y
  S BARY("LOC","NM")=Y(0,0)
  Q
- ; **************
+ ;**************
 TYP ; EP
- ; Select BILLING ENTITY Inclusion Parameter
- ; May not specify both billing entity and a/r account
+ ;Select BILLING ENTITY Inclusion Parameter
+ ;May not specify both billing entity and a/r account
  K DIR,BARY("TYP"),BARY("ACCT"),BARY("PAT"),BARY("ALL"),BARY("ITYP")
- ; - BAR1.8*23 UPDATED DISPATCH TABLE
+ ;bar*1.8*23 UPDATED DISPATCH TABLE
  S DIR(0)="SO^1:MEDICARE"
  S DIR(0)=DIR(0)_";2:MEDICAID"
  S DIR(0)=DIR(0)_";3:PRIVATE INSURANCE"
@@ -66,7 +62,7 @@ TYP ; EP
  S BARY("TYP")=U_Y_U
  S BARY("TYP","NM")=Y(0)
  G ACCT:Y=6,PAT:Y=7
- ;P.OTT UPDATED DISPATCH TABLE  BAR1.8*23
+ ;bar*1.8*23 POT UPDATED DISPATCH TABLE
  S:Y=1 BARY("TYP")="^R^MH^MD^MC^MMC^"
  S:Y=2 BARY("TYP")="^D^K^FPL^"
  S:Y=3 BARY("TYP")="^H^M^P^F^"
@@ -78,12 +74,13 @@ TYP ; EP
  S:Y=11 BARY("TYP")="^V^"
  S:Y=12 BARY("TYP")="^W^C^N^I^T^G^SEP^TSI^"
  Q
- ; ***********
+ ;***********
 ACCT ; 
- ; Specific insurer of billing entity parameter
+ ;Specific insurer of billing entity parameter
  K DIC
  K BARY("TYP"),BARY("ACCT")
  S DIC="^BARAC(DUZ(2),"
+ S DIC("W")="D DICWACCT^BARUTL0(Y)"  ;bar*1.8*35 IHS/SD/SDR ADO60910
  S DIC(0)="ZQEAM"
  D ^DIC
  K DIC
@@ -93,8 +90,8 @@ ACCT ;
  S BARY("ACCT","NM")=Y(0,0)
  I $G(BAR("OPT"))="STA" F BARGRPI=1:1 D GETGRP Q:+Y<0
  Q
- ; *******
-GETGRP ;  Prompt for Group #   ;New Tag... M819*ADD*TMM*20100720
+ ;*******
+GETGRP ;Prompt for Group # ;New Tag M819*ADD*TMM*20100720
  W !
  K DIC
  S DIC="^AUTNEGRP("
@@ -108,10 +105,13 @@ GETGRP ;  Prompt for Group #   ;New Tag... M819*ADD*TMM*20100720
  Q
  ;
 PAT ;
- ; Specific patient of billing entity parameter
+ ;Specific patient of billing entity parameter
  K BARY("TYP"),BARY("PAT")
+ D ^XBFMK  ;bar*1.8*35 IHS/SD/SDR ADO60910
  S DIC="^AUPNPAT("
- S DIC(0)="ZQEAM"
+ ;S DIC(0)="ZQEAM"  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ S DIC(0)="IZQEAM"  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ S DIC("W")="D DICWPAT^BARUTL0(1)"  ;bar*1.8*35 IHS/SD/SDR ADO60910
  D ^DIC
  K DIC
  Q:$D(DTOUT)!($D(DUOUT))
@@ -120,9 +120,9 @@ PAT ;
  S BARY("PAT")=+Y
  S BARY("PAT","NM")=Y(0,0)
  Q
- ; **********
+ ;**********
 ALL ; EP
- ; Select ALLOWANCE CATEGORY Inclusion Parameter  BAR1.8*23
+ ;bar*1.8*23 Select ALLOWANCE CATEGORY Inclusion Parameter
  K DIR,BARY("TYP"),BARY("ACCT"),BARY("PAT"),BARY("ALL"),BARY("ITYP")
  S DIR(0)="SO^1:MEDICARE              (INS TYPES R MD MH MC MMC)" ;JULY 2003 
  S DIR(0)=DIR(0)_";2:MEDICAID              (INS TYPES D K FPL)"
@@ -133,86 +133,86 @@ ALL ; EP
  S DIR("?")="Enter TYPE of ALLOWANCE CATEGORY to display, or press <return> for ALL"
  D ^DIR
  K DIR
- I $D(DUOUT)!($D(DTOUT)) S BARDONE3=1 Q
- I Y<1 S BARDONE3=1 Q
+ I $D(DUOUT)!($D(DTOUT)) S BARDONE=1 Q
+ I $A(Y)<1 S BARDONE2=1 Q
  S BARY("ALL")=Y
  S BARY("ALL","NM")=Y(0)
  Q
- ; *******************
-DT ; EP
- ; Select Date inclusion parameter
+ ;*******************
+DT ;EP
+ ;Select Date inclusion parameter
  D DT^BARRSL4
  Q
- ; **************************
-PRV ; EP
- ; Select Provider Inclusion Parameter
+ ;********************
+PRV ;EP
+ ;Select Provider Inclusion Parameter
  D PRV^BARRSL4
  Q
- ; *******************************
-AR ; EP
- ; Select A/R Clerk Inclusion Parameter
+ ;********************
+AR ;EP
+ ;Select A/R Clerk Inclusion Parameter
  D AR^BARRSL4
  Q
- ; ******************
-BATCH ; EP
- ; Select Collection Batch Inclusion Parameter
+ ;******************
+BATCH ;EP
+ ;Select Collection Batch Inclusion Parameter
  D BATCH^BARRSL4
  Q
- ; *******
+ ;*******
 ITEM ; EP
- ; Select Collection Batch Item Inclusion Parameter
+ ;Select Collection Batch Item Inclusion Parameter
  D ITEM^BARRSL4
  Q
- ; *************
+ ;*************
 RTYP ; EP
- ; Select Report Type Inclusion Parameter
+ ;Select Report Type Inclusion Parameter
  D RTYP^BARRSL4
  Q
- ; *********************
-DSVC ; EP Select One Discharge Service
+ ;*********************
+DSVC ;EP Select One Discharge Service
  D DSVC^BARRSL4
  Q
- ; ********************  BAR1.8*23
+ ;***BAR*1.8*23
 ASKICD() ;         
  D ASKICD^BARRSL4()
  Q Y
 CLNUPDX ;CLEAN UP DX
  D CLNUPDX^BARRSL4
  Q
-DX ; EP
+DX ;EP
  S BARQ=0 ;^
  K BARY("DX9")
  K BARY("DX10")
  K BARY("DX-ICDVER")
 DXCODE ;
- ;S BARICDV=$$ASKICD() I BARICDV="^" D  QUIT ;OLD CODE  BAR1.8*24
+ ;S BARICDV=$$ASKICD() I BARICDV="^" D  QUIT ;OLD bar*1.8*24
  ;FIXED RETURN TO SELECT INCLUSION PARAMETERS
- S BARICDV=$$ASKICD() I BARICDV="^"  S DUOUT=0,DIRUT=0 D  QUIT  ;NEW CODE  BAR1.8*24
- . D CLNUPDX
+ S BARICDV=$$ASKICD() I BARICDV="^"  S DUOUT=0,DIRUT=0 D  QUIT  ;NEW bar*1.8*24
+ .D CLNUPDX
  I Y="B"!(Y=10) I $T(+1^ICDEX)="" D  G DXCODE
- . W !!!,"NOTE: SOME OF THE ICD-10 INFRASTRUCTURE UTILITIES ARE MISSING."
- . W !,"THIS REPORT CANNOT CURRENTLY PROVIDE ANY DATA BASED ON ICD-10 DX CODES"
- . Q
+ .W !!!,"NOTE: SOME OF THE ICD-10 INFRASTRUCTURE UTILITIES ARE MISSING."
+ .W !,"THIS REPORT CANNOT CURRENTLY PROVIDE ANY DATA BASED ON ICD-10 DX CODES"
+ .Q
  S BARY("DX-ICDVER")=BARICDV
  I BARY("DX-ICDVER")=9 D  I $G(BARQ) Q
- . D DX9 I $G(BARQ) Q
- . D DXADD(9) I $G(BARQ) Q
+ .D DX9 I $G(BARQ) Q
+ .D DXADD(9) I $G(BARQ) Q
  I BARY("DX-ICDVER")=10 D  I $G(BARQ) Q
- . D DX10 I $G(BARQ) Q
- . D DXADD(10) I $G(BARQ) Q
+ .D DX10 I $G(BARQ) Q
+ .D DXADD(10) I $G(BARQ) Q
  I BARY("DX-ICDVER")="B" D  I $G(BARQ) Q
- . D DX9 I $G(BARQ) Q
- . D DXADD(9) I $G(BARQ) Q
- . D DX10 I $G(BARQ) Q
- . D DXADD(10) I $G(BARQ) Q
+ .D DX9 I $G(BARQ) Q
+ .D DXADD(9) I $G(BARQ) Q
+ .D DX10 I $G(BARQ) Q
+ .D DXADD(10) I $G(BARQ) Q
  I BARY("DX-ICDVER")=9!(BARY("DX-ICDVER")="B") I '$D(BARY("DX9")) D
- . K BARY("DX9")
- . S BARY("DX9")="ALL"  ;- BAR1.8*24
- . S BARY("DX9_ALL")="ALL"
+ .K BARY("DX9")
+ .S BARY("DX9")="ALL"  ;bar*1.8*24
+ .S BARY("DX9_ALL")="ALL"
  I BARY("DX-ICDVER")=10!(BARY("DX-ICDVER")="B") I '$D(BARY("DX10")) D
- . K BARY("DX10")
- . S BARY("DX10")="ALL"  ;- BAR1.8*24
- . S BARY("DX10_ALL")="ALL"
+ .K BARY("DX10")
+ .S BARY("DX10")="ALL"  ;bar*1.8*24
+ .S BARY("DX10_ALL")="ALL"
  W !!
  D SHOWDX
  S DIR("A")="Are you OK with this selection"
@@ -221,10 +221,10 @@ DXCODE ;
  D ^DIR
  K DIR
  I Y'=1 D  G DX
- . W !,"OK, make a new DX selection"
+ .W !,"OK, make a new DX selection"
  Q
  ;
-DX9 ;<------- 
+DX9 ;<---
  ;
 DXLOW9 ;
  K BARY("DX9")
@@ -249,11 +249,11 @@ DXHI9 ;
  I $D(BARY("DX9",1)) I +Y<1 G DXLOW9 ;IF LO DEFINED, ENTER
  I +Y<1 Q  ;ENTER
  S BARY("DX9",2)=$P(Y,U,2)
- I BARY("DX9",1)=BARY("DX9",2) QUIT  ; - BAR1.8*24
+ I BARY("DX9",1)=BARY("DX9",2) QUIT  ;bar*1.8*24
  I BARY("DX9",1)>BARY("DX9",2)!('+BARY("DX9",1)&($E(BARY("DX9",1),2,9)>$E(BARY("DX9",2),2,9))) D  G DXLOW9
- .  W !!,*7,"INPUT ERROR: Low Diagnosis is Greater than the High, TRY AGAIN!",!!
+ .W !!,*7,"INPUT ERROR: Low Diagnosis is Greater than the High, TRY AGAIN!",!!
  Q
- ; ********************** 
+ ;********************** 
 DXADD(BARICD) ;
  NEW BARDXTYP
  S BARDXTYP="DX"_BARICD
@@ -281,8 +281,8 @@ ADDDX(BARICD) ;ADD ONE OR MORE SINGLE DG INTO BARY("DX9",3 or BARY("DX10",3
  S BARDX=$P(Y,U,2)
  I BARDX="" S BARQ1=1 Q
  I $D(BARY(BARDXTYP,3,BARDX)) D  Q
- . W !,"      Removed from selection."
- . K BARY(BARDXTYP,3,BARDX)
+ .W !,"      Removed from selection."
+ .K BARY(BARDXTYP,3,BARDX)
  S BARY(BARDXTYP,3,BARDX)="" W !,"    Added to selection." Q
  Q
 CONTDX(BARICD) ;
@@ -302,14 +302,13 @@ CONTDX(BARICD) ;
  D LIST^BARRSLDX(BARDX1,0)
  I 'BARCNT W " no matching DXs found" Q
  I $D(BARY(BARDXTYP,4,BARDX1)) D  Q
- . I '$$ASKREM() Q
- . K BARY(BARDXTYP,4,BARDX1)
- . W !,BARDX1, "  removed from selection."
+ .I '$$ASKREM() Q
+ .K BARY(BARDXTYP,4,BARDX1)
+ .W !,BARDX1,"  removed from selection."
  W " (",BARCNT," matching DXs found) "
  S BARY(BARDXTYP,4,BARDX1)="" W !,BARDX1," added to selection." Q
  Q
 DX10 ;
- ;
 DXLOW10 ;
  K BARY("DX10")
  K DIR,DIC,DA
@@ -334,11 +333,11 @@ DXHI10 ;
  I $G(BARY("DX10",1))]"" I +Y<1 G DXLOW10
  I +Y<1 Q  ;ENTER 
  S BARY("DX10",2)=$P(Y,U,2)
- ;;;I BARY("DX10",2)=BARY("DX10",1) Q  ; - BAR1.8*??
+ ;I BARY("DX10",2)=BARY("DX10",1) Q  ; - BAR1.8*??
  I '(BARY("DX10",2)]]BARY("DX10",1)) D  G DXLOW10
- . W !!,*7,"INPUT ERROR: Low Diagnosis is Greater than the High, TRY AGAIN!",!!
+ .W !!,*7,"INPUT ERROR: Low Diagnosis is Greater than the High, TRY AGAIN!",!!
  Q
- ; **********************
+ ;**********************
 DXADINFO(BARX,BARY) ; 
  QUIT  ;
 LIST(BARICD) ;
@@ -349,8 +348,8 @@ LIST(BARICD) ;
  S BAR1="" F  S BAR1=$O(BARY(BARDXTYP,3,BAR1)) Q:BAR1=""  W ! D DXINFO(BAR1) ;
  S BAR1="" F  S BAR1=$O(BARY(BARDXTYP,4,BAR1)) Q:BAR1=""  W !,"code begins ",BAR1
  Q
-LBL ; EP
- ; Ask for large balance
+LBL ;EP
+ ;Ask large balance
  K DIR
  S DIR(0)="NAO^50:10000000:2"
  S DIR("A")="Large Balance: "
@@ -360,9 +359,9 @@ LBL ; EP
  I $D(DUOUT)!(Y="")  Q
  S BARY("LBL")=+Y
  Q
- ; ******************
-SBL ; EP
- ; Ask for small balance
+ ;******************
+SBL ;EP
+ ;Ask small balance
  K DIR
  S DIR(0)="NAO^0:99:2"
  S DIR("A")="Small Balance: "
@@ -372,25 +371,25 @@ SBL ; EP
  I $D(DUOUT)!(Y="")  Q
  S BARY("SBL")=+Y
  Q
- ; ****************
-ITYP ; EP
- ; Ask for Insurer Type
+ ;****************
+ITYP ;EP
+ ;Ask Insurer Type
  K DIR,BARY("ITYP"),BARY("ACCT"),BARY("PAT"),BARY("ALL"),BARY("TYP")
  K BARY("COLPT")
  ;PRIV
  S DIR(0)="SO^H:HMO"
  S DIR(0)=DIR(0)_";M:MEDICARE SUPPL."
- S DIR(0)=DIR(0)_";P:PRIVATE INSURANCE" 
- S DIR(0)=DIR(0)_";F:FRATERNAL ORGANIZATION" 
+ S DIR(0)=DIR(0)_";P:PRIVATE INSURANCE"
+ S DIR(0)=DIR(0)_";F:FRATERNAL ORGANIZATION"
  ;OTHER
- S DIR(0)=DIR(0)_";T:THIRD PARTY LIABILITY" 
+ S DIR(0)=DIR(0)_";T:THIRD PARTY LIABILITY"
  S DIR(0)=DIR(0)_";W:WORKMEN'S COMP"
  S DIR(0)=DIR(0)_";C:CHAMPUS"
  S DIR(0)=DIR(0)_";N:NON-BENEFICIARY (NON-INDIAN)"
  S DIR(0)=DIR(0)_";I:INDIAN PATIENT"
  S DIR(0)=DIR(0)_";G:GUARANTOR"
- S DIR(0)=DIR(0)_";SEP:STATE EXCHANGE PLAN" 
- S DIR(0)=DIR(0)_";TSI:TRIBAL SELF INSURED" 
+ S DIR(0)=DIR(0)_";SEP:STATE EXCHANGE PLAN"
+ S DIR(0)=DIR(0)_";TSI:TRIBAL SELF INSURED"
  ;MEDICAID 
  S DIR(0)=DIR(0)_";D:MEDICAID FI"
  S DIR(0)=DIR(0)_";K:CHIP (KIDSCARE)"
@@ -412,9 +411,9 @@ ITYP ; EP
  S BARY("ITYP")=Y
  S BARY("ITYP","NM")=Y(0)
  Q
- ; *****************
-COLPT ; EP
- ; Select Collection Point and Date ranges
+ ;*****************
+COLPT ;EP
+ ;Select Collection Point, date ranges
  K BARY("COLPT"),BARY("ITYP")
  S DIC="^BAR(90051.02,DUZ(2),"
  S DIC(0)="ZQEAM"
@@ -425,7 +424,7 @@ COLPT ; EP
  S BARY("COLPT")=+Y
  S BARY("COLPT","NM")=Y(0,0)
  Q
- ;start new code bar*1.8*20 REQ10
+ ;start new bar*1.8*20 REQ10
 DATASRC ;EP
  ;Select Data Source
  S DIR(0)="SO^1:ELECTRONIC;2:MANUAL;3:BOTH"
@@ -436,38 +435,38 @@ DATASRC ;EP
  I $D(DUOUT)!($D(DTOUT))!($D(DIRUT)) Q
  S BARY("DATA SRC")=Y(0)
  Q
- ;end new code REQ10
+ ;end new REQ10
 SHOWDX ; - BAR1.8*23 LIST SELECTED DXs
  NEW BAR1,BAR2,BAR3,BARTMP1
  I $G(BARY("DX9"))="ALL" W !,"Display all ICD-9 Diagnosis"
  I $G(BARY("DX10"))="ALL" W !,"Display all ICD-10 Diagnosis"
  F BAR1="DX9","DX10" D
- . F BAR2=1,2,3 I $D(BARY(BAR1,BAR2)) D
- . . W !,"ICD"_$E(BAR1,3,4) ;
- . . I BAR2<3 D  Q
- . . . I BAR2=1 W " FROM "
- . . . I BAR2=2 W " TO   "
- . . . S BARDX=BARY(BAR1,BAR2)
- . . . D DXINFO(BARDX) ;
- . . W "      "
- . . S BARDX="" F  S BARDX=$O(BARY(BAR1,BAR2,BARDX)) Q:BARDX=""  D DXINFO(BARDX) W !
- . S BAR2=4 I $D(BARY(BAR1,BAR2)) D
- . . W !,BAR1
- . . W " begins"
- . . S BARDX="" F  S BARDX=$O(BARY(BAR1,BAR2,BARDX)) Q:BARDX=""  W ?12," ",BARDX W !
+ .F BAR2=1,2,3 I $D(BARY(BAR1,BAR2)) D
+ ..W !,"ICD"_$E(BAR1,3,4) ;
+ ..I BAR2<3 D  Q
+ ...I BAR2=1 W " FROM "
+ ...I BAR2=2 W " TO   "
+ ...S BARDX=BARY(BAR1,BAR2)
+ ...D DXINFO(BARDX) ;
+ ..W "      "
+ ..S BARDX="" F  S BARDX=$O(BARY(BAR1,BAR2,BARDX)) Q:BARDX=""  D DXINFO(BARDX) W !
+ .S BAR2=4 I $D(BARY(BAR1,BAR2)) D
+ ..W !,BAR1
+ ..W " begins"
+ ..S BARDX="" F  S BARDX=$O(BARY(BAR1,BAR2,BARDX)) Q:BARDX=""  W ?12," ",BARDX W !
  Q
 DXINFO(BARDX) ;
  NEW BAR2,BAR3,BAR4
  S BAR4=""
  W ?12," ",BARDX
- I $$HAVICD10() D  ;
- . S BAR2=BARDX_" "
- . S BAR3=$O(^ICD9("AB",BAR2,""))
- . I BAR3]"" S BAR4=$P($G(^ICD9(BAR3,67,1,0)),U,2)
+ I $$HAVICD10() D
+ .S BAR2=BARDX_" "
+ .S BAR3=$O(^ICD9("AB",BAR2,""))
+ .I BAR3]"" S BAR4=$P($G(^ICD9(BAR3,67,1,0)),U,2)
  E  D
- . S BAR2=BARDX
- . S BAR3=$O(^ICD9("AB",BAR2,""))
- . I BAR3]"" S BAR4=$P($G(^ICD9(BAR3,0)),U,3)
+ .S BAR2=BARDX
+ .S BAR3=$O(^ICD9("AB",BAR2,""))
+ .I BAR3]"" S BAR4=$P($G(^ICD9(BAR3,0)),U,3)
  W ?20,BAR4 ;CODE - TEXT
  ;ICD9 - OLD GLOBAL VERSION: ^ICD9(2,0)="100.89^^LEPTOSPIRAL INFECT NEC^^1^^^^"
  ;ICD10 - NDE GLOBAL VERSION ^ICD9("AB","307.1 ",1361) =
@@ -484,7 +483,7 @@ ASKREM() ;
  Q 0
 HAVICD10() ;RETURNS 1 IF ICD10 INSTALLED
  Q $T(+1^ICDEX)]""
- ;---------------------------EOR-------------------
+ ;-----EOR-----
  ;SHOW(X) ;
  I 'X Q
  W !,"Y=",Y,"  X=",X," DTOUT: ",$G(DTOUT)," DUOUT: ",$G(DUOUT)," DIRUT: ",$G(DIRUT)," DIROUT: ",$D(DIROUT),"  $g(barq)=",$G(BARQ)

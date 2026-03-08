@@ -1,5 +1,5 @@
 AMHLETPP ; IHS/CMI/LAB - DISPLAY A TREATMENT PLAN ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**1,4**;JUN 18, 2010;Build 28
+ ;;4.0;IHS BEHAVIORAL HEALTH;**1,4,11**;JUN 02, 2010;Build 27
  ;
 PRINT ;EP - called from xbdbque
  Q:'$G(AMHTP)
@@ -94,7 +94,9 @@ HEAD1 ;EP
  W !,$TR($J("",80)," ","*")
  W !,"*",?79,"*"
  W !,"*  TREATMENT PLAN",?45,"Printed: "_$$FMTE^XLFDT($$NOW^XLFDT),?79,"*"
+ ;W !,"*  Name:  ",$P(^DPT(DFN,0),U),?68,"Page ",AMHPG,?79,"*"
  W !,"*  Name:  ",$P(^DPT(DFN,0),U),?68,"Page ",AMHPG,?79,"*"
+ NEW N S N=$$GETPREF^AUPNSOGI(DFN,"I",1) I N]"" W !,"*  Preferred Name: ",N,?79,"*"
  W !,"*  ",$E($P(^DIC(4,DUZ(2),0),U),1,25),?30,"DOB:  ",$$FMTE^XLFDT($P(^DPT(DFN,0),U,3),"2D"),?46,"Sex:  ",$P(^DPT(DFN,0),U,2),?54,"  Chart #:  ",$P(^AUTTLOC(DUZ(2),0),U,7),$P($G(^AUPNPAT(DFN,41,DUZ(2),0)),U,2),?79,"*"
  W !,"*",?79,"*"
  W !,$TR($J("",80)," ","*"),!

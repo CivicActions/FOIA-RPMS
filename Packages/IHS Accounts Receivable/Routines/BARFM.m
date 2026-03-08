@@ -1,5 +1,5 @@
 BARFM ; IHS/SD/LSL - USER FM ACCESS TO RESTRICTED FILES MAY 30,1996 ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+ ;;1.7;IHS ACCOUNTS RECEIVABLE;**2,4**;MAY 02, 2003
  ;;
  ; IHS/SD/LSL - 06/23/03 - V1.7 Patch 2
  ;       Modified screen to work better with FM 22
@@ -21,7 +21,13 @@ SELPKG ;
  K DIC,DA,DR,DIE
  S DIC=9.4
  S DIC(0)="AEQM"
+ ; Begin code change V1.7 Patch 4
+ ; Begin code change V1.7 Patch 2
+ ;S DIC("S")="I $D(BARS($$VAL^XBDIQ1(9.4,+Y,1)))"
+ ;S DIC("S")="$S($$GET1^DIQ(9.4,+Y,1)']"""":0,1:$D(BARS($$GET1^DIQ(9.4,+Y,1))))"
  S DIC("S")="I $S($$GET1^DIQ(9.4,+Y,1)']"""":0,1:$D(BARS($$GET1^DIQ(9.4,+Y,1))))"
+ ; End code change V1.7 Patch 2
+ ; End code change V1.7 Patch 4
  D ^DIC
  Q:Y'>0
  S BARPKDA=+Y

@@ -1,5 +1,6 @@
-DIFROMSE ;SFISC/DCL-FILE ORDER TO RESOLVE POINTERS ;07:27 AM  2 Jun 1994
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROMSE ;SFISC/DCL-FILE ORDER TO RESOLVE POINTERS;07:27 AM  2 Jun 1994; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
  ;File Order List for Resolving Pointers

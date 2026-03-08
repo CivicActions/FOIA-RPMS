@@ -1,5 +1,5 @@
 ABSPOSCD ; IHS/FCS/DRS - ABSP("RX",*) ;      [ 10/28/2002  2:40 PM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,10,12,18,19,20,21,23,32,36,40,42,46**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,10,12,18,19,20,21,23,32,36,40,42,46,51**;JUN 21, 2001;Build 131
  ;---
  ;IHS/SD/lwj 8/20/02  NCPDP 5.1 changes
  ; One of the new segments in 5.1 is the DUR/PPS segment - this 
@@ -174,15 +174,18 @@ MEDINFO(VMEDINFO,MEDN,INSPINS) ;EP
  . S ABSP("RX",MEDN,"Prescriber ID")=ABSP("RX",MEDN,"Prescriber NPI #")
  ;
  D:DRUGIEN'=""
- .S ABSP("RX",MEDN,"Drug IEN")=DRUGIEN
- .S ABSP("RX",MEDN,"Drug Name")=$P($G(^PSDRUG(DRUGIEN,0)),U,1)
- .I ABSP("RX",MEDN,"NDC")="" D
- ..S ABSP("RX",MEDN,"NDC")=$P($G(^PSDRUG(DRUGIEN,2)),U,4)
- .;IHS/SD/RLT - 7/18/06 - Patch 18 - Add Unit of Measure
- .S UOM=$P($G(^PSDRUG(DRUGIEN,660)),U,8)
- .S ABSP("Claim",MEDN,"Unit of Measure")="EA"        ;default
- .S:UOM="ML"!(UOM="ml")!(UOM="MILLILITERS") ABSP("Claim",MEDN,"Unit of Measure")="ML"
- .S:UOM="GM"!(UOM="gm")!(UOM="GRAM") ABSP("Claim",MEDN,"Unit of Measure")="GM"
+ . S ABSP("RX",MEDN,"Drug IEN")=DRUGIEN
+ . S ABSP("RX",MEDN,"Drug Name")=$P($G(^PSDRUG(DRUGIEN,0)),U,1)
+ . ; /IHS/OIT/RAM ; PATCH 51 ; NEED TO SET SEGMENTS 442 AND 460 ACCORDING TO THE DRUG SCHEDULE
+ . ;                NEED TO ADD A NEW FIELD WITH THE NUMERIC SCHEDULE VALUE.
+ . S ABSP("RX",MEDN,"Drug Schedule")=+$$GET1^DIQ(50,DRUGIEN_",",3,"I")
+ . I ABSP("RX",MEDN,"NDC")="" D
+ . . S ABSP("RX",MEDN,"NDC")=$P($G(^PSDRUG(DRUGIEN,2)),U,4)
+ . ;IHS/SD/RLT - 7/18/06 - Patch 18 - Add Unit of Measure
+ . S UOM=$P($G(^PSDRUG(DRUGIEN,660)),U,8)
+ . S ABSP("Claim",MEDN,"Unit of Measure")="EA"        ;default
+ . S:UOM="ML"!(UOM="ml")!(UOM="MILLILITERS") ABSP("Claim",MEDN,"Unit of Measure")="ML"
+ . S:UOM="GM"!(UOM="gm")!(UOM="GRAM") ABSP("Claim",MEDN,"Unit of Measure")="GM"
  N PRICING S PRICING=^ABSPT(IEN59,5)
  S ABSP("RX",MEDN,"Quantity")=$P(PRICING,U) ; 01/31/2001
  S ABSP("RX",MEDN,"Unit Price")=$P(PRICING,U,2)

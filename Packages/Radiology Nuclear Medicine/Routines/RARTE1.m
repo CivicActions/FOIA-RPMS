@@ -1,5 +1,5 @@
-RARTE1 ;HISC/CAH,FPT,GJC AISC/MJK,RMO-Edit/Delete a Report ;6/10/98  16:08
- ;;5.0;Radiology/Nuclear Medicine;**2,15,17,23,31,68,56,47**;Mar 16, 1998;Build 21
+RARTE1 ;HISC/CAH,FPT,GJC AISC/MJK,RMO-Edit/Delete a Report ; Aug 25, 2020@15:11:03
+ ;;5.0;Radiology/Nuclear Medicine;**2,15,17,23,31,68,56,47,124,163,162,173,1009**;Mar 16, 1998;Build 21
  ;Private IA #4793 DELETE^WVRALINK, CREATE^WVRALINK 
  ;Supported IA #10035
  ;Supported IA #10007
@@ -49,7 +49,7 @@ AD2 K RAXIT S RAPRG74=1 ;RAPRG74 used in kill logic file 74 fld .01
  D UNLOCK^RAUTL12("^RARPT(",RAIEN) ; unlock report
  I RAOK'=2,$T(DELETE^WVRALINK)]"" D DELETE^WVRALINK(RADFN,RADTI,RACNI) ; women's health, skip if report doesn't belong to exm
 END K %,%Y,D0,DA,DIC,DIE,RAJ1,DIK,RADFN,RADTI,RACN,RACNI,RA0,RAIEN,RAOR
- K RADUZ,RAORDIFN,RAPRG74,RASN,RASTI,Y
+ K RAORDIFN,RAPRG74,RASN,RASTI,Y ;KLM/163 - removed RADUZ from kill
  K RADATE,RADTE,X
  K RA791,RACANC,RACN0,RACPT,RACPTNDE,RAI,RAN,RAOBR4,RAPKG,RAPRCNDE,RAPROC,RAPROCIT,RAPRV,RASULT,RAXIT
  K C,D,D1,DDER,DDH,DFN,DI,DISYS,DIWF,DIWL,DIWR,DQ,DR,GMRAL,HLN,HLRESLT,HLSAN,I,VA,VADM,VAERR,X0
@@ -62,7 +62,8 @@ UNVER(RAXRPT) ; unverify a report
  ;                    delete (interactive)
  ;
  I 'RAXRPT D SET^RAPSET1 G Q:$D(XQUIT)
- I RAXRPT N X S X=RAXRPT
+ ;p173/KLM lookup on IEN should not be ambiguous.
+ I RAXRPT N X S X="`"_RAXRPT
  S RAXIT=0,DIC="^RARPT(",DIC("S")="I $P(^(0),U,5)=""V"""
  S DIC(0)=$S('RAXRPT:"AEMQZ",1:"NZ")
  D DICW,^DIC K DIC I Y<0 D Q Q
@@ -74,7 +75,12 @@ UNVER(RAXRPT) ; unverify a report
  ;11/07/2005 KAM/BAY 110020 Modified next line to look for voice recognition
  S DIE="^RARPT(",DR(2,74.01)="2////U;3////"_$S(($D(RAQUIET)#2)&($D(RASUB)#2):$G(^TMP("RARPT-REC",$J,RASUB,"RAVERF")),1:DUZ)
  S RAXIT=$$LOCK^RAUTL12("^RARPT(",RARPT)
- I RAXIT D Q QUIT
+ ;
+ ;this check is to see if a report from the outside is to be amended $G(RAXRPT)>0
+ I RAXIT S:$G(RAXRPT)>0 RAERR="^RARPT("_RARPT_", could not be locked for addendum." D Q QUIT
+ ;if called from RAHLO1 and the lock fails we need to set RAERR
+ ;RAERR is needed back in RAHLO1 p162
+ ;
  D ^DIE K DE,DQ,DIE,DR D UNLOCK^RAUTL12("^RARPT(",RARPT)
  N RA1,RA2,RA3,RA4 S RA1=RADFN,RA2=RADTI,RA3=RACN,RA4=RARPT
  S RA(0)=$G(^RARPT(RARPT,0)),RA(5)=$P(^RARPT(RARPT,0),"^",5)
@@ -96,7 +102,7 @@ Q ; Kill and quit
  K DFN,DI,DIW,DIWF,DIWI,DIWL,DIWT,DIWTC,DIWX,RAACNT,RANUM,RAST,RAWHOVER
  K %,%DT,%W,%Y,%Y1,C,D,D0,D1,DA,DIC,DIE,DIK,DR,RA,RACN,RACNI,RADATE
  K RADFN,RADIV,RADTE,RADTI,RAJ,RAOR,RAORDIFN,RARPT,RASET,RASN,RASTATX
- K RASTI,RAXIT,X,XQUIT,Y,RA74B4,DDH,DIPGM,DISYS,I,RADUZ
+ K RASTI,RAXIT,X,XQUIT,Y,RA74B4,DDH,DIPGM,DISYS,I ;KLM/163 - removed RADUZ from kill
  Q
  ;
 STD S (RALR,RALI)=1
@@ -145,7 +151,8 @@ COPYDX ;if we have a printset copy over the Dx code data (both primary & seconda
  D DXULOC
  ;
 PACS I ($P(^RARPT(RARPT,0),U,5)="V")!($P(^(0),U,5)="R") D RPT^RAHLRPC
- I "^V^EF"[("^"_$P(^RARPT(RARPT,0),U,5)_"^"),$T(CREATE^WVRALINK)]"" D CREATE^WVRALINK(RADFN,RADTI,RACNI) ; women's health
+ ;pre p124: "^V^EF" post p124 "^V^EF^"
+ I "^V^EF^"[("^"_$P(^RARPT(RARPT,0),U,5)_"^"),$T(CREATE^WVRALINK)]"" D CREATE^WVRALINK(RADFN,RADTI,RACNI) ; women's health
  Q
  ;
 ASKBTCH R !!,"Do you want to batch print reports? Yes// ",X:DTIME S:'$T X="^" S:X="" X="Y" Q:X["^"  I "Nn"'[$E(X),"Yy"'[$E(X) W:X'["?" $C(7) W !!?3,"Enter 'YES' to batch print reports, or 'NO' not to." G ASKBTCH

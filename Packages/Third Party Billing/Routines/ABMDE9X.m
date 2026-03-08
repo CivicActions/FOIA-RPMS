@@ -1,5 +1,5 @@
-ABMDE9X ; IHS/ASDST/DMJ - Page 9 - ERROR CHECKS ;
- ;;2.6;IHS Third Party Billing;**1,6**;NOV 12, 2009
+ABMDE9X ; IHS/SD/SDR - Page 9 - ERROR CHECKS ;
+ ;;2.6;IHS Third Party Billing;**1,6,10**;NOV 12, 2009;Build 43
  ;
  ; 12/19/03 V2.5 Patch 5 - 837 modifications
  ;     Add 192 error code for imprecise accident dates
@@ -46,7 +46,8 @@ B1 S ABMX("X0")=^ABMDCLM(DUZ(2),ABMP("CDFN"),57,ABMX,0)
  Q
  ;
 C ;EP - for 9C error checks
- I ABMP("BTYP")=111,$P($G(^AUTNINS(+ABMP("INS"),2)),U)="R" D
+ ;I ABMP("BTYP")=111,$P($G(^AUTNINS(+ABMP("INS"),2)),U)="R" D  ;abm*2.6*10 IHS/SD/AML HEAT71651
+  I ABMP("BTYP")=111,$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+ABMP("INS"),".211","I"),1,"I")="R",ABMP("VTYP")'=999 D  ;abm*2.6*10 IHS/SD/AML HEAT71651 and HEAT73780
  .K ABMX("OK")
  .S ABMX=0 F  S ABMX=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),53,ABMX)) Q:'ABMX  D
  ..Q:$G(ABMX("OK"))

@@ -1,5 +1,5 @@
 ABSPOSMZ ; IHS/FCS/DRS - General Inquiry/Report .57; [ 09/12/2002  10:15 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**3**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3**;JUN 21, 2001;Build 131
  Q
 ASKPHARM() ; EP - Lookup pharmacy (the POS pharmacy, that is)
  ; Return pointer to 9002313.56

@@ -1,10 +1,11 @@
 BADEHL3 ;IHS/MSC/MGH/VAC - Dentrix HL7 inbound interface  ;01-Oct-2010
- ;;1.0;DENTAL/EDR INTERFACE;**1,3,4,5**;FEB 22, 2010;Build 23
+ ;;1.0;DENTAL/EDR INTERFACE;**1,3,4,5,9**;FEB 22, 2010;Build 16
  ;; Modified - IHS/MSC/AMF - 11/23/10 - More descriptive alert messages
  ;; Modified - IHS/MSC/AMF 10/2010 fix for hospital location FT1-16,2
  ;; Modified - GDIT/KJH Patch 3 - Comment out incorrect call to tag ACK pending further review
- ;; Modified - IHS/OIT/GAB 05/2015 fix for ICD10 Implementation	**4**
+ ;; Modified - IHS/OIT/GAB **4** 05/2015 fix for ICD10 Implementation
  ;; Modified - IHS/OIT/GAB **5** 12/2015 Process POV from Dentrix (v8.0.5 or later)
+ ;; Modified - IHS/GDIT/GAB **9** 09/2024 Process "D" codes if present in the ADA Code file
  ; Return array of message data
  ; Input: MIEN - IEN to HLO MESSAGES and HLO MESSAGE BODY files
  ; Output: DATA
@@ -105,10 +106,15 @@ NEW ;Create a new dental procedure
  S TYPE=$$GET^HLOPRS(.SEGFT1,6)
  S TCODE=$$GET^HLOPRS(.SEGFT1,7)
  I TCODE="" D ACK(HLMSGIEN,DFN,"Missing ADA code in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
- I $E(TCODE,1,1)="D" S SCODE=$E(TCODE,2,$L(TCODE))
- E  S SCODE=TCODE
- S CODEIEN="" S CODEIEN=$O(^AUTTADA("B",SCODE,CODEIEN))
- I CODEIEN="" D ACK(HLMSGIEN,DFN,"ADA code "_TCODE_" not in RPMS:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
+ ;/IHS/GDIT/GAB **9** Comment next 4 lines to process "D" codes in the ADA Code file
+ ;I $E(TCODE,1,1)="D" S SCODE=$E(TCODE,2,$L(TCODE))
+ ;E  S SCODE=TCODE
+ ;S CODEIEN="" S CODEIEN=$O(^AUTTADA("B",SCODE,CODEIEN))
+ ;I CODEIEN="" D ACK(HLMSGIEN,DFN,"ADA code "_TCODE_" not in RPMS:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
+ ;/IHS/GDIT/GAB **9** Added next 3 lines to process "D" codes (ex: "D3450")
+ S CODEIEN="" S CODEIEN=$$GETADIEN^BADEUTIL(TCODE)
+ I CODEIEN<0 S BADERR="Dental Code "_TCODE_" is not in the ADA Code file" Q
+ I CODEIEN="I" S BADERR="Dental Code "_TCODE_" has been inactivated in the ADA Code file" Q
  S NOOPSITE=$$GET1^DIQ(9999999.31,CODEIEN,.09,"I")="n"
  ;Charge amount
  S APCDTFEE=$$GET^HLOPRS(.SEGFT1,11)
@@ -211,7 +217,7 @@ POV ;Store the POV
  ;If 1 USE ICD9, 30 USE ICD10 **4**
  S I=$$IMP^BADEHL3(VISDT)
  ;I I=30 S APCDALVR("APCDTPOV")="ZZZ.999"  ;/IHS/OIT/GAB **5** REMOVED & ADD NEXT 6 LINES
- I I=30	 D
+ I I=30  D
   .D GETPOV^BADEUTIL
   .I NOPOV=1  D
   ..S POV="ZZZ.999"

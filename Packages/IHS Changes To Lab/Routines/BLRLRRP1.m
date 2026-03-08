@@ -1,5 +1,10 @@
 BLRLRRP1 ;IHS/MSC/MKK - INTERIM REPORTS IHS Utilities ; 22-Oct-2013 09:22 ; MKK
- ;;5.2;LAB SERVICE;**1033**;NOV 01, 1997
+ ;;5.2;IHS LABORATORY;**1033,1054**;NOV 01, 1997;Build 20
+ ;
+ ; ADO 74587 - LR*5.2*1054 - Designate Therapeutic Ref Ranges (if necessary)
+ ;                           Fixed bug in this routine would print (TR)(TR)
+ ;                           instead of just (TR) if Therapeutic Ref Ranges.
+ ;
  ;
 EEP ; Ersatz EP
  D EEP^BLRGMENU
@@ -9,8 +14,9 @@ EEP ; Ersatz EP
  ;
 LRREFS ; EP - Reference Range
  I $L(LRREFS)<16 D
- . W ?43,$E(LRREFS,1,15),?55,$S(LRTHER:"(TR)",1:"")
- . W ?55,$S(LRTHER:"(TR)",1:"")
+ . ; W ?43,$E(LRREFS,1,15),?55,$S(LRTHER:"(TR)",1:"")
+ . W ?43,$E(LRREFS,1,15)     ; IHS/MSC/MKK - LR*5.2*1054 - Don't print (TR) twice
+ . W ?54,$S(LRTHER:"(TR)",1:"")
  . I LRPLS'="" W ?59,$J("["_LRPLS_"]",6)
  . W ?66,$$GETCOMPD^BLRUTIL4
  I $L(LRREFS)>15 D REFWRAP^BLRLRRP1

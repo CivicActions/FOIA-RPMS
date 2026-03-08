@@ -1,5 +1,5 @@
 BGP8DP13 ; IHS/CMI/LAB - print ind 19 AGE DIST 02 Feb 2018 1:14 PM ;
- ;;18.1;IHS CLINICAL REPORTING;;MAY 25, 2018;Build 66
+ ;;18.0;IHS CLINICAL REPORTING;**1**;NOV 21, 2017;Build 62
  ;
  ;
 I1AGE ;EP  special age tallies

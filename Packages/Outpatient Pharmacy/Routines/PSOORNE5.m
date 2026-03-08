@@ -1,5 +1,5 @@
-PSOORNE5 ;BIR/SAB - display orders from backdoor con't ;06-Dec-2012 20:20;PLS
- ;;7.0;OUTPATIENT PHARMACY;**11,27,32,46,78,99,117,131,146,171,180,1013,210,222,268,206,225,1015**;DEC 1997;Build 62
+PSOORNE5 ;BIR/SAB - display orders from backdoor con't ;23-Aug-2018 17:22;DU
+ ;;7.0;OUTPATIENT PHARMACY;**11,27,32,46,78,99,117,131,146,171,180,1013,210,222,268,206,225,1015,1023**;DEC 1997;Build 121
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External references L and UL^PSSLOCK supported by DBIA 2789
  ;External reference to ^PS(51.2 supported by DBIA 2226
@@ -10,6 +10,8 @@ PSOORNE5 ;BIR/SAB - display orders from backdoor con't ;06-Dec-2012 20:20;PLS
  ; Modified - IHS/MSC/PLS - 09/20/2011 - Line PEN+6
  ;                        - 10/05/2011 - Line PEN+14
  ;                          12/06/2012 - Line RDSPL+10
+ ;            IHS/MSC/MGH - 05/17/2017 - PEN+14,PEN+21 changed for EPCS
+ ;            IHS/MSC/MGH - 04/10/2018 - Added fields for supervisor
 PEN ;pending orders
  K ^TMP("PSOPO",$J),PSORX("ISSUE DATE"),PSORX("FILL DATE") S ORSV=ORD,ORD=$P(PSOLST(ORN),"^",2)
  I $P($G(^PS(52.41,ORD,0)),"^",3)="DC"!($P($G(^(0)),"^",3)="DE") S VALMBCK="R" Q
@@ -24,9 +26,18 @@ PEN ;pending orders
  I '$G(PSOFIN) S PSOPLCK=$$L^PSSLOCK(PSODFN,0) I '$G(PSOPLCK) S VALMSG=$S($P($G(PSOPLCK),"^",2)'="":$P($G(PSOPLCK),"^",2)_" is working on this patient.",1:"Another person is entering orders for this patient."),VALMBCK="" K PSOPLCK Q
  K PSOPLCK ; D PSOL^PSSLOCK($P(PSOLST(ORN),"^",2)_"S") I '$G(PSOMSG) S VAMLSG=$S($P($G(PSOMSG),"^",2)'="":$P($G(PSOMSG),"^",2),1:"Another person is editing this order."),PSOACT="" K PSOMSG G OK ;VALMBCK="" Q
  S PSODRG=+$P($G(^PS(52.41,ORD,0)),"^",9) I $G(^PSDRUG(PSODRG,"I"))]"",DT>$G(^("I")) S VALMSG="This Drug has been Inactivated."
+ ;IHS/MSC/MGH Don't allow items with later issue dates to be processed
+ N Y,EFF
+ S EFF=$P($G(^PS(52.41,ORD,0)),"^",6)
+ S Y=EFF X ^DD("DD")
+ I $P(EFF,".",1)>DT S VALMSG="This RX cannot be processed until "_Y,VALMBCK="R" K Y,EFF Q
  ;IHS/MSC/MGH Add text for REM medication Patch 1013
  D REMMSG^APSPFUNC(PSODRG)
- K PSOMSG S PSOACT=$S($D(^XUSEC("PSORPH",DUZ)):"DEFX",'$D(^XUSEC("PSORPH",DUZ))&($P($G(PSOPAR),"^",2)):"F",1:"")
+ ;IHS/MSC/MGH - changed for EPCS
+ I $P($G(^PS(52.41,ORD,0)),"^",24) S PSOACT=$S($D(^XUSEC("PSDRPH",DUZ)):"DEFX",$D(^XUSEC("PSORPH",DUZ)):"F",$P($G(PSOPAR),"^",2):"F",1:"")
+ E  S PSOACT=$S($D(^XUSEC("PSORPH",DUZ)):"DEFX",'$D(^XUSEC("PSORPH",DUZ))&($P($G(PSOPAR),"^",2)):"F",1:"")
+ K PSOMSG
+ ;K PSOMSG S PSOACT=$S($D(^XUSEC("PSORPH",DUZ)):"DEFX",'$D(^XUSEC("PSORPH",DUZ))&($P($G(PSOPAR),"^",2)):"F",1:"")
 OK S PAT=PSODFN,PSORNSV=ORN,PSORNLT=PSLST D ORD^PSOORFIN S PSLST=PSORNLT,ORD=ORSV,ORN=PSORNSV K ORSV,PSORNSV,PSORNLT,PSODRUG S VALMBCK="R"
  K ORCHK,ORDRG,PSOFDR,SIGOK,PSONEW,PSORX("ISSUE DATE"),PSORX("FILL DATE"),PSORX("FN")
  K:'$G(MEDP) PAT
@@ -137,4 +148,25 @@ SPINS K T,SG,MIG
  I $P($G(^PS(55,PSODFN,"LAN")),"^") S IEN=IEN+1,^TMP("PSOAO",$J,IEN,0)="  Other Pat. Instruc: "_$S($G(^PSRX(RXN,"INSS"))]"":^PSRX(RXN,"INSS"),1:"")
  Q
 SV S VALMSG="Pre-POE Rx. Please Compare Dosing Fields with SIG!"
+ Q
+PRV ;
+ N DETN,DEA,I,LBL,VADD,SPC,ORN,SUP,SUPNME,SUPDEA
+ S ORN=ORDZ
+ S DEA=$$DEA^XUSER(0,$P(RX0,"^",4))
+ S LBL=$S(DEA["-":"  VA#: ",1:" DEA#: ")
+ ;IHS/MSC MGH
+ ;I $$DETOX^PSSOPKI($P(RX0,"^",6)) S DETN=$$DETOX^XUSER($P(RX0,"^",4))
+ S DETN=$P($G(^PSRX(RXN,999999941)),"^",1)
+ S $P(SPC," ",(28-$L(DEA)))=" "
+ I (DEA'="")!($G(DETN)'="") S IEN=IEN+1,$E(^TMP("PSOAO",$J,IEN,0),16)=LBL_DEA_$S($G(DETN)]"":SPC_"DEA X#: "_$G(DETN),1:"")
+ D PRVAD^PSOPKIV2
+ I $G(VADD(1))]"" D
+ .S IEN=IEN+1,^TMP("PSOAO",$J,IEN,0)="        Site Address: "_VADD(1)
+ .S:VADD(2)'="" IEN=IEN+1,^TMP("PSOAO",$J,IEN,0)="                      "_VADD(2) S:VADD(3)'="" IEN=IEN+1,^TMP("PSOAO",$J,IEN,0)="                      "_VADD(3)
+ .;IHS/MSC/MGH added supervisor data
+ .I $$NEEDSUP^APSPFNC6($P(RX0,"^",4),$P(RX0,"^",6)) D
+ ..S SUP=$P($G(^PSRX(RXN,999999941)),U,3)
+ ..S SUPNME=$$GET1^DIQ(200,SUP,.01)
+ ..S SUPDEA=$$DEAVAUS^APSPFUNC(SUP)
+ ..S IEN=IEN+1,^TMP("PSOAO",$J,IEN,0)="          Supervisor: "_SUPNME_" "_SUPDEA
  Q

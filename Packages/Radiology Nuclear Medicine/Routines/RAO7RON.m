@@ -1,5 +1,5 @@
-RAO7RON ;HISC/GJC- Request message from OE/RR. (frontdoor) ;2/2/98  12:34
- ;;5.0;Radiology/Nuclear Medicine;**41,75,86**;Mar 16, 1998;Build 7
+RAO7RON ;HISC/GJC IHS/OIT/NST - Request message from OE/RR. (frontdoor) ;02 Oct 2024  12:34
+ ;;5.0;Radiology/Nuclear Medicine;**41,75,86,1009,1012**;Mar 16, 1998;Build 13
  ;
  ;Supported IA #10040 reference to ^SC
  ;Supported IA #2187 reference to EN^ORERR
@@ -33,6 +33,16 @@ EN1(RAMSG) ; Pass in the message from RAO7RO.  Decipher information.
  . D @$S(RAHDR="PID":"PID",RAHDR="PV1":"PV1",RAHDR="ORC":"ORC",RAHDR="OBR":"OBR^RAO7RON1",RAHDR="OBX":"OBX^RAO7RON1",RAHDR="DG1":"GETCPRS^RABWORD1",RAHDR="ZCL":"GETCPRS^RABWORD1",1:"ERR")
  . Q
  S RANEW(75.1,"+1,",18)=RALDT
+ ;
+ ; RA*5.0*1012 IHS/OIT/NST  Set ICD code
+ I '$D(RANEW(75.1,"+1,",91)) D
+ . N BRACLIND,ICDIEN,ICD
+ . S ICD=$$VALUE^ORCSAVE2(+RAORC2,"CLININD2")
+ . S BRACLIND=$$ICDDX^ICDEX(ICD,DT)   ; ICD string
+ . S ICDIEN=+BRACLIND
+ . S:ICDIEN RANEW(75.1,"+1,",91)=ICDIEN
+ . Q
+ ; RA*5.0*1012 IHS/OIT/NST  end Set ICD code  
  Q
 PID ; breakdown the 'PID' segment
  S RAERR=$$EN2^RAO7VLD(2,RAPID3,RAPID5) S:RAERR RAERR=2

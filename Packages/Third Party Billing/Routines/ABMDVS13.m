@@ -1,12 +1,12 @@
 ABMDVS13 ; IHS/ASDST/DMJ - PCC VISIT STUFF, V CPT code ; 
- ;;2.6;IHS 3P BILLING SYSTEM**9,11**;NOV 12, 2009;;Build 133
+ ;;2.6;IHS 3P BILLING SYSTEM;**9,11,36**;NOV 12, 2009;Build 698;Build 133
  ;Original;DMJ;
  ;
- ; IHS/SD/SDR - 11/04/02 - V2.5 P2 - ZZZ-0301-210046
- ;     Modified to capture modifiers from PCC
+ ;IHS/SD/SDR 11/04/02 2.5*2 ZZZ-0301-210046 Modified to capture modifiers from PCC
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ; IHS/SD/SDR - 2.6*9 - HEAT36314 - Correction for modifiers; was coming back NO SUCH MODIFIER
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*9 HEAT36314 Correction for modifiers; was coming back NO SUCH MODIFIER
+ ;IHS/SD/SDR 2.6*36 ADO76171 Updated to get 3rd modifier from V CPT file
  ;
  Q:ABMIDONE
 START ;START
@@ -37,6 +37,10 @@ START ;START
  .S ABMMOD2=$P(AUPNCPT(N),"^",7)
  .;I $G(ABMMOD2)'="" S ABMMOD2=$P($$MOD^ABMCVAPI(ABMMOD2,"E",ABMP("VDT")),U,2)  ;CSV-c  ;abm*2.6*9 HEAT36314
  .I $G(ABMMOD2)'="" S ABMMOD2=$P($$MOD^ABMCVAPI(ABMMOD2,"I",ABMP("VDT")),U,2)  ;CSV-c  ;abm*2.6*9 HEAT36314
+ .;start new abm*2.6*36 IHS/SD/SDR ADO76171
+ .I $P(AUPNCPT(N),U,4)["18" D
+ ..S ABMMOD3=$$GET1^DIQ(9000010.18,$P(AUPNCPT(N),U,5),".1","E")
+ .;end new abm*2.6*36 IHS/SD/SDR ADO76171
  .;The next line is intended to prevent dupes being stuffed into the
  .;claim file.  It requires that other stuffing rtns put in ABMSRC
  .I $D(^ABMDCLM(DUZ(2),DA(1),"ASRC",ABMSRC)),(ABMCPT<ABMCPTTB("SURGERY","L"))!(ABMCPT>ABMCPTTB("SURGERY","H")) Q

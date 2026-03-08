@@ -1,6 +1,6 @@
-DMSQ ;SFISC/EZ-CALLS INTO SQLI CODE ;10/30/97  16:25
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQ ;SFISC/EZ-CALLS INTO SQLI CODE ;10/30/97  16:25 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
  Q
 SETUP ;entry point to begin SQLI projection process
  ;gives interactive user a chance to cancel out before continuing

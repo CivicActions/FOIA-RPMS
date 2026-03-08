@@ -1,8 +1,8 @@
-XMUT4A ;ISC-SF/GMB- Integrity Checker for file 3.7 ;04/17/2002  11:54
- ;;8.0;MailMan;;Jun 28, 2002
+XMUT4A ;ISC-SF/GMB- Integrity Checker ;06/29/99  15:17
+ ;;7.1;MailMan;**34,55,50**;Jun 02, 1994
 ADDITC(XMDUZ,XMK,XMZ,XMKZ) ; "C" xref, but msg not in bskt.  Fix it.
  S ^XMB(3.7,XMDUZ,2,XMK,1,XMZ,0)=XMZ_U_XMKZ_U_$S($D(^XMB(3.7,XMDUZ,"N0",XMK,XMZ)):"1",$D(^XMB(3.7,XMDUZ,"N",XMK,XMZ)):"1",1:"")
- S:'$D(^XMB(3.7,"M",XMZ,XMDUZ,XMK,XMZ)) ^XMB(3.7,"M",XMZ,XMDUZ,XMK,XMZ)=""
+ S:'$D(^XMB(3.7,"M",XMZ,XMDUZ,XMK)) ^XMB(3.7,"M",XMZ,XMDUZ,XMK)=""
  Q
 ADDITM(XMDUZ,XMK,XMZ,XMKZ) ; "M" xref, but msg not in bskt.  Fix it.
  ; out: XMKZ
@@ -13,7 +13,7 @@ ADDITN(XMDUZ,XMTYPE,XMK,XMZ) ; "N" or "N0" xref, but msg not in bskt.  Fix it.
  N XMKZ
  S XMKZ=$$GETXMKZ(XMDUZ,XMK,XMZ)
  S ^XMB(3.7,XMDUZ,2,XMK,1,XMZ,0)=XMZ_U_XMKZ_"^1"
- S:'$D(^XMB(3.7,"M",XMZ,XMDUZ,XMK,XMZ)) ^XMB(3.7,"M",XMZ,XMDUZ,XMK,XMZ)=""
+ S:'$D(^XMB(3.7,"M",XMZ,XMDUZ,XMK)) ^XMB(3.7,"M",XMZ,XMDUZ,XMK)=""
  Q
 GETXMKZ(XMDUZ,XMK,XMZ) ; Find or create the message's basket sequence number.
  N XMKZ

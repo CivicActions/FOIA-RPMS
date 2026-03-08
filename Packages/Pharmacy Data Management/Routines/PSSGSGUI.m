@@ -1,10 +1,12 @@
-PSSGSGUI ;BIR/CML3-SCHEDULE PROCESSOR FOR GUI ONLY ;05/29/98
- ;;1.0;PHARMACY DATA MANAGEMENT;**12,27,38,44,56,59,94**;9/30/97;Build 26
+PSSGSGUI ;BIR/CML3-SCHEDULE PROCESSOR FOR GUI ONLY ;15-May-2024 13:37;DU
+ ;;1.0;PHARMACY DATA MANAGEMENT;**12,27,38,44,56,59,94,1035**;9/30/97;Build 39
  ;
  ; Reference to ^PS(53.1 supported by DBIA #2140
  ; Reference to ^PSIVUTL supported by DBIA #4580
  ; Reference to ^PS(59.6 supported by DBIA #2110
  ; Reference to ^DIC(42 is supported by DBIA# 10039
+ ;
+ ; Modified - IHS/MSC/PLS - 02/01/2024 - FID 103810 - EN+4
  ;
 ENA ; entry point for train option
  ;N X S X="PSGSETU" X ^%ZOSF("TEST") I  D ENCV^PSGSETU Q:$D(XQUIT)
@@ -22,7 +24,9 @@ EN(X,PSSGUIPK) ; validate
  ;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>2)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N")!($E(X,1)=" ") K X Q
  I $G(PSSGUIPK)="O" D  Q
  .Q:$G(X)=""
- .I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!(X["^")!($L(X)>20)!($L(X)<1) K X Q
+ .; IHS/MSC/PLS - 02/01/2024 - p1035
+ .;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!(X["^")!($L(X)>20)!($L(X)<1) K X Q
+ .I X[""""!($A(X)=45)!(X?.E1C.E)!(X["^")!($L(X)>24)!($L(X)<1) K X Q  ;P35
  .N PSSUPGUI S X=$$UPPER(X)
  ;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N")!($E(X,1)=" ") K X Q
  I $TR(X," ")="PRN" S X="PRN"
@@ -84,7 +88,7 @@ ENCHK ;
 DIC ;
  K DIC S DIC="^PS(51.1,",DIC(0)=$E("E",'$D(PSGOES))_"ISZ"_"X",DIC("W")="W ""  "","_$S('$D(PSJPWD):"$P(^(0),""^"",2)",'PSJPWD:"$P(^(0),""^"",2)",1:"$S($D(^PS(51.1,+Y,1,+PSJPWD,0)):$P(^(0),""^"",2),1:$P(^PS(51.1,+Y,0),""^"",2))"),D="APPSJ"
  S DIC("W")=""
- ; Naked reference below refers to global reference ^PS(51.1 stored in variable DIC. 
+ ; Naked reference below refers to global reference ^PS(51.1 stored in variable DIC.
  I $D(PSGST) S DIC("S")="I $P(^(0),""^"",5)"_$E("'",PSGST'="O")_"=""O"""
  D IX^DIC K DIC S:$D(DIE)#2 DIC=DIE Q:Y'>0
  S XT=$S("C"[$P(Y(0),"^",5):$P(Y(0),"^",3),1:$P(Y(0),"^",5)),X=+Y,Y="" I $D(PSJPWD),$D(^PS(51.1,X,1,+PSJPWD,0)) S Y=$P(^(0),"^",2)

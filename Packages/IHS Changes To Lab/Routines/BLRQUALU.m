@@ -1,5 +1,7 @@
 BLRQUALU ; IHS/MSC/MKK - RPMS LAB QUALitative Utilities ; 13-Oct-2017 14:04 ;  MKK
- ;;5.2;LAB SERVICE;**1041**;NOV 01, 1997;Build 23
+ ;;5.2;LAB SERVICE;**1041,1047**;NOV 01, 1997;Build 21
+ ;
+ ;
  ;
 EEP ; Ersatz EP
  D EEP^BLRGMENU
@@ -7,25 +9,47 @@ EEP ; Ersatz EP
  ;
 QUALCHEK() ; EP -- CR06260 - Qualitative critical alert
  NEW ARRAY,OLDX,OLDY,QIEN,QVAL,SUBJECT,TAB
+ NEW QUALFLAG,ABNFLAG     ; LR*5.2*1047
  ;
  ; LRDL = Result
  ; LRSB = DataName
  ; LRSPEC = Site/Specimen
  ; LRTS = File 60 IEN
  ;
- Q:$D(^LAB(60,LRTS,1,LRSPEC,999999))<1 0      ; Skip if no Qualitative value
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1047
+ Q:$D(^LAB(60,LRTS,1,LRSPEC,999999))<1 0    ; Skip if no Qualitative value
+ Q:$D(LRDL)<1 0                             ; Skip if no result
+ Q:$D(LRSB)<1 0                             ; Skip if no DataName
+ Q:$D(LRSPEC)<1 0                           ; Skip if no Site/Specimen
+ Q:$D(LRTS)<1 0                             ; Skip if no File 60 IEN
+ ; ----- END IHS/MSC/MKK - LR*5.2*1047
  ;
  M OLDX=X,OLDY=Y
  ;
- S QIEN=0
- F  S QIEN=$O(^LAB(60,LRTS,1,LRSPEC,999999,QIEN))  Q:QIEN<1!($G(LRFLG)="A*")  D
- . S:LRDL=$$GET1^DIQ(60.1999999,QIEN_","_LRSPEC_","_LRTS,.01) LRFLG="A*"
+ ; S QIEN=0
+ ; F  S QIEN=$O(^LAB(60,LRTS,1,LRSPEC,999999,QIEN))  Q:QIEN<1!($G(LRFLG)="A*")  D
+ ; . S:LRDL=$$GET1^DIQ(60.1999999,QIEN_","_LRSPEC_","_LRTS,.01) LRFLG="A*"
  ;
- I $$GET^XPAR("PKG","BLR QUALITATIVE ALERT",1,"Q")'=1!($G(LRFLG)'="A*") D  Q $S($G(LRFLG)="A*":1,1:0)
+ ; I $$GET^XPAR("PKG","BLR QUALITATIVE ALERT",1,"Q")'=1!($G(LRFLG)'="A*") D  Q $S($G(LRFLG)="A*":1,1:0)
+ ; . M:$D(OLDX) X=OLDX
+ ; . M:$D(OLDY) Y=OLDY
+ ;
+ ; Q:$G(LRACC)="" $S($G(LRFLG)="A*":1,1:0)    ; During Point-Of-Care Tests, there is no accession initially.
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1047
+ S QIEN=0,LRFLG=""
+ F  S QIEN=$O(^LAB(60,LRTS,1,LRSPEC,999999,QIEN))  Q:QIEN<1!($L(LRFLG))  D
+ . S QUALFLAG=$$GET1^DIQ(60.1999999,QIEN_","_LRSPEC_","_LRTS,.01)
+ . S ABNFLAG=$P(QUALFLAG,"~",2)
+ . S:LRDL=$P(QUALFLAG,"~") LRFLG=$S($L(ABNFLAG):ABNFLAG,1:"A*")
+ ;
+ I $$GET^XPAR("PKG","BLR QUALITATIVE ALERT",1,"Q")'=1!($E($G(LRFLG))'="A") D  Q $S($E($G(LRFLG))="A":1,1:0)
  . M:$D(OLDX) X=OLDX
  . M:$D(OLDY) Y=OLDY
  ;
- Q:$G(LRACC)="" $S($G(LRFLG)="A*":1,1:0)    ; During Point-Of-Care Tests, there is no accession initially.
+ Q:$G(LRACC)="" $S($E($G(LRFLG))="A":1,1:0)    ; During Point-Of-Care Tests, there is no accession initially.
+ ;
+ ; ----- END IHS/MSC/MKK - LR*5.2*1047
  ;
  S TAB=$J("",5)
  S SUBJECT="Accession "_LRACC_" Qualitative Alert"
@@ -36,8 +60,14 @@ QUALCHEK() ; EP -- CR06260 - Qualitative critical alert
  S ARRAY(5)=TAB_"Test: "_$$GET1^DIQ(60,LRTS,.01)_" ["_LRTS_"]"
  S ARRAY(6)=" "
  S ARRAY(7)=TAB_TAB_"Result:"_LRDL
- S ARRAY(8)=" "
- S ARRAY(9)=TAB_"DATE/TIME:"_$$UP^XLFSTR($$HTE^XLFDT($H,"5MPZ"))
+ ; S ARRAY(8)=" "
+ ; S ARRAY(9)=TAB_"DATE/TIME:"_$$UP^XLFSTR($$HTE^XLFDT($H,"5MPZ"))
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1047
+ S ARRAY(8)=TAB_TAB_"Qualitative Alert:"_LRFLG
+ S ARRAY(9)=" "
+ S ARRAY(10)=TAB_"DATE/TIME:"_$$UP^XLFSTR($$HTE^XLFDT($H,"5MPZ"))
+ ; ----- END IHS/MSC/MKK - LR*5.2*1047
  ;
  D MAILALMI^BLRUTIL8(SUBJECT,.ARRAY,"LRVER4",,"LAB QUALITATIVE ALERT")
  ;

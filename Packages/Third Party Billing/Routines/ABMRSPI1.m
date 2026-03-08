@@ -1,6 +1,9 @@
 ABMRSPI1 ; IHS/SD/SDR - Claims Identified as Potential Split Billing Report; 
- ;;2.6;IHS 3P BILLING SYSTEM;**22**;NOV 12, 2009;Build 418
+ ;;2.6;IHS 3P BILLING SYSTEM;**22,32**;NOV 12, 2009;Build 621
  ;IHS/SD/SDR 2.6*22 HEAT335246 - New routine
+ ;IHS/SD/SDR 2.6*32 CR9764 updated to check all pages, not just pages that are setup for splitting; if there is a charge on
+ ;  a should-split page and a charge on another page, it should split.
+ ;IHS/SD/SDR 2.6*32 CR9771 Added backbilling check
  ;
  Q
 VISIT ;EP
@@ -25,6 +28,18 @@ DATA ;EP
  S ABMAINS=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,8)  ;active insurer
  I ABMAINS="" Q  ;no active insurer
  I '$D(ABMY("INS",ABMAINS)) Q  ;not selected insurer
+ ;
+ ;start new abm*2.6*32 IHS/SD/SDR CR9771
+ S ABMBBL=0
+ S ABMBBL=+$P($G(^AUTNINS(ABMAINS,2)),U,4)
+ S:ABMBBL=0 ABMBBL=+$P(^ABMDPARM(DUZ(2),1,0),U,16)
+ I ABMBBL>0 D
+ .S X1=DT
+ .S X2=0-(ABMBBL*30.417)
+ .D C^%DTC
+ I ABMSDT<X Q
+ ;end new abm*2.6*32 IHS/SD/SDR CR9771
+ ;
  I ABMY("DT")="V" S ABMCS=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,4)  ;claim status
  I ABMY("DT")="A" S ABMCS=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,4)  ;bill status
  I ABMY("STA")'[ABMCS Q  ;not selected claim status
@@ -34,6 +49,7 @@ DATA ;EP
  Q:ABMVSTCK=1  ;H or I service category
  S ABMVFILE=""
  F  S ABMVFILE=$O(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),ABMVFILE)) Q:$G(ABMVFILE)=""  D  Q:ABMVMULT=1
+ .I (ABMY("PGS")[("^"_$TR($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,25),",")_"^")) Q  ;don't count ones that have already been split for selected page  ;abm*2.6*32 IHS/SD/SDR CR9764
  .I +$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),ABMVFILE))>1 S ABMVMULT=1 Q
  .I +$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),ABMVFILE))=1 S ABMVMULT=ABMVMULT+.5
  I ABMVMULT=1 D  ;multiple entries were found in requested files
@@ -63,14 +79,33 @@ DATA ;EP
 DATA2 ;EP
  ;now loop thru visits on claim and see if there are multiple charges on the selected pages
  S ABMP("VDFN")=0
+ K ABMP("VDETAIL")  ;abm*2.6*32 IHS/SD/SDR CR9764
  S ABMVMULT=0
  F  S ABMP("VDFN")=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),11,ABMP("VDFN"))) Q:'ABMP("VDFN")  D
  .S ^TMP("ABM-SPIN",$J,"VSTS",ABMP("VDFN"))=$P($G(^AUPNVSIT(ABMP("VDFN"),0)),U,7)  ;list of visits with service category
+ .I +$P($G(^AUPNVSIT(ABMP("VDFN"),0)),U,17)'=0 S ABMP("VDETAIL","8A","AUPNVSIT",ABMP("VDFN"))="",^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"AUPNVSIT")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"AUPNVSIT"))+1  ;abm*2.6*32 IHS/SD/SDR CR9764
  .I "^H^I^"[("^"_$P($G(^AUPNVSIT(ABMP("VDFN"),0)),U,7)_"^") S ABMVSTCK=1  ;check if service category is H or I
- .I ((ABMY("PGS")["8D")!(ABMY("PGS")["8Z")) D CHECK("^AUPNVMED","8D")  ;meds - 8D
- .I ((ABMY("PGS")["8E")!(ABMY("PGS")["8Z")) D CHECK("^AUPNVLAB","8E"),CHECK("^AUPNVMIC","8E"),CHECK("^AUPNVPTH","8E"),CHECK("^AUPNVBB","8E"),CHECK("^AUPNVCYT","8E")  ;lab - 8E
- .I ((ABMY("PGS")["8F")!(ABMY("PGS")["8Z")) D CHECK("^AUPNVRAD","8F")  ;rad - 8F
+ .;
+ .;start old abm*2.6*32 IHS/SD/SDR CR9764
+ .;I ((ABMY("PGS")["8D")!(ABMY("PGS")["8Z")) D CHECK("^AUPNVMED","8D")  ;meds - 8D
+ .;I ((ABMY("PGS")["8E")!(ABMY("PGS")["8Z")) D CHECK("^AUPNVLAB","8E"),CHECK("^AUPNVMIC","8E"),CHECK("^AUPNVPTH","8E"),CHECK("^AUPNVBB","8E"),CHECK("^AUPNVCYT","8E")  ;lab - 8E
+ .;I ((ABMY("PGS")["8F")!(ABMY("PGS")["8Z")) D CHECK("^AUPNVRAD","8F")  ;rad - 8F
+ .;D CHECK2  ;checks V CPT entries and if that page was selected by user as one to report on, since V CPT could have anything
+ .;end old start new abm*2.6*32 IHS/SD/SDR CR9764
+ .D CHECK("^AUPNVMED","8D")  ;meds - 8D
+ .D CHECK("^AUPNVLAB","8E"),CHECK("^AUPNVMIC","8E"),CHECK("^AUPNVPTH","8E"),CHECK("^AUPNVBB","8E"),CHECK("^AUPNVCYT","8E")  ;lab - 8E
+ .D CHECK("^AUPNVRAD","8F")  ;rad - 8F
  .D CHECK2  ;checks V CPT entries and if that page was selected by user as one to report on, since V CPT could have anything
+ ;
+ ;there must be charges on multiple pages or it's not splitable
+ S ABMT("PG")=""
+ S ABMPCNT=0,ABMWPG=0
+ F  S ABMT("PG")=$O(ABMP("VDETAIL",ABMT("PG"))) Q:($G(ABMT("PG"))="")  D
+ .S ABMPCNT=+$G(ABMPCNT)+1
+ .I ((ABMY("PGS")[ABMT("PG"))!((ABMY("PGS")["8Z")&(("^8D^8E^8F^8H^"[("^"_ABMT("PG")_"^"))))) S ABMWPG=1
+ I ABMPCNT<2 K ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN")),ABMP("VDETAIL")
+ I ABMWPG=0 K ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN")),ABMP("VDETAIL")
+ ;end new abm*2.6*32 IHS/SD/SDR CR9764
  Q
  ;
 CHECK(VFILE,ABMVFILE) ;EP - VFILE is the V file global name
@@ -91,9 +126,18 @@ CHECK2 ;EP
  F  S ABMVIEN=$O(^AUPNVCPT("AD",ABMP("VDFN"),ABMVIEN)) Q:'ABMVIEN  D
  .S ABMCPT=$P($G(^ICPT($P($G(^AUPNVCPT(ABMVIEN,0)),U),0)),U)  ;CPT
  .S ABMVFILE="8H"  ;default
- .I (((ABMCPT<100)!(ABMCPT?.5N1.6A.5N)!($L(ABMCPT)=6))&((ABMY("PGS")["8H")!(ABMY("PGS")["8Z"))) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8H")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8H"))+1,ABMVFILE="8H"
- .I (((ABMCPT>79999)&(ABMCPT<90000))&((ABMY("PGS")["8E")!(ABMY("PGS")["8Z"))) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8E")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8E"))+1,ABMVFILE="8E"
- .I (((ABMCPT>69999)&(ABMCPT<80000))&((ABMY("PGS")["8F")!(ABMY("PGS")["8Z"))) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8F")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8F"))+1,ABMVFILE="8F"
- .I (ABMCPT>89999) S ABMVFILE="8A"
+ .;start old abm*2.6*32 IHS/SD/SDR CR9764
+ .;I (((ABMCPT<100)!(ABMCPT?.5N1.6A.5N)!($L(ABMCPT)=6))&((ABMY("PGS")["8H")!(ABMY("PGS")["8Z"))) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8H")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8H"))+1,ABMVFILE="8H"
+ .;I (((ABMCPT>79999)&(ABMCPT<90000))&((ABMY("PGS")["8E")!(ABMY("PGS")["8Z"))) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8E")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8E"))+1,ABMVFILE="8E"
+ .;I (((ABMCPT>69999)&(ABMCPT<80000))&((ABMY("PGS")["8F")!(ABMY("PGS")["8Z"))) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8F")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8F"))+1,ABMVFILE="8F"
+ .;I (ABMCPT>89999) S ABMVFILE="8A"
+ .;end old start new abm*2.6*32 IHS/SD/SDR CR9764
+ .I ((ABMCPT<100)!(ABMCPT?.5N1.6A.5N)!($L(ABMCPT)=6)) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8H")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8H"))+1,ABMVFILE="8H"
+ .E  I (ABMCPT<70000)&(ABMVFILE="8H") S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8G")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8G"))+1,ABMVFILE="8G"
+ .I ((ABMCPT>9999)&(ABMCPT<70000)) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8B")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8B"))+1,ABMVFILE="8B"
+ .I ((ABMCPT>79999)&(ABMCPT<90000)) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8E")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8E"))+1,ABMVFILE="8E"
+ .I ((ABMCPT>69999)&(ABMCPT<80000)) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8F")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8F"))+1,ABMVFILE="8F"
+ .I (ABMCPT>89999) S ^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8A")=+$G(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),"8A"))+1,ABMVFILE="8A"
+ .;end new abm*2.6*32 IHS/SD/SDR CR9764
  .S ABMP("VDETAIL",ABMVFILE,"^AUPNVCPT",ABMVIEN)=""
  Q

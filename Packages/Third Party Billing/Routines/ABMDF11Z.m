@@ -1,5 +1,5 @@
 ABMDF11Z ; IHS/ASDST/DMJ - PRINT UB92 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**9,10,12,15**;APR 05, 2002
  ;Original;DMJ;
  ;
  ; IHS/ASDS/LSL - 04/05/00 - V2.4 Patch 1 - NOIS NCA-0300-180046
@@ -25,7 +25,9 @@ ABMDF11Z ; IHS/ASDST/DMJ - PRINT UB92 ;
  I ABMP("ITYPE")="N" D
  .S ABMPRPAY=+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),"^",9)
  .S ABMPAID=+($E($G(ABMREC(30,1)),173,182)/100)+($E($G(ABMREC(30,2)),173,182)/100)+($E($G(ABMREC(30,3)),173,182)/100)+ABMPRPAY
- .S:$G(ABMPBAL)<0 ABMPBAL=0
+ .;S ABMPBAL=+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),"^",3)-ABMPAID  ;abm*2.5*10 IM19557
+ .;S:ABMPBAL<0 ABMPBAL=0  ;abm*2.5*10 IM19557
+ .S:$G(ABMPBAL)<0 ABMPBAL=0  ;abm*2.5*10 IM19557
  .S ABMDE=$TR($FN(ABMPAID,"T",2),".")_"^45^10R"
  .D WRT^ABMDF11W                  ; Total paid
  .S ABMDE=$TR($FN(ABMPBAL,"T",2),".")_"^56^10R"
@@ -35,7 +37,9 @@ ABMDF11Z ; IHS/ASDST/DMJ - PRINT UB92 ;
  W !
  N I
  F I=1:1:3 D
+ .;W !  ;abm*2.5*12 IM24099
  .Q:'$D(ABMREC(30,I))
+ .W !  ;abm*2.5*12 IM24099
  .S ABMDE=$E(ABMREC(30,I),111,130)  ; Insured's last name
  .S ABMDE=$TR(ABMDE," ")
  .I $E(ABMREC(30,I),131,139)]"" S ABMDE=ABMDE_","_$TR($E(ABMREC(30,I),131,139)," ")   ; Add First Name
@@ -52,6 +56,7 @@ ABMDF11Z ; IHS/ASDST/DMJ - PRINT UB92 ;
  .D WRT^ABMDF11W                                ; Form locator #62
  ;
 51 ;
+ ;W !  ;abm*2.5*12 IM24099
  N I
  F I=50:10:70 D
  .D @(I_"^ABMER40A")
@@ -109,9 +114,14 @@ ABMDF11Z ; IHS/ASDST/DMJ - PRINT UB92 ;
  W !
  D PROV^ABMDF11W
  ; Primary Provider State Liscence #
+ ;start old code abm*2.5*9 IM15561
+ ;S ABMDE=$P($G(ABM("PRV",1)),"^",3)_"^59^23"
+ ;D WRT^ABMDF11W                      ; form locator #82a
+ ;end old code start new code
  I ABMP("ITYPE")'="R" D  ;only if not Medicare
  .S ABMDE=$P($G(ABM("PRV",1)),"^",3)_"^59^23"
  .D WRT^ABMDF11W  ;form locator #82a
+ ;end new code abm*2.5*9 IM15561
  ;
 57 ;
  W !
@@ -120,8 +130,21 @@ ABMDF11Z ; IHS/ASDST/DMJ - PRINT UB92 ;
  .D @(I_"^ABMER70")
  S ABMDE=ABMR(70,270)_"^^1"      ; Procedure coding method used
  D WRT^ABMDF11W                      ; form locator #79
+ ;start old code abm*2.5*15 IM30188
+ ;S ABMDE=ABMR(70,130)_"^3^7"     ; Principle Procedure code
+ ;D WRT^ABMDF11W                      ; form locator #80a
+ ;S ABMDE=ABMR(70,140)_"^11^6"    ; Principle Procedure date
+ ;D WRT^ABMDF11W                      ; form locator #80b
+ ;S ABMDE=ABMR(70,150)_"^18^7"    ; Other Procedure code - 1
+ ;D WRT^ABMDF11W                      ; form locator #81a
+ ;S ABMDE=ABMR(70,160)_"^26^6"    ; Other Procedure date - 1
+ ;D WRT^ABMDF11W                      ; form locator #81b
+ ;S ABMDE=ABMR(70,170)_"^33^7"    ; Other Procedure code - 2
+ ;D WRT^ABMDF11W                      ; form locator #81c
+ ;S ABMDE=ABMR(70,180)_"^41^6"    ; Other Procedure date - 2
+ ;D WRT^ABMDF11W                      ; form locator #81d
+ ;end old code start new code IM30188
  I $P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,9)'="N" D
- .D WRT^ABMDF11W                      ; form locator #79
  .S ABMDE=ABMR(70,130)_"^3^7"     ; Principle Procedure code
  .D WRT^ABMDF11W                      ; form locator #80a
  .S ABMDE=ABMR(70,140)_"^11^6"    ; Principle Procedure date
@@ -134,6 +157,7 @@ ABMDF11Z ; IHS/ASDST/DMJ - PRINT UB92 ;
  .D WRT^ABMDF11W                      ; form locator #81c
  .S ABMDE=ABMR(70,180)_"^41^6"    ; Other Procedure date - 2
  .D WRT^ABMDF11W                      ; form locator #81d
+ ;end new code IM30188
  ; Primary Provider UPIN/MCD #_name
  S ABMDE=$P($G(ABM("PRV",1)),"^",1)_"^49^32"
  D WRT^ABMDF11W                      ; form locator #82b

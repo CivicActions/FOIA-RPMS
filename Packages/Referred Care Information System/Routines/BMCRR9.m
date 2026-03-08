@@ -1,9 +1,12 @@
 BMCRR9 ; IHS/PHXAO/TMJ - list patients for which medical and/or cost data has not been received ; 
- ;;4.0;REFERRED CARE INFO SYSTEM;;JAN 09, 2006
+ ;;4.0;REFERRED CARE INFO SYSTEM;**16**;JAN 09, 2006;Build 168
  ;IHS/ITSC/FCJ ADDED ABILITY TO SELECT BEG AND END DATE OF REPORT
+ ;MENU Option - ARD Active Referrals by Date
+ ;4.0*16 2.15.2024 IHS.OIT.FCJ Format for CSV
  ;
  ;
 START ;
+ K ^XTMP("BMCRR9",$J)  ;BMC*4.0*16
  W:$D(IOF) @IOF
  W !,"This report will list all referrals by either date initiated or Best available",!,"beginning date of service.  Best of available Date of service is defined as"
  W !,"the actual begin date of service if available, otherwise the expected begin "
@@ -17,13 +20,19 @@ SORT ;sort by?
  G:$D(DIRUT) XIT
  S BMCSTYPE=Y
 ZIS ;call to XBDBQUE
- K BMCOPT
- W ! S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to",DIR("B")="P" K DA D ^DIR K DIR
+ K BMCOPT,DA
+ S BMCCSV=""     ;BMC*4.0*16
+ ;SPLIT NXT LINE ADDED CSV FORMAT;BMC*4.0*16
+ ;S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to",DIR("B")="P" K DA D ^DIR K DIR ;BMC*4.0*16
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen;C:CSV Output",DIR("A")="Do you wish to",DIR("B")="P"
+ S DIR("??")="^D CSV^BMCHELP"     ;BMC*4.0*16
+ W ! D ^DIR K DIR
  I $D(DIRUT) S BMCQUIT="" Q
  S BMCOPT=Y
  G:$G(BMCQUIT) SORT
  I $G(BMCOPT)="B" D BROWSE,XIT Q
  S XBRP="^BMCRR9P",XBRC="^BMCRR91",XBRX="XIT^BMCRR9",XBNS="BMC"
+ I $G(BMCOPT)="C" D XPRTCSV,XIT Q   ;BMC*4.0*16
  D ^XBDBQUE
  D XIT
  Q
@@ -31,9 +40,15 @@ BROWSE ;
  S XBRP="VIEWR^XBLM(""^BMCRR9P"")"
  S XBRC="^BMCRR91",XBRX="XIT^BMCRR9",XBIOP=0 D ^XBDBQUE
  Q
+XPRTCSV ; Export data to CSV file Format(Excel);BMC*4.0*16
+ ;print a comma delimited report
+ S BMCCSV=1
+ S BMCSPRTR=","
+ D ^XBDBQUE
+ Q
 XIT ;EP - CALLED FROM BMCRR9
  D KILL^AUPNPAT
  K BMC80D,BMC80E,BMCBT,BMCBTH,BMCET,BMCFAC,BMCJOB,BMCOPT,BMCPG,BMCQUIT,BMCRCNT,BMCREF,BMCRREC,BMCSORT,BMCSTYPE
- K BMCBD,BMCED,BMCBDD,BMCEDD,BMCSD
+ K BMCBD,BMCED,BMCBDD,BMCEDD,BMCSD,BMCCSV,BMCCOMMA
  K DA,DFN,DIR,X,Y
  Q

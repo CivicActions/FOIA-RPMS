@@ -1,5 +1,5 @@
 ABMEF19 ; IHS/ASDST/DMJ - Electronic HCFA-1500 V2.0 Envoy Version ;     
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;
  ; IHS/ASDS/DMJ - 03/01/01 - V2.4 P5 - NOIS HQW-0301-100010
  ;    New routine to address new Envoy electronic format 
@@ -21,7 +21,8 @@ START ;
  ..D ^DIC
  ..Q:Y<0
  ..S ABMP("INS")=+Y
- .S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)
+ .;S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*10 HEAT73780
+ .S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  I 'ABMP("INS") D  Q
  .W !!,*7,"Insurer NOT identified.",!
  S ABMP("FTYPE")=$P($G(^ABMDPARM(DUZ(2),1,3)),"^",4)

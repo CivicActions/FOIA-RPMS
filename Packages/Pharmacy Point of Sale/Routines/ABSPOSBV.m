@@ -1,5 +1,5 @@
 ABSPOSBV ; IHS/FCS/DRS - ILC A/R billing interface ;   
- ;;1.0;PHARMACY POINT OF SALE;**48**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**48**;JUN 21, 2001;Build 131
  Q
  ;
 VCPT() ;EP - from ABSPOSQB

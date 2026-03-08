@@ -1,5 +1,5 @@
-ABME8SV4 ; IHS/ASDST/DMJ - 837 SV4 Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8SV4 ; IHS/ASDST/DMJ - 837 SV4 Segment [ 02/04/2003  11:07 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1,10**;APR 05, 2002
  ;Transaction Set Header
  ;
  ; IHS/SD/SDR - v2.5 p10 - IM20395
@@ -23,7 +23,8 @@ LOOP ;LOOP HERE
  Q
 20 ;SV401 - Reference Identification
  ; Prescription Number
- S ABMR("SV4",20)=$P(ABMRV(ABMREV,ABMCODE,ABMCNTR),U,14)
+ ;S ABMR("SV4",20)=$P(ABMRV(ABMREV,ABMCODE),U,14)  ;abm*2.5*10 IM20395
+ S ABMR("SV4",20)=$P(ABMRV(ABMREV,ABMCODE,ABMCNTR),U,14)  ;abm*2.5*10 IM20395
  Q
 30 ;SV402 - Composite Medical Procedure Identifier (Not used)
  S ABMR("SV4",30)=""

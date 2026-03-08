@@ -1,6 +1,6 @@
-DIEQ ;SFISC/XAK,YJK-HELP DURING INPUT ;09:13 AM  27 Jul 2001 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**4,3,59**;Mar 30, 1999
+DIEQ ;SFISC/XAK,YJK-HELP DURING INPUT ;4/14/95  10:10 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**3**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 BN S D=$P(DQ(DQ),U,4) S:DP+1 D=DIFLD
  S DZ=X D EN1 G B^DIED
@@ -13,9 +13,8 @@ EN1 S DDH=0 G M:DV I DP<0 D HP G P
 P I DV["P" K DO S DIC=U_DU,D="B",DIC(0)="M"_$E("L",DV'["'") G AST:DV["*"&('$G(DISORT)) D DQ^DICQ D %
 VP I DV["V" S DU=DP S:DV DU=+DO(2),D=.01 D V G Q
 D I DV["D" S %(0)=0,%DT=$P($P($P(DQ(DQ),U,5,9),"%DT=""",2),"""",1) D HELP^%DTC
-S I DV["S" X:($D(^DD(DP,D,12.1))#2)&('$G(DISORT)) ^(12.1) S A1="T",DST=$$EZBLD^DIALOG(8068)_" " D DS,S1 K DIC("S")
+S I DV["S" X:($D(^DD(DP,D,12.1))#2)&('$G(DISORT)) ^(12.1) S A1="T",DST=$$EZBLD^DIALOG(8068)_" " D DS,S1
 Q K DST,A1 S:$D(DIE) DIC=DIE S D=0 I $D(DDH)>10 D LIST^DDSU
- D:DV UDA
  Q
  ;
  ;
@@ -41,22 +40,15 @@ AST S:$D(X)[0 X="?" X $P(DQ(DQ),U,5,99) K DIC G Q
  ;
 M K DO S DZ=X,DIC=DIE_DA_","_$S(+$P(DC,U,3)=$P(DC,U,3):$P(DC,U,3),1:$C(34)_$P(DC,U,3)_$C(34))_",",D="B",DIC(0)="LM",DZ(1)=0
  I '$D(@(DIC_"0)")) S DO=U_$P(DC,U,2) D DO2^DIC1
- D:'$D(DO) DO^DIC1
- D DDA,DQ^DICQ D % G Q:'$D(DZ)!(DV["S") S X=DZ G P
+ D DQ^DICQ D % G Q:'$D(DZ)!(DV["S") S X=DZ G P
  ;
-H I '$G(DISORT),$D(^DD(DP,D,4)) S A1="X",DST=^(4) D DS,LIST^DDSU Q:'$D(DZ)!$D(DDSQ)
- I $G(X)?1"??".E,X'["BAD" D
- . N DIDG,DG,DDD,DD,DIY,DIZ,DUOUT
+H I '$G(DISORT),$D(^DD(DP,D,4)) S A1="X",DST=^(4) D DS,LIST^DDSU Q:'$D(DZ)
+ I $D(X),X'["BAD",X?1"??".E D
+ . N DIDG,DG
  . S DIDG=$P($G(^DD(DP,D,21,0)),U,3)
  . K DDSQ
- . I '$D(DDS) S DDD=5,DD="",DIY=99,DIZ=21 I $G(DIPGM)'="DICQ1" N DIPGM S DIPGM="DIEQ" D Z^DDSU
- . F DG=1:1 Q:'$D(^DD(DP,D,21,DG,0))  Q:+DIDG&(DG>DIDG)  D  Q:$D(DDSQ)
- . . I '($G(DDH)#15) D LIST^DDSU I $G(DTOUT)!($G(DUOUT)) S DDSQ=1
- . . Q:$D(DDSQ)
- . . S DST=^DD(DP,D,21,DG,0) D DS Q
- . I '$D(DDSQ) Q:$D(DDH)'>10  D LIST^DDSU
+ . F DG=1:1 Q:'$D(^DD(DP,D,21,DG,0))  Q:+DIDG&(DG>DIDG)  D:$G(DDH)'<15 LIST^DDSU Q:$D(DDSQ)  S DST=^DD(DP,D,21,DG,0) D DS
  . I $D(DDSQ) K DDSQ,DDH
- . Q
  Q
  ;
 BK S DDH=$G(DDH)+1,DDH(DDH,"T")=" " Q
@@ -65,20 +57,6 @@ V S DDH=+$G(DDH),A1="T",DST=$$EZBLD^DIALOG(8071) D DS
  F Y=0:0 S Y=$O(^DD(DU,D,"V",Y)) Q:Y'>0  I $D(^(Y,0)) S Y(0)=^(0) X:$D(DIC("V")) DIC("V") I  I $D(^DIC(+Y(0),0)) S Y(1)=$P(Y(0),U,4),Y(2)=$P(Y(0),U,2),DST=$$EZBLD^DIALOG(8072,.Y) K Y(1),Y(2) D DS
  D BK S DST=$$EZBLD^DIALOG(8073) D DS S DU="" D BK I DZ'?1"??".E K X,DZ Q
  D T^DIEQ1 K X,DZ Q
- ;
-DDA N T,%
- S T=$T
- F %=+$O(DA(" "),-1):-1:1 K DA(%+1) S:$D(DA(%))#2 DA(%+1)=DA(%)
- K DA(1) S:$D(DA)#2 DA(1)=DA
- I T
- Q
- ;
-UDA N T,%
- S T=$T
- S DA=$G(DA(1)) ;K DA(1)
- F %=2:1:+$O(DA(" "),-1) I $D(DA(%))#2 S DA(%-1)=DA(%) K DA(%)
- I T
- Q
  ;
  ;#8071  Enter one of the following
  ;#8072  |Prefix|.EntryName to select a |filename|

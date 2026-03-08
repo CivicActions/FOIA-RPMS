@@ -1,5 +1,6 @@
-DDXP2 ;SFISC/DPC-SELECTED FIELDS FOR EXPORT ;10/11/94  14:34
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDXP2 ;SFISC/DPC-SELECTED FIELDS FOR EXPORT ;10/11/94  14:34 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 EN1 ;
  N Y,D,DICS D ^DICRW I Y=-1 G QUIT

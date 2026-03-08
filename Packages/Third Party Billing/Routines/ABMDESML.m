@@ -1,14 +1,17 @@
 ABMDESML ; IHS/ASDST/DMJ - Summarized Claim LAB Charges ;
- ;;2.6;IHS 3P BILLING SYSTEM;**13**;NOV 12, 2009;Build 213
+ ;;2.6;IHS 3P BILLING SYSTEM;**13,28,29**;NOV 12, 2009;Build 562
  ;
- ; IHS/SD/SDR - V2.5 P8 - IM10618/IM11164 - Prompt/display provider
- ; IHS/SD/SDR - v2.5 p9 - task 1 - Use new service line provider multiple
- ; IHS/SD/SDR - v2.5 p11 - NPI
- ; IHS/SD/SDR - v2.5 p12 - IM25331 - Add provider taxonomy to CMS-1500 block 24K
- ; IHS/SD/SDR - v2.5 p13 - IM25899 - Alignment changes
+ ;IHS/SD/SDR 2.5 P8 IM10618/IM11164 - Prompt/display provider
+ ;IHS/SD/SDR 2.5 p9 task 1 - Use new service line provider multiple
+ ;IHS/SD/SDR 2.5 p11 NPI
+ ;IHS/SD/SDR 2.5 p12 IM25331 - Add provider taxonomy to CMS-1500 block 24K
+ ;IHS/SD/SDR 2.5 p13 IM25899 - Alignment changes
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - 2.6*13 - Added check for new export mode 35
+ ;IHS/SD/SDR 2.6 CSV
+ ;IHS/SD/SDR 2.6*13 Added check for new export mode 35
+ ;IHS/SD/SDR 2.6*28 CR10648 Put CPT Narrative in array
+ ;IHS/SD/SDR 2.6*29 CR10410 Added Medicare non-covered changes
+ ;IHS/SD/SDR 2.6*29 CR10888 Made units print on Charge Summary screen
  ;
 LAB ;EP for Lab Charges
  I $G(ABMP("VTYP",996)),'$G(ABMPRINT) Q:ABMP("VTYP",996)'=ABMP("EXP")
@@ -25,10 +28,15 @@ OUT ;OUTSIDE LAB
  Q
  ;
 LAB1 S ABMX(0)=@(ABMP("GL")_"37,"_ABMX("X")_",0)")
+ S ABMX(2)=$G(@(ABMP("GL")_"37,"_ABMX("X")_",2)"))  ;abm*2.6*28 IHS/SD/SDR CR10648
  S ABMZ("UNIT")=$P(ABMX(0),U,3)
  S:'+ABMZ("UNIT") ABMZ("UNIT")=1
  S ABMX("SUB")=(ABMZ("UNIT")*$P(ABMX(0),U,4))
  S ABMS("TOT")=ABMS("TOT")+ABMX("SUB")
+ ;start new abm*2.6*29 IHS/SD/SDR CR10410
+ S ABMCNDCK=U_$P(ABMX(0),U,6)_U_$P(ABMX(0),U,7)_U_$P(ABMX(0),U,8)
+ D CNCD21CK^ABMDESM1
+ ;end new abm*2.6*29 IHS/SD/SDR CR10410
  I $P(^ABMDEXP(ABMP("EXP"),0),U)'["UB" G LABH
  ; ABMS(revn)=Totl Charge^units^Unit Charge^CPT Code
 LABU S ABMX("R")=$P(ABMX(0),U,2) Q:ABMX("R")=""  D REVN
@@ -55,6 +63,7 @@ LABH S ABMS(ABMS("I"))=ABMX("SUB")
  .S $P(ABMS(ABMS("I")),U,9)=$$K24N^ABMDFUTL(ABMDPRV)
  .S $P(ABMS(ABMS("I")),U,11)=$P($$NPI^XUSNPI("Individual_ID",ABMDPRV),U)
  .I $G(ABMP("NPIS"))="N" S $P(ABMS(ABMS("I")),U,9)=$$PTAX^ABMEEPRV(ABMDPRV)
+ I "^35^"[("^"_ABMP("EXP")_"^") S $P(ABMS(ABMS("I")),U,12)=$P(ABMX(2),U,2)  ;abm*2.6*28 IHS/SD/SDR CR10648
  Q
  ;
 CPT I ABMX("C")]"" S ABMX("C")=$P($$CPT^ABMCVAPI(ABMX("C"),ABMP("VDT")),U,2)  ;CSV-c
@@ -62,4 +71,5 @@ CPT I ABMX("C")]"" S ABMX("C")=$P($$CPT^ABMCVAPI(ABMX("C"),ABMP("VDT")),U,2)  ;C
  ;
 REVN I $D(ABMS(ABMX("R"))) S $P(ABMS(ABMX("R")),U)=$P(ABMS(ABMX("R")),U)+ABMX("SUB")
  E  S ABMS(ABMX("R"))=ABMX("SUB")
+ S $P(ABMS(ABMX("R")),U,2)=+$P(ABMS(ABMX("R")),U,2)+ABMZ("UNIT")  ;abm*2.6*29 IHS/SD/SDR CR10888
  Q

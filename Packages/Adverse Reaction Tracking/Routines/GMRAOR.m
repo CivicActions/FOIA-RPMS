@@ -1,5 +1,6 @@
-GMRAOR ;HIRMFO/WAA,RM-OERR UTILITIES ;31-Dec-2012 12:12;DU
- ;;4.0;Adverse Reaction Tracking;**2,13,26,37,41,42,1006**;Mar 29, 1996;Build 29
+GMRAOR ;HIRMFO/WAA,RM-OERR UTILITIES ;14-Jul-2022 09:30
+ ;;4.0;Adverse Reaction Tracking;**2,13,26,37,41,42,1006,1010**;Mar 29, 1996;Build 17
+ ;     
 ORCHK(DFN,TYP,PTR,LOC,REAC,COMM) ; Given a patient IEN (DFN), this function will
  ; return 1 (true) if the patient has an allergy to an agent defined
  ; by TYP and PTR, else it returns 0 (false). See table below.
@@ -14,6 +15,8 @@ ORCHK(DFN,TYP,PTR,LOC,REAC,COMM) ; Given a patient IEN (DFN), this function will
  ;                 Drug Class:  TYP="CL", PTR=IEN in ^PS(50.605,
  ;Patch 1006 modified for reactions and comments
  ;Patch 1006 modified to fix multiple ingredients
+ ;IHS/MGH/MIR Modified to fix issue with more than 1 allergy per ingredient and class (LOCAL+15)
+ ;Patch 1010 IHS/MGH modified to add loop through multiple ingredients and classes 
  N GMRAFLG,GMRACM,DA ;37
  S GMRAFLG=0
  S REAC=$G(REAC),COMM=$G(COMM)
@@ -33,10 +36,6 @@ RAD(DFN) ; Subroutine checks for Contrast Media Reaction, returns 1 or 0.
  .I $G(^TMP("GMRAOC",$J,"APC",DC))["LOCAL" S LOCAL=1
  .I $G(^TMP("GMRAOC",$J,"APC",DC))["REMOTE" S REMOTE=1
  S GMRACM=$S($G(LOCAL)&($G(REMOTE)):"LOCAL AND REMOTE SITE(S)",$G(LOCAL):"LOCAL",$G(REMOTE):"REMOTE SITE(S)",1:"")
- ;D EN1^GMRADPT S FLG=GMRAL
- ;I GMRAL S GMRAPA=0 F  S GMRAPA=$O(GMRAL(GMRAPA)) Q:GMRAPA<1  D  Q:FLG
- ;.S FLG=$$RALLG^GMRARAD(GMRAPA)
- ;.Q
  Q FLG
 DRUG(DFN,PTR,REAC,COMM) ; Subroutine checks for Drug Reaction, returns 1 or 0.
  N %,J,FLG,GMRAC,GMRADR,GMRAI,PSNVPN,PSNDA,X1 S FLG=0
@@ -49,24 +48,22 @@ DRUG(DFN,PTR,REAC,COMM) ; Subroutine checks for Drug Reaction, returns 1 or 0.
  ..K ^TMP("PSNDD",$J) D DISPDRG^PSNNGR ; get ingredients
  ..S GMRAI=0,%=1 F  S GMRAI=$O(^TMP("PSNDD",$J,GMRAI)) Q:GMRAI<1  I $D(^TMP("GMRAOC",$J,"API",GMRAI)) D
  ...;IHS/MSC/MGH Mod for active
- ...S X1="" S X1=$O(^GMR(120.8,"API",DFN,GMRAI,X1)) Q:X1=""  D
+ ...S X1="" F  S X1=$O(^GMR(120.8,"API",DFN,GMRAI,X1)) Q:X1=""  D
  ....I $$ACTIVE(X1) D
  .....S FLG=1,GMRAING(%)=^TMP("PSNDD",$J,GMRAI)_$$FAC(^TMP("GMRAOC",$J,"API",GMRAI)),%=%+1 ;26
  .....I REAC=1 D GETREAC(X1,.GMRAREAC)
  .....I COMM=1 D GETCOM(X1,.GMRACOM)
  ..K ^TMP("PSNDD",$J)
- ..Q
  .E  D  ; get ingredients
  ..K ^TMP("PSN",$J) D ^PSNNGR
  ..S GMRAI=0,%=1 F  S GMRAI=$O(^TMP("PSN",$J,GMRAI)) Q:GMRAI<1  I $D(^TMP("GMRAOC",$J,"API",GMRAI)) D
  ...;IHS/MSC/MGH mod for active
- ...S X1="" S X1=$O(^GMR(120.8,"API",DFN,GMRAI,X1)) Q:X1=""  D
+ ...S X1="" F  S X1=$O(^GMR(120.8,"API",DFN,GMRAI,X1)) Q:X1=""  D
  ....I $$ACTIVE(X1) D
  .....S FLG=1,GMRAING(%)=^TMP("PSN",$J,GMRAI)_$$FAC(^TMP("GMRAOC",$J,"API",GMRAI)),%=%+1 ;26
  .....I REAC=1 D GETREAC(X1,.GMRAREAC)
  .....I COMM=1 D GETCOM(X1,.GMRACOM)
  ..K ^TMP("PSN",$J)
- ..Q
  .Q:FLG  ; Rxn to ingredient, quit now.
  .; Check for rxn to VA Drug Class
  .S PSNDA=$P(PTR,"."),PSNVPN=$P(PTR,".",2)
@@ -75,11 +72,9 @@ DRUG(DFN,PTR,REAC,COMM) ; Subroutine checks for Drug Reaction, returns 1 or 0.
  .N CLASS,GMRALIST
  .S GMRALIST=$$CLIST^PSNAPIS(PSNDA,.GMRALIST) Q:'$G(GMRALIST)
  .S GMRALIST=0 F  S GMRALIST=$O(GMRALIST(GMRALIST)) Q:'GMRALIST  D DRCL($P(GMRALIST(GMRALIST),U,2),REAC,COMM)
- .Q
  Q FLG
 FAC(NODE) ;
- N FAC
- S FAC=$S($L(NODE):" ("_NODE_")",1:"")
+ N FAC S FAC=$S($L(NODE):" ("_NODE_")",1:"")
  Q FAC
 DRCL(CODE,REAC,COMM) ;return any rxn's in GMRADRCL(
  N X1
@@ -89,23 +84,21 @@ DRCL(CODE,REAC,COMM) ;return any rxn's in GMRADRCL(
  .I $$ACTIVE(X1) D
  ..N J S J=$S('$D(GMRADRCL):1,1:$O(GMRADRCL(999),-1)+1)
  ..;S GMRADRCL(J)=$$CLASS2^PSNAPIS(CODE)
- ..N CLSFN
- ..;S CLSFN=$P(^PS(50.605,+$O(^PS(50.605,"B",CODE,0)),0),U,2)
- ..S CLSFN=$$CODE2CL^GMRAPENC(CODE)
+ ..N CLSFN S CLSFN=$$CODE2CL^GMRAPENC(CODE)
  ..S GMRADRCL(J)=CODE_"^"_CLSFN_$$FAC(^TMP("GMRAOC",$J,"APC",CODE))
  ..I REAC=1 D GETREAC(X1)
  ..I COMM=1 D GETCOM(X1)
  ..S FLG=2
  Q
 ING(DFN,PTR,REAC,COMM) ; Subroutine checks for Drug Ingredients, returns:
- ;                  If found FLG= 1 with GMRAIEN Array Drug Ingredients
- ;                 Not found FLG= 0
+ ;                  If found  FLG= 1 with GMRAIEN Array Drug Ingredients
+ ;                  Not found FLG= 0
  N GMRAX K GMRAIEN,GMRAREAC
  S FLG=0
  S GMRAX=0
  ;IHS/MSC/MGH added check for inactive entries
  F  S GMRAX=$O(^GMR(120.8,"API",DFN,PTR,GMRAX)) Q:GMRAX<1  D
- .S X1="" S X1=$O(^GMR(120.8,"API",DFN,GMRAI,X1)) Q:X1=""  D
+ .S X1="" F  S X1=$O(^GMR(120.8,"API",DFN,PTR,GMRAX,X1)) Q:X1=""  D
  ..I $$ACTIVE(X1) D
  ...S FLG=1,GMRAIEN(GMRAX)=""
  ...I REAC=1 D GETREAC(GMRAX,.GMRAREAC)
@@ -113,12 +106,11 @@ ING(DFN,PTR,REAC,COMM) ; Subroutine checks for Drug Ingredients, returns:
  .;END MOD
  Q FLG
 CLASS(DFN,PTR,REAC,COMM) ; Subroutine checks for Drug Class, returns:
- ;                  If found FLG= 1 with GMRAIEN Array Drug Class
- ;                 Not found FLG= 0
- N GMRAC,GMRAX K GMRAIEN
- ;S GMRAX=0,FLG=0,GMRAC=$P($G(^PS(50.605,PTR,0)),U)
- S GMRAX=0,FLG=0,GMRAC=$$CLP2CODE^GMRAPENC(PTR)
- I GMRAC'="" F  S GMRAX=$O(^GMR(120.8,"APC",DFN,GMRAC,GMRAX)) Q:GMRAX<1  D
+ ;                  If found  FLG= 1 with GMRAIEN Array Drug Class
+ ;                  Not found FLG= 0
+ N GMRAC,GMRAX,FLG K GMRAIEN
+ S FLG=0,GMRAC=$$CLP2CODE^GMRAPENC(PTR) Q:GMRAC="" FLG
+ S GMRAX=0 F  S GMRAX=$O(^GMR(120.8,"APC",DFN,GMRAC,GMRAX)) Q:GMRAX<1  D
  .;IHS/MSC/MGH Check for active
  .I $$ACTIVE(GMRAX) D
  ..S FLG=1,GMRAIEN(GMRAX)=""
@@ -151,31 +143,29 @@ GETDATA(DFN) ;Obtain local and HDR related allergy data for use in order checkin
  Q
  ;
 LOCAL(DFN) ;
- N J,K,L,M,NAREAC,X1,ACOM
+ N J,L,M,NAREAC,X1,ACOM
  S J=0 F  S J=$O(^GMR(120.8,"API",DFN,J)) Q:'+J  D
- .S X1="" S X1=$O(^GMR(120.8,"API",DFN,J,X1)) Q:X1=""  D
+ .S X1="" F  S X1=$O(^GMR(120.8,"API",DFN,J,X1)) Q:X1=""  D
  ..I $$ACTIVE(X1) D
  ...S ^XTMP("GMRAOC",DFN,"API",J)=$$SETNODE^GMRAOR1($G(^XTMP("GMRAOC",DFN,"API",J)),"LOCAL")
- ...S K=0 F  S K=$O(^GMR(120.8,"API",DFN,J,K)) Q:'+K  D
- ....K AREAC D GETREAC(K,.AREAC)
- ....K ACOM D GETCOM(K,.ACOM)
- ....S L=0 F  S L=$O(AREAC(L)) Q:'+L  D
- .....S ^XTMP("GMRAOC",DFN,"API",J,"REAC",L)=$G(AREAC(L))
- ....S L=0 F  S L=$O(ACOM(L)) Q:'+L  D
- .....S M=0 F  S M=$O(ACOM(L,M)) Q:'+M  D
- ......S ^XTMP("GMRAOC",DFN,"API",J,"COM",M)=$G(ACOM(L,M,0))
+ ...K AREAC D GETREAC(X1,.AREAC)
+ ...K ACOM D GETCOM(X1,.ACOM)
+ ...S L=0 F  S L=$O(AREAC(L)) Q:'+L  D
+ ....S ^XTMP("GMRAOC",DFN,"API",J,"REAC",L)=$G(AREAC(L))
+ ...S L=0 F  S L=$O(ACOM(L)) Q:'+L  D
+ ....S M=0 F  S M=$O(ACOM(L,M)) Q:'+M  D
+ .....S ^XTMP("GMRAOC",DFN,"API",J,"COM",M)=$G(ACOM(L,M,0))
  S J="" F  S J=$O(^GMR(120.8,"APC",DFN,J)) Q:J=""  D
- .S X1="" S X1=$O(^GMR(120.8,"APC",DFN,J,X1)) Q:X1=""  D
+ .S X1="" F  S X1=$O(^GMR(120.8,"APC",DFN,J,X1)) Q:X1=""  D
  ..I $$ACTIVE(X1) D
  ...S ^XTMP("GMRAOC",DFN,"APC",J)=$$SETNODE^GMRAOR1($G(^XTMP("GMRAOC",DFN,"APC",J)),"LOCAL")
- ...S K=0 F  S K=$O(^GMR(120.8,"APC",DFN,J,K)) Q:'+K  D
- ....K AREAC D GETREAC(K,.AREAC)
- ....K ACOM D GETCOM(K,.ACOM)
- ....S L=0 F  S L=$O(AREAC(L)) Q:'+L  D
- .....S ^XTMP("GMRAOC",DFN,"APC",J,"REAC",L)=$G(AREAC(L))
- ....S L=0 F  S L=$O(ACOM(L)) Q:'+L  D
- .....S M=0 F  S M=$O(ACOM(L,M)) Q:'+M  D
- ......S ^XTMP("GMRAOC",DFN,"APC",J,"COM",M)=$G(ACOM(L,M,0))
+ ...K AREAC D GETREAC(X1,.AREAC)
+ ...K ACOM D GETCOM(X1,.ACOM)
+ ...S L=0 F  S L=$O(AREAC(L)) Q:'+L  D
+ ....S ^XTMP("GMRAOC",DFN,"APC",J,"REAC",L)=$G(AREAC(L))
+ ...S L=0 F  S L=$O(ACOM(L)) Q:'+L  D
+ ....S M=0 F  S M=$O(ACOM(L,M)) Q:'+M  D
+ .....S ^XTMP("GMRAOC",DFN,"APC",J,"COM",M)=$G(ACOM(L,M,0))
  Q
  ;
 REMOTE(DFN) ;

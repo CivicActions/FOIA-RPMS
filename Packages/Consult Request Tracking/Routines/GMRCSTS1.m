@@ -1,10 +1,12 @@
-GMRCSTS1 ;SLC/JFR,MA - GROUP UPDATE OF CONSULTS cont'd ;4/18/01  10:31
- ;;3.0;CONSULT/REQUEST TRACKING;**8,18,21,50**;DEC 27, 1997;Build 8
+GMRCSTS1 ;SLC/JFR,MA - GROUP UPDATE OF CONSULTS cont'd ;10/25/22  10:31
+ ;;3.0;CONSULT/REQUEST TRACKING;**8,18,21,50,1006**;DEC 27, 1997;Build 3
  ; Patch 18 modified PRTTSK to stop for acknowledgement between
  ; printing the report and continuing with the group update.
  ; Patch 21 moved the ^%ZISC up a few lines to correct a problem
  ; of menu going to the printer
  ; This routine invokes IA #2638
+ ; Modified for Patch 1006 - IHS/MSC/MIR - 07/15/2022 
+ ;              Lines PRTTSK+20:+23 and HDR+8 -  Modified to print HRCN instead of SSN
 PROCESS(GMRCCVT,GMRCMT) ;Update consult status by service and date range
  N GMRCO,GMRCSTS,GMRCTRLC,GMRCORNP,GMRCDEV,GMRCFF,GMRCAD,ORIFN
  N GMRCOM1,ORIFN
@@ -37,8 +39,10 @@ PRTTSK ; print the report then start the processing
  . Q:'$G(^GMR(123,GMRCIEN,0))
  . I $P(^GMR(123,GMRCIEN,0),U,12)=1!($P(^(0),U,12)=2) Q
  . W !,GMRCIEN,?8,$$FMTE^XLFDT(+^GMR(123,GMRCIEN,0))
- . W ?29,$E($$GET1^DIQ(2,$P(^GMR(123,GMRCIEN,0),U,2),.01),1,26)
- . W ?56,$$GET1^DIQ(2,$P(^GMR(123,GMRCIEN,0),U,2),.09)
+ . ; IHS/MSC/MIR for Patch 1006 - Modified to use HRCN instead of SSN
+ . S GMRCDFN=$P(^GMR(123,GMRCIEN,0),U,2)
+ . W ?29,$E($$GET1^DIQ(2,GMRCDFN,.01),1,26)
+ . W ?56,$$HRCN^GMRCMP(GMRCDFN,+$G(DUZ(2))) ;$$GET1^DIQ(2,$P(^GMR(123,GMRCIEN,0),U,2),.09)
  . S GMRCSTAT=+^TMP("GMRCLS",$J,GMRCIEN)
  . W ?70,$S(GMRCSTAT=5:"p",GMRCSTAT=6:"a",GMRCSTAT=8:"s",1:"?")
  . W " to ",$S(+GMRCCVT=1:"dc",1:"c")
@@ -61,7 +65,7 @@ HDR(PAGE) ; print the header for the report
  I PAGE=1 W !,?49,"Printed: ",$$FMTE^XLFDT($$NOW^XLFDT)
  I PAGE=1 D UPDCRIT(GMRCCVT,GMRCM,GMRCSVC,.GMRCMT,GMRCSTRT,GMRCSTOP)
  W !,"Consult",?70,"Status"
- W !,"Number    Requested          Patient                    SSN           Change"
+ W !,"Number    Requested          Patient                    HRCN           Change"
  W !,$$REPEAT^XLFSTR("-",79)
  Q
 GETENTS(SERV,STRDT,STPDT,SRCH)  ;loop "AE" x-ref and dump into ^TMP

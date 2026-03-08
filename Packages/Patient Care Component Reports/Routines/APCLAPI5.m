@@ -1,5 +1,5 @@
 APCLAPI5 ; IHS/CMI/LAB - visit data ;
- ;;2.0;IHS PCC SUITE;**2,11**;MAY 14, 2009;Build 58
+ ;;2.0;IHS PCC SUITE;**2,11,23**;MAY 14, 2009;Build 17
  ;IHS/TUCSON/LAB - added G parameter to provider call
  ;
  ;
@@ -156,4 +156,32 @@ LASTNUTR(APCLPDFN,APCLBD,APCLED,APCLFORM) ;PEP - date of last NUTRITION SCRFEENI
  .Q:V>APCLED
  .I V>$P(APCLLAST,U,1) S APCLLAST=V_U_"NUTRITION SCREENING EXAM"_U_U_$P(^AUPNVNTS(X,0),U,3)_U_9000010.49_U_X
  I APCLFORM="D" Q $P(APCLLAST,U,1)
+ Q APCLLAST
+LASTCTCO(APCLPDFN,APCLBD,APCLED,APCLFORM) ;PEP - return last sigmoidoscopy
+ ;   - V CPT: [BGP CT COLONOGRAPHY CPTS
+ ;
+ ;  Input:
+ ;   APCLPDFN - Patient DFN
+ ;   APCLBD - beginning date to begin search for value - if blank, default is DOB
+ ;   APCLED - ending date of search - if blank, default is DT
+ ;   APCLFORM -  APCLFORM returned:  D - return date only - example 3070801
+ ;                                 A - return value:
+ ;                       date^text of item found^value if appropriate^visit ien^File found in^ien of file found in
+ ;             Default if blank is D
+ ;  Output:
+ ;   If APCLFORM is blank or APCLFORM is D returns internal fileman date if one found otherwise returns null
+ ;   If APCLFORM is A returns the string:
+ ;     date^text of item found^value if appropriate^visit ien^File found in^ien of file found in
+ ;     
+ I '$G(APCLPDFN) Q ""
+ I $G(APCLBD)="" S APCLBD=$$DOB^AUPNPAT(APCLPDFN)
+ I $G(APCLED)="" S APCLED=DT
+ I $G(APCLFORM)="" S APCLFORM="D"
+ NEW APCLLAST,APCLVAL,APCLX,E,%,T
+ S APCLVAL="",APCLLAST=""
+ S APCLVAL=$$LASTCPTT^APCLAPIU(APCLPDFN,$S($P(APCLLAST,U)]"":$P(APCLLAST,U),1:APCLBD),APCLED,"BGP CT COLONOGRAPHY CPTS","A")
+ D E
+ S APCLVAL=$$LASTRADT^APCLAPIU(APCLPDFN,$S($P(APCLLAST,U)]"":$P(APCLLAST,U),1:APCLBD),APCLED,"BGP CT COLONOGRAPHY CPTS","A")
+ D E
+ I APCLFORM="D" Q $P(APCLLAST,U)
  Q APCLLAST

@@ -1,9 +1,11 @@
-BILOGO ;IHS/CMI/MWR - DISPLAY LOGO WHRN ENTERING PKG; OCT 15, 2010
- ;;8.5;IMMUNIZATION;**16**;MAR 01,2018
+BILOGO ;IHS/CMI/MWR - DISPLAY LOGO WHRN ENTERING PKG; OCT 15, 2010 ; [ 01/29/2025  6:01 PM ]
+ ;;8.5;IMMUNIZATION;**27,28,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  DISPLAYS LOGO.  GETS VERSION FROM LINE 2 OF THIS ROUTINE.
  ;
  D SETVARS^BIUTL5
+ ;V8.5 PATCH 29 - FID-107546 Adjust Td,NOS forecast
+ D VARR^BIUTL3
  ;---> Set Imm Package Version Number.
  S BIVER=$$VER
  ;
@@ -11,10 +13,11 @@ BILOGO ;IHS/CMI/MWR - DISPLAY LOGO WHRN ENTERING PKG; OCT 15, 2010
  W !?13,"     .. --- ..         *     *         .. --- .."
  W !?13,"   *          ~ *.      \   /      .* ~          *"
  W !?13," *                *      \ /      *                *"
- W !?13,"(         RPMS      *    (|)    *     Version       )"
- W !?13," *    IMMUNIZATION    *  ***  *         "
- W $$PAD^BIUTL5($$VER,11),"*"
- W !?13,"   *.                   *   *                   .*"
+ W !?13,"(         RPMS      *    (|)    *      Version      )"
+ W !?13," *    IMMUNIZATION    *  ***  *        "
+ W $$PAD^BIUTL5($$VER,11)," *"
+ W !?13,"   *.                   *   *          *"
+ W $$PAD^BIUTL5($$VER2,7)," .*"
  W !?13,"      *                *     *                *"
  W !?13,"        >              *     *              <"
  W !?13,"       *                *   *                *"
@@ -147,14 +150,19 @@ TEXT5 ;EP
  ;----------
 VER() ;PEP - Return Version# and Patch Level (if any).
  ;
+ ;N DA,VDA,VER,PATCH
+ S DA=+$O(^DIC(9.4,"C","BI",0))
+ S VER=+$O(^DIC(9.4,DA,22,"B",99),-1)
+ S VDA=+$O(^DIC(9.4,DA,22,"B",VER,0))
+ S PATCH=+$O(^DIC(9.4,DA,22,VDA,"PAH","B",99),-1)
+ Q VER_$S('PATCH:"",1:"*"_PATCH)
+ ;
+ ;
+ ;----------
+VER2() ;EP - Return Vaccine Table Update Patch Level (if any).
+ ;
  N X,Y,Z
- S X=$P($T(BILOGO+1),";;",2)
- S Y=$P(X,";")
- S Z=$P(X,";",3)
- ;---> If no patch level, return version# and quit.
- Q:Z="" Y
- S Z=$TR(Z,"*","")
- Q Y_"*"_$P(Z,",",$L(Z,","))
+ Q $P($G(^BISITE(+$G(DUZ(2)),0)),"^",26)
  ;
  ;
  ;----------

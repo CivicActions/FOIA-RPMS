@@ -1,6 +1,5 @@
 XWBRM ;OIFO-Oakland/REM - M2M Broker Server Request Mgr  ;4/6/06  10:21
- ;;1.1;RPC BROKER;**28,45,62**;Mar 28, 1997;Build 13
- ;Per VHA Directive 6402, this routine should not be modified
+ ;;1.1;RPC BROKER;**28,45**;Mar 28, 1997
  ;
  QUIT
  ;
@@ -17,15 +16,9 @@ EN(XWBROOT) ; -- main entry point for SRM
  SET XWBOPT=""
  DO EN^XWBRMX(XWBROOT,.XWBOPT,.XWBDATA)
  S XWBMODE=$G(XWBDATA("MODE"))
- ;access/verify RPC must be within first 2 calls P62
- I $G(XWBAVC) D  Q:XWBAVC>1 '(XWBAVC=3)
- . Q:$G(XWBDATA("URI"))="XUS SIGNON SETUP"
- . I $G(XWBDATA("URI"))="XUS AV CODE" D EN^XWBRPC(.XWBDATA) S XWBAVC=2 Q
- . S XWBCODES(2)="",XWBCODES=$G(XWBCODES)+1,XWBAVC=3
- . D SECERR(.XWBCODES)
- . Q
- ;removed in P62
- ;I $G(XWBDATA("URI"))="XUS GET VISITOR" D EN^XWBRPC(.XWBDATA) S XWBOK=1 S:'$D(DUZ) XWBSTOP=1 Q 1
+ ;M ^REM($J)=XWBDATA ;**TEST ONLY
+ ;
+ I $G(XWBDATA("URI"))="XUS GET VISITOR" D EN^XWBRPC(.XWBDATA) S XWBOK=1 S:'$D(DUZ) XWBSTOP=1 Q 1
  ;Break off to RCPBroker **M2M
  IF $G(XWBDATA("MODE"))="RPCBroker" D RPC^XWBM2MS(.XWBDATA) SET XWBSTOP=0
  ; -- single call processing
@@ -95,10 +88,9 @@ RMERR(XWBCODE) ; -- send request error message
  QUIT
  ;
 RMERRS ; -- application errors
- ;;No valid application specified
- ;;
+ ;;No valid application specified.
  ;
-SECERR(XWBCODES) ; -- send security error message and log
+SECERR(XWBCODES) ; -- send security error message
  NEW XWBDAT,XWBCNT,XWBCODE
  SET XWBCNT=0
  SET XWBDAT("MESSAGE TYPE")="Gov.VA.Med.Foundations.Security.Errors"
@@ -108,7 +100,6 @@ SECERR(XWBCODES) ; -- send security error message and log
  . SET XWBDAT("ERRORS",XWBCNT,"ERROR TYPE")="security"
  . SET XWBDAT("ERRORS",XWBCNT,"MESSAGE",1)=$P($TEXT(SECERRS+XWBCODE),";;",2)
  . SET XWBDAT("ERRORS",XWBCNT,"CDATA")=0
- . D XTMP
  DO ERROR^XWBUTL(.XWBDAT)
  QUIT
  ;
@@ -116,9 +107,3 @@ SECERRS ; -- security errors
  ;;Security token is either invalid or was not passed.
  ;;DUZ is either invalid or was not passed.
  ;;
- ;
-XTMP ;
- ;reset expiration date to T+7 on security log
- S:'$G(^XTMP("XWBSEC"_DT,0)) ^(0)=$$FMADD^XLFDT(DT,7)_U_DT_U_0
- S X=$P(^XTMP("XWBSEC"_DT,0),U,3)+1,$P(^(0),U,3)=X,^(X)=XWBCODE_U_$J_U_$G(IO("IP"))
- Q

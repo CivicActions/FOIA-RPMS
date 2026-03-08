@@ -1,9 +1,10 @@
 BDGAD4 ; IHS/ANMC/LJF - A&D DISCHARGES ; 
- ;;5.3;PIMS;**1003,1005,1009,1013,1018,1019**;MAY 28, 2004;Build 3
+ ;;5.3;PIMS;**1003,1005,1009,1013,1018,1019,1023**;MAY 28, 2004;Build 24
  ;IHS/ITSC/LJF 06/03/2005 PATCH 1003 added code for multiple discharges per patient
  ;IHS/OIT/LJF  12/29/2005 PATCH 1005 changed AGE^BDGF2 to official API
  ;cmi/anch/maw 02/11/2008 added fix in GATHER PATCH 1009
  ;ihs/cmi/maw  09/14/2011 added check of service being DAY SURGERY
+ ;IHS/CMI/FBD  12/02/2024 p1023 - corrected unspecified treating specialties error
  ;
 LOOP ;--loop discharges
  NEW DGDT,DFN,IFN
@@ -24,6 +25,7 @@ GATHER ; gather info on discharges and put counts into arrays
  ;ihs/cmi/maw 08/07/2015 this line needs to be removed or counts will be off, interward transfers are being created without a ward causing the counts and errors
  ;Q:'$G(OLDWD)  ;cmi/maw 2/11/2008 added for no ward being returned PATCH 1009
  ;
+ Q:'+$$PRIORTXN^BDGF1(DGDT,ADM,DFN)  ;PIMS*5.3*1023 - SKIP IF NO TREATING SPECIALTY IDENTIFIED
  S OLDSV=$P(^DGPM(+$$PRIORTXN^BDGF1(DGDT,ADM,DFN),0),U,9)  ;old srv
  S OLDSVN=$$GET1^DIQ(45.7,OLDSV,.01)
  I OLDSVN["OBSERVATION" S LOS=$$LOSHRS^BDGF1(ADM,DGDT,DFN)  ;los-hours

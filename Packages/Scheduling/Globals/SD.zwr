@@ -1,0 +1,14 @@
+CACHE FORMAT
+ZWR
+^SD(409.75,"AEDT",Encounter Date,IEN for entry in 409.73,DA)=""
+^SD(409.75,"AECL",IEN of entry in 44,DA)=""
+^SD(409.75,"AER",IEN of entry in 409.73,IEN of entry in 409.76,DA)=""
+^SD(409.75,"ACOD",Patient DFN,External value of the error code,DA)=""
+^SD(409.75,"AER",IEN of entry in 409.73,IEN of entry in 409.76,DA)=""
+^SD(409.75,"ACOD",Patient DFN,External value of the error code,DA)=""
+^SD(409.75,"AEDT",Encounter Date,IEN for entry in 409.73,DA)=""
+^SD(409.75,"AECL",IEN of entry in 44,DA)=""
+^SD(409.75,"AER",IEN of entry in 409.73,IEN of entry in 409.76,DA)=""
+^SD(409.75,"ACOD",Patient DFN,External value of the error code,DA)=""
+^SD(409.75,"AER",IEN of entry in 409.73,IEN of entry in 409.76,DA)=""
+^SD(409.75,"ACOD",Patient DFN,External value of the error code,DA)=""

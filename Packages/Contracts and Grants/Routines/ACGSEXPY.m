@@ -1,8 +1,9 @@
-ACGSEXPY ;IHS/OIRM/DSD/THL,AEF - EXPORT CONTROLLER; [ 03/27/2000   2:22 PM ]
- ;;2.0t1;CONTRACT INFORMATION SYSTEM;;FEB 16, 2000
+ACGSEXPY ;IHS/OIRM/DSD/THL,AEF - EXPORT CONTROLLER; [ 10/27/2004   4:19 PM ]
+ ;;2.0t1;CONTRACT INFORMATION SYSTEM;**13**;FEB 16, 2000
  ;;UTILITY WHICH CREATES THE EXPORT GLOBAL AND TRANSMITS IT TO THE
  ;;ALBUQUERQUE DATA CENTER
  ;;modifed for y2k;mlp
+ ;;IHS/ITSC/MRS:ACR*2.1*9 MODIFIED FOR CACHE COMPLIANCY
 EN D EXPORT
 EXIT K ACGT1,ACGRDA,ACGSIGN,ACGY,ACGFY,%DEV,%FN,%CMT,%GN,%QUIT,%SIZE,%TAP,%TAPV
  Q
@@ -11,14 +12,18 @@ EXPORT D ^XBKVAR,HEAD^ACGSMENU
  W !
  D FY
  Q:$D(ACGQUIT)
- S ACGFY=Y,ACG4=$P(ACGPARA,U,3),%FN=$S(ACG4=236:"/usr2/acg",ACG4=102:"ACG",1:"A:ACG")_ACG4_"."_$S($P(ACGPARA,U,2)=1:$S(ACG4'=236:"asc",1:"phs"),1:"ASC")
+ ;S ACGFY=Y,ACG4=$P(ACGPARA,U,3),%FN=$S(ACG4=236:"/usr2/acg",ACG4=102:"ACG",1:"A:ACG")_ACG4_"."_$S($P(ACGPARA,U,2)=1:$S(ACG4'=236:"asc",1:"phs"),1:"ASC")  ;ACR*2.1*13.06 IM14144
+ S ACG2=1                 ;FLAG FOR NO FORMATING ACR*2.1*13.06 IM14144
+ D DIR^ACGSEXP(ACGPARA,.ACRDIR,.%FN,.ACG4,.ACG2) ;ACR*2.1*13.06 IM14144
+ Q:ACRDIR']""                    ;ACR*2.1*13.06 IM14144
+ S ACGFY=Y                       ;ACR*2.1*13.06 IM14144
  W !!,"CIS data will now be filed to file '"_%FN_"'"
  S DIR(0)="YO",DIR("A")="Proceed with filing",DIR("B")="NO"
  D DIR^ACGSDIC
  I $D(ACGQUIT)!(Y'=1) S ACGQUIT=1 Q
  K ^ACGS("T",1),^ACGS("SPP",1)
  I ACG4=236 D FY^ACGSUP
- W !!,"The data export process will now take place.  It takes 30-45 minutes.",!,"Please do not interrupt."
+ W !!,"The data export process will now take place. It takes 30-45 minutes.",!,"Please do not interrupt."
  D HFS,^%ZISC
  ;S %FN=$P(%FN,"asc")_"spp"_$P(%FN,"asc",2)
  ;D OPEN,SSP:POP=0,^%ZISC
@@ -35,7 +40,11 @@ OPEN ;OPEN HOST FILE
  Q
 AREAS U IO
  S %DEV=IO,(%TAP,%TAPV)=0,%GN="ACGS",^TMP($J,"ACGS")="",%CMT="",%SIZE=1024*1000,%QUIT=0
- D START^%GS
+ ;D START^%GS                         ;ACR*2.1*13.01 IM13574
+ N ACGOS                              ;ACR*2.1*13.01 IM13574
+ S ACGOS=$$VERSION^%ZOSV(1)           ;ACR*2.1*13.01 IM13574
+ I ACGOS["MSM" D START^%GS            ;ACR*2.1*13.01 IM13574
+ I ACGOS["Cache" D ^%GO               ;ACR*2.1*13.01 IM13574
  Q
 HQ U IO
  K ^TMP("ACGERR"),^TMP("ACG")
@@ -84,7 +93,10 @@ DX ;EP;TO EXPORT RECORDS BY DATE LAST EDITED
  D C^%DTC
  S ACGDATE=X-1
  D DCON
- S ACG4=$P(ACGPARA,U,3),ACG2=$P(ACGPARA,U,2),%FN=$S(ACG2=1:"/usr/spool/uucppublic/acg",ACG4=102:"ACG",1:"A:ACG")_ACG4_"."_$S(ACG2=1:$S(ACG4'=236:"asc",1:"phs"),1:"ASC")
+ ;S ACG4=$P(ACGPARA,U,3),ACG2=$P(ACGPARA,U,2),%FN=$S(ACG2=1:"/usr/spool/uucppublic/acg",ACG4=102:"ACG",1:"A:ACG")_ACG4_"."_$S(ACG2=1:$S(ACG4'=236:"asc",1:"phs"),1:"ASC")  ;ACR*2.1*13.06 IM14144
+ S ACG2=1                                ;ACR*2.1*13.06 IM14144
+ D DIR^ACGSEXP(ACGPARA,.ACRDIR,.%FN,.ACG4,.ACG2)  ;ACR*2.1*13.06 IM14144
+ Q:ACRDIR']""                            ;ACR*2.1*13.06 IM14144
  D OPEN
  I POP D CLOSE Q
  U IO

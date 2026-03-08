@@ -59,7 +59,7 @@ MODADA ;
  ;;dysfunction, facial pain of unknown origin, conditions requiring multi-disciplinary consultation, etc.
  ;;D0350^31^oral/facial photographic images^
  ;;This includes photographic images, including those obtained by intraoral and extraoral cameras, excluding
- ;;radiographic images.  These photographic images should be a part of the patient’s clinical record
+ ;;radiographic images.  These photographic images should be a part of the patientÂ’s clinical record
  ;;D0415^57^collection of microorganisms for culture and sensitivity ^
  ;;
  ;;D0480^61^processing and interpretation of exfoliative cytologic smears^
@@ -80,7 +80,7 @@ MODADA ;
  ;;Classification of Metals (Source:  ADA Council on Scientific Affairs) The noble metal classification system
  ;;has been adopted as a more precise method of reporting various alloys used in dentistry.  The alloys are
  ;;defined on the basis of the percentage of metal content: high noble - Gold (Au), Palladium (Pd), and/or
- ;;Platinum (Pt) > 60% (with at least 40% Au); titanium and titanium alloys – Titanium (Ti) > 85%; noble
+ ;;Platinum (Pt) > 60% (with at least 40% Au); titanium and titanium alloys Â– Titanium (Ti) > 85%; noble
  ;;- Gold (Au), Palladium (Pd), and/or Platinum (Pt)> 25%; predominantly base - Gold (Au), Palladium (Pd),
  ;;and/or Platinum (Pt) < 25%.   Porcelain/ceramic
  ;;D2710^40^crown - resin-based composite (indirect)^
@@ -137,12 +137,12 @@ MODADA ;
  ;;periodontal regeneration when the disease process has led to a deformity of the bone.  This procedure
  ;;does not include flap entry and closure, wound debridement, osseous contouring, or the placement of biologic
  ;;materials to aid in osseous tissue regeneration of barrier membranes,  including, but not limited to,
- ;;D4240, D4241, D4260, and D4261, D4265, D4266 and D4267.   Definition for the term “site” precedes code
+ ;;D4240, D4241, D4260, and D4261, D4265, D4266 and D4267.   Definition for the term Â“siteÂ” precedes code
  ;;D4210. This procedure involves the use of osseous autografts, osseous allografts, or non-osseous grafts
  ;;to stimulate periodontal regeneration when the disease process has led to a deformity of the bone.  This
  ;;procedure does not include flap entry and closure, wound debridement, osseous contouring, or the placement
  ;;of biologic materials to aid in osseous tissue regeneration of barrier membranes,  including, but not
- ;;limited to, D4240, D4241, D4260, and D4261, D4265, D4266 and D4267.   Definition for the term “site” precedes
+ ;;limited to, D4240, D4241, D4260, and D4261, D4265, D4266 and D4267.   Definition for the term Â“siteÂ” precedes
  ;;code D4210.
  ;;D4265 ^65^biologic materials to aid in soft and osseous tissue regeneration^
  ;;Biologic materials may be used alone or with other regenerative substrates such as bone and barrier membranes,

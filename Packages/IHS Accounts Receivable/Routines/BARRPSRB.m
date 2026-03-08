@@ -1,5 +1,5 @@
 BARRPSRB ; IHS/SD/LSL - Period Summary Report Print ; 08/20/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**7**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**7,31**;OCT 26, 2005;Build 90
  ; MODIFIED XTMP FILE NAME TO TMP TO MEET SAC REQUIREMENTS;MRS:BAR*1.8*7 IM29892
  ; IHS/ASDS/LSL - 02/27/03 - V1.7 Patch 1
  ;     Routine created.  Called from BARRPSRA
@@ -7,11 +7,13 @@ BARRPSRB ; IHS/SD/LSL - Period Summary Report Print ; 08/20/2008
  ;
  ; IHS/SD/LSL - 08/01/03 - V1.7 Patch 2
  ;     Add call to PSR^EISS for print of summary data
+ ; BAR*1.8*31 IHS/OIT/FCJ 11/5/2020 CR#6369 Save report to file
  Q
  ; *********************************************************************
  ;
 PRINT ; EP
  ; Print reports
+ I $D(BARFILN) D OPEN^%ZISH("FILE",BARPTH,BARFILN,"W") U IO  ;BAR*1.8*31 IHS/OIT/FCJ 11/5/2020 CR#6369
  F I=1:1:4 K BAR(I)
  F I=1:1:5 K BAR("SUB"_I)
  S BAR("PG")=0

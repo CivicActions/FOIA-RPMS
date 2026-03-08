@@ -1,5 +1,5 @@
 BSTSVRXN ;GDIT/HS/BEE-Standard Terminology - RxNorm Subset Updates ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3,5,7,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
@@ -75,7 +75,7 @@ SUB ;EP - Update IHS Standard Terminology RxNorm Subsets
  S SDAYS=$$GET1^DIQ(9002318,SITE_",",.02,"I") S:SDAYS="" SDAYS=60
  ;
  NEW BSTS,ERROR,CIEN,BSTSSB,STS,CNC,SUBLST,SSCIEN,ICONC,X,X1,X2,ITEM,%H
- NEW MFAIL,FWAIT,FCNT,ABORT,RUNSTRT,TR
+ NEW MFAIL,FWAIT,FCNT,ABORT,RUNSTRT,TR,BIPROG,BSTSWS,CDST,RVAR
  ;
  ;Note the run date
  S RUNSTRT=DT
@@ -87,11 +87,30 @@ SUB ;EP - Update IHS Standard Terminology RxNorm Subsets
  . I +STS'=2 H TR
  I +STS'=2 G XSUB
  ;
+ ;Pull down 32781 version
+ S STS=$$VERSIONS^BSTSAPI("RVAR","32781")
+ ;
+ ;GDIT/HS/BEE 04/29/19;BSTS*2.0*3;CR#8841;Retrieve progress
+ S BIPROG=$G(^XTMP("BSTSLCMP","UPD"))
+ I BIPROG,($P(BIPROG,U,2)'="SUB")!($P(BIPROG,U,3)'="BSTSVRXN") S ^XTMP("BSTSLCMP","QUIT")=1 G XSUB
+ ;
  ;Reset Monitoring Global
- K ^XTMP("BSTSLCMP")
+ I 'BIPROG K ^XTMP("BSTSLCMP")
  ;
  ;Get a later date
  S X1=DT,X2=60 D C^%DTC
+ ;
+ ;Log updates
+ S CDST=32781 D
+ . NEW CVRSN,NM
+ . ;
+ . S NM=$O(^BSTS(9002318.1,"B",CDST,"")) Q:NM=""
+ . ;
+ . ;Get current version
+ . S CVRSN=$$GET1^DIQ(9002318.1,NM_",",.04,"I")
+ . ;
+ . ;Make a log entry
+ . D LOG^BSTSAPIL("UPDS",CDST,"CURRENT",CVRSN),PLOG^BSTSAPIL
  ;
  ;Retrieve Failover Variables
  S MFAIL=$$FPARMS^BSTSVOFL()
@@ -107,72 +126,87 @@ SUB ;EP - Update IHS Standard Terminology RxNorm Subsets
  ;Set up Monitoring Global
  S ^XTMP("BSTSLCMP",0)=X_U_DT_U_"RxNorm Cache subset refresh running for "_NMID
  ;
- ;Loop through concepts and clear out modified date for codes in codeset
- S ^XTMP("BSTSLCMP","STS")="Marking entries as out of date"
- S ICONC="" F  S ICONC=$O(^BSTS(9002318.4,"C",NMID,ICONC)) Q:ICONC=""  D
- . S CIEN="" F  S CIEN=$O(^BSTS(9002318.4,"C",NMID,ICONC,CIEN)) Q:CIEN=""  D
- .. NEW CDSET,BSTS,ERR,LMOD
- .. ;
- .. ;Skip partial entries
- .. I $$GET1^DIQ(9002318.4,CIEN_",",.03,"I")="P" Q
- .. ;
- .. ;Check last modified - skip if today
- .. S LMOD=$$GET1^DIQ(9002318.4,CIEN_",",.12,"I") I LMOD'<RUNSTRT Q
- .. ;
- .. ;Mark as out of date
- .. S BSTS(9002318.4,CIEN_",",".12")="@"
- .. D FILE^DIE("","BSTS","ERR")
+ ;Mark entries as out of date and log status
+ I 'BIPROG D  I $D(^XTMP("BSTSLCMP","QUIT")) G XSUB
+ . D SUBMDT^BSTSVOF1(NMID)
+ . Q:$D(^XTMP("BSTSLCMP","QUIT"))
+ . S ^XTMP("BSTSLCMP","UPD")="1^SUB^BSTSVRXN"
  ;
  ;Make the call to update the subset entries
- S STS=$$SCODE^BSTSWSV1(1552)
+ S ^XTMP("BSTSLCMP","STS")="Performing subset refresh from DTS"
+ S STS=1
+ S BSTSWS("BIPROG")=BIPROG
+ I $P($G(^XTMP("BSTSLCMP","UPD")),U,6)<200 S STS=$$SCODE^BSTSWSV1(1552,.BSTSWS)
  ;
  ;Quit on failure
  I +STS=0 S ^XTMP("BSTSLCMP","QUIT")=1 G XSUB
  I $D(^XTMP("BSTSLCMP","QUIT")) G XSUB
  ;
  ;Need to loop through list again to catch any deletes
- S ^XTMP("BSTSLCMP","STS")="Looking for entries removed from subsets"
- S ABORT=0,ICONC="" F  S ICONC=$O(^BSTS(9002318.4,"C",NMID,ICONC)) Q:ICONC=""  Q:$D(^XTMP("BSTSLCMP","QUIT"))  S SSCIEN="" F  S SSCIEN=$O(^BSTS(9002318.4,"C",NMID,ICONC,SSCIEN)) Q:SSCIEN=""  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
- . ;
- . NEW LMOD,DTSID,SBVAR,CDSET,X1,X2,X,%H,FCNT,TRY
- . ;
- . ;Skip partial entries
- . I $$GET1^DIQ(9002318.4,SSCIEN_",",.03,"I")="P" Q
- . ;
- . ;Get last modified date for concept
- . S LMOD=$$GET1^DIQ(9002318.4,SSCIEN_",",".12","I")
- . ;
- . ;Skip if not out of date
- . I LMOD'<RUNSTRT Q
- . ;
- . ;Get DTSId
- . S DTSID=$$GET1^DIQ(9002318.4,SSCIEN_",",".08","I") Q:DTSID=""
- . S ^XTMP("BSTSLCMP","STS")="Refreshing removed entry: "_SSCIEN_" DTSID: "_DTSID
- . ;
- . ;If Out of Date, retrieve detail from server - Hang max of 12 times
- . S (FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS=2!(STS="0^") Q
- .. D RESET^BSTSWSV1 ;Make sure the link is on
- .. S STS=$$DTSLKP^BSTSAPI("SBVAR",DTSID_"^1552") I +STS=2!(STS="0^") Q
- .. S FCNT=FCNT+1 I FCNT'<MFAIL D  ;Fail handling
- ... S ABORT=$$FAIL^BSTSVOFL(MFAIL,FWAIT,TRY,"SUB^BSTSVRSN - Refreshing entry: "_DTSID)
- ... I ABORT=1 S ^XTMP("BSTSLCMP","QUIT")=1 D ELOG^BSTSVOFL("SUBSET REFRESH FAILED ON DETAIL ENTRY: "_DTSID)
- ... S FCNT=0
+ S STS=1 I $P($G(^XTMP("BSTSLCMP","UPD")),U,6)<300 S STS=$$SBSKP^BSTSVUP0(BIPROG,NMID)
  ;
  ;Check for failure
  I $D(^XTMP("BSTSLCMP","QUIT")) G XSUB
  ;
- ;Process VUID and NDC
- ;S STS=$$NVLKP^BSTSVOFL(MFAIL,FWAIT)
- ;
- ;Update LAST SUBSET RUN as completed today
+ ;Update the subset multiple
  D
- . NEW BSTS,ERROR
- . S BSTS(9002318.1,NMIEN_",",.1)=DT
- . D FILE^DIE("","BSTS","ERROR")
+ . NEW VAR,STS
+ . S VAR=$$SUBSET^BSTSAPI("VAR",NMID_"^2")
+ ;
+ ;Run allergy and APSP file updates
+ D
+ . NEW PSTART,%
+ . D NOW^%DTC
+ . S PSTART=%
+ . S ^XTMP("BSTSLCMP","STS")="Running process to update allergy entries with new RxNorm values"
+ . D BACKLOAD^GMRAZRXU
+ . D NOW^%DTC
+ . D PRLOG^BSTSAPIL("BACKLOAD^GMRAZRXU",PSTART,PSTART,1552,%,1552,"")
+ . S PSTART=%
+ . S ^XTMP("BSTSLCMP","STS")="Running process to update APSP information"
+ . D DQ^APSPRCUI
+ . D NOW^%DTC
+ . D PRLOG^BSTSAPIL("DQ^APSPRCUI",PSTART,PSTART,1552,%,1552,"")
+ ;
+ ;Process finished
+ K ^XTMP("BSTSLCMP","UPD")
+ ;
+ ;Update the RxNorm subset version
+ S NMID=32781 D
+ . NEW NMIEN,NVIEN,NVLCL
+ . ;
+ . S NMIEN=$O(^BSTS(9002318.1,"B",NMID,"")) Q:NMIEN=""
+ . ;
+ . ;Update current version
+ . ;
+ . ;Get current version from codeset multiple
+ . S NVIEN=$O(^BSTS(9002318.1,NMIEN,1,"A"),-1)
+ . S NVLCL="" I +NVIEN>0 D
+ .. NEW DA,IENS
+ .. S DA(1)=NMIEN,DA=+NVIEN,IENS=$$IENS^DILF(.DA)
+ .. S NVLCL=$$GET1^DIQ(9002318.11,IENS,".01","I")
+ . ;
+ . ;Now save CURRENT VERSION
+ . I NVLCL]"" D
+ .. NEW BSTS,ERROR
+ .. S BSTS(9002318.1,NMIEN_",",.04)=NVLCL
+ .. D FILE^DIE("","BSTS","ERROR")
+ ;
+ ;Make a log entry
+ S CDST=32781 D
+ . NEW CVRSN,NM
+ . ;
+ . S NM=$O(^BSTS(9002318.1,"B",CDST,"")) Q:NM=""
+ . ;
+ . ;Get current version
+ . S CVRSN=$$GET1^DIQ(9002318.1,NM_",",.04,"I")
+ . ;
+ . ;Make a log entry
+ . D LOG^BSTSAPIL("UPDE",CDST,"CURRENT",CVRSN),PLOG^BSTSAPIL
  ;
 XSUB NEW FAIL
  S FAIL=$S($D(^XTMP("BSTSLCMP","QUIT")):1,1:0)
- K ^XTMP("BSTSLCMP")
+ I '$G(^XTMP("BSTSLCMP","UPD")) K ^XTMP("BSTSLCMP")
  S:FAIL ^XTMP("BSTSLCMP","QUIT")=1
  ;
  ;Unlock entry

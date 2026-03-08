@@ -1,9 +1,10 @@
 BSDAIU ; IHS/ANMC/LJF - ADDRESS & INSURANCE UPDATE ; 
- ;;5.3;PIMS;**1007,1010,1012,1019**;APR 26, 2002;Build 3
+ ;;5.3;PIMS;**1007,1010,1012,1019,1021,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw 09/01/2008 PIMS Patch 1010 RQMT33 added number in household and income in DEM
  ;cmi/anch/maw 09/01/2008 PIMS Patch 1010 RQMT6 added mother and fathers employer name
  ;cmi/flag/maw 05/14/2010 PIMS Patch 1012 RQMT142 added call to this report from Appointment Managment
+ ;cmi/maw 04/11/2022 PIMS Patch 1021 83941 Remove SSN
  ;
  ;
 OR ;EP - called from Other Reports on Appointment Management if no patient
@@ -29,11 +30,14 @@ DEM ;-- print demographics
  W !?16,$$CONF^BSDU
  W !,?17,"*** PATIENT ADDRESS AND INSURANCE UPDATE ***"
  W !,?9,"*** PLEASE MAKE CORRECTIONS TO ANY INCORRECT INFORMATION ***"
- W !!,$E($$GET1^DIQ(2,DFN,.01),1,27)                     ;pat name
+ ;202307 77892 maw p1022 PPN
+ W !!,$$GETPREF^AUPNSOGI(DFN,"E",1)                     ;pat name
+ ;W !!,$E($$GET1^DIQ(2,DFN,.01),1,27)                     ;pat name
+ W !
  W ?30,"HRCN: ",$$HRCN^BDGF2(DFN,+$G(DUZ(2)))            ;chart #
  W ?44,"DOB: ",$$GET1^DIQ(2,DFN,.03)                     ;date of birth
  W ?62,"AGE: ",$$GET1^DIQ(9000001,DFN,1102.98)           ;printable age
- W !,"SSN: ","XXX-XX-"_$E($$GET1^DIQ(2,DFN,.09),6,9)     ;ssn
+ W !,"SSN: "  ;"XXX-XX-"_$E($$GET1^DIQ(2,DFN,.09),6,9)     ;ssn
  ;
  I $$GET1^DIQ(9000001,DFN,1112)["PENDING" D
  . W !!,$$REPEAT^XLFSTR("*",80)

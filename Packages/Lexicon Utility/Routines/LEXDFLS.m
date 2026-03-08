@@ -1,12 +1,6 @@
-LEXDFLS ;ISL/KER - Default Filter - Select ;04/21/2014
- ;;2.0;LEXICON UTILITY;**80**;Sep 23, 1996;Build 10
- ;               
- ; Global Variables
- ;    ^LEX(757.41)        N/A
- ;               
- ; External References
- ;    ^DIR                ICR  10026
- ;               
+LEXDFLS ; ISL Default Filter - Select              ; 09-23-96
+ ;;2.0;LEXICON UTILITY;;Sep 23, 1996;Build 15
+ ;
  ; Special Look-up in file 757.3 Screens
  ; Entry:  S X=$$EN^LEXDFLS
  ;

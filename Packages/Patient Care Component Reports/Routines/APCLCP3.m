@@ -1,5 +1,5 @@
-APCLCP3 ; IHS/CMI/LAB - activity report ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCP3 ; IHS/OHPRD/TMJ - activity report ; [ 02/06/02  9:23 AM ]
+ ;;3.0;IHS PCC REPORTS;**11**;FEB 05, 1997
  ;
 START ; 
  I '$G(DUZ(2)) W $C(7),$C(7),!!,"SITE NOT SET IN DUZ(2) - NOTIFY SITE MANAGER!!",!! Q
@@ -24,26 +24,7 @@ ED ;get ending date
  S APCLED=Y
  S X1=APCLBD,X2=-1 D C^%DTC S APCLSD=X
  ;
-LOC ;get location
- K APCLLOC
- S DIR(0)="S^O:One Location;T:Taxonomy of or Selected Set of Locations;A:All Locations"
- S DIR("A")="Include visits from which set of locations",DIR("B")="A" KILL DA D ^DIR KILL DIR
- G:$D(DIRUT) BD
- I Y="A" K APCLLOC G CLINIC
- I Y="O" D O G:$D(APCLQ) LOC
- I Y="T" D T G:$D(APCLQ) LOC
-CLINIC ;
- K APCLCLN
- S DIR(0)="S^O:One Clinic;T:Taxonomy of or Selected Set of Clinics;A:All Clinics"
- S DIR("A")="Include visits from which set of clinics",DIR("B")="A" KILL DA D ^DIR KILL DIR
- G:$D(DIRUT) LOC
- I Y="A" K APCLCLN G ZIS
- I Y="O" D OC G:$D(APCLQ) CLINIC
- I Y="T" D TC G:$D(APCLQ) CLINIC
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G CLINIC
  S XBRP="^APCLCP3P",XBRC="^APCLCP31",XBRX="XIT^APCLCP3",XBNS="APCL"
  D ^XBDBQUE
  D XIT
@@ -64,15 +45,3 @@ INFORM ;
  Q
  ;
  ;
-O ;EP one location
- D O^APCLCP1
- Q
-T ;EP taxonomy
- D T^APCLCP1
- Q
-OC ;EP one location
- D OC^APCLCP1
- Q
-TC ;EP taxonomy
- D TC^APCLCP1
- Q

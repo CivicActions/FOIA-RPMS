@@ -1,5 +1,5 @@
 BSDROUT1 ; IHS/ANMC/LJF,WAR - ROUTING SLIPS PRINT ;  
- ;;5.3;PIMS;**1001,1003,1004,1007,1009**;DEC 01, 2006
+ ;;5.3;PIMS;**1001,1003,1004,1007,1009,1022**;MAY 28, 2004;Build 18
  ;IHS/ITSC/LJF 04/22/2004 PATCH 1001 centered duplicate routings slips on paper
  ;IHS/ITSC/LJF 06/17/2005 PATCH 1003 if BSDHS set to 1, don't print other documents
  ;IHS/OIT/LJF  07/15/2005 PATCH 1004 increment count when reprinting add-ons; needed for form feed
@@ -180,7 +180,9 @@ RSHED(DFN) ; -- routing slip heading
  W ?40,"**",$E($$CONF^BSDU,1,25),"**"
  S BSDPG=$G(BSDPG)+1 W !,"PAGE ",BSDPG,?10,"OUTPATIENT ROUTING SLIP"
  ;
- W !!,$$GET1^DIQ(2,DFN,.01),?30,"HRCN: ",$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
+ ;202307 77892 maw p1022 PPN
+ W !!,$$GETPREF^AUPNSOGI(DFN,"E",1),?60,"HRCN: ",$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
+ ;W !!,$$GET1^DIQ(2,DFN,.01),?30,"HRCN: ",$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
  ;
  W !?5,"DOB: ",$$GET1^DIQ(2,DFN,.03)
  W ?44,"APPT DT:  ",$$FMTE^XLFDT(SDATE,5)

@@ -1,6 +1,9 @@
-DIR ;SFISC/XAK-READER, HELP ;6:35 PM  12 Jul 2013
- ;;22.0;VA FileMan;**30,163,170**;Mar 30, 1999;Build 12
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIR ;SFISC/XAK-READER, HELP ;2/13/98  14:26 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**13,24,41**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+ ;12371;8809710;4693;
+ ;
  N %,%A,%B,%B1,%B2,%B3,%BA,%C,%E,%G,%H,%I,%J,%N,%P,%S,%T,%W,%X,%Y,A0,C,D,DD,DDH,DDQ,DDSV,DG,DH,DIC,DIFLD,DIRO,DO,DP,DQ,DU,DZ,X1,XQH,DIX,DIY,DISYS,%BU,%J1,%A0,%W0,%D1,%D2,%DT,%K,%M
  S:$D(DDH)[0 DDH=0 Q:'$D(DIR(0))  D ^DIR2 G Q:%T=""
  I $D(DIR("V"))#2 D ^DIR1 S DDER=%E G Q
@@ -14,21 +17,19 @@ A I $D(DDM) K:DDM DDQ S:'DDM DDQ=IOSL-7
  I %A'["O","@"[X,%T'="E" S A0=$C(7)_%A0 D MSG G A
  I $D(DDS),$D(DIR0),DIR0N G Q
  I $D(%G),$D(DIR("B")),X=DIR("B") S Y=%G G Q
- I X'?1."?" K DDQ D ^DIR1 I '%E,$P(DIR(0),U,3)]"" S %X=X D  S:'$D(X) %E=1 S X=%X
- . N %A,%B,%B1,%B2,%B3,%E,%N,%P,%T,%X,%W,%W0
- . X $P(DIR(0),U,3,99)
+ I X'?1."?" K DDQ D ^DIR1 I '%E,$P(DIR(0),U,3)]"" S %X=X X $P(DIR(0),U,3,99) S:'$D(X) %E=1 S X=%X
  I %A["V" K:%E Y G Q
- I X?1."?"!%E D QUES:%E'<0&'$G(DUOUT)&'$G(DTOUT) S A0="" D MSG D:$G(DDH) LIST^DDSU G A ;**170
+ I X?1."?"!%E D QUES:%E'<0 S A0="" D MSG D:$G(DDH) LIST^DDSU G A
  G Q
  ;
 W ; write the prompt and read the user's response
  S %W=%W0,%N=$E(%W)=U
-SCREEN K DTOUT,DUOUT,DIRUT,DIROUT S %E=0 I $D(DDS),$D(DIR0) D ^DIR0 Q  ;READ in DIR01 via DIR0
+ K DTOUT,DUOUT,DIRUT,DIROUT S %E=0 I $D(DDS),$D(DIR0) D ^DIR0 Q
  I %T="S",%A'["A",%A'["B" D S
  I $D(DIR("A"))=11 F %=0:0 S %=$O(DIR("A",%)) Q:%'>0  W !,DIR("A",%)
  W ! W:$L(%P) %P
- I $L($G(DIR("B")))>19,%A'["r",%T'="D",%T'="S",(%B'["D"&%T)!'%T,%B'["P"!'$P(%A,",",2) W DIR("B") S Y=DIR("B") D RW^DIR2 S:X="" X=DIR("B") Q
- W:$D(DIR("B")) DIR("B")_"// "
+ I $D(DIR("B")) W DIR("B") I $L(DIR("B"))<20!(%T="D")!(%T="S")!((%B["D"&%T)) W "// "
+ I %T'="D",$D(DIR("B")),$L(DIR("B"))>19,%T'="S",(%B'["D"&%T)!'%T S Y=DIR("B") D RW^DIR2 S:X="" X=DIR("B") Q
  R X:$S($D(DIR("T")):DIR("T"),'$D(DTIME):300,1:DTIME) I '$T S DTOUT=1
  I $D(DIR("PRE")) X DIR("PRE") I '$D(X) S %E=1,X="" Q
  I X="",$D(DIR("B")) S X=DIR("B") I %T'="D",%B'["D"&%T W X
@@ -70,13 +71,9 @@ QUES ;
  D:'%N WRAP:%W]"" I %T["S",(%A["A"!(%A["B")) D S
  Q
 WRAP I $D(DIR("?"))=11 F %I=1:1 Q:'$D(DIR("?",%I))  S A0=DIR("?",%I) D MSG
- K %Y S %J=$S($G(IOM,80)>6:$G(IOM,80)-6,IOM>1:IOM,1:2),%Y=1 S X1=$S(($D(DIR("?"))&'%N):DIR("?"),1:%W)
+ K %Y S %J=$S($D(IOM):IOM,1:80)-6,%Y=1 S X1=$S(($D(DIR("?"))&'%N):DIR("?"),1:%W)
  I '%N,$D(DIR("?"))'=11,$E(X1,$L(X1))'="." S X1=X1_"."
-W1 I $L(X1)<%J S %Y(%Y)=X1
- E  D  G W1
- . I $E(X1,1,%J-1)'?.E1P.E S %I=%J-1
- . E  F %I=%J-1:-1:1 Q:$E(X1,%I)?1P
- . S %Y(%Y)=$E(X1,1,%I),X1=$E(X1,%I+1,999),%Y=%Y+1
+W1 S:$L(X1)<%J %Y(%Y)=X1 I $L(X1)'<%J F %I=%J:-1:0 I $E(X1,%I)?1P S %Y(%Y)=$E(X1,1,%I),X1=$E(X1,%I+1,999),%Y=%Y+1 G W1
  F %I=1:1:%Y S A0=%Y(%I) D MSG
  I $D(DDS),%T="S" D
  . S A0="Choose from:" D MSG
@@ -101,12 +98,6 @@ S W:$G(X)'?1."?"!(%A["A") !
  I $D(DIR("L"))#2 D
  . I $D(DIR("L"))=11 F %=0:0 S %=$O(DIR("L",%)) Q:%'>0  W !,DIR("L",%)
  . W !,DIR("L")
- E  I %B'[":",$O(DIR("C",""))]"" D
- . W !?5,"Select one of the following:",!
- . S %I="" F  S %I=$O(DIR("C",%I)) Q:%I=""  D
- .. S Y=$P(DIR("C",%I),":")
- .. I $D(DIR("S"))#2 X DIR("S") E  Q
- .. W !?10,Y,?20,$P(DIR("C",%I),":",2)
  E  D
  . W !?5,"Select one of the following:",!
  . F %I=1:1 Q:$P(%B,";",%I,999)=""  D

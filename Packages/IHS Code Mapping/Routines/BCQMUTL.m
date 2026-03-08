@@ -1,5 +1,5 @@
-BCQMUTL ; IHS/OIT/FBD - MAPPER UTILITIES ;05/07/2018 07:49;FS
- ;;1.0;IHS CODE MAPPING;;MAY 07, 2018;Build 21
+BCQMUTL ; IHS/OIT/FBD - MAPPER UTILITIES ;09/11/2024 07:49;FS
+ ;;1.0;IHS CODE MAPPING;**12,13**;OCT 01, 2025;Build 91
  ;
 TXICU(V) ;EP - IS THIS ADMISSION A TRANSFER TO AN ICU?
  I $G(V)="" Q 0
@@ -48,6 +48,14 @@ HOSP(V) ;EP - IS THIS A HOSPITAL FACILITY TYPE?
  I '$D(^DIC(4,A,0)) Q 0
  S A=$$FACTYPE(A)
  I A="HOSPITAL" Q 1
+ Q 0
+ISAMBU(V) ;EP - IS THIS A AMBULATORY SERVICE CATEGORY?
+ I $G(V)="" Q 0
+ I '$D(^AUPNVSIT(V,0)) Q 0
+ NEW A
+ S A=$P(^AUPNVSIT(V,0),U,7)
+ I 'A Q 0
+ I A="A" Q 1
  Q 0
 NURSEVAL(CLIN,PROV,TIU) ;EP - IS THIS A NURSE VISIT?
  I 'TIU Q 0  ;no tiu note
@@ -100,5 +108,53 @@ AGEV(V) ;EP - age of patient on this visit
  S P=$P(^AUPNVSIT(V,0),U,5)
  I 'P Q ""
  Q $$AGE^AUPNPAT(P,$$VD^APCLV(V))
+BWTV(V) ;EP - birth weight is detected (same date as DOB for patient) on this visit
+ I $G(V)="" Q ""
+ I $$ESTIM(V)'=0 Q "" ;IF AN ESTIMATE EXIST?
+ ;add a mapping to LOINC 8339-4 when a birth weight is detected (same date as DOB for patient)
+ ;and when the Estimated Gestational Age is NOT available.
+ I '$D(^AUPNVSIT(V,0)) Q ""  ;no visit
+ NEW P,I,A,IEN,WT
+ S P=$P(^AUPNVSIT(V,0),U,5) ;Patient
+ I 'P Q ""
+ ;WT > 0 V Measurement IEN without ENTERED IN ERROR
+ S I="",IEN="",WT=$O(^AUTTMSR("B","WT","")) F  S I=$O(^AUPNVMSR("AD",V,I)) Q:'I  D
+ .I $D(^AUPNVMSR(I,0)),'$D(^AUPNVMSR(I,2)),+$P(^AUPNVMSR(I,0),U,4)>0,+$P(^AUPNVMSR(I,0),U,1)=WT S IEN=I
+ I 'IEN Q 0
+ S A=$P($P(^AUPNVSIT(V,0),",",1),".",1)
+ I 'A Q ""
+ Q $$GET1^DIQ(2,P_",",.03,"I")=A
+CHKMODV(V,C,M) ;EP - GQ,GT or 95 modifier or no modifiers at all for the visit
+ I $G(V)="" Q ""
+ I $G(M)="" S M=1 ;M should be 0 to go for a 'No Modifiers' Check
+ I '$D(^AUPNVSIT(V,0)) Q ""  ;no visit
+ I '$D(^AUPNVCPT("AD",V)) Q ""  ;no vcpt
+ NEW I,M1,M2,MGQ,MGT,M95,IEN
+ S I=$O(^AUPNVCPT("AD",V,"")) ; V CPT IEN
+ I 'I,'$D(^AUPNVCPT(I,0)) Q 0
+ S I="",IEN="" F  S I=$O(^AUPNVCPT("AD",V,I)) Q:'I  D
+ .I $D(^AUPNVCPT("B",C,I)) S IEN=I
+ I 'IEN Q 0
+ S M1=$P(^AUPNVCPT(IEN,0),U,8),M2=$P(^AUPNVCPT(IEN,0),U,9)
+ I 'M1,'M2,'M Q 1
+ I 'M Q 0 ;No Modifiers Failed
+ S MGQ=$O(^DIC(81.3,"B","GQ","")),MGT=$O(^DIC(81.3,"B","GT","")),M95=$O(^DIC(81.3,"B","95","")) ;Modifiers Ref. data
+ I (M1=MGQ)!(M1=MGT)!(M1=M95)!(M2=MGQ)!(M2=MGT)!(M2=M95) Q 1  ;Needed at least one of the following modifiers
+ Q 0
+CHKMODV2(V,C,M) ;EP - 50, LT, RT modifier or no modifiers at all for the visit
+ I $G(V)="" Q 0
+ I $G(M)="" Q 0
+ I '$D(^AUPNVSIT(V,0)) Q ""  ;no visit
+ I '$D(^AUPNVCPT("AD",V)) Q ""  ;no vcpt
+ NEW I,IEN,M1,M2,M3
+ S I=$O(^AUPNVCPT("AD",V,"")) ; V CPT IEN
+ I 'I,'$D(^AUPNVCPT(I,0)) Q 0
+ S I="",IEN="" F  S I=$O(^AUPNVCPT("AD",V,I)) Q:'I  D
+ .I $D(^AUPNVCPT("B",C,I)) S IEN=I
+ I 'IEN Q 0
+ S M1=$P(^AUPNVCPT(IEN,0),U,8),M2=$P(^AUPNVCPT(IEN,0),U,9),M3=$P(^AUPNVCPT(IEN,0),U,10)
+ S M=$O(^DIC(81.3,"B",M,"")) ;Modifiers Ref. data
+ I (M1=M)!(M2=M)!(M3=M) Q 1  ;Needed at least one of the following modifiers
+ Q 0
 EKGFINDL() ;PEP - return EKG finding loinc
  Q "8601-7"

@@ -1,0 +1,68 @@
+XUCS8RGA ;CLARKSBURG/SO GRAPH RESPONSE TIME BY VG/DATE - PRINT ; 1/31/94 [ 04/02/2003   8:47 AM ]
+ ;;7.3;TOOLKIT;**1001**;APR 1, 2003
+ ;;7.3;TOOLKIT;**6**;Apr 25, 1995
+PRINT ; Print the Report
+ ; Find VG's Highest RT
+ S (XUCSVG,XUCSAP)="",(XUCSH,XUCSX)=0 F  S XUCSVG=$O(^TMP($J,6,XUCSVG)) Q:XUCSVG=""  DO
+ . F  S XUCSAP=$O(^TMP($J,6,XUCSVG,XUCSAP)) Q:XUCSAP=""  DO
+ .. F  S XUCSX=$O(^TMP($J,6,XUCSVG,XUCSAP,+XUCSX)) Q:+XUCSX<1  S XUCSX1=^(+XUCSX) DO
+ ... I XUCSX1>XUCSH S XUCSH=XUCSX1
+ ... K XUCSX1
+ ... Q
+ .. Q
+ . Q
+ D TBLINIT
+BLDGPH ; Build Graph in XUCSW(
+ S XUCSVG="" F  S XUCSVG=$O(^TMP($J,6,XUCSVG)) Q:XUCSVG=""!(XUCSEND)  DO
+ . S XUCSAP="" F  S XUCSAP=$O(^TMP($J,6,XUCSVG,XUCSAP)) Q:XUCSAP=""!(XUCSEND)  DO  D REPORT Q:XUCSEND
+ .. S XUCSX=0 F  S XUCSX=$O(^TMP($J,6,XUCSVG,XUCSAP,+XUCSX)) Q:+XUCSX<1  S XUCSX1=^(+XUCSX) DO
+ ... S X1=XUCSX,X2=XUCSPD D ^%DTC I X>1 D PAD
+ ... S XUCSPD=XUCSX
+ ... I 'XUCSX1 F I=1:1:15 S XUCSW(+I)=XUCSW(+I)_" "
+ ... I 'XUCSX1 S XUCSW(16)=XUCSW(16)_" " Q
+ ... S XUCSS1=$J((XUCSX1/XUCSS),0,0) F I=1:1:16-XUCSS1 S XUCSW(+I)=XUCSW(+I)_" "
+ ... F I=(16-XUCSS1)+1:1:16 S XUCSW(+I)=XUCSW(+I)_"|"
+ ... Q
+ .. Q
+ . Q
+ Q
+REPORT ; Print Graphs Built In XUCSW( & XUCSPW(
+ S X1=XUCSED,X2=XUCSPD D ^%DTC I X>1 D PAD
+ F I=1:1:16 S XUCSX=$F($E(XUCSW(+I),7,$L(XUCSW(+I))),"|") Q:+XUCSX>0
+ I +XUCSX<1 D HDR W !,?20,"* No Recorded Responses *"
+ I +XUCSX>0 D HDR F I=1:1:16 W !,XUCSW(+I)
+ I +XUCSX>0 W !,"      |+++++++++|+++++++++|+++++++++|+++++++++|+++++++++|++++++++|"
+ I +XUCSX>0 W !,"     T-60      T-50      T-40      T-30      T-20     T-10      T-1"
+ D PAUSE^XUCSUTL Q:XUCSEND
+ D TBLINIT
+ Q
+HDR ; Header Sub-Routine
+ I $D(XUCSHSW),$E(IOST)="P",$Y>2,$Y<(IOSL-18) DO  Q
+ . N X
+ . W !
+ . S X="",$P(X,"-",IOM)="" W !,X
+ . D SITEH^XUCSUTL3,SUBHDR
+ . Q
+ W:$D(XUCSHSW) @IOF
+ I '$D(XUCSHSW) S XUCSHSW=1,XUCSPG=0 D NOW^%DTC S Y=% D DD^%DT S XUCSRDT=$P(Y,"@")_"@"_$P($P(Y,":",1,2),"@",2) W:$E(IOST)="C" @IOF
+ S XUCSPG=XUCSPG+1 W !,"Ave. Response Time Graph"
+ W !,"Report Date: ",XUCSRDT,?(IOM-10),"Page: ",XUCSPG
+ S X="",$P(X,"-",IOM)="" W !,X K X
+ D SITEH^XUCSUTL3,SUBHDR
+ Q
+PAD ;
+ F I1=1:1:(X-1) DO
+ . F I2=1:1:16 Q:I2=17  S XUCSW(+I2)=XUCSW(+I2)_" "
+ . Q
+ Q
+TBLINIT ; Initialize Report Table
+ K XUCSPD S X1=DT,X2=-1 D C^%DTC S XUCSED=X,X1=X,X2=-60 D C^%DTC S XUCSPD=X
+ S XUCSS=XUCSH,XUCSS=$J((XUCSS/16),0,4)
+ K XUCSW
+ S XUCSW="" F I=1:1:16 S XUCSW(+I)=""
+ S XUCSW(1)=$J((XUCSS*16),5,2)_"|" F I=16,12,8,4 S XUCSW(+I)=$J(((16-I)*XUCSS),5,2)_"|"
+ S X="     |" F I=1:1:16 I '$L(XUCSW(+I)) S XUCSW(+I)=XUCSW(+I)_X
+ Q
+SUBHDR ; Sub-Header
+ W !,?7,"For: ",XUCSAP," RTHIST's",?38,XUCSITEH
+ Q

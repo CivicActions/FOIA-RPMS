@@ -1,0 +1,32 @@
+BARP1835 ; IHS/OIT/SDR - Post init for V1.8 Patch 35;02/01/2020
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**35**;OCT 26,2005;Build 187;Build 22
+ ;IHS/SD/SDR 1.8*35 Post install routine
+ Q
+ ;*****************************************
+ ;
+POST ;EP
+ ;
+TSKRPT ;ADO76628 - ADD ENTRIES TO THE PARAMETER FILE FOR THE TASKED REPORTS
+ ;LOOKUP NEW TASKMAN OPTION
+ S BAROIEN=""
+ S DIC(0)="MZ",DIC="^DIC(19,"
+ S X="BAR RPTS MONTHLY TASKED"
+ D ^DIC
+ I Y>0 S BAROIEN=+Y
+ ;SET REPORTS IN PARAMETER FILE
+ S DA(2)=0 F  S DA(2)=$O(^BAR(90052.06,DA(2))) Q:DA(2)'?1N.N  D
+ .S DA(1)=0,CT=4 F  S DA(1)=$O(^BAR(90052.06,DA(2),DA(1))) Q:DA(1)'?1N.N  D
+ ..S ^BAR(90052.06,DA(2),DA(1),12,0)="^90052.0612^8^8"
+ ..F X="TREASURY DEPOSIT/BATCH STAT REPORT","Transaction Report","Adj & Refund Report by Transaction Date","A/R Bill and Trans Synch Report" D
+ ...Q:$D(^BAR(90052.06,DA(2),DA(1),12,"B",X))
+ ...S CT=CT+1
+ ...S ^BAR(90052.06,DA(2),DA(1),12,CT,0)=X_"^^^"_BAROIEN_"^^"_$P($T(@CT),";",2)
+ ...S ^BAR(90052.06,DA(2),DA(1),12,"B",X,CT)=""
+ ...S ^BAR(90052.06,DA(2),DA(1),12,"AC",BAROIEN,CT)=""
+ Q
+ ;
+CT ;REPORT EP
+5 ;TBSL
+6 ;TAR
+7 ;ADJT
+8 ;ATS

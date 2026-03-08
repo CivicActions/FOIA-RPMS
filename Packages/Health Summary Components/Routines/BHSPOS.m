@@ -1,6 +1,8 @@
-BHSPOS ;IHS/MSC/MGH - Routine to select meds for selected med health summary compoenent;27-Oct-2009 17:53;MGH
- ;;1.0;HEALTH SUMMARY COMPONENTS;**3**; March 17,2006
+BHSPOS ;IHS/MSC/MGH - Routine to select meds for selected med health summary compoenent;30-Jan-2025 14:43
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**3,21,22**; March 17,2006;Build 47
  ;==================================================================
+ ; IHS/MSC/MIR  11/18/2024  GET+15 has been updated for "Hold" status Feature 115724 (patch 21)
+ ;              01/30/2025  PSONDF and GENERIC(PSONDF) got removed from SEL and GET (patch 22)
  ;Copy of PSOHCSUM to be used for health summary
  ;;7.0;OUTPATIENT PHARMACY;**4,35,42,48,54,46,103,132,1005**;DEC 1997
  ;External reference to File ^PS(55 supported by DBIA 2228
@@ -31,10 +33,8 @@ SEL(MEDSEG) ;Use selected meds only
  I $D(PSOACT) F PSODT=PSOBEGIN-1:0 S PSODT=$O(^PS(55,DFN,"P","A",PSODT)) Q:'PSODT  F PSORXX=0:0 S PSORXX=$O(^PS(55,DFN,"P","A",PSODT,PSORXX)) Q:'PSORXX  D:$G(^PSRX(PSORXX,0))]"" GET
  I '$D(PSOACT) F PSOI=0:0 S PSOI=$O(^PS(55,DFN,"P",PSOI)) Q:'PSOI  S PSORXX=+^(PSOI,0) D:$G(^PSRX(PSORXX,0))]"" GET
  F I=0:0 S I=$O(^PS(55,DFN,"NVA",I)) Q:'I  S NVA=^PS(55,DFN,"NVA",I,0)  Q:'$P(NVA,"^")  D
- .S PSOSEL=$P(NVA,U,2)
- .Q:PSOSEL=""
- .S PSONDF=$P($G(^PSDRUG(PSOSEL,"ND")),U,1)
- .Q:'$D(MEDSEG(PSOSEL))&('$D(GENERIC(PSONDF)))
+ .S PSOSEL=$P(NVA,U,2) Q:PSOSEL=""
+ .Q:'$D(MEDSEG(PSOSEL))
  .S PSONV=$G(PSONV)+1
  .S ^TMP("BHS",$J,"NVA",PSONV,0)=$S($D(^PS(50.7,$P(+NVA,"^"),0)):$P(^PS(50.7,$P(+NVA,"^"),0),"^")_" "_$P(^PS(50.606,$P(^(0),"^",2),0),"^"),1:"")_"^"
  .S ^TMP("BHS",$J,"NVA",PSONV,0)=^TMP("BHS",$J,"NVA",PSONV,0)_$S($P(NVA,"^",6):"DISCONTINUED",1:"ACTIVE")_"^"_$P(NVA,"^",9)_"^"_$P(NVA,"^",8)_"^"_$P(NVA,"^",10)_"^"_$P(NVA,"^",11)_";"_$P($G(^VA(200,$P(NVA,"^",11),0)),"^")_"^"_$P(NVA,"^",7)
@@ -47,27 +47,25 @@ END K PSODT,PSOST,PSORXX,PSO0,PSO2,PSOIDD,PSOFD,PSOSEL,PSODR,PSOPR,PSOREF,PSORFL
 CHECK ;
  Q
  ;
-GET N PSOSEL,PSONDF
- S PSOSEL=$P($G(^PSRX(PSORXX,0)),U,6)
- Q:PSOSEL=""
- S PSONDF=$P($G(^PSDRUG(PSOSEL,"ND")),U,1) I PSONDF="" S PSONDF=0
- Q:'$D(MEDSEG(PSOSEL))&('$D(GENERIC(PSONDF)))
+GET N PSOSEL,PSONDF,PSORSN
+ S PSOSEL=$P($G(^PSRX(PSORXX,0)),U,6) Q:PSOSEL=""
+ Q:'$D(MEDSEG(PSOSEL))
  Q:$P($G(^PSRX(PSORXX,"STA")),"^")=13  S PSO0=^PSRX(PSORXX,0),PSO2=$G(^(2)),PSOFD=+$G(^(3)),PSODR=$P(PSO0,"^",6),PSOPR=$P(PSO0,"^",4),PSOREF=$P(PSO0,"^",9),PSOIDD=$P(PSO0,"^",13)
  I '$P(PSO0,"^",2)!('PSODR)!('PSOPR) Q
  I $D(^PS(55,$P(PSO0,"^",2),0)) D:$P($G(^PS(55,$P(PSO0,"^",2),0)),"^",6)'=2 EN^PSOHLUP($P(PSO0,"^",2))
- S PSOST=$P($G(^PSRX(PSORXX,"STA")),"^")
+ S PSOST=$P($G(^PSRX(PSORXX,"STA")),"^"),PSORSN="" I PSOST=3 S PSORSN=$$VAL^XBDIQ1(52,PSORXX,99)_" - "_$$VAL^XBDIQ1(52,PSORXX,99.1)_" ("_$$VAL^XBDIQ1(52,PSORXX,99.2)_")"
  I '$D(PSOACT) D ODT I PSODT<PSOBEGIN Q
  I $D(PSOACT) Q:PSOST>10&(PSOST<16)
  I 'PSOFD S PSOFD=$P(PSO0,"^",13) F PSOJ=0:0 S PSOJ=$O(^PSRX(PSORXX,1,PSOJ)) Q:'PSOJ  I $D(^(PSOJ,0)),^(0)>PSOFD S PSOFD=+^(0)
  S PSOX=$S($D(^PSDRUG(PSODR,0)):$P(^(0),"^"),1:"NOT ON FILE"),PSODR=PSODR_";"_PSOX
  S PSOX=$G(^VA(200,PSOPR,0)) S PSOPR=PSOPR_";"_$P(PSOX,"^")
  S PSOX="A;ACTIVE" S:$D(^PS(52.4,PSORXX,0)) PSOX="N;NON-VERIFIED" S:$O(^PS(52.5,"B",PSORXX,0))&($G(^PS(52.5,+$O(^PS(52.5,"B",PSORXX,0)),"P"))'=1) PSOX="S;SUSPENDED"
- S:PSODT<DT PSOX="E;EXPIRED" S:PSOST=4 PSOX="N;NON-VERIFIED" S:PSOST=3!(PSOST=16) PSOX="H;HOLD"
+ S:PSODT<DT PSOX="E;EXPIRED" S:PSOST=4 PSOX="N;NON-VERIFIED" S:PSOST=3!(PSOST=16) PSOX=""  ;"H;HOLD"
  S:PSOST=12!(PSOST=14)!(PSOST=15) PSOX="DC;DISCONTINUED"
  S PSOCF=+$P(PSO0,"^",17)*(+$P(PSO0,"^",7)) ; Cost/Fill
  S PSORFL=0 F PSOJ=0:0 S PSORFL=$O(^PSRX(PSORXX,1,PSORFL)) Q:PSORFL'>0  S PSOREF=PSOREF-1
  F PSOJ=9999999-PSOFD:.0001 Q:'$D(^TMP("BHS",$J,PSOJ))
- S ^TMP("BHS",$J,PSOJ,0)=PSOIDD_"^"_PSOFD_"^"_PSODR_"^"_PSOPR_"^"_PSOX_"^"_$P(PSO0,"^")_"^"_$P(PSO0,"^",7)_"^"_PSOREF_"^"_PSORXX_"^"_PSOCF_"^"_PSODT
+ S ^TMP("BHS",$J,PSOJ,0)=PSOIDD_"^"_PSOFD_"^"_PSODR_"^"_PSOPR_"^"_PSOX_"^"_$P(PSO0,"^")_"^"_$P(PSO0,"^",7)_"^"_PSOREF_"^"_PSORXX_"^"_PSOCF_"^"_PSODT_"^"_PSORSN
  ; IHS/CIA/PLS - 08/20/04 - Quit if SIG node doesn't exist.
  Q:'$D(^PSRX(PSORXX,"SIG"))
  I '$P(^PSRX(PSORXX,"SIG"),"^",2) D SIG Q

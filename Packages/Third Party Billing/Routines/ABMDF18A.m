@@ -1,5 +1,5 @@
-ABMDF18A ; IHS/ASDST/DMJ - ADA Dental Export -part 2 ;    
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF18A ; IHS/SD/SDR - ADA Dental Export -part 2 ;    
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;Original;TMD;08/13/96 11:47 AM
  ;
  ; IHS/ASDS/LSL - 06/26/00 - Patch 3 - NOIS DXX-0600-140080
@@ -46,7 +46,8 @@ BADDR ;
  S ABM("J")=ABMP("BDFN")
  S ABM("I")=$P(^AUTNINS(ABMP("INS"),0),U)_"-"_ABMP("INS")
  S ABM("INS",ABM("I"),ABM("J"))=""
- I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D
+ ;I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D  ;abm*2.6*10 HEAT73780
+ I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")="N" D  ;abm*2.6*10 HEAT73780
  .S ABM("INS",ABM("I"),ABM("J"))=ABMP("PDFN")
  S ABM("IDFN")=ABMP("INS")
  D BADDR^ABMDLBL1
@@ -85,7 +86,7 @@ PAT ;
  ;
 LOC ;
  ; Location info
- S $P(ABMF(28),U)=$S($P(ABMV("X1"),U,2)]"":$P(ABMV("X1"),U,2),1:$P($P(ABMV("X1"),U),";",2))                                ; billing entity name  (42)
+ S $P(ABMF(28),U)=$S($P(ABMV("X1"),U,2)]"":$P(ABMV("X1"),U,2),1:$P($P(ABMV("X1"),U),";",2))         ; billing entity name  (42)
  S $P(ABMF(30),U)=$P(ABMV("X1"),U,3)       ; address (46) 
  S ABMCSZ=$P(ABMV("X1"),"^",4)
  S $P(ABMF(32),U)=$P(ABMCSZ,",",1) ; City (50)
@@ -119,7 +120,8 @@ INSNUM ;
  .S:ABMPRV ABM("INUM")=$P($G(^VA(200,ABMPRV,9999999.18,ABMP("INS"),0)),U,2)
  S $P(ABMF(28),"^",3)=ABM("INUM")
  S $P(ABMF(30),U,2)=ABM("INUM")            ; Dentist License (47)
- S ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ; Ins. type
+ ;S ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ; Ins. type  ;abm*2.6*10 HEAT73780
+ S ABMP("ITYP")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ; Ins. type  ;abm*2.6*10 HEAT73780
  I ABMP("ITYP")="D" D
  .S ABMMCD=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMP("INS"),0)),U,6)
  .S:+ABMMCD $P(ABMF(9),U,4)=$P($G(^AUPNMCD(ABMMCD,0)),U,3) ; mcd # (13)

@@ -1,5 +1,5 @@
-AMHBHRP5 ; IHS/CMI/LAB - behavioral health display for GUI ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHBHRP5 ; IHS/OIT/MJL - behavioral health display for GUI ;
+ ;;3.0;IHS BEHAVIORAL HEALTH;**6**;JAN 27, 2003
  ;
  ;
  ;
@@ -23,7 +23,7 @@ DISPLAST(AMHARRAY,AMHPAT,AMHTYPE,AMHNUM,AMHBD,AMHED,AMHPROG) ;EP - AMHBH RPT LAS
  I $G(AMHTYPE)="P",$G(AMHPROG)="" S ^XTMP("AMHRPT",JOB,.5)=2,^XTMP("AMHRPT",JOB,1)="Program type not passed and type is program" D KILL Q
  S (DFN,AMHPAT,AUPNPAT)=AMHPAT
  K AMHV D @AMHTYPE
- I '$O(AMHV(0)) S ^XTMP("AMHRPT",JOB,.5)=2,^XTMP("AMHRPT",JOB,1)="No visits found"  ;cmi/maw 4/5/2010 PR 682 D KILL Q
+ I '$O(AMHV(0)) S ^XTMP("AMHRPT",JOB,.5)=2,^XTMP("AMHRPT",JOB,1)="No visits found" D KILL Q
  S ^XTMP("AMHRPTRUN",JOB)=""
  D ^XBKSET
  ;S ZTRTN="TSK^AMHBHRP5",ZTIO="",ZTDESC="AMH LAST VISIT DISPLAY",ZTSAVE("DFN")="",ZTSAVE("AMH*")="",ZTSAVE("JOB")="",ZTDTH=$H D ^%ZTLOAD
@@ -44,29 +44,28 @@ KILL ;
  K DFN,AMHPAT,AUPNPAT
  K AMHOA,AMHBT,AMHTOT
  K AMHCTR,AMHGUI,AMHSF,DIC,JOB,X,Y,ZTDESC,ZTDTH,ZTIO,ZTRTN,ZTSAVE
- ;D EN^XBVK("AMH")
+ D EN^XBVK("AMH")
  Q
 L ;get patients last visit
  ;AMHV array
- S (C,D)=0 F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D!(C>0)  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V!(C>0)  I $$ALLOWVI^AMHUTIL(DUZ,V) S C=C+1,AMHV(D,V)=""
- ;I '$D(^AMHREC("AE",DFN)) Q
- ;S D=$O(^AMHREC("AE",DFN,"")),R=$O(^AMHREC("AE",DFN,D,""))
- ;I R S AMHV(D,R)=""
+ I '$D(^AMHREC("AE",DFN)) Q
+ S D=$O(^AMHREC("AE",DFN,"")),R=$O(^AMHREC("AE",DFN,D,""))
+ I R S AMHV(D,R)=""
  Q
 S ;san only
  S D=0,V=0
- F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V  I $P(^AMHREC(V,0),U,33)="S",$$ALLOWVI^AMHUTIL(DUZ,V) S AMHV(D,V)=""
+ F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V  I $P(^AMHREC(V,0),U,33)="S" S AMHV(D,V)=""
  Q
 N ;patients last N visits
- S (C,D)=0 F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D!(C=AMHNUM)  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V!(C=AMHNUM)  I $$ALLOWVI^AMHUTIL(DUZ,V) S C=C+1,AMHV(D,V)=""
+ S (C,D)=0 F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D!(C=AMHNUM)  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V!(C=AMHNUM)  S C=C+1,AMHV(D,V)=""
  Q
 P ;on program
- S D=0 F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V  I $P(^AMHREC(V,0),U,2)=AMHPROG,$$ALLOWVI^AMHUTIL(DUZ,V) S AMHV(D,V)=""
+ S D=0 F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V  I $P(^AMHREC(V,0),U,2)=AMHPROG S AMHV(D,V)=""
  Q
 A ;all visits
  S D=0,V=0
- F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V  I $$ALLOWVI^AMHUTIL(DUZ,V) S AMHV(D,V)=""
+ F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V  S AMHV(D,V)=""
  Q
 D ;date rante
- S E=9999999-AMHBD,D=9999999-AMHED-1_".99" F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D!($P(D,".")>E)  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V  I $$ALLOWVI^AMHUTIL(DUZ,V) S AMHV(D,V)=""
+ S E=9999999-AMHBD,D=9999999-AMHED-1_".99" F  S D=$O(^AMHREC("AE",DFN,D)) Q:D'=+D!($P(D,".")>E)  S V=0 F  S V=$O(^AMHREC("AE",DFN,D,V)) Q:V'=+V  S AMHV(D,V)=""
  Q

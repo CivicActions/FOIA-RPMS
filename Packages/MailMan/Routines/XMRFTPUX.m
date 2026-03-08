@@ -1,5 +1,6 @@
-XMRFTPUX ;(WASH ISC)/THM/CAP-SMTP Receiver (RFC 821) ;04/17/2002  11:20
- ;;8.0;MailMan;;Jun 28, 2002
+XMRFTPUX ;(WASH ISC)/THM/CAP-SMTP RECEIVER [ARPANET RFC 821] ;08/05/96  14:30
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**27**;Jun 02, 1994
  ;Modified for TCP/IP under INET_SERVERS of Wollongong
  ;Send out FTP jobs that are due
 FTP N %,DA,DIK,XMA0,XMC0,XMSFTP,Y,Z,XMCOM S XMA0=$H*86400+$P($H,",",2)

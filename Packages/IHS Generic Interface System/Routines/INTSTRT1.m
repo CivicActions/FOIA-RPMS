@@ -1,5 +1,5 @@
-INTSTRT1 ;JD; 26 Mar 97 13:44; 
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INTSTRT1 ;ihs/cmi/maw - Query utilities; 
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  ;
  Q
@@ -13,7 +13,7 @@ QUERY(INDA,DIPA,INEXPAND) ;Do Query response messages
  D UPDTSND^INTSUT3(INDA)
  ;Outbound message and nothing was selected to send
  I '$D(^UTILITY("INTHU",DUZ,$J)) D DISPLAY^INTSUT1("Note - messages have not been selected transmit")
- D ENAUTO^INTS(INDA,.DIPA,INEXPAND)
+ ;D ENAUTO^INTS(INDA,.DIPA,INEXPAND)
  Q
 UNSOLI(INDIR,DIPA,INEXPAND,INDA,DIE) ;Process unsolicted message
  ;Input:
@@ -70,7 +70,7 @@ CRDUZ ;Stuff current user DUZ into file
  S INOIEN=$O(^UTILITY("INHSYS",$J,4001.1,""))
  I INOIEN D
  .;set user field to current user
- .S $P(^UTILITY("INHSYS",$J,4001.1,INOIEN,0),U,2)=$P(^DIC(3,DUZ,0),U)
+ .S $P(^UTILITY("INHSYS",$J,4001.1,INOIEN,0),U,2)=$P(^VA(200,DUZ,0),U)
  Q
 CONTINUE(INODE0) ;Continue with restore or stop
  ;Input:

@@ -1,5 +1,5 @@
-AMHLEOD ; IHS/CMI/LAB - enter outside rx ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLEOD ; IHS/CMI/LAB - enter outside rx ;  [ 04/10/03  1:43 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**1**;JAN 27, 2003
  ;
 START ;EP - called from option
  D FULL^VALM1

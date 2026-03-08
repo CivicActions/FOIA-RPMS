@@ -1,61 +1,146 @@
-DINIT013 ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ;9:34 AM  7 Aug 2002 [ 12/09/2003  4:53 PM ]
- ;;22.0;VA FileMan;**41,110,1002**;Mar 30, 1999
+DINIT013 ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS  [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
- ;;^UTILITY(U,$J,.85)
- ;;=^DI(.85,
- ;;^UTILITY(U,$J,.85,0)
- ;;=LANGUAGE^.85I^18^11
- ;;^UTILITY(U,$J,.85,1,0)
- ;;=1^ENGLISH
- ;;^UTILITY(U,$J,.85,1,"CRD")
- ;;=I Y S Y=$FN(Y,",")
- ;;^UTILITY(U,$J,.85,1,"DD")
- ;;=S:Y Y=$S($E(Y,4,5):$P("JAN^FEB^MAR^APR^MAY^JUN^JUL^AUG^SEP^OCT^NOV^DEC","^",+$E(Y,4,5))_" ",1:"")_$S($E(Y,6,7):+$E(Y,6,7)_",",1:"")_($E(Y,1,3)+1700)_$P("@"_$E(Y_0,9,10)_":"_$E(Y_"000",11,12)_$S($E(Y,13,14):":"_$E(Y_0,13,14),1:""),"^",Y[".")
- ;;^UTILITY(U,$J,.85,1,"FMTE")
- ;;=N RTN,%T S %T="."_$E($P(Y,".",2)_"000000",1,7),%F=$G(%F),RTN="F"_$S(%F<1:1,%F>7:1,1:+%F\1)_"^DILIBF" D @RTN S Y=%R
- ;;^UTILITY(U,$J,.85,1,"LC")
- ;;=S Y=$TR(Y,"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz")
- ;;^UTILITY(U,$J,.85,1,"ORD")
- ;;=I $G(Y) S Y=Y_$S(Y#10=1&(Y#100-11):"ST",Y#10=2&(Y#100-12):"ND",Y#10=3&(Y#100-13):"RD",1:"TH")
- ;;^UTILITY(U,$J,.85,1,"TIME")
- ;;=S Y=$S($L($G(Y),".")>1:$E(Y_0,9,10)_":"_$E(Y_"000",11,12)_$S($E(Y,13,14):":"_$E(Y_0,13,14),1:""),1:"")
- ;;^UTILITY(U,$J,.85,1,"UC")
- ;;=S Y=$TR(Y,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
- ;;^UTILITY(U,$J,.85,2,0)
- ;;=2^GERMAN
- ;;^UTILITY(U,$J,.85,2,"CRD")
- ;;=S:$G(Y) Y=$TR($FN(Y,","),",",".")
- ;;^UTILITY(U,$J,.85,2,"DD")
- ;;=S:Y Y=$S($E(Y,6,7):$E(Y,6,7)_".",1:"")_$S($E(Y,4,5):$E(Y,4,5)_".",1:"")_($E(Y,1,3)+1700)_$P(" "_$E(Y_0,9,10)_":"_$E(Y_"000",11,12)_$S($E(Y,13,14):":"_$E(Y_0,13,14),1:""),"^",Y[".")
- ;;^UTILITY(U,$J,.85,2,"LC")
- ;;=S Y=$TR(Y,"ABCDEFGHIJKLMNOPQRSTUVWXYZ[]\","abcdefghijklmnopqrstuvwxyz{}|")
- ;;^UTILITY(U,$J,.85,2,"ORD")
- ;;=S:$G(Y) Y=Y_"."
- ;;^UTILITY(U,$J,.85,2,"TIME")
- ;;=S Y=$S($L($G(Y),".")>1:$E(Y_0,9,10)_":"_$E(Y_"000",11,12)_$S($E(Y,13,14):":"_$E(Y_0,13,14),1:""),1:"")
- ;;^UTILITY(U,$J,.85,2,"UC")
- ;;=S Y=$TR(Y,"abcdefghijklmnopqrstuvwxyz{}|","ABCDEFGHIJKLMNOPQRSTUVWXYZ[]\")
- ;;^UTILITY(U,$J,.85,3,0)
- ;;=3^SPANISH
- ;;^UTILITY(U,$J,.85,4,0)
- ;;=4^FRENCH
- ;;^UTILITY(U,$J,.85,5,0)
- ;;=5^FINNISH
- ;;^UTILITY(U,$J,.85,5,"DD")
- ;;=X:$G(Y) ^DD("DD")
- ;;^UTILITY(U,$J,.85,5,"ORD")
- ;;=I $G(Y) S Y=Y_"."
- ;;^UTILITY(U,$J,.85,6,0)
- ;;=6^ITALIAN
- ;;^UTILITY(U,$J,.85,7,0)
- ;;=7^PORTUGUESE
- ;;^UTILITY(U,$J,.85,10,0)
- ;;=10^ARABIC
- ;;^UTILITY(U,$J,.85,11,0)
- ;;=11^RUSSIAN
- ;;^UTILITY(U,$J,.85,12,0)
- ;;=12^GREEK
- ;;^UTILITY(U,$J,.85,18,0)
- ;;=18^HEBREW
+ ;;^UTILITY(U,$J,.84,9504,0)
+ ;;=9504^1^^11
+ ;;^UTILITY(U,$J,.84,9504,1,0)
+ ;;=^^1^1^2940908^^
+ ;;^UTILITY(U,$J,.84,9504,1,1,0)
+ ;;=DIFROM Server; Installing DD only if file is new on target system.
+ ;;^UTILITY(U,$J,.84,9504,2,0)
+ ;;=^^1^1^2940908^^
+ ;;^UTILITY(U,$J,.84,9504,2,1,0)
+ ;;=Data Dictionary not installed; DD already exist on target system.
+ ;;^UTILITY(U,$J,.84,9505,0)
+ ;;=9505^1^^11
+ ;;^UTILITY(U,$J,.84,9505,1,0)
+ ;;=^^1^1^2940915^^^
+ ;;^UTILITY(U,$J,.84,9505,1,1,0)
+ ;;=DIFROM Server; Did not pass DD screen.
+ ;;^UTILITY(U,$J,.84,9505,2,0)
+ ;;=^^1^1^2940915^^^
+ ;;^UTILITY(U,$J,.84,9505,2,1,0)
+ ;;=Data Dictionary not updated; Did not pass DD Screen.
+ ;;^UTILITY(U,$J,.84,9506,0)
+ ;;=9506^1^^11
+ ;;^UTILITY(U,$J,.84,9506,1,0)
+ ;;=^^1^1^2940909^^^^
+ ;;^UTILITY(U,$J,.84,9506,1,1,0)
+ ;;=DIFROM Server;  Transport structure does not exist or invalid.
+ ;;^UTILITY(U,$J,.84,9506,2,0)
+ ;;=^^1^1^2940909^^^^
+ ;;^UTILITY(U,$J,.84,9506,2,1,0)
+ ;;=Transport array does not exist or invalid.
+ ;;^UTILITY(U,$J,.84,9507,0)
+ ;;=9507^1^^11
+ ;;^UTILITY(U,$J,.84,9507,1,0)
+ ;;=^^1^1^2940908^^
+ ;;^UTILITY(U,$J,.84,9507,1,1,0)
+ ;;=DIFROM Server;  FIA file number invalid.
+ ;;^UTILITY(U,$J,.84,9507,2,0)
+ ;;=^^1^1^2940908^^
+ ;;^UTILITY(U,$J,.84,9507,2,1,0)
+ ;;=Data Dictionary not installed; FIA file number invalid.
+ ;;^UTILITY(U,$J,.84,9508,0)
+ ;;=9508^1^^11
+ ;;^UTILITY(U,$J,.84,9508,1,0)
+ ;;=^^1^1^2940908^^^
+ ;;^UTILITY(U,$J,.84,9508,1,1,0)
+ ;;=DIFROM Server;  File does not exist on target system (Partial DD).
+ ;;^UTILITY(U,$J,.84,9508,2,0)
+ ;;=^^1^1^2940908^^^
+ ;;^UTILITY(U,$J,.84,9508,2,1,0)
+ ;;=Data Dictionary not installed; Partial DD/File does not exist.
+ ;;^UTILITY(U,$J,.84,9509,0)
+ ;;=9509^1^^11
+ ;;^UTILITY(U,$J,.84,9509,1,0)
+ ;;=^^1^1^2940908^^^
+ ;;^UTILITY(U,$J,.84,9509,1,1,0)
+ ;;=DIFROMS Server;  FIA node is set to send "No Data"
+ ;;^UTILITY(U,$J,.84,9509,2,0)
+ ;;=^^1^1^2940908^^^
+ ;;^UTILITY(U,$J,.84,9509,2,1,0)
+ ;;=FIA array is set to "No data"
+ ;;^UTILITY(U,$J,.84,9510,0)
+ ;;=9510^1^^11
+ ;;^UTILITY(U,$J,.84,9510,1,0)
+ ;;=^^1^1^2940908^
+ ;;^UTILITY(U,$J,.84,9510,1,1,0)
+ ;;=DIFROM Server;  Records to transport do not exist.
+ ;;^UTILITY(U,$J,.84,9510,2,0)
+ ;;=^^1^1^2940908^
+ ;;^UTILITY(U,$J,.84,9510,2,1,0)
+ ;;=Records do not exist.
+ ;;^UTILITY(U,$J,.84,9511,0)
+ ;;=9511^1^^11
+ ;;^UTILITY(U,$J,.84,9511,1,0)
+ ;;=^^1^1^2940908^
+ ;;^UTILITY(U,$J,.84,9511,1,1,0)
+ ;;=DIFROM Server; DD not installed because FIA array does not exist.
+ ;;^UTILITY(U,$J,.84,9511,2,0)
+ ;;=^^1^1^2940908^
+ ;;^UTILITY(U,$J,.84,9511,2,1,0)
+ ;;=Data Dictionary not installed; FIA array does not exist.
+ ;;^UTILITY(U,$J,.84,9512,0)
+ ;;=9512^1^y^11
+ ;;^UTILITY(U,$J,.84,9512,1,0)
+ ;;=^^1^1^2940909^^^^
+ ;;^UTILITY(U,$J,.84,9512,1,1,0)
+ ;;=Parent DD missing on Partial DD.
+ ;;^UTILITY(U,$J,.84,9512,2,0)
+ ;;=^^1^1^2940909^^^^
+ ;;^UTILITY(U,$J,.84,9512,2,1,0)
+ ;;=DD: |1| not installed, parent DD(s) missing.
+ ;;^UTILITY(U,$J,.84,9513,0)
+ ;;=9513^1^y^11
+ ;;^UTILITY(U,$J,.84,9513,1,0)
+ ;;=^^1^1^2940909^^^
+ ;;^UTILITY(U,$J,.84,9513,1,1,0)
+ ;;=Invalid record in file.
+ ;;^UTILITY(U,$J,.84,9513,2,0)
+ ;;=^^1^1^2940909^^^
+ ;;^UTILITY(U,$J,.84,9513,2,1,0)
+ ;;=IEN: |1| in file |2| is invalid.
+ ;;^UTILITY(U,$J,.84,9514,0)
+ ;;=9514^1^y^11
+ ;;^UTILITY(U,$J,.84,9514,1,0)
+ ;;=^^1^1^2940909^
+ ;;^UTILITY(U,$J,.84,9514,1,1,0)
+ ;;=Dangling pointer.  File, IEN and field.
+ ;;^UTILITY(U,$J,.84,9514,2,0)
+ ;;=^^1^1^2940909^
+ ;;^UTILITY(U,$J,.84,9514,2,1,0)
+ ;;=Dangling pointer.  FILE: |1|, IEN: |2| FIELD: |3|
+ ;;^UTILITY(U,$J,.84,9515,0)
+ ;;=9515^1^y^11
+ ;;^UTILITY(U,$J,.84,9515,1,0)
+ ;;=^^1^1^2940909^
+ ;;^UTILITY(U,$J,.84,9515,1,1,0)
+ ;;=No sending data on partial DDs.
+ ;;^UTILITY(U,$J,.84,9515,2,0)
+ ;;=^^1^1^2940909^
+ ;;^UTILITY(U,$J,.84,9515,2,1,0)
+ ;;=Partial DD.  No sending of data allowed for file |1|.
+ ;;^UTILITY(U,$J,.84,9516,0)
+ ;;=9516^1^y^11
+ ;;^UTILITY(U,$J,.84,9516,1,0)
+ ;;=^^1^1^2940909^
+ ;;^UTILITY(U,$J,.84,9516,1,1,0)
+ ;;=Invalid entry in trasnport structure.
+ ;;^UTILITY(U,$J,.84,9516,2,0)
+ ;;=^^1^1^2940909^
+ ;;^UTILITY(U,$J,.84,9516,2,1,0)
+ ;;=Transport structure does not contain |1| with IEN: |2|.
+ ;;^UTILITY(U,$J,.84,9517,0)
+ ;;=9517^1^y^11
+ ;;^UTILITY(U,$J,.84,9517,1,0)
+ ;;=^^1^1^2940909^
+ ;;^UTILITY(U,$J,.84,9517,1,1,0)
+ ;;=DIFROM Server unable to install block.
+ ;;^UTILITY(U,$J,.84,9517,2,0)
+ ;;=^^1^1^2940909^
+ ;;^UTILITY(U,$J,.84,9517,2,1,0)
+ ;;=DIFROM Server unable to install |1| block.

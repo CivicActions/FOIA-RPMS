@@ -1,5 +1,5 @@
-BCQMAPI ; IHS/OIT/FBD - MAGIC MAPPER API ;05/07/18 07:49;FS
- ;;1.0;IHS CODE MAPPING;;MAY 07, 2018;Build 21
+BCQMAPI ; IHS/OIT/FBD - MAGIC MAPPER API ;09/11/24 07:49;FS
+ ;;1.0;IHS CODE MAPPING;**12,13**;OCT 01, 2025;Build 91
  ;
 MM(BCQMF,LOOKUP,LKFORM,VALUE1,VALUE2,VALUE3,VALUE4,VALUE5,VALUE6,BCQMDATE,RETVAL) ;PEP; table oriented magic mapper
  ;this API will be called to obtained code values based
@@ -43,6 +43,7 @@ MM(BCQMF,LOOKUP,LKFORM,VALUE1,VALUE2,VALUE3,VALUE4,VALUE5,VALUE6,BCQMDATE,RETVAL
  S VALUE4=$G(VALUE4)
  S VALUE5=$G(VALUE5)
  S VALUE6=$G(VALUE6)
+ ;S ^TMP("BCQMHF",$J,$G(LOOKUP))=$G(BCQMF)_","_$G(LOOKUP)_","_$G(LKFORM)_","_$G(VALUE1)_","_$G(VALUE2)_","_$G(VALUE3)_","_$G(VALUE4)_","_$G(VALUE5)_","_$G(VALUE6)_","_$G(BCQMDATE)_","_$G(RETVAL)
  ;NEW BCQMFIEL,BCQMFV,BCQMX,BCQMY,BCQMMAP,BCQMC,BCQMZ,S,BCQMS,D,C,X,Y
  S BCQMC=0
  S BCQMX=$O(^BCQM(9002023,"B",BCQMF,0))
@@ -55,6 +56,7 @@ MM(BCQMF,LOOKUP,LKFORM,VALUE1,VALUE2,VALUE3,VALUE4,VALUE5,VALUE6,BCQMDATE,RETVAL
  I BCQMFIEL]"" S BCQMFV=$$GET1^DIQ(BCQMF,BCQMFV,BCQMFIEL)
  I BCQMFV="" Q "-1^something went wrong"
  I $D(^BCQM(9002023,BCQMX,2)) X ^BCQM(9002023,BCQMX,2)  ;CODE PUT IN FOR EDUCATION TOPIC BUT MIGHT BE ABLE TO BE USED FOR OTHER TABLES
+ ;S ^TMP("FAR",$J,2)=$G(BCQMF)_"^"_LOOKUP_"^L:"_LKFORM_"^1:"_VALUE1_"^2:"_VALUE2_"^3:"_VALUE3_"^4:"_VALUE4_"^5:"_VALUE5_"^6:"_VALUE6_"^D:"_BCQMDATE
  ;Now go through all entries in 9002023 for this file and execute M logic for value checks
  ;I BCQMF=9999999.09 S BCQMZ=VALUE1 D PROCESS S BCQMZ=VALUE2 D PROCESS S BCQMZ="*ANY*" D PROCESS Q BCQMC
  F BCQMZ=BCQMFV,"*ANY*" D PROCESS
@@ -64,8 +66,9 @@ PROCESS ;
  .S X=0 I $D(^BCQM(9002023,BCQMX,1,BCQMY,1)) X ^BCQM(9002023,BCQMX,1,BCQMY,1) I 'X Q  ;doesn't match
  .;looks like we got a match so set up codes in retval arry
  .S BCQMS=0 F  S BCQMS=$O(^BCQM(9002023,BCQMX,1,BCQMY,2,BCQMS)) Q:BCQMS'=+BCQMS  D
- ..S D=$$GET1^DIQ(9002023.12,BCQMS_","_BCQMY_","_BCQMX,.03)
- ..I D]"",BCQMDATE'>D Q  ;inactive
+ ..S D=$$GET1^DIQ(9002023.12,BCQMS_","_BCQMY_","_BCQMX,.03,"I") ;Below comparison is happening in internal format
+ ..;I D]"",BCQMDATE'>D Q  ;inactive
+ ..I D]"",BCQMDATE>D Q  ;inactive - Date would be in past if the mapping is inactivated
  ..S S=$$GET1^DIQ(9002023.12,BCQMS_","_BCQMY_","_BCQMX,.01)
  ..S C=$$GET1^DIQ(9002023.12,BCQMS_","_BCQMY_","_BCQMX,.02)
  ..I S]"",C]"" S BCQMC=BCQMC+1,@RETVAL@(BCQMC,S)=C
@@ -97,7 +100,8 @@ PRIMPOV() ;PEP - return SNOMED to use for primary pov
  Q $$GET1^DIQ(9002022,1,.02)
  ;
 EMERPOV() ;PEP - return SNOMED to use for V EMERGENCY VISIT (In Future, for now eCQM module will map it locally)
- Q ;$$GET1^DIQ(9002022,2,.02)
+ Q
+ ;$$GET1^DIQ(9002022,2,.02)
  ;
 HANDED(V,D,RETVAL) ;PEP = get snomed handedness
  K @RETVAL
@@ -109,6 +113,9 @@ HANDED(V,D,RETVAL) ;PEP = get snomed handedness
  S Y=0 F  S Y=$O(^BCQM(9002022,1,1,X,1,Y)) Q:Y'=+Y  D
  .S BCQMC=BCQMC+1,@RETVAL@(BCQMC,"SNOMED")=$P($G(^BCQM(9002022,1,1,X,1,Y,0)),U,1)
  Q BCQMC
+ECQMVER() ;BCER - Return the eCQM Version (Task#86372)
+ Q ##class(BMW.BSF.SP.BqreGetCurrentVersion).GetVersion()
+ ;
 TESTIMM ;
  S X=$$MM^BCQMAPI(9002084.81,16,"I",10,,,,,,DT,"CODES")
  ;input :

@@ -1,5 +1,5 @@
-AMHLEDV ; IHS/CMI/LAB - ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLEDV ; IHS/CMI/LAB - ; [ 02/21/2007  3:27 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**1,6,8,10**;JAN 27, 2003
  ;
  ;
 START ;
@@ -171,7 +171,7 @@ EP1 ;EP
  W !!,"This option is used to duplicate a patient visit that occurred on a different",!,"day.  The user selects a visit, enters a new date, and then the visit",!,"is copied to the new date.",!!
  W !,"You must first identify the patient and the visit to duplicate.",!
  G GETDATE
-RBLK(V,L) ;EP - right blank fill
+RBLK(V,L) ;left blank fill
  NEW %,I
  S %=$L(V),Z=L-% F I=1:1:Z S V=V_" "
  Q V

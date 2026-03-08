@@ -1,6 +1,7 @@
-ORWDPS1 ; SLC/KCM/JLI - Pharmacy Calls for Windows Dialog; 03/10/2008
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,132,141,163,215,255,243**;Dec 17, 1997;Build 242
+ORWDPS1 ; SLC/KCM/JLI - Pharmacy Calls for Windows Dialog;06-Dec-2017 10:55;DU
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,132,141,163,215,255,243,1017**;Dec 17, 1997;Build 48
  ;
+ ;IHS/GDIT/MSC/MGH changed for EPCS  FAILDEA+8
 ODSLCT(LST,PSTYPE,DFN,LOC) ; return default lists for dialog
  ; PSTYPE: pharmacy type (U=unit dose, F=IV fluids, O=outpatient)
  N ILST S ILST=0
@@ -44,7 +45,7 @@ PRIOR ; from DLGSLCT, get list of allowed priorities
  . S ILST=ILST+1,LST(ILST)="i"_$O(^ORD(101.42,XREF,X,0))_U_X
  S ILST=ILST+1,LST(ILST)="d"_$O(^ORD(101.42,"B","ROUTINE",0))_U_"ROUTINE"
  Q
-DEFPICK(LOC)       ; return default routing
+DEFPICK(LOC) ; return default routing
  N X,DLG,PRMT
  S DLG=$O(^ORD(101.41,"AB","PSO OERR",0)),X=""
  S PRMT=$O(^ORD(101.41,"AB","OR GTX ROUTING",0))
@@ -60,13 +61,13 @@ DEFPICK(LOC)       ; return default routing
  I X=""  S X=$S($D(^PSX(550,"C")):"M^by Mail",1:"W^at Window")
 XPICK Q X
  ;
-DEFSPLY(DFN)    ; return default days supply for this patient
+DEFSPLY(DFN) ; return default days supply for this patient
  N ORWX
  S ORWX("PATIENT")=DFN
  D DSUP^PSOSIGDS(.ORWX)
  Q $G(ORWX("DAYS SUPPLY"))
  ;
-DFLTSPLY(VAL,UPD,SCH,PAT,DRG)        ; return days supply given quantity
+DFLTSPLY(VAL,UPD,SCH,PAT,DRG,OI) ; return days supply given quantity
  ; VAL: default days supply
  N ORWX,I
  S ORWX("PATIENT")=PAT
@@ -77,10 +78,10 @@ DFLTSPLY(VAL,UPD,SCH,PAT,DRG)        ; return days supply given quantity
  D DSUP^PSOSIGDS(.ORWX)
  S VAL=$G(ORWX("DAYS SUPPLY"))
  Q
-DISPMSG()       ; return 1 to suppress dispense message
+DISPMSG() ; return 1 to suppress dispense message
  Q +$$GET^XPAR("ALL","ORWDPS SUPPRESS DISPENSE MSG",1,"I")
  ;
-DOWSCH(LST,DFN,LOCIEN)     ; return all schedules
+DOWSCH(LST,DFN,LOCIEN) ; return all schedules
  N CNT,FREQ,ILST,ORARRAY,WIEN
  S WIEN=$$WARDIEN^ORWDPS32(+$G(LOCIEN))
  D SCHED^PSS51P1(WIEN,.ORARRAY)
@@ -97,7 +98,7 @@ DOWSCH(LST,DFN,LOCIEN)     ; return all schedules
  ..S ILST=ILST+1,LST(ILST)=$P(ORARRAY(CNT),U,2,5)
  Q
  ;
-SCHALL(LST,DFN,LOCIEN)     ; return all schedules
+SCHALL(LST,DFN,LOCIEN) ; return all schedules
  N CNT,ILST,ORARRAY,WIEN
  S WIEN=$$WARDIEN^ORWDPS32(+$G(LOCIEN))
  D SCHED^PSS51P1(WIEN,.ORARRAY)
@@ -133,14 +134,28 @@ QOMEDALT(ORY,ODIEN) ;
  ;D FORMALT(.ARRAY,VALUE,PSTYPE) I $D(ARRAY)>0 S ORY=VALUE
  ;I ORY=0,$P($G(^ORD(101.43,VALUE,"PS")),U,6)=1 S ORY=VALUE
  Q
-FAILDEA(FAIL,OI,ORNP,PSTYPE)    ; return 1 if DEA check fails for this provider
- N DEAFLG,PSOI,TPKG
+FAILDEA(FAIL,OI,ORNP,PSTYPE) ; return 1 if DEA check fails for this provider
+ N DEAFLG,PSOI,TPKG,DETFLAG,DETPRO,RET1
  S FAIL=0,TPKG=$P($G(^ORD(101.43,+$G(OI),0)),U,2)
  Q:TPKG'["PS"
  S PSOI=+TPKG Q:PSOI'>0
- I '$L($T(OIDEA^PSSUTLA1)) Q
- S DEAFLG=$$OIDEA^PSSUTLA1(PSOI,PSTYPE) Q:DEAFLG'>0
- I '$L($$DEA^XUSER(,+$G(ORNP))) S FAIL=1
+ S RET1=0
+ D PKISITE^ORWOR(.RET1)
+ Q:'+RET1
+ ;IHS/MSC/MGH changed for EPCS
+ ;I '$L($T(OIDEA^PSSUTLA1)) Q
+ ;S DEAFLG=$$OIDEA^PSSUTLA1(PSOI,PSTYPE) Q:DEAFLG'>0
+ ;I '$L($$DEA^XUSER(,+$G(ORNP))) S FAIL=1
+ ;IHS/MSC/MGH Commented out the detox checks per IHS
+ ;S DETFLAG=$$OIDETOX^PSSOPKI(PSOI,PSTYPE)
+ ;S DETPRO=$$DETOX^XUSER(+$G(ORNP))
+ ;I DETFLAG,DETPRO="" S FAIL=3 Q
+ ;I DETFLAG,DETPRO>0 S Y=DETPRO X ^DD("DD") S FAIL="5^"_Y Q
+ S DEAFLG=$P($$OIDEA^PSSOPKI(PSOI,PSTYPE),";",2) Q:DEAFLG'>0
+ S RT=$$SDEA^XUSER(,+$G(ORNP),DEAFLG) I RT=1 S FAIL=1
+ I RT=2 S FAIL="2^"_$$UP^XLFSTR(DEAFLG)
+ I RT?1"4".E S FAIL=RT
+ I FAIL>0 D ATTEMPT^APSPCSA(+$G(ORNP),OI,DEAFLG,FAIL)
  Q
 FDEA1(FAIL,OI,OITYPE,ORNP) ; only be called for an outpaitent and IV dialog
  ;OI: IV Orderable Item
@@ -154,7 +169,7 @@ FDEA1(FAIL,OI,OITYPE,ORNP) ; only be called for an outpaitent and IV dialog
  I '$L($P($G(^VA(200,+$G(ORNP),"PS")),U,2)),'$L($P($G(^("PS")),U,3)) S FAIL=1
  Q
  ;
-CHK94(VAL)      ; return 1 if patch 94 has been installed
+CHK94(VAL) ; return 1 if patch 94 has been installed
  S VAL=0
  I $O(^ORD(101.41,"B","PS MEDS",0)) S VAL=1
  Q

@@ -1,5 +1,5 @@
-APCDVMDD ; IHS/CMI/LAB - VISIT MERGE ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDVMDD ; IHS/CMI/TUCSON - VISIT MERGE ; [ 07/10/02  5:57 AM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**5**;MAR 09, 1999
  ;
  W !!,"This option is used to merge 2 visits on 2 different dates.",!,"Be very careful in using this option.  This will normally need to be used only",!,"when a lab or radiology visit that occurred after midnight needs to be merged",!
  W "to a visit that occurred before midnight.",!!
@@ -34,9 +34,6 @@ RDR ;EP
  D ^APCDVM2
  I $D(APCDVMQF) W !!,"*** ERROR encountered.  QFLG=",APCDVMQF D EOJ Q
  S $P(^AUPNVSIT(APCDVMF,0),U,37)=APCDVMT ;direct set as visit is being deleted.  set for billing
- S $P(^AUPNVSIT(APCDVMF,22),U)="MERGED TO VISIT IEN "_APCDVMT
- ;UPDATE DELETE LOG
- D UPDLOG^APCDVDEL(APCDVMF,APCDVMT)
  S AUPNVSIT=APCDVMF D DEL^AUPNVSIT
  W !!,"*** MERGED VISIT ***"
  D ZTSK

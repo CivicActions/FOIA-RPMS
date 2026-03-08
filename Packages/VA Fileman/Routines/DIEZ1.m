@@ -1,6 +1,6 @@
-DIEZ1 ;SFISC/GFT-COMPILE INPUT TEMPLATE ;9:27 AM  22 Oct 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**4,11**;Mar 30, 1999
+DIEZ1 ;SFISC/GFT-COMPILE INPUT TEMPLATE ;3/15/96  09:35 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**1,13,19**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  D QF^DIEZ2 S L=2,X="DE S DIE="_Q_",DIC=DIE,DP="_DP_",DL="_DL_",DIEL="_DIEZL_",DU="""" K DG,DE,DB Q:$O("_DIE_"DA,""""))=""""",DS=-1 D L S X=""
 DL S DS=$O(^UTILITY($J,U,DS)) S:DS="" DS=-1 I DS<0 K ^UTILITY($J,U) G CN
@@ -33,17 +33,17 @@ TEXT ;;
  ;;A K DQ(DQ) S DQ=DQ+1
  ;;B G @DQ
  ;;RE G PR:$D(DE(DQ)) D W,TR
- ;;N I X="" G NKEY:$D(^DD("KEY","F",DP,DIFLD)),A:DV'["R",X:'DV,X:D'>0,A
+ ;;N I X="" G A:DV'["R",X:'DV,X:D'>0,A
  ;;RD G QS:X?."?" I X["^" D D G ^DIE17
  ;; I X="@" D D G Z^DIE2
  ;; I X=" ",DV["d",DV'["P",$D(^DISV(DUZ,"DIE",DLB)) S X=^(DLB) I DV'["D",DV'["S" W "  "_X
  ;;T G M^DIE17:DV,^DIE3:DV["V",P:DV'["S" X:$D(^DD(DP,DIFLD,12.1)) ^(12.1) I X?.ANP D SET I 'DDER X:$D(DIC("S")) DIC("S") I  W:'$D(DB(DQ)) "  "_% G V
  ;; K DDER G X
- ;;P I DV["P" S DIC=U_DU,DIC(0)=$E("EN",$D(DB(DQ))+1)_"M"_$E("L",DV'["'") S:DIC(0)["L" DLAYGO=+$P(DV,"P",2) G:DV["*" AST^DIED D NOSCR^DIED S X=+Y,DIC=DIE G X:X<0
+ ;;P I DV["P" S DIC=U_DU,DIC(0)=$E("EN",$D(DB(DQ))+1)_"M"_$E("L",DV'["'") S:DIC(0)["L" DLAYGO=+$P(DV,"P",2) I DV'["*" D ^DIC S X=+Y,DIC=DIE G X:X<0
  ;; G V:DV'["N" D D I $L($P(X,"."))>24 K X G Z
  ;; I $P(DQ(DQ),U,5)'["$",X?.1"-".N.1".".N,$P(DQ(DQ),U,5,99)["+X'=X" S X=+X
  ;;V D @("X"_DQ) K YS
- ;;Z K DIC("S"),DLAYGO I $D(X),X'=U D:$G(DE(DW,"INDEX")) SAVEVALS G:'$$KEYCHK UNIQFERR^DIE17 S DG(DW)=X S:DV["d" ^DISV(DUZ,"DIE",DLB)=X G A
+ ;;Z K DIC("S"),DLAYGO I $D(X),X'=U S DG(DW)=X S:DV["d" ^DISV(DUZ,"DIE",DLB)=X G A
  ;;X W:'$D(ZTQUEUED) $C(7),"??" I $D(DB(DQ)) G Z^DIE17
  ;; S X="?BAD"
  ;;QS S DZ=X D D,QQ^DIEQ G B
@@ -61,9 +61,3 @@ TEXT ;;
  ;; I $D(DB(DQ)),'$D(DIQUIET) N DIQUIET S DIQUIET=1
  ;; D ^DIR I 'DDER S %=Y(0),X=Y
  ;; Q
- ;;SAVEVALS S @DIEZTMP@("V",DP,DIIENS,DIFLD,"O")=$G(DE(DQ)) S:$D(^("F"))[0 ^("F")=$G(DE(DQ))
- ;; I $D(DE(DW,"4/")) S @DIEZTMP@("V",DP,DIIENS,DIFLD,"4/")=""
- ;; E  K @DIEZTMP@("V",DP,DIIENS,DIFLD,"4/")
- ;; Q
- ;;NKEY W:'$D(ZTQUEUED) "??  Required key field" S X="?BAD" G QS
- ;;KEYCHK() Q:$G(DE(DW,"KEY"))="" 1 Q @DE(DW,"KEY")

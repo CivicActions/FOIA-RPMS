@@ -1,5 +1,5 @@
 BUD7ENV ; IHS/CMI/LAB - environmental check ;
- ;;10.0;IHS/RPMS UNIFORM DATA SYSTEM;;FEB 04, 2016;Build 50
+ ;;2.0;IHS/RPMS UNIFORM DATA SYSTEM;**4**;DEC 29, 2004
  ;
 ENV ;
  ; The following line prevents the "Disable Options..." and "Move

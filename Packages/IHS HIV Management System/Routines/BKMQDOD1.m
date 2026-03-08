@@ -1,0 +1,128 @@
+BKMQDOD1 ;PRXM/HC/BHS - DUE/OVERDUE REPORT PRINT CONTROL ; 14 Aug 2005  11:17 AM
+ ;;2.0;HIV MANAGEMENT SYSTEM;**1**;May 29, 2009
+ ;
+ Q
+ ;
+EN(BKMSEL) ; EP - Entry point to build report data global
+ N BKMDFN,BKMX,HMSIEN,HIVIEN,REG,REGIEN,EXEC,HRN
+ N LIST,BN,II,HDR,NDA
+ ;
+ S HMSIEN=$O(^BQI(90506.2,"B","HIV/AIDS",""))
+ I HMSIEN="" S BMXSEC="HMS Register missing from file definition." Q
+ S HIVIEN=$$HIVIEN^BKMIXX3()
+ I HIVIEN="" S BMXSEC="There is no HMS register defined." Q
+ I '$D(^BKM(90450,HIVIEN,11,"B",DUZ)) S BMXSEC="RPC Call Failed: You are not a valid HMS user." Q
+ S REG="HIV Management System",REGIEN=$O(^BQI(90507,"B",REG,""))
+ S EXEC=$$GET1^DIQ(90507,REGIEN_",",3,"I")
+ ;
+ ; Create header record
+ S HDR="I00010BKMIEN^I00010DFN^T00030BKMNM^T00030HRN^D00030BKMDOB^"
+ S HDR=HDR_"I00007BKMAGE^T00001BKMSEX^T00030BKMDIAG^T00030BKMPR^T00030BKMCM^"
+ S HDR=HDR_"T00080BKMREM^D00030BKMLAST^D00030BKMDUE"
+ S @DATA@(BQII)=HDR_$C(30)
+ ;
+ ; Build report for list of patients or panel
+ I $G(OWNR)'="",$G(PLIEN)'="" D PANEL G DONE
+ S DFN=$G(DFN,"")
+ I DFN="" D
+ . S LIST="",BN=""
+ . F  S BN=$O(DFN(BN)) Q:BN=""  S LIST=LIST_DFN(BN)
+ . K DFN
+ . S DFN=LIST
+ . K LIST
+ F II=1:1 S PT=$P(DFN,$C(28),II) Q:PT=""  D PPR(PT,.BKMSEL)
+ ;
+DONE ; If all or some patients did not meet criteria send info back to GUI
+ I 'BQII D  Q
+ . S BMXSEC="RPC Call Failed: This report cannot be run. None of the patients selected for this report meet the criteria."
+ I $D(NDA) D  Q
+ . S NDA=""
+ . F  S NDA=$O(NDA(NDA)) Q:NDA=""  S BQII=BQII+1,@DATA@(BQII)=NDA(NDA)
+ Q
+ ;
+PANEL ; Report run by panel
+ N BKMDFN
+ S BKMDFN=0
+ F  S BKMDFN=$O(^BQICARE(OWNR,1,PLIEN,40,BKMDFN)) Q:'BKMDFN  D PPR(BKMDFN,.BKMSEL)
+ Q
+ ;
+PPR(DFN,BKMSEL) ; Build temporary report global
+ ; Assumes BKMSEL array
+ N BKMIEN,BKMREG,DA,IENS,BKMOTH,BKMOTHI,BKMNM,BKMDOB
+ N BKMSEX,BKMAGE,BKMDIAG,BKMPR,BKMCM,BKMDPC
+ N BKMPRI,BKMCMI,BKMDPCI,BKMSRT,BKMSRT1,BKMSRT2,BKMCTR,BKMCTR2
+ N BKMREM,BKMBDT,BKMPAT,BKMLST,BKMX1,BKMX2,BKMDUE
+ N BKMDEM,BKMLAST,BKMSTR,BKMRMDT
+ ;
+ S BKMPAT=$G(BKMSEL("PAT"))
+ S BKMIEN=$$BKMIEN^BKMIXX3(DFN)
+ I BKMIEN="" D  Q
+ . S BKMSTR=$$DEM(DFN),NDA($P(BKMSTR,U)_U_DFN)=U_DFN_U_BKMSTR_"^^^^Did not meet qualifying criteria for this report^^"_$C(30)
+ ;
+ ; Check current HMS Tag and HMS Register status
+ I '$$HMSDEN^BKMQUTL(HMSIEN,DFN) D  Q
+ . S BKMSTR=$$DEM(DFN),NDA($P(BKMSTR,U)_U_DFN)=BKMIEN_U_DFN_U_BKMSTR_U_$$HMS(DFN)_U_"Did not meet qualifying criteria for this report^^"_$C(30)
+ ;
+ X EXEC ; Sets IENS for patient's HMS record
+ S BKMNM=$$GET1^DIQ(2,DFN,".01","E")
+ S HRN=$$HRNL^BQIULPT(DFN)
+ S BKMDOB=$$FMTMDY^BQIUL1($$GET1^DIQ(2,DFN,".03","I"))
+ S BKMSEX=$$GET1^DIQ(2,DFN,".02","I")
+ S BKMAGE=$$AGE^BKMIMRP1(DFN)
+ S (BKMDIAG,BKMPR,BKMCM,BKMDPC)=""
+ ;I IENS'="" D
+ ;. S BKMDIAG=$$GET1^DIQ(90451.01,IENS,"2.3","E")
+ ;. S BKMPRI=$$GET1^DIQ(90451.01,IENS,"6","I")
+ ;. S BKMPR=$$GET1^DIQ(90451.01,IENS,"6","E")
+ ;. S BKMCMI=$$GET1^DIQ(90451.01,IENS,"6.5","I")
+ ;. S BKMCM=$$GET1^DIQ(90451.01,IENS,"6.5","E")
+ ;S BKMDPCI=$$GET1^DIQ(9000001,DFN,".14","I")
+ ;S BKMDPC=$$GET1^DIQ(9000001,DFN,".14","E") I BKMDPC="" S BKMDPC="{NONE}"
+ K BKMLST
+ ; Call reminder logic here
+ S BKMRMDT=$$DATE^BQIUL1(BKMSEL("BLDATE"))
+ ;D REMIND^BKMVF3(DFN,BKMSEL("BLDATE"),.BKMLST)
+ D REMIND^BKMVF3(DFN,BKMRMDT,.BKMLST)
+ ; Walk reminders to build tests to list here
+ ;S BKMBDT=$G(BKMSEL("BLDATE"))
+ S BKMBDT=BKMRMDT
+ I $O(BKMLST("")) D
+ . S BKMCTR2=0
+ . S BKMX1=""
+ . F  S BKMX1=$O(BKMLST(BKMX1)) Q:BKMX1=""  D
+ .. S BKMDEM=BKMIEN_U_DFN_U_$$DEM(DFN)_U_$$HMS(DFN)
+ .. ;S BKMDEM=BKMIEN_U_DFN_U_BKMNM_U_HRN_U_BKMDOB_U_BKMAGE_U_BKMSEX_U_BKMDIAG_U_BKMPR_U_BKMCM
+ .. S BKMX2=""
+ .. F  S BKMX2=$O(BKMLST(BKMX1,BKMX2)) Q:BKMX2=""  D
+ ... S BKMREM=$G(BKMLST(BKMX1,BKMX2,0))
+ ... S BKMDUE=$G(BKMLST(BKMX1,BKMX2,"DUE"))
+ ... I 'BKMDUE Q
+ ... ; Check due date against baseline date - if the date is beyond one month
+ ... ;  it is not due or overdue so it should not be displayed in the report
+ ... I BKMDUE>+$$SCH^XLFDT("1M",BKMBDT) Q
+ ... ;
+ ... ; Convert dates to external format
+ ... S BKMDUE=$P($$FMTMDY^BQIUL1(BKMDUE)," ")
+ ... S BKMLAST=$P($$FMTMDY^BQIUL1(BKMLST(BKMX1,BKMX2,"LAST"))," ")
+ ... S BQII=BQII+1,@DATA@(BQII)=BKMDEM_U_BKMREM_U_BKMLAST_U_BKMDUE_$C(30)
+ Q
+ ;
+DEM(DFN) ; Return a string of demographic fields
+ N STR
+ S BKMNM=$$GET1^DIQ(2,DFN,".01","E")
+ S HRN=$$HRNL^BQIULPT(DFN)
+ S BKMDOB=$$FMTMDY^BQIUL1($$GET1^DIQ(2,DFN,".03","I"))
+ S BKMAGE=$$AGE^BKMIMRP1(DFN)
+ S BKMSEX=$$GET1^DIQ(2,DFN,".02","I")
+ S STR=BKMNM_U_HRN_U_BKMDOB_U_BKMAGE_U_BKMSEX
+ Q STR
+ ;
+HMS(DFN) ; Return a string of HMS related fields
+ N IENS
+ X EXEC I IENS="" Q "^^"
+ N STR
+ S BKMDIAG=$$GET1^DIQ(90451.01,IENS,"2.3","E")
+ S BKMPR=$$GET1^DIQ(90451.01,IENS,"6","E")
+ S BKMCM=$$GET1^DIQ(90451.01,IENS,"6.5","E")
+ S STR=BKMDIAG_U_BKMPR_U_BKMCM
+ Q STR

@@ -1,8 +1,9 @@
 BARRNBRA ; IHS/SD/POT - Non Ben Payment Report ; 08/20/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**24**;OCT 26, 2005;Build 69
- ; IHS/SD/POT 07/15/13 HEAT114352 NEW REPORT BAR*1.8*24
- ; IHS/SD/POT 01/14/14 FIXED: IDENTIFY PAYMENTS TO OTHER PAT BAR*1.8*24
- ; IHS/SD/POT 04/07/14 FIXED CHECK FOR ELIGIBILITY STATUS FROM PAT FILE BAR*1.8*24
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**24,33**;OCT 26, 2005;Build 133
+ ;IHS/SD/POT 1.8*24 07/15/13 HEAT114352 NEW REPORT
+ ;IHS/SD/POT 1.8*24 01/14/14 FIXED: IDENTIFY PAYMENTS TO OTHER PAT
+ ;IHS/SD/POT 1.8*24 04/07/14 FIXED CHECK FOR ELIGIBILITY STATUS FROM PAT FILE
+ ;IHS/SD/SDR 1.8*33 ADO60817 Updated to use 'C' xref since DINUM was removed
  Q
  ; **
  ;
@@ -54,9 +55,9 @@ SETHDR ;
  S BAR("TXT")="ALL"
  I $D(BARY("LOC")) S BAR("TXT")=$P(^DIC(4,BARY("LOC"),0),U)
  I BAR("LOC")="BILLING" D
- . S BAR("TXT")=BAR("TXT")_" Visit location(s) under "
- . S BAR("TXT")=BAR("TXT")_$P(^DIC(4,DUZ(2),0),U)
- . S BAR("TXT")=BAR("TXT")_" Billing Location"
+ .S BAR("TXT")=BAR("TXT")_" Visit location(s) under "
+ .S BAR("TXT")=BAR("TXT")_$P(^DIC(4,DUZ(2),0),U)
+ .S BAR("TXT")=BAR("TXT")_" Billing Location"
  E  S BAR("TXT")=BAR("TXT")_" Visit location(s) regardless of Billing Location"
  I $D(BARY("PAT")) S BAR("TXT")=BAR("TXT")_$C(10,13)_"for "_BARY("PAT","NM")
  S BAR("CONJ")="at "
@@ -76,20 +77,21 @@ COMPUTE ; EP
  ; *********************************************************************
  ;
 TRANS ;EP for Looping thru Transaction File
- I $G(BARY("PAT"))="" I BARY("DT")="T" S BARP("X")="B" D  Q  ;NO PAT - LOOP TXD FROM-TO
- . S BARP("DT")=BARY("DT",1)-.5 F  S BARP("DT")=$O(^BARTR(DUZ(2),BARP("X"),BARP("DT"))) Q:'BARP("DT")!(BARP("DT")>(BARY("DT",2)+.5))  D
- . . S BARTR=0 F  S BARTR=$O(^BARTR(DUZ(2),BARP("X"),BARP("DT"),BARTR)) Q:'BARTR  D DATA
+ ;I $G(BARY("PAT"))="" I BARY("DT")="T" S BARP("X")="B" D  Q  ;NO PAT - LOOP TXD FROM-TO  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ I $G(BARY("PAT"))="" I BARY("DT")="T" S BARP("X")="C" D  Q  ;NO PAT - LOOP TXD FROM-TO  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .S BARP("DT")=BARY("DT",1)-.5 F  S BARP("DT")=$O(^BARTR(DUZ(2),BARP("X"),BARP("DT"))) Q:'BARP("DT")!(BARP("DT")>(BARY("DT",2)+.5))  D
+ ..S BARTR=0 F  S BARTR=$O(^BARTR(DUZ(2),BARP("X"),BARP("DT"),BARTR)) Q:'BARTR  D DATA
  ;-------------------------
  I $G(BARY("PAT"))="" I BARY("DT")="V" D  Q   ;NO PAT - LOOP ALL TXD
- . S BARP("DT")=0 F  S BARP("DT")=$O(^BARTR(DUZ(2),BARP("DT"))) Q:'+BARP("DT")  S BARTR=BARP("DT") D DATA
+ .S BARP("DT")=0 F  S BARP("DT")=$O(^BARTR(DUZ(2),BARP("DT"))) Q:'+BARP("DT")  S BARTR=BARP("DT") D DATA
  ;-------------------------
  I BARY("DT")="T" S BARP("X")="AF" D  Q  ;PAT
- . S BARP("DT")=BARY("DT",1)-.5 F  S BARP("DT")=$O(^BARTR(DUZ(2),BARP("X"),BARY("PAT"),BARP("DT"))) Q:'BARP("DT")!(BARP("DT")>(BARY("DT",2)+.5))  D
- . . S BARTR=BARP("DT") D DATA
+ .S BARP("DT")=BARY("DT",1)-.5 F  S BARP("DT")=$O(^BARTR(DUZ(2),BARP("X"),BARY("PAT"),BARP("DT"))) Q:'BARP("DT")!(BARP("DT")>(BARY("DT",2)+.5))  D
+ ..S BARTR=BARP("DT") D DATA
  ;--------------------------
  I BARY("DT")="V" S BARP("X")="AF" D  Q
- . S BARP("DT")=0 F  S BARP("DT")=$O(^BARTR(DUZ(2),BARP("X"),BARY("PAT"),BARP("DT"))) Q:+BARP("DT")=0  D
- . . S BARTR=BARP("DT") D DATA
+ .S BARP("DT")=0 F  S BARP("DT")=$O(^BARTR(DUZ(2),BARP("X"),BARY("PAT"),BARP("DT"))) Q:+BARP("DT")=0  D
+ ..S BARTR=BARP("DT") D DATA
  ;--
  Q
  ; **
@@ -171,15 +173,15 @@ MAIN2(YBARBL) ;YBARBL IS THE 1ST PART OF A BILL
  S BAR("SUB1")=$$GET1^DIQ(9999999.06,BARTR("L"),.01) ;Visit Location
  S:BAR("SUB1")="" BAR("SUB1")="No Visit Location"
  I BARY("SORT")="C" D
- . S BAR("SUB2")=BAR("C") ;Clinic / visit type
- . I BAR("SUB2")]"",BAR("SUB2")'=99999 S BAR("SUB2")=$$GET1^DIQ(40.7,BAR("SUB2"),.01)
- . I BAR("SUB2")=""!(BAR("SUB2")=99999) S BAR("SUB2")="No Clinic Type"
- . D STANDARD
+ .S BAR("SUB2")=BAR("C") ;Clinic / visit type
+ .I BAR("SUB2")]"",BAR("SUB2")'=99999 S BAR("SUB2")=$$GET1^DIQ(40.7,BAR("SUB2"),.01)
+ .I BAR("SUB2")=""!(BAR("SUB2")=99999) S BAR("SUB2")="No Clinic Type"
+ .D STANDARD
  I BARY("SORT")="V" D
- . S BAR("SUB2")=BAR("V") ;Clinic / visit type
- . I BAR("SUB2")]"",BAR("SUB2")'=99999 S BAR("SUB2")=$$GET1^DIQ(9002274.8,BAR("SUB2"),.01)
- . I BAR("SUB2")=""!(BAR("SUB2")=99999) S BAR("SUB2")="No Visit Type"
- . D STANDARD
+ .S BAR("SUB2")=BAR("V") ;Clinic / visit type
+ .I BAR("SUB2")]"",BAR("SUB2")'=99999 S BAR("SUB2")=$$GET1^DIQ(9002274.8,BAR("SUB2"),.01)
+ .I BAR("SUB2")=""!(BAR("SUB2")=99999) S BAR("SUB2")="No Visit Type"
+ .D STANDARD
  S BAR("SUB3")=" " ;N/A
  S BAR("SUB4")=" " ;N/A
  S BAR("SUB5")=YBARBL

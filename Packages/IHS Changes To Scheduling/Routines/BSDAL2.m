@@ -1,5 +1,5 @@
 BSDAL2 ; IHS/ANMC/LJF - IHS APPT LIST - CONTINUED ;  
- ;;5.3;PIMS;**1004,1005,1007,1011,1012,1013**;DEC 01, 2006
+ ;;5.3;PIMS;**1004,1005,1007,1011,1012,1013,1022,1023**;MAY 28, 2004;Build 24
  ;IHS version of SDAL0
  ;IHS/OIT/LJF 07/15/2005 PATCH 1004 used code for printable age, instead of just a number
  ;IHS/OIT/LJF 05/03/2006 PATCH 1005 added parens around inurance coverage for readability
@@ -7,6 +7,7 @@ BSDAL2 ; IHS/ANMC/LJF - IHS APPT LIST - CONTINUED ;
  ;cmi/flag/maw 11/6/2009 PATCH 1011 added code in CLINIC to print for multiple days
  ;cmi/flag/maw 6/4/2010 PATCH 1012 added code to expand other info
  ;ihs/cmi/maw 04/05/2011 PATCH 1013 RQMT152 added cell phone
+ ;IHS/CMI/FBD 09/24/2024 PATCH 1023 Incorporated display of both Cell and Other phone #s
  ;
 START ;EP; called by list template INIT^BSDALL
  NEW SC,BSDCN
@@ -84,10 +85,18 @@ APPTLN(CLN,DATE,IEN) ; -- for each individual appt, print patient data
  . D SET($$SP(12)_"**PATIENT DIED ON "_$$DOD^BDGF2(DFN)_"**",.VALMCNT)
  ;
  S LINE=$$SP(3)_$S($D(^SC(SC,"S",DATE,1,IEN,"OB")):"*",1:"")    ;overbook
- S LINE=$$PAD(LINE,5)_$E(VADM(1),1,20)                          ;pat name
+ ;202307 77892 maw p1022 PPN
+ N PATNM
+ S PATNM=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S LINE=$$PAD(LINE,5)_$G(PATNM)
+ ;S LINE=$$PAD(LINE,5)_$E(VADM(1),1,20)                          ;pat name
+ D SET(LINE,.VALMCNT)
+ S LINE=""
+ ;S LINE=$$PAD($$PAD(LINE,34)_$$HRCN^BDGF2(DFN,DUZ(2)),36)   ;p1022
  S LINE=$$PAD($$PAD(LINE,27)_"#"_$$HRCN^BDGF2(DFN,DUZ(2)),36)   ;pat id
  ;S LINE=LINE_$$FMTE^XLFDT(+VADM(3),5)_" ("_VADM(4)_")"         ;dob(age)
  S LINE=LINE_$$FMTE^XLFDT(+VADM(3),5)_" ("_$$AGE(DFN)_")"       ;IHS/OIT/LJF 7/15/2005 PATCH 1004
+ ;S LINE=LINE_$$FMTE^XLFDT(+VADM(3),5)       ;p1022
  ;
  S (BSDZ(3),BSDZ(4),BSDZ(5))="",SPACE=0                         ;lab/xray/ekg
  F X=3,4,5 S BSDZ(X)=$P(DATA,U,X)                               ;test date/times
@@ -125,13 +134,16 @@ APPTLN(CLN,DATE,IEN) ; -- for each individual appt, print patient data
  . I BSDPH D
  .. K VAPA
  .. D ADD^VADPT
- .. N BSDWPH,BSDCPH  ;ihs/cmi/maw 04/05/2011 Patch 1013 RQMT152
+ .. N BSDWPH,BSDCPH,BSDOPH  ;ihs/cmi/maw 04/05/2011 Patch 1013 RQMT152  ;PIMS*5.3*1023
  .. S BSDWPH=$$GET1^DIQ(2,DFN,.132)
- .. S BSDCPH=$$GET1^DIQ(9000001,DFN,1801)  ;ihs/cmi/maw 04/05/2011 Patch 1013 RQMT152
+ .. S BSDCPH=$$GET1^DIQ(2,DFN,.134)  ;PIMS*5.3*1023 - CELL PHONE (FROM VA PATIENT FILE)
+ .. S BSDOPH=$$GET1^DIQ(9000001,DFN,1801)  ;ihs/cmi/maw 04/05/2011 Patch 1013 RQMT152  ;PIMS*5.3*1023
  .. S LINE=LINE_"Home Phone: "_VAPA(8)
  .. S LINE=LINE_$$SP(3)_"Work Phone: "_$G(BSDWPH)
  .. I $L(LINE>9) D SET(LINE,.VALMCNT)
- .. S LINE=$$SP(8)_"Other Phone: "_$G(BSDCPH)  ;ihs/cmi/maw 04/05/2011 Patch 1013 RQMT152
+ .. ;S LINE=$$SP(8)_"Other Phone: "_$G(BSDOPH)  ;ihs/cmi/maw 04/05/2011 Patch 1013 RQMT152  ;PIMS*5.3*1023
+ .. S LINE=$$SP(9)_"Cell Phone: "_$G(BSDCPH)  ;PIMS*5.3*1023
+ .. S LINE=LINE_$$SP(3)_"Other Phone: "_$G(BSDOPH)  ;PIMS*5.3*1023
  .. D SET(LINE,.VALMCNT)
  . ;cmi/anch/maw 11/3/2006 commented out line below to add work phone as well item 1007.01 patch 1007
  . ;I BSDPH K VAPA D ADD^VADPT S LINE=LINE_"Phone: "_VAPA(8)  ;pat phone

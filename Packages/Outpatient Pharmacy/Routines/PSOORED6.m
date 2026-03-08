@@ -1,5 +1,5 @@
-PSOORED6 ;BHAM ISC/SAB-edit orders from backdoor ;05-Sep-2013 15:44;DU
- ;;7.0;OUTPATIENT PHARMACY;**78,104,117,133,1005,1013,1014,143,219,148,247,268,260,269,1015,1016**;DEC 1997;Build 74
+PSOORED6 ;BHAM ISC/SAB-edit orders from backdoor ;01-Dec-2021 16:57;DU
+ ;;7.0;OUTPATIENT PHARMACY;**78,104,117,133,1005,1013,1014,143,219,148,247,268,260,269,1015,1016,1029**;DEC 1997;Build 50
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference ^PS(50.606 supported by DBIA 2174
@@ -10,6 +10,7 @@ PSOORED6 ;BHAM ISC/SAB-edit orders from backdoor ;05-Sep-2013 15:44;DU
  ;                          05/22/12 - Line UPDATE+19, UPDATE+56
  ;                          05/31/12 - Line UPDATE+13, UPDATE+38
  ;                          06/21/12 - Line UPDATE+12, UPDATE+40
+ ;                          12/01/21 - Line UPDATE1+81
 DRG ;select drug
  S PSORX("EDIT")=1,RX0HLD=RX0
  S PSODRUG("IEN")=$S($G(PSODRUG("IEN"))]"":PSODRUG("IEN"),1:$P(RX0,"^",6)),PSODRUG("NAME")=$S($G(PSODRUG("NAME"))]"":PSODRUG("NAME"),1:$P(^PSDRUG($P(RX0,"^",6),0),"^"))
@@ -181,7 +182,9 @@ UPDATE1 ;IHS/MSC/MGH separated for reissue code
  .S $P(CS,U,2)=$$ISSCH^APSPFNC2(DRG,"2")
  .S EXTEXP=$$GET1^DIQ(50,DRG,9999999.08)
  .S ISSDT=$P(^PSRX(PSORXED("IRXN"),0),U,13)
- .S X2=$S(EXTEXP:EXTEXP,$P(CS,U,2):184,CS:184,1:366)
+ .;IHS/MSC/PLS - 12/01/2021
+ .;S X2=$S(EXTEXP:EXTEXP,$P(CS,U,2):184,CS:184,1:366)
+ .S X2=$S(EXTEXP:EXTEXP,1:$$EXPDATE^PSOUTLA2($G(CS),ISSDT))
  .;IHS/MSC/PLS - 05/22/2012
  .;S NEXPDT=$$FMADD^XLFDT($P(PSORXED("RX0",U,13),X2)
  .S NEXPDT=$$FMADD^XLFDT(ISSDT,X2)

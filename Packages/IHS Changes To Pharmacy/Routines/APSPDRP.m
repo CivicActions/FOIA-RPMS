@@ -1,5 +1,5 @@
-APSPDRP ; IHS/DSD/ENM - SORT ENTRIES FROM DUE REVIEW FILE ;  [ 09/03/97   1:30 PM ]
- ;;6.0;IHS PHARMACY MODIFICATIONS;;09/03/97
+APSPDRP ;IHS/MSC/PLS- SORT ENTRIES FROM DUE REVIEW FILE;08-Jan-2023 10:40;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1032**;Sep 23, 2004;Build 26
  ;------------------------------------------------------------
 START ;
  D BD ; Ask Beginning and Ending Dates

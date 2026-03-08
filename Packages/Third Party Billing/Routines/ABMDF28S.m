@@ -1,11 +1,15 @@
 ABMDF28S ; IHS/SD/SDR - PRINT UB-04 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**21,23,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS 3P BILLING SYSTEM;**21,23,27,29,32,40**;NOV 12, 2009;Build 785
  ;new routine abm*2.6*21
  ;IHS/SD/SDR-2.6*21 HEAT240744 - Added routine to resort line items for dialysis billing for Medi-Cal.  All Z6004 CPTs should be reported as 1 line item
  ; with all dates, total units for all Z6004s, and a total $$.
  ;IHS/SD/SDR 2.6*23 HEAT247169 If there's an NDC on the line item add it to the description
  ;IHS/SD/SDR 2.6*23 HEAT347035 Make T1015 print on the top line for Medi-Cal
  ;IHS/SD/AML,SDR 2.6*27 CR8897 Change for Medi-Cal from-thru billing
+ ;IHS/SD/SDR 2.6*29 CR10844 Correction to rev code printing 0001 instead of actual rev code
+ ;IHS/SD/SDR 2.6*29 CR10888 Made change so it doesn't try to put T1015 on top line if print order display screen was used
+ ;IHS/SD/SDR 2.6*32 CR10026 Fixed page numbering when multi-page claim
+ ;IHS/SD/SDR 2.6*40 ADO108243 For Medi-Cal bill type 731/visit type 142 and bill type 731/visit type 131/POS=55 make rev code print on second line
  ;
 COMPILE ;EP
  K I,J,K
@@ -100,6 +104,7 @@ Z6004PRT ;EP
 PGCNT ;EP
  ;cnt lines for page numbering
  S ABMLCNT=0
+ S I=0  ;abm*2.6*32 IHS/SD/SDR CR10026
  F  S I=$O(ABMRV(I)) Q:'I  D
  .I 'ABMITMZ S ABMLCNT=ABMLCNT+1 Q
  .S J=-1
@@ -107,6 +112,7 @@ PGCNT ;EP
  ..S L=0
  ..F  S L=$O(ABMRV(I,J,L)) Q:+L=0  D
  ...;S ABMLCNT=ABMLCNT+1  ;abm*2.6*21 IHS/SD/SDR HEAT240744
+ ...I $O(ABMRV(I,J,L,0))="" S ABMLCNT=ABMLCNT+1 Q  ;abm*2.6*32 IHS/SD/SDR CR10026
  ...;start new abm*2.6*21 IHS/SD/SDR HEAT240744
  ...S ABMIJ=0
  ...F  S ABMIJ=$O(ABMRV(I,J,L,ABMIJ)) Q:'ABMIJ  D
@@ -137,6 +143,7 @@ T1015 ;EP
  ;end old start new abm*2.6*23 IHS/SD/SDR HEAT347035
  ;I ($D(ABMRV))&(($P($G(^AUTNINS(ABMP("INS"),0)),U)="ARBOR HEALTH PLAN")!($$RCID^ABMUTLP(ABMP("INS"))["61044")) D  ;abm*2.6*27 IHS/SD/SDR CR8897
  I ($D(ABMRV))&(($P($G(^AUTNINS(ABMP("INS"),0)),U)="ARBOR HEALTH PLAN")!($$RCID^ABMUTLP(ABMP("INS"))["61044")!($G(ABMP("ITYPE"))="D")) D  ;abm*2.6*27 IHS/SD/SDR CR8897
+ .I $P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),1)),U,24)="Y" Q  ;dont' do this section of print order was already selected  ;abm*2.6*29 IHS/SD/SDR CR10888
  .S ABMF=0
  .S (ABMIS,ABMJS,ABMKS)=1
  .S ABMI=0
@@ -147,7 +154,8 @@ T1015 ;EP
  ...F  S ABMK=$O(ABMRV(ABMI,ABMJ,ABMK)) Q:'ABMK  D
  ....M ABMTMP(ABMIS,ABMJS,ABMKS)=ABMRV(ABMI,ABMJ,ABMK)
  ....S ABMIS=ABMIS+1,ABMJS=ABMJS+1,ABMKS=ABMKS+1
- ....I $P($G(ABMRV(ABMI,ABMJ,ABMK)),U,2)'="T1015" S ABMF=1 Q
+ ....;I $P($G(ABMRV(ABMI,ABMJ,ABMK)),U,2)'="T1015" S ABMF=1 Q  ;abm*2.6*29 IHS/SD/SDR CR10844
+ ....I $P($G(ABMRV(ABMI,ABMJ,ABMK)),U,2)="T1015" S ABMF=1 Q  ;abm*2.6*29 IHS/SD/SDR CR10844
  .I ABMF=0 Q  ;no T1015 on claim
  .K ABMRV
  .M ABMRV=ABMTMP
@@ -190,6 +198,10 @@ CALYRTC ;EP
  S ABMDE=$$MDY^ABMDUTL($P(ABMRV(I,J,L),U,10))_"^45^6"
  D WRT^ABMDF28W  ;#45
  W !
+ ;start new abm*2.6*40 IHS/SD/SDR ADO108243
+ S ABMDE=$$GETREV^ABMDUTL($P(ABMRV(I,J,L),U))_"^^4"
+ D WRT^ABMDF28W  ;#42
+ ;end new abm*2.6*40 IHS/SD/SDR ADO108243
  S ABMIPADT=$P($$MDT^ABMDUTL($P(ABMRV(I,J,L),U,10)),"-",2)_" "_$P($$MDT^ABMDUTL($P(ABMRV(I,J,L),U,10)),"-",1)
  S ABMIPDDT=$P($$MDT^ABMDUTL($P(ABMRV(I,J,L),U,27)),"-",2)_" "_$P($$MDT^ABMDUTL($P(ABMRV(I,J,L),U,27)),"-",1)_","_$P($$MDT^ABMDUTL($P(ABMRV(I,J,L),U,27)),"-",3)
  S ABMDE=ABMIPADT_"-"_ABMIPDDT_"^5^24"
@@ -285,6 +297,10 @@ CALYRTC ;EP
  .S ABMDE=$$MDY^ABMDUTL($P(ABMRV(I,J,L),U,10))_"^45^6"
  .I ABMIJ=1 D WRT^ABMDF28W  ;#45
  .W !
+ .;start new abm*2.6*40 IHS/SD/SDR ADO108243
+ .S ABMDE=$$GETREV^ABMDUTL($P(ABMRV(I,J,L),U))_"^^4"
+ .D WRT^ABMDF28W  ;42
+ .;end new abm*2.6*40 IHS/SD/SDR ADO108243
  .S ABMDE=$G(ABMRV(I,J,L,ABMIJ))_"^5^25"
  .D WRT^ABMDF28W  ;#43
  .I ABMIJ=$O(ABMRV(I,J,L,99),-1) D

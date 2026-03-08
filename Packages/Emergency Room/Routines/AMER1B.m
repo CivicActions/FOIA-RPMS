@@ -1,5 +1,5 @@
 AMER1B ; IHS/ANMC/GIS -ISC - OVERFLOW FROM AMER1 ;   
- ;;3.0;ER VISIT SYSTEM;;FEB 23, 2009
+ ;;3.0;ER VISIT SYSTEM;**16**;MAR 3, 2009;Build 14
  ;
 QA6 ; TRANSFER
  S DIR("B")="NO" I $G(^TMP("AMER",$J,1,6)) S DIR("B")="YES"
@@ -38,5 +38,52 @@ QA9 ; TRANSFER ATTENDANT
  S DIR(0)="YO",DIR("A")="Medical attendant present during transfer" D ^DIR K DIR
  D OUT^AMER
  S %=$G(^TMP("AMER",$J,1,8)) I $P(%,U,2)="AMBULANCE" S AMERRUN=10,^TMP("AMER",$J,1,10)=^TMP("AMER",$J,1,8) Q
- I X'=U S AMERRUN=98
+ ;GDIT/HS/BEE;FEATURE#110347;AMER*3.0*16;TRAUMA REGISTRY
+ ;I X'=U S AMERRUN=98
+ I X'=U S AMERRUN=36
+ Q
+ ;
+ ;GDIT/HS/BEE;FEATURE#110347;AMER*3.0*16;TRAUMA REGISTRY - QA37,QA38,QA39
+QA37 ; Trauma Team Activation
+ ;
+ S DIR("B")="NO" I $G(^TMP("AMER",$J,1,37)) S DIR("B")="YES"
+ S DIR(0)="YO",DIR("A")="*Was the Trauma Team Activated for this visit" D ^DIR K DIR
+ D OUT^AMER
+ I 'Y D
+ . NEW I F I=38,39 K ^TMP("AMER",$J,1,I)
+ . S AMERRUN=99
+ ;
+ Q
+ ;
+QA38 ; Trauma Team Activated Provider
+ ;
+ S DIR("A")="*Trauma Activated Provider" K DIR("B")
+ I $G(^TMP("AMER",$J,1,38))>0 S %=+^(38),DIR("B")=$$GET1^DIQ(200,%_",",.01,"E")
+ S DIR("?")="^D NHELP^AMERMPV1(""P"")"
+ S DIR="^VA(200,",DIR(0)="PO^200:AEQM"
+ S DIR("S")="I $D(^VA(200,""AK.PROVIDER"",$P($G(^VA(200,+Y,0)),U),+Y))"
+ D ^DIR
+ K DIR
+ D OUT^AMER
+ I Y<1 S AMERRUN=36 Q
+ ;
+ Q
+ ;
+QA39 ; Trauma Team Activation Date/Time
+ ;
+ ;Quit if no trauma
+ I '$G(^TMP("AMER",$J,1,37)) Q
+ ;
+ S DIR("A")="*Trauma Team Activation Date/Time" K DIR("B")
+ I $D(^TMP("AMER",$J,1,39)) S Y=^(39) X ^DD("DD") S DIR("B")=Y
+ S DIR(0)="DO^::ER",DIR("?")="Enter a time and date in the usual FileMan format (e.g., 1/3/90@1PM)." D ^DIR K DIR
+ D OUT^AMER
+ I Y="" S Y=-1
+ I Y<1 S AMERRUN=37 Q
+ ;
+ S AMERRUN=99
+ ;
+ Q
+ ;
+VAR NEW %,AMERRIN,AMERRUN,X,Y,Z
  Q

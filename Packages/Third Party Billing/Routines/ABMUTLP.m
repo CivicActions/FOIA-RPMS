@@ -1,10 +1,16 @@
-ABMUTLP ; IHS/ASDST/DMJ - PAYER UTILITIES ;      
- ;;2.6;IHS 3P BILLING SYSTEM;**3,6,8,9,10,11,19,21,26**;NOV 12, 2009;Build 440
+ABMUTLP ; IHS/SD/SDR - PAYER UTILITIES ;      
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,6,8,9,10,11,19,21,26,30,31,34**;NOV 12, 2009;Build 645
  ;abm*2.6*10 split into ABMUTLP2 due to routine size
- ;IHS/SD/SDR 2.6*19 HEAT136922 -made changes for relationship code for grandchildren, nephew, niece
- ;IHS/SD/SDR 2.6*19 HEAT168248 -Made changes to merge same SARs into one entry, not one for each A/R trans.
- ;IHS/SD/SDR 2.6*21 HEAT107645 - SBR - made change to check if insurer type K should be mcd or prvt and pull appropriate data
+ ;IHS/SD/SDR 2.6*19 HEAT136922 made changes for relationship code for grandchildren, nephew, niece
+ ;IHS/SD/SDR 2.6*19 HEAT168248 Made changes to merge same SARs into one entry, not one for each A/R trans.
+ ;IHS/SD/SDR 2.6*21 HEAT107645 SBR - made change to check if insurer type K should be mcd or prvt and pull appropriate data
  ;IHS/SD/SDR 2.6*26 CR9265 Added code to call AUPN API to return either MBI or default to old code for HIC
+ ;IHS/SD/SDR 2.6*30 CR8901 Change to correct relationship code if patient has same insurer twice
+ ;IHS/SD/SDR 2.6*31 CR8848 Added check for GENDER^ABMUTLP3 tag
+ ;IHS/SD/SDR 2.6*31 CR8851 Fixed MCD tag to use Medicaid Eligible field RELATIONSHIP TO INSURED; will cause loops 2000C
+ ;   and 2010CA to print depending on if field is answered and how; as of this patch RELATIONSHIP TO INSURED is only editable via FM
+ ;IHS/SD/SDR 2.6*34 ADO60710 CR10997 Put quit statement to stop <SUBSCR>RCID+5^ABMUTLP error if there's no active insurer at the time
+ ;   they are trying to open the claim in the claim editor
  ;*********************
 SET(X,ABMDUZ2) ; EP set up standard vars
  ;x=bill ien
@@ -27,7 +33,6 @@ SET(X,ABMDUZ2) ; EP set up standard vars
  S ABMP("CLIN")=$P(ABMB0,U,10)  ;Clinic
  S ABMP("CLIN")=$P($G(^DIC(40.7,+ABMP("CLIN"),0)),U,2)
  S ABMP("VDT")=$P($G(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),7)),U)  ;Service date from
- ;S ABMP("ITYPE")=$P($G(^AUTNINS(+ABMP("INS"),2)),U)  ;Type of ins  ;abm*2.6*10 HEAT73780
  S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+ABMP("INS"),".211","I"),1,"I")  ;Type of ins  ;abm*2.6*10 HEAT73780
  S ABMP("RTYPE")=$S(ABMP("ITYPE")="R":"1G",ABMP("ITYPE")="D":"1D",$P($G(^ABMNINS(ABMDUZ2,ABMP("INS"),1,ABMP("VTYP"),1)),U)'="":$P($G(^ABMREFID($P($G(^ABMNINS(ABMDUZ2,ABMP("INS"),1,ABMP("VTYP"),1)),U),0)),U),1:"0B")
  I ABMP("EXP")=22,ABMP("RTYPE")="1G" S ABMP("RTYPE")="1C"
@@ -47,8 +52,7 @@ ISET ; EP
  .F  S I=$O(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),13,"C",ABME("PRIO"),I)) Q:'I!($G(ABMP("INS",3)))  D
  ..;Quit if insurer unbillable
  ..Q:$P(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),13,I,0),U,3)="U"  S ABME("INS")=$P(^(0),U)   ;Ins IEN
- ..;S ABME("ITYPE")=$P(^AUTNINS(ABME("INS"),2),U)  ;type insurer  ;abm*2.6*10 HEAT73780
- ..S ABME("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABME("INS"),".211","I"),1,"I")  ;type insurer  ;abm*2.6*10 HEAT73780
+ ..S ABME("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABME("INS"),".211","I"),1,"I")  ;ins type  ;abm*2.6*10 HEAT73780
  ..Q:"I"[ABME("ITYPE")  ;Quit if indian pt
  ..;Quit if non-beneficiary & not active ins
  ..Q:"N"[ABME("ITYPE")&($P(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),0),U,8)'=ABME("INS"))
@@ -61,6 +65,7 @@ ISET ; EP
  ..S ABME("INS#")=ABME("INS#")+1  ;increment cntr
  ..S ABMP("INS",ABME("INS#"))=^ABMDBILL(ABMDUZ2,ABMP("BDFN"),13,I,0)
  ..S $P(ABMP("INS",ABME("INS#")),U,2)=ABME("ITYPE")
+ ..D GENDER^ABMUTLP3  ;abm*2.6*31 IHS/SD/SDR CR8848
  Q
 PAYED ; EP
  ; Build Ins Pymt Array
@@ -116,7 +121,8 @@ SBR(X,ABMDUZ2) ;PEP - subscriber
  S ABMI=0
  F  S ABMI=$O(ABMP("INS",ABMI)) Q:'ABMI  D
  .S ABMINS=ABMP("INS",ABMI)
- .I ($P(ABMINS,U)=ABMP("INS")!($P(ABMINS,U,11)=ABMP("INS"))) S ABMPSQ=ABMI
+ .;I ($P(ABMINS,U)=ABMP("INS")!($P(ABMINS,U,11)=ABMP("INS"))) S ABMPSQ=ABMI  ;abm*2.6*30 IHS/SD/SDR CR8901
+ .I ($P(ABMINS,U)=ABMP("INS")!($P(ABMINS,U,11)=ABMP("INS")))&($P(ABMINS,U,3)="I") S ABMPSQ=ABMI  ;abm*2.6*30 IHS/SD/SDR CR8901
  .D SOP
  .;I $P(ABMINS,U,2)="D"!($P(ABMINS,U,2)="K") D MCD  Q  ;abm*2.6*21 IHS/SD/SDR HEAT107645
  .;start new abm*2.6*21 IHS/SD/SDR HEAT107645
@@ -153,7 +159,8 @@ MCD ;mcd
  .S ABMSBR(ABMI)=2_"-"_ABMP("PDFN")
  .S ABMP("PNUM",ABMI)=$P($G(^AUPNMCD(ABMCDNUM,0)),U,3)
  .S ABMP("SNUM",ABMI)=$P($G(^AUPNMCD(ABMCDNUM,0)),U,3)
- .S ABMP("REL",ABMI)=18
+ .;S ABMP("REL",ABMI)=18  ;abm*2.6*31 IHS/SD/SDR CR8851
+ .I $G(ABMP("REL",ABMI))="" S ABMP("REL",ABMI)=18  ;abm*2.6*31 IHS/SD/SDR CR8851
  I '$D(^AUPN3PPH(ABMP("PH",ABMI),0)) D  Q
  .S ABMSBR(ABMI)=2_"-"_ABMP("PDFN")
  .S ABMP("PNUM",ABMI)=$P($G(^AUPNMCD(ABMCDNUM,0)),U,3)
@@ -304,6 +311,7 @@ RCID(X) ;EP - receiver id
  ;x=insurer
  K Y
  S X=$G(X)
+ I X="" Q 0  ;abm*2.6*34 IHS/SD/SDR ADO60710
  ;start new abm*2.6*6 5010
  I $D(^ABMRECVR("C",X)) D
  .Q:$G(ABMLOOP)="2330B"  ;abm*2.6*9 HEAT55022

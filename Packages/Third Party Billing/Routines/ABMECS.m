@@ -1,24 +1,26 @@
 ABMECS ; IHS/ASDST/DMJ - ELECTRONIC CLAIMS SUBMISSION ;   
- ;;2.6;IHS Third Party Billing System;**2,6,10,19**;NOV 12, 2009;Build 300
+ ;;2.6;IHS Third Party Billing System;**2,6,10,19,33,35,37**;NOV 12, 2009;Build 739
  ;Original;DMJ;01/02/96 4:18 PM
  ;
- ; This routine is called from the EMC Create a Batch Menu option.
- ; It will show you a summary of bills ready to export grouped by
- ; bill type and export type. The user is asked to select one 
- ; group. An entry is then made in 3P TX STATUS file and a file
- ; is created in unix as specified by the user.
+ ;This routine is called from the EMC Create a Batch Menu option. It will show you a summary of bills ready to export grouped by
+ ;bill type and export type. The user is asked to select one group. An entry is then made in 3P TX STATUS file and a file
+ ;is created in unix as specified by the user.
  ;
- ; IHS/ASDS/DMJ - 03/01/01 - V2.4 Patch 9 - NOIS HQW-0301-100010 - Modified to accommodate new Envoy electronic format
- ; IHS/ASDS/DMJ - 01/03/02 - V2.4 Patch 10 - NOIS NDA-1201-180141 - Modified code to calculate submission number differently as
+ ;IHS/ASDS/DMJ 03/01/01 2.4*9 NOIS HQW-0301-100010 Modified to accommodate new Envoy electronic format
+ ;IHS/ASDS/DMJ 01/03/02 2.4*10 NOIS NDA-1201-180141 Modified code to calculate submission number differently as
  ;    Medicare saves the numbers for up to a year.
- ; IHS/ASDS/SDR - 01/16/02 - V2.4 Patch 10 - NOIS XAA-0800-200136 - Modified so as not to combine different export modes
- ;   into one file
- ; IHS/SD/SDR - v2.5 p8 - IM13650 - Set ABMAPOK so the trigger on Bill Status field gets executed
- ;    to update A/R.
- ; IHS/SD/SDR - abm*2.6*2 - 5PMS10005 - Populate EXPORT NUMBER RE-EXPORT mult
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - Added clearinghouse code
- ;IHS/SD/SDR - 2.6*19 - HEAT138428 - Made change to stop programming error <UNDEF>START+24^ABMEF31, <UNDEF>START+24^ABMEF32, <UNDEF>START+24^ABMEF33
- ; ********************************************************************
+ ;IHS/ASDS/SDR 01/16/02 2.4*10 NOIS XAA-0800-200136 Modified so as not to combine different export modes into one file
+ ;
+ ;IHS/SD/SDR 2.5*8 IM13650 Set ABMAPOK so the trigger on Bill Status field gets executed to update A/R.
+ ;
+ ;IHS/SD/SDR 2.6*2 5PMS10005 Populate EXPORT NUMBER RE-EXPORT mult
+ ;IHS/SD/SDR 2.6*6 5010 Added clearinghouse code
+ ;IHS/SD/SDR 2.6*19 HEAT138428 Made change to stop programming error <UNDEF>START+24^ABMEF31, <UNDEF>START+24^ABMEF32, <UNDEF>START+24^ABMEF33
+ ;IHS/SD/SDR 2.6*33 ADO60178 Added change to 4-slash the export mode; if the exp mode is expired it won't create a complete entry, just a partial,
+ ;   but not the claim so it's still sitting in an approved status
+ ;IHS/SD/SDR 2.6*35 ADO60705 Updated to use TXST^ABMDFUTL so creating batches code is centralized for updating
+ ;IHS/SD/SDR 2.6*37 ADO75349 Store EXPORT DATE in separate field
+ ;************************************
 START ;
  K ABME,ABMER
  ; Display summary of bills ready to export and ask user to select 
@@ -37,6 +39,7 @@ START ;
  K ABMGCN  ;abm*2.6*6 5010
  I $D(^TMP($J,"S-CH",ABMSEQ)) D CHFILE Q  ;abm*2.6*6 5010
  D FILE         ; Make entry in 3P TX STATUS and create a file
+ I $G(ABMQFLG)=1 Q  ;abm*2.6*33 IHS/SD/SDR ADO60178
  S DIR(0)="E"
  D ^DIR
  K DIR
@@ -160,6 +163,11 @@ CHFILE ;
  .....S DR=".04////B;.16////A"_$S($P($G(^ABMDBILL(DUZ(2),ABMDA,1)),U,7)="":";.17////"_ABMP("XMIT"),1:"")
  .....S ABMREX("BDFN")=ABMDA
  .....D ^DIE
+ ....;start new abm*2.6*37 IHS/SD/SDR ADO75349
+ ....I $P($G(^ABMDBILL(DUZ(2),DA,1)),U,7)'="" S DR=".172////"_$P($P(^ABMDTXST(DUZ(2),$P(^ABMDBILL(DUZ(2),DA,1),U,7),0),U),".")  ;export date
+ ....E  S DR=".172////"_DT
+ ....D ^DIE
+ ....;end new abm*2.6*37 IHS/SD/SDR ADO75349
  ....K ABMAPOK
  ....; Write record  (Create EMC unix file)
  ....D @("^ABMEF"_$P(ABMER(ABMSEQ),U,3))
@@ -169,6 +177,7 @@ CHFILE ;
  .....S DR=".14///NOPEN"
  .....D ^DIE
  ;end new abm*2.6*19 IHS/SD/SDR HEAT138428
+ I $G(ABMQFLG)=1 Q  ;abm*2.6*33 IHS/SD/SDR ADO60178
  S DIR(0)="E"
  D ^DIR
  K DIR
@@ -218,6 +227,11 @@ FILE ;
  ..S DR=".04////B;.16////A"_$S($P($G(^ABMDBILL(DUZ(2),ABMDA,1)),U,7)="":";.17////"_ABMP("XMIT"),1:"")  ;abm*2.6*2 5PMS10005
  ..S ABMREX("BDFN")=ABMDA  ;abm*2.6*3
  ..D ^DIE
+ ..;start new abm*2.6*37 IHS/SD/SDR ADO75349
+ ..I $P($G(^ABMDBILL(DUZ(2),DA,1)),U,7)'="" S DR=".172////"_$P($P(^ABMDTXST(DUZ(2),$P(^ABMDBILL(DUZ(2),DA,1),U,7),0),U),".")  ;export date
+ ..E  S DR=".172////"_DT
+ ..D ^DIE
+ ..;end new abm*2.6*37 IHS/SD/SDR ADO75349
  ..;D BILLSTAT^ABMDREEX(DUZ(2),ABMDA,ABMP("XMIT"),"O",$P($G(^ABMDTXST(DUZ(2),ABMP("XMIT"),1)),U,6))  ;abm*2.6*2 5PMS10005
  .K ABMAPOK
  .; Write record  (Create EMC unix file)
@@ -231,19 +245,39 @@ FILE ;
  ;
 NEWB ;
  ; Create a new batch  (Make entry in 3P TX STATUS)
- D NOW^%DTC
- S X=%
- S DIC="^ABMDTXST(DUZ(2),"
- S DIC(0)="LX"
- S DLAYGO=9002274.6
- K DD,DO D FILE^DICN
- K DLAYGO
- Q:Y<0
- S ABMP("XMIT")=+Y
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60178
+ I $P($G(^ABMDEXP($P(ABMER(ABMSEQ),U,3),0)),U,11)=1 D  I Y=0!$D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT) S Y=-1,ABMQFLG=1 Q
+ .W !!,"NOTE: The export mode for this batch is INACTIVE."
+ .W !,"Are you sure you wish to continue with this export?"
+ .S DIR(0)="Y"
+ .S DIR("A")="Proceed"
+ .D ^DIR
+ .K DIR
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60178
+ ;start old abm*2.6*35 IHS/SD/SDR ADO60705
+ ;D NOW^%DTC
+ ;S X=%
+ ;S DIC="^ABMDTXST(DUZ(2),"
+ ;S DIC(0)="LX"
+ ;S DLAYGO=9002274.6
+ ;K DD,DO D FILE^DICN
+ ;K DLAYGO
+ ;Q:Y<0
+ ;S ABMP("XMIT")=+Y
+ ;end old start new abm*2.6*35 IHS/SD/SDR ADO60705
+ S ABMP("EXP")=$P(ABMER(ABMSEQ),U,3)
+ S ABMP("XMIT")=0
+ S ABMY("INS")=ABMINS("IEN")
+ S ABMY("TYP")=ABMITYP
+ S ABMY("TOT")=$P(ABMER(ABMSEQ),U,4)_"^"_$J($P(ABMER(ABMSEQ),U,5),1,2)
+ D TXST^ABMDFUTL
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60705
  S DIE=DIC
  S DA=+Y
- S DR=".02///"_$P(ABMER(ABMSEQ),U,3)_";.04///`"_ABMINS("IEN")_";.03///"_ABMITYP_";.05////"_DUZ_";.09///"_$P(ABMER(ABMSEQ),U,4)_";.11///"_$J($P(ABMER(ABMSEQ),U,5),1,2)
- S DR=DR_";.17////"_$$FMT^ABMERUTL(ABMER("CNT"),"4NR")  ;abm*2.6*6 5010
+ ;S DR=".02///"_$P(ABMER(ABMSEQ),U,3)_";.04///`"_ABMINS("IEN")_";.03///"_ABMITYP_";.05////"_DUZ_";.09///"_$P(ABMER(ABMSEQ),U,4)_";.11///"_$J($P(ABMER(ABMSEQ),U,5),1,2)  ;abm*2.6*33 IHS/SD/SDR ADO60178
+ ;S DR=".02////"_$P(ABMER(ABMSEQ),U,3)_";.04///`"_ABMINS("IEN")_";.03///"_ABMITYP_";.05////"_DUZ_";.09///"_$P(ABMER(ABMSEQ),U,4)_";.11///"_$J($P(ABMER(ABMSEQ),U,5),1,2)  ;abm*2.6*33 IHS/SD/SDR ADO60178  ;abm*2.6*35 IHS/SD/SDR ADO60705
+ ;S DR=DR_";.17////"_$$FMT^ABMERUTL(ABMER("CNT"),"4NR")  ;abm*2.6*6 5010  ;abm*2.6*35 IHS/SD/SDR ADO60705
+ S DR=".17////"_$$FMT^ABMERUTL(ABMER("CNT"),"4NR")  ;abm*2.6*6 5010  ;abm*2.6*35 IHS/SD/SDR ADO60705
  D ^DIE
  ;S DR=".16///"_$$NSN^ABMERUTL D ^DIE  ;abm*2.6*3 5PMS10005#2
  D GCNMULT^ABMERUTL("O",$S(($G(ABMREX("BILLSELECT"))!($G(ABMREX("BATCHSELECT")))):"1",1:""))  ;abm*2.6*3 5PMS10005#2

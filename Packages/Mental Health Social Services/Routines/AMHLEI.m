@@ -1,5 +1,5 @@
 AMHLEI ; IHS/CMI/LAB - DISPLAY/EDIT TREATMENT NOTES ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;4.0;IHS BEHAVIORAL HEALTH;**11**;JUN 02, 2010;Build 27
  ;
  ;
  ;
@@ -74,7 +74,7 @@ GATHER ;EP - called from AMHUAR
  D DISP^AMHLEI2(DFN)
  Q
 HDR ;EP -- header code
- S VALMHDR(1)="Patient Name:  "_$P(^DPT(DFN,0),U)_"     DOB:  "_$$FTIME^VALM1($P(^DPT(DFN,0),U,3))_"   Sex:  "_$P(^DPT(DFN,0),U,2)
+ S VALMHDR(1)="Patient Name:  "_$$GETPREF^AUPNSOGI(DFN,"E",1)_"  DOB: "_$$FTIME^VALM1($P(^DPT(DFN,0),U,3))_" Sex: "_$P(^DPT(DFN,0),U,2)
  Q
  ;
 INIT ;EP -- init variables and list array

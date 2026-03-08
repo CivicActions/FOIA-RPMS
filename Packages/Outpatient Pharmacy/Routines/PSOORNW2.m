@@ -1,5 +1,5 @@
-PSOORNW2 ;ISC-BHAM/SAB - edit orders from oerr ;29-May-2012 15:00;PLS
- ;;7.0;OUTPATIENT PHARMACY;**10,23,37,46,117,131,133,1005,1008,148,222,269,206,1015**;DEC 1997;Build 62
+PSOORNW2 ;ISC-BHAM/SAB - edit orders from oerr ;13-Mar-2019 09:45;DU
+ ;;7.0;OUTPATIENT PHARMACY;**10,23,37,46,117,131,133,1005,1008,148,222,269,206,1015,1023**;DEC 1997;Build 121
  ;Reference to ^YSCL(603.01 supported by DBIA 2697
  ;Reference to ^PS(55 supported by DBIA 2228
  ;Reference to ^PSDRUG( supported by DBIA 221
@@ -8,7 +8,9 @@ PSOORNW2 ;ISC-BHAM/SAB - edit orders from oerr ;29-May-2012 15:00;PLS
  ;Reference to $$GETNDC^PSSNDCUT supported by IA 4707
  ; Modified - IHS/CIA/PLS - 01/26/04 - Lines DREN+12
  ;            IHS/MSC/PLS - 03/23/09 - Line 3+3
+ ;Modified - IHS/MSC/MGH 03/13/19 - Line 1+2
 1 I $G(PSODRUG("OI")) M:$G(PSOBDRG) PSOBDR=PSODRUG W !!,"Current Orderable Item: "_$P(^PS(50.7,PSODRUG("OI"),0),"^")_" "_$P(^PS(50.606,$P(^(0),"^",2),0),"^")
+ I $D(OR0),$P(OR0,"^",24)=1 S VALMSG="Digitally Signed Order - No such changes allowed." S OUT=1 Q
  S DIC("B")=$S($G(PSODRUG("OIN"))]"":PSODRUG("OIN"),1:""),DIC="^PS(50.7,",DIC(0)="AEMQZ"
  S DIC("S")="I '$P(^PS(50.7,+Y,0),""^"",4)!($P(^(0),""^"",4)'<DT) N PSOF,PSOL S (PSOF,PSOL)=0 F  S PSOL=$O(^PSDRUG(""ASP"",+Y,PSOL)) Q:PSOF!'PSOL  "
  S DIC("S")=DIC("S")_"I $P($G(^PSDRUG(PSOL,2)),U,3)[""O"",'$G(^(""I""))!($G(^(""I""))'<DT) S PSOF=1"

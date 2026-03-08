@@ -1,8 +1,5 @@
-ADGDSQA ; IHS/ADC/PDW/ENM - DAY SURGERY PROVIDER QA REPORT ; [ 12/16/2003  4:06 PM ]
+ADGDSQA ; IHS/ADC/PDW/ENM - DAY SURGERY PROVIDER QA REPORT ; [ 07/16/1999  3:16 PM ]
  ;;5.0;ADMISSION/DISCHARGE/TRANSFER;**3**;MAR 25, 1999
- ;
- ;IHS/ITSC/WAR 12/16/03 Added call to 'old'(?) init of IHS variales
- I '$D(DGOPT("QA1"))&($D(^DG(43,1,9999999.02))) D VAR^ADGVAR
  ;
  W @IOF,!!!?28,"DAY SURGERY PROVIDER QA REPORT",!!
  ;***> get date range
@@ -42,11 +39,7 @@ C3 S DGDFN1=$O(^ADGDS("AA",DGDT,DFN,DGDFN1)) G C2:DGDFN1=""
  S DGOBS=$P(DGSTR,U,7) G C4:DGADM="Y" ;obsrv?/skip next lines if admit
  ;
  ;***> check if admitted w/in time limit in site parameters
- ;IHS/ITSC/WAR 12/16/03 if parameter is not set - site never used DS -
- ;        I added $G to DGOPT("QA1") as defensive code. Chk Q41 of the
- ;        logged PIMS issues.
- ;S Y=9999999-DGDT,X1=$P(DGDT,"."),X2=$P(DGOPT("QA1"),U,2) D C^%DTC
- S Y=9999999-DGDT,X1=$P(DGDT,"."),X2=$P($G(DGOPT("QA1")),U,2) D C^%DTC
+ S Y=9999999-DGDT,X1=$P(DGDT,"."),X2=$P(DGOPT("QA1"),U,2) D C^%DTC
  S DGX=9999999-X
  S DGX=$O(^DGPM("ATID1",DFN,DGX))
  I DGX'="",DGX'>Y S DGADWK=9999999-DGX

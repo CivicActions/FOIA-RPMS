@@ -1,5 +1,5 @@
-APCLADX0 ; IHS/CMI/LAB - cont. apcladx ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLADX0 ; IHS/OHPRD/TMJ - cont. apcladx ; [ 03/01/00  8:31 AM ]
+ ;;3.0;IHS PCC REPORTS;**7**;FEB 05, 1997
  ;
 SEX S DIR(0)="YO",DIR("A")="Want to limit search by PATIENT SEX",DIR("B")="NO",DIR("?")="" D ^DIR S:$D(DUOUT) DIRUT=1 K DIR
  Q:$D(DIRUT)

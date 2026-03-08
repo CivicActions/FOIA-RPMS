@@ -1,9 +1,11 @@
-PSBOMV ;BIRMINGHAM/EFC-BCMA UNIT DOSE VIRTUAL DUE LIST FUNCTIONS ;Mar 2004
- ;;3.0;BAR CODE MED ADMIN;;Mar 2004
+PSBOMV ;BIRMINGHAM/EFC-BCMA UNIT DOSE VIRTUAL DUE LIST FUNCTIONS ;02-May-2023 16:39;DU
+ ;;3.0;BAR CODE MED ADMIN;**1033**;Mar 2004;Build 34
  ;
  ; Reference/IA
  ; ^DPT/10035
  ; ^NURSF(211.4/1409
+ ; Modified - IHS/MSC/MIR - 03/01/23 - RANGE+10:+13
+ ;                          04/25/23 - BYDFN+2, BYDFN+6, PTHDR
  ;
 EN ;
  N CNT,PSBHDR,PSBPT,PSBINDX,DFN,PSBY,PSBSORT,PSBPRINT,PSBDT,PSBEV,PSBLOG,PSBPRCX,PSBRB,PSBSTOP,PSBSTRT,PSBTIME,PSBWLF,PSBWRD,PSBWRDA,PSBX,PSBY,PSBXX
@@ -25,6 +27,10 @@ CHECK ..;Ward IEN must exist in Ward Field # 9.
  ..I $G(PSBTIME)=$P($G(^PSB(53.79,PSBLOG,0)),U,6),$P($G(^PSB(53.79,PSBLOG,0)),U,9)="RM" Q
  ..;Quit if Ward IEN is not in Nurse Location file.
  ..I PSBPRINT="W",'$O(^NURSF(211.4,"C",PSBWLF,PSBWRD,0)) Q
+ ..; - IHS/OCA/JTC - 2022.05.12 - HOSPITAL LOCATION
+ ..I PSBPRINT="W",'$O(^NURSF(211.4,"C",PSBWLF,PSBWRD,0)) I PSBWRD<9000000 Q
+ ..I PSBPRINT="W" I PSBWRD>9000000 I PSBWRD'=PSBWLF Q  ; QUIT IF LOG FILE WARD DOES NOT MATCH REPORT WARD
+ ..; - END -
  ..;Compare date/time and Quit if order status set to Remove.
  ..;
 BUILD ..I $G(PSBSORT)'="B" S ^TMP("PSBO",$J,DFN,PSBX,PSBY)=""
@@ -80,11 +86,11 @@ BYWDRB ;Print by Ward and Sort by Room and Bed.
  ;
 BYDFN ;Print by Patient.
  D:$G(PSBPRINT)="P"
- .W $$PTHDR()
+ .W $$PTHDR($G(PSBDFN))
  .S PSBINDX=""
  .F  S PSBINDX=$O(^TMP("PSBO",$J,"B",PSBINDX)) Q:PSBINDX=""  D
  ..F DFN=0:0 S DFN=$O(^TMP("PSBO",$J,"B",PSBINDX,DFN)) Q:'DFN  D
- ...W:$Y>(IOSL-10) $$PTHDR()
+ ...W:$Y>(IOSL-10) $$PTHDR(DFN)
  ...F PSBDT=0:0 S PSBDT=$O(^TMP("PSBO",$J,DFN,PSBDT)) Q:'PSBDT  D
  ....F PSBY=0:0 S PSBY=$O(^TMP("PSBO",$J,DFN,PSBDT,PSBY)) Q:'PSBY  D
  .....D EVENTS  ;Set Total Number of Events
@@ -104,7 +110,7 @@ WRDHDR() ;
  W !,"Rm-Bed",?20,"Patient Name",?48,"Event Date/Time",?75,"Event",?95,"Var",?102,"Medication",!,$TR($J("",IOM)," ","-")
  Q ""
  ;
-PTHDR() ;
+PTHDR(PSBDFN) ;
  S PSBHDR(1)="MEDICATION VARIANCE LOG"
  D PT^PSBOHDR(PSBDFN,.PSBHDR)
  W !,"Event Date/Time",?23,"Event",?43,"Var",?50,"Medication",!,$TR($J("",IOM)," ","-")
@@ -142,4 +148,4 @@ SORTING ;Sort by Patient or Room and Bed Information
  ;
  I $G(PSBSORT)="P"!($G(PSBSORT)="") S PSBINDX=$P(^DPT(DFN,0),U),^TMP("PSBO",$J,"B",PSBINDX,DFN)="" Q
  I $G(PSBSORT)="B" S PSBINDX=$P($G(^PSB(53.78,+PSBY,0)),U,2) S:PSBINDX="" PSBINDX="** NO ROOM/BED **" S ^TMP("PSBO",$J,"B",PSBINDX,DFN,PSBX,PSBY)=""
- Q 
+ Q

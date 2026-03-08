@@ -1,5 +1,5 @@
-BMC4E ;IHS/OIT/FCJ - BMC 4.0 PATCH 13 -ENV INSTALL ; 16 Feb 2011  2:54 PM
- ;;4.0;REFERRED CARE INFO SYSTEM;**13**;JAN 09, 2006;Build 101
+BMC4E ;IHS/OIT/FCJ - BMC 4.0 PATCH 16 -ENV INSTALL ; 16 Feb 2011  2:54 PM
+ ;;4.0;REFERRED CARE INFO SYSTEM;**16**;JAN 09, 2006;Build 168
  ;
  ;
  I '$G(IOM) D HOME^%ZIS
@@ -15,14 +15,14 @@ BMC4E ;IHS/OIT/FCJ - BMC 4.0 PATCH 13 -ENV INSTALL ; 16 Feb 2011  2:54 PM
  S X="IORVON;IORVOFF"
  D ENDR^%ZISS
  ;
- I $$VCHK("BMC","4.0",2,"'=")
+ I '$$INSTALLD("BMC*4.0*13") S BMCQUIT=2 D SORRY(BMCQUIT)
  I $$VCHK("DI","22.0",2,"<")
  I $$VCHK("XU","8.0",2,"<")
  I $$VCHK("AICD","4.0",2,"<")
- I '$$INSTALLD("AG*7.1*13") S BMCQUIT=2 D SORRY(BMCQUIT)
- I '$$INSTALLD("AUPN*99.1*26") S BMCQUIT=2 D SORRY(BMCQUIT)
+ I '$$INSTALLD("AG*7.1*15") S BMCQUIT=2 D SORRY(BMCQUIT)
+ I '$$INSTALLD("AUPN*99.1*29") S BMCQUIT=2 D SORRY(BMCQUIT)
  I '$$INSTALLD("ATX*5.1*5") S BMCQUIT=2 D SORRY(BMCQUIT)
- I '$$INSTALLD("AUT*98.1*26") S BMCQUIT=2 D SORRY(BMCQUIT)
+ I '$$INSTALLD("AUT*98.1*31") S BMCQUIT=2 D SORRY(BMCQUIT)
  I '$$INSTALLD("LEX*2.0*1003") S BMCQUIT=2 D SORRY(BMCQUIT)
  I '$$INSTALLD("OR*3.0*190") S BMCQUIT=2 D SORRY(BMCQUIT)
  I $$VCHK("BSTS","1.0",2,"<")
@@ -89,19 +89,19 @@ INSTALLD(BMC) ; Determine if patch BMC was installed, where BMC is
 MAIL ; EP
  D BMES^XPDUTL("BEGIN Delivering MailMan message to select users.")
  NEW DIFROM,XMSUB,XMDUZ,XMTEXT,XMY
- KILL ^TMP("BMC4P13",$J)
- D RSLT(" --- BMC v 4.0 Patch 13, has been installed into this namespace ---")
+ KILL ^TMP("BMC4P16",$J)
+ D RSLT(" --- BMC v 4.0 Patch 16, has been installed into this namespace ---")
  F %=1:1 D RSLT($P($T(GREET+%),";",3)) Q:$P($T(GREET+%+1),";",3)="###"
  S %=0
  F  S %=$O(^XTMP("XPDI",XPDA,"BLD",XPDBLD,1,%)) Q:'%   D RSLT(^(%,0))
- S XMSUB=$P($P($T(+1),";",2)," ",3,99),XMDUZ=$S($G(DUZ):DUZ,1:.5),XMTEXT="^TMP(""BMC4P13"",$J,",XMY(1)="",XMY(DUZ)=""
+ S XMSUB=$P($P($T(+1),";",2)," ",3,99),XMDUZ=$S($G(DUZ):DUZ,1:.5),XMTEXT="^TMP(""BMC4P16"",$J,",XMY(1)="",XMY(DUZ)=""
  F %="BMCZMENU","XUMGR","XUPROG","XUPROGMODE" D SINGLE(%)
  D ^XMD
- KILL ^TMP("BMC4P13",$J)
+ KILL ^TMP("BMC4P16",$J)
  D MES^XPDUTL("END Delivering MailMan message to select users.")
  Q
  ;
-RSLT(%) S ^(0)=$G(^TMP("BMC4P13",$J,0))+1,^(^(0))=%
+RSLT(%) S ^(0)=$G(^TMP("BMC4P16",$J,0))+1,^(^(0))=%
  Q
  ;
 SINGLE(K) ; Get holders of a single key K.
@@ -115,14 +115,37 @@ INTROE ; Intro text during KIDS Environment check.
  ;;In this distribution:
  ;;
  ;;    Changes include
- ;;      1. General Retrieval Report
- ;;         a. Added printing of MBI and testing for "D" coverage 
- ;;      2. Printing a referral letter with the new MBI for both
- ;;         GUI and R&S.
- ;;      3. Fixed catastrophic error, when printing Referral
- ;;         letter from GUI option.
- ;;      4. Added time to the Consult Review field and GUI options
- ;;         to require the time stamp for CQM reports.
+ ;;      1. R&S and GUI-Add C1 suffix to Primary Referral number for
+ ;;         identification of Call-in referrals
+ ;;      2. R&S and GUI-Prevent duplication of referrals by checking
+ ;;         new referral for Patient, Vendor, Referral Type, Referring
+ ;;         Provider, Priority and Visit type
+ ;;      3. R&S and GUI-Use of Actual Begin/End DOS instead of Estimated
+ ;;         dates
+ ;;      4. R&S and GUI-Referral Letter to include changes:
+ ;;         a. DX code
+ ;;         b. Case Notes
+ ;;         c. Removal of End DOS
+ ;;         d. Change Contract Health to Purchased Referred Care
+ ;;         e. Added Age parameter for Minor child
+ ;;      5. R&S-Modification to all whole dollar amounts for cost data
+ ;;      6. R&S-General Retrieval Report to include SNOMED Code selection
+ ;;      7. R&S-Reports to include Excel format:
+ ;;         a. Active Referrals by Date
+ ;;         b. CHS Status Report for Referrals
+ ;;         c. Referral Review Report - By Time Period
+ ;;         d. General Retrieval
+ ;;      8. R&S-New Appointment Letter
+ ;;      9. R&S and GUI-Added new standard Medical Priorities
+ ;;     10. GUI-Screen added UEI to Vendor Search option
+ ;;     11. GUI-Screen added Primary Care provider column
+ ;;     12. GUI-Screen added Additional Referral notes
+ ;;     13. GUI-Screen added Acknowledge Date column
+ ;;     14. GUI-Included Direct Email lookup in the Location file
+ ;;     15. GUI-Display Direct Email dialog
+ ;;     16. GUI-Display of secondary referral notes
+ ;;     17. GUI-Check for special characters in Priority field
+ ;;     18. GUI-Remove ability to close referral
  ;;
  ;;###
  ;
@@ -146,38 +169,39 @@ GREET ;;To add to mail message.
  ;;You need do nothing in response to this message.
  ;;  
  ;;Questions about this Patch, which is a product of the RPMS
- ;;Patches, can be directed to the Help Desk.
- ;;Please refer to Patch "bmc*4.0*13".
+ ;;Patchs can be directed to the OIT Support Center, at
+ ;;505-248-4371 or via e-mail to support@ihs.gov.
+ ;;Please refer to Patch "bmc*4.0*16".
  ;;  
  ;;###;NOTE: This line indicates the end of text in this message.
  ;
  ; -----------------------------------------------------
  ; The global location for dictionary audit is:
  ;           ^DD(FILE,0,"DDA")
- ; If the value is "Y", dd audit is on.  Any other value, or the
+ ; If the valuey is "Y", dd audit is on.  Any other value, or the
  ; absence of the node, means dd audit is off.
  ; -----------------------------------------------------
 AUDS ;EP - From KIDS.
- D BMES^XPDUTL("Saving current DD AUDIT settings for files in BMC 4.0 Patch 13")
+ D BMES^XPDUTL("Saving current DD AUDIT settings for files in BMC 4.0 Patch 16")
  D MES^XPDUTL("and turning DD AUDIT to 'Y'.")
- S ^XTMP("BMC4P13",0)=$$FMADD^XLFDT(DT,10)_"^"_DT_"^"_$P($P($T(+1),";",2)," ",3,99)
+ S ^XTMP("BMC4P16",0)=$$FMADD^XLFDT(DT,10)_"^"_DT_"^"_$P($P($T(+1),";",2)," ",3,99)
  NEW BMC
  S BMC=0
  F  S BMC=$O(^XTMP("XPDI",XPDA,"FIA",BMC)) Q:'BMC  D
- . I '$D(^XTMP("BMC4P13",BMC,"DDA")) S ^XTMP("BMC4P13",BMC,"DDA")=$G(^DD(BMC,0,"DDA"))
- . D MES^XPDUTL(" File "_$$RJ^XLFSTR(BMC,12)_" - "_$$LJ^XLFSTR(^XTMP("XPDI",XPDA,"FIA",BMC),30)_"- DD audit was '"_$G(^XTMP("BMC4P13",BMC,"DDA"))_"'"),MES^XPDUTL($$RJ^XLFSTR("Set to 'Y'",69))
+ . I '$D(^XTMP("BMC4P16",BMC,"DDA")) S ^XTMP("BMC4P16",BMC,"DDA")=$G(^DD(BMC,0,"DDA"))
+ . D MES^XPDUTL(" File "_$$RJ^XLFSTR(BMC,12)_" - "_$$LJ^XLFSTR(^XTMP("XPDI",XPDA,"FIA",BMC),30)_"- DD audit was '"_$G(^XTMP("BMC4P16",BMC,"DDA"))_"'"),MES^XPDUTL($$RJ^XLFSTR("Set to 'Y'",69))
  . S ^DD(BMC,0,"DDA")="Y"
  D MES^XPDUTL("DD AUDIT settings saved in ^XTMP(.")
  Q
  ; -----------------------------------------------------
 AUDR ; EP- KIDS ;Restore the file data audit values to their original values.
- D BMES^XPDUTL("Restoring DD AUDIT settings for files in BMC 4.0 Patch 13.")
+ D BMES^XPDUTL("Restoring DD AUDIT settings for files in BMC 4.0 Patch 16.")
  NEW BMC
  S BMC=0
- F  S BMC=$O(^XTMP("BMC4P13",BMC)) Q:'BMC  D
- . S ^DD(BMC,0,"DDA")=^XTMP("BMC4P13",BMC,"DDA")
+ F  S BMC=$O(^XTMP("BMC4P16",BMC)) Q:'BMC  D
+ . S ^DD(BMC,0,"DDA")=^XTMP("BMC4P16",BMC,"DDA")
  . D MES^XPDUTL(" File "_$$RJ^XLFSTR(BMC,12)_" - "_$$LJ^XLFSTR($$GET1^DID(BMC,"","","NAME"),30)_"- DD AUDIT Set to '"_^DD(BMC,0,"DDA")_"'")
- KILL ^XTMP("BMC4P13")
+ KILL ^XTMP("BMC4P16")
  D MES^XPDUTL("DD AUDIT settings restored.")
  Q
  ; -----------------------------------------------------

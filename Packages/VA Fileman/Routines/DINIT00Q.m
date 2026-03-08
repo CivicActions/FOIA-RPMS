@@ -1,155 +1,138 @@
-DINIT00Q ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ;2:03 PM  10 Jan 2013
- ;;22.0;VA FileMan;**169**;Mar 30, 1999;Build 28
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DINIT00Q ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS  [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
- ;;^UTILITY(U,$J,.84,9201,2,85,0)
- ;;=     To SCROLL RIGHT, press the ARROW RIGHT key.
- ;;^UTILITY(U,$J,.84,9201,2,86,0)
+ ;;^UTILITY(U,$J,.84,9006,2,2,0)
+ ;;=be entered without a leading up-arrow, and cannot begin with "DI".
+ ;;^UTILITY(U,$J,.84,9006,3,0)
+ ;;=^.845^1^1
+ ;;^UTILITY(U,$J,.84,9006,3,1,0)
+ ;;=1^Internal parameter indicating the maximum number of characters allowed for routine namespace.
+ ;;^UTILITY(U,$J,.84,9006,4,0)
+ ;;=^.847P^^0
+ ;;^UTILITY(U,$J,.84,9006,5,0)
+ ;;=^.841^4^4
+ ;;^UTILITY(U,$J,.84,9006,5,1,0)
+ ;;=DIU0^6
+ ;;^UTILITY(U,$J,.84,9006,5,2,0)
+ ;;=DIKZ^ 
+ ;;^UTILITY(U,$J,.84,9006,5,3,0)
+ ;;=DIPZ^ 
+ ;;^UTILITY(U,$J,.84,9006,5,4,0)
+ ;;=DIEZ^ 
+ ;;^UTILITY(U,$J,.84,9014,0)
+ ;;=9014^3^^11^
+ ;;^UTILITY(U,$J,.84,9014,1,0)
+ ;;=^^1^1^2930706^^^^
+ ;;^UTILITY(U,$J,.84,9014,1,1,0)
+ ;;=Help prompt for compiling sort templates.
+ ;;^UTILITY(U,$J,.84,9014,2,0)
+ ;;=^^3^3^2931110^
+ ;;^UTILITY(U,$J,.84,9014,2,1,0)
+ ;;=If YES is entered,
+ ;;^UTILITY(U,$J,.84,9014,2,2,0)
+ ;;=the Sort logic will be compiled into a routine at the
+ ;;^UTILITY(U,$J,.84,9014,2,3,0)
+ ;;=time the template is used in a FileMan Sort/Print.
+ ;;^UTILITY(U,$J,.84,9014,3,0)
+ ;;=^.845^^0
+ ;;^UTILITY(U,$J,.84,9014,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,9014,5,1,0)
+ ;;=DIOZ^ENCU
+ ;;^UTILITY(U,$J,.84,9019,0)
+ ;;=9019^3^^11^
+ ;;^UTILITY(U,$J,.84,9019,1,0)
+ ;;=^^1^1^2931110^^^^
+ ;;^UTILITY(U,$J,.84,9019,1,1,0)
+ ;;=Help prompt for Uncompiling sort templates.
+ ;;^UTILITY(U,$J,.84,9019,2,0)
+ ;;=^^3^3^2931110^
+ ;;^UTILITY(U,$J,.84,9019,2,1,0)
+ ;;=If YES is entered,
+ ;;^UTILITY(U,$J,.84,9019,2,2,0)
+ ;;=the Sort logic for this template will NOT be compiled into a
+ ;;^UTILITY(U,$J,.84,9019,2,3,0)
+ ;;=routine during the time it is used by a FileMan sort/print.
+ ;;^UTILITY(U,$J,.84,9019,3,0)
+ ;;=^.845^^0
+ ;;^UTILITY(U,$J,.84,9019,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,9019,5,1,0)
+ ;;=DIOZ^ENCU
+ ;;^UTILITY(U,$J,.84,9024,0)
+ ;;=9024^3^^11^
+ ;;^UTILITY(U,$J,.84,9024,1,0)
+ ;;=^^2^2^2931105^
+ ;;^UTILITY(U,$J,.84,9024,1,1,0)
+ ;;=Help for the POST-SELECTION ACTION field for a file.  This entry is put
+ ;;^UTILITY(U,$J,.84,9024,1,2,0)
+ ;;=in from the Utility option to edit a file.
+ ;;^UTILITY(U,$J,.84,9024,2,0)
+ ;;=^^1^1^2931105^^^
+ ;;^UTILITY(U,$J,.84,9024,2,1,0)
+ ;;=This code will be executed whenever an entry is selected from the file.
+ ;;^UTILITY(U,$J,.84,9024,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,9024,5,1,0)
+ ;;=DIU0^6
+ ;;^UTILITY(U,$J,.84,9025,0)
+ ;;=9025^3^^11^
+ ;;^UTILITY(U,$J,.84,9025,1,0)
+ ;;=^^1^1^2931105^^
+ ;;^UTILITY(U,$J,.84,9025,1,1,0)
+ ;;=General help for MUMPS type fields.
+ ;;^UTILITY(U,$J,.84,9025,2,0)
+ ;;=^^1^1^2931105^
+ ;;^UTILITY(U,$J,.84,9025,2,1,0)
+ ;;=Enter a line of standard MUMPS code.
+ ;;^UTILITY(U,$J,.84,9025,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,9025,5,1,0)
+ ;;=DIOU^6
+ ;;^UTILITY(U,$J,.84,9026,0)
+ ;;=9026^3^^11
+ ;;^UTILITY(U,$J,.84,9026,1,0)
+ ;;=^^3^3^2931105^^
+ ;;^UTILITY(U,$J,.84,9026,1,1,0)
+ ;;=The DD for the file of files is not completely FileMan compatible.  This
+ ;;^UTILITY(U,$J,.84,9026,1,2,0)
+ ;;=is the standard help prompt for the LOOK-UP PROGRAM field on the file of
+ ;;^UTILITY(U,$J,.84,9026,1,3,0)
+ ;;=files.  Prompt appears when file attributes are being edited.
+ ;;^UTILITY(U,$J,.84,9026,2,0)
+ ;;=^^2^2^2931105^^
+ ;;^UTILITY(U,$J,.84,9026,2,1,0)
+ ;;=This special lookup routine will be executed instead of the standard
+ ;;^UTILITY(U,$J,.84,9026,2,2,0)
+ ;;=FileMan lookup logic, whenever a call is made to ^DIC.
+ ;;^UTILITY(U,$J,.84,9026,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,9026,5,1,0)
+ ;;=DIU0^6
+ ;;^UTILITY(U,$J,.84,9027,0)
+ ;;=9027^3^^11
+ ;;^UTILITY(U,$J,.84,9027,1,0)
+ ;;=^^3^3^2931105^
+ ;;^UTILITY(U,$J,.84,9027,1,1,0)
+ ;;=The DD for the file of files is not completely FileMan compatible.  This
+ ;;^UTILITY(U,$J,.84,9027,1,2,0)
+ ;;=is the standard help prompt for the CROSS-REFERENCE ROUTINE field on the
+ ;;^UTILITY(U,$J,.84,9027,1,3,0)
+ ;;=file of files.  Prompt appears when file attributes are being edited.
+ ;;^UTILITY(U,$J,.84,9027,2,0)
+ ;;=^^5^5^2931109^
+ ;;^UTILITY(U,$J,.84,9027,2,1,0)
+ ;;=If a NEW routine name is entered, but the cross-references are not
+ ;;^UTILITY(U,$J,.84,9027,2,2,0)
+ ;;=compiled at this time, the routine name will be automatically deleted.
+ ;;^UTILITY(U,$J,.84,9027,2,3,0)
  ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,87,0)
- ;;=     To SCROLL LEFT, press the ARROW LEFT key.
- ;;^UTILITY(U,$J,.84,9201,2,88,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,89,0)
- ;;=     Try pressing these keys at this time and observe the behavior. Get a
- ;;^UTILITY(U,$J,.84,9201,2,90,0)
- ;;=     feel for 'browsing' through a document.  Press the arrow down key a
- ;;^UTILITY(U,$J,.84,9201,2,91,0)
- ;;=     few times, then press the arrow up key.  Also notice that the 'Line>'
- ;;^UTILITY(U,$J,.84,9201,2,92,0)
- ;;=     and 'Screen>' indicator numbers are changing. To see more of this
- ;;^UTILITY(U,$J,.84,9201,2,93,0)
- ;;=     text keep pressing the ARROW DOWN key.  Now try the arrow right key,
- ;;^UTILITY(U,$J,.84,9201,2,94,0)
- ;;=     then the arrow left key.  Notice that the 'Col>' indicator number is
- ;;^UTILITY(U,$J,.84,9201,2,95,0)
- ;;=     also changing.  This shows what column the left most edge of the
- ;;^UTILITY(U,$J,.84,9201,2,96,0)
- ;;=     document is on.  As you can see, the VA FileMan Browser is like a
- ;;^UTILITY(U,$J,.84,9201,2,97,0)
- ;;=     window placed over a document. You are in control of this window
- ;;^UTILITY(U,$J,.84,9201,2,98,0)
- ;;=     which moves over the document by pressing the functional key
- ;;^UTILITY(U,$J,.84,9201,2,99,0)
- ;;=     sequences.  Here are a few more functions.
- ;;^UTILITY(U,$J,.84,9201,2,100,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,101,0)
- ;;=     To PAGE DOWN one screen at one time, press the NEXT SCREEN key, PAGE
- ;;^UTILITY(U,$J,.84,9201,2,102,0)
- ;;=     DOWN or PF1 followed by the ARROW DOWN key, depending on what kind of
- ;;^UTILITY(U,$J,.84,9201,2,103,0)
- ;;=     CRT or workstation that is being used.
- ;;^UTILITY(U,$J,.84,9201,2,104,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,105,0)
- ;;=     To PAGE UP one screen at one time, press the PREV SCREEN key, PAGE UP
- ;;^UTILITY(U,$J,.84,9201,2,106,0)
- ;;=     or PF1 followed by the ARROW UP key, depending on what kind of CRT or
- ;;^UTILITY(U,$J,.84,9201,2,107,0)
- ;;=     workstation that is being used.
- ;;^UTILITY(U,$J,.84,9201,2,108,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,109,0)
- ;;=     To return to the TOP, back to the beginning of the document, press
- ;;^UTILITY(U,$J,.84,9201,2,110,0)
- ;;=     the <PF1> key followed by the letter 'T'.
- ;;^UTILITY(U,$J,.84,9201,2,111,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,112,0)
- ;;=     To go to the BOTTOM, end of the document, press the <PF1> key
- ;;^UTILITY(U,$J,.84,9201,2,113,0)
- ;;=     followed by the letter 'B'.
- ;;^UTILITY(U,$J,.84,9201,2,114,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,115,0)
- ;;=     To GOTO a specific screen, line or column press the <PF1> key
- ;;^UTILITY(U,$J,.84,9201,2,116,0)
- ;;=     followed by the letter 'G'.  This will cause a prompt to be displayed
- ;;^UTILITY(U,$J,.84,9201,2,117,0)
- ;;=     where a screen, line or column number can be entered preceded by a
- ;;^UTILITY(U,$J,.84,9201,2,118,0)
- ;;=     'S' , 'L' or 'C'.  The default is screen, meaning that the 'S' is
- ;;^UTILITY(U,$J,.84,9201,2,119,0)
- ;;=     optional when entering a screen number.  10 or S10 will go to screen
- ;;^UTILITY(U,$J,.84,9201,2,120,0)
- ;;=     10, if screen 10 is a valid screen.  L99 will go to line 99 and C33
- ;;^UTILITY(U,$J,.84,9201,2,121,0)
- ;;=     will go to column 33.
- ;;^UTILITY(U,$J,.84,9201,2,122,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,123,0)
- ;;=     To FIND a string of characters, on a line, press the <PF1> key
- ;;^UTILITY(U,$J,.84,9201,2,124,0)
- ;;=     followed by the letter 'F' or 'FIND' key.  A prompt will appear where
- ;;^UTILITY(U,$J,.84,9201,2,125,0)
- ;;=     a search string of characters can be entered.  The Find facility will
- ;;^UTILITY(U,$J,.84,9201,2,126,0)
- ;;=     search the document and immediately stop when it finds a match and
- ;;^UTILITY(U,$J,.84,9201,2,127,0)
- ;;=     'Goto' the line/screen.  The matched text will be highlighted in
- ;;^UTILITY(U,$J,.84,9201,2,128,0)
- ;;=     reverse video, if available, so it can be found easily.  However, if
- ;;^UTILITY(U,$J,.84,9201,2,129,0)
- ;;=     a string contains two or more words, matching will only be done if
- ;;^UTILITY(U,$J,.84,9201,2,130,0)
- ;;=     the words are found on the same line.  The default direction of the
- ;;^UTILITY(U,$J,.84,9201,2,131,0)
- ;;=     search is down.  This can be controlled by using the ARROW UP or
- ;;^UTILITY(U,$J,.84,9201,2,132,0)
- ;;=     ARROW DOWN keys instead of the RETURN key to terminate the search
- ;;^UTILITY(U,$J,.84,9201,2,133,0)
- ;;=     string.
- ;;^UTILITY(U,$J,.84,9201,2,134,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,135,0)
- ;;=     To, NEXT FIND, find the next occurrence of the same search string,
- ;;^UTILITY(U,$J,.84,9201,2,136,0)
- ;;=     press the letter 'N' or <PF1> followed by the letter 'N'. The FIND
- ;;^UTILITY(U,$J,.84,9201,2,137,0)
- ;;=     facility keeps track of the last find string including the direction
- ;;^UTILITY(U,$J,.84,9201,2,138,0)
- ;;=     and continues searching through the document and brings up the next
- ;;^UTILITY(U,$J,.84,9201,2,139,0)
- ;;=     screen.  If no match is found a message appears indicating this and
- ;;^UTILITY(U,$J,.84,9201,2,140,0)
- ;;=     the screen is repainted at it's original location.
- ;;^UTILITY(U,$J,.84,9201,2,141,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,142,0)
- ;;=     To rePAINT the screen, press the <PF1> key followed by the letter
- ;;^UTILITY(U,$J,.84,9201,2,143,0)
- ;;=     'P'.
- ;;^UTILITY(U,$J,.84,9201,2,144,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,145,0)
- ;;=     To PRINT the current document, press <PF1><PF1> followed by the
- ;;^UTILITY(U,$J,.84,9201,2,146,0)
- ;;=     letter 'P'. You will be prompted whether to print a header on each
- ;;^UTILITY(U,$J,.84,9201,2,147,0)
- ;;=     page, whether to wrap the text at word bounaries, whether to
- ;;^UTILITY(U,$J,.84,9201,2,148,0)
- ;;=     interpret wp windows (|), and for a DEVICE to print to.
- ;;^UTILITY(U,$J,.84,9201,2,149,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,150,0)
- ;;=     To SWITCH to another document press the <PF1> key followed by the
- ;;^UTILITY(U,$J,.84,9201,2,151,0)
- ;;=     letter 'S'.  This will allow the selection of another file, (wp)field
- ;;^UTILITY(U,$J,.84,9201,2,152,0)
- ;;=     and entry.  The document is put on an active list and Browse
- ;;^UTILITY(U,$J,.84,9201,2,153,0)
- ;;=     switches to the newly selected document.  Subsequent use of Switch
- ;;^UTILITY(U,$J,.84,9201,2,154,0)
- ;;=     will allow choosing from the active list if desired or branch to
- ;;^UTILITY(U,$J,.84,9201,2,155,0)
- ;;=     select file, (wp)field and entry prompts. This function CAN BE
- ;;^UTILITY(U,$J,.84,9201,2,156,0)
- ;;=     RESTRICTED depending on how the running application calls the Browser
- ;;^UTILITY(U,$J,.84,9201,2,157,0)
- ;;=     utility.
- ;;^UTILITY(U,$J,.84,9201,2,158,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,159,0)
- ;;=     To RETURN to the previous document after using Switch or Help, press
+ ;;^UTILITY(U,$J,.84,9027,2,4,0)
+ ;;=If the routine name is deleted, the cross-references are considered
+ ;;^UTILITY(U,$J,.84,9027,2,5,0)
+ ;;=uncompiled, and FileMan will not use the routine for re-indexing.
+ ;;^UTILITY(U,$J,.84,9027,5,0)
+ ;;=^.841^1^1

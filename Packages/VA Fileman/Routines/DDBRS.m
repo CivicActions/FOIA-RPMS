@@ -1,5 +1,7 @@
-DDBRS ;SFISC/DCL-SET UP SPLIT SCREEN ;NOV 04, 1996@13:55
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDBRS ;SFISC/DCL-SET UP SPLIT SCREEN ;09:27 AM  13 Sep 1994; [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 TB(IOTM,IOBM,TA) ;Set Top and Bottom Margins in Target Array
  ;pass IOTM, IOBM and TA all by reference **
@@ -36,7 +38,7 @@ INIT(SUB,TA) ;Finish saving variables for TA pass TA by reference **
  N I G:$G(SUB)]"" SUB
  F SUB=1,2 D SUB
  Q
-SUB F I="DDBSRL","DDBHDR","DDBHDRC","DDBTL","DDBSA","DDBSF","DDBST","DDBZN","DDBDM","DDBC","DDBPSA","DDBRPE","DDBPMSG","DDBTPG" S TA(SUB,I)=@I
+SUB F I="DDBSRL","DDBHDR","DDBTL","DDBSA","DDBSF","DDBST","DDBZN","DDBDM","DDBC","DDBPSA","DDBRPE","DDBPMSG","DDBTPG" S TA(SUB,I)=@I
  S TA(SUB,"DDBL")=+$G(DDBL)
  Q
  ;

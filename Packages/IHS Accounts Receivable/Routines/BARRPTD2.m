@@ -1,14 +1,16 @@
 BARRPTD2 ; IHS/SD/pkd - Payment Summary Report by TDN or Date Range ;06/09/2010
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**19**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,29**;OCT 26, 2005;Build 66
  ; 
  ; IHS/SD/PKD - 6/9/10 - V1.8*19 based on BARRPRP* routines
  ;      Routine created
+ ;;IHS/SD/CPC - CR10586 BAR*1.8*29
  Q
  ; *********************************************************************
 PRINT ;
  S BAR(132)=1,BAR(133)=1  ; Width of printing parameters ;pkd
  N LOC S LOC=$O(^TMP($J,"BAR-PTD"))
- I LOC="" S LOC=DUZ(2)  ; Need LOC for Headers 
+ ;I LOC="" S LOC=DUZ(2)  ; Need LOC for Headers
+ I +LOC=0 S LOC=DUZ(2)  ; Need LOC for Headers  ;IHS/SD/CPC - CR10586 BAR*1.8*29
  I BARTEXT&($D(^TMP($J,"BAR-PTD"))) D FILEHDR I 1
  E  D SETHDR
  I '$D(^TMP($J,"BAR-PTD")) D  Q           ; No data - quit
@@ -39,7 +41,7 @@ SETHDR ;
  . S BAR("LVL")=BAR("LVL")+1
  . S BAR("HD",BAR("LVL"))="FOR TDNs As Entered  "
  I $G(LOC) S DUZ(2)=LOC  ; if >1 location being processed
- S BAR("HD",BAR("LVL"))=BAR("HD",BAR("LVL"))_"                      "_"LOCATION: "_$P(^BAR(90052.05,DUZ(2),LOC,0),U,4)
+ S BAR("HD",BAR("LVL"))=$G(BAR("HD",BAR("LVL")))_"                      "_"LOCATION: "_$P(^BAR(90052.05,DUZ(2),LOC,0),U,4)  ; I +LOC=0 S LOC=DUZ(2)  ;IHS/SD/CPC - CR10586
  ;
  S BAR("LVL")=BAR("LVL")+1
  S BAR("HD",BAR("LVL"))="BATCHED AMOUNT:  $"_$J($FN($P($G(^TMP($J,"BAR-PTD")),U,2),",",2),15)
@@ -70,8 +72,8 @@ DETAIL  ; Print per LOCATION
  ;
 DTDET  ;
  ; Print Report - subTotals on Date Change
- ; 				  Location Change
- ; 				  SORT1 = DATE  SORT2 = TDN
+ ; Location Change
+ ; SORT1 = DATE  SORT2 = TDN
  I 'BARTEXT D HDB^BARRPSRB
  S SORT1=""
  F  S SORT1=$O(^TMP($J,"BAR-PTD",LOC,SORT1)) Q:SORT1=""  D  Q:$G(QUIT)

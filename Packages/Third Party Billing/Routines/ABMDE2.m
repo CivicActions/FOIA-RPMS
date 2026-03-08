@@ -1,16 +1,16 @@
 ABMDE2 ; IHS/ASDST/DMJ - Edit Page 2 - PAYERS ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**6,8,10,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8,10,21,37**;NOV 12, 2009;Build 739
  ;
- ;IHS/SD/SDR - 10/29/02 - V2.5 P2 - NHA-0402-180088
- ;    Modified so it would allow the deletion of insurer from page 2 if accident or work related claim.
- ;IHS/SD/SDR - v2.5 p8 - IM15307/IM14092 - Modified to display MSP error on page if applicable
- ;IHS/SD/SDR - v2.5 p8 - task 8 - Added code to display replacment insurer
- ;IHS/SD/SDR - v2.5 p9 - IM19040 - Added ability to delete insurers all the time
- ;IHS/SD/SDR - v2.5 p10 - IM20593 - Changed default for MSP reason to NO MSP ON FILE
+ ;IHS/SD/SDR 2.5*2 10/29/02 NHA-0402-180088 Modified so it would allow the deletion of insurer from page 2 if accident or work related claim.
+ ;IHS/SD/SDR 2.5*8 IM15307/IM14092 Modified to display MSP error on page if applicable
+ ;IHS/SD/SDR 2.5*8 task 8 Added code to display replacment insurer
+ ;IHS/SD/SDR 2.5*9 IM19040 Added ability to delete insurers all the time
+ ;IHS/SD/SDR 2.5*10 IM20593 Changed default for MSP reason to NO MSP ON FILE
  ;
- ;IHS/SD/SDR - 2.6*21 - HEAT131494 - Changed code to populate priority for added insurer.  It wasn't being
+ ;IHS/SD/SDR 2.6*21 HEAT131494 Changed code to populate priority for added insurer.  It wasn't being
  ;  populated so insurer wasn't showing up on display.
- ;IHS/SD/SDR - 2.6*21 - HEAT238757 - Fixed so ADD option shows up all the time, nut just when an accident/employment related claim.
+ ;IHS/SD/SDR 2.6*21 HEAT238757 Fixed so ADD option shows up all the time, nut just when an accident/employment related claim.
+ ;IHS/SD/SDR 2.6*37 ADO76009 Added field to capture which PI entry it is, since pt could have same PI twice
  ;
 OPT ;
  K ABM,ABME,ABMV,ABMG
@@ -160,6 +160,15 @@ LOOP ;LOOP HERE
  F ABM("I")=1:1 S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"C",ABM)) Q:'ABM  D
  .S ABM("XIEN")=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"C",ABM,""))
  .S ABM("X")=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABM("XIEN"),0),U)
+ .;start new abm*2.6*37 IHS/SD/SDR ADO76009
+ .;this is to keep track of which entry it is, since the patient can have multiple entries for the same PI
+ .I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABM("XIEN"),0)),U,3)="I" D
+ ..S DIE="ABMDCLM(DUZ(2),"
+ ..S DA=ABMP("CDFN")
+ ..I +$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABM("XIEN"),0)),U,8)=0 S DR=".081////@" D ^DIE Q  ;PI insurers only; the rest are ok
+ ..S DR=".081////"_$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABM("XIEN"),0)),U,8)
+ ..D ^DIE
+ .;end new abm*2.6*37 IHS/SD/SDR ADO76009
  .D INS
  ;S ABMZ("DR2")=";.02////"_(ABMZ("LNUM")+1)  ;abm*2.6*21 IHS/SD/SDR HEAT131494
  S ABMZ("DR")=ABMZ("DR")_";.02////"_(ABMZ("LNUM")+1)  ;abm*2.6*21 IHS/SD/SDR HEAT131494
@@ -168,7 +177,7 @@ LOOP ;LOOP HERE
  S ABME("CONT")=""
  S ABM("E")=0
  F  S ABM("E")=$O(ABMG(ABM("E"))) Q:'ABM("E")  D
- . S ABME(ABM("E"))=ABMG(ABM("E"))
+ .S ABME(ABM("E"))=ABMG(ABM("E"))
  D ^ABMDERR
  K ABME("CONT")
  Q

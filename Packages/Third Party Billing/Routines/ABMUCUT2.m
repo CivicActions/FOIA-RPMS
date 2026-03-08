@@ -1,9 +1,11 @@
 ABMUCUT2 ; IHS/SD/SDR - 3PB/UFMS Cashiering Utilities - Part 2
- ;;2.6;IHS Third Party Billing;**14,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing;**14,21,42**;NOV 12, 2009;Build 789
  ; New routine - abm*2.6*14
  ; Cashiering Utilities
- ;IHS/SD/SDR - 2.6*21 - HEAT121470 - Updated to use a new x-ref for session status.  Taking
+ ;IHS/SD/SDR 2.6*21 HEAT121470 Updated to use a new x-ref for session status. Taking
  ;    too long to look through all sessions and causing <STORE>FINDACLS+22^ABMUCUTL 
+ ;IHS/SD/SDR 2.6*42 ADO89471 Removed limit check when displaying closed sessions; closed sessions
+ ;  should display all the time when exporting so nothing gets skipped
  ;
 FINDAOPN ;EP - look for all open sessions
  ; 0 returned means no open sessions found
@@ -72,7 +74,7 @@ FINDACLS ;EP - look for all closed sessions
  .F  S ABMDUZ=$O(^ABMUCASH(ABMLOC,"AC",ABMSTAT,ABMDUZ)) Q:+ABMDUZ=0  D
  ..S ABMSDT=0
  ..F  S ABMSDT=$O(^ABMUCASH(ABMLOC,"AC",ABMSTAT,ABMDUZ,ABMSDT)) Q:+ABMSDT=0  D  Q:ABMFD'=0
- ...I $G(ABMSESSL)'="C" Q:ABMSDT<ABMDLIMT
+ ...;I $G(ABMSESSL)'="C" Q:ABMSDT<ABMDLIMT  ;abm*2.6*42 IHS/SD/SDR ADO89471
  ...I $P($G(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMSDT,0)),U,3)="" Q
  ...I $G(ABMFLG)="CLOSED",($P($G(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMSDT,0)),U,4))'="C" Q
  ...S ABMO(ABMSDT,ABMDUZ,ABMSDT)=$P($G(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMSDT,0)),U,4)_"^"_$P($G(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMSDT,0)),U,3)
@@ -82,7 +84,7 @@ FINDACLS ;EP - look for all closed sessions
  F ABMSTAT="C","T","R" D
  .S ABMSDT=0
  .F  S ABMSDT=$O(^ABMUCASH(ABMLOC,"AC",ABMSTAT,1,ABMSDT)) Q:+ABMSDT=0  D  Q:ABMFD'=0
- ..I $G(ABMSESSL)'="C" Q:ABMSDT<ABMDLIMT
+ ..;I $G(ABMSESSL)'="C" Q:ABMSDT<ABMDLIMT  ;abm*2.6*42 IHS/SD/SDR ADO89471
  ..I $P($G(^ABMUCASH(ABMLOC,20,1,20,ABMSDT,0)),U,3)="" Q
  ..I $G(ABMFLG)="CLOSED",($P($G(^ABMUCASH(ABMLOC,20,1,20,ABMSDT,0)),U,4))'="C" Q
  ..S ABMO(ABMSDT,"POS",ABMSDT)=$P($G(^ABMUCASH(ABMLOC,20,1,20,ABMSDT,0)),U,4)_"^"_$P($G(^ABMUCASH(ABMLOC,20,1,20,ABMSDT,0)),U,3)

@@ -1,5 +1,5 @@
 AMHLEGP ; IHS/CMI/LAB - BH GROUP FORM DATA ENTRY ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4,5,6**;JAN 27, 2003
  ;
  D ^AMHLEIN
  D INFORM
@@ -153,7 +153,7 @@ NUM ;
  ;Q:$D(DIRUT)
  ;S AMHNUM=Y
  K AMHEFT,AMHEFTH
- W !! S DIR(0)="S^F:Full Encounter Form;S:Suppressed Encounter Form;B:Both a Suppressed & Full;T:2 copies of the Suppressed;E:2 copies of the Full"
+ W !! S DIR(0)="S^F:Full Encounter Form;S:Suppress Subjective/Objective/Chief Complaint Encounter Form;B:Both a Suppressed&Full;T:2 copies of the Suppressed;E:2 copies of the Full"
  S DIR("B")=$S($P(^AMHSITE(DUZ(2),0),U,23)]"":$P(^AMHSITE(DUZ(2),0),U,23),1:"B") K DA D ^DIR K DIR
  Q:$D(DIRUT)
  S (AMHEFT,AMHEFTH)=Y

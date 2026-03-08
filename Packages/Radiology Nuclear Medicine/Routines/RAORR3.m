@@ -1,11 +1,14 @@
-RAORR3 ;HISC/CAH,FPT,GJC AISC/DMK-OE/RR results display ;9/12/94  11:12
- ;;5.0;Radiology/Nuclear Medicine;;Mar 16, 1998
+RAORR3  ;IHS/HQW/SCR - Finds Service, Ward and Bed Section of Inpatient  [ 11/01/2001  11:12 AM ]
+ ;;4.0;RADIOLOGY;**11**;Nov 20,1997
+ ;
+ ;Routine created for VA patch **11** IHS/HQW/SCR - 8/2/01
+ ;
  ;ORACTION=8
  ;$P(XQORNOD(0),"^",3)="Results Display"
- ;Called from RAORD2
+ ;Called from RAORD2     
  ;SET ^TMP($J,"RAEX",1)=Variables needed to display/print report
  N %
- S RADTE=9999999.9999-RADTI
+ S RADTE=9999999.999-RADTI
  S RANME=$P($G(^DPT(RADFN,0)),"^"),DFN=RADFN,RASSN=$$SSN^RAUTL
  S Y=RADTE D D^RAUTL S RADATE=Y
  S RACN=+RA(0),RAPRC=$P($G(^RAMIS(71,+$P(RA(0),"^",2),0)),"^"),RAPRC=$S(RAPRC="":"Unknown",1:RAPRC)
@@ -14,6 +17,6 @@ RAORR3 ;HISC/CAH,FPT,GJC AISC/DMK-OE/RR results display ;9/12/94  11:12
  S X=^TMP($J,"RAEX",1),RADUP(1)=$P(X,"^",10)_"^"_$P(X,"^",8)
  ;
  I $S($D(ZTQUEUED):1,$E(IOST,1,2)'="C-":1,1:0) S RAMIE=1 D DQ^RAORDQ
- I $E(IOST,1,2)="C-" D OERR^RART1
+ I $E(IOST,1,2)="C-" D OERR^RART
  K RA,RACI,RACNI,RADATE,RAMIE,RANME,RASSN,RAST,RADIV,RADIVPAR,RADPT0,RADTI,RAORD0,RAOSTS,RADFN,RAOIFN,^TMP($J,"RAEX")
  Q

@@ -1,0 +1,340 @@
+BLRCVDCB ;IHS/CMI/MAW - BLR Create COVID-19 Test for Abbott ID NOW Binax
+ ;;5.2;IHS LABORATORY;**1048**;APRIL 07,2020;Build 5
+ Q
+ ;
+MAIN(LAB) ;-- this is the main routine driver
+ N ATS
+ D EOJ
+ I $O(^LAB(60,"B","COVID-19 AG(Abbott BINAXNOW)",0)) D  Q
+ . W !,"COVID-19 AG(Abbott BINAXNOW) test already exists, will not install"
+ D TESTS
+ D CNTTST(LAB)
+ D LOOP(LAB)
+ D REST(LAB)
+ D ADDSPC("NASAL CAVITY","_PROCEDURAL CONTROL","35522-2","Valid")
+ S ATS=$O(^LAB(60,"B","_PROCEDURAL CONTROL",0))
+ I $G(ATS) D
+ . D CS(ATS,"NASAL SWAB")
+ . N FDA,FIENS,FERR
+ . S FIENS=ATS_","
+ . S FDA(60,FIENS,10)=0
+ . D FILE^DIE("K","FDA","FERR(1)")
+ D EOJ
+ Q
+ ;
+TESTS ;-- test subscript
+ ;LAB^ORDCD^RESC^DATATYPE^ORDERNAME^RESULTNAME^COLSAMP^SPEC^PRINTNAME^LOINC^CPT^QUALRES^SYNONYM^REFLOW^REFHIGH^ORDERLOINC^CPTMODIFIER
+ S COVID19BP="ABBOTT^COVID19AG^^^COVID-19 AG(Abbott BINAXNOW)^^NASAL SWAB*NASAL CAVITY*SWAB^^BINAX^^U0002*87635^^COVID19^^^94558-4^QW"
+ S COVID19BA="ABBOTT^COVID19AG^COVIDABBIN^S*P:POSITIVE;N:NEGATIVE;I:INVALID;^COVID-19 AG(ABBOTT BINAXNOW)^_COVID-19 AG(Abbott BinaxNOW)^NASAL SWAB*NASAL CAVITY*SWAB^NASAL CAVITY^COVID BINAX^94558-4^^P*POS^^Negative"
+ S PROCCONT="ABBOTT^COVID19AG^PROCCONT^S*V:Valid;^COVID-19 AG(ABBOTT BINAXNOW)^_PROCEDURAL CONTROL^NASAL SWAB*NASAL CAVITY*SWAB^NASAL^^^^^^^Valid"
+ S COVID19GP="ABBOTT^COVID19G^^^COVID-19 AG (GENERIC) TEST^^NASAL SWAB*NASAL CAVITY*SWAB^^COVID AG^^^^COVID19^^^^"
+ S COVID19GA="ABBOTT^COVID19G^COVIDAGGEN^S*P:POSITIVE;N:NEGATIVE;I:INVALID;^COVID-19 AG (GENERIC) TEST^_COVID-19 Antigen (GENERIC) TEST^NASAL SWAB*NASAL CAVITY*SWAB^NASAL CAVITY^_COVID AG TEST^^^^^Negative"
+ S PROCCONTG="ABBOTT^COVID19G^PROCCONT^S*V:Valid;^COVID-19 AG (GENERIC) TEST^_PROCEDURAL CONTROL^NASAL SWAB*NASAL CAVITY*SWAB^NASAL^^^^^^^Valid"
+ F I="COVID19BP","COVID19BA","PROCCONT","COVID19GP","COVID19GA","PROCCONTG" D
+ . D SETTESTS(@I)
+ Q
+ ;D 
+SETTESTS(TEST)  ;setup the tests needed for building
+ I $P(TEST,U,3)="" D  Q
+ . S ^BLRLTMP($P(TEST,U),$P(TEST,U,2))=$P(TEST,U,2,16)
+ S ^BLRLTMP($P(TEST,U),$P(TEST,U,2),$P(TEST,U,3))=$P(TEST,U,2,16)
+ Q
+ ;
+CNTTST(R) ;-- loop the BLRLTMP global and determine panels and set the first piece to P or A
+ N CDA,CIEN,FRES,DONE
+ S CDA=0 F  S CDA=$O(^BLRLTMP(R,CDA)) Q:CDA=""  D
+ . K FRES,DONE
+ . S CIEN=0 F  S CIEN=$O(^BLRLTMP(R,CDA,CIEN)) Q:CIEN=""!($G(DONE))  D
+ .. I $G(FRES)="" S FRES=CIEN
+ .. S:'$D(BLRLAB(CDA)) BLRLAB(CDA)=0
+ .. S BLRLAB(CDA)=BLRLAB(CDA)+1
+ Q
+ ;
+CHKPAN(OC)  ;-- see if panel
+ I $G(BLRLAB(OC))=1 Q "BOTH"
+ Q "CHILD"
+ ;
+LOOP(RL) ;-- loop through the stored data and create tests
+ ;build all atomic tests first, then build panels with children just in case children have already been built as atomic tests
+ N ORD,RES,DATA,BOTH,CDA,PORD,PRES,PDATA
+ S ORD=0 F  S ORD=$O(^BLRLTMP(RL,ORD)) Q:ORD=""  D
+ . Q:$G(BLRLAB(ORD))'=1
+ . S RES=0 F  S RES=$O(^BLRLTMP(RL,ORD,RES)) Q:RES=""  D
+ .. S DATA=$G(^BLRLTMP(RL,ORD,RES))
+ .. D DATANAME(RL,ORD,RES,$P(DATA,U,3))
+ .. S DATA=$G(^BLRLTMP(RL,ORD,RES))
+ .. Q:$O(^LAB(60,"B",$P(DATA,U,5),0))  ;already there
+ .. D TEST("BOTH",RL,ORD,RES,DATA)
+ S PORD=0 F  S PORD=$O(^BLRLTMP(RL,PORD)) Q:PORD=""  D
+ . Q:BLRLAB(PORD)=1
+ . I $G(^BLRLTMP(RL,PORD))]"" S DATA=$G(^BLRLTMP(RL,PORD)) D TEST("PAN",RL,PORD,"",DATA)
+ . S PRES=0 F  S PRES=$O(^BLRLTMP(RL,PORD,PRES)) Q:PRES=""  D
+ .. ;DATA=ORDC^RESC^DATATYPE^ORDER TEST NAME^RESULT TEST NAME^COLL SAMP^SITE SPECIMEN^PRINT NAME^LOINC^CPT^QUAL RES^SYNONYM^DATANAME^TESTIEN^REFLOW^REFHIGH^ORDERLOINC
+ .. S PDATA=$G(^BLRLTMP(RL,PORD,PRES))
+ .. D DATANAME(RL,PORD,PRES,$P(PDATA,U,3))
+ .. S PDATA=$G(^BLRLTMP(RL,PORD,PRES))
+ .. I $O(^LAB(60,"B",$P(PDATA,U,5),0)) D  Q  ;already there
+ ... S CTST=$O(^LAB(60,"B",$P(PDATA,U,5),0))
+ ... D ADDCH(RL,CTST,PORD)
+ .. D TEST("CHILD",RL,PORD,PRES,PDATA)
+ Q
+ ;
+DATANAME(R,OR,RE,DAT) ;-- create the dataname, always free text
+ N NAME,DNDA,MIN,MAX,DTP,CVAL
+ S DTP=$P(DAT,"*")
+ S NAM=RE
+ I DTP="S" D  Q
+ . S CVAL=$P(DAT,"*",2)
+ . S (X,LRNAME)=NAM,DIC="^DD(63.04,",DIC(0)="XM" D ^DIC I Y>0 S $P(^BLRLTMP(R,OR,RE),U,17)=+Y_"|"_NAM Q
+ . S DA=$S($P($G(^XMB(1,1,"XUS")),U,17):$P(^("XUS"),U,17),1:0)*1000 F I=0:0 S DA=DA+1 Q:'$D(^DD(63.04,DA))
+ . S ^DD(63.04,DA,0)=NAM_"^S^"_CVAL_"^"_DA_";1^Q",^(3)="",^("DT")=DT
+ . S $P(^DD(63.04,0),U,4)=$P(^DD(63.04,0),U,4)+1
+ . S DIK="^DD(63.04,",DA(1)=63.04 D IX1^DIK
+ . S $P(^BLRLTMP(R,OR,RE),U,17)=DA_"|"_NAM
+ I DTP="F" D  Q
+ . S MIN=1
+ . S MAX=30
+ . S (X,LRNAME)=NAM,DIC="^DD(63.04,",DIC(0)="XM" D ^DIC I Y>0 S $P(^BLRLTMP(R,OR,RE),U,17)=+Y_"|"_NAM Q
+ . S DA=$S($P($G(^XMB(1,1,"XUS")),U,17):$P(^("XUS"),U,17),1:0)*1000 F I=0:0 S DA=DA+1 Q:'$D(^DD(63.04,DA))
+ . S ^DD(63.04,DA,0)=NAM_"^F^^"_DA_";1^K:$L(X)>"_MAX_"!($L(X)<"_MIN_") X",^(3)="ANSWER MUST BE "_MIN_"-"_MAX_" CHARACTERS IN LENGTH",^("DT")=DT
+ . S $P(^DD(63.04,0),U,4)=$P(^DD(63.04,0),U,4)+1
+ . S DIK="^DD(63.04,",DA(1)=63.04 D IX1^DIK
+ . S $P(^BLRLTMP(R,OR,RE),U,17)=DA_"|"_NAM
+ Q
+ ;
+TEST(PAN,R,OR,RE,DAT) ;-- build the child test in file 60
+ N PANEL
+ S PANEL=0
+ I PAN="PAN" D  Q:$G(PANEL)  ;dont recreate the panel
+ . N PANI
+ . S PANI=$O(^LAB(60,"B",$P(DAT,U,4),0))
+ . I PANI,$P($G(^LAB(60,PANI,0)),U,3)="B" S PANEL=1
+ N FDA,FERR,FIENS,OTNAM,SPEC,SITE,LOINC,TYPE,HU,PRINT,DN,ONE,TESTIEN,TNAM,RQ,FU
+ S HU=$O(^LAB(62.05,"B","ASAP",0))
+ S DN=$P($P(DAT,U,17),"|")
+ I PAN="CHILD" S OTNAM=$P(DAT,U,5),TYPE="O"
+ I PAN="PAN"!(PAN="BOTH") S OTNAM=$P(DAT,U,4),TYPE="B"
+ S PRINT=$P(DAT,U,8)
+ S SPEC=$P(DAT,U,6)
+ S SITE=$P(DAT,U,7)
+ S LOINC=$P(DAT,U,9)
+ S OLNC=$P(DAT,U,15)
+ S RQ=$O(^LAB(62.07,"B","ORDER COMMENT",0))
+ S FU=$O(^LAB(62.05,"B","ASAP",0))
+ S FDA(60,"+1,",.01)=OTNAM
+ S FDA(60,"+1,",3)=TYPE
+ S FDA(60,"+1,",4)="CH"
+ S FDA(60,"+1,",10)=1
+ S FDA(60,"+1,",17)=HU
+ S FDA(60,"+1,",51)=PRINT
+ I TYPE="B" S FDA(60,"+1,",320)=RQ
+ S FDA(60,"+1,",400)=DN
+ I TYPE="B" D
+ . S FDA(60,"+1,",7)=1
+ . S FDA(60,"+1,",9)=$$SPEC($$UP^XLFSTR(SPEC))
+ . ;S FDA(60,"+1,",18)=FU  not wanted for COVID AG test patch 1048
+ . S FDA(60,"+1,",503)=1
+ . S FDA(60,"+1,",999999902)=$G(OLNC)
+ D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ Q:'$G(FIENS(1))
+ S TESTIEN=$G(FIENS(1))
+ I PAN'="PAN" S $P(^BLRLTMP(R,OR,RE),U,18)=TESTIEN
+ I PAN="PAN" S $P(^BLRLTMP(R,OR),U,18)=TESTIEN
+ D SYN(TESTIEN,$P(DAT,U,12))
+ I PAN="CHILD" D ADDCH(R,TESTIEN,OR,RE,TYPE)
+ I TYPE="O"!(PAN="BOTH") D SITE(TESTIEN,DAT)
+ ;I TYPE="B" D CS(TESTIEN,SPEC)
+ D CS(TESTIEN,SPEC)  ;maw needed for child tests so BLR BEHO functions properly
+ ;D ADDACC(TESTIEN)
+ D SN(TESTIEN,"LAB TEST CREATED IN LAB PATCH 1048, OCTOBER 2020")
+ Q
+ ;
+ADDCH(RL,TST,OR,RE,TY) ;-- add the child test to the panel
+ Q:$G(RE)=$G(OR)  ;don't add the child if test code is the same 06062018
+ ;Q:$G(TY)="O"  ;don't add a child test to a child test
+ N FDA,FIENS,FERR,PANIEN
+ S PANIEN=$P(^BLRLTMP(RL,OR),U,18)
+ Q:$P($G(^LAB(60,PANIEN,0)),U,3)="O"  ;dont add a child to a child
+ S FIENS="+2,"_PANIEN_","
+ S FDA(60.02,FIENS,.01)=TST
+ D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ Q
+ ;
+ADDACC(TS);-- add the accession area
+ N FDA,FIENS,FERR,I
+ S FIENS="+2,"_TS_","
+ S FIENS(2)=CMIDIV
+ S FDA(60.11,FIENS,.01)=CMIDIV
+ S FDA(60.11,FIENS,1)=CMIACC
+ D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ Q
+ ;
+ADDCS(S) ;-- add the collection sample
+ N FDA,FIENS,FERR,SIT
+ S SIT=$O(^LAB(61,"B",$P(S,"*",2),0))  ;already there
+ I 'SIT S SIT=$O(^LAB(61,"D",$P(S,"*",2),0))
+ Q:'SIT
+ S FDA(62,"+1,",.01)=$P(S,"*")
+ S FDA(62,"+1,",2)=SIT
+ S FDA(62,"+1,",3)=$P(S,"*",3)
+ D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ Q
+ ;
+SPEC(ST) ;-- map the specimen to ours
+ N SPECN,DS,TUBE
+ S SPECN=$P(ST,"*")
+ S DS=$P(ST,"*",2)
+ S TUBE=$P(ST,"*",3)
+ I '$O(^LAB(62,"B",SPECN,0)) D ADDCS(ST)
+ I $O(^LAB(62,"B",SPECN,0)) Q $O(^LAB(62,"B",SPECN,0))
+ Q $O(^LAB(62,"B","OTHER",0))
+ ;
+ST(ST) ;-- map the site/specimen to ours
+ Q $S($O(^LAB(61,"B",ST,0)):$O(^LAB(61,"B",ST,0)),1:$O(^LAB(61,"B","OTHER",0)))
+ ;
+SYN(TS,O) ;-- add a synonym to the file
+ N I,SNN
+ F I=1:1 D  Q:$P(O,"*",I)=""
+ . Q:$P(O,"*",I)=""
+ . S SNN=$P(O,"*",I)
+ . Q:$O(^LAB(60,"B",SNN,0))  ;dont add the synonym if already there
+ . N FDA,FIENS,FERR
+ . S FIENS="+2,"_TS_","
+ . S FDA(60.1,FIENS,.01)=SNN
+ . D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ Q
+ ;
+SITE(TS,DAT) ;-- add the site specimen and the loinc
+ N FDA,FIENS,FERR,ST,STI,LNC,LNCI,REFL,QUAL,VAL,INT,TN
+ S TN=$P(DAT,U,2)
+ S ST=$P(DAT,U,7)
+ S LNC=$P(DAT,U,9)
+ I $G(@TN@("INT"))]"" S INT(1)=$G(@TN@("INT"))
+ S ST=$$UP^XLFSTR(ST)
+ S REFL=$P(DAT,U,13)
+ S REFH=$P(DAT,U,14)
+ I $G(LNC)]"" S LNCI=$O(^LAB(95.3,"B",$P(LNC,"-"),0))
+ S STI=$$ST(ST)
+ S FIENS="+2,"_TS_","
+ S FIENS(2)=STI
+ S FDA(60.01,FIENS,.01)=STI
+ I $G(REFL)]"" S FDA(60.01,FIENS,1)=""""_REFL_""""
+ I $G(REFH)]"" S FDA(60.01,FIENS,2)=""""_REFH_""""
+ S FDA(60.01,FIENS,95.3)=$G(LNCI)
+ D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ S QUAL=$P(DAT,U,11)
+ Q:$G(QUAL)=""
+ F I=1:1 D  Q:$P(QUAL,"*",I)=""
+ . Q:$P(QUAL,"*",I)=""
+ . S VAL=$P(QUAL,"*",I)
+ . N FFDA,FFIENS,FFERR
+ . S FFDA(60.1999999,"+3,"_FIENS(2)_","_TS_",",.01)=VAL
+ . D UPDATE^DIE("","FFDA","FFIENS","FFERR(1)")
+ Q:$G(INT(1))=""
+ ;revamp this in the next release
+ S ^LAB(60,TS,1,FIENS(2),1,1,0)=$G(INT(1))
+ S ^LAB(60,TS,1,FIENS(2),1,0)="^60.07A^1^1"
+ Q
+ ;
+CS(TS,SP) ;-- add the collection sample
+ N FDA,FIENS,FERR,SPI,ST
+ S ST=$$UP^XLFSTR(SP)
+ S SPI=$$SPEC(ST)
+ S FIENS="+2,"_TS_","
+ S FDA(60.03,FIENS,.01)=SPI
+ D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ ;S ^LAB(60,TS,3,FIENS(2),2,0)="^60.05A^1^1"
+ ;S ^LAB(60,TS,3,FIENS(2),2,1,0)=SP
+ Q
+ ;
+SN(TS,NOTE) ;-- add the site notes
+ N FDA,FIENS,FERR,SNI,SFDA,SFIENS,SFERR
+ S FIENS="+2,"_TS_","
+ S FDA(60.0505,FIENS,.01)=DT
+ D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ S SNI=$G(FIENS(2))
+ Q:'SNI
+ S ^LAB(60,TS,11,0)="^60.0505D^1^1"
+ S ^LAB(60,TS,11,SNI,0)=DT
+ S ^LAB(60,TS,11,SNI,1,0)="^60.5051^1^1"
+ S ^LAB(60,TS,11,SNI,1,1,0)=NOTE
+ Q
+ ;
+QUAL(TS,DAT) ;file qualitative values
+ N FDA,FIENS,FERR,VALE,VAL,I
+ S VALE=$P(DAT,U,11)
+ F I=1:1 D  Q:$P(VALE,"*",I)=""
+ . Q:$P(VALE,"*",I)=""
+ . S VAL=$P(VALE,"*",I)
+ . S FDA(60.1999999,"+2,"_TS_",",.01)=VAL
+ . D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ Q
+ ;
+REST(RL) ;-- build the remaining files
+ N RORD,RRES,ROTST,RRTST,RDATA,RORD,RRES,RTST,RCPT,RSPEC,RTEMP,RSPECI
+ N PORD,PDATA,POTST,PTST,PCPT,PSPEC,PSPECI,PTEMP
+ S PORD=0 F  S PORD=$O(^BLRLTMP(RL,PORD)) Q:PORD=""  D
+ . Q:$G(BLRLAB(PORD))=1
+ . S PDATA=$G(^BLRLTMP(RL,PORD))
+ . S POTST=$P(PDATA,U,4)
+ . S PTST=$P(PDATA,U,18)
+ . I $G(PTST)="" S PTST=$O(^LAB(60,"B",PORD,0))
+ . S PCPT=$P(PDATA,U,10)
+ . D CPT(POTST,PTST,PCPT)
+ S RORD=0 F  S RORD=$O(^BLRLTMP(RL,RORD)) Q:RORD=""  D
+ . S RRES=0 F  S RRES=$O(^BLRLTMP(RL,RORD,RRES)) Q:RRES=""  D
+ .. S RDATA=$G(^BLRLTMP(RL,RORD,RRES))
+ .. S ROTST=$P(RDATA,U,4)
+ .. S RRTST=$P(RDATA,U,5)
+ .. S RTST=$P(RDATA,U,18)
+ .. I $G(RTST)="" S RTST=$O(^LAB(60,"B",RRES,0))
+ .. S RCPT=$P(RDATA,U,10)
+ .. Q:$G(RCPT)=""
+ .. I RTST,$P($G(^LAB(60,RTST,0)),U,3)="B" D
+ ... D CPT(ROTST,RTST,RCPT)  ;only do parent tests
+ Q
+ ;
+CPT(OTST,TST,CPT) ;-- build the IHS LAB CPT CODE entries
+ Q:TST=""  ;no test code
+ Q:$O(^BLRCPT("C",TST,0))  ;dont readd the test
+ N I,CPTE
+ F I=1:1 D  Q:$P(CPT,"*",I)=""
+ . S CPTE=$P(CPT,"*",I)
+ . ;Q:CPTE'?.N
+ . Q:CPTE=""
+ . S CPTE=$O(^ICPT("B",CPTE,0)) ;get IEN for HCPCS code 
+ . Q:'CPTE
+ . N FDA,FIENS,FERR,NOW
+ . D NOW^%DTC
+ . S NOW=%
+ . S FDA(9009021,"?+1,",.01)=OTST
+ . S FDA(9009021,"?+1,",.02)="COVIDAG"
+ . S FDA(9009021,"?+1,",.03)=NOW
+ . S FDA(9009021,"?+1,",.04)=NOW
+ . S FDA(9009021,"?+1,",101)=TST
+ . S FDA(9009021.01101,"?+2,?+1,",.01)=CPTE
+ . S FDA(9009021.1101101,"?+3,?+2,?+1,",.01)="QW"
+ . D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ Q
+ ;
+ADDSPC(ST,TSN,LNC,REFH) ;-- add the site specimen and the loinc
+ N FDA,FIENS,FERR,STI,LNCI,VAL,INT,TN,TS
+ S TS=$O(^LAB(60,"B",TSN,0))
+ Q:'TS
+ S ST=$$UP^XLFSTR(ST)
+ S STI=$$ST(ST)
+ Q:$O(^LAB(60,TS,1,"B",STI,0))  ;site already exists
+ I $G(LNC)]"" S LNCI=$O(^LAB(95.3,"B",$P(LNC,"-"),0))
+ S FIENS="+2,"_TS_","
+ S FIENS(2)=STI
+ S FDA(60.01,FIENS,.01)=STI
+ I $G(REFH)]"" S FDA(60.01,FIENS,2)=""""_REFH_""""
+ S FDA(60.01,FIENS,95.3)=$G(LNCI)
+ D UPDATE^DIE("","FDA","FIENS","FERR(1)")
+ Q
+ ;
+EOJ ;-- kill variables and quit
+ K ^BLRLTMP
+ K BLRLAB,NAM,LRNAME,COVID19P,COVID19A,PROCCONT
+ Q
+ ;

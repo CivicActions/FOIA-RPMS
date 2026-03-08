@@ -1,5 +1,5 @@
 BARTRNS1 ; IHS/SD/SDR - Transaction Summary/Detail Report ; 03/10/2009
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**10,19,20,22,23,28**;OCT 26, 2005;Build 92
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**10,19,20,22,23,28,33**;OCT 26, 2005;Build 133
  ;IHS/SD/POT 1.8*23 HEAT74599 JUNE 2012 "No Billing Entity" & $T("No Billing Entity"
  ;IHS/SD/POT 1.8*23 MAR 2013 ADDED NEW VA billing
  ;IHS/SD/SDR 1.8*28 Updated p23 documentation
@@ -7,6 +7,7 @@ BARTRNS1 ; IHS/SD/SDR - Transaction Summary/Detail Report ; 03/10/2009
  ;  for Adj Amt.  Added #DAYS (APPR.DT-ADJ.DT) (Header was printing without data).  Changed loop to
  ;  look thru transaction file, not bill file.
  ;  (POT) - ADD ADJ TYPE IEN TO THE DETAIL REPORT; FIX MISSING #OF DATES (#5PIECE)
+ ;IHS/SD/SDR 1.8*33 ADO60817 Changed to use new DATE/TIME field since DINUM was removed; .01 is now date/time/counter
  Q
 COMPUTE ; EP
  S BAR("SUBR")="BAR-TRANS"
@@ -88,7 +89,8 @@ TRANS ;EP Loop thru Trans File
  .;S:(BARTR("ADJ TYPE")="") BARTR("ADJ TYPE")="NULL"
  .I BARTR("ADJ TYPE")="" S BARTR("ADJ TYPE")="NULL",BARTR("ADJ TYPIEN")=" "
 ADJTY .I $D(BARY("ADJ TYP")) Q:'$D(BARY("ADJ TYP",BARTR("ADJ TYPIEN")))  ;PKD 1.8*20 Check for Inclusion ADJ TYPE
- .S BARTR("DT")=$P(BARTR(0),U)  ;Trans date/time
+ .;S BARTR("DT")=$P(BARTR(0),U)  ;Trans date/time  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .S BARTR("DT")=$P(BARTR(0),U,18)  ;Trans date/time  ;bar*1.8*33 IHS/SD/SDR ADO60817
  .S BARTR("TAMT")=$$GET1^DIQ(90050.03,BARTR,3.5)
  .S BARTR("INS")=$P(BAR(0),U,3)  ;A/R Acct
  .I BARTR("INS")]"" D

@@ -1,5 +1,5 @@
 BQILYDEF ;PRXM/HC/ALA-Layout Template Defaults ; 01 Jun 2007  11:51 AM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**1,3,5**;Mar 01, 2021;Build 20
  ;
 RET(DATA,BDUZ,TMIEN) ;EP -- BQI GET LAYOUTS
  ;
@@ -25,16 +25,15 @@ RET(DATA,BDUZ,TMIEN) ;EP -- BQI GET LAYOUTS
  S @DATA@(II)=@DATA@(II)_"^T00050TITLE^T00050LAYOUT_TYPE^T00245COLUMN_RPC^T00245SYSTEM_DEF_RPC"_$C(30)
  ;
  ; Make sure user has all templates defined - If not, set up
- S DIEN=0
+ S DIEN=0 K TDEF,DDEF
  F  S DIEN=$O(^BQICARE(BDUZ,15,DIEN)) Q:'DIEN  D
- . N DA,IENS,TYP,DEF
- . ;
+ . NEW DA,IENS,TYP
  . ;Track whether each type has a default template set up (and if each type has one designated as the default)
  . S DA(1)=DUZ,DA=DIEN,IENS=$$IENS^DILF(.DA)
  . S TYP=$$GET1^DIQ(90505.015,IENS,.02,"I") Q:TYP=""
  . I $$GET1^DIQ(90505.015,IENS,.05,"I")'="Y" S TDEF(TYP)=""
  . I $$GET1^DIQ(90505.015,IENS,.03,"I")="Y" S DDEF(TYP)=""
- ;F TYP="D","G","R","A","H","Q","T","N","B","I","CO" D
+ ;
  S TYP=""
  F  S TYP=$O(^BQI(90506.5,"C",TYP)) Q:TYP=""  D
  . S VSIEN=$O(^BQI(90506.5,"C",TYP,""))
@@ -42,6 +41,7 @@ RET(DATA,BDUZ,TMIEN) ;EP -- BQI GET LAYOUTS
  . S TMTYP=$G(^BQI(90506.5,VSIEN,2))
  . I $P(TMTYP,U,2)="" Q
  . I $P(TMTYP,U,3)=1 Q
+ . ;B:TYP="AP"
  . I '$D(TDEF(TYP)) D DTMPSET^BQITMPLS(TYP) ;Create default template if missing
  . I '$D(DDEF(TYP)) D DTMPDEF^BQITMPLS(TYP) ;Set to default if needed
  ;
@@ -59,7 +59,6 @@ RET(DATA,BDUZ,TMIEN) ;EP -- BQI GET LAYOUTS
  . ; Get the standard default displays for all types if there are no default
  . ; templates defined
  . I DIEN="" D  Q
- .. ;F TYP="D","G","R","A","H","Q","T","N","I","B","CO" D STND(TYP)
  .. S TYP=""
  .. F  S TYP=$O(^BQI(90506.5,"C",TYP)) Q:TYP=""  D
  ... S VSIEN=$O(^BQI(90506.5,"C",TYP,""))
@@ -71,7 +70,7 @@ RET(DATA,BDUZ,TMIEN) ;EP -- BQI GET LAYOUTS
  . ; Otherwise, get the displays for any defined default template
  . S DIEN=0
  . F  S DIEN=$O(^BQICARE(BDUZ,15,DIEN)) Q:'DIEN  D
- .. N DA,IENS,TYP,DEF
+ .. NEW DA,IENS,TYP,DEF
  .. ;
  .. ;Track whether each type has a default template set up
  .. S DA(1)=DUZ,DA=DIEN,IENS=$$IENS^DILF(.DA)
@@ -88,7 +87,6 @@ RET(DATA,BDUZ,TMIEN) ;EP -- BQI GET LAYOUTS
  . ;
  . ;Now set up the standard entries (which may not be defined)
  . ;If no default set yet, set this one as the default
- . ;F TYP="D","G","R","A","H","Q","T","N","I","B","CO" D
  . S TYP=""
  . F  S TYP=$O(^BQI(90506.5,"C",TYP)) Q:TYP=""  D
  .. S VSIEN=$O(^BQI(90506.5,"C",TYP,""))
@@ -137,9 +135,9 @@ STND(DTYP,DEF) ;EP - Get the standard display for each type
  NEW CRN,CNAM
  S CRN=$O(^BQI(90506.5,"C",DTYP,"")),CNAM="Unknown"
  I CRN'="" D
- . S CNAM=$P(^BQI(90506.5,CRN,0),U,9) I CNAM'="" Q
+ . S CNAM=$P(^BQI(90506.5,CRN,0),U,9) I CNAM'="" S TEMPL=CNAM Q
  . S CNAM=$P(^BQI(90506.5,CRN,0),U,1)
- S TEMPL=CNAM_" Default"
+ I TEMPL'["Default" S TEMPL=CNAM_" Default"
  S DEF=$G(DEF,""),DEF=$S(DEF="N":"",1:"Y")
  ;
  S II=II+1,@DATA@(II)=U_TEMPL_U_DEF_U_DTYP
@@ -153,11 +151,15 @@ STND(DTYP,DEF) ;EP - Get the standard display for each type
  ; If the type is Performance, get the default definition
  I DTYP="G" D
  . S @DATA@(II)=@DATA@(II)_U_$$DFNC^BQIGPVW()_$C(29)_$$GDEF^BQIGPVW()_"^"_$$SFNC^BQIGPVW()_"^A^^"_$$GUI(DTYP)_$C(30) Q
+ I DTYP="ORP" D
+ . N CARE
+ . S CARE="Orders PL"
+ . S @DATA@(II)=@DATA@(II)_U_$$DFNC^BQICMVW()_$C(29)_$$CDEF^BQICMVW()_"^"_$$SFNC^BQICMVW()_"^A^^"_$$GUI(DTYP)_$C(30) Q
  I DTYP="Q"!(DTYP="T")!(DTYP="N") D  Q
  . S CRN=$O(^BQI(90506.5,"C",DTYP,"")) I CRN="" Q
  . S CARE=$P(^BQI(90506.5,CRN,0),U,1)
  . S @DATA@(II)=@DATA@(II)_U_$$DFNC^BQICEVW()_$C(29)_$$CDEF^BQICEVW()_"^"_$$SFNC^BQICEVW(CRN,DTYP)_"^A"_$C(29)_"D"_$C(29)_"A^^"_$$GUI(DTYP)_$C(30) Q
- I DTYP'="D",DTYP'="R",DTYP'="G" D
+ I DTYP'="D",DTYP'="R",DTYP'="G",DTYP'="ORP" D
  . N CRN,CARE
  . S CRN=$O(^BQI(90506.5,"C",DTYP,"")) I CRN="" Q
  . S CARE=$P(^BQI(90506.5,CRN,0),U,1)
@@ -232,11 +234,13 @@ SAV(DATA,OWNR,LYIEN,TEMPL,TYPE,ADDEL,SOR,SDIR,DOR) ;EP -- BQI SAVE LAYOUTS
  ;
  I $G(TEMPL)="" D
  . S SRCN=$O(^BQI(90506.5,"C",TYPE,""))
- . S TEMPL=$P(^BQI(90506.5,SRCN,0),U,1)_" Default"
+ . S TEMPL=$P(^BQI(90506.5,SRCN,0),"^",9) I TEMPL'="" Q
+ . I TEMPL="" S TEMPL=$P(^BQI(90506.5,SRCN,0),U,1)_" Default"
+ ;
  I $G(LYIEN)="" D
  . NEW DIC,Y,DLAYGO
  . I $G(^BQICARE(OWNR,15,0))="" S ^BQICARE(OWNR,15,0)="^90505.015^^"
- . S DIC(0)="L",DA(1)=OWNR,DLAYGO="90505.015",DIC="^BQICARE("_DA(1)_",15,",X=TEMPL
+ . S DIC(0)="FL",DA(1)=OWNR,DLAYGO="90505.015",DIC="^BQICARE("_DA(1)_",15,",X=TEMPL
  . D ^DIC
  . S LYIEN=+Y
  ;
@@ -272,7 +276,7 @@ SAV(DATA,OWNR,LYIEN,TEMPL,TYPE,ADDEL,SOR,SDIR,DOR) ;EP -- BQI SAVE LAYOUTS
  . NEW DA,X,DINUM,DIC,DIE,DLAYGO,IENS
  . S DA(2)=OWNR,DA(1)=LYIEN
  . S DIC="^BQICARE("_DA(2)_",15,"_DA(1)_",1,",DIE=DIC
- . S DLAYGO=90505.151,DIC(0)="L",DIC("P")=DLAYGO
+ . S DLAYGO=90505.151,DIC(0)="FL",DIC("P")=DLAYGO
  . S X=STVW
  . I '$D(^BQICARE(DA(2),15,DA(1),1,0)) S ^BQICARE(DA(2),15,DA(1),1,0)="^90505.151^^"
  . K DO,DD D FILE^DICN

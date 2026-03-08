@@ -1,5 +1,5 @@
 ACMRL01 ; IHS/TUCSON/TMJ - SCREEN LOGIC ; [ 01/07/02  3:43 PM ]
- ;;2.0;ACM CASE MANAGEMENT SYSTEM;**4,8**;JAN 10, 1996
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**17**;JUN 14, 2007;Build 138
  ;
  ;
 INFORM ;PEP-GEN RETRIEVAL INFORMING
@@ -9,7 +9,7 @@ INFORM ;PEP-GEN RETRIEVAL INFORMING
  W ?((80-$L(ACMLHDR))/2),ACMLHDR
  W !!!,"This report will produce a listing of Patients on a Register selected by the",!
  W "user.  You will be asked (in three separate steps) to identify your",!
- W "selection criteria; what you wish displayed for each patitent; and the",!
+ W "selection criteria; what you wish displayed for each patient; and the",!
  W "sorting order for your list.  You may save the logic used to produce the report",!
  W "for future use.  If you design a report that is 80 characters or less in width,",!
  W "it can be displayed on your screen or printed.  If your report is 81-132",!

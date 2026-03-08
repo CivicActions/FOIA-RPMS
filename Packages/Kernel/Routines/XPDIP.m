@@ -1,6 +1,5 @@
-XPDIP ;SFISC/RSD - Install Package & Routine file ;03/08/2006
- ;;8.0;KERNEL;**15,21,28,30,41,44,51,58,83,92,100,108,137,229,350,393,517**;Jul 10, 1995;Build 14
- ;Per VHA Directive 2004-038, this routine should not be modified.
+XPDIP ;SFISC/RSD - Install Package & Routine file ;12/17/2002  11:30 [ 03/19/2004  12:04 PM ]
+ ;;8.0;KERNEL;**15,21,28,30,41,44,51,58,83,92,100,108,137,229,1009**;Jul 10, 1995
  Q
 PKG ;
  N %,OLDA,DA,DIK,XPD,XPDFIL,XPDPKG,XPDBLDA,Y
@@ -20,17 +19,13 @@ PKGH I $D(XPDIDVT) S XPDIDCNT=XPDIDCNT+2 D UPDATE^XPDID(XPDIDCNT)
  N REC,IEN
  S REC=0
  F  S REC=$O(^XTMP("XPDI",XPDA,"PKG",OLDA,20,REC)) Q:'REC  D
- . ;;Only install if have a routine defined
- . K IEN I '$L($P($G(^XTMP("XPDI",XPDA,"PKG",OLDA,20,REC,0)),U,3)) Q
- . S IEN(9.402,"?+1,"_XPDPKG_",",.01)=$P($G(^XTMP("XPDI",XPDA,"PKG",OLDA,20,REC,0)),U,1)
- . S IEN(9.402,"?+1,"_XPDPKG_",",3)=$P($G(^XTMP("XPDI",XPDA,"PKG",OLDA,20,REC,0)),U,3)
- . S IEN(9.402,"?+1,"_XPDPKG_",",4)=$G(^XTMP("XPDI",XPDA,"PKG",OLDA,20,REC,1))
- . D UPDATE^DIE("","IEN")
- . Q
+ .S IEN(9.402,"?+1,"_XPDPKG_",",.01)=$P($G(^XTMP("XPDI",XPDA,"PKG",OLDA,20,REC,0)),U,1)
+ .S IEN(9.402,"?+1,"_XPDPKG_",",3)=$P($G(^XTMP("XPDI",XPDA,"PKG",OLDA,20,REC,0)),U,3)
+ .S IEN(9.402,"?+1,"_XPDPKG_",",4)=$G(^XTMP("XPDI",XPDA,"PKG",OLDA,20,REC,1))
+ .D UPDATE^DIE("","IEN")
+ .Q
  ;
 PKGEND S XPDBLDA=$$BLD(XPDBLD) Q:'XPDBLDA
- ;Move the Test/SEQ number from build to Install file.
- S ^XPD(9.7,XPDA,6)=$G(^XPD(9.6,XPDBLDA,6))
  ;move Alpha/Beta testing info to Kernel site para file
  I XPDPKG S %=$G(^XPD(9.6,XPDBLDA,"ABPKG")) D
  .;Install message and they have an address, set flag in XPDIST
@@ -86,7 +81,7 @@ PKGV N %
  Q:'$D(^XTMP("XPDI",XPDA,"PKG",OLDA,22,+%,"PAH",+$P(%,U,2),0))  S %=$P(^(0),U) S:$D(^(1)) %(1)=$NA(^(1))
  ;check File Comment, %=patch number
  S:^XPD(9.7,XPDA,2)[" SEQ #" %=$P(^(2),"*",3)
- S $P(%,U,2,3)=$$NOW^XLFDT()_U_DUZ,%=$$PKGPAT(DA,$$VER^XPDUTL(XPDNM),.%)
+ S $P(%,U,2,3)=DT_U_DUZ,%=$$PKGPAT(DA,$$VER^XPDUTL(XPDNM),.%)
  Q
  ;
 PKGVER(XPDPDA,XPDI) ;update version in package file, XPDPDA=Package file ien, return ien
@@ -102,19 +97,16 @@ PKGVER(XPDPDA,XPDI) ;update version in package file, XPDPDA=Package file ien, re
  ;
 PKGPAT(XPDPDA,XPDV,XPDI) ;update patch history
  ;INPUT: XPDPDA=Package file ien, XPDV=version
- ;XPDI=patch^date installed^install by
- ;RETURNS: version ien^patch ien^[CURRENT VERSION, if it was set]
- N I,X,XPD,XPDP,XPDIEN,CURVER
+ ;XPDI=patch^date installed^install by,   returns version ien^patch ien
+ N I,X,XPD,XPDP,XPDIEN
  ;quit if we can't find the version multiple, resets XPDV=ien of version
  S XPDIEN=","_XPDPDA_",",XPDV=$$MDIC(9.49,XPDIEN,XPDV) Q:'XPDV 0
  S XPDIEN=","_XPDV_XPDIEN,XPDP=$$MDIC(9.4901,XPDIEN,$P(XPDI,U)) Q:'XPDP 0
  S X="XPD(9.4901,"""_XPDP_XPDIEN_""")"
  F I=.02,.03 S:$P(XPDI,U,I*100)]"" @X@(I)=$P(XPDI,U,I*100)
  S:$D(XPDI(1)) @X@(1)=XPDI(1)
- ;if no CURRENT VERSION, set it
- I $G(^DIC(9.4,XPDPDA,"VERSION"))="" S XPD(9.4,XPDPDA_",",13)=XPDV,CURVER=XPDV
  D FILE^DIE("","XPD")
- Q XPDV_U_XPDP_U_$G(CURVER)
+ Q XPDV_U_XPDP
  ;
  ;XPDF=subfile #,XPDIEN=ien string, X=input
 MDIC(XPDF,XPDIEN,XPDX) ;

@@ -1,14 +1,16 @@
-ABMDE8B1 ; IHS/ASDST/DMJ - Edit Page 8 - SURG PROC ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**6,14**;NOV 12, 2009;Build 238
+ABMDE8B1 ; IHS/SD/SDR - Edit Page 8 - SURG PROC ;  
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,14,32**;NOV 12, 2009;Build 621
  ;
- ; IHS/SD/SDR - V2.5 P2 - 5/9/02 - NOIS HQW-0302-100190
- ;     Modified to display 2nd and 3rd modifiers and units
- ; IHS/SD/SDR - v2.6 CSV
- ; IHS/SD/SDR - v2.6 p6 - HEAT28973 - if 55 modifier present use '1' for units when calculating charges
- ;IHS/SD/SDR - 2.6*14 - HEAT161263 - Changed to use $$GET1^DIQ so output transform will execute for SNOMED/provider narrative
+ ;IHS/SD/SDR 2.5*2 5/9/02 NOIS HQW-0302-100190 Modified to display 2nd and 3rd modifiers and units
+ ;
+ ;IHS/SD/SDR 2.6 CSV
+ ;IHS/SD/SDR 2.6*6 HEAT28973 if 55 modifier present use '1' for units when calculating charges
+ ;IHS/SD/SDR 2.6*14 HEAT161263 Changed to use $$GET1^DIQ so output transform will execute for SNOMED/provider narrative
+ ;IHS/SD/SDR 2.6*32 CR8942 Changed default rev code from 960 to 510
  ;
  D MODE^ABMDE8X
- I ^ABMDEXP(ABMMODE(2),0)["UB" S ABMZ("DR")=";W !;.03//960"_ABMZ("DR")
+ ;I ^ABMDEXP(ABMMODE(2),0)["UB" S ABMZ("DR")=";W !;.03//960"_ABMZ("DR")  ;abm*2.6*32 IHS/SD/SDR CR8942
+ I ^ABMDEXP(ABMMODE(2),0)["UB" S ABMZ("DR")=";W !;.03//510"_ABMZ("DR")  ;abm*2.6*32 IHS/SD/SDR CR8942
  D HD G LOOP
 HD W !,"BIL",?4,"SERV"
  W ?11,$S($P(^ABMDEXP(ABMP("EXP"),0),"^",1)["UB":"REVN",1:"CORR"),?17," CPT",?29,"CPT",?52,"PROVIDER'S"

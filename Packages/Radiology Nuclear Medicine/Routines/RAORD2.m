@@ -1,9 +1,9 @@
-RAORD2 ;HISC/CAH,FPT,GJC,DAD AISC/RMO-Detailed Request Display ;9/3/99  13:48
- ;;5.0;Radiology/Nuclear Medicine;**5,10,51,45,75**;Mar 16, 1998;Build 4
+RAORD2 ;HISC/CAH,FPT,GJC,DAD AISC/RMO IHS/OIT/BT - Detailed Request Display ; 30 Nov 2023  10:15 AM
+ ;;5.0;Radiology/Nuclear Medicine;**5,10,51,45,75,1010**;Mar 16, 1998;Build 11
  K XQADATA
  D HOME^%ZIS K DIC S DIC="^DPT(",DIC(0)="AEMQ"
  W ! D ^DIC G Q:Y<0
- S RADFN=+Y,RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
+ S RADFN=+Y,RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1) S:RANME="" RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
  S RAOFNS="Display",RAOVSTS="1;2;3;5;6;8" D LOCATN I $G(RAQUIT) D Q Q
  I RAONE]"" S ^TMP($J,"RA L-TYPE",$P(RAONE,"^"),$P(RAONE,"^",2))=""
  S ^TMP($J,"RA L-TYPE","Unknown")=""
@@ -30,7 +30,10 @@ Q K %,DIC,I,OREND,RA,RACI,RACNI,RADFN,RADIV,RADIVPAR,RADPT0,RADTI,RALNE
  K ^TMP($J,"RA L-TYPE"),^TMP($J,"RAORDS"),^TMP($J,"RA DIFF PRC") Q
  ;
  ;
-DISORD Q:'$D(^DPT(RADFN,0))  S RADPT0=^(0),RA("NME")=$P(RADPT0,"^"),RA("DOB")=$P(RADPT0,"^",3),RASSN=$$SSN^RAUTL Q:'$D(^RAO(75.1,RAOIFN,0))  S RAORD0=^(0)
+DISORD ;
+ Q:'$D(^DPT(RADFN,0))  S RADPT0=^(0)
+ S RA("NME")=$$GETPREF^AUPNSOGI(RADFN,"E",1),RA("DOB")=$P(RADPT0,"^",3),RASSN=$$SSN^RAUTL
+ Q:'$D(^RAO(75.1,RAOIFN,0))  S RAORD0=^(0)
  ;determine if ordered procedure has CM assoc.; return null if none
  S RAZPRC0=$G(^RAMIS(71,+$P(RAORD0,U,2),0))
  S RACMFLG("O")=$$CMEDIA^RAO7UTL(+$P(RAORD0,U,2),$P(RAZPRC0,U,6))
@@ -62,6 +65,7 @@ DISORD Q:'$D(^DPT(RADFN,0))  S RADPT0=^(0),RA("NME")=$P(RADPT0,"^"),RA("DOB")=$P
  S RA("USR")=$S($D(^VA(200,+$P(RAORD0,"^",15),0)):$P(^(0),"^"),1:"")
  D HDR ; display a header
  W !,"Requested :",?12,RA("PROC INFO")
+ ;
  I $D(^TMP($J,"RA DIFF PRC")) D
  .N CRTN,I S CRTN=0,I="" W !,"Registered:"
  .F  S I=$O(^TMP($J,"RA DIFF PRC",I)) Q:I']""  D
@@ -113,7 +117,8 @@ LOC1() ; Checking for only one Imaging Location
  Q X
 HDR ; Header for the 'Detailed Request Display' option.  Called from above
  ; (D HDR) and from RAORD3
- W @IOF,?22,"**** Detailed Display ****",!!,"Name: ",RA("NME"),"    (",RASSN,")" S Y=RA("DOB") D D^RAUTL W ?45,"Date of Birth: ",Y,!,RALNE
+ W @IOF,?22,"**** Detailed Display ****",!!
+ W "Name: ",RA("NME"),"  (",RASSN,")" S Y=RA("DOB") D D^RAUTL W ?45,$S($L(RA("NME"))<21:"Date of Birth: ",1:" DOB: "),Y,!,RALNE
  Q
  ;
 DPRC(RAOIFN,RADFN) ; If the ordered procedure has been registered check

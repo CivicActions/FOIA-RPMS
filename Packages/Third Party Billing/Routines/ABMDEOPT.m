@@ -1,8 +1,11 @@
 ABMDEOPT ; IHS/ASDST/DMJ - EDIT PAGE OPTIONS ;
- ;;2.6;IHS 3P BILLING SYSTEM;**11,14**;NOV 12, 2009;Build 238
+ ;;2.6;IHS 3P BILLING SYSTEM;**11,14,34,36**;NOV 12, 2009;Build 698
  ;
- ; IHS/SD/SDR,TPF - v2.5 p8 - added code for pending status (12)
- ;IHS/SD/SDR - 2.6*14 - ICD10 Added refresh and Ind (Indicator) options for page 5A
+ ;IHS/SD/SDR,TPF - v2.5 p8 - added code for pending status (12)
+ ;
+ ;IHS/SD/SDR 2.6*14 ICD10 Added refresh and Ind (Indicator) options for page 5A
+ ;IHS/SD/SDR 2.6*34 ADO60696 CR7333 Added Close option on page 0
+ ;IHS/SD/SDR 2.6*36 ADO76247 Added check for ABMP("SCRN")=123 for ADPS option to do approval
  ;
 SEL ;EP for Page Commands, Desired Action Controller
  I $D(ABMP("DDL")),$D(ABMP("QUIT")) S Y="Q" G XIT
@@ -27,7 +30,9 @@ SEL ;EP for Page Commands, Desired Action Controller
  I $D(ABMP("VIEWMODE")),"NBVJQ"'[$E(Y) W *7 G SEL
  I $E(X)="?" D ^ABMDEHLP G SEL
  I '+$E(Y),'+$E(Y,2),$E(Y,2)'=0 S Y=$E(Y)
+ I Y="C",(ABMZ("PG")=0) S (X,Y)="L"  ;abm*2.6*34 IHS/SD/SDR ADO60696
  I ABMP("SCRN")=0,"Aa"[Y S (X,Y)="C"
+ I ABMP("SCRN")=123,"Aa"[Y S (X,Y)="C"  ;abm*2.6*36 IHS/SD/SDR ADO76247
  I "Pp"[Y,(ABMZ("PG")=0) S (X,Y)="F"
  I $A(Y,1)>96&($A(Y,1)<123) S Y=$C($A(Y,1)-32)_$E(Y,2,99)
  I ABMP("OPT")[$E(Y) K ABMP("DFLT") G XIT
@@ -49,6 +54,8 @@ M ;;     Mode - Change mode of export for this page;;Mode
 F ;;     Pend - Pend the claim and enter Pend Status;;Pend
 R ;;     Rfsh - For page 5A when ICD9 and ICD10 present;;Rfsh
 I ;;     Ind - Acts as override for ICD9 or ICD10 coding on claim;;Ind
+L ;;     Close - Close Claim;;Close;;  ;abm*2.6*34 IHS/SD/SDR ADO60696
+Z ;;     COB  - COB page;;COB
  ;
 FLDS ;EP for Field Edit Controller
  S ABMO("Y")=+$E(Y,2,3) I ABMO("Y")>0&(ABMO("Y")<(ABMP("FLDS")+1)) S Y=ABMO("Y") G EJ

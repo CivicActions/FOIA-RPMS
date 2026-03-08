@@ -1,7 +1,8 @@
-PXRMPINF ;SLC/PKR - Routines relating to patient information. ;23-Mar-2015 10:39;DU
- ;;2.0;CLINICAL REMINDERS;**1001,12,17,24,1005**;Feb 04, 2005;Build 23
+PXRMPINF ;SLC/PKR - Routines relating to patient information. ;10-Apr-2025 10:39
+ ;;2.0;CLINICAL REMINDERS;**1001,12,17,24,1005,1016**;Feb 04, 2005;Build 32
  ;
  ;IHS/MSC/MGH Patch 1001 IHS is not currently using military sexual trauma
+ ;IHS/MSC/MIR 04/10/2025 Patch 1016  added RACE, ETHNICITY AND PREFERRED LANGUAGE
  ;======================================================
 DATACHG ;This entry point is called whenever patient data has changed.
  ;It is attached to the following event points:
@@ -57,7 +58,7 @@ DEM(DFN,TODAY,DEMARR) ;Load the patient demographics into DEMARR
  ;then set the date of death to null. Direct read of patient file
  ;supported DBIA #10035. DATE OF BIRTH and SEX are required fields
  ;in the patient file.
- N TEMP
+ N TEMP,LNGIN,PRLANG,SEXDT,SEXIN,SEXORIEN,RACE,ETHNIN,ETHNIC,GNDRIDEN
  K DEMARR
  I $L(DFN)'>0 S DEMARR("PATIENT")="" Q
  S TEMP=$G(^DPT(DFN,0))
@@ -76,5 +77,21 @@ DEM(DFN,TODAY,DEMARR) ;Load the patient demographics into DEMARR
  S TEMP=$O(^DGPM("ATID1",DFN,""))
  I TEMP'="" S TEMP=9999999.999999-TEMP
  S DEMARR("LAD")=TEMP
+ S LNGIN=$O(^AUPNPAT(DFN,86,"A"),-1),PRLANG=""
+ I LNGIN S PRLANG=$$GET1^DIQ(9000001.86,LNGIN_","_DFN,.02)
+ S SEXDT=$O(^AUPNPAT(DFN,93,"A"),-1),SEXORIEN=""
+ I SEXDT S SEXIN=$O(^AUPNPAT(DFN,93,SEXDT,1,"A"),-1) I SEXIN D
+ .S SEXORIEN=$$GET1^DIQ(9000001.93011,SEXIN_","_SEXDT_","_DFN,.01)
+ N GNDRDT,GNDRIDEN,GNDRID S GNDRDT=$O(^AUPNPAT(DFN,94,"A"),-1),GNDRIDEN=""
+ I GNDRDT S GNDRID=$O(^AUPNPAT(DFN,94,GNDRDT,1,"A"),-1) I GNDRID D
+ .S GNDRIDEN=$$GET1^DIQ(9000001.94011,GNDRID_","_GNDRDT_","_DFN,.01)
+ S RACE=$$GET1^DIQ(2,DFN,.06)
+ S ETHNIC="",ETHNIN=$O(^DPT(DFN,.06,"A"),-1)
+ I ETHNIN S ETHNIC=$$GET1^DIQ(2.06,ETHNIN_","_DFN,.01)
+ S DEMARR("PREFLANG")=PRLANG
+ ;S DEMARR("SEXORIEN")=SEXORIEN
+ ;S DEMARR("GENDER IDENT")=GNDRIDEN
+ S DEMARR("ETHNICITY")=ETHNIC
+ S DEMARR("RACE")=RACE
  Q
  ;

@@ -1,5 +1,5 @@
 BQIPDSCL ;GDHD/HCS/ALA-Panel Filter Description continued ; 13 Feb 2017  12:09 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5**;Mar 01, 2021;Build 20
  ;
 ASPARM(FN) ;EP - Retrieve associated parameters from single value field
  NEW AP,APRM,ASTR
@@ -81,6 +81,25 @@ NVIS(PORD,VALUE,ASTR) ;EP - Assemble number of visits
  S STR="# of Visits"
  I CLIN]"" S STR=STR_" in clinic "_CLIN
  I PROV]"" S STR=STR_" for provider "_PROV
+ ;
+ S V=VALUE
+ I V["~",V["'" S STR=STR_" in range (inclusive) "_N1_" thru "_N2
+ E  I V["~" S STR=STR_" out of range (exclusive) less than "_N1_" or greater than "_N2
+ E  I V["'<" S STR=STR_" greater than or equal to "_N1
+ E  I V["'>" S STR=STR_" less than or equal to "_N1
+ E  I V["<" S STR=STR_" less than "_N1
+ E  I V[">" S STR=STR_" greater than "_N1
+ E  S STR=STR_" equal to "_N1
+ S VALUE=STR
+ Q
+ ;
+VVIS(PORD,VALUE) ; New number of visits
+ NEW STR,N1,N2,FND,V,VAL,FND
+ S (N1,FND)="" F I=1:1:$L(VALUE) Q:(FND=1&($E(VALUE,I)'?1N))  I $E(VALUE,I)?1N S N1=N1_$E(VALUE,I),FND=1
+ Q:N1=""
+ S (N2,FND)="" I I<$L(VALUE) F I=I:1:$L(VALUE) Q:(FND=1&($E(VALUE,I)'?1N))  I $E(VALUE,I)?1N S N2=N2_$E(VALUE,I),FND=1
+ ;
+ S STR="# of Visits"
  ;
  S V=VALUE
  I V["~",V["'" S STR=STR_" in range (inclusive) "_N1_" thru "_N2

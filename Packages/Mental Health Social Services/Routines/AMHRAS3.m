@@ -1,5 +1,5 @@
 AMHRAS3 ; IHS/CMI/LAB - list ALCOHOL screenings ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**6**;JUN 02, 2010;Build 10
+ ;;4.0;IHS BEHAVIORAL HEALTH;**6,11,12**;JUN 02, 2010;Build 46
  ;
  ;
 INFORM ;
@@ -11,15 +11,13 @@ INFORM ;
  W !,"the user.  Alcohol Screening is defined as any of the following documented:"
  W !?5,"- Alcohol Screening Exam (Exam code 35)"
  W !?5,"- Measurements: AUDC, AUDT, CRFT"
- W !?5,"- Health Factor with Alcohol/Drug Category (CAGE)"
- W !?5,"- Diagnoses V79.1, 29.1"
+ W !?5,"- Any CAGE [F018-F022] or CAGE-AID [F210-F214] Health Factor"
+ W !?5,"- Any TAPS-Alcohol Health Factor [F175-F179]"
+ W !?5,"- Diagnoses 29.1"
  W !?5,"- Education Topics: AOD-SCR, CD-SCR"
- W !?5,"- CPT Codes: 99408, 99409, G0396, G0397, H0049"
- W !?5,"- refusal of exam code 35"
- W !,"This report will tally the patients by age, gender, screening exam result,"
- W !,"provider (either exam provider, if available, or primary provider on the "
- W !,"visit), clinic, date of screening, designated PCP, MH Provider, SS Provider"
- W !,"and A/SA Provider."
+ W !?5,"- CPT 99408, 99409, G0396, G0397, G0442, G0443, G2011, G2196, G2197, H0049,"
+ W !?5,"  H0050, 3016F [BGP ALCOHOL SCREENING CPTS]"
+ W !?5,"- refusal of exam code 35 (Alcohol Screening exam)"
  W !,"  Notes:  "
  W !?10,"- the last screening/refusal for each patient is used.  If a patient"
  W !?10,"  was screened more than once in the time period, only the latest"
@@ -168,7 +166,7 @@ TEMP ;TEMPLATE OR LIST
 LIST1 ;
  S AMHRSORT=""
  W !
- S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN"
+ S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN;Q:Race;E:Ethnicity"
  S DIR("A")="How would you like the list to be sorted",DIR("B")="H"
  KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G PRIMPRV
@@ -183,9 +181,16 @@ DEMO ;
  D DEMOCHK^AMHUTIL1(.AMHDEMO)
  I AMHDEMO=-1 G TEMP
 ZIS ;
- S XBRP="PRINT^AMHRAS3P",XBRC="PROC^AMHRAS31",XBRX="XIT^AMHRAS3",XBNS="AMHR"
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
+ I $D(DIRUT) G XIT
+ I $G(Y)="B" D BROWSE,XIT Q
+ S XBRP="PRINT^AMHRAS3P",XBRC="PROC^AMHRAS31",XBRX="XIT^AMHRAS3",XBNS="AMH"
  D ^XBDBQUE
  D XIT
+ Q
+BROWSE ;
+ S XBRP="VIEWR^XBLM(""^AMHRAS3P"")"
+ S XBNS="AMH",XBRC="PROC^AMHRAS31",XBRX="XIT^AMHRAS3",XBIOP=0 D ^XBDBQUE
  Q
 XIT ;
  D EN^XBVK("AMHR")

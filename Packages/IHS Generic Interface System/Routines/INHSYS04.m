@@ -1,5 +1,5 @@
-INHSYS04 ;slt,JPD; 31 Jan 96 15:58;System Configuration data utility
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHSYS04 ;ihs/cmi/maw - System Configuration data utility
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  Q
  ;
@@ -43,11 +43,11 @@ NEWR ; Current routine will be too big so finish
  .X INZI W X_" filed.",! S INROU(X)=""
  .K ^UTILITY($J,0)
  S %CC=0,%RC=$$HEXUP(%RC),%LC=0
- S %T=%RTN_$S($L(%RC)=1:"0"_%RC,1:%RC)_" ;"_$$INITIALS^INHUT5($P($G(^DIC(3,DUZ,0)),U))_";"_$$DATIM^INHUT5()_";compiled gis system data"
+ S %T=%RTN_$S($L(%RC)=1:"0"_%RC,1:%RC)_" ;"_$$INITIALS^INHUT5($P($G(^VA(200,DUZ,0)),U))_";"_$$DATIM^INHUT5()_";compiled gis system data"
  D LN(%T,.%CC,.%LC),LN(" ;;V1; "_$$DATIM^INHUT5(),.%CC,.%LC)
  D LN(" ;COPYRIGHT "_(1700+$E(DT,1,3))_" SAIC",.%CC,.%LC)
  D LN(" ;"_$P($G(^INRHT(%TT,0)),U),.%CC,.%LC)
- D LN(" ;Compiled by: "_$P($G(^DIC(3,DUZ,0)),U),.%CC,.%LC),LN(" Q",.%CC,.%LC)
+ D LN(" ;Compiled by: "_$P($G(^VA(200,DUZ,0)),U),.%CC,.%LC),LN(" Q",.%CC,.%LC)
  D LN(" ;",.%CC,.%LC)
  D LN("EN F I=1:2 S %ODD=$E($T(EN+I),4,999) Q:%ODD=""""  S %EVEN=$E($T(EN+(I+1)),4,999) S X="""_%RTNBFR_"""_$J_"",""_$P(%ODD,"","",2,99),@X=%EVEN",.%CC,.%LC)
  Q
@@ -113,11 +113,11 @@ NTRNL(INROU,X) ;procedure to compile internal installation driver
  ;
  N %CC,%LC,INRTN,INOS,INZI
  S INOS=^DD("OS"),INZI=^("OS",INOS,"ZS")
- D LN(X_" ;"_$$INITIALS^INHUT5($P($G(^DIC(3,DUZ,0)),U))_";"_$$DATIM^INHUT5()_";gis system configuration installation",.%CC,.%LC)
+ D LN(X_" ;"_$$INITIALS^INHUT5($P($G(^VA(200,DUZ,0)),U))_";"_$$DATIM^INHUT5()_";gis system configuration installation",.%CC,.%LC)
  D LN(" ;;V1; "_$$DATIM^INHUT5(),.%CC,.%LC)
  D LN(" ;COPYRIGHT "_(1700+$E(DT,1,3))_" SAIC",.%CC,.%LC)
  D LN(" ;"_$P($G(^INRHT(+$O(^INRHT("ID",$E(X,3,6),"")),0)),U),.%CC,.%LC)
- D LN(" ;Compiled by: "_$P($G(^DIC(3,DUZ,0)),U),.%CC,.%LC)
+ D LN(" ;Compiled by: "_$P($G(^VA(200,DUZ,0)),U),.%CC,.%LC)
  D LN(" Q",.%CC,.%LC),LN(" ;",.%CC,.%LC)
  D LN("EN ;entry point",.%CC,.%LC)
  S INRTN=""

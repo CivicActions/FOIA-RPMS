@@ -1,7 +1,12 @@
-PSOHELP2 ;B'ham ISC/SAB - utility routine #3 ;12/29/94  19:32
- ;;7.0;OUTPATIENT PHARMACY;;DEC 1997
+PSOHELP2 ;B'ham ISC/SAB - utility routine #3 ;13-Jun-2024 13:28;DU
+ ;;7.0;OUTPATIENT PHARMACY;**1035**;DEC 1997;Build 39
+ ;
+ ; Modified - IHS/MSC/PLS - 06/13/2024 - Line EN+1 - FID 103810
+ ;
 EN ; validate
- I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>2)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N") K X Q
+ ;IHS/MSC/PLS - p1035 - FID 103810
+ ;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>2)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N") K X Q
+ I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N") K X Q
  I X?.E1L.E S X=$$ENLU^PSGMI(X) W "  (",X,")"
  ;
 ENOS ; order set entry

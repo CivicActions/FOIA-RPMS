@@ -1,6 +1,7 @@
 ABME5NTE ; IHS/ASDST/DMJ - 837 NTE Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,40**;NOV 12, 2009;Build 785
  ;Transaction Set Header
+ ;IHS/SD/SDR 2.6*40 ADO111599 Check for VA CONTRACT#
  ;
 EP(X) ;EP - start here
  ;x=parameter
@@ -26,6 +27,11 @@ LOOP ;LOOP HERE
 30 ;NTE02 - Description
  S ABMR("NTE",30)=""
  I ABMEIC="ADD" D
+ .;start new abm*2.6*40 IHS/SD/SDR ADO111599
+ .I $P($G(^AUTNINS(ABMP("INS"),0)),U)="VA MEDICAL BENEFIT (VMBP)" D
+ ..S ABMR("NTE",30)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),U,27)
+ .I ABMR("NTE",30)'="" Q  ;there's a VA CONTRACT#, so stop
+ .;end new abm*2.6*40 IHS/SD/SDR ADO11159
  .S ABMR("NTE",30)=$G(^ABMDBILL(DUZ(2),ABMP("BDFN"),61,1,0))
  .Q:'$D(^ABMDBILL(DUZ(2),ABMP("BDFN"),61,2,0))
  .S ABMR("NTE",30)=ABMR("NTE",30)_" "_^ABMDBILL(DUZ(2),ABMP("BDFN"),61,2,0)

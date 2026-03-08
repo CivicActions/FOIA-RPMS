@@ -64,6 +64,6 @@ SORRY ;
  W *7,!!!,$$C^XBFUNC("Sorry....something is wrong with your enviroment")
  W !,$$C^XBFUNC("Aborting Electronic Signature Plug-in install!")
  W !,$$C^XBFUNC("Please print/capture this screen and notify")
- W !,$$C^XBFUNC("the Help Desk")
+ W !,$$C^XBFUNC("the ITSC Support Center at 888-830-7280")
  W !!,LINE
  Q

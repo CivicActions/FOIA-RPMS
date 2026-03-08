@@ -1,5 +1,5 @@
 LRLABLD0 ;DALOI/FHS/DRH/JMC - LABELS ON DEMAND FOR FUTURE LAB COLLECT ;8/29/94 12:36 [ 05/06/2003  7:24 AM ]
- ;;5.2T9;LR;**1003,1018**;Nov 17, 2004
+ ;;5.2;LR;**1003,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**1,65,121,161,218**;Sep 27, 1994
 EN ;
  W !?5,"Future Lab, Immediate, Ward Collect and Send Patient Orders"

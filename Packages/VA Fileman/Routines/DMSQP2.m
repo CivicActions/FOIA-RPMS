@@ -1,6 +1,6 @@
-DMSQP2 ;SFISC/EZ-PRINT SQLI'S DD INFORMATION ;10/30/97  17:29
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQP2 ;SFISC/EZ-PRINT SQLI'S DD INFORMATION ;10/30/97  17:29 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
  Q
 EN ; for a single file or number range, show SQLI projection of fields
  S DMQ="" D CHK,CHK1:'DMQ,ASK:'DMQ,ASK1:'DMQ,PRT:'DMQ,EXIT Q

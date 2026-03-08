@@ -1,5 +1,5 @@
-ABMDE2X2 ; IHS/ASDST/DMJ - PAGE 2 - INSURER DATA CK PART 2 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDE2X2 ; IHS/ASDST/DMJ - PAGE 2 - INSURER DATA CK PART 2 ;  [ 10/30/2002  9:05 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**2,10,11**;APR 05, 2002
  ;
  ; IHS/SD/SDR - 10/30/02 - V2.5 P2 - QXX-0402-130120
  ;     Modified to make error codes 11 and 105 more specific when
@@ -29,12 +29,18 @@ GRP ;
  .. S $P(ABMV("X3"),U,7)=$S($D(^AUTNEGRP(ABMX("GRP"),11,ABMP("VTYP"),0)):$P(^(0),U,2),1:$P(^AUTNEGRP(ABMX("GRP"),0),U,2))
  ;
 REG ;
- I $P(^AUPN3PPH(+ABMV("X2"),0),U,2)]"",($G(ABMP("PDFN"))'=$P(^AUPN3PPH(+ABMV("X2"),0),U,2)) S ABMX("HDFN")=$P(^AUPN3PPH(+ABMV("X2"),0),U,2)
+ ;I $P(^AUPN3PPH(+ABMV("X2"),0),U,2)]"" S ABMX("HDFN")=$P(^(0),U,2)  ;abm*2.5*10 IM20128
+ I $P(^AUPN3PPH(+ABMV("X2"),0),U,2)]"",($G(ABMP("PDFN"))'=$P(^AUPN3PPH(+ABMV("X2"),0),U,2)) S ABMX("HDFN")=$P(^AUPN3PPH(+ABMV("X2"),0),U,2)  ;abm*2.5*10 IM20128
  E  G PHINFO
  S $P(ABMV("X2"),U,6)=$P(^DPT(ABMX("HDFN"),0),U,2)
  S $P(ABMV("X2"),U,7)=$P(^DPT(ABMX("HDFN"),0),U,3)
+ ; start old code 10/30/02 QXX-0402-130120
+ ;I $D(^DPT(ABMX("HDFN"),.11)) D
+ ; end old code 10/30/02 QX-0402-130120
+ ; start new code 10/30/02 QXX-0402-130120
  I '+$D(^DPT(ABMX("HDFN"),.11)) S ABME(105)="" Q
  I +$D(^DPT(ABMX("HDFN"),.11)) D
+ . ; end new code 10/30/02 QX-0402-130120
  . I '($P(^DPT(ABMX("HDFN"),.11),U)]"") S ABME(105)="" Q
  . I '($P(^DPT(ABMX("HDFN"),.11),U,4)]"") S ABME(105)="" Q
  . I '($P(^DPT(ABMX("HDFN"),.11),U,5)]"") S ABME(105)="" Q
@@ -52,13 +58,21 @@ REMPL ;
  I $P(^AUPNPAT(ABMX("HDFN"),0),U,19)]"" D
  .I $D(^AUTNEMPL($P(^AUPNPAT(ABMX("HDFN"),0),U,19),0)) D
  ..S $P(ABMV("X3"),U)=$P(^AUTNEMPL($P(^AUPNPAT(ABMX("HDFN"),0),U,19),0),U)
- ..S ABMX("E0")=$G(^AUTNEMPL($P(^AUPNPAT(ABMX("HDFN"),0),U,19),0))
+ ..;S ABMX("E0")=^AUTNEMPL($P(^AUPNPAT(ABMX("HDFN"),0),U,19),0)  ;abm*2.5*11 IM22893
+ ..S ABMX("E0")=$G(^AUTNEMPL($P(^AUPNPAT(ABMX("HDFN"),0),U,19),0))  ;abm*2.5*11 IM22893
  E  S ABME(73)="" G XIT
- I $G(ABMX("E0"))="" S ABME(73)=""
+ I $G(ABMX("E0"))="" S ABME(73)=""  ;abm*2.5*11 IM22893
+ ;start old code abm*2.5*11 IM22893
+ ;I '($P(ABMX("E0"),U,2)]"") S ABME(75)=""
+ ;I '($P(ABMX("E0"),U,3)]"") S ABME(75)=""
+ ;I '($P(ABMX("E0"),U,4)]"") S ABME(75)=""
+ ;I '($P(ABMX("E0"),U,5)]"") S ABME(75)=""
+ ;end old code start new code IM22893
  I '($P($G(ABMX("E0")),U,2)]"") S ABME(75)=""
  I '($P($G(ABMX("E0")),U,3)]"") S ABME(75)=""
  I '($P($G(ABMX("E0")),U,4)]"") S ABME(75)=""
  I '($P($G(ABMX("E0")),U,5)]"") S ABME(75)=""
+ ;end new code IM22893
  I $D(ABME(75)) G REMST
  S $P(ABMV("X3"),U,2)=$P(ABMX("E0"),U,2)
  S $P(ABMV("X3"),U,3)=$P(ABMX("E0"),U,3)_", "
@@ -103,11 +117,13 @@ PHADD ;
  ;
 PEMPL ;
  I $P(^AUPN3PPH(+ABMV("X2"),0),U,16)]"" D
+ . ;new code patch #1
  . I '$D(^AUTNEMPL($P(^AUPN3PPH(+ABMV("X2"),0),U,16),0)) S ABME(73)="" Q
  . S $P(ABMV("X3"),U)=$P(^AUTNEMPL($P(^AUPN3PPH(+ABMV("X2"),0),U,16),0),U)
  . S ABMX("E0")=^AUTNEMPL($P(^AUPN3PPH(+ABMV("X2"),0),U,16),0)
  E  S ABME(73)=""
  I $D(ABME(73)) G XIT
+ ;end patch #1 changes
  I $P(ABMX("E0"),U,2)]"",$P(ABMX("E0"),U,3)]"",$P(ABMX("E0"),U,4)]"",$P(ABMX("E0"),U,5)]""
  E  S ABME(75)="" G XIT
  S $P(ABMV("X3"),U,2)=$P(ABMX("E0"),U,2)

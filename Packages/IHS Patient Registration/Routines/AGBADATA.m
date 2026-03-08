@@ -1,5 +1,6 @@
 AGBADATA ; IHS/ASDS/EFG - DISPLAY MISSING MANDATORY DATA;  
- ;;7.1;PATIENT REGISTRATION;;AUG 25,2005
+ ;;7.1;PATIENT REGISTRATION;**15**;AUG 25,2005;Build 1
+ ;IHS/OIT/NKD AG*7.1*15 BIRTH SEX
  ;
  Q:'$D(AG("DTOT"))
  Q:AG("DTOT")=0
@@ -25,7 +26,8 @@ VAR ;EP
  S AG(1)="invalid NAME"
  S AG(2)="invalid CHART NUMBER"
  S AG(3)="missing DATE OF BIRTH"
- S AG(4)="invalid SEX"
+ ;S AG(4)="invalid SEX"  ;IHS/OIT/NKD AG*7.1*15 BIRTH SEX
+ S AG(4)="invalid BIRTH SEX"
  S AG(5)="missing or unspecified TRIBE"
  S AG(6)="missing INDIAN QUANTUM"
  S AG(7)="missing CURRENT COMMUNITY"

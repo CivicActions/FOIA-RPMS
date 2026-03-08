@@ -1,0 +1,9 @@
+BQIATX ;GDHD/HCD/ALA-CREATED BY ^ATXSTX ON SEP 08, 2016;
+ ;;2.5;ICARE MANAGEMENT SYSTEM;**2**;May 24, 2016;Build 14
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^BQIATXA ;   BQI ZIKA TEST LOINC
+ D ^BQIATXB ;   BQI TB QUANTIFERON LOINC
+ Q

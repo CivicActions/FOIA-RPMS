@@ -1,5 +1,5 @@
 XUMFXHL7 ;BPFO/JRP - IEMM UTILTIES (CONT);7/29/2002
- ;;8.0;KERNEL;**299,407**;Jul 10, 1995;Build 8
+ ;;8.0;KERNEL;**299**;Jul 10, 1995
  ;
  ;copied from SCMSVUT5
  ;
@@ -61,7 +61,7 @@ ADDNODE ;Used by PARSE to add data to output node (handles continuation nodes)
  Q
  ;
  ;
-SEGPRSE(SEGMENT,OUTARR,FS,LENGTH)      ;Parse HL7 segment by field separator
+SEGPRSE(SEGMENT,OUTARR,FS)      ;Parse HL7 segment by field separator
  ;Input  : SEGMENT - Array containing HL7 segment to parse
  ;                   (full global ref)
  ;                   SEGMENT = First 245 characters of segment
@@ -78,9 +78,7 @@ SEGPRSE(SEGMENT,OUTARR,FS,LENGTH)      ;Parse HL7 segment by field separator
  ;Notes  : OUTARR is initialized (KILLed) on entry
  ;       : Assumes SEGMENT and OUTARR are defined and valid
  ;
- S LENGTH=$S($G(LENGTH):LENGTH,1:245)
- ;
- D PARSE($G(SEGMENT),$G(OUTARR),$G(FS),0,LENGTH)
+ D PARSE($G(SEGMENT),$G(OUTARR),$G(FS),0,245)
  Q
  ;
 SEQPRSE(SEQDATA,OUTARR,ENCODE)  ;Parse HL7 sequence by component

@@ -1,5 +1,5 @@
-BIDUVLS2 ;IHS/CMI/MWR - VIEW DUE LIST VIEW.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+BIDUVLS2 ;IHS/CMI/MWR - VIEW DUE LIST VIEW.; MAY 10, 2010 ; 03 Aug 2025  8:50 PM
+ ;;8.5;IMMUNIZATION;**26,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  LIST TEMPLATE CODE FOR VIEWING PATIENTS DUE, SET LINES FOR
  ;;  INDIVIDUAL PATIENTS.
@@ -101,7 +101,7 @@ PATIENT(BILINE,BIDFN,BINFO,BIDASH,BIMMRF,BIMMLF) ;EP
  ;---> Refusals.
  D:((BINFODS[23)!BIALL)
  .N A,X1,X2,X3 S (X1,X2,X3)=""
- .D CONTRA^BIUTL11(BIDFN,.A,1,1)
+ .D REFUSAL^BIUTL13(BIDFN,.A,1)
  .Q:('$D(A))
  .D WRITE(.BILINE)
  .S X1="     Refusals: "
@@ -117,6 +117,24 @@ PATIENT(BILINE,BIDFN,BINFO,BIDASH,BIMMRF,BIMMLF) ;EP
  .I X2]"" D WRITE(.BILINE,X2)
  .I X3]"" D WRITE(.BILINE,X3)
  ;
+ ;---> Contraindications.
+ D:((BINFODS[24)!BIALL)
+ .N A,X1,X2,X3 S (X1,X2,X3)=""
+ .D CONTRA^BIUTL11(BIDFN,.A,,1)
+ .Q:('$D(A))
+ .D WRITE(.BILINE)
+ .S X1="     Contraindications: "
+ .N N,M S N=0,M=0
+ .F  S N=$O(A(N)) Q:'N  D
+ ..N X S M=M+1
+ ..S X=$$VNAME^BIUTL2($$HL7TX^BIUTL2(N)) ;_" ("_$$SLDT2^BIUTL5($P(A(N),U,2),1)_")"
+ ..S:"235689"[M X=", "_X
+ ..I M<4 S X1=X1_X Q
+ ..I M<7 S:M=4 X2="               ",X1=X1_"," S X2=X2_X Q
+ ..S:M=7 X3="               ",X2=X2_"," S X3=X3_X Q
+ .I X1]"" D WRITE(.BILINE,X1)
+ .I X2]"" D WRITE(.BILINE,X2)
+ .I X3]"" D WRITE(.BILINE,X3)
  ;---> Next Appointment.
  D:((BINFODS[21)!BIALL)
  .;---> Write either Patient's Next Appointment if there is one.
@@ -166,7 +184,8 @@ FORECAST(BILINE,BIDFN,BIFDT) ;EP
  N BIRETVAL,BIRETERR S BIRETVAL=""
  ;---> Next line: 4th param=1 to not call Immserve because forecast
  ;---> just got updated in retrieving patients: +225^BIDUR.
- D IMMFORC^BIRPC(.BIRETVAL,BIDFN,BIFDT,1)
+ ;V8.5 P31 - FID-  Include '*HR*' high risk flag
+ D IMMFORC^BIRPC(.BIRETVAL,BIDFN,BIFDT,1,,,1)
  ;
  ;---> If BIRETERR has a value, store it and quit.
  S BIRETERR=$P(BIRETVAL,BI31,2)

@@ -1,8 +1,9 @@
 ACHSA5 ; IHS/ITSC/TPF/PMF - ENTER DOCUMENTS (6/8)-(SCC,DCR,DEST,REF,COM,DAYS) ;JUL 10, 2008   
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**14,15,16,21**;JUN 11,2001;Build 43
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**14,15,16,21,28**;JUN 11,2001;Build 86
  ;ACHS*3.1*14 IHS/OIT/FCJ Fixed the lookup problem when crosswalk was not definned
  ;ACHS*3.1*15 2.5.2009 IHS/OIT/FCJ FED FACILITIES REQUIRED TO USE VALID SCC
  ;ACHS*3.1*16 6.10.2009 IHS.OIT.FCJ FX FOR TRIBAL SITE USING NON STANDARD SCC'S
+ ;ACHS*3.1*28 12.18.2019 IHS.OIT.FCJ TEST FOR ^ IN COMMENT
  ;
 B1 ;EP - Input Service Class Code.
  W !!,"Service Class Code: "
@@ -149,6 +150,7 @@ C1 ;EP - Input optional comment.
  D READ^ACHSFU
  I $D(ACHSQUIT) D END^ACHSA Q
  G B10:$D(DUOUT)
+ S Y=$TR(Y,"^","")   ;ACHS*3.1*28
  I Y?1"?".E W !,"  Enter a Comment (10 chars max) If You Wish",!,"  Enter An '@' To Delete Current Comment" G C1
  G C2:Y=""
  I $L(Y)<11 S ACHSCOPT=$S(Y="@":"",1:Y) W:Y="@" "   Deleted" G C2

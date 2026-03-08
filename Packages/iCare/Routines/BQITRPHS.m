@@ -1,5 +1,5 @@
 BQITRPHS ;APTIV/HC/ALA-Treatment Prompt API for Health Summary ; 28 Feb 2008  3:31 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;2.0;ICARE MANAGEMENT SYSTEM;**2**;May 29, 2009
  ;
 EN(BQIDFN,BQIHSM,ARRAY) ; PEP - by patient and each best practice prompt
  ; Input
@@ -48,16 +48,21 @@ APCH ; EP - Tag to be called from Health Summary
  Q
  ;
 PAT(DFN,ARRAY) ;PEP - By patient and get all best practice prompts
- NEW TAG,BQTN,ORD,CT,BQTIEN,BQIRMK,BDT,BI,BK,BN,E,EDT,LCNT,NDESC,PDESC,RES,RESULT,TXT,VSDTM,X
  K ARRAY
  S TAG=$$CVT(DFN)
  I 'TAG S ARRAY(0)="Patient does not have an iCare Diagnostic Tag of CVD" Q
  S ARRAY(0)=1_U_"Patient's active iCare Diagnostic Tag is "_$P(TAG,U,2)
- I $O(^BQIPAT(DFN,50,0))="" S ARRAY(1)="No CVD Best Practice Prompts on file for this patient."
- S BQTIEN=0,CT=0
- F  S BQTIEN=$O(^BQIPAT(DFN,50,BQTIEN)) Q:'BQTIEN  D
- . S BN=0,CT=CT+1
- . M ARRAY(CT)=^BQIPAT(DFN,50,BQTIEN,1)
+ S BQTN=$P(TAG,U,3)
+ S ORD="",UID=$J,CT=0
+ F  S ORD=$O(^BQI(90508.5,"AD",BQTN,ORD)) Q:ORD=""  D
+ . S BQTIEN=""
+ . F  S BQTIEN=$O(^BQI(90508.5,"AD",BQTN,ORD,BQTIEN)) Q:BQTIEN=""  D
+ .. K BQIRMK
+ .. S BK=0
+ .. F  S BK=$O(^BQI(90508.5,BQTIEN,1,BK)) Q:'BK  S BQIRMK(BK)=^BQI(90508.5,BQTIEN,1,BK,0)
+ .. I '$$FND^BQITRPPT(BQTIEN,"BQITEST",DFN,.BQIRMK) Q
+ .. S CT=CT+1
+ .. M ARRAY(CT)=BQIRMK
  Q
  ;
 CVT(DFN) ;EP - Is patient tagged for CVD?

@@ -1,5 +1,5 @@
 SDAMEP1 ;ALB/CAW - Expanded Display (Appt. Data) ; 16 May 2001  4:49 PM  ; Compiled August 22, 2008 12:24:32
- ;;5.3;Scheduling;**20,241,534,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Scheduling;**20,241,534,1015,1022**;MAY 28, 2004;Build 18
  ;IHS/ANMC/LJF 07/06/2000 removed data not needed by IHS from display
  ;                        moved overbook data to first column
  ;IHS/OIT/LJF  12/30/2005 PATCH 1005 displayed OTHER INFO in multiple lines
@@ -11,22 +11,24 @@ APDATA ; Appointment Data
  D SET("")
  ;
  S X=""
+ ;202307 77892 maw p1022 PPN
  S X=$$SETSTR^VALM1("           Name:",X,1,SDWIDTH)
- S X=$$SETSTR^VALM1($P($G(^DPT(DFN,0)),U),X,SDFSTCOL,24)
- S X=$$SETSTR^VALM1("         Clinic:",X,40,SDWIDTH)
- S X=$$SETSTR^VALM1($P($G(^SC(SDCL,0)),U),X,SDSECCOL,24)
+ ;S X=$$SETSTR^VALM1($P($G(^DPT(DFN,0)),U),X,SDFSTCOL,24)
+ S X=$$SETSTR^VALM1($$GETPREF^AUPNSOGI(DFN,"E",1),X,SDFSTCOL,44)
  D SET(X)
  ;
  S X=""
  S X=$$SETSTR^VALM1("             ID:",X,1,SDWIDTH)
  S X=$$SETSTR^VALM1(VA("PID"),X,SDFSTCOL,24)
- S X=$$SETSTR^VALM1("      Date/Time:",X,40,SDWIDTH)
- S X=$$SETSTR^VALM1($$FTIME^VALM1(SDT),X,SDSECCOL,24)
+ S X=$$SETSTR^VALM1("         Clinic:",X,40,SDWIDTH)
+ S X=$$SETSTR^VALM1($P($G(^SC(SDCL,0)),U),X,SDSECCOL,24)
  D SET(X)
  ;
  S X=""
  S X=$$SETSTR^VALM1("         Status:",X,1,SDWIDTH)
  S X=$$SETSTR^VALM1($P($$STATUS^SDAM1(DFN,SDT,SDCL,$G(^DPT(DFN,"S",SDT,0)),SDDA),";",3),X,SDFSTCOL,50)
+ S X=$$SETSTR^VALM1("      Date/Time:",X,40,SDWIDTH)
+ S X=$$SETSTR^VALM1($$FTIME^VALM1(SDT),X,SDSECCOL,24)
  D SET(X)
  ;
  S SDPV=$P($G(^DPT(DFN,"S",SDT,0)),U,7),SDPOV=$S(SDPV=1:"C&P",SDPV=2:"10-10",SDPV=3:"SCHEDULED",SDPV=4:"UNSCHEDULED",1:"UNKNOWN")

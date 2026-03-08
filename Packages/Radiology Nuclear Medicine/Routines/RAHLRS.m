@@ -1,7 +1,14 @@
-RAHLRS ;HIRMFO/CRT/PDW - Resend HL7 messages for selected cases ;01/19/08 12:40
- ;;5.0;Radiology/Nuclear Medicine;**25,54,60,71,82,95**;Mar 16, 1998;Build 7
+RAHLRS ;HIRMFO/CRT/PDW - Resend HL7 messages for selected cases ;11 Mar 2019 10:07 AM
+ ;;5.0;Radiology/Nuclear Medicine;**25,54,60,71,82,95,137,156,1009**;Mar 16, 1998;Build 21
  ;
  ; Utility to RESEND HL7 messages
+ ;
+ ;Integration Agreements
+ ;----------------------
+ ;SENDA08^MAGDHLE       (6761 - Private)
+ ;^MAG(2006.1, IHE flag (6860 - Private)
+ ;$$PATCH^XPDUTL        (10141 - Supported)
+ ;$$KSP^XUPARAM("INST") (2541 - Supported) 
  ;
  ;;02/14/2006 BAY/KAM RA*5*71 Add ability to update exam data to V/R
  N RACNI,RADFN,RADTI,RARPT,X
@@ -94,4 +101,38 @@ SETVARS ; Setup key Rad/Nuc Med variables
  I $O(RACCESS(DUZ,""))="" D SETVARS^RAPSET1(0)
  Q:'($D(RACCESS(DUZ))\10)  ; user does not have location access
  I $G(RAIMGTY)="" D SETVARS^RAPSET1(1) K:$G(RAIMGTY)="" XQUIT
+ Q
+ ;
+RAADT ;Send patient demographic update (A47/A08) to PACS - P137/KLM
+ ;check if MAG*3*183 is installed
+ I '$$PATCH^XPDUTL("MAG*3.0*183") W !,"You need imaging patch MAG*3.0*183 installed to use this option!" Q
+ ;check if the IHE interface is enabled 
+ ;Get appropriate entry from IMAGING SITE PARAMETERS based on institution from Kernel Site Params
+ N RA20061 S RA20061=$O(^MAG(2006.1,"B",$$KSP^XUPARAM("INST"),"")) Q:RA20061<1  ;DBIA 2541,6860
+ I $$GET1^DIQ(2006.1,RA20061,3.01,"I")'="Y" W !!,"IHE is not enabled!",!,"See MAG*3.0*183 patch instructions to setup/enable ADT messages to PACS." Q
+ W !!,"This option will send patient demographic updates for selected patients.",!
+ W !,"It is recommended that you task this if you select 'ALL' patients.",!!
+ N RADFN,DIR,Y
+ S RADIC="^RADPT(",RADIC(0)="QEAMZ",RAUTIL="RA PATA08"
+ S RADIC("A")="Select Patient(s): "
+ W !! D EN1^RASELCT(.RADIC,RAUTIL)
+ K DIC,RADIC,RAUTIL
+ I $O(^TMP($J,"RA PATA08",""))="" W !!?3,$C(7),"No Patient selected." G EXIT
+ S %=1 W !,"Would you like to task this Job" D YN^DICN G:%<1 EXIT
+ I %=1 D  G EXIT
+ .S ZTIO="",ZTSAVE("^TMP($J,""RA PATA08"",")=""
+ .S ZTDESC="Rad/Nuc Med Patient Demographic Update to PACS",ZTRTN="TADT^RAHLRS"
+ .D ^%ZTLOAD
+ .I $D(ZTSK) W !,"Task# "_ZTSK,!!
+ .Q
+TADT ;task entry or fall through
+ S RACT=0
+ S RAPN="" F  S RAPN=$O(^TMP($J,"RA PATA08",RAPN)) Q:RAPN=""  D
+ .S RADFN=0 F  S RADFN=$O(^TMP($J,"RA PATA08",RAPN,RADFN)) Q:RADFN=""  D
+ ..D SENDA08^MAGDHLE(RADFN)
+ ..S RACT=RACT+1
+ ..Q
+ .Q
+ I '$D(ZTQUEUED) W !!,"Demographic updates sent for "_RACT_" patients"
+EXIT K ^TMP($J,"RA PATA08"),RAPN,RADFN,ZTDESC,ZTRTN,RACT,ZTSAVE,ZTIO,ZTSK,ZTQUEUED,%
  Q

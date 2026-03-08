@@ -1,0 +1,65 @@
+ABMCGRP2 ; IHS/SD/SDR - Claim Generator Report
+ ;;2.6;IHS Third Party Billing;**35,40**;NOV 12, 2009;Build 785
+ ;IHS/SD/SDR 2.6*35 ADO60700 New report - delimited summary output
+ ;IHS/SD/SDR 2.6*40 ADO85530 Report visits w/o Loc. Of Encounter
+PRINT ;
+ U IO W !!,"Hold on please, I'm writing the report..."
+ D OPEN^%ZISH("ABMF",ABMY("RPATH"),ABMY("RFN"),"W")
+ Q:POP
+ U IO
+ D HDB
+ I ABMY("DT")="C" D DTCHK^ABMCGRP1  ;this makes sure there is at least one line for each day of the claim generator
+ S ABMCGI=0
+ F  S ABMCGI=$O(^TMP("ABM-CGRPT",$J,"S",ABMCGI)) Q:'ABMCGI  D
+ .I $O(^TMP("ABM-CGRPT",$J,"S",ABMCGI,""))="NOCG" D  Q
+ ..W !,$$SDT^ABMDUTL(ABMCGI)_U_"<<CLAIM GENERATOR NOT RUN - NO DATA TO PRINT>>"
+ .;S ABMVLOC=0  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ .S ABMVLOC="" ;abm*2.6*40 IHS/SD/SDR ADO85530
+ .;F  S ABMVLOC=$O(^TMP("ABM-CGRPT",$J,"S",ABMCGI,ABMVLOC)) Q:'ABMVLOC  D  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ .F  S ABMVLOC=$O(^TMP("ABM-CGRPT",$J,"S",ABMCGI,ABMVLOC)) Q:(ABMVLOC="")  D  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ ..S ABMOPT=""
+ ..F  S ABMOPT=$O(^TMP("ABM-CGRPT",$J,"S",ABMCGI,ABMVLOC,ABMOPT)) Q:$G(ABMOPT)=""  D
+ ...W !
+ ...S ABMREC=$$SDT^ABMDUTL($P($G(^ABMCGAUD(ABMCGI,0)),U))  ;run date
+ ...;S ABMLABBR=$P($G(^AUTTLOC(ABMVLOC,0)),U,7)  ;loc abbr  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ ...S ABMLABBR=$S(+ABMVLOC'=0:$P($G(^AUTTLOC(ABMVLOC,0)),U,7),1:"NONE")  ;loc abbr  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ ...I $G(ABMLABBR)="" S ABMLABBR=$E($P($G(^AUTTLOC(ABMVLOC,0)),U,2),1,4)
+ ...S ABMREC=ABMREC_U_ABMLABBR  ;loc abbr
+ ...S ABMREC=ABMREC_U_ABMOPT  ;option
+ ...D BKMG^ABMCGRPT
+ ...S ABMREC=ABMREC_U_ABMBKMG
+ ...S ABMREC=ABMREC_U_+$P($G(^TMP("ABM-CGRPT",$J,"S",ABMCGI,ABMVLOC,ABMOPT,"TOT","VSTS")),U)  ;visit count
+ ...S ABMREC=ABMREC_U_+$P($G(^TMP("ABM-CGRPT",$J,"S",ABMCGI,ABMVLOC,ABMOPT,"TOT","CLMS")),U)  ;claim count
+ ...S ABMREC=ABMREC_U_+$P($G(^TMP("ABM-CGRPT",$J,"S",ABMCGI,ABMVLOC,ABMOPT,"TOT","RCVSTS")),U)  ;re-check visit count
+ ...W ABMREC
+ ;
+ W !
+ I $O(TMP("ABM-CGRPT",$J,"S-BKMG",0))=0 W !!,"Note: <No Backbill checks done in selected date range for report>"
+ S ABMDT=0
+ F  S ABMDT=$O(^TMP("ABM-CGRPT",$J,"B",ABMDT)) Q:'ABMDT  D
+ .;S ABMLOC=0  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ .S ABMLOC=""  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ .;F  S ABMLOC=$O(^TMP("ABM-CGRPT",$J,"B",ABMDT,ABMLOC)) Q:'ABMLOC  D  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ .F  S ABMLOC=$O(^TMP("ABM-CGRPT",$J,"B",ABMDT,ABMLOC)) Q:(ABMLOC="")  D  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ ..S ABMBY=0
+ ..F  S ABMBY=$O(^TMP("ABM-CGRPT",$J,"B",ABMDT,ABMLOC,ABMBY)) Q:'ABMBY  D
+ ...S ABMIDT=0
+ ...F  S ABMIDT=$O(^TMP("ABM-CGRPT",$J,"B",ABMDT,ABMLOC,ABMBY,ABMIDT)) Q:'ABMIDT  D
+ ....S ABMREC="(BKMG) "_$$BDT^ABMDUTL(ABMDT)
+ ....;S ABMREC=ABMREC_U_"(BKMG for) "_$P($G(^AUTTLOC(ABMLOC,0)),U,2)  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ ....S ABMREC=ABMREC_U_"(BKMG for) "_$S(+ABMLOC'=0:$P($G(^AUTTLOC(ABMLOC,0)),U,2),1:"NONE")  ;abm*2.6*40 IHS/SD/SDR ADO85530
+ ....S ABMREC=ABMREC_U_"(BKMG by) "_$P($G(^VA(200,ABMBY,0)),U)
+ ....S ABMREC=ABMREC_U_"(BKMG date) "_$$SDT^ABMDUTL(ABMIDT)
+ ....W !,ABMREC
+ W !,"END OF REPORT"
+ ;
+XIT ;
+ D CLOSE^%ZISH("ABMF")
+ D PAZ^ABMDRUTL
+ Q
+ ;
+HDB ;
+ S ABM("PG")=ABM("PG")+1
+ D WHD^ABMCGRP1
+ W !,"CG Run Date^Loc^Type^Backbill Check?^# Visits^# Claims Generated^# Visits Rechecked"
+ Q

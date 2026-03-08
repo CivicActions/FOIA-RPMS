@@ -1,13 +1,13 @@
-DIWE2 ;SFISC/GFT-WP SEARCH, CHANGE, INSERT ;11:04 AM  1 Oct 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**8**;Mar 30, 1999
+DIWE2 ;SFISC/GFT-WP SEARCH, CHANGE, INSERT ;4/12/94  1:15 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S DWI=DWLC,DWJ=0,DWLR=DWLW I DWLC W !,$J(DWLC,3),">",@(DIC_DWLC_",0)")
 NEWL W !,$J(DWJ+DWI+1,3),">" R X#245:DTIME I '$T,X="" S DTOUT=1 Q
  I X="",DIWPT'="" S X=" "
  Q:U[X!(DIWPT=X)
  I X?."?" D IQ^DIWE5 G NEWL
-TAB F  Q:X'[$C(9)  S X=$S($L(X)+4>245:$TR(X,$C(9)," "),1:$P(X,$C(9))_"|TAB|"_$P(X,$C(9),2,999))
+TAB I X[$C(9) S X=$P(X,$C(9),1)_$C(124)_"TAB"_$C(124)_$P(X,$C(9),2,999) G TAB
  I X'?.ANP W $C(7),!?9,"CONTROL CHARACTERS REMOVED!!",! F Y=1:1 I $E(X,Y)?.C G:Y>$L(X) NEWL:X="",G S X=$E(X,1,Y-1)_$E(X,Y+1,999),Y=Y-1
 G G NW:'DWPK,NW:X?." "!(X[($C(124)_"TAB"_$C(124)))!($A(X)=124),NL:DWPK=1 S:DWI Y=@(DIC_DWI_",0)") S J=$L(X) I J+DWLR<DWLW S @(DIC_"DWI,0)")=Y_$E(" ",$A(Y,DWLR)'=32)_X,DWLR=$L(@(DIC_"DWI,0)")) G NEWL
  I DWLR+7<DWLW F J=DWLW-DWLR:-1:1 IF $E(X,J)=" " S @(DIC_"DWI,0)")=Y_$E(" ",$A(Y,DWLR)'=32)_$E(X,1,J-1),X=$E(X,J+1,256),DWLR=$L(X) Q

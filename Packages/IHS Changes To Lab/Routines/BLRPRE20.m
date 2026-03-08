@@ -135,7 +135,7 @@ SORRY(MSG,MODE)       ;
  S STR(10)=$$CJ^XLFSTR("Please print/capture this screen and",65)
  S STR(11)=$$CJ^XLFSTR("notify the Support Center at",65)
  S STR(12)=""
- S STR(13)=$$CJ^XLFSTR("1-999-999-9999.",65)
+ S STR(13)=$$CJ^XLFSTR("1-888-830-7280.",65)
  S STR(14)=" "
  S STR(15)=$G(STR(2))
  S STR(16)=""

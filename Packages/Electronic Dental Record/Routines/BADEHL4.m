@@ -1,17 +1,21 @@
 BADEHL4 ;IHS/MSC/MGH/VAC - Dentrix HL7 inbound interface  ;01-Oct-2010 ;MGH
- ;;1.0;DENTAL/EDR INTERFACE;**1,4,5*;FEB 22, 2010;Build 23
+ ;;1.0;DENTAL/EDR INTERFACE;**1,4,5,9*;FEB 22, 2010;Build 16
  ;; Modified - IHS/MSC/AMF - 11/23/10 - More descriptive alert messages
  ;; Modified - IHS/MSC/AMF 10/2010 fix for hospital location FT1-16,2
  ;; Modified - IHS/OIT/GAB **4** 05/2015 for ICD10 Implementation
- ;; Modified - IHS/OIT/GAB **5** 03/2016 for ICD10 to accept POV from Dentrix (v 8.0.5 or later)
+ ;; Modified - IHS/OIT/GAB **5** 03/2016 for ICD10 to update POV from Dentrix (v 8.0.5 or later)
+ ;; Modified - IHS/GDIT/GAB **9** 09/2024 fix for <SUBSCRIPT> error when updating a V Dental entry and process "D" codes
+ ;;                                       check for "D" (CDT) codes if present in the ADA Code file
 UPD ;EP Update a V Dental entry
  N DIEN,MATCH,DA,APCDVSIT,CODEIEN,APCDSUR,APCDTEE
  N TYPE,TCODE,SCODE,PROV,X,Y,Y2,PIEN,POVIEN2,ADACODE,VTIME
  N NOOPSITE
+ S APCDVSIT=""  ;IHS/GDIT/GAB **9** Fix for <SUBSCRIPT> error
  S APCDALVR("APCDPAT")=DFN    ;patient
  ;visit stored in V Dental file
  S APCDVSIT=$P($G(^AUPNVDEN(EXKEY,0)),U,3)
  ;Added patient name, DFN, and Visit date. can't add ASUFAC or HLBIEN
+ I APCDVSIT="" D ACK^BADEHL3(HLMSGIEN,DFN,"Can't update visit using EXKEY: "_EXKEY_", visit IEN not present.") Q   ;IHS/GDIT/GAB **9** Fix for <SUBSCRIPT> error
  I '$D(^AUPNVSIT(APCDVSIT)) D ACK^BADEHL3(HLMSGIEN,DFN,"Can't update visit "_APCDVSIT_". Not in RPMS:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  S APCDALVR("APCDVSIT")=APCDVSIT
  ;ADA code stored in V Dental file
@@ -40,9 +44,17 @@ UPD ;EP Update a V Dental entry
  ;ADA code in the message
  S TCODE=$$GET^HLOPRS(.SEGFT1,7)
  I TCODE="" D ACK^BADEHL3(HLMSGIEN,DFN,"Missing ADA code in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
- I $E(TCODE,1,1)="D" S SCODE=$E(TCODE,2,$L(TCODE))
- E  S SCODE=TCODE
- S CODEIEN=$O(^AUTTADA("B",SCODE,""))
+ ;/IHS/GDIT/GAB **9** Commented next 3 lines, process the code "as is" first
+ ;I $E(TCODE,1,1)="D" S SCODE=$E(TCODE,2,$L(TCODE))
+ ;E  S SCODE=TCODE
+ ;S CODEIEN=$O(^AUTTADA("B",SCODE,""))
+ ;/IHS/GDIT/GAB **9** Added next 5 lines to Process "D" CDT Codes, create alert if not a valid code
+ S SCODE="" I TCODE=ADACODE S SCODE=TCODE   ;same code number
+ S CODEIEN="" S CODEIEN=$$GETADIEN^BADEUTIL(TCODE) ;get the code IEN
+ I CODEIEN<0 S BADERR="Dental Code "_TCODE_" is not in the ADA Code file" Q
+ I CODEIEN="I" S BADERR="Dental Code "_TCODE_" has been inactivated in the ADA Code file" Q
+ I CODEIEN=APCDTSC S SCODE=ADACODE  ;same code IEN
+ ;
  S APCDALVR("APCDTSC")="`"_CODEIEN
  ;Check to see if the code has changed. If the code was changed,
  ;the old code needs to be deleted and a new one stored
@@ -136,12 +148,13 @@ DEL ;EP  Delete V file entry
  ;Delete the entry
  I '$D(^AUPNVDEN(DIEN)) D ACK^BADEHL3(HLMSGIEN,DFN,"Can't delete visit "_DIEN_". Not in RPMS:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  S VSIT=$P($G(^AUPNVDEN(+DIEN,0)),U,3)
+ I VSIT="" D ACK^BADEHL3(HLMSGIEN,DFN,"Can't update visit using EXKEY: "_EXKEY_", visit IEN not present.") Q   ;IHS/GDIT/GAB **9** Fix for <SUBSCRIPT> error
  S PROV=$$GET^HLOPRS(.SEGFT1,20,1)
  I PROV="" D ACK^BADEHL3(HLMSGIEN,DFN,"Missing provider in FT1:") Q  ;IHS/MSC/AMF 11/23/10 More descriptive alert
  ;Get the dependent count for this visit
  S DCNT=$P(^AUPNVSIT(VSIT,0),U,9)
  ;Delete this entry and quit
- ;I DCNT>3 D							;/IHS/OIT/GAB 3/2016 **5** commented this line
+ ;I DCNT>3 D                           ;/IHS/OIT/GAB 3/2016 **5** commented this line
  S FILE=9000010.05
  D VDEL(FILE,DIEN,VSIT)
  S FILE=9000010.07

@@ -1,0 +1,332 @@
+BDMDJ13 ; IHS/CMI/LAB - 2022 DIABETES AUDIT ;
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**15**;JUN 14, 2007;Build 95
+ ;
+LASTFLU(BDMPDFN,BDMBD,BDMED,BDMFORM) ;PEP - date of last FLU
+ ;  Return the last recorded FLU:
+ ;
+ I $G(BDMPDFN)="" Q ""
+ I $G(BDMBD)="" S BDMBD=$$DOB^AUPNPAT(BDMPDFN)
+ I $G(BDMED)="" S BDMED=DT
+ I $G(BDMFORM)="" S BDMFORM="D"
+ NEW BDMLAST,BDMVAL,BDMX,R,X,Y,V,E,T,G,BDMY,BDMF,Z,D,S
+ S BDMLAST="",S=""
+ S T=$O(^ATXAX("B","DM AUDIT FLU IZ CVX CODES",0))
+ I T S X=0 F  S X=$O(^ATXAX(T,21,"B",X)) Q:X=""  S S(X)=""
+ ;F X=194,200,201,202,205 S S(X)=""
+ S R="" F  S R=$O(S(R)) Q:R=""  D
+ .S BDMVAL=$$LASTITEM^APCLAPIU(BDMPDFN,R,"IMMUNIZATION",$S($P(BDMLAST,U)]"":$P(BDMLAST,U),1:BDMBD),BDMED,"A")
+ .D E
+ S BDMVAL=$$LASTCPTT^APCLAPIU(BDMPDFN,$S($P(BDMLAST,U)]"":$P(BDMLAST,U),1:BDMBD),BDMED,"BGP CPT FLU","A")
+ D E
+ ;S BDMVAL=$$LASTDXT^APCLAPIU(BDMPDFN,$S($P(BDMLAST,U)]"":$P(BDMLAST,U),1:BDMBD),BDMED,"DM AUDIT FLU IZ DXS","A")
+ ;D E
+ I BDMFORM="D" Q $P(BDMLAST,U)
+ Q BDMLAST
+E ;
+ I $P(BDMVAL,U,1)>$P(BDMLAST,U,1) S BDMLAST=BDMVAL
+ Q
+FLU(P,BDATE,EDATE,R,F) ;EP
+ NEW BDM,X,E,%,%DT,BD,B,D,C,Y,LFLU,TFLU,Z,G,T,S,A,J
+ I $G(F)="" S F="E"
+ S R=$G(R)  ;IF BLANK, NO REFUSALS
+ S LFLU=$$LASTFLU(P,BDATE,EDATE,"D")
+ I LFLU]"" Q $S(F="E":"1  Yes  "_$$DATE^BDMS9B1(LFLU),1:LFLU)
+ Q $S(F="E":"2  No",1:"")
+PNEU(P,EDATE,R,F) ;EP
+ NEW BDM,X,E,B,%DT,Y,TPN,D,LPN,G,C,Z,T
+ K TPN
+ I $G(F)="" S F="E"
+ I $G(R)="" S R=0
+ S LPN=$$PPSV23(P,$$DOB^AUPNPAT(P),EDATE)
+ I LPN]"" Q $S(F="E":"1  Yes  "_$$DATE^BDMS9B1(LPN),1:LPN)
+ Q $S(F="E":"2  No",1:"")
+PPSV23(P,BDATE,EDATE) ;EP
+ NEW BDMG,T1,BDMOPNU,I,X,CVX,T,D,BDMZ,G,B
+ K BDMG
+ S BDMOPNU=""
+ S T1=$O(^ATXAX("B","BGP PPSV23 CVX CODES",0))
+ S X=0 F  S X=$O(^AUPNVIMM("AC",P,X)) Q:X'=+X  D
+ .S I=$P($G(^AUPNVIMM(X,0)),U,1)
+ .I 'I Q
+ .S CVX=$P($G(^AUTTIMM(I,0)),U,3)
+ .Q:CVX=""
+ .I '$D(^ATXAX(T1,21,"B",CVX)) Q  ;NOT IN TAXONOMY
+ .S D=$P($$VALI^XBDIQ1(9000010.11,X,1201),".")
+ .I D="" S D=$$VD^APCLV($P(^AUPNVIMM(X,0),U,3))
+ .Q:D<BDATE
+ .Q:D>EDATE
+ .I $P(BDMOPNU,U,1)<D S BDMOPNU=D
+ K BDMG S %=P_"^LAST DX [BGP PNEUMO IZ DXS;DURING "_BDATE_"-"_EDATE,E=$$START1^APCLDF(%,"BDMG(")
+ I $D(BDMG(1)),$P(BDMOPNU,U,1)<$P(BDMG(1),U) S BDMOPNU=$P(BDMG(1),U,1)
+ S %=$$CPT^BDMDJDU(P,BDATE,EDATE,$O(^ATXAX("B","BGP PPSV23 CPT CODES",0)),5)
+ I $P(BDMOPNU,U,1)<$P(%,U,1) S BDMOPNU=$P(%,U,1)
+ S %=$$TRAN^BDMDJDU(P,BDATE,EDATE,$O(^ATXAX("B","BGP PPSV23 CPT CODES",0)),5)
+ I $P(BDMOPNU,U,1)<$P(%,U,1) S BDMOPNU=$P(%,U,1)
+ I BDMOPNU]"" Q BDMOPNU
+ Q ""
+BI() ;
+ Q $S($O(^AUTTIMM(0))>100:1,1:0)
+BPS(P,BDATE,EDATE,F) ;EP ;
+ I $G(F)="" S F="E"
+ NEW X,BDM,E,BDML,BDMLL,BDMV,BDMVF,BDMBDT,D,I
+ S BDMLL=0,BDMV=""
+ K BDM,BDMBDT
+ S X=P_"^ALL MEAS BP;DURING "_BDATE_"-"_EDATE S E=$$START1^APCLDF(X,"BDM(")
+ S BDML=0 F  S BDML=$O(BDM(BDML)) Q:BDML'=+BDML  D
+ .S BDMVF=+$P(BDM(BDML),U,4)
+ .Q:$P($G(^AUPNVMSR(BDMVF,2)),U,1)  ;entered in error
+ .Q:$$CLINIC^APCLV($P(BDM(BDML),U,5),"C")=30
+ .S D=$$VALI^XBDIQ1(9000010.01,BDMVF,1201)
+ .I D="" S D=$$VDTM^APCLV($P(BDM(BDML),U,5))
+ .S BDMBDT($P(D,"."),D,BDMVF)=BDM(BDML)
+ S D="" F  S D=$O(BDMBDT(D),-1) Q:D'=+D!(BDMLL=3)  D
+ .S E="",E=$O(BDMBDT(D,E),-1) Q:E'=+E!(BDMLL=3)
+ .S I="" S I=$O(BDMBDT(D,E,I),-1) Q:I'=+I!(BDMLL=3)  D
+ ..S BDMLL=BDMLL+1
+ ..S BDMBP=$P(BDMBDT(D,E,I),U,2)
+ ..I F="E" S $P(BDMV,";",BDMLL)=BDMBP_" mm Hg "_$$DATE^BDMS9B1($P(BDMBDT(D,E,I),U))
+ ..I F="I" S $P(BDMV,";",BDMLL)=$P(BDMBP," ")
+ Q BDMV
+HTNDX(P,EDATE) ;EP - is HTN on problem list
+ I '$G(P) Q ""
+ I '$D(^DPT(P)) Q ""
+ NEW %,BDM,E,X,T,G,Y
+ S T=$O(^ATXAX("B","SURVEILLANCE HYPERTENSION",0))
+ S (X,G)=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(G)  D
+ .Q:'$D(^AUPNPROB(X,0))  ;bad xref
+ .Q:$P(^AUPNPROB(X,0),U,8)>EDATE  ;if added to pl after end of time period, no go
+ .S Y=$P(^AUPNPROB(X,0),U)
+ .Q:$P(^AUPNPROB(X,0),U,12)="I"
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"
+ .I $$ICD^BDMUTL(Y,$P(^ATXAX(T,0),U),9) S G=1 Q
+ .I $P($G(^AUPNPROB(X,800)),U,1)]"",$$SNOMED^BDMUTL(2022,"PXRM ESSENTIAL HYPERTENSION",$P(^AUPNPROB(X,800),U,1)) S G=1
+ .Q
+ I G Q "1  Yes"
+ K BDM
+ S X=P_"^LAST 3 DX [SURVEILLANCE HYPERTENSION;DURING "_$$DATE^BDMS9B1($$DOB^AUPNPAT(P))_"-"_EDATE S E=$$START1^APCLDF(X,"BDM(")
+ I $D(BDM(3)) S Y=$$DATE^BDMS9B1($P(BDM(3),U,1))_"  "_$$DATE^BDMS9B1($P(BDM(2),U))_"  "_$$DATE^BDMS9B1($P(BDM(1),U)) Q "1  Yes - DX on "_Y
+ Q "2  No"
+LASTHT(P,EDATE,F) ;PEP - return last ht and date
+ I 'P Q ""
+ I $G(F)="" S F="E"
+ I '$D(^AUPNVSIT("AC",P)) Q ""
+ NEW %,BDMARRY,H,E,W,BDATE,D
+ S %DT="P",X=EDATE D ^%DT S EDATE=Y
+ S BDATE=$P(^DPT(P,0),U,3)
+ S E=$O(^AUTTMSR("B","HT",0))
+ S H=""
+ S D=0 F  S D=$O(^AUPNVMSR("AA",P,E,D)) Q:D'=+D!(H]"")  D
+ .S W=0 F  S W=$O(^AUPNVMSR("AA",P,E,D,W)) Q:W'=+W!(H]"")  D
+ ..Q:'$D(^AUPNVMSR(W,0))
+ ..Q:$P($G(^AUPNVMSR(W,2)),U,1)  ;entered in error
+ ..S H=$P(^AUPNVMSR(W,0),U,4)
+ ..S BDMARRY(1)=$$VD^APCLV($P(^AUPNVMSR(W,0),U,3))
+ I H="" Q H
+ I F="I" Q H
+ S H=$J(H,5,2)
+ Q H_" inches "_$$DATE^BDMS9B1($P(BDMARRY(1),U))
+LASTWT(P,BDATE,EDATE,F) ;PEP - return last wt
+ I 'P Q ""
+ I $G(F)="" S F="E"
+ NEW %,BDMARRY,E,BDMW,X,BDMN,BDM,BDMD,BDMZ,BDMX,W,H,BDMVF
+ K BDM S BDMW="" S BDMX=P_"^LAST 24 MEAS WT;DURING "_BDATE_"-"_EDATE S E=$$START1^APCLDF(BDMX,"BDM(")
+ S BDMN=0 F  S BDMN=$O(BDM(BDMN)) Q:BDMN'=+BDMN!(BDMW]"")  D
+ . S BDMVF=+$P(BDM(BDMN),U,4)
+ . Q:$P($G(^AUPNVMSR(BDMVF,2)),U,1)  ;entered in error
+ . S BDMZ=$P(BDM(BDMN),U,5)
+ . I '$D(^AUPNVPOV("AD",BDMZ)) S BDMW=$P(BDM(BDMN),U,2)\1_" lbs "_$$DATE^BDMS9B1($P(BDM(BDMN),U)) Q
+ . S BDMD=0,G=0 F  S BDMD=$O(^AUPNVPOV("AD",BDMZ,BDMD)) Q:'BDMD  D
+ .. N ICDI
+ .. S ICDI=$P($$ICDDX^BDMUTL($P(^AUPNVPOV(BDMD,0),U)),U)  ;p8
+ .. S ICD=$P($$ICDDX^BDMUTL($P(^AUPNVPOV(BDMD,0),U)),U,2)  ;cmi/anch/maw 9/12/2007 csv
+ .. ;make the call here to BGP PREGNANCY DIAGNOSIS 2
+ ..N TAX
+ ..S TAX=$O(^ATXAX("B","BGP PREGNANCY DIAGNOSES 2",0))
+ .. I $$ICD^BDMUTL(ICDI,$P(^ATXAX(TAX,0),U),9) S G=1  ;cmi/maw 05/15/2014 p8
+ .I 'G S BDMW=$P(BDM(BDMN),U,2)\1_" lbs "_$$DATE^BDMS9B1($P(BDM(BDMN),U))
+ .Q
+ Q $S(F="E":BDMW,1:+BDMW)
+CMSFDX(P,R,T,M,Z) ;EP - return date/dx of dm in register
+ I '$G(P) Q ""
+ I $G(T)="" Q ""
+ I $G(M) G CMSFDXM
+ I '$G(R) Q ""
+ NEW D1,Y,X,D,G S X=0,(D,Y)="" F  S X=$O(^ACM(44,"C",P,X)) Q:X'=+X  I $P(^ACM(44,X,0),U,4)=R D
+ .S D=$P($G(^ACM(44,X,"SV")),U,2),D1=D,D=$$DATE^BDMS9B1(D)
+ .S Y=$$VAL^XBDIQ1(9002244,X,.01)
+ .I D1="" S D1=0
+ .S G(9999999-D1)=D_"^"_D1_"^"_Y
+ I '$O(G(0)) Q ""
+ S Y=0,G=$O(G(Y))
+ S D=$P(G(G),U),D1=$P(G(G),U,2),Y=$P(G(G),U,3)
+ Q $S(T="D":$G(D),T="DX":$G(Y),T="ID":$G(D1),1:"")
+CMSFDXM ;
+ NEW D1,Y,X,D,G,DOO,DX
+ S X=0,(D,Y)="" F  S X=$O(^ACM(44,"C",P,X)) Q:X'=+X  S R=$P(^ACM(44,X,0),U,4) I $D(Z(R)) D
+ .S D=$P($G(^ACM(44,X,"SV")),U,2) S:'D D=9999999 I D S DOO(D)=$$DATE^BDMS9B1(D)_U_D_U_$$VAL^XBDIQ1(9002244,X,.01)
+ .S Y=$$VAL^XBDIQ1(9002244,X,.01)
+ .I D="" S D=0
+ .S DX(9999999-D)=Y
+ S G=""
+ I T="D"!(T="ID") D  Q G
+ .S G=""
+ .S D=$O(DOO(0)) I D S G=$S(T="D":$P(DOO(D),U,1),T="ID":D,1:"")
+ S Y=0,Y=$O(DX(Y))
+ I 'Y Q ""
+ Q DX(Y)
+PLDMDOO(P,F) ;EP
+ I '$G(P) Q ""
+ I $G(F)="" S F="E"
+ NEW T S T=$O(^ATXAX("B","SURVEILLANCE DIABETES",0))
+ I 'T Q ""
+ NEW D,X,I S D="",X=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X  D
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"  ;deleted problem
+ .S I=$P(^AUPNPROB(X,0),U)
+ .I $$ICD^BDMUTL(I,$P(^ATXAX(T,0),U),9) D  Q
+ ..I $P(^AUPNPROB(X,0),U,13)]"" S D($P(^AUPNPROB(X,0),U,13))=""
+ ..Q
+ .I $P($G(^AUPNPROB(X,800)),U,1)]"",$$SNOMED^BDMUTL(2022,"PXRM DIABETES",$P(^AUPNPROB(X,800),U,1)) D
+ ..I $P(^AUPNPROB(X,0),U,13)]"" S D($P(^AUPNPROB(X,0),U,13))=""
+ .Q
+ S D=$O(D(0)) Q $S(F="E":$$DATE^BDMS9B1(D),1:$O(D(0)))
+PLDMDXS(P) ;EP - get all DM dxs from problem list
+ I '$G(P) Q ""
+ NEW T S T=$O(^ATXAX("B","SURVEILLANCE DIABETES",0))
+ I 'T Q "<diabetes taxonomy missing>"
+ NEW D,X,I S D="",X=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X  D
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"  ;deleted problem
+ .S I=$P(^AUPNPROB(X,0),U)
+ .I $$ICD^BDMUTL(I,$P(^ATXAX(T,0),U),9) S:D]"" D=D_";" S D=D_$P($$ICDDX^BDMUTL(I),U,2) Q
+ .I $P($G(^AUPNPROB(X,800)),U,1)]"",$$SNOMED^BDMUTL(2022,"PXRM DIABETES",$P(^AUPNPROB(X,800),U,1)) S:D]"" D=D_";" S D=D_"SNOMED: "_$P(^AUPNPROB(X,800),U,1)
+ .Q
+ Q D
+ ;
+FRSTDMDX(P,F) ;EP return date of first dm dx
+ I '$G(P) Q ""
+ I $G(F)="" S F="E"
+ NEW X,E,BDM,Y
+ S Y="BDM("
+ S X=P_"^FIRST DX [SURVEILLANCE DIABETES" S E=$$START1^APCLDF(X,Y) S Y=$P($G(BDM(1)),U)
+ Q $S(F="E":$$DATE^BDMS9B1(Y),1:Y)
+LASTDMDX(P,D) ;EP - last pcc dm dx
+ I '$G(P) Q ""
+ NEW X,E,BDM,Y
+ S Y="BDM("
+ S X=P_"^LAST DX [DM AUDIT TYPE II DXS;DURING "_$$DOB^AUPNPAT(P,"E")_"-"_D S E=$$START1^APCLDF(X,Y)
+ I $D(BDM(1)) Q "Type 2"
+ K BDM S X=P_"^LAST DX [DM AUDIT TYPE I DXS;DURING "_$$DOB^AUPNPAT(P,"E")_"-"_D S E=$$START1^APCLDF(X,Y)
+ I $D(BDM(1)) Q "Type 1"
+ Q ""
+INCHES ;
+ NEW F,FI,Z
+ S (X,Z)=$$LASTHT^BDMDJ13(BDMPD,BDMRED,"I")
+ Q:X=""
+ S X=X/12  ;get feet
+ S F=$P(X,".")
+ S FI=F*12  ;GET INCHES
+ S X=Z-FI
+ S X=$J(X,5,2)
+ S X=$$STRIP^XLFSTR(X," ")
+ Q
+DATE(D) ;EP
+ I D="" Q D
+ Q $E(D,4,5)_"/"_$E(D,6,7)_"/"_$E(D,2,3)
+HEP(P,EDATE,NR,F) ;EP
+ NEW BDMC,BDMG,BDMX,BDMHEP,C,X,ED,G,T,BDM10743,V,Z,Y,BDMIMM,I,R,BDMZ,S,BDMREF,BDMCVX
+ ;get all immunizations
+ S F=$G(F) I F="" S F="E"
+ S S=$G(S)
+ S C="8^42^43^44^45^51^102^104^110^132^146^193"
+ D GETIMMS^BDMUTL(P,EDATE,C,.BDMX)
+ ;go through and set into array if 10 days apart
+ S X=0 F  S X=$O(BDMX(X)) Q:X'=+X  S BDMHEP(X)=""
+ ;now get cpts
+ S ED=9999999-EDATE,BD=9999999-$$DOB^AUPNPAT(P),G=0
+ S T=$O(^ATXAX("B","BGP HEPATITIS CPTS",0))
+ F  S ED=$O(^AUPNVSIT("AA",P,ED)) Q:ED=""!($P(ED,".")>BD)  D
+ .S V=0 F  S V=$O(^AUPNVSIT("AA",P,ED,V)) Q:V'=+V  D
+ ..Q:'$D(^AUPNVSIT(V,0))
+ ..S X=0 F  S X=$O(^AUPNVCPT("AD",V,X)) Q:X'=+X  D
+ ...S Y=$P(^AUPNVCPT(X,0),U) S Z=$P($$CPT^ICPTCOD(Y),U,2) I $$ICD^BDMUTL(Y,$P(^ATXAX(T,0),U),1) S BDMHEP(9999999-$P(ED,"."))=""  ;cmi/maw 05/15/2014 p8
+ ..S X=0 F  S X=$O(^AUPNVTC("AD",V,X)) Q:X'=+X  D
+ ...S Y=$P(^AUPNVTC(X,0),U,7) Q:'Y  S Z=$P($$CPT^ICPTCOD(Y),U,2) I $$ICD^BDMUTL(Y,$P(^ATXAX(T,0),U),1) S BDMHEP(9999999-$P(ED,"."))=""  ;cmi/maw 05/15/2014 p8
+ ;now check to see if they are all spaced 20 days apart, if not, kill off the odd ones
+ S X="",Y="",C=0 F  S X=$O(BDMHEP(X)) Q:X'=+X  S C=C+1 D
+ .I C=1 S Y=X Q
+ .I $$FMDIFF^XLFDT(X,Y)<21 K BDMHEP(X) Q
+ .S Y=X
+ ;now count them and see if there are 3 of them
+ S BDMHEP=0,X=0 F  S X=$O(BDMHEP(X)) Q:X'=+X  S BDMHEP=BDMHEP+1
+ I BDMHEP>2 Q "1  Yes"
+I ;;
+ ;NEW FOR 2022 AUDIT CHECK FOR 2 OF CVX 189
+ S C="189"
+ D GETIMMS^BDMUTL(P,EDATE,C,.BDMX)
+ ;go through and set into array if 10 days apart
+ S X=0 F  S X=$O(BDMX(X)) Q:X'=+X  S BDMHEP(X)=""
+ ;now check to see if they are all spaced 20 days apart, if not, kill off the odd ones
+ S X="",Y="",C=0 F  S X=$O(BDMHEP(X)) Q:X'=+X  S C=C+1 D
+ .I C=1 S Y=X Q
+ .I $$FMDIFF^XLFDT(X,Y)<21 K BDMHEP(X) Q
+ .S Y=X
+ ;now count them and see if there are 2 of them
+ S BDMHEP=0,X=0 F  S X=$O(BDMHEP(X)) Q:X'=+X  S BDMHEP=BDMHEP+1
+ I BDMHEP>1 Q "1  Yes"
+ ;check for Evidence of desease and Contraindications and if yes, then quit
+ ;CONTRA OF IMMUNE
+ F BDMIMM=8,42,43,44,45,51,102,104,110,132,146,189,193 S R=$$HEPCONT(P,BDMIMM,$$DOB^AUPNPAT(P),EDATE) Q:R]""
+ I R Q "3  Immune"
+ K BDMG S %=P_"^LAST DX [BGP HEP EVIDENCE;DURING "_$$DOB^AUPNPAT(P)_"-"_EDATE,E=$$START1^APCLDF(%,"BDMG(")
+ I $D(BDMG(1)) Q "3  Immune by DX"  ;_U_"Evid Hep B"
+ I $$PLTAX^BDMDJ12(P,"BGP HEP EVIDENCE") Q "3  Immune by DX"
+ I $G(NR) Q "2  No"   ;no refusals
+ ;NOW CHECK CONTRAINDICATIONS EVER AND REFUSALS IN PAST YEAR
+ ;LOOK FOR CONTRAINDICATION FIRST
+ K S
+ F BDMIMM=8,42,43,44,45,51,102,104,110,132,146,189,193 S S(BDMIMM)=""
+ K BDMREF
+ S G="",Z="" F  S Z=$O(S(Z)) Q:Z=""  S X=0,Y=$O(^AUTTIMM("C",Z,0)) I Y F  S X=$O(^BIPC("AC",P,Y,X)) Q:X'=+X!(G)  D
+ .S S=$P(^BIPC(X,0),U,3)
+ .Q:S=""
+ .Q:'$D(^BICONT(S,0))
+ .Q:$P(^BICONT(S,0),U,1)["Refusal"
+ .S T=$P(^BIPC(X,0),U,4)
+ .Q:T=""
+ .S BDMREF(9999999-T)=1_U_$$DATE^BDMS9B1(T)_U_$$VAL^XBDIQ1(9002084.11,X,.03)
+ ;NMI, PROV DISCONTINUED, CONSIDERED AND NOT DONE 
+ S BDMCVX="",G="" F  S BDMCVX=$O(S(BDMCVX)) Q:BDMCVX=""  D
+ .S G=$$REFUSAL^BDMDJ17(P,9999999.14,$O(^AUTTIMM("C",BDMCVX,0)),$$DOB^AUPNPAT(P),DT,"N")
+ .I G I '$D(BDMREF(9999999-$P(G,U,7))) S BDMREF((9999999-$P(G,U,7)))=1_U_$P(G,U,3)_U_$P(G,U,5)
+ .S G=$$REFUSAL^BDMDJ17(P,9999999.14,$O(^AUTTIMM("C",BDMCVX,0)),$$DOB^AUPNPAT(P),DT,"P")
+ .I G I '$D(BDMREF(9999999-$P(G,U,7))) S BDMREF((9999999-$P(G,U,7)))=1_U_$P(G,U,3)_U_$P(G,U,5)
+ .S G=$$REFUSAL^BDMDJ17(P,9999999.14,$O(^AUTTIMM("C",BDMCVX,0)),$$DOB^AUPNPAT(P),DT,"U")
+ .I G I '$D(BDMREF(9999999-$P(G,U,7))) S BDMREF((9999999-$P(G,U,7)))=1_U_$P(G,U,3)_U_$P(G,U,5)
+ S X=$O(BDMREF(0)) I X Q "  Contraindication: "_$P(BDMREF(X),U,3)_" "_$P(BDMREF(X),U,2)
+ ;NOW CHECK REFUSAL IN PAST YEAR ONLY
+ S BD=$$FMADD^XLFDT(DT,-365)
+ S ED=DT
+ S G="",Z="" F  S Z=$O(S(Z)) Q:Z=""  S X=0,Y=$O(^AUTTIMM("C",Z,0)) I Y F  S X=$O(^BIPC("AC",P,Y,X)) Q:X'=+X!(G)  D
+ .S S=$P(^BIPC(X,0),U,3)
+ .Q:S=""
+ .Q:'$D(^BICONT(S,0))
+ .Q:$P(^BICONT(S,0),U,1)'["Refusal"
+ .S T=$P(^BIPC(X,0),U,4)
+ .Q:T<BD
+ .Q:T>ED
+ .S BDMREF(9999999-T)=1_U_$$DATE^BDMS9B1(T)_U_$$VAL^XBDIQ1(9002084.11,X,.03)
+ ;NMI, PROV DISCONTINUED, CONSIDERED AND NOT DONE 
+ S BDMCVX="",G="" F  S BDMCVX=$O(S(BDMCVX)) Q:BDMCVX=""  D
+ .S G=$$REFUSAL^BDMDJ17(P,9999999.14,$O(^AUTTIMM("C",BDMCVX,0)),BD,DT,"R")
+ .I G I '$D(BDMREF(9999999-$P(G,U,7))) S BDMREF((9999999-$P(G,U,7)))=1_U_$P(G,U,3)_U_$P(G,U,5)
+ S X=$O(BDMREF(0)) I X Q $P(BDMREF(X),U,3)_" "_$P(BDMREF(X),U,2)
+ Q "2  No"
+HEPCONT(P,C,BD,ED) ;EP
+ NEW X,G,Y,R,D
+ S X=0,G="",Y=$O(^AUTTIMM("C",C,0)) I Y F  S X=$O(^BIPC("AC",P,Y,X)) Q:X'=+X!(G)  D
+ .S R=$P(^BIPC(X,0),U,3)
+ .Q:R=""
+ .Q:'$D(^BICONT(R,0))
+ .S D=$P(^BIPC(X,0),U,4)
+ .Q:$P(^BIPC(X,0),U,4)>ED
+ .I $P(^BICONT(R,0),U,1)="Immune" S G="3  Immune"
+ Q G

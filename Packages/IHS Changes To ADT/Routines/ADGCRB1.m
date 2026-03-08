@@ -1,5 +1,5 @@
-ADGCRB1 ; IHS/ADC/PDW/ENM - A SHEET lines 1&2 ; [ 03/25/1999  11:48 AM ]
- ;;5.0;ADMISSION/DISCHARGE/TRANSFER;;MAR 25, 1999
+ADGCRB1 ; IHS/ADC/PDW/ENM - A SHEET lines 1&2 ; [ 05/28/2004  11:48 AM ]
+ ;;5.3;ADMISSION/DISCHARGE/TRANSFER;**1021**;MAY 28, 2004;Build 5
  ;
 A ; -- driver
  D INI,HDH,H1,L1,H2,L2,^ADGCRB2,^ADGCRB3,^ADGCRB4 Q
@@ -30,6 +30,7 @@ L2 ; -- data line 2
  W ?2,$P(DGN0,U),?32,$$AGE,?40,$$REL,?58,$$TIM,?69,$$CDE Q
  ;
 SSN() ; -- social security number
+ Q ""  ;cmi/maw 04/13/2022 Patch 1021 84778
  Q:$P(DGN0,U,9)="" "UNKNOWN"
  Q $E($P(DGN0,U,9),1,3)_"-"_$E($P(DGN0,U,9),4,5)_"-"_$E($P(DGN0,U,9),6,9)
  ;

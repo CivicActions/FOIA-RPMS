@@ -1,5 +1,5 @@
-DDSCOMP ;SFISC/MKO-EVALUATE COMPUTED EXPRESSIONS ;8:55 AM  12 Feb 1999
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDSCOMP ;SFISC/MKO-EVALUATE COMPUTED EXPRESSIONS ;8:01 AM  15 Mar 1996
+ ;;21.0;VA FileMan;**11**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 PARSE(DDP,EXP,BK,NEXP,AR,FDL) ;Parse the computed expression EXP
@@ -76,7 +76,7 @@ RPCF1 ;
  Q
  ;
 GETDA(P,B,DA) ;Get DA array of block
- N I K DA
+ K DA
  S DA=$G(@DDSREFT@(P,B)) Q:DA=""  Q:'$G(^(B,DA))
  F I=2:1:$L(DA,",")-1 S DA(I-1)=$P(DA,",",I)
  S DA=+DA

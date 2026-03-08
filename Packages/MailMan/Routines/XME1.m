@@ -1,0 +1,3 @@
+XME1 ;(WASH ISC)/THM/CAP- * OBSOLETE * ;12/18/97  16:02
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+ Q

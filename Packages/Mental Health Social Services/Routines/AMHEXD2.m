@@ -1,5 +1,5 @@
-AMHEXD2 ; IHS/CMI/LAB - PROCESS RECORD ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHEXD2 ; IHS/CMI/LAB - PROCESS RECORD ; [ 04/15/04  12:41 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**2,7**;JAN 27, 2003
  ;
  ;encryted patient id info, fixed sec prov to check for unknown
  ;

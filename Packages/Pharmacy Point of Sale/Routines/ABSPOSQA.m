@@ -1,5 +1,5 @@
 ABSPOSQA ; IHS/FCS/DRS - POS background, Part 1 ;   
- ;;1.0;PHARMACY POINT OF SALE;**10,42,43,46,47,48,49**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**10,42,43,46,47,48,49,52**;JUN 01, 2001;Build 131
  ;------------------------------------------------
  ;IHS/SD/lwj 03/10/04 patch 10
  ; Routine adjusted to call ABSPFUNC to retrieve
@@ -13,11 +13,15 @@ ONE59 ;EP - from ABSPOSQ1
  ; MODULO also comes in from ABSPOSQ1
  ; MODULO,COUNT,ERROR were NEW'ed in ABSPOSQ1
  ;
- S ERROR=0
+ S ERROR=0 N RTS,DELETED
  N X S X=^ABSPT(IEN59,1)
  N ABSBRXR,ABSBNDC,ABSBRXI
  S ABSBRXR=$P(X,U),ABSBNDC=$P(X,U,2),ABSBRXI=$P(X,U,11)
  I '$D(^PSRX(ABSBRXI,0)) S ERROR=101 G ERRJOIN
+ S RTS=$P($G(^PSRX(ABSBRXI,2)),"^",15) ; /IHS/OIT/RAM ; P52 ; CHECK FOR PRESCRIPTION RETURN TO STOCK
+ ; I RTS S ERROR=103 G ERRJOIN ; /IHS/OIT/RAM ; P52 ; IF POPULATED, SET NEW ERROR CODE AND GO.
+ ; S DELETED=$D(^PSRX(IEN52,"D"))#2 ; /IHS/OIT/RAM/ ; Let's see if the prescription is marked for deletion.
+ ; I DELETED S ERROR=104 G ERRJOIN ; /IHS/OIT/RAM ; P52 ; IF POPULATED, SET NEW ERROR CODE AND GO.
  I ABSBRXR,'$D(^PSRX(ABSBRXI,1,ABSBRXR,0)) S ERROR=102 G ERRJOIN
  ;
  I $E(IEN59,$L(IEN59))=1 D  ; if it's a prescription claim,
@@ -63,7 +67,11 @@ ERRJOIN I ERROR D
  . N ERRTEXT
  . I ERROR=12 S ERRTEXT="PCC Link problem during visit lookup"
  . E  I ERROR=101 S ERRTEXT="Missing ^PSRX("_ABSBRXI_",0)"
- . E  I ERROR=102 S ERRTEXT="Missing ^PSRX("_ABSBRXI_",1,"_ABSBRXR_",0)"
+ . ; /IHS/OIT/RAM ; P52 ; Only reason for error 102 (deleted refill) is for Return to Stock. Changing error text.
+ . ; E  I ERROR=102 S ERRTEXT="Missing ^PSRX("_ABSBRXI_",1,"_ABSBRXR_",0)" ; P52 ; old error.
+ . E  I ERROR=102 S ERRTEXT="Refill Returned to Stock" ; P52 ; New error.
+ . ; E  I ERROR=103 S ERRTEXT="Prescription Returned to Stock" ; /IHS/OIT/RAM ; P52 ; New error text for RTS.
+ . ; E  I ERROR=104 S ERRTEXT="Prescription Deleted" ; /IHS/OIT/RAM ; P52 ; New error text for Deleted Prescription.
  . E  I ERROR=105 S ERRTEXT="Missing ABSP PHARMACY link for Division" ; OIT/CAS/RCS 081213 Patch 46
  . E  I ERROR=106 S ERRTEXT="Missing Prescriber NPI Number" ; OIT/CAS/RCS 081913 Patch 46
  . E  S ERRTEXT="ERROR - see LOG"
@@ -191,7 +199,7 @@ PAPER() ; Return TRUE if this has to be sent as a paper claim.
  . I FORMAT,'BIN,$G(^ABSP(9002313.99,1,"ABSPICNV"))=1 S FORMAT=""
  . ;IHS/OIT/CASSEVERN/RAN patch42 3/30/2011 Added to prevent claims without format from going paper
  . ;IHS/OIT CASSEVERN/RCS patch43 12/23/2011 Added BIN check to make sure valid Insurer
- . I 'FORMAT,BIN,$G(^ABSP(9002313.99,1,"ABSPICNV"))=1 S FORMAT=1	
+ . I 'FORMAT,BIN,$G(^ABSP(9002313.99,1,"ABSPICNV"))=1 S FORMAT=1
  . S ACTDATE=$P($G(^ABSPEI(INSURER,100)),U,3)
  . S FLAG23=$P($G(^AUTNINS(INSURER,2)),U,3)
  I FORMAT,ACTDATE'>DT D  ; yes, this insurer is billed electronically

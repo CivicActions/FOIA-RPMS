@@ -1,6 +1,6 @@
-DDXP ;SFISC/DPC-EXPORT MENU DRIVER ;12:09 PM  16 Jun 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**9**;Mar 30, 1999
+DDXP ;SFISC/DPC-EXPORT MENU DRIVER ;12/17/92  10:13 ;10/30/92  10:01 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 NOKL ;
  I ($G(^DIC(.44,0,"GL"))'="^DIST(.44,")!($G(^DIC(.81,0,"GL"))'="^DI(.81,") W !!,$C(7),"SORRY. You cannot use the Data Export options",!,"because you do not have the necessary files on your system." G Q^DII1
@@ -41,17 +41,3 @@ CHOOSE ;
  Q
 Q ;
  K DDXP,X,DIRUT,DUOUT,DTOUT Q
- ; Export API
-EXPORT(DDXPFINO,DDXPXTNM,DDXPTMDL,DDXPBY,FR,TO,DIS,DISTOP,IOP,DQTIME) ;
- ; DDXPFINO = File Number or "1.1^<file number>"
- ; DDXPXTNM = Export Template Name
- ; DDXPTMDL = 0=Export Template SHOULD NOT Be Deleted
- ;            1=Export Template SHOULD Be Deleted
- ; DDXPBY = Sort Template Name
- ; [.]FR = FROM Values as Documentated in DIP
- ; [.]TO = TO Values as Documentated in DIP
- ; .DIS = DIS array as Documentated in DIP
- ; [.]DISTOP = DISTOP array as Documentated in DIP
- ; IOP = IOP as Documentated in DIP
- ; DQTIME = DQTIME as Documentated in DIP
- G EN2^DDXP4

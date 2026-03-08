@@ -1,5 +1,6 @@
-DICE7 ;SFISC/GFT-BULLETIN X-REFS ;12:38 PM  8 Jun 1995
- ;;22.0;VA FileMan;;Mar 30, 1999
+DICE7 ;SFISC/GFT-BULLETIN X-REFS ;2/17/93 12:10 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  K ^UTILITY("DICE",$J) S ^($J,0)="^^BULLETIN MESSAGE",DOLD=$P(^DD(DI,DL,0),U,1)
  F DIK=1,2 Q:$D(DTOUT)  D M G QQ:X[U!$D(DTOUT) I X]"" S DQI="Y(",DCOND="SENDING OF '"_DREF_"'" D DA,CC^DICE4,DA G QQ:$D(DTOUT) S DHI=0,DLAY=$S($D(DCOND):X,1:"") D S G QQ:X=U
@@ -20,21 +21,8 @@ SS S DLOC="PARAMETER #"_DHI I DHI>1 W !,"NOW, IF THE BULLETIN IS TO HAVE "_DHI_"
  W !,"(NOTE THAT NO SUCH PARAMETER IS DEFINED FOR THE '"_DREF_"' BULLETIN)"
 T W ! D OLD^DICE2 W DLOC_": " R X:DTIME S:'$T DTOUT=1 G:X?.P QQ:X=U!'$T,SET:X="",SS S DSUB=X,DICOMP="?" D ^DICOMP I $D(X)-1 W $C(7),"??",! G SS
  S DHI(DHI)=X_$P(" S Y=X X ^DD(""DD"") S X=Y",1,Y["D"),^UTILITY("DICE",$J,$P("CREA^DELE",U,DIK)_"TE "_DLOC)=DSUB G S
-SET W !
- S ^UTILITY("DICE",$J,DIK)="K XMY S XMB="""_DREF_""" D ^XMB:$D(^XMB(3.6,""B"",XMB)) K Y,XMB"
- ;
- F D=1:1 Q:'$D(DHI(D))  D
- . S X="S X=Y(0) "_DHI(D)_" S XMB("_D_")=X"
- . S %=DIK_"."_$E("00",1,3-$L(D))_D
- . S ^UTILITY("DICE",$J,+%)=X
- ;
- S Y=""
- S:$D(DHI(1))#2 Y=" X ""N DIIND F DIIND="_DIK_".001:.001 Q:$D("_DA_"DIIND))[0  X ^(DIIND)"""
+SET W ! S ^UTILITY("DICE",$J,DIK)="K XMY S XMB="""_DREF_""" D ^XMB:$D(^XMB(3.6,""B"",XMB)) K Y,XMB",Y="",DHI=185-(DHI*20)
+ F D=1:1 Q:'$D(DHI(D))  S X="S X=Y(0) "_DHI(D)_" S XMB("_D_")=X" S:$L(DREF)+$L(X)+$L(Y)>DHI %=DIK_"."_D,^(%)=X,X="X "_DA_%_")" S Y=Y_" "_X
  S I="S Y(0)=X,D"_N_"=DA" F %=1:1:N S I=I_",D"_(N-%)_"=DA("_%_")"
- ;
- I $L(DLAY) D
- . S Y=" I X"_Y
- . S:$L(I)+$L(Y)+$L(DLAY)+$L(^(DIK))>238 ^(DIK+.9)=DLAY,DLAY="X "_DA_(DIK+.9)_")"
- . S DLAY=" "_DLAY
- ;
- S:Y]""!$L(DLAY) ^(DIK)=I_DLAY_Y_" "_^(DIK)
+ I $L(DLAY) S Y=" I X"_Y S:$L(I)+$L(Y)+$L(DLAY)+$L(^(DIK))>238 ^(DIK+.9)=DLAY,DLAY="X "_DA_(DIK+.9)_")" S DLAY=" "_DLAY
+ S:Y]""!$T ^(DIK)=I_DLAY_Y_" "_^(DIK)

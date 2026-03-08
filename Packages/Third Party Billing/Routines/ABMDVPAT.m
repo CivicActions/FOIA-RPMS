@@ -1,11 +1,19 @@
 ABMDVPAT ; IHS/ASDST/DMJ - CLAIM FOR ONE PAT ;
- ;;2.6;IHS 3P BILLING SYSTEM;**11**;NOV 12, 2009;Build 133
+ ;;2.6;IHS 3P BILLING SYSTEM;**11,33,37**;NOV 12, 2009;Build 739
  ;;Y2K/OK - IHS/ADC/JLG 12-03-97
+ ;IHS/SD/SDR 2.6*33 ADO60185 CR11502 Added preferred name to display all the time
+ ;IHS/SD/SDR 2.6*37 ADO81491 Changed PPN to standardize display
+ ;
  S DIC="^AUPNPAT("
  S DIC(0)="AEMQ"
  S DIC("S")="I $D(^AUPNVSIT(""AC"",Y))"
  S AUPNLK("ALL")=""  ;universal lookup  ;abm*2.6*11 NOHEAT6
+ S DIC("W")="S Z=+Y D DICW^ABMDEMRG"  ;abm*2.6*37 IHS/SD/SDR ADO81491
  D ^DIC
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ ;I $$GETPREF^AUPNSOGI(+Y,"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;.W !?5,"Preferred Name: ",$$EN^ABMVDF("RVN"),$$GETPREF^AUPNSOGI(+Y,""),$$EN^ABMVDF("RVF")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  I Y<1 D  Q
  .W !,"No patient selected."
  W !

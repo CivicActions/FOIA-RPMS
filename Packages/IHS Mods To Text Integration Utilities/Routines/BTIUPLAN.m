@@ -1,5 +1,5 @@
-BTIUPLAN ; IHS/MSC/MGH - Problem/Visit Objects ;06-Jan-2015 12:50;du
- ;;1.0;TEXT INTEGRATION UTILITIES;**1012,1013**;MAR 20, 2013;Build 33
+BTIUPLAN ; IHS/MSC/MGH - Problem/Visit Objects ;12-Mar-2020 16:09;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1012,1013,1022**;MAR 20, 2013;Build 11
  ;Obects for entries from Care Plan file
  Q
  ;
@@ -23,6 +23,8 @@ CPDT(DFN,TARGET,TYPE) ;Active Care Plans by Date
  ...S EDATE=$P(EDTE,".",1)
  ..S STAT=$$GET1^DIQ(9000011,PRIEN,.12)
  ..S PNAR=$$GET1^DIQ(9000011,PRIEN,.05)
+ ..S PNAR=$TR(PNAR,"|","-")
+ ..I $P(PNAR,"-",2)=""!($P(PNAR,"-",2)=" ") S PNAR=$P(PNAR,"-",1)
  ..S CONCT=$$GET1^DIQ(9000011,PRIEN,80001)
  ..S SIGN=$P(ARRAY(X,Y),U,4)
  ..S SIGNDT=$P(ARRAY(X,Y),U,6)

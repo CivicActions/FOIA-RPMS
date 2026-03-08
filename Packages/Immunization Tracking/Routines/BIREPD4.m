@@ -1,10 +1,11 @@
 BIREPD4 ;IHS/CMI/MWR - REPORT, ADOLESCENT RATES; AUG 10,2010
- ;;8.5;IMMUNIZATION;**3**;SEP 10,2012
+ ;;8.5;IMMUNIZATION;**17,26,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW ADOLESCENT IMMUNIZATION RATES REPORT, WRITE HEADERS, ETC.
  ;;  PATCH 1: Fix to count only one Flu dose per season; do not affect
  ;;           other Vaccine Groups.  CHECKSET+158
  ;;  PATCH 3: Include new "1-Td 1-Men 3-HPV" lines. CHKSET+215
+ ;;  PATCH 17: Extensive changes to enhance Adol HPV & Tdap Reporting. GETPATS+31
  ;
  ;
  ;----------
@@ -35,6 +36,33 @@ GETPATS(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIQDT,BIAGRPS,BISITE,BIUP,BITMP) ;
  ..D CHKSET(BIDFN,.BICC,.BIHCF,.BICM,.BIBEN,BIDOB,BIQDT,.BIVAL,BIAGRPS,BIUP,.BITMP)
  ..;---> Set ^TMP("BIDUL",$J,CURCOM,1,HRCN,BIDFN)=$G(BIVAL) for Patient Roster.
  ..D:$G(BIVAL) STORE^BIDUR1(BIDFN,DT,9,,BIVAL,BISITE)
+ ;
+ ;
+ ;===> Now tally HPV Fully Vac'd Totals.
+ ;
+ ;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ ;---> New code to combine tallies below.
+ ;---> Simple dose totals for F+M Combined.
+ D
+ .N N F N=1,2,3 D
+ ..S BITMP("STATS",17,N,"1112S")=+$G(BITMP("STATS",17,N,"1112F"))+$G(BITMP("STATS",17,N,"1112M"))
+ ..S BITMP("STATS",17,N,"1313S")=+$G(BITMP("STATS",17,N,"1313F"))+$G(BITMP("STATS",17,N,"1313M"))
+ ..S BITMP("STATS",17,N,"1317S")=+$G(BITMP("STATS",17,N,"1317F"))+$G(BITMP("STATS",17,N,"1317M"))
+ ;
+ ;;---> 2 + 3-Dose Female and Male Fully Vac'd totals
+ D
+ .N N F N="F","M" D
+ ..S BITMP("STATS",17,5,1112_N_5)=+$G(BITMP("STATS",17,2,1112_N_2))+$G(BITMP("STATS",17,3,1112_N_3))
+ ..S BITMP("STATS",17,5,1317_N_5)=+$G(BITMP("STATS",17,2,1317_N_2))+$G(BITMP("STATS",17,3,1317_N_3))
+ ..S BITMP("STATS",17,5,1313_N_5)=+$G(BITMP("STATS",17,2,1313_N_2))+$G(BITMP("STATS",17,3,1313_N_3))
+ ;
+ D
+ .N N F N=2,3,5 D
+ ..S BITMP("STATS",17,N,"1112B"_N)=+$G(BITMP("STATS",17,N,"1112F"_N))+$G(BITMP("STATS",17,N,"1112M"_N))
+ ..S BITMP("STATS",17,N,"1317B"_N)=+$G(BITMP("STATS",17,N,"1317F"_N))+$G(BITMP("STATS",17,N,"1317M"_N))
+ ..S BITMP("STATS",17,N,"1313B"_N)=+$G(BITMP("STATS",17,N,"1313F"_N))+$G(BITMP("STATS",17,N,"1313M"_N))
+ ;
+ ;X ^O
  Q
  ;
  ;
@@ -85,7 +113,9 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  Q:((BISEX'="F")&(BISEX'="M"))
  ;
  ;---> Get patient age in years on report date.
- N BIAGE S BIAGE=$$AGE^BIUTL1(BIDFN,1,BIQDT)
+ ;V8.5 PATCH 29 - FID-107546 Tdap age check
+ N BIAGE
+ S BIAGE=+$$AGE^BIUTL1(BIDFN,1,BIQDT)
  Q:'BIAGE  Q:(BIAGE<11)  Q:(BIAGE>18)
  ;
  ;---> Set patient's Age Group for this report; either 1112 or 1317.
@@ -131,7 +161,7 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  Q:BIRETERR]""
  ;
  ;---> Add refusals, if any.
- N Z D CONTRA^BIUTL11(BIDFN,.Z,1) I $O(Z(0)) S BITMP("REFUSALS",BIDFN)="" K Z
+ N Z D REFUSAL^BIUTL13(BIDFN,.Z,1) I $O(Z(0)) S BITMP("REFUSALS",BIDFN)="" K Z
  ;
  ;
  ;---> Check for Hx of Chicken Pox (as a reason for contra to Var & MMRV.
@@ -144,14 +174,24 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .;---> Also set for 1:3:2:1 line.
  .S BIHXX(132,1,BIAGRP)=""
  ;
+ ;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ ;---> Begin changes to break out 2-dose and 3-dose HPV.
+ ;---> BIHPV1=Date of first HPV.
+ ;---> BIHPV23 tracks whether 2 doses or 3 are needed to be HPV Fully Vac'd.
+ ;---> Default is 3 doses (if 2-dose criteria not met, 3 doses needed).
+ ;---> BIHPVFV=flag for HPV Fully Vac'd.
+ N BIHPV1,BIHPV23,BIHPVFV
+ S BIHPV23=3,BIHPVFV=0
+ ;
  ;---> Set BIHX=to a valid Immunization History.
  N BIHX S BIHX=$P(BIRETVAL,BI31,1)
  ;
- ;---> Add this Patient's History to stats.
+ ;
+ ;---> * * * Add this Patient's History to stats. * * *
  N I,Y
  ;---> Loop through "^"-pieces of Imm History, getting data.
  F I=1:1 S Y=$P(BIHX,U,I) Q:Y=""  D
- .;---> Age (A), Dose# (D), Visit Date (J), sratch variable (Q),
+ .;---> Age (A), Dose# (D), Visit Date (J), scratch variable (Q),
  .;---> Vaccine Group IEN (V), Vaccine IEN (W).
  .N A,D,J,Q,V,W
  .S W=$P(Y,"|",2),V=$P(Y,"|",3),J=$P(Y,"|",4)
@@ -159,16 +199,20 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .;---> Select for Vaccine Group IEN's:
  .;---> 4-HEPB, 6-MMR, 7-VAR, 8-Td_B, 9-HEPA, 10-FLU, 16-MEN, 17-HPV
  .Q:'$G(V)
- .N Q F Q=1,2,3,5,11:1:15 Q:V=Q
- .Q:V=Q
+ .D
+ ..Q:V=4  Q:V=6  Q:V=7  Q:V=8  Q:V=9  Q:V=10  Q:V=16  Q:V=17  S V=0
+ .Q:('V)
+ .;
+ .;---> Only count Tdap CVX 221, no other Tetanus.
+ .Q:((V=8)&(W'=221))
+ .;
+ .;
+ .;---> Quit if this is a Men-B vaccine (not MenACWY).
+ .Q:W=266  Q:W=267  Q:W=268
  .;
  .;---> Exclude immunization visits after the Quarter Ending Date, BIQDT.
  .Q:(J>BIQDT)
  .;
- .;********** v8.5, MAY 15,2011, IHS/CMI/MWR
- .;---> This code moved up from below.  BIHX(10,D) was getting set for a prior
- .;---> year's dose, then quitting (because >1year), but also blocking this
- .;---> year's dose--since BIHX(10 already existed.
  .;---> Quit if V=FLU and Date of Visit is more than 1 year before Report Date.
  .Q:((V=10)&($$FMDIFF^XLFDT(BIQDT,J,1)>365))
  .;**********
@@ -191,13 +235,43 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .;---> Set each immunization in the STATS array by Vaccine Group (V),
  .;---> Dose (D), and Age Group (BIAGRP).
  .;
+ .;
+ .;--> Start  *HPV*  *HPV*  *HPV*
+ .;
  .;---> If this is HPV, separate female and male by appending sex to age group.
  .I V=17 D  Q
+ ..;---> Don't count more than 3 doses.
+ ..Q:(D>3)
+ ..;---> If this dose was given too early (<9 yrs), kill it and quit.
+ ..I (J-BIDOB)<90000 K BIHX(V,D) Q
+ ..;
  ..N Z S Z=$G(BITMP("STATS",V,D,BIAGRP_BISEX)) S BITMP("STATS",V,D,BIAGRP_BISEX)=Z+1
  ..S BIHX(V,D,BIAGRP)=""
  ..;---> Duplicate tracking of 13-yr-olds.
  ..D:BIAGE=13
  ...S Z=$G(BITMP("STATS",V,D,1313_BISEX)) S BITMP("STATS",V,D,1313_BISEX)=Z+1
+ ..;
+ ..;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ ..;---> Break out 2-dose and 3-dose HPV.
+ ..D
+ ...;---> If dose #1 is less than 15 yrs, possibly only 2 doses needed to fully vaccinate.
+ ...I D=1 N X1,X2 S (X1,BIHPV1)=J,X2=BIDOB D ^%DTC S BIHPV23=$S(X<5478:2,1:3) Q
+ ...;---> If first 2 doses are less than 5 months apart, 3 doses needed.
+ ...I D=2 N X1,X2 S X1=J,X2=BIHPV1 D ^%DTC S:(X<150) BIHPV23=3 Q
+ ..;
+ ..;---> If dose 2, and 2 needed; or if dose 3, and 3 needed, set Fully Vac'd node.
+ ..I ((D=2)&(BIHPV23=2))!((D=3)&(BIHPV23=3)) D  Q
+ ...;
+ ...N Z S Z=$G(BITMP("STATS",V,D,BIAGRP_BISEX_BIHPV23))
+ ...S BITMP("STATS",V,D,BIAGRP_BISEX_BIHPV23)=Z+1
+ ...;---> Duplicate tracking of 13-yr-olds.
+ ...D:BIAGE=13
+ ....S Z=$G(BITMP("STATS",V,D,1313_BISEX_BIHPV23))
+ ....S BITMP("STATS",V,D,1313_BISEX_BIHPV23)=Z+1
+ ...;---> Save Fully Vac'd for Composite measures.
+ ...S BIHPVFV=1
+ ..;
+ .;--> End  *HPV*  *HPV*  *HPV*
  .;
  .;---> Okay, not HPV (don't append sex).
  .N Z S Z=$G(BITMP("STATS",V,D,BIAGRP)) S BITMP("STATS",V,D,BIAGRP)=Z+1
@@ -241,10 +315,15 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .Q:'$D(BIHX(4,3,A))
  .Q:'$D(BIHX(6,2,A))
  .Q:'$D(BIHX(16,1,A))
- .Q:'$D(BIHX(7,2,A))
+ .;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ .;---> Either 2-VAR or Hx of Chicken Pox will count as "1:3:2:1:2 Current."
+ .;Q:'$D(BIHX(7,2,A))
+ .Q:(('$D(BIHX(7,2,A)))&('$D(BIHXX(132,1,A))))
  .D COMBO("8|1^4|3^6|2^16|1^7|2",A,.BITMP,BIAGE)
  .;---> Store for Patient Report Roster (complete 13212).
  .;S BIVAL=2
+ ;
+ ;W !,BIDFN R ZZZ X ^O
  ;
  ;---> 1-Td_B, 1-MEN
  F K=1:1 S A=$P(BIAGRPS,",",K) Q:'A  D
@@ -252,9 +331,6 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .Q:'$D(BIHX(16,1,A))
  .D COMBO("8|1^16|1",A,.BITMP,BIAGE)
  .;---> Store for Patient Report Roster (complete 11).
- .;********** PATCH 3, v8.5, SEP 10,2012, IHS/CMI/MWR
- .;---> 11 no longer complete.  Now 113, see immediately below.
- .;S BIVAL=2
  ;
  ;********** PATCH 3, v8.5, SEP 10,2012, IHS/CMI/MWR
  ;---> Include new "1-Td 1-Men 3-HPV" lines, combined as well as sex specific.
@@ -262,7 +338,9 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  F K=1:1 S A=$P(BIAGRPS,",",K) Q:'A  D
  .Q:'$D(BIHX(8,1,A))
  .Q:'$D(BIHX(16,1,A))
- .Q:'$D(BIHX(17,3,A))
+ .;---> Use HPV Fully Vac'd (could be 2-dose or 3-dose).
+ .;Q:'$D(BIHX(17,3,A))
+ .Q:'$G(BIHPVFV)
  .;---> Store both combined and sex specific lines.
  .D COMBO("8|1^16|1^17|3",A,.BITMP,BIAGE)
  .D COMBO("8|1^16|1^17|3",A_BISEX,.BITMP,BIAGE,BISEX)
@@ -277,8 +355,14 @@ CHKSET(BIDFN,BICC,BIHCF,BICM,BIBEN,BIDOB,BIQDT,BIVAL,BIAGRPS,BIUP,BITMP) ;EP
  .Q:'$D(BIHX(4,3,A))
  .Q:'$D(BIHX(6,2,A))
  .Q:'$D(BIHX(16,1,A))
- .Q:'$D(BIHX(7,2,A))
- .Q:'$D(BIHX(17,3,A))
+ .;
+ .;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ .;---> Either 2-VAR or Hx of Chicken Pox will count as Current.
+ .;Q:'$D(BIHX(7,2,A))
+ .Q:(('$D(BIHX(7,2,A)))&('$D(BIHXX(132,1,A))))
+ .;---> Use HPV Fully Vac'd (could be 2-dose or 3-dose).
+ .;Q:'$D(BIHX(17,3,A))
+ .Q:'$G(BIHPVFV)
  .D COMBO("8|1^4|3^6|2^16|1^7|2^17|3",A_BISEX,.BITMP,BIAGE,BISEX)
  ;
  Q

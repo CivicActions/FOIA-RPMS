@@ -1,5 +1,5 @@
-BHSDEM ;IHS/MSC/MGH - Health Summary Demographics  ;14-Jan-2014 14:59;DU
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,3,4,6,9**;March 17,2006;Build 16
+BHSDEM ;IHS/MSC/MGH - Health Summary Demographics  ;17-Nov-2021 09:37;DU
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,3,4,6,9,17**;March 17,2006;Build 11
  ;==================================================================
  ;VA health summary comopnents for patient demographics
  ;Taken from APCHS1
@@ -13,6 +13,7 @@ BHSDEM ;IHS/MSC/MGH - Health Summary Demographics  ;14-Jan-2014 14:59;DU
  ;Patch 3 SSN is Nremoved
  ;Patch 4 updated for BJPC patch 2
  ;Patch 6 added preferred language and cause of death
+ ;Patch 17 removed SSN
 DEMOG ; ******************** DEMOGRAPHICS ********************
  N BHSPAT,BHSN,BHSNAM,BHSSEX,BHSDOB,BHSMNM,BHSFNM
  N Y,BHSX,BHOTPH,A,BHSFLD,BHSNL,C,BHTCNT,BHPLNG
@@ -24,7 +25,9 @@ DEMOG ; ******************** DEMOGRAPHICS ********************
  S Y=$P(BHSN,U,3)
  I 'Y S BHSDOB="<NO DATE OF BIRTH>"
  E  X ^DD("DD") S BHSDOB=Y
- S BHSSN=$$SSN(BHSPAT)
+ ;IHS/MSC/MGH SSN totally removed Patch 17
+ S BHSSN=""
+ ;S BHSSN=$$SSN(BHSPAT)
  ;S BHSSN=$P(BHSN,U,9) S:BHSSN]"" BHSSN=$E(BHSSN,1,3)_"-"_$E(BHSSN,4,5)_"-"_$E(BHSSN,6,9)
  S BHSN=$G(^DPT(BHSPAT,.24))
  S BHSMNM=$P(BHSN,U,3)

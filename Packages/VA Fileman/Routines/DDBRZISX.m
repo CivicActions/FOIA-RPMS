@@ -1,0 +1,46 @@
+DDBRZIS ;SFISC/DCL-BROWSER DEVICE UTILITIES ;06:25 AM  7 Feb 1995;  [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA Fileman;;DEC 28, 1994
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+OPEN ;
+ ;DDBRZIS AND DDBDMSG ARE KILLED IN POST
+ S DDBRZIS=1,DDBDMSG=$G(DDBDMSG)
+ U IO(0)
+ W !,"...one moment..."
+ U IO
+ Q:DDBDMSG]""
+ I $G(DHD)="W """" D ^DIDH" S DDBDMSG="DATA DICTIONARY" Q
+ S DDBDMSG="VA FileMan Browser"
+ Q
+ ;
+CLOSE ;
+ S DDBRZIS=$G(DDBRZIS,1)
+ N C,CHAR,DDBROS,EOF,X
+ K ^TMP("DDB",$J)
+ S DDBROS=^%ZOSF("OS"),EOF="EOF-End Of File"
+ S CHAR="" F I=1:1:31 S CHAR=CHAR_$C(I)
+ U IO W !,EOF,!
+ S DDBRZIS("REWIND")=$$REWIND^%ZIS(IO,IOT,IOPAR)
+ I 'DDBRZIS("REWIND") S DDBRZIS=0 U IO(0) W $C(7),!!?5,"<< UNABLE TO REWIND FILE>>",! H 3 Q
+ U IO
+ S C=0
+ F  R X:1 Q:X="EOF-End Of File"  D
+ .S X=$TR(X,CHAR)
+ .S:X']"" X=" "
+ .S C=C+1,^TMP("DDB",$J,C)=$E(X,1,255) Q
+ .Q
+ I C=1,^TMP("DDB",$J,C)=" " S ^TMP("DDB",$J,C+1)="BROWSER: No display data sent"  ;IHS/ANMC/FBD-4/14/97-ADDED LINE-AVOID "BLANK SCREEN SYNDROME" ON NULL-OUTPUT REPORTS
+ Q
+ ;
+POST ;
+ ;DDBRZIS IS KILLED IN DDBR
+ I $G(DDBRZIS) D BROWSE^DDBR("^TMP(""DDB"",$J)","NR",$G(DDBDMSG))
+ K DDBRZIS,DDBDMSG
+ Q
+ ;
+STR(X) ;  Remove windows
+ N I,Y
+ I $L(X,"|")'>2 Q X
+ I X["|WRAP|"!(X["| NO WRAP|")!(X["|NOWRAP|") S Y="" F I=1:1:$L(X,"|") S:(I#2) Y=Y_$P(X,"|",I)
+ Q $S(X'["|":X,1:$G(Y))

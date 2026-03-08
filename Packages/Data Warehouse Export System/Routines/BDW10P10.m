@@ -1,0 +1,91 @@
+BDW10P10 ;ihs/cmi/maw - BDW Patch 10
+ ;;1.0;IHS DATA WAREHOUSE;**10**;JAN 24, 2006;Build 9
+ ;
+ENV ;-- environment check
+ I '$$INSTALLD("XU*8.0*1018") D SORRY(2)
+ I '$$INSTALLD("DI*22.0*1018") D SORRY(2)
+ I '$$INSTALLD("GIS*3.01*16") D SORRY(2)
+ I '$$INSTALLD("BDW*1.0*9") D SORRY(2)
+ Q
+ ;
+PRE ;
+ Q
+INSTALLD(BDGSTAL) ;EP - Determine if patch BDGSTAL was installed, where
+ ; BDGSTAL is the name of the INSTALL.  E.g "AG*6.0*11".
+ ;
+ NEW BDGY,DIC,X,Y
+ S X=$P(BDGSTAL,"*",1)
+ S DIC="^DIC(9.4,",DIC(0)="FM",D="C"
+ D IX^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",22,",X=$P(BDGSTAL,"*",2)
+ D ^DIC
+ I Y<1 D IMES Q 0
+ I $P(BDGSTAL,"*",3)="" D IMES Q 1
+ S DIC=DIC_+Y_",""PAH"",",X=$P(BDGSTAL,"*",3)
+ D ^DIC
+ S BDGY=Y
+ D IMES
+ Q $S(BDGY<1:0,1:1)
+IMES ;
+ D MES^XPDUTL($$CJ^XLFSTR("Patch """_BDGSTAL_""" is"_$S(Y<1:" *NOT*",1:"")_" Present.",IOM))
+ Q
+SORRY(X) ;
+ KILL DIFQ
+ I X=3 S XPDQUIT=2 Q
+ S XPDQUIT=X
+ W *7,!,$$CJ^XLFSTR("Sorry....FIX IT!",IOM)
+ Q
+ ;
+POST ;post init
+ S KFM="K DIE,DR,DIC,DA,DD,DO,DIK"
+ D ZMPHOPE
+ S MESS=$O(^INTHL7M("B","HL IHS DW1HOPE O13",0))
+ D COMPILE^BHLU(MESS)
+ K KFM
+ Q
+ZMPHOPE ;
+ ;add fields
+ D ZMPFLD
+ D ZMPSEG
+ D ZMDFLD
+ D ZMDSEG
+ Q
+ ;
+ZMPFLD N I,FLD01,FLD02,FLD03,FLD3,FLD5,ADD
+ F I="HL IHS DW1 ZMP-12" D
+ . S FLD01=I
+ . S FLD02="STRING"
+ . S FLD03=999
+ . S FLD3="@BDW1ZMP"_$P(I,"-",2)
+ . S FLD5=""
+ . S ADD=$$CHKF^INMPORT(FLD01,FLD02,FLD03,FLD3,FLD5)
+ZMPSEG ;-- add the fields to the segment
+ N J,SEGI,SEGA,SEGF
+ S SEGI=$O(^INTHL7S("B","HL IHS DW1HOPE ZMP",0))
+ Q:'SEGI
+ F J="HL IHS DW1 ZMP-12" D
+ . S SEGF=$O(^INTHL7F("B",J,0))
+ . Q:'SEGF
+ . Q:$O(^INTHL7S(SEGI,1,"B",SEGF,0))
+ . S SEGA=$$SFADD^INMPORT(SEGI,SEGF,$P(J,"-",2),"")
+ Q
+ ;
+ZMDFLD N I,FLD01,FLD02,FLD03,FLD3,FLD5,ADD
+ F I="HL IHS DW1 ZMD-24" D
+ . S FLD01=I
+ . S FLD02="STRING"
+ . S FLD03=999
+ . S FLD3="@BDW1ZMD"_$P(I,"-",2)
+ . S FLD5=""
+ . S ADD=$$CHKF^INMPORT(FLD01,FLD02,FLD03,FLD3,FLD5)
+ZMDSEG ;-- add the fields to the segment
+ N J,SEGI,SEGA,SEGF
+ S SEGI=$O(^INTHL7S("B","HL IHS DW1HOPE ZMD",0))
+ Q:'SEGI
+ F J="HL IHS DW1 ZMD-24" D
+ . S SEGF=$O(^INTHL7F("B",J,0))
+ . Q:'SEGF
+ . Q:$O(^INTHL7S(SEGI,1,"B",SEGF,0))
+ . S SEGA=$$SFADD^INMPORT(SEGI,SEGF,$P(J,"-",2),"")
+ Q

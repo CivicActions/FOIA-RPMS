@@ -1,5 +1,5 @@
-APCDACC ; IHS/CMI/LAB - stuff accept command on pov record ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDACC ; IHS/CMI/TUCSON - stuff accept command on pov record ;
+ ;;2.0;IHS RPMS/PCC Data Entry;**10**;MAR 09, 1999
  ;
  D INFORM
  D GETPAT

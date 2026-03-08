@@ -1,26 +1,26 @@
-DIA1 ;SFISC/GFT-PROCESS TEMPLATES, RANGES FOR INPUT ;20MAR2006
- ;;22.0;VA FileMan;**159**;Mar 30, 1999;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIA1 ;SFISC/GFT-PROCESS TEMPLATES, RANGES FOR INPUT ;2/16/93  15:21 ;2/22/93  3:29 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+ S X="" F  S X=$O(DW(X)) Q:X'>0  S F=DW(X),J=DR(F,X),DR(F,X)=DW(X,0),I=1 D OV
 S D NOW^%DTC S DIADT=+$J(%,0,4) K %,DW G Q:DRS<5 R !,"STORE THESE FIELDS IN TEMPLATE: ",X:DTIME S:'$T DTOUT=1 G Q:X="" S DIC(0)="LZSEQ",DLAYGO=0 D T K DLAYGO,DIC I Y<0 G S:X'[U K DR G Q
  S X=$P(^(0),U,6) I DUZ(0)'["@",X]"" F %=1:1 I DUZ(0)[$E(X,%) Q:%'>$L(X)  W !?7,$C(7),"YOU HAVE NO 'WRITE ACCESS' TO THIS TEMPLATE",! G S
  S DW=$S('$D(^("ROU")):1,^("ROU")'[U:1,$D(^("ROUOLD")):^("ROUOLD"),1:1),%=0,X=$P(Y,U,2)
  I $O(^(0))]"" W $C(7),!,X_" TEMPLATE ALREADY EXISTS.... OK TO REPLACE" D YN^DICN W ! G S:%-1 L +^DIE(+Y) S %Y="" F %X=0:0 S %Y=$O(^DIE(+Y,%Y)) Q:%Y=""  K:",%D,ROUOLD,W,"'[(","_%Y_",") ^(%Y)
  S ^DIE(+Y,0)=X_U_DIADT_U_$S('%:DUZ(0),1:$P(Y(0),U,3))_U_DI_U_DUZ_U_$S('%:DUZ(0),1:$P(Y(0),U,6))_U_DT,^DIE("F"_DI,X,+Y)=1 L -^DIE(+Y)
-M S %X="DR(",%Y="^DIE(+Y,""DR""," D %XY^%RCR M ^DIE(+Y,"DIAB")=^UTILITY($J)
- S X=DW,DP=DIA("P"),DMAX=^DD("ROU") I X'=1,$D(^DD("OS",DISYS,"ZS")) D EN^DIEZ S DR(1,DIA("P"))=U_DNM
+ S %X="DR(",%Y="^DIE(+Y,""DR""," D %XY^%RCR S %X="^UTILITY($J,",%Y="^DIE(+Y,""DIAB""," D %XY^%RCR S X=DW,DP=DIA("P"),DMAX=^DD("ROU") I X'=1,$D(^DD("OS",DISYS,"ZS")) D EN^DIEZ S DR(1,DIA("P"))=U_DNM
 Q K DNM,DIAO,DI,DIAP,%,%I,DIADT,DIAT,DIE,DMAX,%X,%Y Q
  ;
-ALL ;Called by DIETED, DIA
- S %=DI,^UTILITY($J,1,F,%,DIAP\1000)="ALL" K DA D  G UP^DIA:F,S:$D(DRS) Q
- .N DIA1 S DIA1=DIARLVL D A
+ALL ;
+ S %=DI,^UTILITY($J,1,F,%,DIAP\1000)="ALL" K DA D A G UP^DIA:F,S:$D(DRS) Q
  ;
-RANGE ;called by DIA, DIE17, DIETED
- N DIA1 S DIA1=F+1 S %=DI I X>0 S Y=X-.000001 G B
+RANGE ;
+ S %=DI I X>0 S Y=X-.000001 G B
 A S Y=0
 B S DA="",X=0
 G S DG=Y
 DR S Y=$O(^DD(%,Y)) S:Y="" Y=-1 I $D(D(F)),Y'>0!(Y>D(F)) D DG:X Q
- I Y'>0 D DG:X S:$D(DR(DIA1,%))[0 DR(DIA1,%)=DA Q
+ I Y'>0 D DG:X S:$D(DR(F+1,%))[0 DR(F+1,%)=DA Q
  I $D(^(Y,0)),X X DIC("S") G G:$T D DG G DR
  X DIC("S") E  G DR
  S X=Y G G
@@ -28,14 +28,14 @@ DR S Y=$O(^DD(%,Y)) S:Y="" Y=-1 I $D(D(F)),Y'>0!(Y>D(F)) D DG:X Q
 DG S DA=DA_$E(";",1,$L(DA))_X_$P(":"_DG,U,X'=DG)
  S DQ=0 F  S DQ=$O(^DD(%,"SB",DQ)) Q:DQ=""  S DP=$O(^(DQ,0)) I DP'<X,DP'>DG S Y(F,DQ)=""
  S DQ=-1
-Y S X=$O(Y(F,0)) I X>0 K Y(F,X) S DA(F)=DA,Y(F)=Y,%(F)=%,F=F+1,DIA1=DIA1+1,%=X D A S F=F-1,DIA1=DIA1-1,%=%(F),Y=Y(F),DA=DA(F) G Y
+Y S X=$O(Y(F,0)) I X>0 K Y(F,X) S DA(F)=DA,Y(F)=Y,%(F)=%,F=F+1,%=X D A S F=F-1,%=%(F),Y=Y(F),DA=DA(F) G Y
  S X="",DG=0 K DP Q
  ;
 TEMP ;
  S DIC(0)="ZSEQ" D T K DIC Q:$D(DTOUT)  G DB:Y<0
  S %=$P(Y(0),U,6) G ED:DUZ(0)="@"!'$L(%) F X=1:1:$L(%) I DUZ(0)[$E(%,X) G ED
-GT I $G(^("ROU"))[U S DR(1,DIA("P"))=^("ROU")
- E  S:$D(^("W")) DIE("W")=^("W") S %X="^DIE(+Y,""DR"",",%Y="DR(" D %XY^%RCR
+GT I $D(^("ROU")),^("ROU")[U S DR(1,DIA("P"))=^("ROU")
+ E  S:$D(^("W")) DIE("W")=^("W") S:$D(^("DR"))#2 ^("DR",1,DIA("P"))=^("DR") S %X="^DIE(+Y,""DR"",",%Y="DR(" D %XY^%RCR
  S $P(^DIE(+Y,0),U,7)=DT
  Q
  ;
@@ -46,6 +46,9 @@ ED I Y<1 G GT
  S DIE="^DIE(",DA=+Y,DR=".01;3;6" D ^DIE K DR I '$D(DA) S DB=0 G DB
  S:$D(^DIE(DA,"DR"))#2 ^("DR",1,J(0))=^("DR")
  S DIAA=DA,DRS=9,DIAT=$S($D(^DIE(DA,"DR",1,J(0))):^(J(0)),1:"")
- M DI=^DIE(DA,"DIAB")
- S F=0,(DIARTLVL,DB)=1,DIAO=0 F DXS=1:1 Q:'$D(DR(99,DXS))
+ I $D(^DIE(DA,"DIAB")) S %X="^DIE(DA,""DIAB"",",%Y="DI(" D %XY^%RCR
+ S F=0,DB=1,DIAO=0 F DXS=1:1 Q:'$D(DR(99,DXS))
 DB S DI=J(0) G ^DIA
+ ;
+OV I '$D(DW(X,I)) S DR(F,X,I)=J Q
+ S DR(F,X,I)=DW(X,I),I=I+1 G OV

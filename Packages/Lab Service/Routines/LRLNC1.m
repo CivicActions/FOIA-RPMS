@@ -1,5 +1,8 @@
-LRLNC1 ;VA/DALOI/CA-LOOKUP LOINC CODE ;1-OCT-1998
- ;;5.2;LAB SERVICE;**215,278,418**;NOV 01, 1997;Build 31
+LRLNC1 ;VA/DALOI/CA-LOOKUP LOINC CODE ; 26-Apr-2023 11:55 ; MKK
+ ;;5.2;LAB SERVICE;**215,278,418,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
  ;Reference to ^DD supported by IA 10154
  ;=================================================================
  ; Ask VistA test to Lookup LOINC code in Lab Test file #60
@@ -31,6 +34,7 @@ EXIT K DA,DIC,DIE,DINUM,DIR,DIRUT,DR,DTOUT,I,LRCODE,LRDATA,LREND,LRLNC,LRLNC0,LR
 TEST W !! K DIR,DIRUT
  S DIR(0)="PO^60:QNEMZ,",DIR("A")="VistA Lab Test to Lookup LOINC "
  S DIR("?")="Select Lab test you wish to lookup LOINC Code"
+ S DIR("S")="I +$G(^(.3))=0"  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  D ^DIR K DIR
  I $D(DIRUT)!'Y K DIRUT S LREND=1 Q
  S LRIEN=+Y,LRTEST=$P(Y,U,2)

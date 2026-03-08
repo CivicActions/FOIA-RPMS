@@ -1,5 +1,5 @@
 BKMIXX2 ;PRXM/HC/BWF - TAXONOMY ACCESS UTILITIES ; 13 Apr 2005  4:53 PM
- ;;2.2;HIV MANAGEMENT SYSTEM;;Apr 01, 2015;Build 40
+ ;;1.0;HIV MANAGEMENT SYSTEM;**2**;Sep 08, 2006
  ; Generic Taxonomy Utilities
  ; Checks V-Files for patients that meet a Taxonomy's criteria, within
  ; a specific date range.
@@ -40,7 +40,7 @@ REFUSAL(DFN,REFILE,TAX,EDATE,SDATE,TARGET,LDATE,LIEN,CNT) ; PEP
  ;Refusal Taxonomy Check (by File)
  ;
  N TXIEN,TEST,VISIT,VSTDT,RESULT,REFLAG
- N QFLAG,REFVAL,REFVAL1,REFVAL2,REFILE1,REFTYPE,IENS,EXIST
+ N QFLAG,REFVAL,REFVAL1,REFVAL2,REFILE1,REFTYPE,IENS
  I DFN="" Q
  I TAX="" Q
  S TXIEN=$O(^ATXAX("B",TAX,"")),REFLAG=1
@@ -72,11 +72,7 @@ REFUSAL(DFN,REFILE,TAX,EDATE,SDATE,TARGET,LDATE,LIEN,CNT) ; PEP
  ..S QFLAG=1 ; Quit if REFILE not listed or REFVAL not found.
  ..I REFILE=71 D  Q  ;Radiology and Mammogram
  ...I REFVAL]"" S REFVAL1=$$GET1^DIQ(71,REFVAL,9,"I")
- ...;I REFVAL1]"" S:$$ICD^BKMIXX5(REFVAL1,TXIEN,1)'=0 QFLAG=0 Q
- ...I REFVAL1]"" D
- ....I $$PATCH^XPDUTL("ATX*5.1*11") S EXIST=$$ICD^ATXAPI(REFVAL1,TXIEN,1)
- ....E  S EXIST=$$ICD^BKMIXX5(REFVAL1,TXIEN,1)
- ....I EXIST'=0 S QFLAG=0
+ ...I REFVAL1]"" S:$$ICD^BKMIXX5(REFVAL1,TXIEN,1)'=0 QFLAG=0 Q
  ..I REFILE=9999999.14 D  Q  ;Immunizations
  ...I REFVAL]"" S REFVAL1=$$GET1^DIQ(9999999.14,REFVAL,.03,"E")
  ...I REFVAL1]"" S:$D(^ATXAX(TXIEN,21,"B",REFVAL1)) QFLAG=0 Q
@@ -224,179 +220,4 @@ WHTAX(DFN,TAX,EDATE,SDATE,TARGET,LDATE,LIEN,CNT) ; PEP
  .S RESULT=$$GET1^DIQ(9002086.1,TEST,.05,"E")
  .S CNT=CNT+1
  .I $G(TARGET)]"" S @TARGET=RESULT
- Q
- ;
- ; For this entry point only:
- ;
- ; Input:
- ;     TAX = ICD OPERATION/PROCEDURE CODE NUMBER (external) to search for
- ;           (required)
- ;
- ; Taxonomies have not been created for this data.
- ; Variables are still named the same for consistency with other functions.
- ;
-PROCTAX(DFN,TAX,EDATE,SDATE,TARGET,LDATE,LIEN,CNT) ; PEP
- ; Procedure Check (using Procedure Code number)
- ;
- N TXIEN,TEST,VISIT,VSTDT,RESULT,PRC
- I DFN="" Q
- I TAX="" Q
- ;Not really needed, but set to maintain same variable list as other functions.
- S TXIEN=TAX
- I TXIEN="" Q
- S TEST="",CNT=0,LDATE=$G(LDATE,""),LIEN=$G(LIEN,"")
- F  S TEST=$O(^AUPNVPRC("AC",DFN,TEST)) Q:TEST=""  D
- .S PRC=$$GET1^DIQ(9000010.08,TEST,.01,"E")
- .I PRC'=TXIEN Q
- .S VISIT=$$GET1^DIQ(9000010.08,TEST,.03,"I")
- .S VSTDT=$$GET1^DIQ(9000010,VISIT_",",.01,"I")
- .I $G(SDATE)'="",(VSTDT<SDATE) Q
- .I $G(EDATE)'="",(VSTDT\1>EDATE) Q
- .I VSTDT>LDATE S LDATE=VSTDT,LIEN=TEST
- .I VSTDT=LDATE,TEST>LIEN S LDATE=VSTDT,LIEN=TEST
- .S RESULT=$$GET1^DIQ(9000010.08,TEST,.04,"E")
- .S CNT=CNT+1
- .I $G(TARGET)]"" S @TARGET=RESULT
- Q
- ;
- ; For this entry point only:
- ;
- ; Input:
- ;     TAX = ICD DIAGNOSIS CODE NUMBER (external) to search for
- ;           (required)
- ;
- ; Taxonomies have not been created for this data.
- ; Variables are still named the same for consistency with other functions.
- ;
-POVTAX(DFN,TAX,EDATE,SDATE,TARGET,LDATE,LIEN,CNT) ; PEP
- ; V POV Check (using the POV code)
- ;
- N TXIEN,TEST,VISIT,VSTDT,RESULT,POV
- I DFN="" Q
- I TAX="" Q
- ;Not really needed, but set to maintain same variable list as other functions.
- S TXIEN=TAX
- I TXIEN="" Q
- S TEST="",CNT=0,LDATE=$G(LDATE,""),LIEN=$G(LIEN,"")
- F  S TEST=$O(^AUPNVPOV("AC",DFN,TEST)) Q:TEST=""  D
- .S POV=$$GET1^DIQ(9000010.07,TEST,.01,"E")
- .I POV'=TXIEN Q
- .S VISIT=$$GET1^DIQ(9000010.07,TEST,.03,"I")
- .S VSTDT=$$GET1^DIQ(9000010,VISIT_",",.01,"I")
- .I $G(SDATE)'="",(VSTDT<SDATE) Q
- .I $G(EDATE)'="",(VSTDT\1>EDATE) Q
- .I VSTDT>LDATE S LDATE=VSTDT,LIEN=TEST
- .I VSTDT=LDATE,TEST>LIEN S LDATE=VSTDT,LIEN=TEST
- .S RESULT=$$GET1^DIQ(9000010.07,TEST,.04,"E")
- .S CNT=CNT+1
- .I $G(TARGET)]"" S @TARGET="N/A"_U_RESULT
- Q
- ;
- ; For this entry point only:
- ;
- ; Input:
- ;     TAX = Array of MHSS PROBLEM/DSM IV POV CODES (external) to search for
- ;           (required)
- ;
- ; Taxonomies have not been created for this data.
- ; Variables are still named the same for consistency with other functions.
- ;
-BHPTAX(DFN,TAX,EDATE,SDATE,TARGET,LDATE,LIEN,CNT) ; PEP
- ; Behavioral Health Problem/POV Check (using Problem/POV code)
- ;
- N TXIEN,TEST,VCIEN,VCODE,RIEN,DATE,VSTDT,RESULT
- I DFN="" Q
- I $O(TAX(""))="" Q
- ; Set up the visit codes
- S TXIEN=""
- F  S TXIEN=$O(TAX(TXIEN)) Q:TXIEN=""  D
- . S VCIEN=$O(^AMHPROB("B",TXIEN,"")) Q:VCIEN=""
- . S VCODE(VCIEN)=TXIEN
- ;
- ; Check in the MHSS files
- S RIEN="",TEST="",CNT=0,LDATE=$G(LDATE,""),LIEN=$G(LIEN,"")
- F  S RIEN=$O(^AMHREC("C",DFN,RIEN)) Q:RIEN=""  D
- . S DATE=$P($G(^AMHREC(RIEN,0)),U,1)
- . Q:DATE<SDATE&(SDATE'="")!(DATE>EDATE&(EDATE'=""))
- . S TEST=""
- . F  S TEST=$O(^AMHRPRO("AD",RIEN,TEST),-1) Q:TEST=""  D
- .. S VCIEN=$P(^AMHRPRO(TEST,0),U,1) Q:VCIEN=""
- .. I '$D(VCODE(VCIEN)) Q
- .. S RESULT=VCODE(VCIEN)
- .. S VSTDT=DATE
- .. I DATE>LDATE S LDATE=DATE,LIEN=TEST
- .. I DATE=LDATE,TEST>LIEN S LIEN=TEST
- .. ;S RESULT="N/A"
- .. S CNT=CNT+1
- .. I $G(TARGET)]"" S @TARGET="N/A"_U_RESULT
- Q
- ;
- ; For this entry point only:
- ;
- ; Input:
- ;     TAX = Array of MHSS PROBLEM CODES (external) to search for
- ;           (required)
- ;
- ; Taxonomies have not been created for this data.
- ; Variables are still named the same for consistency with other functions.
- ;
-BHPRBTAX(DFN,TAX,EDATE,SDATE,TARGET,LDATE,LIEN,CNT) ; EP
- ; Behavioral Health Problem Check (using Problem code)
- ;
- N TXIEN,TEST,VCIEN,VCODE,RIEN,DATE,VSTDT,RESULT,DTENT,DTONS
- I DFN="" Q
- I $O(TAX(""))="" Q
- ; Set up the visit codes
- S TXIEN=""
- F  S TXIEN=$O(TAX(TXIEN)) Q:TXIEN=""  D
- . S VCIEN=$O(^AMHPROB("B",TXIEN,"")) Q:VCIEN=""
- . S VCODE(VCIEN)=TXIEN
- ;
- ; Check in the MHSS files
- S TEST="",CNT=0,LDATE=$G(LDATE,""),LIEN=$G(LIEN,"")
- F  S TEST=$O(^AMHPPROB("AC",DFN,TEST)) Q:TEST=""  D
- . Q:'$D(^AMHPPROB(TEST,0))
- . S VCIEN=$P(^AMHPPROB(TEST,0),U,1) Q:VCIEN=""
- . I '$D(VCODE(VCIEN)) Q
- . S RESULT=VCODE(VCIEN)
- . S DTENT=$P($G(^AMHPPROB(TEST,0)),U,8),DTONS=$P($G(^AMHREC(TEST,0)),U,13)
- . S DATE=$S(DTONS'="":DTONS,1:DTENT)
- . Q:DATE<SDATE&(SDATE'="")!(DATE>EDATE&(EDATE'=""))
- . S VSTDT=DATE
- . I DATE>LDATE S LDATE=DATE,LIEN=TEST
- . I DATE=LDATE,TEST>LIEN S LIEN=TEST
- . ;S RESULT="N/A"
- . S CNT=CNT+1
- . I $G(TARGET)]"" S @TARGET="N/A"_U_RESULT
- Q
- ;
- ; For this entry point only:
- ;
- ; Input:
- ;     TAX = Array of MEASUREMENT TYPES (external) to search for
- ;           (required)
- ;
- ; Taxonomies have not been created for this data.
- ; Variables are still named the same for consistency with other functions.
- ;
-MSRTAX(DFN,TAX,EDATE,SDATE,TARGET,LDATE,LIEN,CNT) ; PEP
- ; V MEASUREMENT Check (using the Measurement type)
- ;
- N TXIEN,TEST,VCIEN,VCODE,MSR,CNT,VISIT,VSTDT,RIEN,DATE,RESULT
- I DFN="" Q
- I $O(TAX(""))="" Q
- S TEST="",CNT=0,LDATE=$G(LDATE,""),LIEN=$G(LIEN,"")
- F  S TEST=$O(^AUPNVMSR("AC",DFN,TEST)) Q:TEST=""  D
- .S MSR=$$GET1^DIQ(9000010.01,TEST,.01,"E")
- .I $P($G(^AUPNVMSR(TEST,2)),"^",1)=1 Q
- .Q:MSR=""  I '$D(TAX(MSR)) Q
- .S VISIT=$$GET1^DIQ(9000010.01,TEST,.03,"I")
- .S VSTDT=$$GET1^DIQ(9000010,VISIT_",",.01,"I")
- .I $G(SDATE)'="",(VSTDT<SDATE) Q
- .I $G(EDATE)'="",(VSTDT\1>EDATE) Q
- .I VSTDT>LDATE S LDATE=VSTDT,LIEN=TEST
- .I VSTDT=LDATE,TEST>LIEN S LDATE=VSTDT,LIEN=TEST
- .S RESULT=$$GET1^DIQ(9000010.01,TEST,.04,"E")
- .S CNT=CNT+1
- .I $G(TARGET)]"" S @TARGET="N/A"_U_RESULT
  Q

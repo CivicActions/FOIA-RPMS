@@ -1,5 +1,5 @@
-RAORD7A ;HISC/CAH-Log of Scheduled Requests by Procedure ;11/5/01  15:19
- ;;5.0;Radiology/Nuclear Medicine;**15,31**;Mar 16, 1998
+RAORD7A ;HISC/CAH IHS/OIT/BT - Log of Scheduled Requests by Procedure ;11/16/2022  10:37
+ ;;5.0;Radiology/Nuclear Medicine;**15,31,1010**;Mar 16, 1998
  ;;This routine looks at orders in file 75.1 with field 23 (Scheduled date) within the date range selected. User also selects order statuses to include.
  ; if sort by procedure:
  ;^TMP($J,"RA7",Img loc name,Img loc IEN, proc name, sched day, sched time, AMIS ien, PATIENT ien, Rad Order ien)
@@ -34,14 +34,14 @@ GET S (RALIEN,RA5)="" F  S RALIEN=$O(^TMP($J,"RA7",RALNM,RALIEN)) Q:'RALIEN!(RAX
  ..S RAMIS="" F  S RAMIS=$O(^TMP($J,"RA7",RALNM,RALIEN,RA5,RA6,RA7,RAMIS)) Q:RAMIS=""!(RAX["^")  S RADFN=0 F  S RADFN=$O(^TMP($J,"RA7",RALNM,RALIEN,RA5,RA6,RA7,RAMIS,RADFN)) Q:RADFN=""!(RAX["^")  D
  ...S RAOIFN=0 F  S RAOIFN=$O(^TMP($J,"RA7",RALNM,RALIEN,RA5,RA6,RA7,RAMIS,RADFN,RAOIFN)) Q:'RAOIFN!(RAX["^")  S RATIME=^(RAOIFN),RAORD0=$G(^RAO(75.1,RAOIFN,0)) D GETDFN
  Q
-GETDFN Q:RAX["^"  S RANME=$P($G(^DPT(RADFN,0)),"^"),RAOSCH=$S($E(RASORT)="P":RA6,1:RA5)_"."_RATIME,RAOSCH=+RAOSCH,X=$P(RAORD0,U,5),RASTAT=$S(X=3:"HOL",X=5:"PEN",X=8:"SCH",X=11:"UNR",1:"???")
+GETDFN Q:RAX["^"  S RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1),RAOSCH=$S($E(RASORT)="P":RA6,1:RA5)_"."_RATIME,RAOSCH=+RAOSCH,X=$P(RAORD0,U,5),RASTAT=$S(X=3:"HOL",X=5:"PEN",X=8:"SCH",X=11:"UNR",1:"???")
  I $D(RANOSHOW),RASTAT'="SCH" Q
  S RALIEN=RAHI K RARLOC,RARLOCN,RARIPOP,RACIPOP,RAIPLOC,RAIPLOCN,RADONE
  D IPOP^RAUTL13,WRT
  Q
 WRT S RAOURG=$P(RAORD0,"^",6)
  D HD:($Y+4)>IOSL!('RAPGE)!(RALIEN'=RAHI) Q:RAX["^"
- W !,$E(RANME,1,12),?14,$$SSN^RAUTL(RADFN,1),?21,$S($E(RASORT)="P":RA5,1:RA7),?44,$E(RALOCN,1,10),?56,$$FMTE^XLFDT(RAOSCH,2)
+ W !,RANME W:$L(RANME)>14 ! W ?14,$$SSN^RAUTL(RADFN,1),?21,$S($E(RASORT)="P":RA5,1:RA7),?44,$E(RALOCN,1,10),?56,$$FMTE^XLFDT(RAOSCH,2)
  S C=$P(^DD(75.1,6,0),U,2),Y=RAOURG D Y^DIQ W ?71,$E(Y,1,7),!
  I $L($G(RARLOCN)) W ?28,"Requesting Loc: ",RARLOCN
  Q

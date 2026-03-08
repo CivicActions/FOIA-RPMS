@@ -1,6 +1,9 @@
 ABMRSTIN ; IHS/SD/SDR - Split Claim Billing; 
- ;;2.6;IHS 3P BILLING SYSTEM;**22**;NOV 12, 2009;Build 418
+ ;;2.6;IHS 3P BILLING SYSTEM;**22,32**;NOV 12, 2009;Build 621
  ;IHS/SD/SDR 2.6*22 HEAT335246 - New routine
+ ;IHS/SD/SDR 2.6*32 CR9771 Added backbilling limit check
+ ;IHS/SD/SDR 2.6*32 CR9764 Made fix if charge in Visit file E&M CODE field; don't display as option to split since it's an E&M code
+ ;   Also removed 'split completed' message and moved it to display further down on display, into routine ABMRSTI3
  ;
  Q
 START ;
@@ -39,6 +42,29 @@ MANUAL ;EP
 MANUAL2 ;EP
  D ^ABMDEDIC  ;prompt for bill/claim number
  Q:$D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT)
+ ;
+ ;start new abm*2.6*32 IHS/SD/SDR CR9771
+ S ABMBBL=0
+ S ABMVDT=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,2)
+ S ABMAINS=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,8)
+ S ABMBBL=+$P($G(^AUTNINS(ABMAINS,2)),U,4)
+ S:ABMBBL=0 ABMBBL=+$P(^ABMDPARM(DUZ(2),1,0),U,16)
+ I ABMBBL>0 D
+ .S X1=DT
+ .S X2=0-(ABMBBL*30.417)
+ .D C^%DTC
+ I ABMVDT<X D  I Y=0 Q
+ .W !!,$$EN^ABMVDF("RVN")
+ .I +$P($G(^AUTNINS(ABMAINS,2)),U,4)'=0 W "** "_$P($G(^AUTNINS(ABMAINS,0)),U)_" has a backbilling limit of "_+$P($G(^AUTNINS(ABMAINS,2)),U,4)_" months  **",!
+ .W "** Site Parameters has a backbilling limit of "_+$P(^ABMDPARM(DUZ(2),1,0),U,16)_" months **",!
+ .W $$EN^ABMVDF("RVF")
+ .W !!
+ .S DIR(0)="Y",DIR("A")="You are about to split a claim.  Are you sure?"
+ .S DIR("B")="NO"
+ .D ^DIR K DIR
+ Q:$D(DIRUT)!$D(DTOUT)!$D(DIROUT)
+ ;end new abm*2.6*32 IHS/SD/SDR CR9771
+ ;
  S ABMY("PGS")="^8Z^"  ;make it capture everything
  S ABMVSTCK=0  ;flag for if visit contains H or I visit
  D DATA2^ABMRSPI1  ;get list of files
@@ -83,7 +109,7 @@ MANUAL2 ;EP
  D SPLITCLM^ABMRSTI2  ;creates the new claims and deletes from original
  S ABMCDFN=ABMP("CDFN")
  W $$EN^ABMVDF("IOF"),!
- W "Split complete.",!
+ ;W "Split complete.",!  ;abm*2.6*32 IHS/SD/SDR CR9764
  D PRINT2^ABMRSTI3  ;print claim summary with split info
  D PAZ^ABMDRUTL
  D ^XBFMK
@@ -100,6 +126,7 @@ PGS ;
  S ABMPCNT=0
  S DIR(0)="SO^"
  F  S ABMPG=$O(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),ABMPG)) Q:$G(ABMPG)=""  D
+ .I ((ABMPG="AUPNVSIT")!(ABMPG="8A")!(ABMPG="8B")!(ABMPG="8G")) Q  ;abm*2.6*32 IHS/SD/SDR CR9764
  .S DIR(0)=DIR(0)_ABMPG_":"_$S(ABMPG["D":"MEDICATIONS",ABMPG["E":"LABORATORY",ABMPG["F":"RADIOLOGY",1:"HCPCS")_";"
  .S ABMPCNT=+$G(ABMPCNT)+1  ;total pages to choose from
  S:$L(DIR(0),":")>2 DIR(0)=DIR(0)_"8Z:ALL"
@@ -114,6 +141,7 @@ PGS ;
  .K ABMY("PGS")
  .S ABMPG=""
  .F  S ABMPG=$O(^TMP("ABM-SPIN",$J,"VLST",ABMP("CDFN"),ABMPG)) Q:$G(ABMPG)=""  D
+ ..I "^8A^8B^8G^"[ABMPG Q  ;these pages should never split  ;abm*2.6*32 IHS/SD/SDR CR9764
  ..S ABMY("PGS")=$G(ABMY("PGS"))_"^"_ABMPG
  S:$G(ABMY("PGS"))'="" ABMY("PGS")=ABMY("PGS")_"^"
  Q

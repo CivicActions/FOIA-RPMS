@@ -1,0 +1,3 @@
+XMAL0A ;(WASH ISC)/JSH/CAP- * OBSOLETE * ;12/12/97  15:35
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+ Q

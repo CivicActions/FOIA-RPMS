@@ -1,5 +1,5 @@
-BARPT171 ; IHS/SD/LSL - Post init for V1.7 ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+BARPT171 ; IHS/SD/LSL - Post init for V1.7 ;  [ 01/29/2003  2:23 PM ]
+ ;;1.7;IHS ACCOUNTS RECEIVABLE;**1**;May 02, 2003
  ;
  Q
  ; *********************************************************************

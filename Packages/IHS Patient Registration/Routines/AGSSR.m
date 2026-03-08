@@ -1,5 +1,5 @@
 AGSSR ; IHS/ASDS/EFG - MASTER PRINTER routine ;  
- ;;7.1;PATIENT REGISTRATION;;AUG 25,2005
+ ;;7.0;IHS PATIENT REGISTRATION;**2**;MAR 28, 2003
  ;
  ;the array AGSSP(report #)=type controlls the prints
 S Q:'$D(AGSSP)
@@ -10,10 +10,14 @@ S Q:'$D(AGSSP)
  . K @AGTMPK ;kill off earlier temp global reports if there
  D ^AGSSRV,^AGSSRA,^AGSSRD,^AGSSRN,^AGSSRP ;set up print globals for all reports
  Q
+ ;
 PRINT ;EP - PRINT
  S AGSSPG=1,AGSSHDR="SSN Summary" D AGSSHDR^AGSSPRT
  U IO W !,"Patients :",?40,"Number",?50,"Report",!
+ ; BEGIN CODE CHANGE  IHS/SD/EFG  AG*7*2  #17
+ ;F AGSSFLAG="V","A","D","N","P" S AGSSROU="PRINT^AGSSR"_AGSSFLAG I $D(AGSSP(AGSSFLAG)) W !,$P($T(@AGSSFLAG),";;",2),?40,$J(AGSSC(AGSSFLAG),7),?50,$S(AGSSP(AGSSFLAG)="C":"Complete",1:"Statistics")
  F AGSSFLAG="V","A","D","N","P" S AGSSROU="PRINT^AGSSR"_AGSSFLAG I $D(AGSSP(AGSSFLAG)) W !,$P($T(@AGSSFLAG),";;",2),?40,$J($G(^AGSSTEMP(AGSSITE,"TOT","R"_AGSSFLAG)),7),?50,$S(AGSSP(AGSSFLAG)="C":"Complete",1:"Statistics")
+ ; END CODE CHANGE  IHS/SD/EFG  AG*7*2  #17
  W !! I "C"=$E(IOST) K DIR S DIR(0)="E" D ^DIR
  ;loop through all printing routines
  F AGSSFLAG="V","A","D","N","P","X" S AGSSROU="PRINT^AGSSR"_AGSSFLAG I $G(AGSSP(AGSSFLAG))="C" D @AGSSROU I "C"=$E(IOST) W !!! I '($G(DUOUT)!$G(DFOUT)!$G(DIRUT)!$G(DTOUT)) K DIR S DIR(0)="E" D ^DIR

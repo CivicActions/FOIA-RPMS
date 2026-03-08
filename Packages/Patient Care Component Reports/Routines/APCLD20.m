@@ -1,5 +1,5 @@
-APCLD20 ; IHS/CMI/LAB - IHS Diabetes Audit 2000 ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLD20 ; IHS/CMI/LAB - IHS Diabetes Audit 2000 ;   [ 03/02/2007  1:35 PM ]
+ ;;3.0;IHS PCC REPORTS;**8,9,19**;FEB 05, 1997
  ;
 BEGIN ;EP - called from option
  D TAXCHK^APCLD209
@@ -22,16 +22,13 @@ TYPE ;
  S APCLTYPE=Y
  S APCLSTP=0 D @APCLTYPE
  I APCLSTP G TYPE
-IF ;EP - called from BDM indivdual or epi
+IF ;PEP - called from BDM indivdual or epi
  S APCLSTP=0
  K DIR S DIR(0)="S^1:Print Individual Reports;2:Create EPI INFO file;3:Cumulative Audit Only;4:Both Individual and Cumulative Audits",DIR("A")="Enter Print option",DIR("B")="1" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I $D(DIRUT) G TYPE
  S APCLPREP=Y
  I APCLPREP=2 D FLAT Q:APCLSTP
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G IF
  I APCLPREP'=2 S XBRP="^APCLD20P",XBRC="^APCLD200",XBRX="XIT^APCLD20",XBNS="APCL"
  I APCLPREP=2 S XBRP="",XBRC="^APCLD200",XBRX="XIT^APCLD20",XBNS="APCL"
  D ^XBDBQUE
@@ -125,7 +122,7 @@ RAND ;random sample or not
  S C=0 F N=1:1:APCLCNT Q:C=Y  S I=$R(APCLCNT) I I,$D(^TMP($J,"PATS",I)) S X=$O(^TMP($J,"PATS",I,0)),^XTMP("APCLDM20",APCLJOB,APCLBTH,"PATS",X)="",C=C+1 K ^TMP($J,"PATS",I,X)
  K ^TMP($J,"PATS")
  Q
-TIME ;EP - called from BDM Get fiscal year or time frame
+TIME ;PEP - called from BDM Get fiscal year or time frame
  S APCLSTP=0
  S (APCLRBD,APCLRED,APCLADAT)=""
  W !!,"Enter the date of the audit.  This date will be considered the ending",!,"date of the audit period.  For most data items all data for the period one",!,"year prior to this date will be reviewed.",!

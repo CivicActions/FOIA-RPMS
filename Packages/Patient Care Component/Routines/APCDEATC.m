@@ -1,5 +1,5 @@
 APCDEATC ; IHS/CMI/LAB - ENTER TRANS CODE TO OUTPATIENT VISIT ;
- ;;2.0;IHS PCC SUITE;**2,17**;MAY 14, 2009;Build 18
+ ;;2.0;IHS PCC SUITE;**2,17,27**;MAY 14, 2009;Build 64
  ;
  ;  Enter Trans Codes on existing Outpatient visit
  ;

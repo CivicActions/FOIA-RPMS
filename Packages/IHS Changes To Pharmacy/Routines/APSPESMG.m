@@ -1,0 +1,154 @@
+APSPESMG ;IHS/MSC/PLS - Surescripts Manager Support;22-Oct-2020 14:58;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1027**;Sep 23, 2004;Build 31
+ Q
+ ; Returns list of requests based on search criteria
+SEARCH(DATA,XMLCRIT) ;EP
+ ;
+ N LP,NODE,STRING,CRIT,IEN,CNT,SDT,EDT
+ S DATA=$$TMPGBL^CIAVMRPC("_REQUESTS")
+ K @DATA
+ D XMLXTRT
+ Q:'$$VALID()  ;check that criteria exists
+ D SEARCH1(CRIT("SDT"),CRIT("EDT"))
+ Q
+ ;
+SEARCH1(SDT,EDT) ;
+ S SDT=SDT-.01
+ S EDT=EDT+.99
+ S CNT=0
+ S LP=SDT
+ F  S LP=$O(^APSPRREQ("D",LP)) Q:'LP!(LP>EDT)  D
+ .S IEN=0 F  S IEN=$O(^APSPRREQ("D",LP,IEN)) Q:'IEN  D
+ ..D REQADD(IEN)
+ Q
+ ;Ensure criteria is present
+VALID() ;EP-
+ N RET
+ S RET=1
+ Q:'$D(CRIT("SDT")) 0
+ Q:'$D(CRIT("EDT")) 0
+ Q RET
+ ;
+REQADD(IEN) ;-
+ N NOD0
+ ;Check Status
+ Q:'$$CANSHOW^APSPESG(IEN,$TR(CRIT("STATUS"),U,""))
+ ;Check Request Type
+ Q:'$$TYPE^APSPESG(IEN,CRIT("REQTYPE"))
+ ;Check RxChange SubType when Request Type 'C' is passed
+ I CRIT("REQTYPE")["C" Q:'$$SUBTYPE(IEN,CRIT("SUBTYPE"))
+ ;
+ D ADD($$GETITM^APSPESG(IEN,$TR(CRIT("STATUS"),U,"")))
+ Q
+ ;
+ADD(STR) ;-
+ S CNT=$G(CNT)+1
+ S @DATA@(CNT)=STR
+ Q
+ ;Check RxChange SubType
+SUBTYPE(IEN,TYPE) ;-
+ Q:TYPE="*" 1
+ Q TYPE[($P($G(^APSPRREQ(IEN,7)),U,4)_U)
+ ;
+XMLXTRT ;-
+ K ^TMP("APSPESMG",$J)
+ S ^TMP("APSPESMG",$J,1)="<?xml version=""1.0"" ?>"
+ S ^TMP("APSPESMG",$J,2)="<!DOCTYPE Change>"
+ S LP=0
+ F  S LP=$O(XMLCRIT(LP)) Q:'LP  D
+ .S ^TMP("APSPESMG",$J,LP+2)=XMLCRIT(LP)
+ S HANDLE=$$EN^MXMLDOM($NA(^TMP("APSPESMG",$J)),"D")
+ I HANDLE=0 S DATA="0^Unable to parse Search Criteria" Q
+ S NODE=1,STRING=""
+ F  S NAME=$$NAME^MXMLDOM(HANDLE,NODE) Q:NAME=""  D
+ .I NAME="Search" D
+ ..D CHILD(HANDLE,NODE)
+ ..S NODE=$$SIBLING^MXMLDOM(HANDLE,NODE)
+ .E  S NODE=NODE+1
+ Q
+CHILD(HANDLE,NODE) ;Handle the child nodes
+ N FDA,ERR,CHILD
+ S CHILD=0
+ S CHILD=$$CHILD^MXMLDOM(HANDLE,NODE,CHILD) Q:'CHILD
+ S NAME=$$NAME^MXMLDOM(HANDLE,CHILD)
+ D PROCESS(HANDLE,CHILD,NAME)
+ D NEXT(HANDLE,CHILD)
+ Q
+NEXT(HANDLE,CHILD) ;Continue extracting child nodes
+ N CHILD2,NAME
+ S CHILD2=CHILD
+ F  S CHILD2=$$SIBLING^MXMLDOM(HANDLE,CHILD2) Q:CHILD2=0  D
+ .S NAME=$$NAME^MXMLDOM(HANDLE,CHILD2)
+ .D PROCESS(HANDLE,CHILD2,NAME)
+ Q
+PROCESS(HANDLE,NODE,NAME) ;
+ I NAME="StartDate" D  Q
+ .S CRIT("SDT")=$$GETTXT(HANDLE,NODE)
+ I NAME="EndDate" D  Q
+ .S CRIT("EDT")=$$GETTXT(HANDLE,NODE)
+ I NAME="ReqType" D  Q
+ .S CRIT("REQTYPE")=$$GETTXT(HANDLE,NODE)
+ I NAME="SubType" D  Q
+ .S CRIT("SUBTYPE")=$$GETTXT(HANDLE,NODE)
+ I NAME="ReqStatLst" D  Q
+ .S CRIT("STATUS")=$$GETTXT(HANDLE,NODE)
+ Q
+GETTXT(HANDLE,NODE) ;-
+ N TXT,RESP
+ S RESP=$$TEXT^MXMLDOM(HANDLE,NODE,"TXT")
+ Q $G(TXT(1))
+ ;Search Preset Management API
+MANAGE(DATA,ACTION,NAME,VAL,ENT) ;-
+ N ENT1
+ S ENT1=+DUZ_";VA(200,"
+ S DATA=$$VALIDATE(.NAME,ACTION="C")
+ Q:DATA
+ I ACTION="C" D
+ .D SETLST(.DATA,NAME)
+ E  I ACTION="R" D
+ .D RENLST(.DATA,NAME,.VAL)
+ E  I ACTION="S" D
+ .D SETLST(.DATA,NAME,.VAL)
+ E  I ACTION="D" D
+ .D DELLST(.DATA,NAME)
+ E  S DATA="-1^Unknown action"
+ Q
+ ;
+ ; Set Preset
+SETLST(DATA,NAME,VAL) ;
+ Q:'$L(NAME)
+ S:NAME=+NAME NAME=$$PGETNAME(NAME)
+ S VAL=NAME
+ S:$D(VAL)'=11 VAL(1,0)=""
+ D EN^XPAR(ENT1,$$PPARAM,NAME,.VAL,.DATA)
+ Q
+ ; Delete Preset
+ ;   NAME - Quick Note Name
+DELLST(DATA,NAME) ;
+ D DEL^XPAR(ENT1,$$PPARAM,$$PGETNAME(NAME),.DATA)
+ Q
+ ;
+ ; Rename existing Preset
+ ;  OLD  - Existing Instance name
+ ;  NEW  - New Preset name
+RENLST(DATA,OLD,NEW) ;
+ S DATA=$$VALIDATE(NEW,1)
+ D:'DATA REP^XPAR(ENT1,$$PPARAM,$$PGETNAME(OLD),NEW,.DATA)
+ D:'DATA CHG^XPAR(ENT1,$$PPARAM,NEW,NEW,.DATA)
+ Q
+VALIDATE(NAME,DUP) ;-
+ N L
+ S NAME=$$TRIM^CIAU(NAME),L=$L(NAME),DUP=+$G(DUP)
+ Q:L<3!(L>30) "-1^Preset name must be 3-30 characters in length."
+ Q:NAME'?.(1A,1N,1"_",1" ",1"-",1"(",1")") "-1^Preset name contains invalid characters."
+ I DUP,$$PGETIEN(NAME) Q "-1^Preset name already exists."
+ I 'DUP,'$$PGETIEN(NAME) Q "-1^Preset name not found."
+ Q ""
+PGETIEN(NAME) ;-
+ Q $S(NAME=+NAME:NAME,1:$O(^XTV(8989.5,"AC",$$PPARAM(1),ENT1,NAME,0)))
+ ;
+PPARAM(X) ;-
+ Q $S($G(X):$$FIND1^DIC(8989.51,,"X",$$PPARAM()),1:"APSPESMG PRESETS")
+ ;
+PGETNAME(IEN) ;-
+ Q $S(IEN=+IEN:$$GET1^DIQ(8989.5,IEN_",",.03),1:IEN)

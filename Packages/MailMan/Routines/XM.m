@@ -1,7 +1,6 @@
-XM ;ISC-SF/GMB-MailMan Main Driver ;04/22/2002  14:31
- ;;8.0;MailMan;;Jun 28, 2002
+XM ;ISC-SF/GMB-MailMan Main Driver ;06/25/99  08:00
+ ;;7.1;MailMan;**17,35,50**;Jun 02, 1994
  ; Replaces ^XM,EN^XMA01,INTRO^XMA6,REC^XMA22,MULTI^XM0,^XMAK (ISC-WASH/CAP/THM)
- ;
  ; Entry points (DBIA 10064):
  ; ^XM       Programmer entry into MailMan
  ; CHECKIN   Meant to be included in option ENTRY ACTION
@@ -15,12 +14,12 @@ XM ;ISC-SF/GMB-MailMan Main Driver ;04/22/2002  14:31
  ; 
  ; Entry points used by MailMan options (not covered by DBIA):
  ; NEWMBOX   XMMGR-NEW-MAIL-BOX - Create a mailbox
+ ; KILL      XMQDISP exit action
+ N XMXUSEC,XMABORT
  D KILL^XUSCLEAN
- N XMXUSEC,XMABORT,XMMENU
- S XMMENU(0)="^XM"
- I '$D(IOF) D HOME^%ZIS
+ I '$D(IOF) S IOP="HOME" D HOME^%ZIS
  D EN
- I $D(XQUIT)!'$D(XMDUZ) K XQUIT D CLEANUP Q
+ Q:'$D(XMDUZ)
  D:'$D(^DOPT("XM")) OPTIONS
  S XMABORT=0
  F  D  Q:XMABORT  ; Programmer option choices
@@ -50,33 +49,31 @@ SETUP ;
  K XMERR,^TMP("XMERR",$J)
  Q
 HEADER ;
- N XMPERSON,XMPARM,XMTEXT
- I $D(XMV("SYSERR")) D ERROR(.XMV,"SYSERR") S:$D(XMMENU) XQUIT="" Q  ; Fatal Errors
- I $D(XMV("ERROR")) D ERROR(.XMV,"ERROR") S:$D(XMMENU) XQUIT="" Q  ; Fatal Errors
+ N XMPERSON
+ I $D(XMV("SYSERR")) D SYSERR(.XMV) S:$D(XMMENU) XQUIT="" Q  ; Fatal Errors
+ I $D(XMV("ERROR")) D ERROR(.XMV) S:$D(XMMENU) XQUIT="" Q  ; Fatal Errors
  I $D(XMV("WARNING")) D WARNING(XMDUZ,.XMV)
- S XMPARM(1)=XMV("VERSION"),XMPARM(2)=XMV("NETNAME")
- W !!,$$EZBLD^DIALOG(38150,.XMPARM) ; |1| service for |2|
- I XMDUZ'=DUZ W !,$$EZBLD^DIALOG(38008,XMV("DUZ NAME")) ; (Surrogate: |1|)
+ W !!,XMV("VERSION")," service for ",XMV("NETNAME")
+ I XMDUZ'=DUZ W !," (Surrogate: ",XMV("DUZ NAME"),")"
  I XMDUZ'=.6 D
- . S XMPARM(1)=XMV("LAST USE"),XMPARM(2)=XMV("NAME")
- . W !,$$EZBLD^DIALOG($S(XMDUZ=DUZ:38151,1:38152),.XMPARM) ; You/|2| last used MailMan: |1|
- . Q:'$D(XMV("BANNER"))
- . S XMPARM(1)=XMV("BANNER"),XMPARM(2)=XMV("NAME")
- . D BLD^DIALOG($S(XMDUZ=DUZ:38153,1:38154),.XMPARM,"","XMTEXT","F")
- . D MSG^DIALOG("WM","","","","XMTEXT")
- . ; Your/|2|'s current banner: |1|
+ . W !,$S(XMDUZ=DUZ:"You",1:XMV("NAME"))," last used MailMan: ",XMV("LAST USE")
+ . I $D(XMV("BANNER")) W !,$S(XMDUZ=DUZ:"Your",1:XMV("NAME")_"'s")," current banner: ",XMV("BANNER")
  . ;E  W !,$S(XMDUZ=DUZ:"You have",1:XMV("NAME")_" has")," no banner."
- S XMPARM(1)=XMV("NEW MSGS"),XMPARM(2)=XMV("NAME")
- W !,$$EZBLD^DIALOG($S(XMDUZ=DUZ:38155,1:38156)+$S(XMV("NEW MSGS")>1:0,'XMV("NEW MSGS"):.2,1:.1),.XMPARM) ; You have/|2| has |1|/no new message(s).
+ W !,$S(XMDUZ=DUZ:"You have ",1:XMV("NAME")_" has "),$S(XMV("NEW MSGS")=0:"no",1:XMV("NEW MSGS"))," new message",$S(XMV("NEW MSGS")=1:".",1:"s.")
  I XMV("NEW MSGS")<0!(XMV("NEW MSGS")&'$D(^XMB(3.7,XMDUZ,"N0")))!('XMV("NEW MSGS")&$D(^XMB(3.7,XMDUZ,"N0"))) D
- . D MSG(38160)
- . ; There's a discrepancy in the 'new message' count.  Checking the mailbox...
+ . W !,"There's a discrepancy in the 'new message' count.  Checking the mailbox..."
  . D USER^XMUT4(XMDUZ)
  Q
-ERROR(XMV,XMTYPE) ;
+SYSERR(XMV) ;
  N I
  S I=0
- F  S I=$O(XMV(XMTYPE,I)) Q:I=""  W !,$C(7),XMV(XMTYPE,I)
+ F  S I=$O(XMV("SYSERR",I)) Q:I=""  W !,*7,XMV("SYSERR",I)
+ K XMDUZ
+ Q
+ERROR(XMV) ;
+ N I
+ S I=0
+ F  S I=$O(XMV("ERROR",I)) Q:I=""  W !,*7,XMV("ERROR",I)
  K XMDUZ
  Q
 WARNING(XMDUZ,XMV) ;
@@ -88,37 +85,24 @@ WARNING(XMDUZ,XMV) ;
  ;D:$D(XMV("WARNING",1)) PRIO^XMJML(XMDUZ)
  K XMV("WARNING")
  Q
-MSG(XMDIALOG) ;
- N XMTEXT
- W !
- D BLD^DIALOG(XMDIALOG,"","","XMTEXT","F")
- D MSG^DIALOG("WM","","","","XMTEXT")
- Q
 POST(XMMSG) ;
- W !!,$C(7),XMMSG ; "POSTMASTER has X baskets."
- D MSG(38113.1)
- ;POSTMASTER may not have more than 999 baskets.
- ;Baskets numbered above 999 are reserved for network transmission
- ;queues and for server queues.
+ W !!,XMMSG   ; "POSTMASTER has X baskets."
+ W !,"The POSTMASTER may not have a basket with an internal number >999"
+ W !,"without having problems.  Problems with network mail delivery will"
+ W !,"soon occur if you do not take corrective action!"
+ W !!,"Contact your ISC for help.",!!,*7
  Q
 MULTI ;
- ;It appears someone is signed on as you/|1| already.
- ;You may not send mail or respond to mail in this session.
- ;(Only the 1st of multiple MailMan sessions may send or respond to mail.)
- N XMTEXT
- W !
- D BLD^DIALOG($S(XMDUZ=DUZ:38110.1,1:38110.2),XMV("NAME"),"","XMTEXT","F")
- D BLD^DIALOG(38110.3,"","","XMTEXT","F")
- D MSG^DIALOG("WM","","","","XMTEXT")
+ W *7,!!,"It appears someone is signed on as you already."
+ W !!,"YOU MAY NOT SEND MAIL OR RESPOND TO MAIL IN THIS SESSION !!!"
+ W !,"(Only the 1st of multiple MailMan sessions may send or respond to mail.)"
  Q
 INTRO(XMDUZ) ;
- D MSG(38114.1)
- ;You have not yet introduced yourself to the group.
- ;Please enter a short introduction, so that others may use
- ;the HELP option to find out more about you.
- ;You may change your INTRODUCTION later
- ;under 'Personal Preferences|User Options Edit.
- W !!
+ W !!,"You have not yet introduced yourself to the group."
+ W !,"Please enter a short introduction, so that others may use"
+ W !,"the HELP option to find out more about you.",!!
+ W !,"You may change your INTRODUCTION later"
+ W !,"under 'Personal Preferences|User Options Edit.",!!
  N DIR S DIR(0)="E" D ^DIR Q:$D(DIRUT)
  N DWPK,DIC
  S DWPK=1,DIC="^XMB(3.7,XMDUZ,1,"
@@ -126,9 +110,6 @@ INTRO(XMDUZ) ;
  Q
 UNSENT(XMDUZ) ;
  N XMREC,XMZ
- L +^XMB(3.7,"AD",XMDUZ):0 E  D  Q
- . S XMV("NOSEND")=1
- . D MULTI
  S XMREC=^XMB(3.7,XMDUZ,"T")
  S XMZ=$P(XMREC,U) Q:'XMZ
  I $P(XMREC,U,3) D RECOVER^XMJMR(XMDUZ,XMZ,$P(XMREC,U,3)) Q  ; Reply
@@ -155,7 +136,7 @@ UNLOCK ;
  Q:'$D(XMMENU(0))
  L -^XMB(3.7,"AD",DUZ)
  Q
-CHK ; Entry used by Kernel
+CHK ;
  K ^TMP("XMY",$J),^TMP("XMY0",$J)
  S XMDUZ=$G(XMDUZ,DUZ)
  Q:XMDUZ=.6
@@ -179,21 +160,14 @@ NUS(XMFORCE,XMNEW) ; new message display
  S XMLAST=$P(XMREC,U,4)
  S XMNEW2U=$P(XMREC,U,5)
  I XMNEW2U!XMFORCE D
- . N XMPARM,XMDIALOG
- . S XMPARM(1)=XMNEW
- . I XMDUZ=DUZ S XMDIALOG=38155
- . E  S XMDIALOG=38156,XMPARM(2)=$$NAME^XMXUTIL(XMDUZ)
- . W !,$$EZBLD^DIALOG(XMDIALOG+$S(XMNEW>1:0,'XMNEW:.2,1:.1),.XMPARM) ; You have/|2| has |1|/no new message(s).
+ . W $S(XMDUZ=DUZ:"You have ",1:$$NAME^XMXUTIL(XMDUZ)_" has "),$S('XMNEW:"no",1:XMNEW)," new message",$S(XMNEW=1:"",1:"s"),"."
  . Q:'XMNEW
- . W "  ",$$EZBLD^DIALOG(38158,$$MMDT^XMXUTIL1(XMLAST)) ; (Last arrival: |1|)
+ . W "  (Last arrival: ",$$MMDT^XMXUTIL1(XMLAST),")"
  D:$P(XMREC,U,2) NOTEPRIO
  Q
 NOTEPRIO ;
- N XMDIALOG,XMPARM
- I XMDUZ=DUZ S XMDIALOG=38159 ;You've got PRIORITY Mail!
- E  S XMDIALOG=38159.1,XMPARM(1)=$$NAME^XMXUTIL(XMDUZ) ;|1| has PRIORITY Mail!
  D ZIS
- W $C(7),!!,$G(IORVON),$$EZBLD^DIALOG(XMDIALOG,.XMPARM),!!,$G(IORVOFF)
+ W *7,!!,$G(IORVON),"There is PRIORITY Mail!",!!,$G(IORVOFF)
  Q
 ZIS ;
  Q:$D(IORVON)
@@ -203,27 +177,29 @@ ZIS ;
  Q
 NEWMBOX ; Create a mailbox for a user
  N DIC,XMZ
- D MSG(38165)
- ;Ready to create a mailbox for a user.
- ;You will only be able to select a user who does not already have a mailbox.
+ W !,"Ready to create a mailbox for a user."
+ W !,"You will only be able to select a user who does not already have a mailbox."
  S DIC="^VA(200,"
  S DIC(0)="AEQM"
  S DIC("S")="I '$D(^XMB(3.7,Y,0))"
  D ^DIC Q:Y=-1
  S Y=+Y
  D NEW
- W !,$$EZBLD^DIALOG(38165.1) ; Mailbox created.
+ W !,"Mailbox created."
  Q
 N1 S Y=XMDUZ
 NEW ; CREATE MAILBOX 4 NEW USER
 N L +^XMB(3.7,0):0 E  H 1 G N
- D CRE8MBOX^XMXMBOX(Y,$S($D(XMZ):DT,1:""))
+ I $D(XMZ) D
+ . D CRE8MBOX^XMXMBOX(Y,DT)
+ E  D
+ . D CRE8MBOX^XMXMBOX(Y)
  L -^XMB(3.7,0)
  D:$D(XMERR) SHOW^XMJERR
  Q
-KILL ;
+KILL ; EXIT execute for MailMan options
 CLEANUP ;
- K XMV,XMDISPI,XMDUN,XMDUZ,XMPRIV,XMNOSEND,XMERR
+ K XMV,XMDISPI,XMDUNO,XMDUN,XMDUZ,XMPRIV,XMERR
  K:$D(^TMP("XMERR",$J)) ^TMP("XMERR",$J)
  D KILLALL
  D UNLOCK
@@ -231,13 +207,11 @@ CLEANUP ;
 KILLALL ;All variables except XMDISPI,XMDUZ,XMDUN and XMPRIV are killed here on
  ;exit from the MailMan package or by calls to this code.
  K A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,V,W,X,Z,%,%0,%1,%2,%3,%4
- K XM,XMA,XMA0,XMAPBLOB,XMB,XMB0
- K XMC,XMC0,XMCH,XMCI,XMCL,XMCNT,XMCT
- K XMD,XMD0,XMDATE,XMDI,XMDT,XME,XME0,XMF,XMF0,XMG,XMG0
- K XMK,XMKM,XMKN,XMI,XMJ
- K XML,XMLOAD,XMLOC,XMLOCK,XMM,XMMG,XMN,XMOUT,XMP
- K XMR,XMRES,XMS,XMSEN,XMSUB
- K XMT,XMTYPE,XMU,XMY,XMZ,XMZ1,XMZ2
+ K XM,XMA0,XMA21A,XMAPBLOB,XMB0,XMC0,XMD0,XMDUNO,XME0,XMF0,XMG0,XMP,XMQF,XMQUE
+ K XMKEY,XMA,XMB,XMBEG,XMC,XMCL,XMCNT,XMD,XMDI,XMDX,XME,XMF,XMG,XMI,XMJ
+ K XMK,XMKO,XMKS,XML,XMR,XMRC,XMRES,XMS,XMSUB,XMT,XMU,XMY,XMY0,XMZ,XMZ1,XMZ2,XMKM
+ K XMCH,XMCI,XMDN,XMMA,XMZO,XMCT,XMRW,XMLOAD,XMCOPY,XMMG,XMOUT
+ K XMDT,XMKK,XMKN,XMLOC,XMLOCK,XMM,XMN,XMRL,XMAN,XMANSP,XMXD,XMDATE,XMPG,XMSEC,XMSEN,XMTYPE,XMKEYTRY
  Q
 DSP ;
  D INIT^XMVVITAE
@@ -247,21 +221,21 @@ OPTIONS ; Set up options
  K ^DOPT("XM")
  S DIK="^DOPT(""XM"","
  S ^DOPT("XM",0)="MailMan Option^1N^"
- F I=1:1 S X=$P($T(T+I)," ",1,3) Q:X=" ;;"  S X=$E(X,4,255),^DOPT("XM",I,0)=$$UP^XLFSTR($$EZBLD^DIALOG(+X))_U_$P(X,U,2,3)
+ F I=1:1 S X=$T(T+I) Q:X=" ;;"  S ^DOPT("XM",I,0)=$E(X,4,255)
  D IXALL^DIK
  Q
 T ;;TABLE
- ;;38170^D SEND^XMJMS        ; SEND A MESSAGE
- ;;38171^D MANAGE^XMJBM      ; READ/MANAGE MESSAGES
- ;;38172^D NEW^XMJBN         ; NEW MESSAGES AND RESPONSES
- ;;38173^D PAKMAN^XMJMS      ; LOAD PACKMAN MESSAGE
- ;;38174^D EDIT^XMVVITA      ; EDIT USER OPTIONS
- ;;38175^D PERSONAL^XMVGROUP ; PERSONAL MAIL GROUP EDIT
- ;;38176^D ENROLL^XMVGROUP   ; JOIN MAIL GROUP
- ;;38177^D LISTMBOX^XMJBL    ; MAILBOX CONTENTS LIST
- ;;38178^D TALK^XMC          ; LOG-IN TO ANOTHER SYSTEM (TalkMan)
- ;;38179^D FIND^XMJMF        ; QUERY/SEARCH FOR MESSAGES
+ ;;SEND A MESSAGE^D SEND^XMJMS
+ ;;READ/MANAGE MESSAGES^D MANAGE^XMJBM
+ ;;NEW MESSAGES AND RESPONSES^D NEW^XMJBN
+ ;;LOAD PACKMAN MESSAGE^D PAKMAN^XMJMS
+ ;;EDIT USER OPTIONS^D EDIT^XMVVITA
+ ;;PERSONAL MAIL GROUP EDIT^D PERSONAL^XMVGROUP
+ ;;JOIN MAIL GROUP^D ENROLL^XMVGROUP
+ ;;MAILBOX CONTENTS LIST^D LISTMBOX^XMJBL
+ ;;LOG-IN TO ANOTHER SYSTEM (TalkMan)^D TALK^XMC
+ ;;QUERY/SEARCH FOR MESSAGES^D FIND^XMJMF
+ ;;BLOB SEND^D BLOB^XMA2B
  ;;
  ;;**OBSOLETE**
- ;;BLOB SEND^D BLOB^XMA2B
  ;;

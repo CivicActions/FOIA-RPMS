@@ -1,24 +1,22 @@
 ABMDE5 ; IHS/SD/SDR - Edit Page 5 - DIAGNOSIS ; 
- ;;2.6;IHS Third Party Billing;**1,3,4,6,10,14,16,18**;NOV 12, 2009;Build 289
+ ;;2.6;IHS Third Party Billing;**1,3,4,6,10,14,16,18,34,37**;NOV 12, 2009;Build 739
  ;
- ; IHS/SD/SDR - 11/4/02 - V2.5 P2 - NDA-0500-180002
- ;     Modified to display E-codes
- ; IHS/SD/SDR - v2.5 p9 - IM19297
- ;    8 Dxs for 837 formats
- ; IHS/SD/SDR - v2.5 p11 - Added two more E-Codes for FL72 on
- ;   the new UB-04 format
- ; IHS/SD/SDR - v2.5 p13 - POA changes
- ;   Changed display to include POA
+ ;IHS/SD/SDR 11/4/02 2.5*2 NDA-0500-180002 Modified to display E-codes
+ ;IHS/SD/SDR 2.5*9 IM19297 8 Dxs for 837 formats
+ ;IHS/SD/SDR 2.5*11 Added two more E-Codes for FL72 on the new UB-04 format
+ ;IHS/SD/SDR 2.5*13 POA changes - Changed display to include POA
  ;
- ;IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - abm*2.6*1 - HEAT7045 - Display page5B if procedure exists
- ;IHS/SD/SDR - abm*2.6*3 - NOHEAT - Fix display of 5B; wasn't displaying if no procs existed
- ;IHS/SD/SDR - abm*2.6*6 - HEAT29426 - <UNDEF>PRTTXT+3^ABMDWRAP error if ICD long desc missing; defaulted to short desc.
- ;IHS/SD/SDR - 2.6*14 ICD10 changes; also added refresh option for page 5A.  Will allow user to basically do RBCL option
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*1 HEAT7045 Display page5B if procedure exists
+ ;IHS/SD/SDR 2.6*3 NOHEAT Fix display of 5B; wasn't displaying if no procs existed
+ ;IHS/SD/SDR 2.6*6 HEAT29426 <UNDEF>PRTTXT+3^ABMDWRAP error if ICD long desc missing; defaulted to short desc.
+ ;IHS/SD/SDR 2.6*14 ICD10 changes; also added refresh option for page 5A.  Will allow user to basically do RBCL option
  ;  for 17 multiple within claim editor.
- ;IHS/SD/SDR - 2.6*14 - dual coding - added screen so only ICD9 or ICD10 can be added based on ICD Indicator
- ;IHS/SD/SDR - 2.6*16 - HEAT217211 - Added PLACE OF OCCURRENCE to display
- ;IHS/SD/SDR - 2.6*18 - HEAT239392 - There are two PLACE OF OCCURRENCEs.  It should display the appropriate one based on ICD9 vs ICD10.
+ ;IHS/SD/SDR 2.6*14 dual coding added screen so only ICD9 or ICD10 can be added based on ICD Indicator
+ ;IHS/SD/SDR 2.6*16 HEAT217211 Added PLACE OF OCCURRENCE to display
+ ;IHS/SD/SDR 2.6*18 HEAT239392 There are two PLACE OF OCCURRENCEs.  It should display the appropriate one based on ICD9 vs ICD10.
+ ;IHS/SD/SDR 2.6*34 ADO60694 CR7384 Capture Primary DX to display on page7
+ ;IHS/SD/SDR 2.6*37 ADO75953 Changed 'E-CODE' to 'External Cause' and made all three External Causes display
  ;
 OPT K ABM,ABME,ABMZ,ABMU
  D DISP Q:$D(DUOUT)!$D(DTOUT)!$D(DIRUT)
@@ -71,6 +69,13 @@ HD ;
  ;I ABMP("ICD10")>ABMP("VDT") W !,"ICD INDICATOR: ICD-9",!  ;abm*2.6*10 ICD10 002G  ;abm*2.6*14 ICD10 002G
  W !,"ICD Indicator for "_$$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")_" : "  ;abm*2.6*14 ICD10 002G
  W $S(ABMP("ICD10")>ABMP("VDT"):"ICD-9",1:"ICD-10"),!  ;abm*2.6*14 ICD10 002G
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60694
+ I ABMP("PAGE")[7 D
+ .W !?3,"DRG: "
+ .I +$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),5)),U,13)'=0 W $$EN^ABMVDF("RVN"),$P($G(^ICD($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),5)),U,13),0)),U),$$EN^ABMVDF("RVF")," ("_$G(^ICD($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),5)),U,13),1,1,0))_")"
+ .E  W "<NONE>"
+ .W !
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60694
  ;W !,"BIL",?6,"ICD9"  ;abm*2.6*10 ICD10 002F
  W !,"BIL",?7,"ICD"  ;abm*2.6*10 ICD10 002F
  ;W !,"SEQ",?6," CODE "  ;abm*2.6*10 ICD10 002F
@@ -104,6 +109,7 @@ LOOP ;
  ..K ^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB")) S ^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),0)="^9002274.30"_ABMZ("SUB")_"P^^"
  ..D A^ABMDE5X
  ;end new code 002F
+ D PRIMDX  ;abm*2.6*34 IHS/SD/SDR ADO60694
  S ABM=""
  F ABM("I")=1:1 S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABM)) Q:'ABM  S ABM("X")=$O(^(ABM,"")),ABMZ("NUM")=ABM("I") D DX
  S ABM("L")=ABMZ("LNUM")+1,ABMZ("DR2")=";.02////"_ABM("L")
@@ -115,6 +121,7 @@ DX ;
  ;ABMZ(ABM("I"))=code^multiple ien^code ien^provider narr^e-code^poa
  ;S ABMZ(ABM("I"))=$P($$DX^ABMCVAPI(+ABM("X"),ABMP("VDT")),U,2)_U_ABM("X")_U_$P(ABM("X0"),U)_U_$P(ABM("X0"),U,3)_U_$P(ABM("X0"),U,4)_U_$P(ABM("X0"),U,5)  ;CSV-c  ;abm*2.6*14 ICD10 002F
  S ABMZ(ABM("I"))=$P($$DX^ABMCVAPI(+ABM("X"),ABMP("VDT")),U,2)_U_ABM("X")_U_$P(ABM("X0"),U)_U_$P(ABM("X0"),U,3)_U_$P(ABM("X0"),U,4)_U_$P(ABM("X0"),U,5)_U_$P(ABM("X0"),U,6)  ;CSV-c  ;abm*2.6*14 ICD10 002F
+ S ABMZ(ABM("I"))=ABMZ(ABM("I"))_U_$P(ABM("X0"),U,7)_U_$P(ABM("X0"),U,8)  ;abm*2.6*37 IHS/SD/SDR ADO75953
  W !,$J(ABM("I"),2),?5,$P($$DX^ABMCVAPI(+ABM("X"),ABMP("VDT")),U,2)  ;CSV-c  ;code
  ;W ?15,$S($P(+ABM("X"),U,6)=1:"10",1:"9")  ;abm*2.6*10 ICD10 002F  ;abm*2.6*14 ICD10 002F
  W ?15,$S(+$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,+ABM("X"),0)),U,6)=1:"10",1:"9")  ;abm*2.6*14 ICD10 002F
@@ -152,8 +159,13 @@ DX ;
  I ABMU("2TXT")["*ICD*" S ABMU("2TXT")=$P(ABMU("2TXT"),"  ")
  I ABMU("2TXT")]"",$D(^ICD9("BA",ABMU("2TXT"))) S ABMU("2TXT")=$P($$DX^ABMCVAPI($O(^(ABMU("2TXT"),"")),ABMP("VDT")),U,4)  ;CSV-c
  D ^ABMDWRAP
- I $P($G(ABM("X0")),U,4)'="" D
- .W !,?7,"CAUSE(E-CODE): "_$P($$DX^ABMCVAPI(+$P(ABM("X0"),U,4),ABMP("VDT")),U,2)  ;CSV-c
+ ;I $P($G(ABM("X0")),U,4)'="" D  ;abm*2.6*37 IHS/SD/SDR ADO75953
+ ;.W !,?7,"CAUSE(E-CODE): "_$P($$DX^ABMCVAPI(+$P(ABM("X0"),U,4),ABMP("VDT")),U,2)  ;CSV-c  ;abm*2.6*37 IHS/SD/SDR ADO75953
+ ;start new abm*2.6*37 IHS/SD/SDR ADO75953
+ I $P($G(ABM("X0")),U,4)'="" W !,?7,"EXTERNAL CAUSE 1: "_$P($$DX^ABMCVAPI(+$P(ABM("X0"),U,4),ABMP("VDT")),U,2)
+ I $P($G(ABM("X0")),U,7)'="" W !,?7,"EXTERNAL CAUSE 2: "_$P($$DX^ABMCVAPI(+$P(ABM("X0"),U,7),ABMP("VDT")),U,2)
+ I $P($G(ABM("X0")),U,8)'="" W !,?7,"EXTERNAL CAUSE 3: "_$P($$DX^ABMCVAPI(+$P(ABM("X0"),U,8),ABMP("VDT")),U,2)
+ ;end new abm*2.6*37 IHS/SD/SDR ADO75953
  ;start new abm*2.6*16 IHS/SD/SDR HEAT217211
  ;I $P($G(ABM("X0")),U,9)'="" D  ;abm*2.6*18 IHS/SD/SDR HEAT239392
  I (ABMP("VDT")'<ABMP("ICD10"))&($P($G(ABM("X0")),U,9)'="") D  ;abm*2.6*18 IHS/SD/SDR HEAT239392
@@ -179,3 +191,13 @@ ECODE ;
  D ^DIE
  S ABMEFLG=1
  Q
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60694
+PRIMDX ;EP
+ K ABMP("PDX")
+ S ABM=""
+ S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABM)) Q:'ABM
+ S ABM("X")=$O(^(ABM,""))
+ I ABM=1 S ABMP("PDX")=+$G(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,ABM("X"),0))
+ I ABM=1,+$G(ABMP("OPDX"))=0 S ABMP("OPDX")=+$G(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,ABM("X"),0))  ;save original prim DX
+ Q
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60694

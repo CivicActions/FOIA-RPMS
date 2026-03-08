@@ -1,9 +1,11 @@
-PSOSIG ;BIR/RTR-Utility to create SIG ;6/04/00
- ;;7.0;OUTPATIENT PHARMACY;**46,99,114**;DEC 1997
+PSOSIG ;BIR/RTR-Utility to create SIG ;28-May-2024 12:29;DU
+ ;;7.0;OUTPATIENT PHARMACY;**46,99,114,1023,1035**;DEC 1997;Build 39
  ;External reference to PS(51 supported by DBIA 2224
  ;External reference to PS(51.1 supported by DBIA 2225
  ;External reference to PSDRUG( supported by DBIA 221
  ;
+ ;Modified - IHS/MSC/MGH - 05/18/17 -QEND+1 changed for EPCS
+ ;         - IHS/MSC/PLS - 05/28/2024 - SCH+4 - FID 103810
 EN(PSOSIGX) ;
  N VARIABLE
  Q
@@ -11,7 +13,9 @@ SCH ;SCH = schedule entered     SCHEX = expanded schedule
  N SQFLAG,SCLOOP,SCLP,SCLPS,SCLHOLD,SCIN,SODL,SST
  K SCHEX S SQFLAG=0
  I $G(SCH)="" S SCHEX="" Q
- I SCH[""""!($A(SCH)=45)!(SCH?.E1C.E)!($L(SCH," ")>3)!($L(SCH)>20)!($L(SCH)<1) K SCH Q
+ ;FID 103810
+ ;I SCH[""""!($A(SCH)=45)!(SCH?.E1C.E)!($L(SCH," ")>3)!($L(SCH)>20)!($L(SCH)<1) K SCH Q
+ I SCH[""""!($A(SCH)=45)!(SCH?.E1C.E)!($L(SCH)>24)!($L(SCH)<1) K SCH Q
  N PSOSCUP S SCH=$$UPPER(SCH)
  F SCLOOP=0:0 S SCLOOP=$O(^PS(51.1,"B",SCH,SCLOOP)) Q:'SCLOOP!(SQFLAG)  I $P($G(^PS(51.1,SCLOOP,0)),"^",8)'="" S SCHEX=$P($G(^(0)),"^",8),SQFLAG=1
  Q:SQFLAG
@@ -120,7 +124,15 @@ QTS ;Find frequency
  Q
 QEND ;
  K PSOFRQ
- I $G(PSOOUTQT),$G(QTYHLD),$G(PSOQX("QTY")),$G(QTYHLD)'=$G(PSOQX("QTY")) N DIR W !!!,"Quantity has been changed from "_QTYHLD_" to "_PSOQX("QTY") W ! K DIR S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR W ! K DIR
+ ;IHS/MSC/MGH changed for EPCS
+ ;I $G(PSOOUTQT),$G(QTYHLD),$G(PSOQX("QTY")),$G(QTYHLD)'=$G(PSOQX("QTY")) N DIR W !!!,"Quantity has been changed from "_QTYHLD_" to "_PSOQX("QTY") W ! K DIR S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR W ! K DIR
+ I $G(PSOOUTQT),$G(QTYHLD),$G(PSOQX("QTY")),$G(QTYHLD)'=$G(PSOQX("QTY")) W !!!,"Quantity has been changed from "_QTYHLD_" to "_PSOQX("QTY") D  W ! N DIR S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR W !
+ .I $G(PSONEW("FLD"))=8,$P($G(OR0),"^",24),$G(PSODRUG("IEN")),$D(^PSDRUG(+$G(PSODRUG("IEN")),0)) D
+ ..I $P(^PSDRUG(PSODRUG("IEN"),0),"^",3)[2!($P(^PSDRUG(PSODRUG("IEN"),0),"^",3)["F") Q
+ ..N ZRFA S ZRFA=$S($G(CLOZPAT)=2&(PSOQX("DAYS SUPPLY")=14):1,$G(CLOZPAT)=2&(PSOQX("DAYS SUPPLY")=7):3,$G(CLOZPAT)=1&(PSOQX("DAYS SUPPLY")=7):1,$D(CLOZPAT):0,1:5)
+ ..N ZREF,ZTQ S ZREF=QTYHLD\PSOQX("QTY") I ZREF>0 D
+ ...S ZTQ=QTYHLD*(PSOQX("# OF REFILLS")+1),ZTQ=ZTQ-PSOQX("QTY"),ZREF=ZTQ\PSOQX("QTY") S:ZREF>ZRFA ZREF=ZRFA
+ ...I ZREF'=PSOQX("# OF REFILLS") W !,"# of Refills has been changed from "_PSOQX("# OF REFILLS")_" to "_ZREF S PSOQX("# OF REFILLS")=ZREF
  Q
 ROUND ;
  Q:'$G(PSOQRND)

@@ -1,5 +1,5 @@
 RART3 ;HISC/GJC,SWM-Reporting Menu (Part 2) ; 20 Apr 2011  7:01 PM
- ;;5.0;Radiology/Nuclear Medicine;**8,10,18,27,35,45,75,99,1003**;Nov 01, 2010;Build 3
+ ;;5.0;Radiology/Nuclear Medicine;**8,10,18,27,35,45,75,99,1003,1009**;Mar 16, 1998;Build 21
  ; continue from RART1
  ; last modif by SS for P18
  ; p99 changed the Staff Phys title to Staff Imaging Phys

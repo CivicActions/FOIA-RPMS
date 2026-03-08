@@ -1,20 +1,19 @@
-%ZTMS0 ;SEA/RDS-TaskMan: Submanager, Part 2 (Trap Functions) ;09/25/08  16:07
- ;;8.0;KERNEL;**24,118,275,446**;JUL 10, 1995;Build 44
- ;Per VHA Directive 2004-038, this routine should not be modified.
+%ZTMS0 ;SEA/RDS-TaskMan: Submanager, Part 2 (Trap Functions) ;18 Jun 2003 6:40 pm
+ ;;8.0;KERNEL;**24,118,275**;JUL 10, 1995
  ;
 ERROR2 ;ERROR--trap
- L +^%ZTSCH("ER"):99 H 1 S ZTH=$H
+ L ^%ZTSCH("ER") H 1 S ZTH=$H
  S ^%ZTSCH("ER",+ZTH,$P(ZTH,",",2))=$$EC^%ZOSV
  S ^%ZTSCH("ER",+ZTH,$P(ZTH,",",2),1)="Caused by the submanager while trapping an error."
  L
- X "HALT  " ;HALT JOB
+ HALT
  ;
 STATUS ;ERROR--update task's status in Task File, Call w/ ^%ZTSK locked
  S ZTE=$E(%ZTME,1,70)
  S ZTE=$TR(ZTE,"^","~")
  S $P(^%ZTSK(%ZTMETSK,.1),"^",1,3)=$S(ZTQUEUED>.5:"C^",1:"L^")_$H_"^"_ZTE
- S $P(^%ZTSK(%ZTMETSK,.12),"^",2,9)=%ZTMEH_"^"_%ZTME
- S ^%ZTSK(%ZTMETSK,.12,%ZTMEH)=%ZTME
+ S $P(^%ZTSK(%ZTMETSK,.12),"^",2,9)=ZTERROH_"^"_%ZTME
+ S ^%ZTSK(%ZTMETSK,.12,ZTERROH)=%ZTME
  Q
  ;
 DEVBAD ;ERROR--dequeue all entries for a bad device
@@ -22,7 +21,7 @@ DEVBAD ;ERROR--dequeue all entries for a bad device
  Q:'$$DEVLK^%ZTMS1(1,ZTDEVOK)
  L +^%ZTSCH("IO"):5 G DBX:'$T  S $P(^%ZTSCH("IO"),"^")=$$H3^%ZTM($H)
  S ZT2=ZTDEVOK,ZT3=""
- F  S ZT3=$O(^%ZTSCH("IO",ZT2,ZT3)),ZT4="" Q:ZT3=""  F  S ZT4=$O(^%ZTSCH("IO",ZT2,ZT3,ZT4)) Q:ZT4=""  L +^%ZTSK(ZT4):99 D DQ L -^%ZTSK(ZT4)
+ F  S ZT3=$O(^%ZTSCH("IO",ZT2,ZT3)),ZT4="" Q:ZT3=""  F  S ZT4=$O(^%ZTSCH("IO",ZT2,ZT3,ZT4)) Q:ZT4=""  L +^%ZTSK(ZT4) D DQ L -^%ZTSK(ZT4)
  K ^%ZTSCH("IO",ZTDEVOK)
  I $O(^%ZTSCH("IO",""))="" K ^%ZTSCH("IO")
  L -^%ZTSCH("IO")
@@ -38,12 +37,18 @@ DQ ;DEVBAD--remove a task from the waiting list for a bad device
  Q
  ;
 ERCLOZ ;ERROR--close device after error
- ;N %ZT1 S %ZT1=(IO=$G(^XUTL("XQ",$J,"IO")))
- I $L($G(IO)) S IO("C")="" D ^%ZISC ;Close the current device
- ;I $G(^XUTL("XQ",$J,"IO"))'=$I D ERC2
- I $L(IO),$D(IO(1,IO)) S IO("C")="" D ^%ZISC ;Close a second device open
+ N %ZT1 S %ZT1=(IO=$G(^XUTL("XQ",$J,"IO")))
+ I 0[$I D ERC1
+ I $G(^XUTL("XQ",$J,"IO"))'=$I D ERC2
  Q
- ;
+ERC1 ;Close current device
+ I %ZTME["data set hang-up" Q
+ I %ZTME["CLOSERR" Q
+ I %ZTME["DSCON" Q
+ I '$D(ZTQUEUED) Q:$D(IO)[0  Q:IO=""  C:$O(^%ZISL(3.54,"B",IO,""))="" IO Q
+ I '$D(IO)&'($D(IOT)) Q
+ S IO("C")="" D ^%ZISC
+ Q
 ERC2 ;Close original Device
  N POP
  S POP=1 D RESETVAR^%ZIS Q:POP

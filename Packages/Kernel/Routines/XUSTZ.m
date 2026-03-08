@@ -1,6 +1,5 @@
-XUSTZ ;SF/RWF - Security Twilight Zone ;11/25/08  15:21
- ;;8.0;KERNEL;**36,180,265,514**;Jul 10, 1995;Build 14
- ;Per VHA Directive 2004-038, this routine should not be modified
+XUSTZ ;SF/RWF - Security Twilight Zone ;05/17/2005  09:41
+ ;;8.0;KERNEL;**36,180,265**;Jul 10, 1995;Build 5
  ;Called from XUS3 for R/S
  N XUSTZ,DUOUT,SETLK,TMOUT
  ;Only send the bulletin once.
@@ -22,8 +21,7 @@ XUSTZ ;SF/RWF - Security Twilight Zone ;11/25/08  15:21
  ;
 RA(IP) ;EF. Entry point for Remote Access (Broker/Vistalink) and R/S
  ;This is used to Lock the User or IP.  Returns Text.
- N TXT,TMOUT
- S TXT="",TMOUT=$$LKTME,IP=$$IP^XUSTZIP,XUFAC=+$G(XUFAC)
+ N TXT,TMOUT S TXT="",TMOUT=$$LKTME,IP=$$IP^XUSTZIP
  D FILE ;File in FAA, Do now before user can disconnect
  D CLEAN^XUSTZIP
  ;Check if Lock the user
@@ -35,7 +33,7 @@ RA(IP) ;EF. Entry point for Remote Access (Broker/Vistalink) and R/S
  . Q
  Q TXT
  ;
-ASK N XUM
+ASK N XUM,XUFAC
  W !!!,$$EZBLD^DIALOG(30810.42)
  X XUEOFF S %="",XUM=4,XUEXIT=0,XUC="",TMOUT=$S(TMOUT>10:TMOUT,1:10)
 A1 ;Let user keep trying
@@ -48,9 +46,8 @@ A1 ;Let user keep trying
  S %1="" I %="" W !,XUSTMP(52) S X=$$ACCEPT^XUS(60),%="" ;Verify
  I XUF S %1="Verify: "_X D FAC
  HANG 2
- I XUF,XUF(.2)>50 D FILE S XUF(.2)=0,XUFAC=0
- ;I XUF,XUF(.2)>2 D FILE S XUF(.2)=0,XUFAC=0 ;used for testing
- S XUFAC=XUFAC+1,%=$$NO^XUS3
+ I XUF,XUF(.2)>50 D FILE S XUF(.2)=0
+ S XUFAC=0,%=$$NO^XUS3
  Q
  ;
 FAC G FAC^XUS
@@ -58,14 +55,13 @@ FAC G FAC^XUS
 FILE ;File data into Access Atempt Log
  ;Call needs, IOS,XUVOL,XUF(.1),(.2),(.3),XUT,XUCI,IO("ZIO"),XUNOW
  ;Want to use IO("IP") in place of IO("ZIO") if we have it.
- Q:'$G(XUF)
+ Q:'$G(XUF) 
  N XUT,ZIO S ZIO=$G(IO("ZIO")) S:$D(IO("IP")) IO("ZIO")=IO("IP")
  S X1=IOS,X2=DT F I=1:1:XUF(.2) S X=XUF(I) D EN^XUSHSHP S XUF(I)=X
  S XUT=XUFAC
- ;S XUSLNT=1,XQZ="FAAL^ZUA[MGR]" D DO^%XUCI
- D FAAL^ZUA
+ S XUSLNT=1,XQZ="FAAL^ZUA[MGR]" D DO^%XUCI
  F I=1:1:XUF(.2) K XUF(I)
- S XUF(.2)=0,XUFAC=0 S:$L(ZIO) IO("ZIO")=ZIO
+ S XUF(.2)=0 S:$L(ZIO) IO("ZIO")=ZIO
  Q
  ;
 SB ;Send the XUSLOCK bulletin

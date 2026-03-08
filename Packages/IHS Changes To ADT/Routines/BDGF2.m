@@ -1,5 +1,5 @@
 BDGF2 ; IHS/ANMC/LJF - PAT INFO FUNCTION CALLS ;  [ 06/01/2004  4:15 PM ]
- ;;5.3;PIMS;**1001,1003,1004,1005,1007,1008,1009**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1003,1004,1005,1007,1008,1009,1022**;MAY 28, 2004;Build 18
  ;IHS/ITSC/WAR 05/24/2004 PATCH 1001 Phoenix style terminla digit logic
  ;IHS/ITSC/LJF 05/13/2005 PATCH 1003 added EP; to CWAD, AGE & INS subroutines
  ;             06/10/2005 PATCH 1003 terminal digit calculation now parameter driven
@@ -31,7 +31,7 @@ HRCNT(X) ;EP; return terminal digit format of chart # passed as X
  Q X
  ;
  ;IHS/OIT/LJF 11/04/2005 PATCH 1004 new subroutine (called by DGPWBD for barcoding)
- ;IHS/OIT/LJF 04/14/2006 PATCH 1005 made into a PEP
+ ;IHS/OIT/LJF 04/14/2006 PATCH 1005 made into a Pub EP
 HRCNF(PAT,SITE) ;PEP; return facility code and chart # with leading zeros
  NEW C,F
  S F=$$GET1^DIQ(9999999.06,+$G(SITE),.12),F=$$PAD(F,6)
@@ -63,24 +63,29 @@ INSUR(PAT,DATE) ;EP; returns insurance info on DATE sent
  Q $G(INS)
  ;
 NEWINS(P,A,T) ;-- make new insurance call here and then parse based on file number
- K BDGNINS,N,BDGRR
+ K BDGNINS,N,BDGRR,MBI
  N DATE,N
  I $G(A) S DATE=+$$GET1^DIQ(405,A,.01,"I")
  I '$G(DATE) S DATE=DT
  D GETELIG^AGAPIS(.BDGNINS,P,DATE,"E","",0)  ;cmi/maw 8/4/2008 changed category back to null from M only PATCH 1009
  Q:$G(T)=""
+ I T="MCR" D
+ . ;20230622 75968 p1022 added MBI if available
+ . S MBI=$$GETMBI^AUPNMBI(P,DATE,0)
+ . I $G(MBI)=0 S MBI=""
+ . I $G(MBI)]"" S N="MBI: "_MBI
  N DA,PR,IN,FL
  S DA=0 F  S DA=$O(BDGNINS(DA)) Q:DA=""  D
  . S PR=0 F  S PR=$O(BDGNINS(DA,PR)) Q:'PR  D
  .. S IN=0 F  S IN=$O(BDGNINS(DA,PR,IN)) Q:'IN  D
  ... S FL=0 F  S FL=$O(BDGNINS(DA,PR,IN,FL)) Q:FL=""  D
  .... I T="MCR",FL'=9000003 D
- ..... I FL'=9000003.11 K BDGNINS(DA,PR) Q
- ..... S BDGCOV=1
- ..... S N="Medicare #"_$G(BDGNINS(DA,PR,IN,9000003,P_",",.03,"E"))_$G(BDGNINS(DA,PR,IN,9000003,P_",",.04,"E"))
- ..... N BIENS
- ..... S BIENS=0 F  S BIENS=$O(BDGNINS(DA,PR,IN,9000003.11,BIENS)) Q:BIENS=""  D
- ...... I $G(BDGNINS(DA,PR,IN,9000003.11,BIENS,.02,"E")) S N=N_" exp "_$G(BDGNINS(DA,PR,IN,9000003.11,BIENS,.02,"E"))
+ ..... ;I FL'=9000003.11 K BDGNINS(DA,PR) Q
+ ..... ;S BDGCOV=1
+ ..... ;S N="Medicare #"_$G(BDGNINS(DA,PR,IN,9000003,P_",",.03,"E"))_$G(BDGNINS(DA,PR,IN,9000003,P_",",.04,"E"))
+ ..... ;N BIENS
+ ..... ;S BIENS=0 F  S BIENS=$O(BDGNINS(DA,PR,IN,9000003.11,BIENS)) Q:BIENS=""  D
+ ..... ;I $G(BDGNINS(DA,PR,IN,9000003.11,BIENS,.02,"E")) S N=N_" exp "_$G(BDGNINS(DA,PR,IN,9000003.11,BIENS,.02,"E"))
  .... I T="MCD",FL'=9000004 D
  ..... I FL'=9000004.11 K BDGNINS(DA,PR) Q
  ..... N BIEN

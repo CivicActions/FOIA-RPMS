@@ -1,5 +1,5 @@
 BDGVAH ; IHS/ANMC/LJF - VIEW ADMISSION HISTORY ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
 EN ; list manager view of patient's admissions      
  NEW DFN,VALMCNT
@@ -11,7 +11,11 @@ EN ; list manager view of patient's admissions
  ;
 HDR ;EP; -- header code
  S VALMHDR(1)=$$SP(16)_$$CONF^BDGF
- NEW X S X=$$GET1^DIQ(2,DFN,.01)_"  #"_$$HRCN^BDGF2(DFN,DUZ(2))
+ ;202307 77894 maw p1022 PPN
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ NEW X S X=$G(PRF)_"  #"_$$HRCN^BDGF2(DFN,DUZ(2))
+ ;NEW X S X=$$GET1^DIQ(2,DFN,.01)_"  #"_$$HRCN^BDGF2(DFN,DUZ(2))
  S X=X_" DOB: "_$$GET1^DIQ(2,DFN,.03)                  ;date of birth
  S X=X_" ("_$$GET1^DIQ(9000001,DFN,1102.98)_")"        ;age
  S VALMHDR(2)=$$SP(79-$L(X)\2)_X

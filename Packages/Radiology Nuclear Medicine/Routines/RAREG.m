@@ -1,6 +1,7 @@
-RAREG ;HISC/GJC AISC/MJK,RMO-Register Rad/NM Patient ;8/15/97  11:04
- ;;5.0;Radiology/Nuclear Medicine;**23,85,47**;Mar 16, 1998;Build 21
- ; 06/07/2007 KAM/BAY RA*5*85 Remedy Call 185568 Exam Backdating
+RAREG ;HISC/GJC AISC/MJK,RMO-Register Rad/NM Patient ;14 Dec 2018 2:02 PM
+ ;;5.0;Radiology/Nuclear Medicine;**23,85,47,144,153,1009**;Mar 16, 1998;Build 21
+ ; 06/07/2007 KAM/BAY RA*5*85 Remedy Call 185568 Exam Backdating 
+ ;
  K RADTE
 PAT D SET^RAPSET1 I $D(XQUIT) K XQUIT Q
  ; Is our sign-on location inactive?

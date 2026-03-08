@@ -1,5 +1,5 @@
-BDMPOST ; cmi/anch/maw - POST INIT ROUTINE ; [ 08/23/2006  3:21 PM ]
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**1**;AUG 11, 2006
+BDMPOST ; cmi/anch/maw - POST INIT ROUTINE ; 
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**18**;JUN 14, 2007;Build 147
  ;
 ENV ;EP;
  ; The following line prevents the "Disable Options..." and "Move

@@ -1,5 +1,5 @@
 LROR8 ; IHS/DIR/AAB - FLAG/HOLD ORDERS 5/1/89 17:46 ;  [ 07/22/2002  1:31 PM ]
- ;;5.2T9;LR;**1002,1013,1018**;Nov 17, 2004
+ ;;5.2;LR;**1002,1013,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**100,128**;Sep 27, 1994
 EN ;;from LROR to FLAG orders
  I ORSTS'=5,ORSTS'=4 W !,"Only PENDING lab orders can be flagged." Q

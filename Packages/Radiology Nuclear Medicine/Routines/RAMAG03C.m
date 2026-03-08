@@ -1,5 +1,5 @@
-RAMAG03C ;HCIOFO/SG - ORDERS/EXAMS API (REGISTR. UTILS) ; 06 Oct 2013  11:03 AM
- ;;5.0;Radiology/Nuclear Medicine;**90,47,1005**;Mar 16, 1998;Build 13
+RAMAG03C ;HCIOFO/SG IHS/OIT/NST - ORDERS/EXAMS API (REGISTR. UTILS) ; 20 Jun 2025  11:03 AM
+ ;;5.0;Radiology/Nuclear Medicine;**90,47,1005,1013**;Mar 16, 1998;Build 13
  ;
  Q
  ;
@@ -64,7 +64,8 @@ EXAM() ;
  . ;---Pregnancy Screen and Pregnancy Screen Comment for female pt ages 12-55
  . ;IHS/BJI/DAY - Patch 1005 - Gender Fix
  . ;I $$PTSEX^RAUTL8(RADFN)="F",(($$PTAGE^RAUTL8(RADFN,"")>11)!($$PTAGE^RAUTL8(RADFN,"")<56)) D
- . I $$PTSEX^RAUTL8(RADFN)'="M",$$PTAGE^RAUTL8(RADFN,"")>11,$$PTAGE^RAUTL8(RADFN,"")<56 D
+ . ;IHS/OIT/NST - Patch 1013 - Change age range from 12-55 to 8-64 years old
+ . I $$PTSEX^RAUTL8(RADFN)'="M",$$PTAGE^RAUTL8(RADFN,"")>7,$$PTAGE^RAUTL8(RADFN,"")<65 D
  .. ;
  .. S RAFDA(70.03,IENS,32)="u"
  .. S RAFDA(70.03,IENS,80)="OUTSIDE STUDY"

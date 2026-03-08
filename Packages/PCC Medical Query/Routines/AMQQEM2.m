@@ -1,5 +1,5 @@
 AMQQEM2 ; IHS/CMI/THL - FORMAT FLAT FILE ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**28**;MAY 14, 2009;Build 72
  ;-----
  S %=""
  S $P(%,"*",79)=""
@@ -18,17 +18,17 @@ VAR K H,AMQQEM("DATE TRANS")
  S T=0
  S AMQQEMFS=""
  K @G
- S %="^^PATIENT^F;1^1^DOB^D;7^1^AGE^N;39^1^SSN^F;^^RECORD #^F;2^1^SEX^F"
- S A="$P(^DPT(AMQP(0),0),U);$P(^DPT(AMQP(0),0),U,3);(DT-$P(^DPT(AMQP(0),0),U,3))\10000;$P(^DPT(AMQP(0),0),U,9);$P($G(^AUPNPAT(AMQP(0),41,DUZ(2),0)),U,2);$P(^DPT(AMQP(0),0),U,2)"
+ S %="^^PATIENT^F;1^1^DOB^D;7^1^AGE^N;^^RECORD #^F;2^1^SEX^F"
+ S A="$P(^DPT(AMQP(0),0),U);$P(^DPT(AMQP(0),0),U,3);(DT-$P(^DPT(AMQP(0),0),U,3))\10000;$P($G(^AUPNPAT(AMQP(0),41,DUZ(2),0)),U,2);$P(^DPT(AMQP(0),0),U,2)"
  S B=";S Y=X X ^DD(""DD"") S X=Y;;;;S X=$S(X=""F"":""FEMALE"",X=""M"":""MALE"",1:"""")"
- F C=1:1:6 S @G@(C,0)=$P(%,";",C),$P(^(0),U,6)=$E($P(^(0),U,3),1,+$G(AMQQEM("HLEN"))),$P(^(0),U,7)="",@G@(C,1)="S X="_$P(A,";",C),@G@(C,2)=$P(B,";",C)
+ F C=1:1:5 S @G@(C,0)=$P(%,";",C),$P(^(0),U,6)=$E($P(^(0),U,3),1,+$G(AMQQEM("HLEN"))),$P(^(0),U,7)="",@G@(C,1)="S X="_$P(A,";",C),@G@(C,2)=$P(B,";",C)
  K %,A,B
  Q
  ;
 PT N %,A,B,X,Y,Z
  D VAR
  S (P,AMQQEMP)="^PATIENT NAME^DOB^AGE^SSN^CHART NUMBER^SEX^"
- S Z="1:PATIENT NAME;2:DOB;3:AGE;4:SSN;5:LOCAL RECORD NUMBER;6:SEX;"
+ S Z="1:PATIENT NAME;2:DOB;3:AGE;4:LOCAL RECORD NUMBER;5:SEX;"
  F %=9:0 S %=$O(^UTILITY("AMQQ",$J,"VAR NAME",%)) Q:'%  S X=^(%) D
  .S Y=$P(^AMQQ(1,+X,4,$P(X,U,2),0),U)
  .I P[(U_Y_U) Q

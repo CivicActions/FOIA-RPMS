@@ -67,13 +67,13 @@ SORRY ;
  W !,$$C^XBFUNC("Aborting "_XPDNM_" install!")
  W !,$$C^XBFUNC("Correct error and reinstall otherwise")
  W !,$$C^XBFUNC("please print/capture this screen and notify")
- W !,$$C^XBFUNC("the Help Desk")
+ W !,$$C^XBFUNC("the Help Desk at 888-830-7280")
  W !!,LINE
  D BMES^XPDUTL("Sorry....something is wrong with your environment")
  D BMES^XPDUTL("Enviroment ERROR "_$G(XPX))
  D BMES^XPDUTL("Aborting "_XPDNM_" install!")
  D BMES^XPDUTL("Correct error and reinstall otherwise")
  D BMES^XPDUTL("please print/capture this screen and notify")
- D BMES^XPDUTL("the Help Desk")
+ D BMES^XPDUTL("the Help Desk at 888-830-7280")
  Q
  ;

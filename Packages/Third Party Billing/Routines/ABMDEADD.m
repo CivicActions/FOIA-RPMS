@@ -1,13 +1,11 @@
-ABMDEADD ; IHS/ASDST/DMJ - Add New Claim - Non PCC Option ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**9**;NOV 12, 2009
+ABMDEADD ; IHS/SD/SDR - Add New Claim - Non PCC Option ;  
+ ;;2.6;IHS 3P BILLING SYSTEM;**9,10,37**;NOV 12, 2009;Build 739
  ;
- ; IHS/SD/SDR - v2.5 p3 - 2/28/03 - QEA-0702-130030
- ;     Added code for manually entered insurer check
- ; IHS/SD/SDR - v2.5 p9 - IM15913
- ;    Add check for admit/encounter date to be >DOB
- ; IHS/SD/SDR - v2.5 p12 - UFMS
- ;   If user isn't logged into cashiering session they can't do
- ;   this option
+ ;IHS/SD/SDR 2.5*3 2/28/03 QEA-0702-130030 Added code for manually entered insurer check
+ ;IHS/SD/SDR 2.5*9 IM15913 Add check for admit/encounter date to be >DOB
+ ;IHS/SD/SDR 2.5*12 UFMS If user isn't logged into cashiering session they can't do this option
+ ;
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
  ;
  S U="^" W !
 PAT K ABMP,ABM
@@ -27,6 +25,8 @@ PAT K ABMP,ABM
  I $G(X)=""!$D(DUOUT)!$D(DTOUT) G XIT
  I +Y<1 W *7 G XIT
  S ABMP("PDFN")=+Y
+ ;I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"I",1)'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;.W !?3,"Preferred Name: ",$$EN^ABMVDF("RVN"),$$GETPREF^AUPNSOGI(ABMP("PDFN"),"I",1),$$EN^ABMVDF("RVF"),!  ;actually write the preferred name in header  ;abm*2.6*37 IHS/SD/SDR ADO81491
  ;
 LOC S ABMP("LDFN")=DUZ(2)
  ;
@@ -89,7 +89,8 @@ TST ;
  .W " Patient either has no 3rd Party Resources for the date of the visit or the",!,"location/clinic is not billable for the insuring source.",!
  .K DIR S DIR(0)="Y",DIR("A")="Continue",DIR("B")="NO" D ^DIR K DIR I Y'=1 S ABM("F1")=1 Q
  .S DIC="^AUTNINS(",DIC(0)="AEMQ",DIC("S")="I $P($G(^(1)),""^"",7)=1",DIC("A")="Select INSURER to Bill // " D ^DIC K DIC I Y<0 S ABM("F1")=1 Q
- .S ABM("TYP")=$P($G(^AUTNINS(+Y,2)),U) I ABM("TYP")="" S ABM("F1")=1 W !!,"Insurance type undefined for this insurer.",! Q
+ .;S ABM("TYP")=$P($G(^AUTNINS(+Y,2)),U) I ABM("TYP")="" S ABM("F1")=1 W !!,"Insurance type undefined for this insurer.",! Q  ;abm*2.6*10 HEAT73780
+ .S ABM("TYP")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+Y,".211","I"),1,"I") I ABM("TYP")="" S ABM("F1")=1 W !!,"Insurance type undefined for this insurer.",! Q  ;abm*2.6*10 HEAT73780
  .S ABML(1,+Y)="^^"_ABM("TYP")_"^^^^M"
  .S ABM("F1")=0
  G:'$G(ABM("F1")) ^ABMDEAD2

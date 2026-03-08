@@ -1,5 +1,6 @@
-DDGFSV ;SFISC/MKO- SAVE DATA ;12:41 PM  29 Mar 1995
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDGFSV ;SFISC/MKO- SAVE DATA ;12:41 PM  29 Mar 1995 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**4**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 SAVE ;Save in form/block files data in DDGFREF
  N P,B,F,P1,B1,F1,N

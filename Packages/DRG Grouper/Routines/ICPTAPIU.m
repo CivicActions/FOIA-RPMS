@@ -1,5 +1,5 @@
 ICPTAPIU  ;ALB/DEK/KER - CPT UTILITIES FOR APIS ; 04/18/2004
- ;;6.0;CPT/HCPCS;**1,6,12,14,16,19,22**;May 19, 1997;Build 44
+ ;;6.0;CPT/HCPCS;**1,6,12,14,16,19,22**;May 19, 1997;Build 9
  ;
  ; External References
  ;   DBIA 10011  ^DIWP

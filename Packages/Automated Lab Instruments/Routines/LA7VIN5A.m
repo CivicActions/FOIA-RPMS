@@ -1,5 +1,5 @@
 LA7VIN5A ;VA/DALOI/JMC - Process Incoming UI Msgs, continued ; Jan 12, 2004
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**1031**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**1031,1047**;NOV 01, 1997;Build 21
  ;
  ;;VA LA Patche(s): 46,64,67
  ;
@@ -191,7 +191,7 @@ ABFLAG(LA7X) ; Process/Store Abnormal Flags.
  ;
  ; Store abnormal flags in LAH global with results.
  ; Currently only storing high/low and critical flags
- S LA7Y=$S(LA7X="L":"L",LA7X="H":"H",LA7X="LL":"L*",LA7X="HH":"H*",1:"")
+ S LA7Y=$S(LA7X="L":"L",LA7X="H":"H",LA7X="LL":"L*",LA7X="HH":"H*",LA7X="A":"A",LA7X="AA":"A*",1:"")  ;maw 05212020 added AA
  S $P(^LAH(LA7LWL,1,LA7ISQN,LA76304),"^",2)=LA7Y
  ;
  ; Critical or designated abnormal tests generate bulletin/alert

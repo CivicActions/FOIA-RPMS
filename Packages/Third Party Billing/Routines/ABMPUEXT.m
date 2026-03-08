@@ -1,5 +1,5 @@
 ABMPUEXT ; IHS/SD/SDR - UFMS Re-extract of bills
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  Q
  ;Invoice file format:
  ;   1. Always D for Invoice (Bill)
@@ -50,7 +50,9 @@ EXTRACT ;
  ...Q:$D(^TMP($J,"ABMUB",ABMDUZ2,ABMP("BDFN")))  ;quit if bill is on open list
  ...S ABMDTAPP=$P($G(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),1)),U,5)  ;date/time approved
  ...S ABMP("INS")=$P($G(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),0)),U,8)  ;active insurer
- ...Q:$P($G(^AUTNINS(ABMP("INS"),2)),U)="I"!($P($G(^AUTNINS(ABMP("INS"),2)),U)="T")  ;no Ben or Third Party Liab.
+ ...;Q:$P($G(^AUTNINS(ABMP("INS"),2)),U)="I"!($P($G(^AUTNINS(ABMP("INS"),2)),U)="T")  ;no Ben or Third Party Liab.  ;abm*2.6*10 HEAT73780
+ ...S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
+ ...Q:ABMITYP="I"!(ABMITYP="T")  ;no Ben or Third Party Liab.  ;abm*2.6*10 HEAT73780
  ...S ABMDUZ=$P($G(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),1)),U,4)  ;approving offical
  ...;
  ...S ABMTAXID=$TR($P($G(^AUTNINS(ABMP("INS"),0)),U,11),"-")  ;TAX ID
@@ -71,7 +73,8 @@ EXTRACT ;
  ...S ABMSASUF=$$ASUFAC($S(+$G(ABMUAOF)'=0:ABMUAOF,1:ABMP("LDFN")),ABMPDOS)
  ...S ABMPBNUM=$P($G(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),0)),U)  ;Bill Number
  ...S ABMP("BAMT")=$P($G(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),2)),U)  ;bill amount
- ...S ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)
+ ...;S ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*10 HEAT73780
+ ...S ABMP("ITYP")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  ...S ABMCLN=$P($G(^ABMDBILL(ABMDUZ2,ABMP("BDFN"),0)),U,10)
  ...;
  ...;CAN number

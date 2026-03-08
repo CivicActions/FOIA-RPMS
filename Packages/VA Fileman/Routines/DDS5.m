@@ -1,6 +1,6 @@
-DDS5 ;SFISC/MKO-MULTS,NEXT/PREV PAGE,NEXT BLOCK ;9:53 AM  1 Oct 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**8**;Mar 30, 1999
+DDS5 ;SFISC/MKO-MULTS,NEXT/PREV PAGE,NEXT BLOCK ;01:34 PM  23 Jan 1995 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**6**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  I X="" D:DDSOLD="" NF^DDS01 D:DDSOLD]"" DM^DDS6 Q
  I DIR0N,$D(DUZ)#2 S ^DISV(DUZ,$E(DDSGL,1,28))=$E(DDSGL,29,999)_X
@@ -56,9 +56,8 @@ LST(DA,DDSDL,DDP,DDSDA,DDSFLD) ;Save last edited subrecord
  Q
  ;
 SEL ;Issue the read at the Select mult prompt
- S DIR(0)="PO"_DDSGL_":QEMZ"_$E("L",'$D(DDSTP)&'$P($G(DDSO(4)),U,5))_$E("V",$P($G(DDSO(4)),U,6))
- I $D(@(DDSGL_"0)"))[0 S ^(0)=U_$P($G(DDSU("DD")),U,2)_U_U
- E  I $P(@(DDSGL_"0)"),U,2)'=$P($G(DDSU("DD")),U,2) S $P(^(0),U,2)=$P($G(DDSU("DD")),U,2)
+ S DIR(0)="PO"_DDSGL_":QEMZ"_$E("L",'$D(DDSTP)&'$P($G(DDSO(4)),U,5))
+ S:$D(@(DDSGL_"0)"))[0 @(DDSGL_"0)")=U_$P(^DD(DDP,+DDSFLD,0),U,2)_U_U
  D DDA(0,.DA,.DDSDL) S DDSDA="0,"_DDSDA
  D ^DIR K DIR,DUOUT,DIRUT,DIROUT
  D UDA(.DA,.DDSDL) S DDSDA=$P(DDSDA,",",2,999)

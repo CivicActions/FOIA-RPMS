@@ -1,5 +1,5 @@
-ZOSFGTM ;ISF/staff - ZOSF Table for GT.M for VMS ;10/18/06  14:28
- ;;8.0;KERNEL;**275,425**;Jul 10, 1995;Build 18
+ZOSFGTM ;ISF/staff - ZOSF Table for GT.M for VMS ;10 Feb 2003 6:36 pm
+ ;;8.0;KERNEL;**275**;Jul 10, 1995
  ; for GT.M for VMS, version 4.3
  ;
  S %Y=1,DTIME=$G(DTIME,600)
@@ -74,11 +74,11 @@ Z ;
  ;;NBRK
  ;;U $I:(NOCENABLE)
  ;;NO-PASSALL
- ;;U $I:(ESCAPE:TERMINATOR="":NOPASTHRU)
+ ;;U $I:(NOPASTHRU)
  ;;NO-TYPE-AHEAD
  ;;U $I:(NOTYPEAHEAD)
  ;;PASSALL
- ;;U $I:(NOESCAPE:NOTERMINATOR:PASTHRU)
+ ;;U $I:(PASTHRU)
  ;;PRIINQ
  ;;S Y=$$PRIINQ^%ZOSV()
  ;;PRIORITY
@@ -96,9 +96,7 @@ Z ;
  ;;RSEL
  ;;N %ZR,X K ^UTILITY($J) D ^%RSEL S X="" X "F  S X=$O(%ZR(X)) Q:X=""""  S ^UTILITY($J,X)="""""
  ;;RSUM
- ;;N %,%1,%2,%3 S Y=0 F %=1,3:1 S %1=$T(+%^@X),%3=$F(%1," ") Q:'%3  S %3=$S($E(%1,%3)'=";":$L(%1),$E(%1,%3+1)=";":$L(%1),1:%3-2) F %2=1:1:%3 S Y=$A(%1,%2)*%2+Y
- ;;RSUM1
- ;;N %,%1,%2,%3 S Y=0 F %=1,3:1 S %1=$T(+%^@X),%3=$F(%1," ") Q:'%3  S %3=$S($E(%1,%3)'=";":$L(%1),$E(%1,%3+1)=";":$L(%1),1:%3-2) F %2=1:1:%3 S Y=$A(%1,%2)*(%2+%)+Y
+ ;;S Y=0 F %=1,3:1 S %1=$T(+%^@X),%3=$F(%1," ") Q:'%3  S %3=$S($E(%1,%3)'=";":$L(%1),$E(%1,%3+1)=";":$L(%1),1:%3-2) F %2=1:1:%3 S Y=$A(%1,%2)*%2+Y
  ;;SS
  ;;D ^ZSY
  ;;SAVE

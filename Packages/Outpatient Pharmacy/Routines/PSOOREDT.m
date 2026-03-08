@@ -1,5 +1,5 @@
-PSOOREDT ;BIR/SAB - edit orders from backdoor ;10-Jun-2013 22:29;DU
- ;;7.0;OUTPATIENT PHARMACY;**4,20,27,37,57,46,78,102,104,119,1002,1008,1013,143,148,260,281,304,289,1015,1016,1017**;DEC 1997;Build 40
+PSOOREDT ;BIR/SAB - edit orders from backdoor ;01-Mar-2019 14:15;DU
+ ;;7.0;OUTPATIENT PHARMACY;**4,20,27,37,57,46,78,102,104,119,1002,1008,1013,143,148,260,281,304,289,1015,1016,1017,1023**;DEC 1997;Build 121
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to PSSLOCK supported by DBIA 2789
  ;External reference to ^VA(200 supported by DBIA 10060
@@ -9,6 +9,7 @@ PSOOREDT ;BIR/SAB - edit orders from backdoor ;10-Jun-2013 22:29;DU
  ;                          02/15/12 - Line PROV+1
  ;            IHS/MSC/PB  - 01/22/13 - Line SEL+1 modified to screen for external Rx and not allow it to be edited.
  ;            IHS/MSC/PLS - 06/04/13 - Line EDT+23
+ ;            IHS/MSC/MGH - 05/17/17 - EDT+6,EDT+38  Changes for EPCS
 SEL ;
  ;IHS/MSC/PB start code to screen for external Rx to be edited 1/22/13
  I $E($P($G(^PSRX($P(PSOLST(ORN),"^",2),0)),"^",1))="X" D  Q
@@ -54,12 +55,14 @@ EX2 S VALMBCK=$S($G(PSORX("FN")):"Q",$G(ZONE):"Q",1:"R") K PSORXED,FST,FLD,IEN,F
  Q
  ;
 EDT ; Rx Edit (Backdoor)
- K NCPDPFLG
- I '$D(PSODRUG) NEW PSOY S PSOY=$P(RX0,U,6),PSOY(0)=^PSDRUG(PSOY,0) D SET^PSODRG
+ K NCPDPFLG,PSOPKO,DEA
  S I=0 F  S I=$O(^PSRX($P(PSOLST(ORN),"^",2),1,I)) Q:'I  S PSORXED("RX1")=^PSRX($P(PSOLST(ORN),"^",2),1,I,0)
  S (RX0,PSORXED("RX0"))=^PSRX($P(PSOLST(ORN),"^",2),0),PSORXED("RX2")=$G(^(2)),PSORXED("RX3")=$G(^(3)),PSOSIG=$P(^("SIG"),"^")
+ I '$D(PSODRUG) NEW PSOY S PSOY=$P(RX0,U,6),PSOY(0)=^PSDRUG(PSOY,0) D SET^PSODRG   ;1023 Moved this line since RX0 wasn't defined
  F FLD=1:1:$L(FST,",") Q:$P(FST,",",FLD)']""!($G(PSORXED("DFLG")))!($G(PSORX("DFLG")))  S FLN=+$P(FST,",",FLD) D
- .S PSORXED("DFLG")=0,(DA,PSORXED("IRXN"),PSORENW("OIRXN"))=$P(PSOLST(ORN),"^",2),RX0=^PSRX(PSORXED("IRXN"),0) S:$G(PSOSIG)="" PSOSIG=$P(^("SIG"),"^")
+ .;IHS/MSC/MGH change for EPCS
+ .;S PSORXED("DFLG")=0,(DA,PSORXED("IRXN"),PSORENW("OIRXN"))=$P(PSOLST(ORN),"^",2),RX0=^PSRX(PSORXED("IRXN"),0) S:$G(PSOSIG)="" PSOSIG=$P(^("SIG"),"^")
+ .S PSORXED("DFLG")=0,(DA,PSORXED("IRXN"),PSORENW("OIRXN"))=$P(PSOLST(ORN),"^",2),RX0=^PSRX(PSORXED("IRXN"),0),PSOPKI=$P($G(^PSRX(PSORXED("IRXN"),"PKI")),"^") S:$G(PSOSIG)="" PSOSIG=$P(^("SIG"),"^")
  .I '$G(PSOSIGFL) D
  ..S PSOI=+^PSRX(DA,"OR1"),PSODAYS=$P(RX0,"^",8),PSORXST=+$P($G(^PS(53,$P(RX0,"^",3),0)),"^",7)
  ..I 'PSOI S PSOI=+^PSDRUG($P(RX0,"^",6),2),$P(^PSRX(DA,"OR1"),"^")=PSOI
@@ -91,6 +94,8 @@ EDT ; Rx Edit (Backdoor)
  .I FLN=4 D INS^PSOORED1 Q
  .I FLN=1 D PSOI^PSOORED6 N PSOX S PSORXED=1,PSOX("IRXN")=$S($D(DA):DA,$D(PSORXED("IRXN")):PSORXED("IRXN"),$D(PSORENW("OIRXN")):PSORENW("OIRXN")) D:'$G(PSORXED("DFLG")) EN^PSODIAG Q
  .I FLN=2 D DRG^PSOORED6 N PSOX S PSORXED=1,PSOX("IRXN")=PSORXED("IRXN") D:'$G(PSORXED("DFLG")) EN^PSODIAG S:$O(^PSRX(PSORXED("IRXN"),1,0)) REF=1 Q
+ .;IHS/MSC/MGH changed for EPCS
+ .I FLN=12,PSOPKI W !!,"Digitally Signed Order - Provider can't be changed" D PAUSE Q
  .I FLN=12 D PROV Q
  .I FLN=6 D ISDT^PSOORED2 Q
  .I FLN=7 D FLDT^PSOORED2 Q
@@ -162,5 +167,10 @@ SVAL ;Set message for patient lock
  Q
 SVALO ;Set message for order lock
  S VALMSG=$S($P($G(PSOMSG),"^",2)'="":$P($G(PSOMSG),"^",2),1:"Another person is editing this order.")
+ Q
+ ;
+PAUSE ;
+ N DIR,X,Y
+ W ! S DIR(0)="E",DIR("A")="Press Return to continue" D ^DIR
  Q
  ;

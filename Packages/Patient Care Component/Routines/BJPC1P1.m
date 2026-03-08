@@ -1,5 +1,5 @@
 BJPC1P1 ; IHS/CMI/LAB - PCC Suite v1.0 patch 1 environment check ;    
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;1.0;IHS PCC SUITE;**2**;MAR 14, 2008
  ;
  ;
  ; The following line prevents the "Disable Options..." and "Move
@@ -28,7 +28,7 @@ ZISH ;create entry in ZISH SEND PARAMETERS file
  .I BDWY S DA=BDWY,DIK="^%ZIB(9888888.93," D ^DIK K DA,DIK
  S X="SURVEILLANCE ILI SEND",DIC(0)="L",DIC="^%ZIB(9888888.93," D FILE^DICN
  I Y=-1 W !!,"error creating ZISH SEND PARAMETERS entry" Q
- S DA=+Y,DIE="^%ZIB(9888888.93,",DR=".02///QUOVADX-IE.DOMAIN.NAME;.03///fludata;.04///etgx7h;.06///-u;.07///B;.08///sendto"
+ S DA=+Y,DIE="^%ZIB(9888888.93,",DR=".02///QUOVADX-IE.IHS.GOV;.03///fludata;.04///etgx7h;.06///-u;.07///B;.08///sendto"
  D ^DIE
  I $D(Y) W !!,"error updating ZISH SEND PARAMETERS entry" Q
  Q

@@ -1,12 +1,14 @@
-PSOBKDE1 ;BIR/MR-Sub-routines for Backdoor Rx Order Edit ;11/25/02
- ;;7.0;OUTPATIENT PHARMACY;**117,133**;DEC 1997
+PSOBKDE1 ;BIR/MR-Sub-routines for Backdoor Rx Order Edit ;30-Dec-2019 10:21;DU
+ ;;7.0;OUTPATIENT PHARMACY;**117,133,1025**;DEC 1997;Build 33
  ;External reference to PSDRUG( supported by DBIA 221
+ ;IHS/MSC/MGH Modified 12/24/2019 LST1+5 Instructions for liquids
  ;
 LST1 ;
  W !,"This is the amount of medication the patient is to receive as one dose"
  W !,"for this order.  This can be a numeric value, such as 325 or 650 or an"
  W !,"amount with a unit of measure such as 325MG or 650MG.  You may also enter"
- W !,"a free text dosage, such as 1 Tablet or 2 Tablets",!
+ W !,"a free text dosage, such as 1 Tablet or 2 Tablets"
+ W !,"If the medication is a liquid, the dose must be in metric units (ML)",!
  ;
 LST I '$D(DOSE("DD")) D  Q
  . W !,"     No dosages are available"

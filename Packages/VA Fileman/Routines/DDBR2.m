@@ -1,15 +1,13 @@
-DDBR2 ;SFISC/DCL-VA FILEMAN BROWSER ;26AUG2009
- ;;22.0;VA FileMan;**162**;Mar 30, 1999;Build 21
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DDBR2 ;SFISC/DCL-VA FILEMAN BROWSER ;09:34 AM  24 Oct 1994; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
 SWITCH(DDBLST,DDBRET) ;Switch to another document in list or FileMan Database
- I $E(DDBSA,1,11)="^DI(.84,920" D EXIT^DDBR0 Q  ;!(DDBSA="^XTMP(""DDBDOC"")") Q
- I DDBSA=$NA(^TMP("DDWB",$J)) G EXIT^DDBR0:$G(DDBRET)["R",SWITCH^DDBRWB Q
+ I DDBSA="^DI(.84,9201,2)" D EXIT^DDBR0 Q  ;!(DDBSA="^XTMP(""DDBDOC"")") Q
  N DDBLN,DDBZ,DIC,DIR,X,Y,DIRUT,DIROUT,DUOUT,DILN
  S DILN=DDBRSA(DDBRSA,"DDBSRL")-2
  S:$G(DDBLST)="" DDBLST="^TMP(""DDBLST"",$J)" S DDBLN=$S($D(@DDBLST@("A",DDBSA)):^(DDBSA),1:$O(@DDBLST@(" "),-1)+1)
  I DDBFLG["R",'$D(@DDBLST) D SFR() G PS
- I DDBFLG["A" D SFR() G PS
  I $G(DDBRET)["R" D  G:$G(Y) PS Q
  .Q:DDBPSA'>0
  .Q:'$D(@DDBLST@("APSA",DDBPSA))  S X=^(DDBPSA) S:$D(@DDBLST@("A",X)) Y=^(X)
@@ -23,8 +21,7 @@ BRMC D BRM
  .;S X=0 F  S X=$O(@DDBLST@(X)) Q:X'>0  W:X'=DDBZ !,$J(X,3),"  ",$E(@DDBLST@(X,0),1,75)
  .W !
  .K DIR0
- .;S DIR(0)="Y",DIR("A")="Do you wish to select from current list? ",DIR("B")="YES" D ^DIR,SFR("to Current List"):Y=0&(DDBFLG["R") Q:$D(DIRUT)!(Y'>0)
- .I DDBFLG'["R" S DIR(0)="Y",DIR("A")="Do you wish to select from current list",DIR("B")="YES" D ^DIR Q:$D(DIRUT)!(Y'>0)
+ .S DIR(0)="Y",DIR("A")="Do you wish to select from current list? ",DIR("B")="YES" D ^DIR,SFR("to Current List"):Y=0&(DDBFLG["R") Q:$D(DIRUT)!(Y'>0)
  .S DIC=$$OREF^DIQGU(DDBLST),DIC(0)="EMQ",DIC("S")="I +Y'=DDBZ",DIC("W")="W:$E(^(0))=U ^(0)",X="??" D ^DIC  ;K DIC("S") Q:Y'>0
  .S DIC(0)="AEMQ"
  .D ^DIC K DIC("S") Q:Y'>0
@@ -62,7 +59,7 @@ SAVEDDB(DDBLIST,IEN,NSAPSA) ;Save local varialbes into ^TMP("DDBLIST",$J,IEN)
  ;NSAPSA Not Set "APSA" x-ref if undefined, pass 1 to not set NSAPSA (optional - default is to set "APSA")
  S NSAPSA=+$G(NSAPSA)
  N I,X
- F I="HDR","HDRC","SA","ZN","DM","PMSG","L","C","TL","SF","ST","RE","RPE" S X="DDB"_I,@DDBLIST@(IEN,X)=@X
+ F I="HDR","SA","ZN","DM","PMSG","L","C","TL","SF","ST","RE","RPE" S X="DDB"_I,@DDBLIST@(IEN,X)=@X
  ;I $D(DDBFNO) S @DDBLIST@(IEN,DDBFNO)=DDBFNO  ;decided to keep it the same throughout the browse session (Next Find String)
  S @DDBLIST@(IEN,0)=DDBPMSG
  S:'$D(@DDBLIST@(0)) ^(0)="CURRENT LIST^1"
@@ -79,7 +76,7 @@ USAVEDDB(DDBLIST,IEN) ;Unsave varialbes in ^TMP("DDBLIST",$J,IEN) to locals
  ;DDBS  array to save list
  ;IEN   internal entry
  N I,X
- F I="HDR","HDRC","SA","ZN","DM","PMSG","L","C","TL","SF","ST","RE","RPE" S X="DDB"_I,@X=@DDBLIST@(IEN,X)
+ F I="HDR","SA","ZN","DM","PMSG","L","C","TL","SF","ST","RE","RPE" S X="DDB"_I,@X=@DDBLIST@(IEN,X)
  S DDBTPG=DDBTL\DDBSRL+(DDBTL#DDBSRL'<1)
  ;I $D(@DDBLIST@(IEN,"DDBFNO")) S DDBFNO=@DDBLIST@(IEN,"DDBFNO")
  Q

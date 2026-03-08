@@ -1,9 +1,9 @@
-ABMDTVIS ; IHS/ASDST/DMJ - Add/Edit 3P Visit Types ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDTVIS ; IHS/SD/SDR - Add/Edit 3P Visit Types ;
+ ;;2.6;IHS 3P BILLING SYSTEM;**31**;NOV 12, 2009;Build 615
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 8
- ;    Add prompt for auto-link to do claim splitting
- ;    in claim generator
+ ;IHS/SD/SDR 2.5*8 task 8 Add prompt for auto-link to do claim splitting in claim generator
+ ;
+ ;IHS/SD/SDR 2.6*31 CR11832 Added Hospital Location prompt
  ;
 START ;START HERE
  K DIC,ABM
@@ -12,7 +12,8 @@ START ;START HERE
  S ABMVT=+Y
  I $P($G(^ABMDVTYP(+Y,0)),U,3)'="" W "  ","(uneditable) ??",*7 D AUTOLINK G START
  I $P($G(^ABMDVTYP(+Y,0)),U,3)="" D
- .S DR=$S('$P(^ABMDVTYP(+Y,0),U,3):".01;",1:"")_".02;1"
+ .;S DR=$S('$P(^ABMDVTYP(+Y,0),U,3):".01;",1:"")_".02;1"  ;abm*2.6*31 IHS/SD/SDR CR11832
+ .S DR=$S('$P(^ABMDVTYP(+Y,0),U,3):".01;",1:"")_".02;1;3"  ;abm*2.6*31 IHS/SD/SDR CR11832
  .S DA=+Y,DIE="^ABMDVTYP(" D ^DIE
  D AUTOLINK
  G XIT

@@ -1,5 +1,7 @@
-XMDIR1A ;(WASH ISC)/CAP-Load VACO Directories (WANG) ;04/17/2002  08:47
- ;;8.0;MailMan;;Jun 28, 2002
+XMDIR1A ;(WASH ISC)/CAP- LOAD... VACO DIRECTORIES - WANG ;08/05/96  09:35
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**27**;Jun 02, 1994
+ ;
  I $$NEWERR^%ZTER N $ETRAP,$ESTACK S $ETRAP=""
  S X="EOF^XMDIR1A",@^%ZOSF("TRAP"),XMB0=^%ZOSF("UPPERCASE")
  G P:'$D(ZTQUEUED)
@@ -25,7 +27,7 @@ P S X=Y X XMB0 F %=0:0 Q:$E(Y)'?1P  S Y=$E(Y,2,99)
  S X("L")=$P(Y,"*",3)
  ;
  ;Network address
- S Y=$P(XMY,"*") G R1:'$L(Y),R1:Y?.E1C.E S X("NET")=Y_"@DOMAIN.NAME"
+ S Y=$P(XMY,"*") G R1:'$L(Y),R1:Y?.E1C.E S X("NET")=Y_"@VACOWMAIL.VA.GOV"
  I $D(^XMD(4.2997,"B",X("LN"))) S %="" F  S %=$O(^XMD(4.2997,"B",X("LN"),%)) Q:%=""  I $D(^XMD(4.2997,%,0)) S %6=^XMD(4.2997,%,0) I X("NET")=$P(%6,U,7) S XME="Already on file - not filed " D ER^XMDIR1 G R1
  ;
  D FILE(.X)
@@ -56,8 +58,8 @@ EOF D ^%ZISC,END("WANG",90) Q
 END(X,Y) ;END PROCESSING
  ;X=NAME OF FILE (WANG or NOAVA)
  ;Y=Subscript of text array
- N A S A=X,XMDIR1($E(X))=XMA
+ N %,%I,%H,A S A=X,XMDIR1($E(X))=XMA D NOW^%DTC K %I,%H
  S ^TMP("XMDIR1",$J,.01)="Normal error reported here",^(.02)="("_$ZE_")",^(.03)="should be end of File."
- S ^TMP("XMDIR1",$J,.04)="Done processing "_A_" file on "_$$HTE^XLFDT($H,5)
+ S ^TMP("XMDIR1",$J,.04)="Done processing "_A_" file on "_$E(%,4,5)_"/"_$E(%,6,7)_" @ "_$E($P(%,".",2)_"0000",1,4)_" military time."
  S ^TMP("XMDIR1",$J,.05)=""
  Q

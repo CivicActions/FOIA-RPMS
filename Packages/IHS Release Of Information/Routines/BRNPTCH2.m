@@ -156,7 +156,7 @@ SORRY(MSG,MODE,MSG2)       ; EP -- Error Message routine.
  . D ADDLINE($$CJ^XLFSTR("Please print/capture this screen and",65),.LINECNT)
  . D ADDLINE($$CJ^XLFSTR("notify the Support Center at",65),.LINECNT)
  . D ADDLINE(" ",.LINECNT)
- . D ADDLINE($$CJ^XLFSTR("1-999-999-9999.",65),.LINECNT)
+ . D ADDLINE($$CJ^XLFSTR("1-888-830-7280.",65),.LINECNT)
  . D ADDLINE(" ",.LINECNT)
  ;
  D ADDLINE($TR($J("",65)," ","*"),.LINECNT)    ; Row of asterisks
@@ -258,7 +258,7 @@ ADDMESG ; EP -- Add to the STR array
 SORRYFIN ; EP -- "Fin" of Final Fatal Message
  D ADDLINE($$CJ^XLFSTR("Re-Installation will be necessary.",65),.LINECNT)
  D ADDLINE(" ",.LINECNT)
- D ADDLINE($$CJ^XLFSTR("If assistance is needed, please call 1-999-999-9999.",65),.LINECNT)
+ D ADDLINE($$CJ^XLFSTR("If assistance is needed, please call 1-888-830-7280.",65),.LINECNT)
  D ADDLINE(" ",.LINECNT)
  D ADDLINE($TR($J("",65)," ","*"),.LINECNT)
  D ADDLINE(" ",.LINECNT)

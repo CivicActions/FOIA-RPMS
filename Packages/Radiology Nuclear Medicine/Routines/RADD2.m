@@ -1,21 +1,49 @@
-RADD2 ;HISC/GJC/CAH-Radiology Data Dictionary Utility Routine ;5/14/97  10:31
- ;;5.0;Radiology/Nuclear Medicine;**84,47**;Mar 16, 1998;Build 21
+RADD2 ;HISC/GJC/CAH-Radiology Data Dictionary Utility Routine ;30 May 2019 8:39 AM
+ ;;5.0;Radiology/Nuclear Medicine;**84,47,124,158,1009**;Mar 16, 1998;Build 21
  ;
  ;Integration Agreements
  ;----------------------
  ;EN^DDIOL(10142); FILE^DIE(2053);NOTE^ORX3(868);MES^XPDUTL(10141)
  ;
-EN1(RAX,RAY) ; Input transform for the .01 field (Procedure) for the Rad/Nuc
- ; Med Common Procedure file i.e, ^RAMIS(71.3
+EN1(RA71) ; Input transform for the .01 field (Procedure) for the Rad/Nuc
+ ; Med Common Procedure file i.e, ^RAMIS(71.3 (reworked for RA*5.0*158)
  ; Procedure must not have an inactive date before today in file 71
  ; Procedure in file 71 must have same imaging type as the one
  ;   selected before editing this record in file 71.3
- ; If 'Parent' type procedure, it must have at least 1 descendent
- ; 'RAX' is the value of the .01 field in ^RAMIS(71.3,
- ; 'RAY' are ien's of entries in ^RAMIS(71,
- I '$G(RAIMGTYI) Q 0
- I $S('$D(^("I")):1,'^("I"):1,DT'>^("I"):1,1:0),$S(RAIMGTYI=$P($G(^RAMIS(71,+RAY,0)),"^",12):1,1:0),$S($P(^RAMIS(71,+RAY,0),U,6)'="P":1,$O(^RAMIS(71,+RAY,4,0)):1,1:0)
- Q $T
+ ;
+ ; A PARENT type procedure must have at least one descendent
+ ; Output:
+ ; -If at least one descendant return one
+ ; -else return 0
+ ;
+ ; Input:
+ ; RA71 = IENS of entries in ^RAMIS(71,
+ ; RAIMGTYI = IEN of an IMAGING TYPE record (global scope)
+ ;
+ Q:'$G(RAIMGTYI) 0
+ ;
+ S RA71("I")=$G(^RAMIS(71,+RA71,"I")),RA71(0)=$G(^RAMIS(71,+RA71,0))
+ ;parent procedure?
+ S RAPARENT=$S($P(RA71(0),"^",6)="P":1,1:0)
+ ;does the parent have a descendant?
+ S:RAPARENT RAPFLG=+$O(^RAMIS(71,+RA71,4,0))
+ ;
+ ;if no "I" node or "I" node null ok, if DT is before today ok, else not ok
+ S RA71ACTIVE=$S(RA71("I")="":1,DT<RA71("I"):1,1:0)
+ Q:RA71ACTIVE=0 0
+ ;
+ ;match i-type?
+ S RA71ITYPE=$S(RAIMGTYI=$P($G(RA71(0)),"^",12):1,1:0)
+ Q:RA71ITYPE=0 0
+ ;
+ ;if active, w/i-type match & non-parent quit 1
+ Q:RAPARENT=0 1
+ ;
+ ;if active, w/i-type match & parent w/descendant quit 1
+ Q:RAPARENT&RAPFLG 1
+ ;
+ K RA71ACTIVE,RA71ITYPE,RAPARENT,RAPFLG
+ Q 0
  ;
 CH(RAY,RAX) ; This subroutine will fire off the 'Radiology Request Cancel
  ; /Hold' notification as defined in the 'OE/RR NOTIFICATIONS' file.
@@ -116,5 +144,48 @@ PRIDXIXK(DA,X) ;This subroutine executes the KILL logic for the 'new style' AD c
  S RAIENS=DA_","_DA(1)_","_DA(2)_",",RAFDA(70.03,RAIENS,20)="@"
  D FILE^DIE(,"RAFDA") ;delete data in 'DIAGNOSTIC PRINT DATE' (DD: 70.03; field: 20)
  K ^RADPT("AD",RAX,RADFN,RADTI,RACNI)
+ Q
+ ;
+AEASSET(RAX,RADA,RAXREF) ;determine is the examination status of the
+ ;study is either CANCELED or COMPLETE. This routine will set the "AS"
+ ; or "AE" xref SET logic (new style). 
+ ;
+ ; Note: The first numeric subscript of the "AE" xref is the
+ ;       CASE NUMBER (70.03;.01). Since the .01 field cannot
+ ;       be changed because of business rules, the "AE" xref
+ ;       does not have set/kill logic in the CASE NUMBER field.
+ ;
+ ;       The first numeric subscript of the "AS" xref is the
+ ;       EXAMINATION STATUS IEN (70.03;3). 
+ ;
+ ;
+ ;input: RAX = value of 'X' passed into from ^DD(70.03,3,0)
+ ;             'X' is the IEN of a record in the EXAMINATION
+ ;             STATUS (#72) file.
+ ;      RADA = the DA array: DA(2) think RADFN, DA(1) think
+ ;             RADTI & DA think RACNI.
+ ;    RAXREF = one of two values: "AS" or "AE"
+ ;
+ ;
+ ;ORDER value for CANCELED is zero (0), ORDER value for CANCELED is nine (9)
+ ;ORDER values 0, 1 & 9 are RESERVED. RAIMGTY is set in the input transform
+ N RAIMGTY,RAY2,RAY3,RAY S RAY=$P($G(^RA(72,RAX,0)),U,3) ;ORDER value
+ Q:RAY=""  S RAY2=$G(^RADPT(RADA(2),"DT",RADA(1),0))
+ S RAY3=$G(^RADPT(RADA(2),"DT",RADA(1),"P",RADA,0)) ;70.03
+ S RAIMGTY=$P($G(^RA(79.2,+$P(RAY2,U,2),0)),U) Q:RAIMGTY=""
+ ;^RA(72,"AA","GENERAL RADIOLOGY",1,1)="" 4th subscript is ORDER,
+ ;the 5th is IEN of file 72
+ Q:'$D(^RA(72,"AA",RAIMGTY,RAY,RAX))#2  ;the "AA" must be preserved
+ Q:RAY=0!(RAY=9)  ;the study is canceled or complete or broken
+ S:RAXREF="AE"&($P(RAY3,U)>0) ^RADPT("AE",$E(+RAY3,1,30),RADA(2),RADA(1),RADA)=""
+ S:RAXREF="AS" ^RADPT("AS",$E(RAX,1,30),RADA(2),RADA(1),RADA)=""
+ Q
+ ;
+AEKILL(RADA) ;execute the KILL logic for the "AE" xref on the
+ ;EXAM STATUS field (70.03;3)
+ ;input: RADA = the DA array: DA(2) think RADFN, DA(1) think
+ ;              & DA think RACNI.
+ N RAY3 S RAY3=$G(^RADPT(RADA(2),"DT",RADA(1),"P",RADA,0)) ;70.03
+ K ^RADPT("AE",$E(+RAY3,1,30),RADA(2),RADA(1),RADA)
  Q
  ;

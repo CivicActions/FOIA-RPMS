@@ -1,23 +1,15 @@
-DIP3 ;SFISC/GFT,TKW-PRINT HEADING, PAGE, COPIES ;06:51 PM  9 Dec 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**23**;Mar 30, 1999
+DIP3 ;SFISC/GFT,TKW-PRINT HEADING, PAGE, COPIES ;9/2/94  11:01 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  I DJ,DE]"" S DJ=DJ+1,^UTILITY("DIP2",$J,DJ)=DE,DE=""
 H G G:((L?1"]".E)!($G(DDXP)=2)!($G(DDXP)=4)) I '$D(DIASKHD),'L G:$D(DALL)>9 G G PAGE
  D HD
  S DA=X D HQ^DIP31 G Q^DIP:$D(DTOUT)!($D(DUOUT)) K DIRUT,DIROUT
- S DHD=X G G:X=DA,G:$$DHD(.DHD,DK,L),H
- ;
-DHD(DHD,DK,L) ;VALIDATE HEADER 'DHD' FOR FILE 'DK'
- ;   'L'=0 MEANS SILENT
- ;   CALLED BY SCREENMAN TEMPLATE EDIT
- N DC,X,Y,DIC,DD,%,DW
- I DHD?.P1"["1.E F DC=1,2 S X=$P($P(DHD,"[",DC+1),"]",1) D D^DIP21 S DIC(0)=$E("E",L)_"SF",DIC("S")="I '$D(^(""DCL"")) "_DIC("S") D IX^DIC K DIC G DHDBAD:Y<0&$L(X) I Y>0 S DHD=$P(DHD,"[",1,DC)_"["_$P(Y,U,2)_"]"_$P(DHD,"]",DC+1,9) W:L !
- I DHD'?1"W ".E Q DHD'[""""
- I DUZ(0)'="@" F %=1:2 Q:$P(DHD,"""",%,999)=""  I $P($E(DHD,3,999),"""",%)[" " G DHDBAD
- Q 1
-DHDBAD Q 0
- ;
+ S DHD=X G:X=DA G
+ I DHD?.P1"["1E.E F DC=1,2 S X=$P($P(DHD,"[",DC+1),"]",1) D D^DIP21 S DIC(0)="ESF",DIC("S")="I '$D(^(""DCL"")) "_DIC("S") D IX^DIC K DIC G H:Y<0&$L(X) I Y>0 S DHD=$P(DHD,"[",1,DC)_"["_$P(Y,U,2)_"]"_$P(DHD,"]",DC+1,9) W:L !
+ I DHD?1"W ".E G G:DUZ(0)="@"!(DA=DHD) F %=1:2 G G:$P(DHD,Q,%,999)="" I $P($E(DHD,3,999),Q,%)[" " G H
+ G H:DHD[Q
 G S DHD=$G(DHD) G PUT^DIP21:$S(L?1"]".E:1,$D(DALL)>9:1,$D(DALL):0,1:$L(DE)>13!DJ),PAGE
 X W $C(7),!,"TRY LATER" S X="^" G Q^DIP
  ;

@@ -1,5 +1,5 @@
 ABMMUDEF ;IHS/SD/SDR - MU Patient Volume DEF Report ;
- ;;2.6;IHS 3P BILLING SYSTEM;**7**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**7,10**;NOV 12, 2009;Build 43
  ;
  S ABMQ("RC")="COMPUTE^ABMMUDEF"
  S ABMQ("RX")="POUT^ABMDRUTL"
@@ -50,12 +50,22 @@ PRINT ;
  ;
  W !,$$EN^ABMVDF("HIN"),"NEEDY INDIVIDUAL PATIENT VOLUME ENCOUNTERS:",$$EN^ABMVDF("HIF")
  W " The Needy Individual Patient Volume"
- W !?3,"will be used for EPs who work predominately at an FQHC or RHC.  An EP is"
- W !?3,"considered to work predominantly at an FQHC or RHC when the FQHC/RHC is the"
- W !?3,"clinical location for over 50% of all of the provider's total encounters for"
- W !?3,"six (6) months in the most recent calendar year.  FQHCs and RHCs use the"
- W !?3,"Needy Individual encounter definition (expanded from the basic Medicaid"
- W !?3,"encounter) for their encounters."
+ ;start old code abm*2.6*10 HEAT61752
+ ;W !?3,"will be used for EPs who work predominately at an FQHC or RHC.  An EP is"
+ ;W !?3,"considered to work predominantly at an FQHC or RHC when the FQHC/RHC is the"
+ ;W !?3,"clinical location for over 50% of all of the provider's total encounters for"
+ ;W !?3,"six (6) months in the most recent calendar year.  FQHCs and RHCs use the"
+ ;W !?3,"Needy Individual encounter definition (expanded from the basic Medicaid"
+ ;W !?3,"encounter) for their encounters."
+ ;end old code start new code HEAT61752
+ W !?3,"will be used for EPs who work predominately at an FQHC, RHC or Tribal clinic."
+ W !?3,"An EP is considered to work predominantly at an FQHC, RHC or Tribal clinic"
+ W !?3,"when the FQHC/RHC/Tribal clinic is the clinical location for over 50% of all"
+ W !?3,"of the provider's total encounters for six (6) months in the most recent"
+ W !?3,"calendar year.  FQHCs, RHCs and Tribal clinics use the Needy Individual"
+ W !?3,"encounter definition (expanded from the basic Medicaid encounter) for their"
+ W !?3,"encounters."
+ ;end new code HEAT61752
  W !
  ;
  W !,$$EN^ABMVDF("HIN"),"NEEDY INDIVIDUALS:",$$EN^ABMVDF("HIF")," Needy Individual encounters include all patient encounters"

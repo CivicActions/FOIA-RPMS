@@ -1,5 +1,6 @@
-ADGCRB0 ; IHS/ADC/PDW/ENM - A SHEET driver ; [ 03/25/1999  11:48 AM ]
- ;;5.0;ADMISSION/DISCHARGE/TRANSFER;;MAR 25, 1999
+ADGCRB0 ; IHS/ADC/PDW/ENM - A SHEET driver ; [ 02/12/2003  5:07 PM ]
+ ;;5.0;ADMISSION/DISCHARGE/TRANSFER;**8**;MAR 25, 1999
+ ;11/27/02 WAR - Patch 8 - 'SD' & 'ED' variables
  ;
  S DIC="^DPT(",DIC(0)="AQZEM",DIC("A")="Select PATIENT NAME: "
  D ^DIC K DIC G:Y'>0 Q S DFN=+Y
@@ -99,7 +100,8 @@ EN2 D LP1,Q Q
  ;
 QUE1 ; -- queued output
  S ZTRTN="EN2^ADGCRB0",ZTDESC="PRINT FORM 44-1"
- F I="DFN","DGDS","DGFN","DGZC","DGZN" S ZTSAVE(I)=""
+ ;11/27/02 WAR - Added the 'SD' & 'ED' variables
+ F I="DFN","DGDS","DGFN","DGZC","DGZN","SD","ED" S ZTSAVE(I)=""
  D ^%ZTLOAD Q
  ;
 DT ; -- Admission date

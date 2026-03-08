@@ -31,7 +31,7 @@ MODADA ;
  ;;Classification of Metals (Source:  ADA Council on Scientific Affairs) The noble metal classification system
  ;;has been adopted as a more precise method of reporting various alloys used in dentistry.  The alloys are
  ;;defined on the basis of the percentage of metal content: high noble - Gold (Au), Palladium (Pd), and/or
- ;;Platinum (Pt) > 60% (with at least 40% Au); titanium and titanium alloys – Titanium (Ti) > 85%; noble
+ ;;Platinum (Pt) > 60% (with at least 40% Au); titanium and titanium alloys Â– Titanium (Ti) > 85%; noble
  ;;- Gold (Au), Palladium (Pd), and/or Platinum (Pt)> 25%; predominantly base - Gold (Au), Palladium (Pd),
  ;;and/or Platinum (Pt) < 25%.   Porcelain/ceramic
  ;;D6056^43^prefabricated abutment - includes placement^
@@ -44,13 +44,13 @@ MODADA ;
  ;;noble or high noble metal.  A 'UCLA abutment' is an example of this type abutment.
  ;;;;D6200-D6999^21^Prosthodontics, fixed^
  ;;;;Each retainer and each pontic constitutes a unit in a fixed partial denture.  Local anesthesia is usually
- ;;;;considered to be part of Fixed Prosthodontic procedures.   The words “bridge” and “bridgework” have been
- ;;;;replaced by the statement “fixed partial denture” throughout this section.
+ ;;;;considered to be part of Fixed Prosthodontic procedures.   The words Â“bridgeÂ” and Â“bridgeworkÂ” have been
+ ;;;;replaced by the statement Â“fixed partial dentureÂ” throughout this section.
  ;;^27^CLASSIFICATION OF MATERIALS^
  ;;Classification of Metals (Source:  ADA Council on Scientific Affairs) The noble metal classification system
  ;;has been adopted as a more precise method of reporting various alloys used in dentistry.  The alloys are
  ;;defined on the basis of the percentage of metal content: high noble - Gold (Au), Palladium (Pd), and/or
- ;;Platinum (Pt) > 60% (with at least 40% Au); titanium and titanium alloys – Titanium (Ti) > 85%; noble
+ ;;Platinum (Pt) > 60% (with at least 40% Au); titanium and titanium alloys Â– Titanium (Ti) > 85%; noble
  ;;- Gold (Au), Palladium (Pd), and/or Platinum (Pt)> 25%; predominantly base - Gold (Au), Palladium (Pd),
  ;;and/or Platinum (Pt) < 25%.   Porcelain/ceramic
  ;;D6975^14^coping - metal^

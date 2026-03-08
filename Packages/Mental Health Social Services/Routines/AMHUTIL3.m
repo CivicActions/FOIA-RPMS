@@ -1,5 +1,5 @@
 AMHUTIL3 ; IHS/CMI/LAB - provider functions ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**2,3,4,6**;JUN 02, 2010;Build 10
+ ;;4.0;IHS BEHAVIORAL HEALTH;**2,3,4,6,11**;JUN 02, 2010;Build 27
  ;IHS/CMI/LAB - added stage as output parameter
  ;
  ;IHS/TUCSON/LAB - patch 1 05/19/97 - fixed setting of array
@@ -239,3 +239,10 @@ CODE10 ;
 18 S %=$$VAL^XBDIQ1(9000010.07,Y,.05) Q
 19 S %=$$VALI^XBDIQ1(9000010.07,Y,.06) Q
 20 S %=$$VAL^XBDIQ1(9000010.07,Y,.06) Q
+ ;
+HELPMSR ;EP
+ NEW AUPNMTYP,%
+ S AUPNMTYP=$P(^AMHRMSR(DA,0),U,1)
+ S %=0 F  S %=$O(^AUTTMSR(AUPNMTYP,11,%)) Q:%'=+%  D EN^DDIOL(^AUTTMSR(AUPNMTYP,11,%,0))
+ D EN^DDIOL("","","!")
+ Q

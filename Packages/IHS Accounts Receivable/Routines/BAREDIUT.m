@@ -1,5 +1,5 @@
 BAREDIUT ; IHS/SD/LSL - UTILITY FOR TANSPORT FILE ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,21,23**;OCT 26,2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,21,23,31**;OCT 26,2005;Build 90
  ;;
  ; IHS/ASDS/LSL - 09/11/01 - V1.5 Patch 2 - NOIS CXX-0501-110014
  ;     Allow deletion of ERA Import files
@@ -14,6 +14,7 @@ BAREDIUT ; IHS/SD/LSL - UTILITY FOR TANSPORT FILE ;
  ;     FIELD CROSS REFERENCE CHANGED TO 80
  ;     POST ROUTINE RE-INDEXS RECORDS 
  ; ;P.OTT HEAT# 80621
+ ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 1
  ; *********************************************************************
  ;
 PRTVARA(TRDA) ; EP
@@ -210,7 +211,7 @@ FNAME1 ;
  . . ;;;R X:DTIME  ;IM13589
  . . K DIR S (X,Y)=""
  . . S DIR(0)="E"
- . . S DIR("A")="Hit ENTER to continue" ;ANY CHAR, 
+ . . ;S DIR("A")="Hit ENTER to continue" ;ANY CHAR, ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 1
  . . D ^DIR
  . . K DIR
  . Q

@@ -1,5 +1,5 @@
-BIDX ;IHS/CMI/MWR - RISK FOR FLU & PNEUMO, CHECK FOR DIAGNOSES.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**15**;SEP 30,2017
+BIDX ;IHS/CMI/MWR - RISK FOR FLU & PNEUMO, CHECK FOR DIAGNOSES.; MAY 10, 2010 ; 30 Jun 2025  3:48 PM
+ ;;8.5;IMMUNIZATION;**22,25,26,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  CHECK FOR DIAGNOSES IN A TAXONOMY RANGE, WITHIN A GIVE DATE RANGE.
  ;;  FROM LORI BUTCHER, 9-18-05
@@ -7,6 +7,9 @@ BIDX ;IHS/CMI/MWR - RISK FOR FLU & PNEUMO, CHECK FOR DIAGNOSES.; MAY 10, 2010
  ;;  PATCH 9: Changes to include Hep B Risk.  RISK+9, RISK+41
  ;;  PATCH 13: Changes to check for Flu High Risk.   RISK+25, HASDX+38
  ;;  PATCH 15: Changes to check for Flu High Risk (removed in p14).   RISKAB+19
+ ;;  PATCH 22: Changes to check for Immunocompromised.  RISKC+0, UPDTC
+ ;;  PATCH 31: Add BIRPROF(BIVGO) variable for patient risk profile
+ ;;            to use for adding *HR* flag to forecast display
  ;
  ;
  ;********** PATCH 14, v8.5, AUG 01,2017, IHS/CMI/MWR
@@ -19,6 +22,7 @@ RISKP(BIDFN,BIFDT,BIAGE,BISMKR,BIRISKF) ;EP Return Pneumo High Risk.
  ;     3 - BIAGE   (req) Patient Age in years for this Forecast Date.
  ;     4 - BISMKR  (opt) 1=Include Smoking Factors.
  ;     5 - BIRISKF (ret) 1=Patient has Risk of Pneumo; otherwise 0.
+ ;     6 - BINPLDC (opt) 1=don't check problem list dates, just check active or inactive
  ;
  S BIRISKF=0
  Q:'$G(BIDFN)
@@ -28,20 +32,90 @@ RISKP(BIDFN,BIFDT,BIAGE,BISMKR,BIRISKF) ;EP Return Pneumo High Risk.
  N BIBEGDT,Y S BIBEGDT=$$FMADD^XLFDT(BIFDT,-(3*365))
  ;
  ;---> Check Pneumo Risk (2 Pneumo Dx's over 3-year range).
- S Y=+$$HASDX(BIDFN,"BI HIGH RISK PNEUMO",2,BIBEGDT,BIFDT)
- ;S BIRISKF=1 Q  ;Uncomment to test. MWRZZZ
- I Y S BIRISKF=1 Q
+ ;GDIT/HS/BEE 06/24/22;BI*8.5*22;FEATURE#75583;Added subset reference
+ ;ihs/cmi/lab - changed 2 dx to 1 per email 1/5/23
+ S Y=+$$HASDX(BIDFN,"BI HIGH RISK PNEUMO",1,BIBEGDT,BIFDT,"PXRM IMHR PNEUMO",1)
+ I Y S BIRISKF=1,BIRPROF(11)=1 Q
  ;
+ ;add immunocompromised check patch 26 ihs/cmi/lab
+ ;
+ S Y=+$$IMMUNPNU(BIDFN,BIFDT)
+ I Y S BIRISKF=1,BIRPROF(11)=1 Q
  ;---> Quit if site parameter says don't include Smoking.
  Q:'$G(BISMKR)
- S Y=+$$HASDX(BIDFN,"BI HIGH RISK PNEUMO W/SMOKING",2,BIBEGDT,BIFDT)
- I Y S BIRISKF=1 Q
+ ;GDIT/HS/BEE 06/24/22;BI*8.5*22;FEATURE#75583;Added subset reference
+ ;ihs/cmi/lab - changed 2 dx to 1 per email 1/5/23
+ S Y=+$$HASDX(BIDFN,"BI HIGH RISK PNEUMO W/SMOKING",1,BIBEGDT,BIFDT,"PXRM IMHR PNEUMO WITH SMOKING",1)
+ I Y S BIRISKF=1,BIRPROF(11)=1 Q
  ;
  ;---> Check for Smoking Health Factor in the last 2 years.
  S BIRISKF=$$HFSMKR(BIDFN,BIFDT)
- I Y=1 S BIRISKF=1
+ I Y S BIRISKF=1,BIRPROF("SMOKE")=1
  Q
  ;
+ ;********** PATCH 22, v8.5, JAN 01,2022, IHS/CMI/MWR
+ ;---> Return whether patient is considered to be immunocompromised
+ ;
+RISKC(BIDFN,BIFDT,BIMD,BIRISKC) ;PEP - Return whether considered immunocompromised, 1=Yes, 0=No.
+ ;Determine if this patient is considered to be immunocompromised.
+ ;Parameters:
+ ; 1 - BIDFN   (req) Patient IEN.
+ ; 2 - BIFDT   (opt) Forecast Date (date used for forecast).
+ ; 3 - BIMD    (opt) Null=both Meds and Dx's, 1=Meds only, 2=Dx's only.
+ ; 4 - BIRISKC (ret) 1=Patient is immunocompromised; otherwise 0.
+ ;
+ ;Input checking
+ S BIRISKC=0
+ Q:'$G(BIDFN)
+ S:'$G(BIFDT) BIFDT=$G(DT)
+ S BIMD=$G(BIMD) I BIMD'="",BIMD'=1,BIMD'=2 Q
+ ;
+ NEW BIIBD,TXDIEN,TXRIEN,BIIDT,VPVIEN,ICD,SMD,IDRUG,RX,BIDFDT,BIIDFDT
+ ;
+ ;Check for daily ^XTMP("BI_RISKC") build - quit if couldn't check
+ Q:$$UPDTC()=-1
+ ;
+ ;Get drug look back date - 90 days
+ S BIDFDT=$$FMADD^XLFDT(BIFDT,-90)
+ S BIIDFDT=9999999-BIDFDT ;determine inverse date
+ ;
+ ;Get start date (back 1 year from forecast date)
+ S $E(BIFDT,2,3)=$E(BIFDT,2,3)-1 S:$E(BIFDT,5,7)="229" $E(BIFDT,5,7)="228"
+ S BIIBD=9999999-BIFDT ;determine inverse date
+ ;
+ ;Check ICD10/SNOMED in V POV
+ I BIMD'=1 D  I (BIMD=2)!(BIRISKC) Q
+ . S BIIDT=0 F  S BIIDT=$O(^AUPNVPOV("AA",BIDFN,BIIDT)) Q:(BIIDT="")!(BIIDT>BIIBD)  D  Q:BIRISKC
+ .. S VPVIEN=0 F  S VPVIEN=$O(^AUPNVPOV("AA",BIDFN,BIIDT,VPVIEN)) Q:'VPVIEN  D  Q:BIRISKC
+ ... ;
+ ... ;First look for ICD10
+ ... S ICD=$P($G(^AUPNVPOV(VPVIEN,0)),U)
+ ... I ICD,$D(^XTMP("BI_RISKC","DXTAX",ICD)) S BIRISKC=1 Q
+ ... ;
+ ... ;Next look for SNOMED
+ ... S SMD=$P($G(^AUPNVPOV(VPVIEN,11)),U)
+ ... I SMD,$D(^XTMP("BI_RISKC","DXSUB",SMD)) S BIRISKC=1
+ ;
+ ;Check medications
+ I BIMD'=2 D
+ . ;
+ . ;Retrieve drug/RxNorm taxonomy IENs
+ . S TXDIEN=$O(^ATXAX("B","ATX IMMUNOSUPPRESS DRUGS",0))
+ . S TXRIEN=$O(^ATXAX("B","ATX IMMUNOSUPPRESS RXNORM",0))
+ . ;
+ . ;Check for drug/RxNorm in V MEDICATION
+ . S BIIDT=0 F  S BIIDT=$O(^AUPNVMED("AA",BIDFN,BIIDT)) Q:(BIIDT="")!(BIIDT>BIIDFDT)  D  Q:BIRISKC
+ .. S VPVIEN=0 F  S VPVIEN=$O(^AUPNVMED("AA",BIDFN,BIIDT,VPVIEN)) Q:'VPVIEN  D  Q:BIRISKC
+ ... ;
+ ... ;First look for drug IEN
+ ... S IDRUG=$P($G(^AUPNVMED(VPVIEN,0)),U) Q:IDRUG=""
+ ... I TXDIEN,$D(^ATXAX(TXDIEN,21,"B",IDRUG)) S BIRISKC=1 Q
+ ... ;
+ ... ;Next look for RxNorm
+ ... S RX=$P($G(^PSDRUG(IDRUG,999999924)),U,4)
+ ... I RX,TXRIEN,$D(^ATXAX(TXRIEN,21,"B",RX)) S BIRISKC=1
+ ;
+ Q
  ;
  ;----------
 RISKB(BIDFN,BIFDT,BIAGE,BIRISKF) ;EP Return Hep B High Risk.
@@ -60,8 +134,7 @@ RISKB(BIDFN,BIFDT,BIAGE,BIRISKF) ;EP Return Hep B High Risk.
  ;---> Check Hep B Risk (2 Diabetes Dx's from DOB to Forecast Date).
  Q:(BIAGE>59)
  N Y S Y=+$$V2DM(BIDFN,,BIFDT)
- ;S BIRISKF=1 Q  ;Uncomment to test. MWRZZZ
- I Y=1 S BIRISKF=1
+ I Y=1 S BIRISKF=1,BIRPROF(4)=1
  Q
  ;----------
 RISKAB(BIDFN,BIFDT,BIRISKF) ;EP Return Hep A & Hep B High Risk.
@@ -74,12 +147,12 @@ RISKAB(BIDFN,BIFDT,BIRISKF) ;EP Return Hep A & Hep B High Risk.
  S BIRISKF=0
  Q:'$G(BIDFN)
  S:'$G(BIFDT) BIFDT=$G(DT)
- N BIBEGDT,Y S BIBEGDT=$$FMADD^XLFDT(BIFDT,-(3*365))
+ N BIBEGDT,Y,J S BIBEGDT=$$FMADD^XLFDT(BIFDT,-(3*365))
  ;
  ;---> Check CLD/HepC Risk (1 CLD/HepC Dx's over 3-year range).
- S Y=+$$HASDX(BIDFN,"BI HIGH RISK HEPA/B, CLD/HEPC",1,BIBEGDT,BIFDT)
- ;S BIRISKF=1 Q  ;Uncomment to test. MWRZZZ
- I Y=1 S BIRISKF=1
+ ;GDIT/HS/BEE 06/24/22;BI*8.5*22;FEATURE#75583;Added subset reference
+ S Y=+$$HASDX(BIDFN,"BI HIGH RISK HEPA/B, CLD/HEPC",1,BIBEGDT,BIFDT,"PXRM IMHR HEPA/B, CLD/HEPC")
+ I Y=1 S BIRISKF=1 F J=9,12,14 S BIRPROF(J)=1
  Q
  ;
  ;
@@ -98,75 +171,66 @@ RISKF(BIDFN,BIFDT,BIRISKF) ;EP Return Flu High Risk.
  S BIRISKF=0
  Q:'$G(BIDFN)
  S:'$G(BIFDT) BIFDT=$G(DT)
- N BIBEGDT,Y S BIBEGDT=$$FMADD^XLFDT(BIFDT,-(3*365))
- S Y=+$$HASDX(BIDFN,"BI HIGH RISK FLU",2,BIBEGDT,BIFDT)
- S:(Y>0) BIRISKI=1
+ N BIBEGDT,Y,J S BIBEGDT=$$FMADD^XLFDT(BIFDT,-(3*365))
+ ;GDIT/HS/BEE 06/24/22;BI*8.5*22;FEATURE#75583;Added subset reference
+ S Y=+$$HASDX(BIDFN,"BI HIGH RISK FLU",2,BIBEGDT,BIFDT,"PXRM IMHR FLU")
+ I Y S BIRISKF=1 F J=10,18 S BIRPROF(J)=1
  Q
  ;**********
+IMMUNPNU(BIDFN,BIFDT) ;EP - Return whether considered immunocompromised, 1=Yes, 0=No.
+ ;IHS/CMI/LAB - copied RISKC, removed med check, added problem list check for active problem, changed to 3 year look back for pneumo
+ ;Determine if this patient is considered to be immunocompromised.
+ ;Parameters:
+ ; 1 - BIDFN   (req) Patient IEN.
+ ; 2 - BIFDT   (opt) Forecast Date (date used for forecast).
+ ; 4 - BIRISKC (ret) 1=Patient is immunocompromised; otherwise 0.
  ;
+ ;Input checking
+ S BIRISKC=0
+ I '$G(BIDFN) Q 0
+ S:'$G(BIFDT) BIFDT=$G(DT)
  ;
- ;----------
-HASDX(BIDFN,BITAX,BINUM,BIBD,BIED) ;EP
- ;---> This call is made to determine if a patient (BIDFN) has had
- ;---> BINUM number of diagnoses within taxonomy BITAX during the
- ;---> time period BIBD to BIED.
- ;---> Parameters:
- ;     1 - BIDFN  (req) Patient DFN.
- ;     2 - BITAX  (req) Name of the Taxonomy e.g. "BI HIGH RISK FLU"
- ;     3 - BINUM  (req) The number of diagnoses the patient has to have had.
- ;     4 - BIBD   (opt) Beginning date (earliest) date to search for diagnoses.
- ;                      If null, use patient's DOB.
- ;     5 - BIED   (opt) Date (latest) date to search for diagnoses.
- ;                      If null, use DT.
+ NEW BIIBD,TXDIEN,TXRIEN,BIIDT,VPVIEN,ICD,SMD,IDRUG,RX,BIDFDT,BIIDFDT,PRIEN
  ;
- ;  Return values:  1 if patient has had the diagnoses
- ;                  0 if patient has NOT had the diagnoses
- ;                 -1^error message   if error occurred
+ ;Check for daily ^XTMP("BI_RISKC") build - quit if couldn't check
+ I $$UPDTC()=-1 Q 0
  ;
- ;  Example:  to find if patient has had at least 2 diagnoses in past 3 years
- ;           S X=$$HASDX^BIDX(40503,"BI HIGH RISK FLU",2,$$FMADD^XLFDT(DT,-(3*365)),DT)
- ;           I X=1 Then yes they had the diagnoses, I X=0 then no they didn't
- ;           to find if patient has ever had a diagnoses in the SURVEILLANCE DIABETES
- ;           taxonomy:  S X=$$HASDX^BIDX(dfn,"SURVEILLANCE DIABETES",1)
+ ;Get start date (back 3 years from forecast date)
+ S $E(BIFDT,2,3)=$E(BIFDT,2,3)-3 S:$E(BIFDT,5,7)="229" $E(BIFDT,5,7)="228"
+ S BIIBD=9999999-BIFDT ;determine inverse date
  ;
+ ;Check ICD10/SNOMED in V POV
+ S BIIDT=0 F  S BIIDT=$O(^AUPNVPOV("AA",BIDFN,BIIDT)) Q:(BIIDT="")!(BIIDT>BIIBD)!(BIRISKC)  D
+ . S VPVIEN=0 F  S VPVIEN=$O(^AUPNVPOV("AA",BIDFN,BIIDT,VPVIEN)) Q:'VPVIEN!(BIRISKC)  D
+ .. ;
+ .. ;First look for ICD10
+ .. S ICD=$P($G(^AUPNVPOV(VPVIEN,0)),U)
+ .. I ICD,$D(^XTMP("BI_RISKC","DXTAX",ICD)) S BIRISKC=1 Q
+ .. ;
+ .. ;Next look for SNOMED
+ .. S SMD=$P($G(^AUPNVPOV(VPVIEN,11)),U)
+ .. I SMD,$D(^XTMP("BI_RISKC","DXSUB",SMD)) S BIRISKC=1
  ;
- I '$G(BIDFN) Q "-1^Patient DFN invalid"
- ;
- I $G(BIBD)="" S BIBD=$$DOB^AUPNPAT(BIDFN)
- I $G(BIED)="" S BIED=DT
- NEW BITAXI,BIIBD,BIIED,BISD,X,Y,I,P,R,C,BIREF
- S BITAXI=$O(^ATXAX("B",BITAX,0))
- I 'BITAXI Q "-1^Invalid Taxonomy name"
- S R=0  ;return value
- S BIIBD=9999999-BIBD  ;inverse of beginning date
- S BIIED=9999999-BIED  ;inverse of ending date
- S BISD=BIIED-1  ;start one day later for $O
- ;ihs/cmi/lab - added lines below for ICD10
- ;
- ;********** PATCH 13, v8.5, AUG 01,2016, IHS/CMI/MWR
- ;---> Code to prevent error out if atx_0510.11k missing.
- ;I $D(^ICDS(0)) D
- I $D(^ICDS(0)),$T(^ATXAPI)]"" D
- .;**********
- .K ^TMP($J,"BITAX")
- .S BIREF=$NA(^TMP($J,"BITAX"))
- .D BLDTAX^ATXAPI(BITAX,BIREF,BITAXI)
- S C=0  ;counter for diagnoses
- S X=0 F  S X=$O(^AUPNVPOV("AA",BIDFN,X)) Q:X=""!(X>BIIBD)!(C=BINUM)  D
- .S Y=0 F  S Y=$O(^AUPNVPOV("AA",BIDFN,X,Y)) Q:Y'=+Y!(C=BINUM)  D
- ..Q:'$D(^AUPNVPOV(Y,0))  ;bad xref
- ..S P=$P($G(^AUPNVPOV(Y,0)),"^")
- ..Q:P=""  ;bad entry
- ..;added lines below for ICD10
- ..I $D(^TMP($J,"BITAX")) Q:'$D(^TMP($J,"BITAX",P))
- ..I '$D(^TMP($J,"BITAX")) Q:'$$ICD^ATXCHK(P,BITAXI,9)  ;this diagnosis not in taxonomy
- ..S C=C+1  ;update counter as diagnosis found
- ..Q
+ I BIRISKC Q BIRISKC
+ ;NOW CHECK PROBLEM LIST
+ S PRIEN=0 F  S PRIEN=$O(^AUPNPROB("AC",BIDFN,PRIEN)) Q:PRIEN'=+PRIEN!(BIRISKC)  D
+ .Q:'$D(^AUPNPROB(PRIEN,0))  ;no zero node
+ .Q:$P(^AUPNPROB(PRIEN,0),U,12)=""
+ .Q:"ID"[$P(^AUPNPROB(PRIEN,0),U,12)  ;no deleted or inactive
+ .I $P($G(^AUPNPROB(PRIEN,2)),U,2)]"" Q
+ .;Look for ICD
+ .S ICD=$P($G(^AUPNPROB(PRIEN,0)),U)
+ .I ICD,$D(^XTMP("BI_RISKC","DXTAX",ICD)) S BIRISKC=1 Q
+ .;now SNOMED
+ .S SMD=$P($G(^AUPNPROB(PRIEN,800)),U)
+ .I SMD,$D(^XTMP("BI_RISKC","DXSUB",SMD)) S BIRISKC=1
  .Q
- K ^TMP($J,"BITAX")
- I C<BINUM Q 0  ;patient did not meet the required # of diagnoses
- Q 1
+ Q BIRISKC
+ ;----------
+ ;GDIT/HS/BEE 06/24/22;BI*8.5*22;FEATURE#75583;Added subset reference and moved to new routine
+HASDX(BIDFN,BITAX,BINUM,BIBD,BIED,BISUBSET,BINPLDC) ;EP
  ;
+ Q $$HASDX^BIDX1(BIDFN,$G(BITAX),$G(BINUM),$G(BIBD),$G(BIED),$G(BISUBSET),$G(BINPLDC))
  ;
  ;----------
 HFSMKR(BIDFN,BIFDT) ;EP
@@ -209,6 +273,10 @@ V2DM(P,BDATE,EDATE) ;EP - are there 2 visits with DM?
  ;P is Patient DFN
  ;BDATE  - beginning date to look default is DOB
  ;EDATE - end date to look default is DT
+ ;
+ ;GDIT/HS/BEE 06/24/22;BI*8.5*22;FEATURE#75583;Moved to new routine
+ Q +$$V2DM^BIDX1(BIDFN,,BIFDT)
+ ;
  I '$G(P) Q ""
  I '$D(^AUPNVSIT("AC",P)) Q ""  ;patient has no visits
  I '$G(BDATE) S BDATE=$$DOB^AUPNPAT(P)
@@ -226,15 +294,6 @@ V2DM(P,BDATE,EDATE) ;EP - are there 2 visits with DM?
  .K ^TMP($J,"BITAX")  ;IHS/CMI/LAB - clean out old nodes just in case
  .S BIREF=$NA(^TMP($J,"BITAX"))  ;IHS/CMI/LAB
  .D BLDTAX^ATXAPI("SURVEILLANCE DIABETES",BIREF,T)
- ;S (X,G)=0 F  S X=$O(^TMP($J,"A",X)) Q:X'=+X!(G>1)  S V=$P(^TMP($J,"A",X),U,5) D
- ;.Q:'$D(^AUPNVSIT(V,0))
- ;.Q:'$P(^AUPNVSIT(V,0),U,9)  ;0 DEPENDENT ENTRIES
- ;.Q:$P(^AUPNVSIT(V,0),U,11)  ;DELETED VISIT
- ;.Q:"SAHOR"'[$P(^AUPNVSIT(V,0),U,7)  ;ELIMINATE TELEPHONE CALLS, CHART REVIEWS, ETC
- ;.S (D,Y)=0 F  S Y=$O(^AUPNVPOV("AD",V,Y)) Q:Y'=+Y!(D)  I $D(^AUPNVPOV(Y,0)) D
- ;..S %=$P(^AUPNVPOV(Y,0),U)
- ;S (PDA,G)=0 F  S PDA=$O(^AUPNVPOV("AC",P,PDA)) Q:'PDA!(G>1)  D
- ;. S CDX=$P($G(^AUPNVPOV(PDA,0)),U)
  S IBDATE=9999999-BDATE
  S IEDATE=9999999-EDATE
  S G=0
@@ -262,3 +321,60 @@ TEST ;
  ;S P=0 F  S P=$O(^AUPNPAT(P)) Q:P'=+P  S X=$$V2DM(P,,) I X S ^LORIHAS(P)="" W ".",P
  ;D ^%T
  ;Q
+ ;
+ ;
+UPDTC() ;Build the RISKC DX related taxonomies and subsets
+ ;
+ ;Lock the entry - current update in progress
+ L +^XTMP("BI_RISKC"):10 E  Q -1
+ ;
+ ;See if already processed for day
+ I $G(^XTMP("BI_RISKC","COMP"))'<DT G XUPDTTS
+ ;
+ ;Need to recompile
+ S ^XTMP("BI_RISKC",0)=DT_U_DT_U_"RISKC TAXONOMIES AND SUBSETS"
+ ;
+ NEW BITXTI,BITXIEN,BITEXT,BITAX,BITYPE,BIREF
+ NEW BISUBI,BISUB,BISBIEN,BICONC,BISCNT
+ ;
+ ;Loop through DX taxonomies and build ^XTMP
+ K ^XTMP("BI_RISKC","DXTAX")
+ S ^XTMP("BI_RISKC","DXTAX")="DX codes reflecting immunocompromised status"
+ F BITXTI=1:1 S BITEXT=$P($T(TAX+BITXTI),";;",2,99) S BITAX=$P(BITEXT,";") Q:BITAX="END"  D
+ . S BITAX=$P(BITEXT,";")
+ . S BITYPE=$P(BITEXT,";",2)
+ . S BITXIEN=$O(^ATXAX("B",BITAX,0)) I 'BITXIEN Q
+ . I $D(^ICDS(0)),$T(^ATXAPI)]"" D
+ .. K ^TMP($J,"BITAX")
+ .. S BIREF=$NA(^TMP($J,"BITAX"))
+ .. D BLDTAX^ATXAPI(BITAX,BIREF,BITXIEN)
+ .. M ^XTMP("BI_RISKC","DXTAX")=^TMP($J,"BITAX")
+ .. K ^TMP($J,"BITAX")
+ ;
+ ;Loop through subsets and build ^XTMP
+ K ^XTMP("BI_RISKC","DXSUB")
+ S BISCNT=0
+ F BISUBI=1:1 S BITEXT=$P($T(SUB+BISUBI),";;",2,99) S BISUB=$P(BITEXT,";") Q:BISUB="END"  D
+ . S BISBIEN="" F  S BISBIEN=$O(^BSTS(9002318.4,"E",15,BISUB,BISBIEN)) Q:BISBIEN=""  D
+ .. ;Retrieve Concept Id
+ .. S BICONC=$P($G(^BSTS(9002318.4,BISBIEN,0)),U,2) Q:BICONC=""  ;Retrieve Concept Id
+ .. S ^XTMP("BI_RISKC","DXSUB",BICONC)=""
+ .. S BISCNT=BISCNT+1
+ S ^XTMP("BI_RISKC","DXSUB")="SNOMED Concept Ids reflecting immunocompromised status"_U_BISCNT
+ ;
+ ;Update compiled date
+ S ^XTMP("BI_RISKC","COMP")=DT
+ ;
+XUPDTTS L -^XTMP("BI_RISKC")
+ Q 1
+ ;=====
+ ;
+TAX ;;
+ ;;BQI CANCER DXS;D
+ ;;BQI IMMUNE DEFICIENCY DXS;D
+ ;;BQI TRANSPLANT DXS;D
+ ;;END;
+ ;
+SUB ;;
+ ;;PXRM BQI Immunocomp Full Set
+ ;;END;

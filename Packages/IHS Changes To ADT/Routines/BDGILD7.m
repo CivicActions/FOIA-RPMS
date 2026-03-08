@@ -1,5 +1,5 @@
 BDGILD7 ; IHS/ANMC/LJF - INPT DEATHS BY DATE ; 
- ;;5.3;PIMS;**1009**;APR 26, 2002
+ ;;5.3;PIMS;**1009,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw 05/08/2008 PATCH 1009 requirements 22,31,71 for insurance display
  ;
@@ -55,7 +55,12 @@ INIT ; -- init variables and list array
  ... ; build display lines
  ... S DFN=^TMP("BDGILD7A",$J,SORT,DATE,IEN)
  ... S ADM=+$$GET1^DIQ(405,IEN,.14,"I")
- ... S LINE=$E($$GET1^DIQ(2,DFN,.01),1,20)                  ;pat name
+ ... ;202307 77894 maw p1022 PPN
+ ... N PRF
+ ... S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ ... S LINE=$G(PRF)
+ ... D SET(LINE,.VALMCNT)
+ ... S LINE=""
  ... S LINE=$$PAD(LINE,23)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)   ;chart #
  ... S LINE=$$PAD(LINE,31)_$$NUMDATE^BDGF(DATE)             ;disch date
  ... S LINE=$$PAD(LINE,41)_$J($$GET1^DIQ(405,ADM,201),3)    ;los

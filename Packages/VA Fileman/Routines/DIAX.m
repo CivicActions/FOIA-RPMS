@@ -1,5 +1,6 @@
-DIAX ;SFISC/DCM-EXTRACT OPTIONS ;12/8/98  07:55
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIAX ;SFISC/DCM-EXTRACT OPTIONS ;5/13/96  13:52 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**8**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 0 S DIK="^DOPT(""DIAX""," G OPT:$D(^DOPT("DIAX",9))
  S ^(0)="EXTRACT OPTION^1.01^" K ^("B")
@@ -83,7 +84,7 @@ UNLK N DIAR S DIAR=""
 Q D Q^DIARB
  Q
  ;
-FLAG(DIC,DIE,DIARCH) ;
+FLAG(DIC,DIE,DIARCH)  ;
  Q:'DIC  Q:'$D(^DD(DIC,0))
  S $P(^DD(DIC,0,"DI"),U)=DIARCH,$P(^DD(DIC,0,"DI"),U,2)=DIE
  Q

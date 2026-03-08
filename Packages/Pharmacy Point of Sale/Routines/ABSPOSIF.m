@@ -1,5 +1,5 @@
 ABSPOSIF ; IHS/FCS/DRS - handle FIND command ;   [ 09/12/2002  10:11 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,46**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,46,54**;JUN 01, 2001;Build 131
  ; "FIND" - when typed at Prescription field, here's what happens
  Q
 TEST N RETVAL S RETVAL=$$RXFIND()
@@ -25,7 +25,8 @@ RXFINDA I $D(VISITIN) S VISITIEN=VISITIN,PAT=$P(^AUPNVSIT(VISITIEN,0),U,5)
  E  S VISITIEN=0
  I '$G(PAT) S PAT=$$PATFIND I 'PAT G RXFINDX
  I '$D(TYPE) S TYPE=3
- S PATNAME=$P(^DPT(PAT,0),U)
+ ;S PATNAME=$P(^DPT(PAT,0),U)
+ S PATNAME=$P(^DPT(PAT,0),U)_$$PPN1^ABSPUTL(PAT)  ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  ;
  I 'VISITIEN D
  . W !,"...Searching for visits and prescriptions for "_PATNAME_" ...",!
@@ -121,7 +122,8 @@ VISIFIND(PAT,RXTYPE,VISITIEN)      ; given patient IEN, present a list of visits
  ; VISITIEN'=0 means "this is the visit I want, fake it out as if it
  ;   had been selected from the list."
  ;W "In VISIFIND with " ZW PAT,RXTYPE H 1
- I $G(PAT) S PATNAME=$P(^DPT(PAT,0),U)
+ ;I $G(PAT) S PATNAME=$P(^DPT(PAT,0),U)
+ I $G(PAT) S PATNAME=$P(^DPT(PAT,0),U)_$$PPN1^ABSPUTL(PAT)   ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  N TYPE S TYPE="S" ; single item selection
  N LISTROOT S LISTROOT="^TMP("_$J_",""LIST""," K ^TMP($J,"LIST")
  N X S X="1|Visit:12,Date:14,Clinic:15,Prescriptions:25"

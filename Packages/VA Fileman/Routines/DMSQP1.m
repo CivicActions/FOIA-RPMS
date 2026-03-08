@@ -1,6 +1,6 @@
-DMSQP1 ;SFISC/EZ-PRINT SAMPLE SQLI STATS ;10/30/97  17:06
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQP1 ;SFISC/EZ-PRINT SAMPLE SQLI STATS ;10/30/97  17:06 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
  Q
 OK ; check if okay to run
  I '$O(^DMSQ("S",0)) W !?5,"Sorry, SQLI files are empty.",! S DMQ=1 Q 

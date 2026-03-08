@@ -1,5 +1,5 @@
 ABSPOSUA ; IHS/FCS/DRS - sort and print utilities ;    
- ;;1.0;PHARMACY POINT OF SALE;**37**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**37,54**;JUN 01, 2001;Build 131
  Q
 DEFDEST()          Q "^TMP("""_$T(+0)_""","_$J_",1)" ; default dest for sort
 SAVEAREA()         Q "^TMP("""_$T(+0)_""","_$J_",2)" ; if you save old vers.
@@ -76,7 +76,8 @@ SORT3 ;
  N STAT99 S STAT99=100-STATUS
  N TIME99 S TIME99=9999999.99999999-$P(X,U,8)
  I 'PATDFN N PATDFN S PATDFN=$P(X,U,6)
- N PATNAME I PATDFN S PATNAME=$P($G(^DPT(PATDFN,0)),U)
+ ;N PATNAME I PATDFN S PATNAME=$P($G(^DPT(PATDFN,0)),U)
+ N PATNAME I PATDFN S PATNAME=$P($G(^DPT(PATDFN,0)),U)_$$PPN1^ABSPUTL(PATDFN)  ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  S:$G(PATNAME)="" PATNAME="Patient `"_PATDFN
  I '$D(@DEST@(PATNAME)) S @DEST=@DEST+1,@DEST@(PATNAME)=0
  E  I $D(@DEST@(PATNAME,"RXI",RXI)) Q  ; timing - we got this twice
@@ -104,7 +105,8 @@ DISP1 ; given RXI
  N STAT S STAT=$P(REC(0),U,2)
  W "`",RXI," "
  N PAT S PAT=$P(REC(0),U,6)
- I PAT W " ",$P($G(^DPT(PAT,0)),U)," "
+ ;I PAT W " ",$P($G(^DPT(PAT,0)),U)," "
+ I PAT W " ",$P($G(^DPT(PAT,0)),U)_$$PPN1^ABSPUTL(PAT)," "  ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  W:STAT'=99 "in Q",STAT,":" W $E($$STATI^ABSPOSU(STAT),1,30)
  S Y=$P($P(REC(0),U,8),".",2) X TT W " ",Y
  I STAT'=99 G DISP99

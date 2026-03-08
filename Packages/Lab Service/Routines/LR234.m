@@ -1,5 +1,5 @@
 LR234 ;DALISC/WTY - LAB PATCH ENVIRONMENT CHECK ROUTINE  ;03/15/99  07:30 ;
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**234**;Sep 27, 1994
 EN ;--> Does not prevent loading of the transport global.
  ;--> Environment check is done only during the install.

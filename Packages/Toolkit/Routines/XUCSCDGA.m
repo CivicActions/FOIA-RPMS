@@ -1,0 +1,53 @@
+XUCSCDGA ;CLARKSBURG/SO GRAPH % CPU & DISK UTILIZATION BY VG/DATE - PRINT ; 5/14/94 [ 04/02/2003   8:47 AM ]
+ ;;7.3;TOOLKIT;**1001**;APR 1, 2003
+ ;;7.3;TOOLKIT;**6**;Apr 25, 1995
+PRINT ; Print the Report
+ S XUCSVG="" F  S XUCSVG=$O(^TMP($J,7,XUCSVG)) Q:XUCSVG=""!(XUCSEND)  DO
+ . S XUCSAP="" F  S XUCSAP=$O(^TMP($J,7,XUCSVG,XUCSAP)) Q:XUCSAP=""!(XUCSEND)  D BD,HDR DO
+ .. S XUCSX=0 F  S XUCSX=$O(^TMP($J,7,XUCSVG,XUCSAP,+XUCSX)) Q:+XUCSX<1!(XUCSEND)  S XUCSAC=^(+XUCSX),XUCSAD=$P(XUCSAC,"^",2),XUCSAJ=$P(XUCSAC,"^",3),XUCSAC=$P(XUCSAC,"^") DO
+ ... S X1=XUCSX,X2=XUCSPD D ^%DTC I X>1 D PAD Q:XUCSEND
+ ... W !,$E(XUCSX,4,5),"/",$E(XUCSX,6,7),"/",$E(XUCSX,2,3),?12,$J(XUCSAJ,2,0),?18,$J(XUCSAC,2,0)," |"
+ ... W ?(44-$J((XUCSAC/5),0,0)) F I2=1:1:$J((XUCSAC/5),0,0) W "+"
+ ... W ?44 F I2=1:1:$J((XUCSAD/5),0,0) W "-"
+ ... W ?67,"| ",$J(XUCSAD,2,0)
+ ... I $E(IOST)="P",$Y>(IOSL-5) D HDR
+ ... I $E(IOST)="C",$Y>(IOSL-4) DO  Q:XUCSEND
+ .... D PAUSE^XUCSUTL
+ .... Q:XUCSEND
+ .... D HDR
+ .... Q
+ ... S XUCSPD=XUCSX
+ .. I 'XUCSEND S X1=XUCSED,X2=XUCSPD D ^%DTC I X>1 D PAD
+ .. I 'XUCSEND,$E(IOST)="C" D PAUSE^XUCSUTL
+ .. Q
+ . Q
+ Q
+HDR ; Header Sub-Routine
+ I $D(XUCSHSW),$E(IOST)="P",$Y>2,$Y<(IOSL-5) DO  G SHDR
+ . N X
+ . W !
+ . S X="",$P(X,"-",IOM)="" W !,X
+ . Q
+ W:$D(XUCSHSW) @IOF
+ I '$D(XUCSHSW) S XUCSHSW=1,XUCSPG=0 D NOW^%DTC S Y=% D DD^%DT S XUCSRDT=$P(Y,"@")_"@"_$P($P(Y,":",1,2),"@",2) W:$E(IOST)="C" @IOF
+ S XUCSPG=XUCSPG+1 W !,"Ave. %CPU & %DISK Utilization Graph ",XUCSRDT,?(IOM-10),"Page: ",XUCSPG
+ N X
+ S X="",$P(X,"-",IOM)="" W !,X
+SHDR ; Sub-Header
+ D SITEH^XUCSUTL3
+ W !,"Date",?11,"Jobs",?17,"%CPU",?23,XUCSITEH," (",XUCSAP,")",?68,"%Disk"
+ Q
+PAD ;
+ I X=2 S XUCSOD=""
+ S X1=XUCSPD,X2=1 D C^%DTC W !,$E(X,4,5),"/",$E(X,6,7),"/",$E(X,2,3)
+ I '$D(XUCSOD) S X1=XUCSX,X2=-1 D C^%DTC W "-",$E(X,4,5),"/",$E(X,6,7),"/",$E(X,2,3)
+ K XUCSOD W ?30,"* No Data Recorded *"
+ I $E(IOST)="C",$Y>(IOSL-4) DO  Q:XUCSEND
+ . D PAUSE^XUCSUTL
+ . Q:XUCSEND
+ . D HDR
+ . Q
+ Q
+BD ; Set Beginning Date
+ S X1=DT,X2=-1 D C^%DTC S XUCSED=X,X1=X,X2=$S($D(XUCSND):(XUCSND*-1),1:-45) D C^%DTC S XUCSPD=X
+ Q

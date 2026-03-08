@@ -1,5 +1,5 @@
-ACPTENVC ; IHS/SD/SDR - Environment checker for ACPT V2.10 ;4/21/08  14:11
- ;;2.10;CPT FILES;;DEC 18, 2009
+ACPTENVC ; IHS/OIT/NKD - Environment checker for ACPT V2.12 P2 09/19/12 ;
+ ;;2.12;CPT FILES;**2**;DEC 13, 2011;Build 1
  ;
  I '$G(DUZ) W !,"DUZ UNDEFINED OR 0." D SORRY(2) Q
  ;
@@ -13,7 +13,10 @@ ACPTENVC ; IHS/SD/SDR - Environment checker for ACPT V2.10 ;4/21/08  14:11
  I '$$VCHK("XU","8",2)
  I '$$VCHK("XT","7.3",2)
  I '$$VCHK("DI","21",2)
- I '$$VCHK("ACPT","2.09",2) S XPDQUIT=2
+ I ('$$VCHK2("ACPT","2.12.1",2)) S XPDQUIT=2
+ ;I ('$$VCHK2("ACPT","2.11.1",2)) S XPDQUIT=2
+ ;IHS/OIT/NKD ACPT*2.12 Added BCSV requirement
+ I ('$$VCHK2("BCSV","1.0.3",2)) S XPDQUIT=2
  ;
  NEW DA,DIC
  S X="ACPT",DIC="^DIC(9.4,",DIC(0)="",D="C"
@@ -42,8 +45,29 @@ VCHK(ACPTPRE,ACPTVER,ACPTQUIT) ; Check versions needed.
  NEW ACPTV
  S ACPTV=$$VERSION^XPDUTL(ACPTPRE)
  W !,$$CJ^XLFSTR("Need at least "_ACPTPRE_" v "_ACPTVER_"....."_ACPTPRE_" v "_ACPTV_" Present",IOM)
- I ACPTV<ACPTVER S XPDQUIT=ACPTQUIT W *7,!,$$CJ^XLFSTR("^^^^**NEEDS FIXED**^^^^",IOM) Q 0
+ I (ACPTV'="2.10.1")&(ACPTV<ACPTVER) S XPDQUIT=ACPTQUIT W *7,!,$$CJ^XLFSTR("^^^^**NEEDS FIXED**^^^^",IOM) Q 0
  Q 1
+ ;
+VCHK2(ACPTPRE,ACPTVER,ACPTQUIT) ; Check patch level
+ NEW ACPTV
+ S ACPTV=$$VERSION^XPDUTL(ACPTPRE)
+ ;IHS/OIT/NKD ACPT*2.12 Added check in case package is not installed
+ I $L(ACPTV)<1 S XPDQUIT=ACPTQUIT W !,$$CJ^XLFSTR("Need at least "_ACPTPRE_" v "_ACPTVER_"....."_ACPTPRE_" Not Installed",IOM),*7,!,$$CJ^XLFSTR("^^^^**NEEDS TO BE FIXED**^^^^",IOM) Q 1
+ S PTCH=+$$LAST(ACPTPRE,ACPTV) S:PTCH=-1 DPTCH="" S:PTCH'=-1 DPTCH="."_PTCH
+ W !,$$CJ^XLFSTR("Need at least "_ACPTPRE_" v "_ACPTVER_"....."_ACPTPRE_" v "_ACPTV_DPTCH_" Present",IOM)
+ I (ACPTV=$P(ACPTVER,".",1,2))&(PTCH<$P(ACPTVER,".",3)) KILL DIFQ S XPDQUIT=ACPTQUIT W *7,!,$$CJ^XLFSTR("^^^^**NEEDS TO BE FIXED**^^^^",IOM)
+ Q 1
+LAST(PKG,VER) ;EP - returns last patch applied for a Package, PATCH^DATE
+ ;        Patch includes Seq # if Released
+ N PKGIEN,VERIEN,LATEST,PATCH,SUBIEN
+ I $G(VER)="" S VER=$$VERSION^XPDUTL(PKG) Q:'VER -1
+ S PKGIEN=$O(^DIC(9.4,"C",PKG,"")) Q:'PKGIEN -1
+ S VERIEN=$O(^DIC(9.4,PKGIEN,22,"B",VER,"")) Q:'VERIEN -1
+ S LATEST=-1,PATCH=-1,SUBIEN=0
+ F  S SUBIEN=$O(^DIC(9.4,PKGIEN,22,VERIEN,"PAH",SUBIEN)) Q:SUBIEN'>0  D
+ . I $P(^DIC(9.4,PKGIEN,22,VERIEN,"PAH",SUBIEN,0),U,2)>LATEST S LATEST=$P(^(0),U,2),PATCH=$P(^(0),U)
+ . I $P(^DIC(9.4,PKGIEN,22,VERIEN,"PAH",SUBIEN,0),U,2)=LATEST,$P(^(0),U)>PATCH S PATCH=$P(^(0),U)
+ Q PATCH_U_LATEST
  ;
 INSTALLD(ACPTINST) ;EP - Determine if patch ACPTINST was installed, where ACPTINST is
  ; the name of the INSTALL.  E.g "AG*6.0*10".
@@ -61,17 +85,6 @@ INSTALLD(ACPTINST) ;EP - Determine if patch ACPTINST was installed, where ACPTIN
  D ^DIC
  Q $S(Y<1:0,1:1)
  ;
-LAST(PKG,VER) ;EP - returns last patch applied for a Package, PATCH^DATE
- ;        Patch includes Seq # if Released
- N PKGIEN,VERIEN,LATEST,PATCH,SUBIEN
- I $G(VER)="" S VER=$$VERSION^XPDUTL(PKG) Q:'VER -1
- S PKGIEN=$O(^DIC(9.4,"B",PKG,"")) Q:'PKGIEN -1
- S VERIEN=$O(^DIC(9.4,PKGIEN,22,"B",VER,"")) Q:'VERIEN -1
- S LATEST=-1,PATCH=-1,SUBIEN=0
- F  S SUBIEN=$O(^DIC(9.4,PKGIEN,22,VERIEN,"PAH",SUBIEN)) Q:SUBIEN'>0  D
- . I $P(^DIC(9.4,PKGIEN,22,VERIEN,"PAH",SUBIEN,0),U,2)>LATEST S LATEST=$P(^(0),U,2),PATCH=$P(^(0),U)
- . I $P(^DIC(9.4,PKGIEN,22,VERIEN,"PAH",SUBIEN,0),U,2)=LATEST,$P(^(0),U)>PATCH S PATCH=$P(^(0),U)
- Q PATCH_U_LATEST
  ;
 POST1(ACPTDIR) ; input transform for KIDS question POST1
  ;
@@ -94,45 +107,35 @@ POST1(ACPTDIR) ; input transform for KIDS question POST1
  N ACPTFIND S ACPTFIND=0 ; do we find our files in that directory?
  D  ; find out whether that directory contains those files
  .N ACPTFILE
- .S ACPTFILE("acpt2010.9l")=""
- .S ACPTFILE("acpt2010.9h")=""
- .S ACPTFILE("acpt2010.9d")=""
- .S ACPTFILE("acpt2010.l")=""
- .S ACPTFILE("acpt2010.d")=""
+ .S ACPTFILE("acpt2012.01l")=""
+ .S ACPTFILE("acpt2012.01s")=""
+ .S ACPTFILE("acpt2012.01d")=""
+ .S ACPTFILE("acpt2012.01m")="" ;IHS/OIT/NKD ACPT*2.12*1 Added CPT Modifier
+ .S ACPTFILE("acpt2012.01h")=""
  .N Y S Y=$$LIST^%ZISH(ACPTDIR,"ACPTFILE","ACPTFIND")
  .D  Q:ACPTFIND  ; format for most platforms:
  ..K ACPTQUIT
- ..I ($$VERSION^XPDUTL("BCSV")>0) D  Q:($G(ACPTQUIT)=1)
- ...I ('$D(ACPTFIND("acpt2010.9l"))&('$D(ACPTFIND(ACPTDIR_"acpt2010.9l")))) S ACPTQUIT=1
- ...I ('$D(ACPTFIND("acpt2010.9h"))&('$D(ACPTFIND(ACPTDIR_"acpt2010.9h")))) S ACPTQUIT=1
- ...I ('$D(ACPTFIND("acpt2010.9d"))&('$D(ACPTFIND(ACPTDIR_"acpt2010.9d")))) S ACPTQUIT=1
- ...I ('$D(ACPTFIND("acpt2010.l"))&('$D(ACPTFIND(ACPTDIR_"acpt2010.l")))) S ACPTQUIT=1
- ...I ('$D(ACPTFIND("acpt2010.d"))&('$D(ACPTFIND(ACPTDIR_"acpt2010.d")))) S ACPTQUIT=1
- ..I ($$VERSION^XPDUTL("BCSV")<1) D  Q:($G(ACPTQUIT)=1)
- ..I ('$D(ACPTFIND("acpt2010.l"))&('$D(ACPTFIND(ACPTDIR_"acpt2010.l")))) S ACPTQUIT=1
- ..I ('$D(ACPTFIND("acpt2010.d"))&('$D(ACPTFIND(ACPTDIR_"acpt2010.d")))) S ACPTQUIT=1
+ ..I ('$D(ACPTFIND("acpt2012.01l"))&('$D(ACPTFIND(ACPTDIR_"acpt2012.01l")))) S ACPTQUIT=1
+ ..I ('$D(ACPTFIND("acpt2012.01s"))&('$D(ACPTFIND(ACPTDIR_"acpt2012.01s")))) S ACPTQUIT=1
+ ..I ('$D(ACPTFIND("acpt2012.01d"))&('$D(ACPTFIND(ACPTDIR_"acpt2012.01d")))) S ACPTQUIT=1
+ ..I ('$D(ACPTFIND("acpt2012.01m"))&('$D(ACPTFIND(ACPTDIR_"acpt2012.01m")))) S ACPTQUIT=1 ;IHS/OIT/NKD ACPT*2.12*1 Added CPT Modifier
+ ..I ('$D(ACPTFIND("acpt2012.01h"))&('$D(ACPTFIND(ACPTDIR_"acpt2012.01h")))) S ACPTQUIT=1
  ..I $G(ACPTQUIT)'=1 S ACPTFIND=1
- .;D  ; format for Cache on UNIX
- ..;Q:('$D(ACPTFIND("acpt2010.9l"))!'$D(ACPTFIND("acpt2010.9h"))!'$D(ACPTFIND("acpt2010.9d"))!'$D(ACPTFIND("acpt2010.l"))!'$D(ACPTFIND("acpt2010.d")))&($$VERSION^XPDUTL("BCSV")>0)
- ..;Q:('$D(ACPTFIND("acpt2010.l"))!'$D(ACPTFIND("acpt2010.d")))&($$VERSION^XPDUTL("BCSV")<1)
- ..;S ACPTFIND=1
  ;
- I $$VERSION^XPDUTL("BCSV")>0 D
- .I $D(ACPTFIND("acpt2010.9l"))!$D(ACPTFIND(ACPTDIR_"acpt2010.9l")) D
- ..W !,"CPT Description file acpt2010.9l found."
- .I $D(ACPTFIND("acpt2010.9d"))!$D(ACPTFIND(ACPTDIR_"acpt2010.9d")) D
- ..W !,"CPT delete file acpt2010.9d found."
- .I $D(ACPTFIND("acpt2010.9h"))!$D(ACPTFIND(ACPTDIR_"acpt2010.9h")) D
- ..W !,"HCPCS file acpt2010.9h found."
- ;
- I $D(ACPTFIND("acpt2010.l"))!$D(ACPTFIND(ACPTDIR_"acpt2010.l")) D
- .W !,"CPT Description file acpt2010.l found."
- I $D(ACPTFIND("acpt2010.d"))!$D(ACPTFIND(ACPTDIR_"acpt2010.d")) D
- .W !,"CPT delete file acpt2010.d found."
+ I $D(ACPTFIND("acpt2012.01l"))!$D(ACPTFIND(ACPTDIR_"acpt2012.01l")) D
+ .W !,"CPT Long Description file acpt2012.01l found."
+ I $D(ACPTFIND("acpt2012.01s"))!$D(ACPTFIND(ACPTDIR_"acpt2012.01s")) D
+ .W !,"CPT Short Description file acpt2012.01s found."
+ I $D(ACPTFIND("acpt2012.01d"))!$D(ACPTFIND(ACPTDIR_"acpt2012.01d")) D
+ .W !,"CPT Delete file acpt2012.01d found."
+ I $D(ACPTFIND("acpt2012.01m"))!$D(ACPTFIND(ACPTDIR_"acpt2012.01m")) D
+ .W !,"CPT Modifier file acpt2012.01m found."
+ I $D(ACPTFIND("acpt2012.01h"))!$D(ACPTFIND(ACPTDIR_"acpt2012.01h")) D
+ .W !,"HCPCS file acpt2012.01h found."
  ;
  I ACPTFIND D  Q  ; if they picked a valid directory
  .W !!,"Thank you. The file is in that directory."
- .W !,"Proceeding with the install of ACPT*2.10."
+ .W !,"Proceeding with the install of ACPT*2.12*1"
  ;
  I 'ACPTFIND D
  .W !!,"I'm sorry, but that cannot be correct."

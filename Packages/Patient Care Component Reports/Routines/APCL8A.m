@@ -1,5 +1,5 @@
-APCL8A ; IHS/CMI/LAB - APC visits by primary provider ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCL8A ; IHS/OHPRD/TMJ - APC visits by primary provider ;
+ ;;3.0;IHS PCC REPORTS;**20**;FEB 05, 1997
 START ; 
  D INFORM
  K DUOUT,DTOUT
@@ -11,9 +11,6 @@ FY S %DT="AE",%DT("A")="Enter the Fiscal Year for this 1A report: ",%DT("B")=$E(
 F ;
  S DIC("A")="Run for which Facility of Encounter: ",DIC="^AUTTLOC(",DIC(0)="AEMQ" D ^DIC K DIC,DA G:Y<0 FY
  S APCLLOC=+Y
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G FY
 ZIS ;
  S XBRP="^APCL8AP",XBRC="^APCL8A1",XBRX="EOJ^APCL8A",XBNS="APCL"
  D ^XBDBQUE

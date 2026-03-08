@@ -1,7 +1,8 @@
 ABME5L7 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS 3P BILLING SYSTEM;**6,8,9,10,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8,9,10,21,31**;NOV 12, 2009;Build 615
  ;Header Segments
- ;IHS/SD/SDR - 2.6*21 - HEAT70826 - Modified to remove 2310B loop based on SGTM entry
+ ;IHS/SD/SDR 2.6*21 HEAT70826 Modified to remove 2310B loop based on SGTM entry
+ ;IHS/SD/SDR 2.6*31 CR8881 Updated to use the referring provider from page3 first, then check page4
  ;
 EP ;START HERE
  N ABM
@@ -98,7 +99,9 @@ EP ;START HERE
  ; Loop 2310F - Referrring Provider Name
  S ABMLOOP="2310F"
  I $D(ABMP("PRV","F")) D
- .S ABM("PRV")=$O(ABMP("PRV","F",0))
+ .;S ABM("PRV")=$O(ABMP("PRV","F",0))  ;abm*2.6*31 IHS/SD/SDR CR8881
+ .S ABM("PRV")=$O(ABMP("PRV","F"," "))  ;is there a provider from page3? if so use it  ;abm*2.6*31 IHS/SD/SDR CR8881
+ .I ABM("PRV")="" S ABM("PRV")=$O(ABMP("PRV","F",0))  ;if no page3 provider, use the one from page4  ;abm*2.6*31 IHS/SD/SDR CR8881
  .I $O(ABMP("PRV","A",0))=$O(ABMP("PRV","F",0)) Q  ;don't write if Attending=Referring (from page 3)
  .;don't write if attending NPI equals NPI entered on page 3 for referring
  .I (+$O(ABMP("PRV","A",0))'=0),(+$O(ABMP("PRV","F",0))=0)&($D(ABMP("PRV","F"))),$P($$NPI^XUSNPI("Individual_ID",$O(ABMP("PRV","A",0))),U)=$P(ABMP("PRV","F",$O(ABMP("PRV","F",""))),U,3) Q  ;abm*2.6*10 HEAT67469

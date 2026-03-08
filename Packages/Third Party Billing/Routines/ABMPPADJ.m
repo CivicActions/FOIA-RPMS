@@ -1,157 +1,61 @@
 ABMPPADJ ; IHS/SD/SDR - Prior Payments/Adjustments page (CE); 
- ;;2.6;IHS 3P BILLING SYSTEM;**4,6,8,9,10,19,21,23**;NOV 12, 2009;Build 427
+ ;;2.6;IHS 3P BILLING SYSTEM;**4,6,8,9,10,19,21,23,30,31,33,36,37,39,42**;NOV 12, 2009;Build 789
  ; split routine to ABMPPAD1 because of size
+ ;IHS/SD/SDR 2.5*13 NO IM
  ;
- ;IHS/SD/SDR - v2.5 p13 - NO IM
- ;
- ;IHS/SD/SDR 2.6*6 5010 - added export mode 32
- ;IHS/SD/SDR 2.6*19 HEAT168248 - Added code to put each SAR only once with the total amt.  In split routine, ABMPPAD3
- ;IHS/SD/SDR 2.6*21 HEAT118718 - Check for replacement insurer
+ ;IHS/SD/SDR 2.6*6 5010 added export mode 32
+ ;IHS/SD/SDR 2.6*19 HEAT168248 Added code to put each SAR only once w/total amt.  In split routine, ABMPPAD3
+ ;IHS/SD/SDR 2.6*21 HEAT118718 Check for replacement insurer
  ;IHS/SD/SDR 2.6*23 CR9730 Added call for PRINT ORDER CHARGE SCREEN page
+ ;IHS/SD/SDR 2.6*30 CR8901 Fixed COB page when pt has same insurer twice; was counting pymts/adjs twice, displaying twice, once for ea time insurer was on claim
+ ;IHS/SD/SDR 2.6*31 CR11063 Made sure there is suffix and HRN before appending '-' and number; was ending up with just dash and not finding trans because bill number didn't match
+ ;IHS/SD/SDR 2.6*33 ADO60189 Made correction to how amt was being retrieved from Transaction file; if amt was negative, that was
+ ;   getting lost; Changed Current Charges so it would be total amt, not total-non-covered
+ ;IHS/SD/SDR 2.6*36 ADO76247 Added flag so display won't happen at beginning of new ADPS option
+ ;IHS/SD/SDR 2.6*37 ADO76009 Added check for PI multiple to separate out insurers better
+ ;IHS/SD/SDR 2.6*39 ADO76227 Stop COB from displaying if insurer parameter is set (3P Insurer, #.15)
+ ;IHS/SD/SDR 2.6*42 ADO107388 Stop <UNDEF>DISP+33^ABMPPADJ error
  ;
  ;ABMPL(Insurer priority, Insurer IEN)=
- ;    P1=13 multiple IEN
- ;    P2=Billing status
- ;ABMPP(Insurer IEN, "P" or "A", Counter)=
- ;    P1=Amount
- ;    P2=Adj Category
- ;    P3=Trans. Type
- ;    P4=Std Adj. Reason
- ;    P5=billable?(Y/N)
- ;    P6=Payment multiple IEN
+ ;  P1=13 multiple IEN
+ ;  P2=Billing status
+ ;ABMPP(Insurer IEN, PI multiple or '1', "P" or "A", Counter)=
+ ;  P1=Amount
+ ;  P2=Adj Category
+ ;  P3=Trans. Type
+ ;  P4=Std Adj. Reason
+ ;  P5=billable?(Y/N)
+ ;  P6=Payment multiple IEN
 DISPCK ; chk if no complete insurer OR if 2 export modes on claim; don't do if either is true
  ;
- ;if medicaid insurer type, UB-04 or 837I, itemized, and they chose to display print order screen
- I (ABMP("ITYP")="D")&("^28^31^"[("^"_ABMP("EXP")_"^"))&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),0)),U,12)=1)&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,24)="Y") D PRTORD^ABMDEOK1  ;abm*2.6*23 IHS/SD/SDR CR9730
+ ;if mcd insurer type, UB-04 or 837I, itemized, and they chose to display print order screen
+ I (ABMP("ITYP")="D")&("^28^31^"[("^"_ABMP("EXP")_"^"))&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),0)),U,12)=1)&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,24)="Y") D PRTORD^ABMDEOK1
  K ABMTFLAG,ABMSFLG,ABMMFLG
  K ABMPM
  N ABMPP
+ K ABMPL,ABMEMLT,ABMILST,ABMLST  ;abm*2.6*37 IHS/SD/SDR ADO76009
  S ABMA=0
  K ABMAFLG,ABMMFLG
  F  S ABMA=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMA)) Q:+ABMA=0  D
  .S ABMAI=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMA,0)),U)
- .Q:ABMAI=""  ;abm*2.6*10 HEAT74239
+ .Q:ABMAI=""
  .I $P($G(^ABMNINS(ABMP("LDFN"),ABMAI,0)),U,11)="Y",($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMA,0)),U,3)="C") S ABMAFLG=1
- .I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMAI,".211","I"),1,"I")="R",($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,8)=ABMAI) S ABMMFLG=1  ;abm*2.6*9 tribal self-insured  ;abm*2.6*10 HEAT73780
- I $G(ABMAFLG)=1,($G(ABMMFLG)=1) Q  ;don't do COB page cuz there is a tribal insurer and Medicare
+ .I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMAI,".211","I"),1,"I")="R",($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,8)=ABMAI) S ABMMFLG=1
+ I $G(ABMAFLG)=1,($G(ABMMFLG)=1) Q  ;don't do COB page cuz there is tribal insurer and Medicare
+ I $P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),0)),U,15)="N" S ABMAFLG=1,ABMMFLG=1 Q  ;abm*2.6*39 IHS/SD/SDR ADO76227
  K ABMAFLG,ABMMFLG
  D DISPCK^ABMPPAD1
 GATHER Q:$G(ABMCHK)=1  ;quit if no complete insurer or 2 export modes on claim
  K ABMPM,ABMPP
  D SETVAR^ABMPPAD1
- S ABMPHRN=$P($G(^AUPNPAT(ABMP("PDFN"),41,DUZ(2),0)),U,2)
+ ;S ABMPHRN=$P($G(^AUPNPAT(ABMP("PDFN"),41,DUZ(2),0)),U,2)  ;abm*2.6*31 CR11063
+ S ABMPHRN=$P($G(^AUPNPAT(ABMP("PDFN"),41,ABMP("LDFN"),0)),U,2)  ;abm*2.6*31 CR11063
  S ABMBSUF=$P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,4)
- ;loop thru active bills
- S ABMBSTA=""
- F  S ABMBSTA=$O(^ABMDBILL(DUZ(2),"AS",ABMP("CDFN"),ABMBSTA)) Q:ABMBSTA=""  D
- .Q:ABMBSTA="X"
- .S ABMBFIEN=0
- .F  S ABMBFIEN=$O(^ABMDBILL(DUZ(2),"AS",ABMP("CDFN"),ABMBSTA,ABMBFIEN)) Q:+ABMBFIEN=0  D
- ..S ABMBNUM=$P($G(^ABMDBILL(DUZ(2),ABMBFIEN,0)),U)
- ..;get previous payments
- ..S ABMPIEN=0,ABMTFLAG=0
- ..F  S ABMPIEN=$O(^ABMDBILL(DUZ(2),ABMBFIEN,3,ABMPIEN)) Q:+ABMPIEN=0  D
- ...S ABMLN=+$G(ABMLN)+1
- ...S ABMPREC=$G(^ABMDBILL(DUZ(2),ABMBFIEN,3,ABMPIEN,0))
- ...;check if summary or split out entries; if split set flag so it won't
- ...;get trans from A/R again
- ...S ABMBINS=$P($G(^ABMDBILL(DUZ(2),ABMBFIEN,0)),U,8)  ;abm*2.6*6
- ...I $P($G(^ABMDBILL(DUZ(2),ABMBFIEN,2)),U)'=(+$P(ABMPREC,U,3)+($P(ABMPREC,U,4))+($P(ABMPREC,U,6))+($P(ABMPREC,U,7))+($P(ABMPREC,U,9))+($P(ABMPREC,U,10))+($P(ABMPREC,U,12))+($P(ABMPREC,U,13))+($P(ABMPREC,U,14))) D
- ....S ABMTFLAG=1
- ....S ABMOPDT=$P(ABMPREC,U)
- ....I +$P(ABMPREC,U,10)'=0 S ABMCAT="P",ABMAMT=$P(ABMPREC,U,10)
- ....E  D
- .....S ABMCAT="A"
- .....S ABMADJC=$P(ABMPREC,U,15)
- .....S ABMADJT=$P(ABMPREC,U,16)
- .....S ABMSAR=$P(ABMPREC,U,17)
- .....I ABMADJC=3 S ABMAMT=$P(ABMPREC,U,6)
- .....I ABMADJC=4 S ABMAMT=$P(ABMPREC,U,7)
- .....I ABMADJC=13 S ABMAMT=$P(ABMPREC,U,3)
- .....I ABMADJC=14 S ABMAMT=$P(ABMPREC,U,4)
- .....I ABMADJC=15 S ABMAMT=$P(ABMPREC,U,9)
- .....I ABMADJC=16 S ABMAMT=$P(ABMPREC,U,12)
- .....I ABMADJC=19 S ABMAMT=$P(ABMPREC,U,13)
- .....I ABMADJC=20 S ABMAMT=$P(ABMPREC,U,14)
- ....S ABMBINS=$P($G(^ABMDBILL(DUZ(2),ABMBFIEN,0)),U,8)
- ....;start new abm*2.6*21 IHS/SD/SDR HEAT118718
- ....I '$D(^ABMDBILL(DUZ(2),ABMBFIEN,13,"B",ABMBINS)) D  ;means it is a replacement insruer
- .....S ABMTIEN=0,ABMTFLG=0
- .....F  S ABMTIEN=$O(^ABMDBILL(DUZ(2),ABMBFIEN,13,ABMTIEN)) Q:'ABMTIEN  D  Q:ABMTFLG
- ......I $P($G(^ABMDBILL(DUZ(2),ABMBFIEN,13,ABMTIEN,0)),U,11)=ABMBINS D  ;this is our replacement
- .......S ABMBINS=$P($G(^ABMDBILL(DUZ(2),ABMBFIEN,13,ABMTIEN,0)),U)
- .......S ABMTFLG=1
- .....K ABMTIEN,ABMTFLG
- ....;end new abm*2.6*21 IHS/SD/SDR HEAT118718
- ....Q:(+$G(ABMAMT)=0)&(($G(ABMCAT)="A")&(+$G(ABMADJC)=0))  ;stop <UNDEF>GATHER+42 error
- ....S ABMPP(ABMBINS,ABMCAT,ABMLN)=ABMAMT_$S(ABMCAT="A":"^"_ABMADJC_"^"_ABMADJT_"^"_ABMSAR,1:"")
- ....I ABMCAT="P" S $P(ABMPP(ABMBINS,ABMCAT,ABMLN),U,5)="N"
- ....I ABMCAT="A",(ABMADJC=13!(ABMADJC=14)) S $P(ABMPP(ABMBINS,ABMCAT,ABMLN),U,5)="Y"
- ....I ABMCAT="A",(ABMADJC'=13&(ABMADJC'=14)) S $P(ABMPP(ABMBINS,ABMCAT,ABMLN),U,5)="N"
- ....S $P(ABMPP(ABMBINS,ABMCAT,ABMLN),U,6)=ABMPIEN  ;save payment IEN w/trans
- ...S ABMILST(ABMBINS,ABMBFIEN)=""  ;abm*2.6*6 5010
- ...I $P($G(^ABMDBILL(DUZ(2),ABMBFIEN,2)),U)=(+$P(ABMPREC,U,3)+($P(ABMPREC,U,4))+($P(ABMPREC,U,6))+($P(ABMPREC,U,7))+($P(ABMPREC,U,9))+($P(ABMPREC,U,10))+($P(ABMPREC,U,12))+($P(ABMPREC,U,13))+($P(ABMPREC,U,14))) D
- ....S ABMOPDT=$P($G(^ABMDBILL(DUZ(2),ABMBFIEN,3,ABMPIEN,0)),U)  ;original pymt dt
- ....K ^ABMDBILL(DUZ(2),ABMBFIEN,3)  ;remove summary entry; individual entries will be filed later
- ..Q:($G(ABMTFLAG)=1)  ;trans split; skip next part
- ..;get trans for those bills
- ..I $P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,4)'="" S ABMBNUM=$G(ABMBNUM)_"-"_ABMBSUF
- ..I $P($G(^ABMDPARM(ABMP("LDFN"),1,3)),U,3)=1 S ABMBNUM=$G(ABMBNUM)_"-"_ABMPHRN
- ..;
- ..S ABMHOLD=DUZ(2)
- ..S ABMSAT=ABMP("LDFN")  ;Satellite = 3P Visit loc           
- ..S ABMPAR=0  ;Parent
- ..; check site active at DOS to ensure bill added to correct site
- ..S DA=0
- ..F  S DA=$O(^BAR(90052.06,DA)) Q:DA'>0  D  Q:ABMPAR
- ...Q:'$D(^BAR(90052.06,DA,DA))  ; Pos Parent UNDEF Site Parameter
- ...Q:'$D(^BAR(90052.05,DA,ABMSAT))  ; Satellite UNDEF Parent/Satellit
- ...Q:+$P($G(^BAR(90052.05,DA,ABMSAT,0)),U,5)  ; Par/Sat not usable
- ...; Q if sat NOT active at DOS
- ...I ABMP("VDT")<$P($G(^BAR(90052.05,DA,ABMSAT,0)),U,6) Q
- ...; Q if sat became NOT active before DOS
- ...I $P($G(^BAR(90052.05,DA,ABMSAT,0)),U,7),(ABMP("VDT")>$P($G(^BAR(90052.05,DA,ABMSAT,0)),U,7)) Q
- ...S ABMPAR=$S(ABMSAT:$P($G(^BAR(90052.05,DA,ABMSAT,0)),U,3),1:"")
- ..Q:+ABMPAR=0
- ..S DUZ(2)=ABMPAR
- ..S ABMAIEN=$O(^BARBL(DUZ(2),"B",ABMBNUM,0))
- ..I +$G(ABMAIEN)=0 S:+$G(ABMHOLD)'=0 DUZ(2)=ABMHOLD K ABMHOLD Q  ;there isn't an A/R bill w/this number
- ..Q:$P($G(^BARAC(DUZ(2),$P($G(^BARBL(DUZ(2),ABMAIEN,0)),U,3),0)),U)'["AUTNINS"  ;abm*2.6*10 HEAT70085
- ..S ABMBINS=+$P($G(^BARAC(DUZ(2),$P($G(^BARBL(DUZ(2),ABMAIEN,0)),U,3),0)),U)  ;abm*2.6*10 HEAT70085
- ..;start new abm*2.6*21 IHS/SD/SDR HEAT118718
- ..I '$D(^ABMDBILL(DUZ(2),ABMBFIEN,13,"B",ABMBINS)) D  ;means it is a replacement insruer
- ...S ABMTIEN=0,ABMTFLG=0
- ...F  S ABMTIEN=$O(^ABMDBILL(DUZ(2),ABMBFIEN,13,ABMTIEN)) Q:'ABMTIEN  D  Q:ABMTFLG
- ....I $P($G(^ABMDBILL(DUZ(2),ABMBFIEN,13,ABMTIEN,0)),U,11)=ABMBINS D  ;this is our replacement
- .....S ABMBINS=$P($G(^ABMDBILL(DUZ(2),ABMBFIEN,13,ABMTIEN,0)),U)
- .....S ABMTFLG=1
- ...K ABMTIEN,ABMTFLG
- ...S ABMILST(ABMBINS,ABMBFIEN)=""
- ..;end new abm*2.6*21 IHS/SD/SDR HEAT118718
- ..S ABMTRIEN=0,ABMLN=1
- ..F  S ABMTRIEN=$O(^BARTR(DUZ(2),"AC",ABMAIEN,ABMTRIEN)) Q:ABMTRIEN=""  D
- ...S ABMREC=$G(^BARTR(DUZ(2),ABMTRIEN,0))
- ...I $G(ABMOPDT)="" S ABMOPDT=$P($P(ABMREC,U),".")
- ...Q:+$P(ABMREC,U,2)=0&(+$P(ABMREC,U,3)=0)
- ...;S ABMBINS=$P(ABMREC,U,6)  ;abm*2.6*10 HEAT70085
- ...;Q:$P($G(^BARAC(DUZ(2),ABMBINS,0)),U)'["AUTNINS"  ;abm*2.6*10 HEAT70085
- ...;S ABMBINS=+$P($G(^BARAC(DUZ(2),ABMBINS,0)),U)  ;abm*2.6*10 HEAT70085
- ...S ABMTTYP=$P($G(^BARTR(DUZ(2),ABMTRIEN,1)),U,1)
- ...S ABMADJC=$P($G(^BARTR(DUZ(2),ABMTRIEN,1)),U,2)
- ...S ABMCAT=""
- ...I ABMTTYP=40 S ABMCAT="P"
- ...I "^3^4^13^14^15^16^19^20^"[("^"_ABMADJC_"^") S ABMCAT="A",ABMTTYP=$P($G(^BARTR(DUZ(2),ABMTRIEN,1)),U,3)
- ...Q:ABMCAT=""
- ...S ABMPP(ABMBINS,ABMCAT,ABMLN)=$S(+$P(ABMREC,U,2)'=0&(ABMCAT="A"):$P(ABMREC,U,2),+$P(ABMREC,U,2)'=0&(ABMCAT="P"):$P(ABMREC,U,2),1:$P(ABMREC,U,3))_"^"_ABMADJC_"^"_ABMTTYP
- ...I ABMCAT="A",$D(^BARADJ("C",ABMADJC,ABMTTYP)) S $P(ABMPP(ABMBINS,ABMCAT,ABMLN),U,4)=$O(^BARADJ("C",ABMADJC,ABMTTYP,0))  ;abm*2.6*4 NOHEAT
- ...I ABMCAT="P" S $P(ABMPP(ABMBINS,ABMCAT,ABMLN),U,5)="N",ABMLN=ABMLN+1 Q
- ...S $P(ABMPP(ABMBINS,ABMCAT,ABMLN),U,5)="Y",ABMLN=ABMLN+1
- ..I +$G(ABMHOLD)'=0 S DUZ(2)=ABMHOLD K ABMHOLD
- ..D ^ABMPPAD3  ;split routine abm*2.6*19 IHS/SD/SDR HEAT168248
- ..I ABMTFLAG=0 D ^ABMPPFLR  ;do filer if trans not split
- ;D ^ABMPPAD3  ;split routine abm*2.6*19 IHS/SD/SDR HEAT168248
+ ;
+ D GATHER^ABMPPAD6  ;split routine abm*2.6*37 IHS/SD/SDR ADO76009
  S ABMTFLAG=1
 DISP K ABMSFLG,ABMMFLG
+ ;I +$G(ABMFLG("ABMPSADD"))'=0 Q  ;abm*2.6*36 IHS/SD/SDR ADO76247
  D SETVAR^ABMPPAD1
  S ABMDASH="",$P(ABMDASH,"-",80)=""
  S ABMZ("TITL")="PRIOR PAYMENTS/ADJUSTMENTS"
@@ -165,87 +69,33 @@ DISP K ABMSFLG,ABMMFLG
  .S ABMIIEN=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMINS,0)),U)
  .S ABMPRI=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMINS,0)),U,2)
  .S ABMSTAT=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMINS,0)),U,3)
+ .S ABMEMLT=$S(+$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMINS,0)),U,8)'=0:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMINS,0)),U,8),1:1)  ;abm*2.6*37 IHS/SD/SDR ADO76009
  .Q:ABMSTAT'="I"&(ABMSTAT'="C")
- .S ABMPL(ABMPRI,ABMIIEN)=ABMINS_"^"_ABMSTAT
+ .;S ABMPL(ABMPRI,ABMIIEN)=ABMINS_"^"_ABMSTAT  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .S ABMPL(ABMPRI,ABMIIEN,ABMEMLT)=ABMINS_"^"_ABMSTAT  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ;
- S ABMPM("TOT")=ABMP("TOT")-(+$G(ABMP("NC")))
+ ;S ABMPM("TOT")=ABMP("TOT")-(+$G(ABMP("NC")))  ;abm*2.6*33 CR60189
+ S ABMPM("TOT")=ABMP("TOT")  ;abm*2.6*33 CR60189
  S ABMP("CBAMT")=0
  S ABMIPRI=0
+ S ABMISV=0
  F  S ABMIPRI=$O(ABMPL(ABMIPRI)) Q:+ABMIPRI=0  D
  .S ABMIIEN=0
  .F  S ABMIIEN=$O(ABMPL(ABMIPRI,ABMIIEN)) Q:+ABMIIEN=0  D
- ..S ABMCAT=""
- ..F  S ABMCAT=$O(ABMPP(ABMIIEN,ABMCAT)) Q:ABMCAT=""  D
- ...S ABMLN=0
- ...F  S ABMLN=$O(ABMPP(ABMIIEN,ABMCAT,ABMLN)) Q:+ABMLN=0  D
- ....I $P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U,5)="Y" S ABMP("CBAMT")=ABMP("CBAMT")+($FN($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U),"-"))
- ....I ABMCAT="P" S ABMPM("PD")=+$G(ABMPM("PD"))+($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U))
- ....I ABMCAT="A" D
- .....S:$P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U,2)=3 ABMPM("WO")=+$G(ABMPM("WO"))+($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U))
- .....S:$P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U,2)=4 ABMPM("NONC")=+$G(ABMPM("NONC"))+($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U))
- .....S:$P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U,2)=13 ABMPM("DED")=+$G(ABMPM("DED"))+($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U))
- .....S:$P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U,2)=14 ABMPM("COI")=+$G(ABMPM("COI"))+($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U))
- .....S:$P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U,2)=15 ABMPM("PENS")=+$G(ABMPM("PENS"))+($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U))
- .....S:$P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U,2)=16 ABMPM("GRP")=+$G(ABMPM("GRP"))+($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U))
- .....S:$P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U,2)=19 ABMPM("REF")=+$G(ABMPM("REF"))+($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U))
- .....S:$P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U,2)=20 ABMPM("PCR")=+$G(ABMPM("PCR"))+($P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U))
+ ..;I $P(ABMPL(ABMIPRI,ABMIIEN),U,2)="C" S ABMISV=ABMIIEN  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ..;start new abm*2.6*37 IHS/SD/SDR ADO76009
+ ..S ABMEMLT=0
+ ..F  S ABMEMLT=$O(ABMPL(ABMIPRI,ABMIIEN,ABMEMLT)) Q:'ABMEMLT  D
+ ...I $P(ABMPL(ABMIPRI,ABMIIEN,ABMEMLT),U,2)="C" S ABMISV=ABMIIEN,ABMIMSV=ABMEMLT
+ ;S ABMEMLT=ABMIMSV  ;abm*2.6*42 IHS/SD/SDR ADO107388
+ S ABMEMLT=+$G(ABMIMSV)  ;abm*2.6*42 IHS/SD/SDR ADO107388
+ ;end new abm*2.6*37 IHS/SD/SDR ADO76009
+ S ABMIIEN=ABMISV
+ D SUM^ABMPPAD5  ;abm*2.6*37 IHS/SD/SDR ADO76009 split routine due to size
  ;
- W !,"Payment Amount....: " S ABMNFLG=1 W $$DOLAMT(ABMPM("PD")) K ABMNFLG
- W ?40,"ORIGINAL BILL AMOUNT: ",$J(+$G(ABMP("OBAMT")),10,2)
- W !,"Deductible Amount.: ",$$DOLAMT(ABMPM("DED"))
- W ?40,"Current Charges.....: ",$J(+$G(ABMPM("TOT")),10,2)
- W !,"Co-pay/ins Amount.: ",$$DOLAMT(ABMPM("COI"))
- W ?40,"Current Bill Amount.: ",$$EN^ABMVDF("HIN"),$J(+$G(ABMP("CBAMT")),10,2),$$EN^ABMVDF("HIF")
- W !,"Write Off.........: ",$$DOLAMT(ABMPM("WO"))
- W !,"Non-Covered Amount: ",$$DOLAMT(ABMPM("NONC"))
- W !,"Penalty Amount....: ",$$DOLAMT(ABMPM("PENS"))
- W !,"Grouper Allowance.: ",$$DOLAMT(ABMPM("GRP"))
- W !,"Refund............: ",$$DOLAMT(ABMPM("REF"))
- W !,"Payment Credits...: ",$$DOLAMT(ABMPM("PCR"))
- ;
- S ABMPRI=0
- F  S ABMPRI=$O(ABMPL(ABMPRI)) Q:+ABMPRI=0  D
- .S ABMIIEN=0
- .S ABMPRIS=ABMPRI
- .F  S ABMIIEN=$O(ABMPL(ABMPRI,ABMIIEN)) Q:+ABMIIEN=0  D
- ..S ABMSTAT=$P(ABMPL(ABMPRI,ABMIIEN),U,2)
- ..S ABMINS=$P(ABMPL(ABMPRI,ABMIIEN),U)
- ..S ABMSTAT=$S(ABMSTAT="F":"FLAGGED",ABMSTAT="I":"ACTIVE",ABMSTAT="P":"PENDING",ABMSTAT="U":"UNBILLABLE",ABMSTAT="C":"COMPLETED",ABMSTAT="B":"BILLED",ABMSTAT="L":"PARTIAL",1:"")
- ..W !!,"["_ABMPRI_"] INSURER: ",$E($P($G(^AUTNINS(ABMIIEN,0)),U),1,27)
- ..W ?40,"PRIORITY ORDER: ",ABMPRI
- ..W ?62,"STATUS: ",$S(ABMSTAT="COMPLETED":$$EN^ABMVDF("RVN"),1:""),ABMSTAT,$S(ABMSTAT="COMPLETED":$$EN^ABMVDF("RVF"),1:"")
- ..S ABMCOV=0
- ..F  S ABMCOV=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMINS,11,ABMCOV)) Q:+ABMCOV=0  D
- ...I $P($G(^AUTNINS(ABMIIEN,0)),U)["MEDICARE" D
- ....W !?14,"COVERAGE TYPE: ",$P($G(^AUTTPIC(ABMCOV,0)),U)
- ....S ABMCOV=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMINS,11,ABMCOV))
- ....I +ABMCOV'=0 W ", ",$P($G(^AUTTPIC(ABMCOV,0)),U)
- ...E  W !?14,"COVERAGE TYPE: ",$P($G(^AUTTPIC(ABMCOV,0)),U)
- ..S ABMCAT=""
- ..F  S ABMCAT=$O(ABMPP(ABMIIEN,ABMCAT),-1) Q:ABMCAT=""  D
- ...S ABMLN=0
- ...F  S ABMLN=$O(ABMPP(ABMIIEN,ABMCAT,ABMLN)) Q:+ABMLN=0  D
- ....Q:+$P(ABMPP(ABMIIEN,ABMCAT,ABMLN),U)=0
- ....I +$G(ABMLNSV)<ABMLN S ABMLNSV=ABMLN
- ....S ABMDAMT=$P($G(ABMPP(ABMIIEN,ABMCAT,ABMLN)),U)
- ....I ABMCAT="P" S ABMNFLG=1
- ....S ABMDAMT=$$DOLAMT(ABMDAMT)
- ....K ABMNFLG
- ....I ABMCAT="P" W !?6,"PAYMENT: ",ABMDAMT
- ....E  D
- .....W !?3,"ADJUSTMENT: ",ABMDAMT
- .....S ABMPREC=$G(ABMPP(ABMIIEN,ABMCAT,ABMLN))
- .....I $P(ABMPREC,U,2)'="" W ?28,"[",$P(ABMPREC,U,2),"] ",$E($P($G(^BAR(90052.01,$P(ABMPREC,U,2),0)),U),1,18)
- .....I $P(ABMPREC,U,3)'="" W ?48,"[",$P(ABMPREC,U,3),"] ",$E($P($G(^BARTBL($P(ABMPREC,U,3),0)),U),1,18)
- .....I $P($G(ABMPREC),U,4)'="" D
- ......W ?75,"["_$P(^BARADJ($P($G(ABMPREC),U,4),0),U)_"]"
- ......I $P(^BARADJ($P(ABMPREC,U,4),0),U,3)'=$P(ABMPREC,U,2) S ABMMFLG=1
- ......I $P(^BARADJ($P(ABMPREC,U,4),0),U,4)'=$P(ABMPREC,U,3) S ABMMFLG=1
- .....I $P($G(ABMPREC),U,4)="",($P(ABMPREC,U)'=0) S ABMSFLG=1
- W !,ABMDASH,!
- ;I ((ABMP("EXP")=21)!(ABMP("EXP")=22)!(ABMP("EXP")=23)) D  ;abm*2.6*6 5010
- ;I ((ABMP("EXP")=21)!(ABMP("EXP")=22)!(ABMP("EXP")=23)!(ABMP("EXP")=32)) D  ;abm*2.6*6 5010  ;abm*2.6*8 5010
- I ((ABMP("EXP")=21)!(ABMP("EXP")=22)!(ABMP("EXP")=23)!(ABMP("EXP")=31)!(ABMP("EXP")=32)!(ABMP("EXP")=33)) D  ;abm*2.6*6 5010  ;abm*2.6*8 5010
+ ;D DISPLAY^ABMPPAD4  ;split routine abm*2.6*31 IHS/SD/SDR CR11063  ;abm*2.6*36 IHS/SD/SDR ADO76247
+ I +$G(ABMFLG("ABMPSADD"))=0 D DISPLAY^ABMPPAD4  ;abm*2.6*36 IHS/SD/SDR ADO76247
+ I ((ABMP("EXP")=21)!(ABMP("EXP")=22)!(ABMP("EXP")=23)!(ABMP("EXP")=31)!(ABMP("EXP")=32)!(ABMP("EXP")=33)) D
  .I $G(ABMSFLG)=1 W "ERROR: STANDARD ADJUSTMENT CODE NOT ENTERED FOR ADJUSTMENT",!
  .I $G(ABMMFLG)=1 W "ERROR: STANDARD ADJUSTMENT REASON DOESN'T MATCH ADJUSTMENT CATEGORY/REASON",!
  .I ABMP("CBAMT")<0 W "ERROR: NEGATIVE BALANCE ON BILL NOT ALLOWED",! S ABMSFLG=1

@@ -1,5 +1,5 @@
 LR175P ;DALISC/SED - LR*5.2*175 PATCH POST INIT ROUTINE ; 5/1/98
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**175**;Sep 27, 1994
 EN ; Updates for file 69.5 that will not work with KIDS
  ;First enter the protocal from file 101 and enter it into 69.5

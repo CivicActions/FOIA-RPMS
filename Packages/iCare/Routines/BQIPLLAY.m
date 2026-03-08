@@ -1,5 +1,5 @@
 BQIPLLAY ;VNGT/HS/ALA-Panel Layouts ; 20 Jul 2009  10:41 AM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**3,5,7**;Mar 01, 2021;Build 14
  ;
 GET(DATA,OWNR,PLIEN) ; EP - BQI GET PANEL LAYOUTS
  NEW UID,II,IENS,DA,YEAR,GIEN,DISPLAY,SORT,SDIR,SD,SR,GVALUE,STVCD,SVALUE,DVALUE
@@ -17,7 +17,7 @@ GET(DATA,OWNR,PLIEN) ; EP - BQI GET PANEL LAYOUTS
 PT ; for Patient view
  D
  . ; If there is a template
- . I $$TMPL^BQIPLVWC() Q
+ . I $$TMPL("D") Q
  . ; If there is a customized view
  . I $$CVW^BQIPLVWC() D  Q
  .. S @DATA@(II)=$TR(@DATA@(II),$C(30))
@@ -33,7 +33,7 @@ PT ; for Patient view
 GP ; for Natl measures
  D
  . ; If there is a template
- . I $$TMPL^BQIGPVW() Q
+ . I $$TMPL("G") Q
  . ; If there is a customized view
  . I $$CVW^BQIGPVW() D  Q
  .. S @DATA@(II)=$TR(@DATA@(II),$C(30))
@@ -49,7 +49,7 @@ GP ; for Natl measures
 RM ; for Reminders
  D
  . ; If there is a template
- . I $$TMPL^BQIPLRVW() Q
+ . I $$TMPL("R") Q
  . ; If there is a customized view
  . I $$CVW^BQIPLRVW() D  Q
  .. S @DATA@(II)=$TR(@DATA@(II),$C(30))
@@ -65,7 +65,7 @@ RM ; for Reminders
 CN ; for Consults
  D
  . ; If there is a template
- . I $$TMPL^BQIPLCNV() Q
+ . I $$TMPL("CN") Q
  . ; If there is a customized view
  . I $$CVW^BQIPLCNV() D  Q
  .. S @DATA@(II)=$TR(@DATA@(II),$C(30))
@@ -81,7 +81,7 @@ CN ; for Consults
 RF ; for Referrals
  D
  . ; If there is a template
- . I $$TMPL^BQIPLRFV() Q
+ . I $$TMPL("RF") Q
  . ; If there is a customized view
  . I $$CVW^BQIPLRFV() D  Q
  .. S @DATA@(II)=$TR(@DATA@(II),$C(30))
@@ -89,6 +89,22 @@ RF ; for Referrals
  .. I $E(@DATA@(II),$L(@DATA@(II)))'=$C(30) S @DATA@(II)=@DATA@(II)_$C(30)
  . ;
  . S TIEN="",TEMPL="",DEF="",TYP="RF",CARE="Referrals"
+ . S DISPLAY=$$DFNC^BQIGPVW()_$C(29)_$$CDEF^BQICMVW()
+ . S SORT=$$SFNC^BQIGPVW()
+ . S SDIR="A",TEMPL="System Default"
+ . S II=II+1,@DATA@(II)=TIEN_U_TEMPL_U_DEF_U_TYP_U_DISPLAY_U_SORT_U_SDIR_U_$C(30)
+ ;
+OR ; for Orders
+ D
+ . ; If there is a template
+ . I $$TMPL("ORP") Q
+ . ; if there is a customized view
+ . I $$CVW^BQIPLOVW() D  Q
+ .. S @DATA@(II)=$TR(@DATA@(II),$C(30))
+ .. S $P(@DATA@(II),U,8)=""
+ .. I $E(@DATA@(II),$L(@DATA@(II)))'=$C(30) S @DATA@(II)=@DATA@(II)_$C(30)
+ . ;
+ . S TIEN="",TEMPL="",DEF="",TYP="ORP",CARE="Orders PL"
  . S DISPLAY=$$DFNC^BQIGPVW()_$C(29)_$$CDEF^BQICMVW()
  . S SORT=$$SFNC^BQIGPVW()
  . S SDIR="A",TEMPL="System Default"
@@ -191,6 +207,7 @@ UPD(DATA,OWNR,PLIEN,TYPE,TEMPL,SOR,SDIR,DOR) ; EP - BQI SET PANEL LAYOUTS
  K @DATA
  S II=0
  S @DATA@(II)="I00010RESULT"_$C(30)
+ ;S ^ARLLAY(OWNR,PLIEN)=$G(TYPE)_"^"_$G(TEMPL)_"^"_$G(SOR)_"^"_$G(SDIR)_"^"_$G(DOR)
  ;
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BQIPLLAY D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
@@ -207,11 +224,18 @@ UPD(DATA,OWNR,PLIEN,TYPE,TEMPL,SOR,SDIR,DOR) ; EP - BQI SET PANEL LAYOUTS
  I TYPE="R" D FIL^BQIPLRVW(OWNR,PLIEN,$G(TEMPL),SOR,SDIR,DOR) G FIN
  I TYPE="CN" D FIL^BQIPLCNV(OWNR,PLIEN,$G(TEMPL),SOR,SDIR,DOR) G FIN
  I TYPE="RF" D FIL^BQIPLRFV(OWNR,PLIEN,$G(TEMPL),SOR,SDIR,DOR) G FIN
+ I TYPE="ORP" D FIL^BQIPLOVW(OWNR,PLIEN,$G(TEMPL),SOR,SDIR,DOR) G FIN
  S CRN=$O(^BQI(90506.5,"C",TYPE,""))
  I CRN'="" D
  . S CARE=$P(^BQI(90506.5,CRN,0),"^",1)
+ . NEW HFL,HNM
+ . S HFL=0,HNM=""
+ . F  S HNM=$O(^BQI(90506.5,CRN,10,"B",HNM)) Q:HNM=""  D
+ .. I HNM'["HIDE_" Q
+ .. I DOR'[HNM S DOR=DOR_$C(29)_HNM
  . I $P(^BQI(90506.5,CRN,0),U,10)=1 Q
  . D FIL^BQICMVW(OWNR,PLIEN,CARE,$G(TEMPL),SOR,SDIR,DOR)
+ . ;D FIL^BQICMLAY(OWNR,PLIEN,CARE,$G(TEMPL),SOR,SDIR,DOR)
  ;
 FIN ; Finish up
  I $D(ERROR) S II=II+1,@DATA@(II)="-1"_$C(30)
@@ -219,3 +243,27 @@ FIN ; Finish up
  K ERROR
  S II=II+1,@DATA@(II)=$C(31)
  Q
+ ;
+TMPL(CTYP) ;
+ NEW RESULT
+ S RESULT=0
+ S TEMPL=""
+ I OWNR'=DUZ D
+ . I $G(PLIEN)="" Q
+ . S DA=""
+ . F  S DA=$O(^BQICARE(OWNR,1,PLIEN,30,DUZ,4,"C",CTYP,DA)) Q:DA=""  D
+ .. S DA(3)=OWNR,DA(2)=PLIEN,DA(1)=DUZ,IENS=$$IENS^DILF(.DA)
+ .. I +$P($G(^BQICARE(OWNR,1,PLIEN,30,DUZ,4,DA,0)),"^",3)=0 Q
+ .. S TEMPL=$P($G(^BQICARE(OWNR,1,PLIEN,30,DUZ,4,DA,0)),"^",1)
+ I OWNR=DUZ D
+ . I $G(PLIEN)="" Q
+ . S DA=""
+ . F  S DA=$O(^BQICARE(OWNR,1,PLIEN,4,"C",CTYP,DA)) Q:DA=""  D
+ .. I +$P($G(^BQICARE(OWNR,1,PLIEN,4,DA,0)),"^",3)=0 Q
+ .. S TEMPL=$P($G(^BQICARE(OWNR,1,PLIEN,4,DA,0)),"^",1)
+ I TEMPL'="" D
+ . S LYIEN=$$TPN^BQILYUTL(DUZ,TEMPL)
+ . I LYIEN="" Q
+ . D DEF^BQILYDEF(LYIEN)
+ . S RESULT=1
+ Q RESULT

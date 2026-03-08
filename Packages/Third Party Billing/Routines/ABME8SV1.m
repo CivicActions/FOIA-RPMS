@@ -1,5 +1,5 @@
-ABME8SV1 ; IHS/ASDST/DMJ - 837 SV1 Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8SV1 ; IHS/ASDST/DMJ - 837 SV1 Segment [ 03/09/2004  1:16 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1,4,5,6,8,9,10,11**;APR 05, 2002
  ;Transaction Set Header
  ;
  ; IHS/SD/SDR - V2.5 P5 - Fix to put only 4 cooresponding Dxs on claim
@@ -43,13 +43,18 @@ LOOP ;LOOP HERE
 20 ;SV101 - Composite Medical Procedure Identifier
  ;SV102-1 Product Service ID Qualifier
  ;SV102-2 Product Service ID (Procedure Code)
- I $P(ABMRV(ABMI,ABMJ,ABMK),U,2)'="" D
+ ;I $P(ABMRV(ABMI,ABMJ),"^",2)'="" D  ;abm*2.5*10 IM20395
+ I $P(ABMRV(ABMI,ABMJ,ABMK),U,2)'="" D  ;abm*2.5*10 IM20395
  .S ABMR("SV1",20)="HC"
- .S $P(ABMR("SV1",20),":",2)=$P(ABMRV(ABMI,ABMJ,ABMK),U,2)
- I $P(ABMRV(ABMI,ABMJ,ABMK),U,2)="" D
+ .;S $P(ABMR("SV1",20),":",2)=$P(ABMRV(ABMI,ABMJ),U,2)  ;abm*2.5*10 IM20395
+ .S $P(ABMR("SV1",20),":",2)=$P(ABMRV(ABMI,ABMJ,ABMK),U,2)  ;abm*2.5*10 IM20395
+ ;I $P(ABMRV(ABMI,ABMJ),"^",2)="" D  ;abm*2.5*10 IM20395
+ I $P(ABMRV(ABMI,ABMJ,ABMK),U,2)="" D  ;abm*2.5*10 IM20395
  .S ABMR("SV1",20)=""
- .Q:$P(ABMRV(ABMI,ABMJ,ABMK),U,15)=""
- .S ABM("NDC")=$P(ABMRV(ABMI,ABMJ,ABMK),U,15)
+ .;Q:$P(ABMRV(ABMI,ABMJ),"^",15)=""  ;abm*2.5*10 IM20395
+ .Q:$P(ABMRV(ABMI,ABMJ,ABMK),U,15)=""  ;abm*2.5*10 IM20395
+ .;S ABM("NDC")=$P(ABMRV(ABMI,ABMJ),U,15)  ;abm*2.5*10 IM20395
+ .S ABM("NDC")=$P(ABMRV(ABMI,ABMJ,ABMK),U,15)  ;abm*2.5*10 IM20395
  .I ABM("NDC")?4N1"-"4N1"-"2N S ABMR("SV1",20)="N1"
  .I ABM("NDC")?5N1"-"3N1"-"2N S ABMR("SV1",20)="N2"
  .I ABM("NDC")?5N1"-"4N1"-"1N S ABMR("SV1",20)="N3"
@@ -57,37 +62,67 @@ LOOP ;LOOP HERE
  .S $P(ABMR("SV1",20),":",2)=ABM("NDC")
  N I
  F I=3,4,12,22 D
+ .;start old code abm*2.5*10 IM20395
+ .;Q:$P(ABMRV(ABMI,ABMJ),"^",I)=""
+ .;S ABMR("SV1",20)=ABMR("SV1",20)_":"_$P(ABMRV(ABMI,ABMJ),"^",I)
+ .;end old code start new code IM20395
  .Q:$P(ABMRV(ABMI,ABMJ,ABMK),U,I)=""
  .S ABMR("SV1",20)=ABMR("SV1",20)_":"_$P(ABMRV(ABMI,ABMJ,ABMK),U,I)
- .I $P(ABMRV(ABMI,ABMJ,ABMK),U,I)=90 S ABMOUTLB=1
+ .I $P(ABMRV(ABMI,ABMJ,ABMK),U,I)=90 S ABMOUTLB=1  ;abm*2.5*11 IM21946
+ .;end new code IM20395
  Q
 30 ;SV102 - Monetary Amount (Charges)
- S ABMR("SV1",30)=$P(ABMRV(ABMI,ABMJ,ABMK),U,6)
- S ABMR("SV1",30)=$$TRIM^ABMUTLP($J(ABMR("SV1",30),0,2),"L","0")
+ ;S ABMR("SV1",30)=$P(ABMRV(ABMI,ABMJ),U,6)  ;abm*2.5*10 IM20395
+ S ABMR("SV1",30)=$P(ABMRV(ABMI,ABMJ,ABMK),U,6)  ;abm*2.5*10 IM20395
+ ;S ABMR("SV1",30)=$J(ABMR("SV1",30),0,2)  ;IM13693
+ S ABMR("SV1",30)=$$TRIM^ABMUTLP($J(ABMR("SV1",30),0,2),"L","0")  ;IM13693
  Q
 40 ;SV103 - Unit or Basis for Measurement Code
+ ;S ABMR("SV1",40)="UN"  ;abm*2.5*9 IM17729
+ ;start new code abm*2.5*9 IM17729
  I ABMI=39 S ABMR("SV1",40)="MJ"
  E  S ABMR("SV1",40)="UN"
+ ;end new code abm*2.5*9 IM17729
  Q
 50 ;SV104 - Quantity
- S ABMR("SV1",50)=$S(ABMR("SV1",40)="UN":$P(ABMRV(ABMI,ABMJ,ABMK),U,5),1:$P(ABMRV(ABMI,ABMJ,ABMK),U,16))
+ ;S ABMR("SV1",50)=$P(ABMRV(ABMI,ABMJ),U,5)  ;abm*2.5*9 IM17729
+ ;S ABMR("SV1",50)=$S(ABMR("SV1",40)="UN":$P(ABMRV(ABMI,ABMJ),U,5),1:$P(ABMRV(ABMI,ABMJ),U,16))  ;abm*2.5*9 IM17729  ;abm*2.5*10 IM20395
+ S ABMR("SV1",50)=$S(ABMR("SV1",40)="UN":$P(ABMRV(ABMI,ABMJ,ABMK),U,5),1:$P(ABMRV(ABMI,ABMJ,ABMK),U,16))  ;abm*2.5*10 IM20395
  Q
 60 ;SV105 - Facility Code Value (place of service)
  S ABMR("SV1",60)=""
- I $P($G(ABMRV(ABMI,ABMJ,ABMK)),U,25)'="" D
- .S ABMR("SV1",60)=$P($G(ABMRV(ABMI,ABMJ,ABMK)),U,25)
- .I ABMR("SV1",60)'="" S ABMR("SV1",60)=$P($G(^ABMDCODE(ABMR("SV1",60),0)),"^")
+ ; IHS/SD/SDR 5/18/04 start new code
+ ;I $P($G(ABMRV(ABMI,ABMJ)),U,25)'="" D  ;abm*2.5*10 IM20395
+ I $P($G(ABMRV(ABMI,ABMJ,ABMK)),U,25)'="" D  ;abm*2.5*10 IM20395
+ .;S ABMR("SV1",60)=$P($G(ABMRV(ABMI,ABMJ)),U,25)  ;abm*2.5*10 IM20395
+ .S ABMR("SV1",60)=$P($G(ABMRV(ABMI,ABMJ,ABMK)),U,25)  ;abm*2.5*10 IM20395
+ .I ABMR("SV1",60)'="" S ABMR("SV1",60)=$P($G(^ABMDCODE(ABMR("SV1",60),0)),"^")  ;IHS/SD/SDR 7/9/04 v2.5 p6
  E  S ABMR("SV1",60)=$$POS^ABMERUTL(ABMI)
- S ABMVALUE=$$OVER^ABMUTL8(37,3)  ;Fl override
+ ;I ABMR("SV1",60)'="" S ABMR("SV1",60)=$P($G(^ABMDCODE(ABMR("SV1",60),0)),"^")  ;IHS/SD/SDR 7/9/04  v2.5 p6
+ ;D OVER^ABMUTL8(37,3)  ;Fl override  ;IHS/SD/SDR 7/13/04 v2.5 p6
+ S ABMVALUE=$$OVER^ABMUTL8(37,3)  ;Fl override  ;IHS/SD/SDR 7/13/04 v2.5 p6
  I ABMVALUE'="" S ABMR("SV1",60)=ABMVALUE
+ ; IHS/SD/SDR 5/18/04 end new code
  Q
 70 ;SV106 - service type code
  S ABMR("SV1",70)=""
+ ; start old code IHS/SD/SDR 7/19/04
+ ; IHS/SD/SDR 5/18/04 start new code
+ ;I $P($G(ABMRV(ABMI,ABMJ)),U,26)'="" D
+ ;. S ABMR("SV1",70)=$P($G(ABMRV(ABMI,ABMJ)),U,26)
+ ;. S ABMR("SV1",70)=$P($G(^ABMDCODE(ABMR("SV1",70),0)),"^")
+ ;E  S ABMR("SV1",70)=$$TOS^ABMERUTL(ABMI)
+ ;D OVER^ABMUTL8(37,4)  ;FL override  ;IHS/SD/SDR 7/13/04 v2.5 p6
+ ;S ABMVALUE=$$OVER^ABMUTL8(37,4)  ;FL override  ;IHS/SD/SDR 7/13/04 v2.5 p6
+ ;I ABMVALUE'="" S ABMR("SV1",70)=ABMVALUE
+ ; IHS/SD/SDR 5/18/04 end new code
+ ; end old code IHS/SD/SDR 7/19/04
  Q
 80 ;SV107 - Composite DX code pointer
- S ABMR("SV1",80)=$P(ABMRV(ABMI,ABMJ,ABMK),U,11)
+ ;S ABMR("SV1",80)=$P(ABMRV(ABMI,ABMJ),"^",11)  ;abm*2.5*10 IM20395
+ S ABMR("SV1",80)=$P(ABMRV(ABMI,ABMJ,ABMK),U,11)  ;abm*2.5*10 IM20395
  S ABMR("SV1",80)=$TR(ABMR("SV1",80),",",":")
- S ABMR("SV1",80)=$P(ABMR("SV1",80),":",1,4)
+ S ABMR("SV1",80)=$P(ABMR("SV1",80),":",1,4)  ;IHS/SD/SDR V2.5 P5
  Q
 90 ;SV108 - Monetary Amount
  S ABMR("SV1",90)=""

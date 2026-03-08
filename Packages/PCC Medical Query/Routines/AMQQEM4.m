@@ -1,12 +1,7 @@
-AMQQEM4 ; IHS/CMI/THL - RECOMPILE DATA EXOPRT INSTRUCTIONS AND EXPORT DATA ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
- ;-----
-RUN D VAR
- D RC
- D ENTRY
- Q:$D(AMQQQUIT)
- D ^AMQQEM41
- D BACK
+AMQQEM4 ; IHS/OHPRD/JCM - RECOMPILE DATA EXOPRT INSTRUCTIONS AND EXPORT THE DATA ;  [ 01/31/2008   5:08 PM ]
+ ;;2.0;PCC QUERY UTILITY;**4,18,20,21**;FEB 07, 2007
+ ;;IHS/CIM/THL PATCH 18 TO MAKE EXPORT CACHE COMPATIBLE
+RUN D VAR,RC,ENTRY Q:$D(AMQQQUIT)  D ^AMQQEM41,BACK
 EXIT K ^UTILITY("AMQQ",$J,"FLAT"),T,AMQQEML,AMQQEMX,AMQQEMI,AMQQEX
  Q
  ;
@@ -14,38 +9,28 @@ INC S AMQQEML=AMQQEML+1
  Q
  ;
 VAR S T="^UTILITY(""AMQQ"",$J,""EMAN"",1,AMQQEML)"
- S AMQQEML=1
- S @T="S AMQQEMX="""""
- S AMQQEX("HEADER")=""
+ S AMQQEML=1,@T="S AMQQEMX=""""",AMQQEX("HEADER")=""
  I '$D(AMQQEM("FIX")),AMQQEM("DEL")="TAB" S AMQQEM("DEL")=$C(9)
  I $G(AMQQEM("DEL"))="UP ARROW" S AMQQEM("DEL")=U
  Q
  ;
 RC N A F AMQQEMI=1:1 S AMQQEMN=$P(AMQQEMFS,U,AMQQEMI) Q:'AMQQEMN  D
- .S %=$G(AMQQEX("HEADER"))
- .S:%'="" %=%_$G(AMQQEM("DEL"))
+ .S %=$G(AMQQEX("HEADER")) S:%'="" %=%_$G(AMQQEM("DEL"))
  .S A=$P(@G@(AMQQEMN,0),U,6)
  .I $D(AMQQEM("FIX")),'$D(AMQQEX("NO HEADER")) S A=$E(A,1,AMQQEM("HLEN"))_$J("",AMQQEM("FIX")-$L(A))
  .S AMQQEX("HEADER")=%_A
- .D INC
- .S @T=@G@(AMQQEMN,1)
+ .D INC S @T=@G@(AMQQEMN,1)
  .F %=2,3 I $G(@G@(AMQQEMN,%))'="" D INC S @T=^(%)
- .S %=$G(AMQQEM("FIX"))
- .I % D INC S @T="S X=$E(X,1,"_%_") I $L(X)<"_%_" N % S %="""",$P(%,"" "",1+"_%_"-$L(X))="""",X=X_%" D INC S @T="S AMQQEMX=AMQQEMX_X" Q
- .S %=+$P($G(^UTILITY("AMQQ",$J,"FLAT",AMQQEMN,0)),U,7)
- .I % D INC S @T="S X=$E(X,1,"_%_")" D INC S @T="S AMQQEMX=AMQQEMX_X_"""_AMQQEM("DEL")_"""" Q
+ .S %=$G(AMQQEM("FIX")) I % D INC S @T="S X=$E(X,1,"_%_") I $L(X)<"_%_" N % S %="""",$P(%,"" "",1+"_%_"-$L(X))="""",X=X_%" D INC S @T="S AMQQEMX=AMQQEMX_X" Q
+ .S %=+$P($G(^UTILITY("AMQQ",$J,"FLAT",AMQQEMN,0)),U,7) I % D INC S @T="S X=$E(X,1,"_%_")" D INC S @T="S AMQQEMX=AMQQEMX_X_"""_AMQQEM("DEL")_"""" Q
+ .Q
  Q
  ;
 BACK D EXIT^AMQQEMAN ; CLEANUP
- S DIR(0)="Y"
- S DIR("A")="Want to run this request as a 'background' job"
- S DIR("B")="NO"
- D ^DIR
- K DIR
- S:$D(DUOUT) DIRUT=1
+ S DIR(0)="Y",DIR("A")="Want to run this request as a 'background' job",DIR("B")="NO" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I X?1."^" S AMQQQUIT="" K DIRUT,DIROUT,DUOUT,DTOUT Q
  I Y D ETASK Q
- I ^DD("OS")=18 D ERUN18 Q
+ I ^DD("OS")=18 D ERUN18 Q  ;IHS/CIM/THL PATCH 18
  U IO D ERUN D ^%ZISC
  Q
  ;
@@ -62,65 +47,40 @@ EXPORT ; ENTRY POINT FROM SEARCH CODE
  ;
 ENTRY ; AMQQ(3.1 ENTRY
  I '$D(AMQQEX("TDFN")) Q
- S DIE="^AMQQ(3.1,"
- S DR=.02_"///"_+$G(DUZ)_";.03///"_DT
- S DA=AMQQEX("TDFN")
- D ^DIE
- K DIC,DIE,DA,DR
+ S DIE="^AMQQ(3.1,",DR=.02_"///"_+$G(DUZ)_";.03///"_DT,DA=AMQQEX("TDFN")
+ D ^DIE K DIC,DIE,DA,DR
  F %=1,2 S ^AMQQ(3.1,AMQQEX("TDFN"),%,0)="^^^^"_DT_U
  Q
  ;
 NAME ; -  EP - MUMPS FILE NAME ; ENTRY POINT FROM AMQQEMAN
- D MARK^AMQQEMAN
- W "MUMPS FILE NAME",!
-N1 S DIC="^AMQQ(3.1,"
- S DIC(0)="AEQMZL"
- S DIC("A")="File name: "
- D ^DIC
- K DIC
+ D MARK^AMQQEMAN W "MUMPS FILE NAME",!
+N1 S DIC="^AMQQ(3.1,",DIC(0)="AEQMZL",DIC("A")="File name: " D ^DIC K DIC
  I X=U S AMQQFNMP="",AMQQQUIT="" Q
  I X="^^"!($D(DTOUT)) K DTOUT S AMQQQUIT="" Q
  I X=""!($D(DUOUT)) W " ??  Enter '^^' to terminate the session." K DUOUT G NAME
  I '$P(Y,U,3) D OVER I $D(AMQQQUIT) Q
  I Y="" W ! G N1
- S AMQQEX("TDFN")=+Y
- S AMQQERUN=99
+ S AMQQEX("TDFN")=+Y,AMQQERUN=99
  Q
  ;
-OVER N AMQQEMNM
- S AMQQEMNM=$P(Y,U,2)
- S DA=+Y
- S %=$P(^AMQQ(3.1,DA,0),U,2)
+OVER N AMQQEMNM S AMQQEMNM=$P(Y,U,2)
+ S DA=+Y,%=$P(^AMQQ(3.1,DA,0),U,2)
  I $G(DUZ)'=%,% W !!,*7,"Someone else has already saved an ASCI file under this name.",!,"Try another name please..." S Y="" Q
  W !!,*7,"You already have an ASCI file stored under this name!"
- S DIR(0)="Y"
- S DIR("A")="Want to erase the old file and replace it"
- S DIR("B")="NO"
- D ^DIR
- K DIR
- S:$D(DUOUT) DIRUT=1
+ S DIR(0)="Y",DIR("A")="Want to erase the old file and replace it",DIR("B")="NO" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I "^"[X S Y="" Q
  I X?2."^" S AMQQQUIT="" Q
  I 'Y S Y="" Q
- S DIK="^AMQQ(3.1,"
- D ^DIK
- S X=AMQQEMNM
- S DINUM=DA
- S DIC=DIK
- S DIC(0)="L"
- K DD,DO
- D FILE^DICN
- K DIC,DIK,DA
+ S DIK="^AMQQ(3.1," D ^DIK
+ S X=AMQQEMNM,DINUM=DA,DIC=DIK,DIC(0)="L" K DD,DO D FILE^DICN K DIC,DIK,DA
  Q
  ;
 ETASK S ZTRTN="ERUN^AMQQEM4",ZTIO=""
  S ZTDESC="QUERY UTILITY DATA EXPORT MANAGER"
- F I=1:1 S %=$P("AMQQRM*;AMQQEX(;AMQV(;AMQQ200(;AMQQRV;AMQQNV;AMQQXV;^UTILITY(""AMQQ"",$J,;^UTILITY(""AMQQ RAND"",$J,;^UTILITY(""AMQQ TAX"",$J,",";",I) Q:%=""  S ZTSAVE(%)=""
- D ^%ZTLOAD
- D ^%ZISC
+ F I=1:1 S %=$P("AMQQRM*;AMQQEX(;AMQV(;AMQQ200(;AMQQRV;AMQQNV;AMQQXV;^UTILITY(""AMQQ"",$J,;^UTILITY(""AMQQ RAND"",$J,;^UTILITY(""AMQQ TAX"",$J,",";",I) Q:%=""  S ZTSAVE(%)="" ;IHS/OHPRD/JCM 3/17/94
+ D ^%ZTLOAD,^%ZISC ; CALL TO TASKMAN
  W !!,$S($D(ZTSK):"Request queued!",1:"Request cancelled!"),!!!
- H 3
- W @IOF
+ H 3 W @IOF
  Q
  ;
 ERUN ; EXPORT DATA
@@ -138,6 +98,7 @@ ERUN18 ; EXPORT DATA
  I $D(AMQQEX("FILE")) S AMQQEFN=AMQQEX("FILE")
  I $G(IOST)["C-" W @IOF
  S AMQQRMFL="EXPORT^AMQQEM4"
+ ;I $D(AMQQEX("WRITE")) X AMQQEX("WRITE") E  D BUSY
  I '$D(AMQQSTOP) S:'$D(AMQQNOET) X="ERR^AMQQEM4",@^%ZOSF("TRAP") X $G(AMQQEX("WRITE")),AMQV(0)
  X $G(AMQQEX("CLOSE"))
  I $D(ZTQUEUED) D EXIT2^AMQQKILL S ZTREQ="@"
@@ -145,21 +106,13 @@ ERUN18 ; EXPORT DATA
  Q
  ;
 BUSY ; EP FROM AMQQEM41 ; HFS IS BUSY
- I $G(IOST)["C-" D
- .W !,"The Host File Server is being used by someone else."
- .W !,"If it is not free in 60 seconds, I must terminate this session"
- .W !!
- N H,T,D
- S H=$H
- S D=+H
- S T=$P(H,",",2)+60
+ I $G(IOST)["C-" W !,"The Host File Server is being used by someone else.",!,"If it is not free in 60 seconds, I must terminate this session",!!
+ N H,T,D S H=$H,D=+H,T=$P(H,",",2)+60
  F  X AMQQEX("WRITE") Q:$T  I +$H'=D!($P($H,",",2)>T) S AMQQSTOP="" Q
  Q
  ;
 ERR ; ERROR MGMT
- X AMQQEX("CLOSE")
- D ^%ZISC
- D EXIT
+ X AMQQEX("CLOSE") D ^%ZISC,EXIT
  I $G(IOST)["C-" W *7,"WHOOPS...AN ERROR HAS OCCURRED DURING THE SEARCH.  SESSION TERMINATED.",!! H 3
  Q
  ;

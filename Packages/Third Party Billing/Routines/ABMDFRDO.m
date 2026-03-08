@@ -1,14 +1,16 @@
-ABMDFRDO ; IHS/ASDST/DMJ - Re-Print Selected Bills ;    
- ;;2.6;IHS Third Party Billing System;**2,4,11,13**;NOV 12, 2009;Build 213
+ABMDFRDO ; IHS/SD/SDR - Re-Print Selected Bills ;    
+ ;;2.6;IHS Third Party Billing System;**2,4,11,13,29,30,33,39**;NOV 12, 2009;Build 776
  ;Original;TMD;02/21/96 12:13 PM
  ;
- ; IHS/SD/SDR - v2.5 p8 - IM14693/IM16105
- ;    Added code to use ADA-2002 for 837D when printing
+ ;IHS/SD/SDR v2.5 p8 IM14693/IM16105 Added code to use ADA-2002 for 837D when printing
+ ;IHS/SD/SDR v2.5 p11 NPI
  ;
- ; IHS/SD/SDR - v2.5 p11 - NPI
- ; IHS/SD/SDR - abm*2.6*2 - FIXPMS10006 - added prompt for DATE to use when reprinting
- ;IHS/SD/SDR - 2.6*13 - Added check for new export mode 35; Updated check to look for HCFA or CMS in the
- ;  export name.
+ ;IHS/SD/SDR 2.6*2 FIXPMS10006 added prompt for DATE to use when reprinting
+ ;IHS/SD/SDR 2.6*13 Added check for new export mode 35; Updated check to look for HCFA or CMS in the export name
+ ;IHS/SD/SDR 2.6*29 CR10836 rewrote part of ENT tag to make it sort like the EXPR option, so they work the same
+ ;IHS/SD/SDR 2.6*30 CR11171 Updated ADA list to remove ADA-2002 and ADA-2019
+ ;IHS/SD/SDR 2.6*33 ADO60178 CR11622 Removed ADA-2006 from choices since it is now 'expired'
+ ;IHS/SD/SDR 2.6*39 ADO99168 Added ADA-2024 as reprint option; removed ADA-2006
  ;
  K ABMY,ABMP
  S ABMP("XMIT")=0
@@ -74,26 +76,55 @@ ZIS ;EP
  ..;S DIR("B")="1500 (08/05)"
  ..;S DIR(0)="S^3:1500 B;14:1500 Y2K;27:1500 (08/05)"
  ..;end old start new export mode 35
- ..S DIR("B")="1500 (02/12)"
- ..S DIR(0)="S^27:1500 (08/05);35:1500 (02/12)"
- ..;end new export mode 35
+ ..;S DIR("B")="1500 (02/12)"  ;abm*2.6*33 IHS/SD/SDR ADO60178
+ ..;S DIR(0)="S^27:1500 (08/05);35:1500 (02/12)"  ;abm*2.6*33 IHS/SD/SDR ADO60178
+ ..;end old start new abm*2.6*33 IHS/SD/SDR ADO60178
+ ..S DIR("B")="CMS-1500 (02/12)"
+ ..S DIR(0)=""
+ ..F ABMT=27,35 D
+ ...I $P($G(^ABMDEXP(ABMT,0)),U,11)'=1 S DIR(0)=DIR(0)_";"_ABMT_":"_$P($G(^ABMDEXP(ABMT,0)),U)
+ ..S DIR(0)="S^"_$E(DIR(0),2,$L(DIR(0)))
+ .;end new abm*2.6*33 IHS/SD/SDR ADO60178
+ .;end new export mode 35
  .I $P(ABMY("FORM"),U,2)["UB" D
  ..S DIR("B")="UB-04"
- ..S DIR(0)="S^11:UB-92;28:UB-04"
+ ..;S DIR(0)="S^11:UB-92;28:UB-04"  ;abm*2.6*33 IHS/SD/SDR ADO60178
+ ..;start new abm*2.6*33 IHS/SD/SDR ADO60178
+ ..S DIR(0)=""
+ ..F ABMT=11,28 D
+ ...I $P($G(^ABMDEXP(ABMT,0)),U,11)'=1 S DIR(0)=DIR(0)_";"_ABMT_":"_$P($G(^ABMDEXP(ABMT,0)),U)
+ ..S DIR(0)="S^"_$E(DIR(0),2,$L(DIR(0)))
+ .;end new abm*2.6*33 IHS/SD/SDR ADO60178
  .I $P(ABMY("FORM"),U,2)["ADA" D
  ..;start old code abm*2.6*11 new ADA form
  ..;S DIR("B")="ADA-2006"
  ..;S DIR(0)="S^25:ADA-2002;29:ADA-2006"
  ..;end old code start new code
- ..S DIR("B")="ADA-2012"
- ..S DIR(0)="S^25:ADA-2002;29:ADA-2006;34:ADA-2012"
+ ..;start old abm*2.6*30 IHS/SD/SDR CR11171
+ ..;S DIR("B")="ADA-2012"
+ ..;S DIR(0)="S^25:ADA-2002;29:ADA-2006;34:ADA-2012"
+ ..;end old start new abm*2.6*30 IHS/SD/SDR CR11171
+ ..;S DIR("B")="ADA-2019"  ;abm*2.6*39 IHS/SD/SDR ADO99168
+ ..S DIR("B")="ADA-2024"  ;abm*2.6*39 IHS/SD/SDR ADO99168
+ ..;S DIR(0)="S^29:ADA-2006;34:ADA-2012;36:ADA-2019"  ;abm*2.6*33 IHS/SD/SDR ADO60178
+ ..;start new abm*2.6*33 IHS/SD/SDR ADO60178
+ ..S DIR(0)=""
+ ..;F ABMT=29,34,36 D  ;abm*2.6*39 IHS/SD/SDR ADO99168
+ ..F ABMT=34,36,37 D  ;abm*2.6*39 IHS/SD/SDR ADO99168
+ ...I $P($G(^ABMDEXP(ABMT,0)),U,11)'=1 S DIR(0)=DIR(0)_";"_ABMT_":"_$P($G(^ABMDEXP(ABMT,0)),U)
+ ..S DIR(0)="S^"_$E(DIR(0),2,$L(DIR(0)))
+ ..;end new abm*2.6*33 IHS/SD/SDR/AD60178
+ ..;end new abm*2.6*30 IHS/SD/SDR CR11171
  ..;end new code
  .D ^DIR K DIR
  .;I $P(ABMY("FORM"),U,2)["HCFA" S ABMY("FORM")=$S(Y=3:"3^HCFA-1500B",Y=14:"14^HCFA-1500 Y2K",1:"27^HCFA 1500 (08/05)")  ;abm*2.6*13 export mode 35
  .I $P(ABMY("FORM"),U,2)["HCFA" S ABMY("FORM")=$S(Y=27:"27^HCFA 1500 (08/05)",1:"35^HCFA 1500 (02/12)")  ;abm*2.6*13 export mode 35
  .I $P(ABMY("FORM"),U,2)["UB" S ABMY("FORM")=$S(Y=11:"11^UB-92",1:"28^UB-04")
  .;I $P(ABMY("FORM"),U,2)["ADA" S ABMY("FORM")=$S(Y=25:"25^ADA-2002",1:"29^ADA-2012")  ;abm*2.6*11 new ADA form
- .I $P(ABMY("FORM"),U,2)["ADA" S ABMY("FORM")=$S(Y=25:"25^ADA-2002",Y=29:"29^ADA-2006",1:"34^ADA-2012")  ;abm*2.6*11 new ADA form I +ABMY("FORM")=2,$P($G(^ABMDPARM(DUZ(2),1,2)),9)=2 D  G XIT:$D(DIRUT)
+ .;I $P(ABMY("FORM"),U,2)["ADA" S ABMY("FORM")=$S(Y=25:"25^ADA-2002",Y=29:"29^ADA-2006",1:"34^ADA-2012")  ;abm*2.6*11 new ADA form   ;abm*2.6*30 IHS/SD/SDR CR11171
+ .;I $P(ABMY("FORM"),U,2)["ADA" S ABMY("FORM")=$S(Y=29:"29^ADA-2006",Y=34:"34^ADA-2012",1:"36^ADA-2019")  ;abm*2.6*11 new ADA form   ;abm*2.6*30 IHS/SD/SDR CR11171  ;abm*2.6*39 IHS/SD/SDR ADO99168
+ .I $P(ABMY("FORM"),U,2)["ADA" S ABMY("FORM")=$S(Y=34:"34^ADA-2012",Y=36:"36^ADA-2019",1:"37^ADA-2024")  ;abm*2.6*39 IHS/SD/SDR ADO99168
+ I +ABMY("FORM")=2,$P($G(^ABMDPARM(DUZ(2),1,2)),9)=2 D  G XIT:$D(DIRUT)
  .;start old code abm*2.6*11
  .;W !!,"Forms Previously Printed on Old HCFA-1500.",!!
  .;K DIR
@@ -149,12 +180,26 @@ ENT ;
  .F  S ABMY=$O(ABMY(ABMY)) Q:'ABMY  D
  ..S ABMP("BDFN")=ABMY
  ..D FORMS
+ ;start old abm*2.6*29 IHS/SD/SDR CR10836
+ ;S ABMY=0
+ ;F  S ABMY=$O(^ABMDBILL(DUZ(2),"AX",ABMY("BATCH"),ABMY)) Q:'ABMY  D
+ ;.; Quit if bill status is Reviewed, Approved, or Cancelled
+ ;.Q:"RAX"[$P($G(^ABMDBILL(DUZ(2),ABMY,0)),U,4)
+ ;.S ABMP("BDFN")=ABMY
+ ;.D FORMS
+ ;end old start new abm*2.6*29 IHS/SD/SDR CR10836
  S ABMY=0
  F  S ABMY=$O(^ABMDBILL(DUZ(2),"AX",ABMY("BATCH"),ABMY)) Q:'ABMY  D
  .; Quit if bill status is Reviewed, Approved, or Cancelled
  .Q:"RAX"[$P($G(^ABMDBILL(DUZ(2),ABMY,0)),U,4)
- .S ABMP("BDFN")=ABMY
- .D FORMS
+ .S ABMY("INS")=$P($G(^ABMDBILL(DUZ(2),ABMY,0)),U,8)
+ .S ABMY(ABMY("INS"),ABMY)=""
+ S ABMY("INS")=0
+ F  S ABMY("INS")=$O(ABMY(ABMY("INS"))) Q:'ABMY("INS")  D
+ .S ABMP("BDFN")=0
+ .F  S ABMP("BDFN")=$O(ABMY(ABMY("INS"),ABMP("BDFN"))) Q:'ABMP("BDFN")  D
+ ..D FORMS
+ ;end new abm*2.6*29 IHS/SD/SDR CR10836
  G OUT
  ;
 FORMS ; Reprint Forms

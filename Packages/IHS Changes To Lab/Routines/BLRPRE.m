@@ -69,5 +69,5 @@ SORRY ;
  D BMES^XPDUTL("Sorry....something is wrong with your enviroment")
  D BMES^XPDUTL("for a Lab 5.2 Patch 15 install!")
  D BMES^XPDUTL("Please print/capture this screen and notify")
- D BMES^XPDUTL("the Help Desk")
+ D BMES^XPDUTL("the Support Center at 1-888-830-7280")
  Q

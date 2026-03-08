@@ -1,8 +1,6 @@
-XMAFTP ;(WASH ISC)/TCPIP-FTP Options ;04/17/2002  07:29
- ;;8.0;MailMan;;Jun 28, 2002
- ; Entry points used by MailMan options (not covered by DBIA):
- ; GET     XM-FTP-GET
- ; PUT     XM-FTP-PUT
+XMAFTP ;(WASH ISC)/TCPIP-FTP     ;08/05/96  09:06
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**27**;Jun 02, 1994
  Q
 GO ;Come here from GET or PUT (see tags below)
  I ^%ZOSF("OS")'["VAX DSM" W !!,"Sorry...this option only works for VAX DSM" Q
@@ -25,7 +23,7 @@ GO ;Come here from GET or PUT (see tags below)
  D FTP K XMSFTP
  Q
 EXIT S DIK="^XMBX(4.2995," D ^DIK
- I '$D(ZTQUEUED),'$D(XMCHAN) W !!,"Process Aborted !!!",$C(7)
+ I '$D(ZTQUEUED),'$D(XMCHAN) W !!,"Process Aborted !!!",*7
  Q
 SETXMF ;Set up XMSFTP array to use when doing tag FTP
  S %1=$G(^XMBX(4.2995,DA,1))

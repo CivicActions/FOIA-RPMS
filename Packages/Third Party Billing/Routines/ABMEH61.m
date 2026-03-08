@@ -1,5 +1,5 @@
-ABMEH61 ; IHS/ASDST/DMJ - HCFA-1500 EMC RECORD FA0 (Claim Root Segment) ;     
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMEH61 ; IHS/ASDST/DMJ - HCFA-1500 EMC RECORD FA0 (Claim Root Segment) ;     [ 11/08/2002  10:07 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**2,10**;APR 05, 2002
  ;
  ; IHS/ASDS/DMJ - 06/22/00 - Patch 3 - NOIS NHA-0600-180066
  ;     AHCCCS denies Medicare zero pays.
@@ -25,6 +25,28 @@ START ;START HERE
 LOOP ;LOOP HERE
  S J=0 F  S J=$O(ABMRV(J)) Q:'J  D
  .S K=0 F  S K=$O(ABMRV(J,K)) Q:K=""  D
+ ..;start old code abm*2.5*10 IM20395
+ ..;K ABMREC(61)
+ ..;I $$ENVOY^ABMEF19 N ABMEH61 D
+ ..;.N X S X=$P(ABMRV(J,K),U,7)
+ ..;.S ABMEH61("RENDERING")=$S(X:X,1:ABMAPRV)
+ ..;S ABME("S#")=ABME("S#")+1
+ ..;F I=10:10:500 D
+ ..;.D @I
+ ..;.I $D(^ABMEXLM("AA",+$G(ABMP("INS")),+$G(ABMP("EXP")),61,I)) D @(^(I))
+ ..;.D ADD
+ ..;Q:J=9999
+ ..;S ABM("ACTOT")=+$P(ABMRV(J,K),"^",6)
+ ..;S ABM("NCTOT")=+$P(ABMRV(J,K),"^",7)
+ ..;D ADTT^ABMER60
+ ..;S ABMEF("LINE")=ABMREC(61)
+ ..;D WRITE^ABMEF19 ; ABM*2.4*9 part 25
+ ..;S ABME("RTYPE")=61 D S90^ABMERUTL
+ ..;S ABMRT(95,"LTOT")=+$G(ABMRT(95,"LTOT"))+1
+ ..;I $$DOFB0 D
+ ..;.D ^ABMEH62
+ ..;I $$DOFB1 D ^ABMEH63
+ ..;end old code start new code IM20395
  ..S L=0
  ..F  S L=$O(ABMRV(J,K,L)) Q:L=""  D
  ...K ABMREC(61)
@@ -41,12 +63,13 @@ LOOP ;LOOP HERE
  ...S ABM("NCTOT")=+$P(ABMRV(J,K,L),U,7)
  ...D ADTT^ABMER60
  ...S ABMEF("LINE")=ABMREC(61)
- ...D WRITE^ABMEF19
+ ...D WRITE^ABMEF19 ; ABM*2.4*9 part 25
  ...S ABME("RTYPE")=61 D S90^ABMERUTL
  ...S ABMRT(95,"LTOT")=+$G(ABMRT(95,"LTOT"))+1
  ...I $$DOFB0 D
  ....D ^ABMEH62
  ...I $$DOFB1 D ^ABMEH63
+ ;end new code IM20395
  Q
 DOFB0() ; Should we do a FB0? 
  I J=23,'$G(ABMP("FLAT")) Q 1
@@ -54,7 +77,8 @@ DOFB0() ; Should we do a FB0?
  Q 0
 DOFB1() ; ABM*2.4*9 Part 1b  - check for '$$ENVOY^ABMEF19 
  I '$$ENVOY^ABMEF19 Q 0
- I $P(ABMRV(J,K,L),U,7) Q 1
+ ;I $P(ABMRV(J,K),U,7) Q 1  ;abm*2.5*10 IM20395
+ I $P(ABMRV(J,K,L),U,7) Q 1  ;abm*2.5*10 IM20395
  I ABMAPRV Q 1
  Q 0
 ADD ;ADD TO RECORD
@@ -76,13 +100,15 @@ ADD ;ADD TO RECORD
  S ABMR(61,40)=$$FMT^ABMERUTL(ABMR(61,40),17)
  Q
 50 ;40-47 Service Date From
- S ABMR(61,50)=$P(ABMRV(J,K,L),U,10)
- S:ABMR(61,50)="" ABMR(61,50)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U)
+ ;S ABMR(61,50)=$P(ABMRV(J,K),"^",10)  ;abm*2.5*10 IM20395
+ S ABMR(61,50)=$P(ABMRV(J,K,L),U,10)  ;abm*2.5*10 IM20395
+ S:ABMR(61,50)="" ABMR(61,50)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),"^",1)
  S ABMR(61,50)=$$Y2KD2^ABMDUTL(ABMR(61,50))
  S ABMR(61,50)=$$FMT^ABMERUTL(ABMR(61,50),8)
  Q
 60 ;48-55 Service Date To
- S ABMR(61,60)=$P(ABMRV(J,K,L),U,10)
+ ;S ABMR(61,60)=$P(ABMRV(J,K),"^",10)  ;abm*2.5*10 IM20395
+ S ABMR(61,60)=$P(ABMRV(J,K,L),U,10)  ;abm*2.5*10 IM20395
  S:ABMR(61,60)="" ABMR(61,60)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),"^",2)
  S ABMR(61,60)=$$Y2KD2^ABMDUTL(ABMR(61,60))
  S ABMR(61,60)=$$FMT^ABMERUTL(ABMR(61,60),8)
@@ -92,34 +118,46 @@ ADD ;ADD TO RECORD
  S ABMR(61,70)=$$FMT^ABMERUTL(ABMR(61,70),2)
  Q
 80 ;58-59 Type of Service Code
+ ; ABM*2.4*9 Part 8,8f ; Call a different $$TOS for Envoy.
  I $$ENVOY^ABMEF19 D
  .S ABMR(61,80)=$$TOS^ABMEH63 ;
  E  S ABMR(61,80)=$$TOS^ABMERUTL(J)
  S ABMR(61,80)=$$FMT^ABMERUTL(ABMR(61,80),2)
  Q
 90 ;60-64 HCPCS Procedure Code
- S ABMR(61,90)=$P(ABMRV(J,K,L),U,2)
+ ;S ABMR(61,90)=$P(ABMRV(J,K),"^",2)  ;abm*2.5*10 IM20395
+ S ABMR(61,90)=$P(ABMRV(J,K,L),U,2)  ;abm*2.5*10 IM20395
  S ABMR(61,90)=$$FMT^ABMERUTL(ABMR(61,90),5)
  Q
 100 ;65-66 Modifier 1
- S ABMR(61,100)=$P(ABMRV(J,K,L),U,3)
+ ;S ABMR(61,100)=$P(ABMRV(J,K),"^",3)  ;abm*2.5*10 IM20395
+ S ABMR(61,100)=$P(ABMRV(J,K,L),U,3)  ;abm*2.5*10 IM20395
  S ABMR(61,100)=$$FMT^ABMERUTL(ABMR(61,100),2)
  Q
 110 ;67-68 Modifier 2
- S ABMR(61,110)=$P(ABMRV(J,K,L),U,4)
+ ;S ABMR(61,110)=$P(ABMRV(J,K),"^",4)  ;abm*2.5*10 IM20395
+ S ABMR(61,110)=$P(ABMRV(J,K,L),U,4)  ;abm*2.5*10 IM20395
  S ABMR(61,110)=$$FMT^ABMERUTL(ABMR(61,110),2)
  Q
 120 ;69-70 Modifier 3
- S ABMR(61,120)=$P(ABMRV(J,K,L),U,12)
+ ; start old code V2.5 P2 NOIS HQW-0302-100190
+ ;S ABMR(61,120)=""
+ ; end old code V2.5 P2 NOIS HQW-0302-100190
+ ; start new code V2.5 P2 NOIS HQW-0302-100190
+ ;S ABMR(61,120)=$P(ABMRV(J,K),"^",12)  ;abm*2.5*10 IM20395
+ S ABMR(61,120)=$P(ABMRV(J,K,L),U,12)  ;abm*2.5*10 IM20395
+ ; end new code V2.5 P2 NOIS HQW-0302-100190
  S ABMR(61,120)=$$FMT^ABMERUTL(ABMR(61,120),2)
  Q
 130 ;71-77 Line Charges
- S ABMR(61,130)=$P(ABMRV(J,K,L),U,6)
+ ;S ABMR(61,130)=$P(ABMRV(J,K),"^",6)  ;abm*2.5*10 IM20395
+ S ABMR(61,130)=$P(ABMRV(J,K,L),U,6)  ;abm*2.5*10 IM20395
  S ABMRT(90,"DTOT")=+$G(ABMRT(90,"DTOT"))+ABMR(61,130)
  S ABMR(61,130)=$$FMT^ABMERUTL(ABMR(61,130),"7NRJ2")
  Q
 140 ;78-78 Diag Code Pointer 1
- S ABMCDX=$P(ABMRV(J,K,L),U,11)
+ ;S ABMCDX=$P(ABMRV(J,K),"^",11)  ;abm*2.5*10 IM20395
+ S ABMCDX=$P(ABMRV(J,K,L),U,11)  ;abm*2.5*10 IM20395
  D
  .; because there are only four diags stored in EA0 record (ABMEH40)
  .N I F I=1:1:$L(ABMCDX,",") D
@@ -145,7 +183,8 @@ ADD ;ADD TO RECORD
  K ABMCDX
  Q
 180 ;82-85 Units of Service
- S ABMR(61,180)=$P(ABMRV(J,K,L),U,5)
+ ;S ABMR(61,180)=$P(ABMRV(J,K),"^",5)  ;abm*2.5*10 IM20395
+ S ABMR(61,180)=$P(ABMRV(J,K,L),U,5)  ;abm*2.5*10 IM20395
  S ABMR(61,180)=$$FMT^ABMERUTL(ABMR(61,180),"4NRJ1")
  Q
 190 ;86-89 Anesthesia/Oxygen Min
@@ -167,7 +206,7 @@ ADD ;ADD TO RECORD
  Q
 230 ;93-107 Rendering Prov ID     
  S ABMR(61,230)=""
- ; SSN/EIN it's supposed to be there,
+ ; ABM*2.4*9 Part 13a,b,e ; SSN/EIN it's supposed to be there,
  ; it's supposed to be SSN or EIN, even though spec has X(15) and 
  ; mention of any such thing.
  I $$ENVOY^ABMEF19 D
@@ -287,7 +326,7 @@ ADD ;ADD TO RECORD
 500 ;238-320 Filler (National)
  S ABMR(61,500)=""
  S ABMR(61,500)=$$FMT^ABMERUTL(ABMR(61,500),83)
- ; TYPE OF SERVICE X(3) POSITIONS 238-240
+ ; ABM*2.4*9 Part 18 - TYPE OF SERVICE X(3) POSITIONS 238-240
  ; An Envoy-specific extension required by some payers.
  ; We use the two-character standard Type of Service code and fill the
  ; third space with a blank.

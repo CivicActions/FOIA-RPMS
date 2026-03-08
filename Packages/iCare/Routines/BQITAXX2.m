@@ -1,5 +1,5 @@
 BQITAXX2 ;PRXM/HC/ALA - Add Taxonomy Item ; 26 May 2006  2:00 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;1.0;ICARE MANAGEMENT SYSTEM;**1**;May 21, 2007
  ;
  Q
  ;
@@ -18,26 +18,24 @@ ADD(DATA,TVALUE,LOW,HIGH) ;EP -- BQI ADD TAXONOMY ITEM
  S II=0
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BQITAXX2 D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
- I '$$KEYCHK^BQIULSC("BQIZTXED",DUZ) S BMXSEC="You do not have the security access to edit a taxonomy."_$C(10)_"Please see your supervisor or program manager." Q
- ;I '$$KEYCHK^BQIULSC("BGPZ TAXONOMY EDIT",DUZ) S BMXSEC="You do not have the security access to edit a taxonomy."_$C(10)_"Please see your supervisor or program manager." Q
+ I '$$KEYCHK^BQIULSC("BGPZ TAXONOMY EDIT",DUZ) S BMXSEC="You do not have the security access to edit a taxonomy."_$C(10)_"Please see your supervisor or program manager." Q
  ;
  S TVALUE=$G(TVALUE,""),LOW=$G(LOW,""),HIGH=$G(HIGH,"")
  I TVALUE="" S BMXSEC="No taxonomy identified" Q
  I LOW="" S BMXSEC="No LOW value submitted" Q
+ I LOW["."!($E(LOW,1,1)="0")!($E(LOW,$L(LOW),$L(LOW))=0) S LOW=LOW_" "
+ I HIGH["."!($E(HIGH,1,1)="0")!($E(HIGH,$L(HIGH),$L(HIGH))=0) S HIGH=HIGH_" "
  ;
  S @DATA@(II)="I00010RESULT"_$C(30)
  ;
- NEW FILE,SBFILE,DA,DIC,Y,RESULT,BQIUPD,CANON,IEN
- S FILE=$$GREF^BQITAXX(TVALUE),IEN=$P(TVALUE,";",1),CANON=0
- I FILE=9002226 S SBFILE=FILE_".02101",CANON=$$GET1^DIQ(FILE,IEN_",",.13,"I")
+ NEW FILE,SBFILE,DA,DIC,Y,RESULT,BQIUPD
+ S FILE=$$GREF^BQITAXX(TVALUE)
+ I FILE=9002226 S SBFILE=FILE_".02101"
  I FILE=9002228 S SBFILE=FILE_".04101"
- I CANON D
- . I LOW["."!($E(LOW,1,1)="0")!($E(LOW,$L(LOW),$L(LOW))=0) S LOW=LOW_" "
- . I HIGH["."!($E(HIGH,1,1)="0")!($E(HIGH,$L(HIGH),$L(HIGH))=0) S HIGH=HIGH_" "
- ;
  S DA(1)=$P(TVALUE,";",1),DIC="^"_$P(TVALUE,";",2)_DA(1)_",21,"
  S DIC(0)="L",X=LOW
- K DO,DD D FILE^DICN
+ K DO
+ D FILE^DICN
  I Y<1 S RESULT=-1
  I +Y>0 S RESULT=1,DA=+Y D
  . NEW IENS
@@ -81,18 +79,16 @@ LKP(DATA,TVALUE,FNBR,VALUE) ;EP -- BQI LOOKUP TAXONOMY ITEM
  I FNBR="" S BMXSEC="No file identified to search for value" Q
  ;
  NEW FILE,FIELD,XREF,FLAGS,NUMB,SCREEN,JJ,IEN,TEXT,DESC
- NEW MAP,HDR,MII,NFLD,TYPE,VERSION
- S FILE=FNBR,XREF="",NUMB="*",SCREEN="",VERSION=$$VERSION^XPDUTL("PSS")
+ NEW MAP,HDR,MII,NFLD,TYPE
+ S FILE=FNBR,XREF="",NUMB="*",SCREEN=""
  ;S FIELD=".01"
  S FIELD="FID;-WID"
- I FNBR=50,VERSION'="" S FIELD=FIELD_";31"
- I FNBR=50,VERSION="" S FIELD=".01"
+ S:FNBR=50 FIELD=FIELD_";31"
  ;S FLAGS=$S(FILE=95.3:"P",1:"MP")
  S FLAGS="MP"
  D FIND^DIC(FILE,"",FIELD,FLAGS,VALUE,"",XREF,SCREEN,"","","ERROR")
  ;
  S MAP=$G(^TMP("DILIST",$J,0,"MAP"))
- I FNBR=50,VERSION="" S MAP="IEN^.01I^100^31"
  I MAP="" S @DATA@(II)="I00010IEN^T00030TEXT^T00120DESCRIPTION"_$C(30)
  I MAP'="" D
  . S HDR=""
@@ -103,9 +99,6 @@ LKP(DATA,TVALUE,FNBR,VALUE) ;EP -- BQI LOOKUP TAXONOMY ITEM
  .. I NFLD["FID(" S NFLD=$P($P(NFLD,"FID(",2),")",1) D CHK(NFLD) S HDR=HDR_TYPE_"^" Q
  .. D CHK(NFLD) S HDR=HDR_TYPE_"^"
  . S HDR=$$TKO^BQIUL1(HDR,"^")
- . I FNBR=9999999.05 F MII=1:1:$L(HDR,"^") D
- .. I $P(HDR,"^",MII)="T00003CODE" S $P(HDR,"^",MII)="T00003COMM_CODE"
- .. I $P(HDR,"^",MII)="T00030NAME" S $P(HDR,"^",MII)="T00030COMM_NAME"
  . S @DATA@(II)=HDR_$C(30)
  S JJ=0
  F  S JJ=$O(^TMP("DILIST",$J,JJ)) Q:'JJ  D
@@ -127,10 +120,10 @@ ERR ;
  NEW Y,ERRDTM
  S Y=$$NOW^XLFDT() X ^DD("DD") S ERRDTM=Y
  S BMXSEC="Recording that an error occurred at "_ERRDTM
- I $D(II),$D(DATA) S II=II+1,@DATA@(II)=$C(31)
+ S II=II+1,^TMP("BQITXADD",UID,II)=$C(31)
  Q
  ;
-CHK(BFLD) ;EP - Check for definition of a field
+CHK(BFLD) ;  Check for definition of a field
  NEW DLEN
  D FIELD^DID(FNBR,BFLD,"","TYPE","BQX")
  D FIELD^DID(FNBR,BFLD,"","FIELD LENGTH","BQX")

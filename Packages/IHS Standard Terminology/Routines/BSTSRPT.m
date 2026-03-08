@@ -1,5 +1,5 @@
 BSTSRPT ;GDIT/HS/BEE-Handle retired concepts/terms ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;1.0;IHS STANDARD TERMINOLOGY;**8**;Sep 10, 2014;Build 35
  ;
 EN ;EP - Main entry point
  ;

@@ -1,5 +1,5 @@
 ACHSRDOS ;IHS/OIT/FCJ - ESTIMATED DATE OF SERVICE REPORT FOR CHS [ 07/24/2000  10:57 AM ]
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;;JUN 11, 2001;Build 43
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;;JUN 11, 2001;Build 86
  ;
  S ACHSIO=IO,ACHSPG=0
  D BM^ACHSFU
@@ -82,4 +82,3 @@ H1 ;EP - From HELP^ACHS() via ^DIR.
  ;;Enter a '2' if you want Estimated Date of Service to be listed.
  ;;###
  ;
- 

@@ -1,5 +1,5 @@
 LRSTUF ; IHS/DIR/FJE - MASS DATA ENTRY INTO FILE 63.04 ;
- ;;5.2T9;LR;**1018*;Nov 17, 2004
+ ;;5.2;LR;**1018*;Nov 18, 2004
  ;;5.2;LAB SERVICE;;Sep 27, 1994
  D ^LRPARAM G:$G(LREND) QUIT
  I '$P($G(LRLABKY),U) W !,"You're not cleared for this option" G QUIT

@@ -1,5 +1,6 @@
-DDW3 ;SFISC/MKO-TOP, BOTTOM, SCROLL ;9:08 AM  13 Feb 1996
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDW3 ;SFISC/MKO-TOP, BOTTOM, SCROLL ;9:08 AM  13 Feb 1996 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**11**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 TOP N DDWI

@@ -1,5 +1,5 @@
-BARADJRA ; IHS/SD/LSL - CREATE ENTRY IN A/R EDI STND CLAIM ADJ REASON ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+BARADJRA ; IHS/SD/LSL - CREATE ENTRY IN A/R EDI STND CLAIM ADJ REASON ; 
+ ;;1.7;IHS ACCOUNTS RECEIVABLE;**4**;MAY 02, 2003
  ;
  ; IHS/SD/LSL - 10/06/2003 - V1.7 Patch 4
  ;     For HIPAA compliance.  Modify description of AR Adjustment
@@ -10,14 +10,7 @@ BARADJRA ; IHS/SD/LSL - CREATE ENTRY IN A/R EDI STND CLAIM ADJ REASON ;
  ; ********************************************************************
 ENTRY ; EP
  ; Edit entries into A/R Table Entry File (Adj Reasons)
- ;L +^BARTBL
- L +^BARTBL:5 S X=$T
- I 'X D  Q
- . W *7,!!,"Cannot update HIPAA Standard Adjustment Reasons at this time."
- . W !,"Contact ITSC Support to obtain instructions for updating"
- . W !,"HIPAA Standard Adjustments after this install is complete."
- . W !!,"....continuing this KIDS installation."
- . D EOP^BARUTL(1)
+ L +^BARTBL
  S BARD=";;"
  S BARCNT=0
  F  D EN2 Q:BARTYPE="END"

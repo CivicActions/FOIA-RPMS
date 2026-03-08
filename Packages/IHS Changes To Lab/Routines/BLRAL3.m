@@ -1,5 +1,5 @@
 BLRAL3 ;DAOU/ALA-ListMan program for delinquent labs 
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2t6;LR;**1013,1015**;Nov 18, 2002
  ;; ;
 EN ;EP

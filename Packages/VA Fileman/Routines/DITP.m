@@ -1,6 +1,6 @@
-DITP ;SFISC/GFT-TRANSFER POINTERS ;6:40 AM  16 Jun 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**50**;Mar 30, 1999
+DITP ;SFISC/GFT-TRANSFER POINTERS ;9/7/94  10:31 ;
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  D ASK Q:%-1  G PTS
  ;
@@ -29,7 +29,7 @@ UP S (D(DL),%)=+Y I $D(^DD(%,0,"UP")) S DL=DL+1,Y=^("UP"),(DL(DL),%)=$O(^DD(Y,"S
  S BY=BY_Y_L_X_")",L=0,FLDS="",DISTOP=0,DHIT="G LOOP^DIA2",%ZIS=""
  I $G(DIFIXPT)=1 D EN1^DIP G P
  D EN1^DIP
- S IOP=$G(IO) G P
+ S IOP=IO G P
  ;
 PTRPT Q:'$G(DIFIXPTC)  N I,J,X
  F I=1:1:DL S J="" F  S J=$O(DR(I,J)) Q:J=""  I DR(I,J)["///" S X=$P($G(DR(I,J)),"///",1) I X]"" D

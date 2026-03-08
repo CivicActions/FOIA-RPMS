@@ -1,21 +1,19 @@
 BEDDUTID ;VNGT/HS/BEE-BEDD Utility Routine 2 ; 08 Nov 2011  12:00 PM
- ;;2.0;BEDD DASHBOARD;**1,2,3**;Jun 04, 2014;Build 12
- ;
- ;GDIT/HS/BEE 05/10/2018;CR#10213 - BEDD*2.0*3 - Allow different hospital locations
- ;
- ;Adapted from BEDDUTL1/CNDH/RPF
+ ;;2.0;BEDD DASHBOARD;**1,2,3,4,7**;Jun 04, 2014;Build 21
  ;
  Q
  ;
-KEYCK(DUZ) ;EP - Determine if user has BEDDZMGR Key
+KEYCK(DUZ,KEY) ;EP - Determine if user has BEDDZMGR Key
  ;
  ; Input:
  ; DUZ - User IEN
  ;
  I $G(DUZ)="" Q 0
  ;
+ I $G(KEY)="" S KEY="BEDDZMGR"
+ ;
  NEW KIEN
- S KIEN=$O(^DIC(19.1,"B","BEDDZMGR","")) Q:KIEN="" 0
+ S KIEN=$O(^DIC(19.1,"B",KEY,"")) Q:KIEN="" 0
  I DUZ>0,$D(^VA(200,"AB",KIEN,DUZ,KIEN)) Q 1
  Q 0
  ;
@@ -25,22 +23,21 @@ ADDDX(VIEN,DXI,DUZ) ;EP - Add DX TO V POV FILE
  ;
  ; Input:
  ; VIEN - Visit Entry Pointer
- ; DXI - Diagnosis Code - Entered from Discharge Page
+ ; DXI - Diagnosis Code - Entered from Disch Page
  ; DUZ - User IEN
  ;
  S VIEN=$G(VIEN,""),DXI=$G(DXI,"") S:$G(U)="" U="^"
  ;
  NEW DFN,NOW,XIEN,PDX,I9,STS
  ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
- ;Define DUZ variable
+ ;Define DUZ
  I $G(DUZ)="" S STS="Missing DUZ" Q
  D DUZ^XUP(DUZ)
  ;
- ;Error Trapping
+ ;Error Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTID D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  S NOW=$$FNOW^BEDDUTIL
@@ -76,7 +73,6 @@ EDCON(AMERVSIT,EDCONS) ;EP - Get list of ER Consults
  ;
  I $G(AMERVSIT)="" S EDCONS=0 Q
  ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
@@ -107,8 +103,6 @@ PROC(AMERVSIT,ERPROC) ;EP - Get list of ER Procedures Performed
  ;
  I $G(AMERVSIT)="" S ERPROC=0 Q
  ;
- ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
@@ -137,8 +131,6 @@ DX(AMERVSIT,ERDX) ;EP - Get list of ER DX'S
  ;
  I $G(AMERVSIT)="" S ERDX=0 Q
  ;
- ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
@@ -163,8 +155,6 @@ MDTRN(DFN) ;EP - Update Patient's MODE OF TRANSPORT
  ;Error Trapping
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTID D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
- ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
@@ -187,16 +177,17 @@ DSUM() ;EP - Return if Discharge Summary Global is defined
  ;
 HTIME(TM) ;EP - Given seconds portion of $H value, return time
  ;
+ ;TM - Initial time to try
+ ;
  NEW T
  ;
- ;To use FileMan Utility add the date, and then strip it off afterwards
+ ;Add date, and strip it off afterwards
  S T=+$H_","_TM
  S T=$$HTE^XLFDT(T)
  Q $P(T,"@",2)
  ;
-PRIMDX(VIEN,OBJID) ;EP - Retrieve/Save the Primary EHR DX
+PRIMDX(VIEN,OBJID) ;EP - Retrieve/Save Primary EHR DX
  ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
@@ -222,8 +213,6 @@ PRIMDX(VIEN,OBJID) ;EP - Retrieve/Save the Primary EHR DX
  ;
 AGE(DFN) ;EP - Return Patients Age
  ;
- ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
@@ -239,29 +228,32 @@ DSAVE(DFN,AMERVSIT,VIEN,OBJID,DUZ,SITE,BEDDARY) ;EP - Dashboard Discharge Screen
  ;Error Trapping
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
- NEW AUPNVSIT,STS
+ NEW AUPNVSIT,STS,BPROV,BNURSE
  ;
  ;Define DUZ variable
  I $G(DUZ)="" S STS="Missing DUZ" Q 0
  D DUZ^XUP(DUZ)
+ ;
+ ;Put latest provider/nurse info from fields and array into provider table
+ D PVFRMT^BEDDUTD1(DFN,.BEDDARY,.BPROV,.BNURSE)
  ;
  ;File ER ADMISSION entries
  I $G(DFN)]"" D
  . S:$D(BEDDARY("Trg")) AMUPD(9009081,DFN_",",20)=BEDDARY("Trg")
  . S:$D(BEDDARY("TrgNow")) AMUPD(9009081,DFN_",",21)=$$DATE^BEDDUTIL(BEDDARY("TrgNow"))
  . S:$D(BEDDARY("TrgN")) AMUPD(9009081,DFN_",",19)=BEDDARY("TrgN")
+ . S:$D(BEDDARY("TrgPDtTm")) AMUPD(9009081,DFN_",",1.02)=$$DATE^BEDDUTIL(BEDDARY("TrgPDtTm"))
+ . S:$D(BEDDARY("TrgP")) AMUPD(9009081,DFN_",",1.01)=BEDDARY("TrgP")
  . S:$D(BEDDARY("AdPvTm")) AMUPD(9009081,DFN_",",22)=$$DATE^BEDDUTIL(BEDDARY("AdPvTm"))
  . S:$D(BEDDARY("AdmPrv")) AMUPD(9009081,DFN_",",18)=BEDDARY("AdmPrv")
- ;
- ;File VISIT entries
- ;I $G(VIEN)]"" D
- ;. S:$G(BEDDARY("txcln"))]"" AMUPD(9000010,VIEN_",",.08)=$O(^DIC(40.7,"C",BEDDARY("txcln"),""))
- ;
+ . S:$D(BEDDARY("EDPvDtm")) AMUPD(9009081,DFN_",",1.03)=BEDDARY("EDPvDtm")
  I $D(AMUPD) D FILE^DIE("","AMUPD","ERROR")
+ ;
+ ;GDIT/HS/BEE 10/22/20;CR#5100;Save nurse/provider information in V EMERGENCY VISIT RECORD
+ D NRPRV^AMERVER($G(DFN),$G(VIEN),.BPROV,.BNURSE)
  ;
  ;Complete Discharge
  D DC^BEDDUTIS(DFN,OBJID,VIEN,DUZ,SITE,.BEDDARY)
@@ -279,21 +271,48 @@ CLIN(CLIN) ;EP - Return List of Applicable Clinics
  ;
  Q
  ;
-DISP(DISP) ;EP - Return List of Dispositions
+DISP(DISP,LWOBS,DUZ) ;EP - Return List of Dispositions
  ;
  ;Input:
- ; None
+ ; LWOBS (optional) - 1 - Return LWOBS selections
+ ;   DUZ - DUZ array
  ;
  ;Output:
  ; DISP Array - List of Dispositions
  ;
- NEW CNT,DSIEN,DIEN,DSP
+ ;GDIT/HS/BEE 12/04/2018;BEDD*3.0*4;CR#8262 - filter results by DISPOSITION
  K DISP
- S DSIEN=$O(^AMER(2,"B","DISPOSITION","")) Q:DSIEN=""
- S DIEN="" F  S DIEN=$O(^AMER(3,"AC",DSIEN,DIEN)) Q:+DIEN=0  D
- . NEW D
- . S D=$$GET1^DIQ(9009083,DIEN_",",".01","I") Q:D=""
- . S DSP(D)=DIEN_"^"_D
+ ;
+ NEW CNT,DSIEN,DIEN,DSP,FNDRE
+ ;
+ ;If LWOBS - look in ER PREFERENCES first
+ S FNDRE="" I +$G(LWOBS) S DIEN="" D
+ . F  S DIEN=$O(^AMER(2.5,+$G(DUZ(2)),9,"B",DIEN)) Q:'DIEN  D
+ .. NEW D
+ .. S D=$$GET1^DIQ(9009083,DIEN_",",".01","I") Q:D=""
+ .. S DSP(D)=DIEN_"^"_D
+ .. I D="REGISTERED IN ERROR" S FNDRE=1
+ . ;
+ . ;If none set up look for "LEFT WITHOUT" or "LWOBS"
+ . I $D(DSP)<10 D
+ .. NEW D
+ .. S D="" F  S D=$O(^AMER(3,"B",D)) Q:D=""  D
+ ... I D'["LEFT WITHOUT",D'["LWOBS",D'["DNA" Q
+ ... S DIEN=$O(^AMER(3,"B",D,"")) Q:DIEN=""
+ ... S DSP(D)=DIEN_"^"_D
+ . ;
+ . ;If REGISTERED IN ERROR not found, add it in
+ . I 'FNDRE D
+ .. S DSIEN=$O(^AMER(2,"B","DISPOSITION","")) Q:DSIEN=""
+ .. S DIEN=$O(^AMER(3,"B","REGISTERED IN ERROR","")) Q:DIEN=""
+ .. S DSP("REGISTERED IN ERROR")=DIEN_"^"_"REGISTERED IN ERROR"
+ ;
+ I '+$G(LWOBS),$D(DSP)<10 D
+ . S DSIEN=$O(^AMER(2,"B","DISPOSITION","")) Q:DSIEN=""
+ . S DIEN="" F  S DIEN=$O(^AMER(3,"AC",DSIEN,DIEN)) Q:+DIEN=0  D
+ .. NEW D
+ .. S D=$$GET1^DIQ(9009083,DIEN_",",".01","I") Q:D=""
+ .. S DSP(D)=DIEN_"^"_D
  ;
  ;Re-sort
  S CNT=0,DSP="" F  S DSP=$O(DSP(DSP)) Q:DSP=""  D
@@ -340,31 +359,10 @@ INST(INST) ;EP - Return list of Followup Instructions
  ;
  Q
  ;
-PROV(PROV) ;EP - Return List of Providers
+ ;GDIT/HS/BEE 10/06/20;BEDD*2.0*6;Moved to BEDDUTD1 for routine size
+PROV(PROV,KEY,CIEN) ;EP - Return List of Providers
  ;
- ;Input:
- ; None
- ;
- ;Output:
- ; PROV Array - List of Providers
- ;
- NEW CNT,PNAME,PIEN,X
- ;
- ;Make sure initial variables are set
- S X="S:$G(U)="""" U=""^""" X X
- S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
- ;
- K PROV
- S CNT=0,PNAME="" F  S PNAME=$O(^VA(200,"AK.PROVIDER",PNAME)) Q:PNAME=""  D
- . S PIEN=0 F  S PIEN=$O(^VA(200,"AK.PROVIDER",PNAME,PIEN)) Q:+PIEN=0  D
- .. ;BEDD*2.0*2;Handle future termination dates
- .. ;I $$GET1^DIQ(200,PIEN_",","9.2","I")]"" Q
- .. NEW TERM
- .. S TERM=$$GET1^DIQ(200,PIEN_",","9.2","I")
- .. I TERM]"",TERM<DT Q
- .. ;
- .. S CNT=CNT+1
- .. S PROV(CNT)=PIEN_"^"_PNAME
+ D PROV^BEDDUTD1(.PROV,$G(KEY),$G(CIEN))
  ;
  Q
  ;
@@ -407,7 +405,6 @@ DXLKP(VALUE,OBJID,DUZ,FILTER) ;EP - Lookup to File 80 (DX)
  ;Make sure filter is populated
  S:$G(FILTER)="" FILTER=0
  ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
@@ -443,10 +440,13 @@ ESAVE(DFN,AMERVSIT,VIEN,BEDDARY) ;EP - Dashboard Edit Screen Save
  ; DFN - Patient IEN
  ; BEDDARY - Array of entries to save
  ;
- NEW CLINIC
+ NEW CLINIC,BPROV,BNURSE,AMUPD,ERROR
  ;
  ;Error Trapping
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
+ ;
+ ;Put latest provider/nurse info from fields and array into provider table
+ D PVFRMT^BEDDUTD1(DFN,.BEDDARY,.BPROV,.BNURSE)
  ;
  ;File ER ADMISSION entries
  I $G(DFN)]"" D
@@ -458,6 +458,11 @@ ESAVE(DFN,AMERVSIT,VIEN,BEDDARY) ;EP - Dashboard Edit Screen Save
  . S:$D(BEDDARY("AdmPrv")) AMUPD(9009081,DFN_",",18)=BEDDARY("AdmPrv")
  . S:$D(BEDDARY("TrgN")) AMUPD(9009081,DFN_",",19)=BEDDARY("TrgN")
  . S:$D(BEDDARY("AdPvTm")) AMUPD(9009081,DFN_",",22)=BEDDARY("AdPvTm")
+ . S:$D(BEDDARY("TrgP")) AMUPD(9009081,DFN_",",1.01)=BEDDARY("TrgP")
+ . S:$D(BEDDARY("TrgPDtTm")) AMUPD(9009081,DFN_",",1.02)=BEDDARY("TrgPDtTm")
+ . S:$D(BEDDARY("EDPvDtm")) AMUPD(9009081,DFN_",",1.03)=BEDDARY("EDPvDtm")
+ . S:$D(BEDDARY("PrmNurse")) AMUPD(9009081,DFN_",",1.04)=BEDDARY("PrmNurse")
+ . S:$D(BEDDARY("PrmNurseDTM")) AMUPD(9009081,DFN_",",1.05)=BEDDARY("PrmNurseDTM")
  ;
  ;File VISIT entries
  S CLINIC=$G(BEDDARY("txcln"))
@@ -486,6 +491,12 @@ ESAVE(DFN,AMERVSIT,VIEN,BEDDARY) ;EP - Dashboard Edit Screen Save
  ;BEDD*2.0*1;Update V EMERGENCY VISIT
  D VER^AMERVER($G(DFN),$G(VIEN))
  ;
+ ;GDIT/HS/BEE 10/22/20;CR#5100;Save nurse/provider information
+ D NRPRV^AMERVER($G(DFN),$G(VIEN),.BPROV,.BNURSE)
+ ;
+ ;GDIT/HS/BEE 12/11/2018;CR#8013;Sync Prov
+ D SYNC^AMERPRV($G(VIEN))
+ ;
  I $D(ERROR) Q 0
  Q 1
  ;
@@ -493,8 +504,6 @@ PLCHLD(OBJID,VIEN) ;EP - Look for Diagnosis Default
  ;
  I $G(OBJID)="" Q ""
  ;
- ;
- ;Make sure initial variables are set
  S X="S:$G(U)="""" U=""^""" X X
  S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
  ;
@@ -505,7 +514,6 @@ PLCHLD(OBJID,VIEN) ;EP - Look for Diagnosis Default
  S:$G(VDT)="" VDT=DT
  ;
  ;Quit if patient already has DX codes
- ;I $$DXCNT^BEDDUTIS(OBJID)>0 Q ""
  I $$POV^AMERUTIL("",VIEN,.BEDDPOV)>0 Q ""
  ;
  ;Determine if pre-AICD 4.0, pre-ICD-10, or post ICD-10

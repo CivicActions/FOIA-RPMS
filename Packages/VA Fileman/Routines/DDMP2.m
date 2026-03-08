@@ -1,5 +1,6 @@
-DDMP2 ;SFISC/DPC-Import Device, Queuing, Reports ;11/5/97  08:10
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDMP2 ;SFISC/DPC-Import Device, Queuing, Reports ;11/5/97  08:10 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**30,44**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 DEV(DDMPIOIN,DDMPIOP) ;
  ;Device selection for printed report.

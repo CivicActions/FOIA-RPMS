@@ -1,5 +1,5 @@
-BIEXPRT4 ;IHS/CMI/MWR - EXPORT IMMUNIZATION RECORDS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**8**;MAR 15,2014
+BIEXPRT4 ;IHS/CMI/MWR - EXPORT IMMUNIZATION RECORDS; 23 Apr 2025  2:08 PM
+ ;;8.5;IMMUNIZATION;**8,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EXPORT IMMUNIZATION RECORDS: WRITE IMM HISTORIES OF PATIENTS
  ;;  STORED IN ^BITMP( TO SCREEN, HOST FILE, OR RETURN AS A STRING.
@@ -61,22 +61,26 @@ WRITE(BIOUT,BIFMT,BIFLNM,BIPATH,BISTRING,BICSV) ;EP
  ...F  S Q=$O(^BITMP($J,2,N,M,P,Q)) Q:'Q  D
  ....;
  ....N X
- ....S X=^BITMP($J,2,N,M,P,Q)
+ ....S X=$G(^BITMP($J,2,N,M,P,Q))
  ....;---> These additional nodes may be set in +170^BIEXPRT5
  ....;---> or in +182^BIEXPRT3.
- ....S:$D(^BITMP($J,2,N,M,P,Q,1)) X=X_^(1)
- ....S:$D(^BITMP($J,2,N,M,P,Q,2)) X=X_^(2)
- ....S:$D(^BITMP($J,2,N,M,P,Q,3)) X=X_^(3)
- ....S:$D(^BITMP($J,2,N,M,P,Q,4)) X=X_^(4)
- ....S:$D(^BITMP($J,2,N,M,P,Q,5)) X=X_^(5)
- ....S:$D(^BITMP($J,2,N,M,P,Q,6)) X=X_^(6)
- ....S:$D(^BITMP($J,2,N,M,P,Q,7)) X=X_^(7)
+BITXT ....;VERSION 8.5 PATCH 30
+ ....N ND
+ ....S ND=0
+BITXTEND ....F  S ND=$O(^BITMP($J,2,N,M,P,Q,ND)) Q:'ND  I ^(ND)]"" S X=X_^(ND)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,1)) X=X_^(1)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,2)) X=X_^(2)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,3)) X=X_^(3)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,4)) X=X_^(4)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,5)) X=X_^(5)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,6)) X=X_^(6)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,7)) X=X_^(7)
  ....;
  ....;********** PATCH 5, v8.5, JUL 01,2013, IHS/CMI/MWR
  ....;---> Increase nodes to accommodate Admin Notes.
- ....S:$D(^BITMP($J,2,N,M,P,Q,8)) X=X_^(8)
- ....S:$D(^BITMP($J,2,N,M,P,Q,9)) X=X_^(9)
- ....S:$D(^BITMP($J,2,N,M,P,Q,10)) X=X_^(10)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,8)) X=X_^(8)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,9)) X=X_^(9)
+ ....;S:$D(^BITMP($J,2,N,M,P,Q,10)) X=X_^(10)
  ....;**********
  ....;
  ....;---> If BICSV=1, translate to Comma Separated Values,

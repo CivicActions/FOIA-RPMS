@@ -1,5 +1,5 @@
-BEDDPREF	;VNGT/HS/BEE-BEDD Utility Routine - Cache Calls ; 08 Nov 2011  12:00 PM
- ;;2.0;IHS EMERGENCY DEPT DASHBOARD;**1**;Apr 02, 2014
+BEDDPREF ;VNGT/HS/BEE-BEDD Utility Routine - Cache Calls ; 08 Nov 2011  12:00 PM
+ ;;2.0;IHS EMERGENCY DEPT DASHBOARD;**1,5**;Jun 04, 2014;Build 2
  ;
  ;New for BEDD*2.0*1
  ;
@@ -7,13 +7,13 @@ BEDDPREF	;VNGT/HS/BEE-BEDD Utility Routine - Cache Calls ; 08 Nov 2011  12:00 PM
  ; 
  Q
  ;
-WACCESS(DUZ)	;EP - Return whether user can edit the Whiteboard settings
+WACCESS(DUZ) ;EP - Return whether user can edit the Whiteboard settings
  ;
  I +$G(DUZ)=0 Q 0
  I $$HASKEY^CIAVCXUS("BEDDZWHITEBOARD",DUZ) Q 1
  Q 0
  ;
-LUPREF(SITE,PDUZ)	;EP - Return user preferences for a site/user
+LUPREF(SITE,PDUZ) ;EP - Return user preferences for a site/user
  ;
  NEW UPIEN,UPREF,RESULT
  ;
@@ -36,7 +36,7 @@ LUPREF(SITE,PDUZ)	;EP - Return user preferences for a site/user
  ;
  Q RESULT
  ;
-CHECKWB(ACVC)	;Check Whiteboard login credentials
+CHECKWB(ACVC) ;Check Whiteboard login credentials
  ;
  NEW AC,VC,SUCCESS,SiteIEN,SITE
  ;
@@ -53,11 +53,14 @@ CHECKWB(ACVC)	;Check Whiteboard login credentials
  . S SiteIEN=""
  I SiteIEN="" Q 0
  S SITE=##CLASS(BEDD.EDSYSTEM).%OpenId(SiteIEN)
- I VC'=SITE.Verify Q 0
+ ;
+ ;GDIT/HS/BEE 01/21/20 - CR#11397 - BEDD*2.0*5 Return -1 if verify mismatch
+ ;I VC'=SITE.Verify Q 0
+ I VC'=SITE.Verify Q -1
  ;
  Q 1
  ;
-WBPREF(WVERIFY)	;EP - Save Whiteboard Information
+WBPREF(WVERIFY) ;EP - Save Whiteboard Information
  ;
  ;I $G(WVERIFY)="" Q 0
  ;
@@ -89,7 +92,7 @@ WBPREF(WVERIFY)	;EP - Save Whiteboard Information
  ;
  Q 1
  ;
-SUPREF(SITE,PDUZ,HIDEDOB,HIDECOMP,HIDESEX,NAMEFRMT)	;EP - Save user preferences for a site/user
+SUPREF(SITE,PDUZ,HIDEDOB,HIDECOMP,HIDESEX,NAMEFRMT) ;EP - Save user preferences for a site/user
  ;
  NEW UserPref,UPIEN,STS,USER
  ;
@@ -129,7 +132,7 @@ SUPREF(SITE,PDUZ,HIDEDOB,HIDECOMP,HIDESEX,NAMEFRMT)	;EP - Save user preferences 
  ;
  Q 1
  ;
-NMFRMT(PNAME,FRMT)	;Format Patient's Name
+NMFRMT(PNAME,FRMT) ;Format Patient's Name
  ;
  I $G(PNAME)="" Q ""
  S:$G(FRMT)="" FRMT="FLFF"

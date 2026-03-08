@@ -1,5 +1,5 @@
-APCLACC1 ; IHS/CMI/LAB - process active user report ; 
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLACC1 ; IHS/OHPRD/TMJ - process active user report ;  [ 06/02/99  9:53 AM ]
+ ;;3.0;IHS PCC REPORTS;**4**;FEB 05, 1997
  ;IHS/CMI/LAB - added template creation
  ;PRINT INDIAN PATIENT COUNTS FOR SERVICE UNIT
 START ;
@@ -71,7 +71,7 @@ HEAD1 ;
  W:APCLSSUR=0 !,"A '*' after the Community name indicates a Non-Service Unit Community.",!
  W:APCLSSUR=1 !,"Report includes only those patients who reside in a Service Unit Community.",!
  W "Active Patient were those seen between ",APCLFYBY," and ",APCLFYEY,".",!
- I APCLRPTT="T" W !!!,"***** SEARCH TEMPLATE 'ACTIVE USERS AS OF "_$$FMTE^XLFDT(APCLFYE,"2E")_"' HAS BEEN CREATED ****" Q
+ I APCLRPTT="T" W !!!,"***** SEARCH TEMPLATE 'IHS ACTIVE USERS AS OF "_$$FMTE^XLFDT(APCLFYE,"2E")_"' HAS BEEN CREATED ****" Q
  W !,$S(APCLSORT="C":"Current Community of Residence",APCLSORT="T":"Tribe of Membership",1:"Service Unit of Residence"),?50,"Reg Pts Living",?67,"Active"
  W !,$S(APCLSUB=1&(APCLSORT="C"):"     Tribe of Membership",APCLSUB=1&(APCLSORT'="C"):"      Community of Residence",1:""),?50,"As of Today",?67,"Patients"
  W !,APCL80D

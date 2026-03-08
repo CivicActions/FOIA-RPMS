@@ -1,5 +1,5 @@
-DDBR4 ;SFISC/DCL-LOAD CURRENT LIST ;NOV 04, 1996@13:49
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDBR4 ;SFISC/DCL-LOAD CURRENT LIST :13 AM  27 Dec 1993;10:28 AM  28 Jun 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 LOADCL(DDBSA,DDBFLG,DDBPMSG,DDBL,DDBC,DDBLST) ;
  ;DDBSA=source array by value
@@ -11,9 +11,8 @@ LOADCL(DDBSA,DDBFLG,DDBPMSG,DDBL,DDBC,DDBLST) ;
  I $G(DDBSA)']"" N X S X(1)="SOURCE ARRAY("_DDBSA_")" D BLD^DIALOG(202,.X) Q
  I '$D(@DDBSA) N X S X(1)="SOURCE ARRAY("_DDBSA_")" D BLD^DIALOG(202,.X) Q
  N DDBRE,DDBLN,DDBRPE,DDBPSA,DDBTO,I,X,Y
- N DDBFNO,DDBDM,DDBSF,DDBTL,DDBTPG,DDBZN,DDBFTR,DDBHDR,DDBHDRC,DDBST
+ N DDBFNO,DDBDM,DDBSF,DDBTL,DDBTPG,DDBZN,DDBFTR,DDBHDR,DDBST
  S DDBHDR=$$CTXT($G(DDBPMSG,"VA FileMan Browser"),$J("",IOM+1),IOM)
- S DDBHDRC=+$G(DDBHDRC)
  S DDBTL=$P($G(@DDBSA@(0)),"^",3) S:DDBTL'>0 DDBTL=$O(@DDBSA@(" "),-1)
  I DDBTL'>0 D  I DDBTL'>0 D BLD^DIALOG(1700,"*NO TEXT* "_DDBSA) Q
  .N I S I=0 F  S I=$O(@DDBSA@(I)) Q:I'>0  S DDBTL=I
@@ -34,19 +33,3 @@ CTXT(X,T,W) ;Center X in T which is W characters wide (usually spaces) and W for
  S $E(T,HW-($L(X)\2),HW-($L(X)\2)+$L(X))=X Q T
 OREF(X) N X1,X2 S X1=$P(X,"(")_"(",X2=$$OR2($P(X,"(",2)) Q:X2="" X1 Q X1_X2_","
 OR2(%) Q:%=")"!(%=",") "" Q:$L(%)=1 %  S:"),"[$E(%,$L(%)) %=$E(%,1,$L(%)-1) Q %
- ;
-CHDR(D) ;Change Header Message in Window Title
- ;D=direction 1 is down, -1 is up, if 0 restore back to original msg.
- N C
- S C=DDBHDRC+D
- I C<0!(C>DDBTL) W $C(7) Q
- S DDBHDRC=C
-ENCHDR I 'DDBHDRC S DDBHDR=$$CTXT^DDBR(DDBPMSG,$J("",IOM+1),IOM)
- E  D
- .I DDBZN S DDBHDR=$$CTXT^DDBR($E(@DDBSA@(DDBHDRC,0),DDBSF,DDBST)_$J("",IOM+1),"",IOM) Q
- .S DDBHDR=$$CTXT^DDBR($E(@DDBSA@(DDBHDRC),DDBSF,DDBST)_$J("",IOM+1),"",IOM)
- .Q
- I DDBRSA S DDBRSA(DDBRSA,"DDBHDRC")=DDBHDRC,DDBRSA(DDBRSA,"DDBHDR")=DDBHDR
- ; repaint screen
- D RPS^DDBRGE
- Q

@@ -1,17 +1,19 @@
-ABMDTPAR ; IHS/ASDST/DMJ - Table Maintenance of 3P PARAMETERS ;  
- ;;2.6;IHS Third Party Billing;**1,3,11,21**;NOV 12, 2009;Build 379
+ABMDTPAR ; IHS/SD/SDR - Table Maintenance of 3P PARAMETERS ;  
+ ;;2.6;IHS Third Party Billing;**1,3,11,21,29**;NOV 12, 2009;Build 562
  ;
- ; IHS/SD/SDR - v2.5 p8 - added code for UNCODED DX LAG TIME prompt
- ; IHS/SD/SDR - V2.5 P8 - IM12246/IM17548 - Added code for default prompt for Reference and In-House CLIAs
- ; IHS/SD/SDR - v2.5 p9 - IM14099 - Fixed access to multiple; would error when user typed "??"
- ; IHS/SD/SDR - v2.5 p10 - IM17482 - Add site parameter for restricting PRV segment by insurer
- ; IHS/SD/SDR - v2.5 p10 - IM19802 - Fix multiple lookup
- ; IHS/SD/SDR - v2.5 p10 - IM20089 - Added code for new prompt to override ISA08 value for Medicare
- ; IHS/SD/SDR - v2.5 p11 - Patient Statement - Added prompt for statement header line 2
- ; IHS/SD/SDR - v2.5 p13 - POA changes - Added new prompt
- ; IHS/SD/SDR - abm*2.6*1 - HEAT4158 - Added prompt for mammography cert#
- ;IHS/SD/SDR - 2.6*21 - HEAT130406 - Removed prompt for DAYS INACTIVE BEFORE PURGING
- ;IHS/SD/SDR - 2.6*21 - VMBP - Updated p11 changes to include Serena ref#s
+ ;IHS/SD/SDR 2.5*8 added code for UNCODED DX LAG TIME prompt
+ ;IHS/SD/SDR 2.5*8 IM12246/IM17548 Added code for default prompt for Reference and In-House CLIAs
+ ;IHS/SD/SDR 2.5*9 IM14099 Fixed access to multiple; would error when user typed "??"
+ ;IHS/SD/SDR 2.5*10 IM17482 Add site parameter for restricting PRV segment by insurer
+ ;IHS/SD/SDR 2.5*10 IM19802 Fix multiple lookup
+ ;IHS/SD/SDR 2.5*10 IM20089 Added code for new prompt to override ISA08 value for Medicare
+ ;IHS/SD/SDR 2.5*11 Patient Statement Added prompt for statement header line 2
+ ;IHS/SD/SDR 2.5*13 POA changes Added new prompt
+ ;
+ ;IHS/SD/SDR 2.6*1 HEAT4158 Added prompt for mammography cert#
+ ;IHS/SD/SDR 2.6*21 HEAT130406 Removed prompt for DAYS INACTIVE BEFORE PURGING
+ ;IHS/SD/SDR 2.6*21 VMBP Updated p11 changes to include Serena ref#s
+ ;IHS/SD/SDR 2.6*29 CR10696 Added UPPER LIMIT FOR BILL APPROVAL prompt
  ;
  ; *********************************************************************
  ;
@@ -50,6 +52,7 @@ AFFL I '$D(^ABMDPARM(DUZ(2),1,0)) D
  S DR=DR_";.36T"                  ; Place of service code
  S DR=DR_";.24T"                  ; Bill Number suffix
  S DR=DR_";.33T"                  ; Append HRN to bill number
+ S DR=DR_";215Upper Limit for Bill Approval...: "  ;abm*2.6*29 IHS/SD/SDR CR10696
  S DR=DR_";.25T"                  ; Allow for CPT modifiers prompt
  S DR=DR_";.27T"                  ; Set prof. component Automatically
  ;S DR=DR_";.28T"                  ; Days inactive before purging  abm*2.6*21 IHS/SD/SDR HEAT130406

@@ -1,0 +1,3 @@
+XMAP0 ;(WASH ISC)/CAP- * OBSOLETE * ;12/12/97  15:38
+ ;;7.1;MailMan;**27,50**;Jun 02, 1994
+ Q

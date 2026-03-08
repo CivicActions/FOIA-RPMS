@@ -1,5 +1,5 @@
-BDWBHL ; IHS/CMI/LAB - BDW Populate Various DW1 HL7 Segments ; [ 04/05/2007  2:56 PM ]
- ;;1.0;IHS DATA WAREHOUSE;**1,2,4**;JAN 23, 2006;Build 24
+BDWBHL ; IHS/CMI/LAB - BDW Populate Various DW1 HL7 Segments ; 05 Dec 2022  5:31 PM
+ ;;1.0;IHS DATA WAREHOUSE;**1,2,4,8,11**;JAN 24, 2006;Build 14
  ;       
  ;this routine will set up all of the necessary variables to populate varios DW1 HL7 segments
  ;
@@ -7,27 +7,11 @@ BDWBHL ; IHS/CMI/LAB - BDW Populate Various DW1 HL7 Segments ; [ 04/05/2007  2:5
  ;
 MAIN ;EP - this is the main routine driver
  S INQUE=1
- D ZVP,DG1,PR1,ZDN,ZIM,ZMD,HF,MSR,XAM,CPT,LAB,PED,SKT,IFC
+ D ZVP,DG1,PR1,ZDN,ZIM,ZMD,HF,MSR,XAM,CPT,LAB,PED,SKT,IFC,ZP2,ZWH,ZLN,ZPT
  Q
  ;
 ZVP ;EP - populate the dw1 ZVP segment
- K PRV
- S BDWCNT=0
- D PROV^BDWUTIL1(.PRV,BHLVIEN)
- I $G(PRV(1))="" D
- . S BDWCNT=1,INDA("ZVP",BDWCNT)="",INA("BDW1ZVP1",BDWCNT)=BDWCNT
- S BDWDA=0 F  S BDWDA=$O(PRV(BDWDA)) Q:'BDWDA  D
- . S BDWDATA=$G(PRV(BDWDA))
- . S BDWCNT=BDWCNT+1
- . S INDA("ZVP",BDWCNT)=""
- . S INA("BDW1ZVP1",BDWCNT)=BDWCNT
- . S INA("BDW1ZVP2",BDWCNT)=$P(BDWDATA,U,3)
- . S INA("BDW1ZVP3",BDWCNT)=$P(BDWDATA,U,4)
- . S INA("BDW1ZVP4",BDWCNT)=$P(BDWDATA,U,6)
- . S INA("BDW1ZVP5",BDWCNT)=$P(BDWDATA,U,7)
- . S INA("BDW1ZVP6",BDWCNT)=$P(BDWDATA,U,8)
- . S INA("BDW1ZVP7",BDWCNT)=$P(BDWDATA,U,5)
- K BDWDA,BDWCNT,BDWDATA,PRV
+ D ZVP^BDWBHL1
  Q
  ;
 DG1 ;EP - populate the dw1 DG1 and ZDX segments
@@ -45,6 +29,14 @@ DG1 ;EP - populate the dw1 DG1 and ZDX segments
  . S INA("BDW1ZDX4",BDWCNT,1)=$P(BDWDATA,U,2)
  . S INA("BDW1ZDX6",BDWCNT,1)=$P(BDWDATA,U,3)_U_U_$P(BDWDATA,U,11)  ;ihs/cmi/maw 10/17/2012 patch 4 icd10
  . S INA("BDW1ZDX7",BDWCNT,1)=$P(BDWDATA,U,4)
+ . ;PATCH 8 IHS/CMI/LAB
+ . S INA("BDW1ZDX8",BDWCNT,1)=$P(BDWDATA,U,13)
+ . S INA("BDW1ZDX9",BDWCNT,1)=$P(BDWDATA,U,14)
+ . S INA("BDW1ZDX10",BDWCNT,1)=$P(BDWDATA,U,15)
+ . S INA("BDW1ZDX11",BDWCNT,1)=$P(BDWDATA,U,16)
+ . S INA("BDW1ZDX12",BDWCNT,1)=$P(BDWDATA,U,17)
+ . S INA("BDW1ZDX13",BDWCNT,1)=$P(BDWDATA,U,18)
+ . S INA("BDW1ZDX14",BDWCNT,1)=$P(BDWDATA,U,19)
  S INDA("ZDX",1)=""
  K BDWCNT,BDWDA,BDWDATA,POV
  Q
@@ -118,12 +110,25 @@ ZMD ;EP - populate the dw1 ZMD segment
  . S INDA("ZMD",BDWCNT)=""
  . S INA("BDW1ZMD1",BDWCNT)=BDWCNT
  . S INA("BDW1ZMD2",BDWCNT)=$P(BDWDATA,U)
- . S INA("BDW1ZMD3",BDWCNT)=$P(BDWDATA,U,3)
+ . S INA("BDW1ZMD3",BDWCNT)=$P(BDWDATA,U,3)  ;
  . S INA("BDW1ZMD4",BDWCNT)=$P(BDWDATA,U,4)
  . S INA("BDW1ZMD5",BDWCNT)=$P(BDWDATA,U,2)
+ . S INA("BDW1ZMD7",BDWCNT)=$P(BDWDATA,U,5)
+ . S INA("BDW1ZMD10",BDWCNT)=$P(BDWDATA,U,6)  ;DATE DISCONTINUTED  PATCH 8
+ . S INA("BDW1ZMD20",BDWCNT)=$P(BDWDATA,U,7)  ;COMMENT  PATCH 8
+ . S INA("BDW1ZMD11",BDWCNT)=$P(BDWDATA,U,9)  ;RXNORM PATCH 8
+ . S INA("BDW1ZMD12",BDWCNT)=$P(BDWDATA,U,10)
+ . S INA("BDW1ZMD13",BDWCNT)=$P(BDWDATA,U,11)
+ . ;added RXD for rx # patch 8
+ . S INDA("RXD",BDWCNT)=""
+ . S INA("BDW1RXD1",BDWCNT)=BDWCNT
+ . S INA("BDW1RXD7",BDWCNT)=$P(BDWDATA,U,8)  ;RX NUMBER
  K BDWCNT,BDWDA,BDWDATA,MED
  Q
  ;
+ZWH ;EP - populate the DW1 ZWH segment
+ D WH^BDWBHL1
+ Q
 HF ;EP - populate the dw1 OBX health factors segment
  D HF^BDWBHL1
  Q
@@ -154,6 +159,12 @@ SKT ;EP - populate the dw1 OBX skin test segment
  ;
 IFC ;EP - populate the dw1 OBX infant feeding choice segment
  D IFC^BDWBHL1
+ Q
+ZP2 ;EP
+ D ZP2^BDWBHL1
+ Q
+ZPT ;EP
+ D ZPT^BDWBHL1
  Q
  ;
 ZRC ;EP - generate ZRC segment
@@ -303,10 +314,10 @@ HFSA(DEST,BHLHDIR,BHLHFNM) ;EP - export from this destination
  Q:Y
  S BHLX=0 F  S BHLX=$O(^BDWTMP(DEST,BHLX)) Q:'BHLX  D
  . S BHLU=$O(^INTHU("AT",BHLX,0))
- . Q:'BHLU  ;cmi/maw 6/28/2004 added for null node
+ . Q:'BHLU
  . D LPINTHU(BHLU)
  D ^%ZISC
- ;*****LORI PUT SENDTO HERE WHEN READY
+ ;
  I $P($G(^AUTTSITE(1,0)),U,21)=1 S BDWSLASH="/" I 1
  E  S BDWSLASH="\"
  S BDWNOSLA=1 I $E(BDWHDIR,$L(BDWHDIR))="/"!($E(BDWHDIR,$L(BDWHDIR))="\") S BDWNOSLA=0
@@ -314,20 +325,27 @@ HFSA(DEST,BHLHDIR,BHLHFNM) ;EP - export from this destination
  ;now loop through and delete them
  S BHLX=0 F  S BHLX=$O(^BDWTMP(DEST,BHLX)) Q:'BHLX  D
  .S BHLU=$O(^INTHU("AT",BHLX,0))
- .Q:'BHLU  ;cmi/maw 6/28/2004 added for null node
+ .Q:'BHLU
  .S DA=BHLU,DIE="^INTHU(",DR=".03////C" D ^DIE K DIE,DA,DR
  .Q
  K ^BDWTMP(DEST)
  D AUTOSEND^BDWBHL1
 FTP ;
  ;PUT FTP TO DW MACHINE HERE
-BULL ;now send mailman message to user who queued the job
+BULL ;send message
  D BULL^BDWBHL1
  Q
  ;
 LPINTHU(BHLUIEN)       ;EP - loop through UIF and set to file
  S BHLUDA=0 F  S BHLUDA=$O(^INTHU(BHLUIEN,3,BHLUDA)) Q:'BHLUDA  D
- . U IO W $P($G(^INTHU(BHLUIEN,3,BHLUDA,0)),"|CR|"),!
+ .;20250519 p11 long segment check
+ .N SEG,SEG1
+ .S SEG=$P(^INTHU(BHLUIEN,3,BHLUDA,0),"|CR|")
+ .S SEG1=$P($G(^INTHU(BHLUIEN,3,(BHLUDA+1),0)),"|CR|")
+ .I $$SEG^BDWBHL1($E(SEG1,1,3)) U IO W SEG,!
+ .I '$$SEG^BDWBHL1($E(SEG1,1,3)) U IO W SEG
+ .;U IO W $P($G(^INTHU(BHLUIEN,3,BHLUDA,0)),"|CR|"),!  ;orig line
+ W !
  Q
  ;
 DELAY(IDA,IA) ;-- determine the delay based on records
@@ -403,4 +421,6 @@ SETZTS6(PFL,PIEN,QCNT) ;-- set ZTS-6 with actual counts
  S LDA=0 F  S LDA=$O(^INTHU(TRL,3,LDA)) Q:'LDA  D
  . I $E($G(^INTHU(TRL,3,LDA,0)),1,3)="ZTS" D
  .. S $P(^INTHU(TRL,3,LDA,0),"|",7)=QCNT_"|CR"
+ Q
+ZLN ;
  Q

@@ -1,6 +1,8 @@
-LR7OU4 ;DALOI/DCM/FHS/RLM-NLT LINKING UTILITY AUTO ;8/11/97
- ;;5.2T9;LR;**1018**;Nov 17, 2004
- ;;5.2;LAB SERVICE;**127,163,272**;Sep 27, 1994
+LR7OU4 ;DALOI/DCM/FHS/RLM-NLT LINKING UTILITY AUTO ; 26-Apr-2023 11:00 ; MKK
+ ;;5.2;LAB SERVICE;**127,163,272,1018,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
  ; Reference to ^DIC supported by IA #10007
  ; Reference to YN^DICN supported by IA #10009
  ; Reference to ^DIE supported by IA #10018
@@ -32,6 +34,7 @@ LAB ;
  G END
  Q
 CHECK ;
+ Q:+$G(^LAB(60,LRIEN,.3))  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  Q:'$D(^LAB(60,LRIEN,0))#2!($G(^LAB(60,LRIEN,64)))!($G(END))
  S LRDATA=$P(^LAB(60,LRIEN,0),U),LRTY=$P(^(0),U,3) Q:LRTY=""!(LRTY="N")
  S LRNU=$$UPPER(LRN),LRMIEN=+$O(^LAM("D",LRNU,0)) D:'LRMIEN 91 Q:(('LRMIEN)!($G(END)))

@@ -1,5 +1,5 @@
-XMVSURR ;ISC-SF/GMB-Surrogate management ;04/19/2002  11:32
- ;;8.0;MailMan;;Jun 28, 2002
+XMVSURR ;ISC-SF/GMB-Surrogate management ;04/14/99  15:40
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces ^XMA7 (ISC-WASH/RJ/THM/CAP)
  ; Entry points used by MailMan options (not covered by DBIA):
  ; SHARE    XMSHARE  - Become SHARED,MAIL
@@ -13,16 +13,13 @@ SHARE ; Assume the identity of SHARED,MAIL
  D SELF
  Q
 CHKOK() ;
- I $D(^XUSEC("XMNOPRIV",DUZ)) D  Q 0
- . N XMTEXT  ;You have been given the XMNOPRIV key
- . W $C(7) ;and may not become anyone's surrogate.
- . D BLD^DIALOG(38053,"","","XMTEXT","F")
- . D MSG^DIALOG("WE","","","","XMTEXT")
+ I $D(^XUSEC("XMNOPRIV",DUZ)) W !,*7,"You have been given the XMNOPRIV key and may not become anyone's surrogate." Q 0
  D CHECK^XMVVITAE
  Q 1
 SELF ;
- D SELF^XMVVITAE
- W $C(7),!,$$EZBLD^DIALOG(38054),! ;You are now yourself again.
+ S XMDUZ=DUZ
+ D USER^XMVVITAE(XMDUZ,.XMV,.XMNOSEND,.XMDUN)
+ W *7,!,"You are now yourself again.",!
  D HEADER^XM
  Q
 ASSUME ; Assume someone else's identity
@@ -36,36 +33,33 @@ ASSUME ; Assume someone else's identity
  S DIC("W")="D SHOWPRIV^XMVSURR(Y)"
  S DIC("S")="I Y=.6!$D(^XMB(3.7,""AB"",DUZ,Y))"
  I XMDUZ=DUZ D
- . S DIC("B")=$$NAME^XMXUTIL(.6) ; SHARED,MAIL
+ . S DIC("B")="SHARED,MAIL"
  E  D
- . N XMTEXT
  . S DIC("S")=DIC("S")_"!(Y=DUZ),Y'=XMDUZ"
  . S DIC("B")=XMV("DUZ NAME")
- . ;You may select yourself to resume your own identity.
- . D BLD^DIALOG(38055,"","","XMTEXT","F")
- . D MSG^DIALOG("WE","","","","XMTEXT")
+ . W !,"You may select yourself to resume your own identity."
  D MIX^DIC1 I Y=-1!$D(DUOUT)!$D(DTOUT) Q
  S XMDUZ=+Y
  I XMDUZ=DUZ D SELF Q
  I XMDUZ=.6 D SHARE Q
- D OTHER^XMVVITAE
+ D SURROGAT^XMVVITAE(XMDUZ,.XMV,.XMDUN,.XMNOSEND,.XMPRIV)
  D HEADER^XM
  Q
 LISTEM ; List surrogates a user may become
  N XMDUZ
- W !,$$EZBLD^DIALOG(38056) ;Choose from:
+ W !,"Choose from:"
  S XMDUZ=0
- F  S XMDUZ=$O(^XMB(3.7,"AB",DUZ,XMDUZ)) Q:'XMDUZ  W !,?3,$E($$NAME^XMXUTIL(XMDUZ),1,32) D SHOWPRIV(XMDUZ)
+ F  S XMDUZ=$O(^XMB(3.7,"AB",DUZ,XMDUZ)) Q:'XMDUZ  W !,?3,$$NAME^XMXUTIL(XMDUZ) D SHOWPRIV(XMDUZ)
  W !,?3,$$NAME^XMXUTIL(.6) D SHOWPRIV(.6) W !
  Q
 SHOWPRIV(XMDUZ) ;
  Q:XMDUZ=DUZ
- I XMDUZ=.6 W ?37,$$EZBLD^DIALOG(38048) Q  ;Read Privilege
+ I XMDUZ=.6 W ?40,"Read Privilege" Q
  N XMPRIV,XMNEW
  S XMPRIV=$P($G(^XMB(3.7,XMDUZ,9,+$O(^XMB(3.7,"AB",DUZ,XMDUZ,0)),0)),U,2,3)
- I XMPRIV'["y" W ?37,$$EZBLD^DIALOG(38046) Q  ;No Privileges
- I $L(XMPRIV,"y")>2 W ?37,$$EZBLD^DIALOG(38047) ;Read and Send Privileges
- E  W ?37,$$EZBLD^DIALOG($S($P(XMPRIV,U)["y":38048,1:38049)) ; Read/Send Privilege
+ I XMPRIV'["y" W ?40,"No Privileges" Q
  S XMNEW=$$TNMSGCT^XMXUTIL(XMDUZ)
- W " ",$J($$EZBLD^DIALOG($S(XMNEW:38052,1:38051),XMNEW),79-$X) ; x/No New Msgs
+ I $L(XMPRIV,"y")>2 W ?39," Read & Write Privileges"
+ E  W ?39,$S($P(XMPRIV,U)["y":" Read",1:" Write")," Privilege"
+ W ?64," ",$S(XMNEW:XMNEW,1:"No")," New Msgs"
  Q

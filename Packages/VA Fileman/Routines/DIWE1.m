@@ -1,6 +1,7 @@
-DIWE1 ;SFISC/GFT-WORD PROCESSING FUNCTION ;4JUN2008
- ;;22.0;VA FileMan;**159**;Mar 30, 1999;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIWE1 ;SFISC/GFT-WORD PROCESSING FUNCTION ;7/29/94  09:18 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  G X:$D(DTOUT) I '$D(DWL) S I=DWLC,J=$S(I<11:1,1:I-8) W:J>1 ?7,". . .",!?7,". . ." D LL
 1 G X:$D(DTOUT) R !,"EDIT Option: ",X:DTIME S:'$T DTOUT=1 G X:U[X!(X=".")
 LC I X?1L S X=$C($A(X)-32)
@@ -47,18 +48,7 @@ Y ;;Y;Y-Programmer Edit;
  ;;
 E2 S Y=^(0) S:Y="" Y=" " W !,$J(DWL,3)_">"_Y,! S DIRWP=1 D RW^DIR2 K DIRWP G E2:X?1."?",X:X?1."^"
 TAB I X[$C(9) S X=$P(X,$C(9),1)_$C(124)_"TAB"_$C(124)_$P(X,$C(9),2,999) G TAB
- S:X]"" ^(0)=X
- ;check if line is greater than max, DWLW, break line up and treat as an insert
- I $L(X)>DWLW D
- . N I,J,DIC1
- . K ^UTILITY($J,"W") S DIC1=DIC,DIC="^UTILITY($J,""W"",",@(DIC_"0)")=""
- . F DWI=1:1 Q:$L(X)'>DWLW  S J=$F(X,"",DWLW-7),J=$S(J<1!(J>DWLW):DWLW,1:J),@(DIC_"DWI,0)")=$E(X,1,J-1),X=$E(X,J,256)
- . S @(DIC_"DWI,0)")=X
- . W !,(DWI-1)_" line"_$E("s",DWI>2)_" inserted.."
- . X "F J=DWL+1:1:DWLC S DWI=DWI+1,"_DIC_"DWI,0)="_DIC1_"J,0) W ""."""
- . S I=DWL X "F J=1:1 Q:'$D("_DIC_"J,0))  S "_DIC1_"I,0)=^(0),I=I+1 W ""."""
- . S DWLC=I-1,DIC=DIC1 K ^UTILITY($J,"W")
- E  I X="@" S (DW1,DW2)=DWL W "DELETED..." D DEL^DIWE3
+ S:X]"" ^(0)=X I X="@" S (DW1,DW2)=DWL W "DELETED..." D DEL^DIWE3
  W ! S I=9 G OPT
  ;
 RD R X:DTIME S:'$T DTOUT=1 I X?1."?" W !?5,"Enter a line number from 1 through "_DWLC,!!,$P(X1,";",3) G RD

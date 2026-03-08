@@ -1,5 +1,5 @@
-ABMDF51 ;IHS/DSD/DMJ/LSL - Set UB92 Print Array ;      
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF51 ;IHS/SD/SDR - Set UB92 Print Array ;      
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;Original;TMD;12/15/95 2:39 PM
  ;
  ;IHS/DSD/DMJ - 5/7/1999 - NOIS XAA-0599-200017 Patch 1
@@ -65,7 +65,8 @@ ENT ;EP for setting up export array and printing form
  S ABMP("B0")=^ABMDBILL(DUZ(2),ABMP("BDFN"),0)  ; 3P BILL 0 node
  S ABMP("INS")=$P(ABMP("B0"),U,8)     ; Active insurer
  Q:'ABMP("INS")                       ; Q:no active insurer
- S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ; type of insur
+ ;S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ; type of insur  ;abm*2.6*10 HEAT73780
+ S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ; type of insur  ;abm*2.6*10 HEAT73780
  S ABMP("PDFN")=$P(ABMP("B0"),U,5)    ; IEN to patient
  S ABMP("CDFN")=+$P(ABMP("B0"),U)      ; IEN to 3P CLAIM
  S ABMP("LDFN")=$P(ABMP("B0"),U,3)    ; IEN to location (visit location)

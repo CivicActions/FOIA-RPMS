@@ -1,5 +1,5 @@
 BSTSNDET ;GDIT/HS/BEE-Get Concept Detail - Documentation ; 15 Nov 2012  4:26 PM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**4**;Dec 01, 2016;Build 10
  Q
  ;
  ;This routine documents the detail return from various BSTS API calls including
@@ -25,9 +25,14 @@ BSTSNDET ;GDIT/HS/BEE-Get Concept Detail - Documentation ; 15 Nov 2012  4:26 PM
  ;Common Concept?
  ; VAR(#,"CMN")=1 - Yes/0 - No
  ;
+ ;Interface term
+ ; VAR(#,"CTM","TRM")=Interface Term
+ ; VAR(#,"CTM","DSC")=Description Id of the Interface Term
+ ;
  ;Concept ID/DTSID
  ; VAR(#,"CON")=Concept Id
  ; VAR(#,"DTS")=Internal DTS Id
+ ; VAR(#,"INACTIVE")=1:INACTIVE,0:ACTIVE
  ;
  ;Is Episodicity Required
  ; VAR(#,"EPI")=1 - Required/0 - Not Required
@@ -50,6 +55,7 @@ BSTSNDET ;GDIT/HS/BEE-Get Concept Detail - Documentation ; 15 Nov 2012  4:26 PM
  ; VAR(#,"FSN","TRM")=Fully Specified Name
  ; VAR(#,"FSN","XADT")=Date Added
  ; VAR(#,"FSN","XRDT")=Date Retired
+ ; VAR(#,"FSN","INACTIVE")=1:INACTIVE,0:ACTIVE
  ;
  ;Healing Prompt Selections
  ; VAR(#,"HEAL")="RD/RDN/RDNM/Null for No Prompt
@@ -86,6 +92,7 @@ BSTSNDET ;GDIT/HS/BEE-Get Concept Detail - Documentation ; 15 Nov 2012  4:26 PM
  ; VAR(#,"PRE","TRM")=Preferred Term
  ; VAR(#,"PRE","XADT")=Date Added
  ; VAR(#,"PRE","XRDT")=Date Retired
+ ; VAR(#,"PRE","INACTIVE")=1:INACTIVE,0:ACTIVE
  ;
  ;Default Concept Status
  ; VAR(#,"STS")=Chronic/Personal History/Sub-acute/Admin/Social
@@ -100,6 +107,7 @@ BSTSNDET ;GDIT/HS/BEE-Get Concept Detail - Documentation ; 15 Nov 2012  4:26 PM
  ; VAR(#,"SYN",CTR,"TRM")=Synonym Term
  ; VAR(#,"SYN",CTR,"XADT")=Date Added
  ; VAR(#,"SYN",CTR,"XRDT")=Date Retired
+ ; VAR(#,"SYN",CTR,"INACTIVE")=1:INACTIVE,0:ACTIVE
  ;
  ;Association Information (SNOMED) - Multiple Records Returned (CTR)
  ; VAR(#,"ASM",CTR,"CON")=SNOMED Concept CT Association

@@ -1,22 +1,28 @@
-ABMDRCHK ; IHS/ASDST/DMJ - Report Utility to Check Parms ;  
- ;;2.6;IHS Third Party Billing;**1,9,10,14,21**;NOV 12, 2009;Build 379
+ABMDRCHK ; IHS/SD/SDR - Report Utility to Check Parms
+ ;;2.6;IHS Third Party Billing;**1,9,10,14,21,29,31,32,37**;NOV 12, 2009;Build 739
  ;Original;TMD;10/17/95 12:45 PM
  ;
- ; IHS/SD/SDR - v2.5 p8 - Added code to check cancelled claim file
- ; IHS/SD/SDR,TPF - v2.5 p8 - added code for pending status (12)
- ; IHS/SD/SDR - v2.5 p9 - IM17380 - Split out line and added $G
- ; IHS/SD/SDR - v2.5 p10 - IM21520 - Fixed report so it would allow selection of one insurer
+ ;IHS/SD/SDR 2.5*8 Added code to check cancelled claim file
+ ;IHS/SD/SDR,TPF 2.5*8 added code for pending status (12)
+ ;IHS/SD/SDR 2.5*9 IM17380 - Split out line and added $G
+ ;IHS/SD/SDR 2.5*10 IM21520 - Fixed report so it would allow selection of one insurer
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ; IHS/SD/SDR - abm*2.6*1 - HEAT7633 - didn't work when V-codes were selected
- ; IHS/SD/SDR - 2.6*9 - HEAT43507 - Closed claim report doesn't run by visit date
- ;IHS/SD/SDR - 2.6*14 - ICD10 009 - Updated so reports will check for ICD-10 codes
- ;IHS/SD/SDR - 2.6*14 - Updated DX^ABMCVAPI to be numeric
- ;IHS/SD/SDR - 2.6*14 - HEAT165197 (CR3109) - Updated check for DX range to use $$NUM
- ;IHS/SD/SDR - 2.6*21 - HEAT184442 - Made change for programming error <UNDEF>DX+22^ABMDRCHK.  Occurs when user selects BOTH
- ;   but doesn't enter any ICD10 codes, just hits return.
- ;IHS/SD/SDR - 2.6*21 - HEAT186137 - Fixed check for pending claims report if a specific visit type is selected.
- ;IHS/SD/SDR - 2.6*21 - VMBP RQMT_96 - Updated checked to look at new insurer type field
+ ;IHS/SD/SDR 2.6 CSV
+ ;IHS/SD/SDR 2.6*1 HEAT7633 didn't work when V-codes were selected
+ ;IHS/SD/SDR 2.6*9 HEAT43507 Closed claim report doesn't run by visit date
+ ;IHS/SD/SDR 2.6*14 ICD10 009 Updated so reports will check for ICD-10 codes
+ ;IHS/SD/SDR 2.6*14 Updated DX^ABMCVAPI to be numeric
+ ;IHS/SD/SDR 2.6*14 HEAT165197 (CR3109) Updated check for DX range to use $$NUM
+ ;IHS/SD/SDR 2.6*21 HEAT184442 Made change for programming error <UNDEF>DX+22^ABMDRCHK.  Occurs when user selects BOTH
+ ;   but doesn't enter any ICD10 codes, just hits return
+ ;IHS/SD/SDR 2.6*21 HEAT186137 Fixed check for pending claims report if a specific visit type is selected.
+ ;IHS/SD/SDR 2.6*21 VMBP RQMT_96 Updated checked to look at new insurer type field
+ ;IHS/SD/SDR 2.6*29 CR10669 Updated PX to use actual CPT code, not pointer when checking CPT range
+ ;IHS/SD/SDR 2.6*31 CR10341 Changed how pending reason is stored so it's reasoncode-desc.
+ ;IHS/SD/SDR 2.6*31 CR11834 Updated INCOM to check for pended date and if it's within selected range
+ ;IHS/SD/SDR 2.6*32 CR8924 INCOM tag fixed specific insurer prompt; variable check was wrong; also fixed eligibility status check
+ ;IHS/SD/SDR 2.6*37 ADO75981 Added 43 (misc) and 47 (ambulance) to be included in the PX tag for reports; updated PX tag so it wouldn't quit
+ ;  right away if range is HCPCS
  ;
 BILL ;EP for checking Bill File data parameters
  Q:'$D(^ABMDBILL(DUZ(2),ABM,0))!('$D(^(1)))
@@ -48,7 +54,6 @@ BILL ;EP for checking Bill File data parameters
  I $G(ABMY("PTYP"))=2,$P($G(^AUPNPAT(ABM("P"),11)),U,12)'="I" Q
  I $G(ABMY("PTYP"))=1,$P($G(^AUPNPAT(ABM("P"),11)),U,12)="I" Q
  I $D(ABMY("INS")),ABMY("INS")'=ABM("I") Q
- ;I $D(ABMY("TYP")) Q:ABMY("TYP")'[$P($G(^AUTNINS(ABM("I"),2)),U)  ;abm*2.6*10 HEAT73780
  ;I $D(ABMY("TYP")) Q:ABMY("TYP")'[$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM("I"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780  ;abm*2.6*21 IHS/SD/SDR VMBP RQMT_96
  I $D(ABMY("TYP")) Q:("^"_ABMY("TYP")_"^")'[("^"_$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM("I"),".211","I"),1,"I")_"^")  ;abm*2.6*10 HEAT73780  ;abm*2.6*21 IHS/SD/SDR VMBP RQMT_96
  I $D(ABMY("CLIN")),'$D(ABMY("CLIN",+$P(^ABMDBILL(DUZ(2),ABM,0),"^",10))) Q
@@ -144,16 +149,21 @@ DX ;EP
 DX2 ;EP
  Q
  ;
-PX I '+ABMY("PX",1)!'+ABMY("PX",2) Q
- I ABM("PX")="BILL" S ABM("PX","HIT")=0 N I F I=21,27,35,37,39 D  Q:ABM("PX","HIT")
+PX ;
+ ;I '+ABMY("PX",1)!'+ABMY("PX",2) Q  ;abm*2.6*37 IHS/SD/SDR ADO75981
+ I (($G(ABMY("PX",1))="")!($G(ABMY("PX",2))="")) Q  ;abm*2.6*37 IHS/SD/SDR ADO75981
+ ;I ABM("PX")="BILL" S ABM("PX","HIT")=0 N I F I=21,27,35,37,39 D  Q:ABM("PX","HIT")  ;abm*2.6*37 IHS/SD/SDR ADO75981
+ I ABM("PX")="BILL" S ABM("PX","HIT")=0 N I F I=21,27,35,37,39,43,47 D  Q:ABM("PX","HIT")  ;abm*2.6*37 IHS/SD/SDR ADO75981
  .N J S J=0 F  S J=$O(^ABMDBILL(DUZ(2),ABM,I,J)) Q:'J  D
- ..S ABM("CPT")=$P(^ABMDBILL(DUZ(2),ABM,I,J,0),U)
+ ..;S ABM("CPT")=$P(^ABMDBILL(DUZ(2),ABM,I,J,0),U)  ;abm*2.6*29 IHS/SD/SDR CR10669
+ ..S ABM("CPT")=$P($G(^ICPT($P(^ABMDBILL(DUZ(2),ABM,I,J,0),U),0)),U)  ;abm*2.6*29 IHS/SD/SDR CR10669
  ..Q:ABM("CPT")>+ABMY("PX",2)
  ..Q:ABM("CPT")<+ABMY("PX",1)
  ..S ABM("PX","HIT")=1
  I ABM("PX")="CLM" S ABM("PX")=0,ABM("PX","HIT")=0 S ABM("PX")=$O(^ABMDCLM(DUZ(2),ABM,21,"C",ABM("PX"))) Q:'ABM("PX")  D  Q:ABM("PX","HIT")
  .S ABM("PX")=$O(^ABMDCLM(DUZ(2),ABM,21,"C",ABM("PX"),""))
- .Q:'$D(^ABMDCLM(DUZ(2),ABM,21,ABM("PX"),0))  S ABM("PX",0)=$P(^(0),U)
+ .;Q:'$D(^ABMDCLM(DUZ(2),ABM,21,ABM("PX"),0))  S ABM("PX",0)=$P(^(0),U)  ;abm*2.6*29 IHS/SD/SDR CR10669
+ .Q:'$D(^ABMDCLM(DUZ(2),ABM,21,ABM("PX"),0))  S ABM("PX",0)=$P($G(^ICPT($P(^(0),U),0)),U)  ;abm*2.6*29 IHS/SD/SDR CR10669
  .Q:+ABM("PX",0)>ABMY("PX",2)
  .Q:+ABM("PX",0)<ABMY("PX",1)
  .S ABM("PX","HIT")=1
@@ -190,14 +200,24 @@ CANCEL ;EP for checking Claim file data parameters
  Q
 INCOM(ABM,ABMTEMP,ABMYTEMP) ;EP - determine parameters for claims with pending status
  Q:$P($G(^ABMDCLM(DUZ(2),ABM,0)),U,4)'="P"
+ ;start new abm*2.6*31 IHS/SD/SDR CR11834
+ S ABM("PDT")=$P($P($G(^ABMDCLM(DUZ(2),ABM,0)),U,20),".")
+ I $G(ABMY("DT"))="H",ABM("PDT")<ABMY("DT",1)!(ABM("PDT")>ABMY("DT",2)) Q
+ ;end new abm*2.6*31 IHS/SD/SDR CR11834
  ;is the provider involved with this claim?
  I $D(ABMY("PRV")),'$D(^ABMDCLM(DUZ(2),ABM,41,"B",ABMY("PRV"))) Q
  S ABMREC0=$G(^ABMDCLM(DUZ(2),ABM,0))
  S ABMREC7=$G(^ABMDCLM(DUZ(2),ABM,7))
  S ABMTEMP("PATIENT")=$P(ABMREC0,U) Q:ABMTEMP("PATIENT")=""
  I $G(ABMY("PAT"))'="" Q:ABMY("PAT")'=ABMTEMP("PATIENT")
- S ABMTEMP("ELIGIBILITY STATUS")=$P($G(^AUPNPAT(ABMTEMP("PATIENT"),11)),U,11)
- I $G(ABMY("PTYP"))'="" Q:ABMTEMP("ELIGIBILITY STATUS")'=ABMY("PTYP")
+ ;start old abm*2.6*32 IHS/SD/SDR CR8924
+ ;S ABMTEMP("ELIGIBILITY STATUS")=$P($G(^AUPNPAT(ABMTEMP("PATIENT"),11)),U,11)
+ ;I $G(ABMY("PTYP"))'="" Q:ABMTEMP("ELIGIBILITY STATUS")'=ABMY("PTYP")
+ ;end old start new abm*2.6*32 IHS/SD/SDR CR8924
+ ;eligibility status
+ I $G(ABMY("PTYP"))=2,$P($G(^AUPNPAT(ABMTEMP("PATIENT"),11)),U,12)'="I" Q
+ I $G(ABMY("PTYP"))=1,$P($G(^AUPNPAT(ABMTEMP("PATIENT"),11)),U,12)="I" Q
+ ;end new abm*2.6*32 IHS/SD/SDR CR8924
  S ABMTEMP("ENCOUNTER DATE")=$P(ABMREC0,U,2)
  S ABMTEMP("LOCATION")=$P(ABMREC0,U,3)
  I $G(ABMY("LOC"))'="" Q:ABMTEMP("LOCATION")'=ABMY("LOC")
@@ -211,12 +231,14 @@ INCOM(ABM,ABMTEMP,ABMYTEMP) ;EP - determine parameters for claims with pending s
  ;I ABMTEMP("ACTIVE INSURER")'="" S ABMTEMP("BILLING ENTITY")=$P($G(^AUTNINS(ABMTEMP("ACTIVE INSURER"),2)),U)  ;abm*2.6*10 HEAT73780
  I ABMTEMP("ACTIVE INSURER")'="" S ABMTEMP("BILLING ENTITY")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMTEMP("ACTIVE INSURER"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  S:ABMTEMP("ACTIVE INSURER")="" ABMTEMP("ACTIVE INSURER")="NO COVERAGE FOUND"
- I $G(ABMYTEMP("TYP"))'="" Q:ABMYTEMP("TYP")'[(ABMTEMP("BILLING ENTITY"))
+ ;I $G(ABMYTEMP("TYP"))'="" Q:ABMYTEMP("TYP")'[(ABMTEMP("BILLING ENTITY"))  ;abm*2.6*32 IHS/SD/SDR CR8924
+ I $D(ABMY("TYP")) Q:("^"_ABMY("TYP")_"^")'[("^"_$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMTEMP("ACTIVE INSURER"),".211","I"),1,"I")_"^")  ;abm*2.6*32 IHS/SD/SDR CR8924
  S ABMTEMP("PS")=$P(ABMREC0,U,18)
  I $D(ABMY("REASON")) Q:'$D(ABMY("REASON",ABMTEMP("PS")))
  S ABMTEMP("PS UPDATER")=$P(ABMREC0,U,19)
  I $G(ABMY("STATUS UPDATER"))'="" Q:ABMTEMP("PS UPDATER")'=$G(ABMY("STATUS UPDATER"))
  S ABMTEMP("VISIT DATE")=$P(ABMREC7,U)
- S ABMTEMP("PS REASON")=$S(ABMTEMP("PS")'="":$P($G(^ABMPSTAT(ABMTEMP("PS"),0)),U),1:"UNDEFINED")
+ ;S ABMTEMP("PS REASON")=$S(ABMTEMP("PS")'="":$P($G(^ABMPSTAT(ABMTEMP("PS"),0)),U),1:"UNDEFINED")  ;abm*2.6*31 IHS/SD/SDR CR10341
+ S ABMTEMP("PS REASON")=$S(ABMTEMP("PS")'="":ABMTEMP("PS")_"-"_$P($G(^ABMPSTAT(ABMTEMP("PS"),0)),U),1:"UNDEFINED")  ;abm*2.6*31 IHS/SD/SDR CR10341
  S ABMP("HIT")=1
  Q

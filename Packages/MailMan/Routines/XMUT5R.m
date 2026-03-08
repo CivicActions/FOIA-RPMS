@@ -1,0 +1,4 @@
+XMUT5R ;(WASH ISC)/CAP - FORUM MAIL RPTS - OPTIONS ;11/7/91  14:29
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;;Jun 02, 1994
+ Q

@@ -1,5 +1,5 @@
 BQIDCAH4 ;GDIT/HS/ALA-Ad Hoc continued ; 10 Dec 2012  3:23 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**1,3**;Mar 01, 2021;Build 32
  ;
 PROB(FGLOB,TGLOB,PROB,PROBTX,FDT,TDT,MPARMS) ;EP - Problems
  NEW PRPT,CT,IEN,PB,PCT,PTAX,TREF
@@ -35,10 +35,10 @@ PRBB ; Problem
  .. I $O(^AUPNPROB("AC",IEN,""))="" Q
  .. S PIEN=""
  .. F  S PIEN=$O(^AUPNPROB("AC",IEN,PIEN)) Q:PIEN=""  D
- ... S PB=$P(^AUPNPROB(PIEN,0),U,1)
+ ... S PB=$P($G(^AUPNPROB(PIEN,0)),U,1) I PB="" Q
  ... I $D(MPARMS("PROB")),'$D(MPARMS("PROB",PB)) Q
  ... I '$D(MPARMS("PROB")),PB'=PROB Q
- ... S STAT=$P(^AUPNPROB(PIEN,0),U,12)
+ ... S STAT=$P($G(^AUPNPROB(PIEN,0)),U,12) I STAT="" Q
  ... I PRSTAT'="",STAT'=PRSTAT Q
  ... I $D(MPARMS("PRSTAT")),'$D(MPARMS("PRSTAT",STAT)) Q
  ... S VSDTM=$$PROB^BQIUL1(PIEN)
@@ -50,10 +50,10 @@ PRBB ; Problem
  NEW IEN,DFN,VSDTM,STAT
  S IEN=""
  F  S IEN=$O(^AUPNPROB("B",PROB,IEN)) Q:IEN=""  D
- . S DFN=$P($G(^AUPNPROB(IEN,0)),U,2)
+ . S DFN=$P($G(^AUPNPROB(IEN,0)),U,2) I DFN="" Q
  . S VSDTM=$$PROB^BQIUL1(IEN)
  . I FDT'="",VSDTM<FDT!(VSDTM>TDT) Q
- . S STAT=$P(^AUPNPROB(IEN,0),U,12)
+ . S STAT=$P(^AUPNPROB(IEN,0),U,12) I STAT="" Q
  . I PRSTAT'="",STAT'=PRSTAT Q
  . I $D(MPARMS("PRSTAT")),'$D(MPARMS("PRSTAT",STAT)) Q
  . I DFN'="",PROP="!" S @TGLOB@(DFN)="",@CRIT@("PROB",DFN,IEN)="" Q
@@ -225,4 +225,146 @@ PLD ;EP
  . F  S DFN=$O(^BQICARE(OWNR,1,PLIEN,40,DFN)) Q:'DFN  D
  .. I $P(^BQICARE(OWNR,1,PLIEN,40,DFN,0),U,2)="R" Q
  .. S @TGLOB@(DFN)=""
+ Q
+ ;
+HFCT(FGLOB,TGLOB,HFTX,HFCAT,HFACT,FDT,TDT,HFNOT,HFOP,MPARMS) ;EP - Health Factors
+ ; NGLOB = Not have global
+ ; HFGLOB = Operand global
+ S NGLOB=$NA(^TMP("BQIDCHFAC",$J)) K @NGLOB
+ S HFGLOB=$NA(^TMP("BQIHFOP",$J)) K @HFGLOB
+ S HCGLOB=$NA(^TMP("BQIHFCOP",$J)) K @HCGLOB
+ I $G(TGLOB)="" Q
+ ;
+ S TTT=0,TCT=0
+ ; Taxonomy
+ I $G(HFTX)'="" D
+ . S TREF=$NA(MPARMS("HFACT"))
+ . K @TREF
+ . S PTAX=$P(@("^"_$P(HFTX,";",2)_$P(HFTX,";",1)_",0)"),"^",1)
+ . D BLD^BQITUTL(PTAX,TREF)
+ ;
+ ; Single Category
+ I $G(HFCAT)'="" D
+ . I HFCAT?.N S HFCNM=$P(^AUTTHF(HFCAT,0),"^",1)
+ . I HFCAT'?.N S HFCNM=HFCAT
+ . D HFCY(HFCNM)
+ ;
+ ; Multiple categories
+ I $O(MPARMS("HFCAT",""))'="" D
+ . S HFCAT="" F  S HFCAT=$O(MPARMS("HFCAT",HFCAT)) Q:HFCAT=""  D
+ .. I HFCAT?.N S HFCNM=$P(^AUTTHF(HFCAT,0),"^",1)
+ .. I HFCAT'?.N S HFCNM=HFCAT
+ .. S TTT=TTT+1
+ .. D HFCY(HFCNM)
+ ;
+ S TCT=0
+ I $G(HFACT)'="" D
+ . S TCT=TCT+1
+ . D HF(HFACT)
+ ;
+ I $D(MPARMS("HFACT"))>0 D
+ . S HFACT="" F  S HFACT=$O(MPARMS("HFACT",HFACT)) Q:HFACT=""  S TCT=TCT+1 D HF(HFACT)
+ ;
+ ; If selection is 'OR', all found are good
+ I HFOP="!"&(HFCOP="!") D
+ . S IEN=""
+ . F  S IEN=$O(@HFGLOB@(IEN)) Q:IEN=""  S @TGLOB@(IEN)=""
+ ;
+ ; if selection is 'AND' a patient must have all selections to be good
+ I HFOP="&" D
+ . NEW IEN,LCT,LB
+ . S IEN="" F  S IEN=$O(@HFGLOB@(IEN)) Q:IEN=""  D
+ .. S LCT=0,LB=""
+ .. F  S LB=$O(@HFGLOB@(IEN,LB)) Q:LB=""  S LCT=LCT+1
+ .. ; If patient count not equal to total count, do not include
+ .. I LCT'=TCT K @CRIT@("HFACT",IEN) Q
+ .. ; if patient count equal to total count include
+ .. I LCT=TCT,'HFNOT S @TGLOB@(IEN)="" Q
+ .. I LCT=TCT,HFNOT S @NGLOB@(IEN)="" K @CRIT@("HFACT",IEN)
+ ;
+ I HFCOP="&" D
+ . S IEN="" F  S IEN=$O(@HCGLOB@(IEN)) Q:IEN=""  D
+ .. S CCT=0,HC=""
+ .. F  S HC=$O(@HCGLOB@(IEN,HC)) Q:HC=""  S CCT=CCT+1
+ .. I CCT'=TTT K @CRIT@("HFACT",IEN) Q
+ .. I CCT=TTT,'HFNOT S @TGLOB@(IEN)="" Q
+ .. I CCT=TTT,HFNOT S @NGLOB@(IEN)="" K @CRIT@("HFACT",IEN)
+ ;
+ I HFNOT,$G(FGLOB)'="" D
+ . S IEN="" F  S IEN=$O(@FGLOB@(IEN)) Q:IEN=""  D
+ .. ;I $G(@NGLOB@(IEN))'=TCT S @TGLOB@(IEN)=""
+ .. I HFOP="!",$G(@NGLOB@(IEN))="" S @TGLOB@(IEN)="" Q
+ .. I HFOP="&",$G(@NGLOB@(IEN))'=TCT S @TGLOB@(IEN)=""
+ I HFNOT,$G(FGLOB)="" D
+ . S IEN=0 F  S IEN=$O(^AUPNPAT(IEN)) Q:'IEN  D
+ .. I HFOP="!",$G(@NGLOB@(IEN))="" S @TGLOB@(IEN)="" Q
+ .. I HFOP="&",$G(@NGLOB@(IEN))'=TCT S @TGLOB@(IEN)=""
+ K @NGLOB,@HFGLOB
+ Q
+ ;
+HF(HF) ;EP
+ ; Check for dates/timeframe for search
+ NEW DFN,IEN,BGT,BDT,ENT,VIS,VSDTM
+ S TDT=$S(TDT'="":TDT,1:DT)
+ ; if already a list of patients passed in, only check for those patients
+ I $G(FGLOB)'="" D  Q
+ . NEW IEN
+ . S IEN=""
+ . F  S IEN=$O(@FGLOB@(IEN)) Q:'IEN  D
+ .. ; if timeframe was Ever
+ .. I FDT="" D
+ ... S BDT=""
+ ... F  S BDT=$O(^AUPNVHF("AA",IEN,HF,BDT)) Q:BDT=""  D HFDT
+ .. ; if timeframe or specific date range
+ .. I FDT'="" D
+ ... S BGT=9999999-FDT,ENT=9999999-TDT,BDT=ENT-1
+ ... F  S BDT=$O(^AUPNVHF("AA",IEN,HF,BDT)) Q:BDT=""!(BDT>BGT)  D HFDT
+ ;
+ ; if no list of patients passed in, look at all patients
+ S IEN=""
+ F  S IEN=$O(^AUPNVHF("B",HF,IEN),-1) Q:IEN=""  D
+ . I $G(^AUPNVHF(IEN,0))="" Q
+ . S DFN=$P($G(^AUPNVHF(IEN,0)),U,2),VIS=$P($G(^AUPNVHF(IEN,0)),U,3),HFN=$P(^(0),U,1)
+ . I VIS="" Q
+ . I $G(^AUPNVSIT(VIS,0))="" Q
+ . ; exclude Chart review, Telephone, Daily Hosp Data, Ancillary Package Daily
+ . ;Q:"DXCT"[$P(^AUPNVSIT(VIS,0),U,7)
+ . S VSDTM=$P(^AUPNVSIT(VIS,0),U,1)\1
+ . I FDT'="",VSDTM<FDT!(VSDTM>TDT) Q
+ . S HFCT=$P($G(^AUTTHF(HFN,0)),"^",3)
+ . I HFCT'="" D
+ .. I $G(HFCAT)'=""&(HFCT=HFCAT) D
+ ... I 'HFNOT S @HCGLOB@(DFN,HFCT)=""
+ .. I $D(MPARMS("HFCAT",HFCT)) D
+ ... I 'HFNOT S @HCGLOB@(DFN,HFCT,IEN)=""
+ . ;
+ . I 'HFNOT D  Q
+ .. S @HFGLOB@(DFN,HF,IEN)="",@CRIT@("HFACT",DFN,IEN)=""
+ . I HFNOT D  Q
+ .. S @NGLOB@(DFN)=$G(@NGLOB@(DFN))+1
+ Q
+ ;
+HFDT ;EP
+ S LIEN=""
+ F  S LIEN=$O(^AUPNVHF("AA",IEN,HF,BDT,LIEN)) Q:LIEN=""  D
+ . S VIS=$P($G(^AUPNVHF(LIEN,0)),U,3) I VIS="" Q
+ . I $G(^AUPNVSIT(VIS,0))="" Q
+ . ; exclude Chart review, Telephone, Daily Hosp Data, Ancillary Package Daily
+ . ;Q:"DXCT"[$P(^AUPNVSIT(VIS,0),U,7)
+ . S HFN=$P(^AUPNVHF(LIEN,0),U,1)
+ . S HFCT=$P($G(^AUTTHF(HFN,0)),"^",3)
+ . I HFCT'="" D
+ .. I $G(HFCAT)'=""&(HFCT=HFCAT) D
+ ... I 'HFNOT S @HCGLOB@(IEN,HFCT)=""
+ .. I $D(MPARMS("HFCAT",HFCT)) D
+ ... I 'HFNOT S @HCGLOB@(IEN,HFCT)=""
+ . ;
+ . I 'HFNOT D  Q
+ .. S @HFGLOB@(IEN,HF,LIEN)="",@CRIT@("HFACT",IEN,LIEN)=""
+ . I HFNOT D  Q
+ .. S @NGLOB@(IEN)=$G(@NGLOB@(IEN))+1
+ Q
+ ;
+HFCY(HFCNM) ;EP - Health Factor Category
+ S N="" F  S N=$O(^AUTTHF("F",HFCNM,N)) Q:'N  S MPARMS("HFACT",N)=""
  Q

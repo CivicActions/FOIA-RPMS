@@ -1,106 +1,100 @@
 ABMPSAPI ; IHS/ASDS/LSL - 3PB Pharmacy POS API   
- ;;2.6;IHS Third Party Billing System;**2,4,6,10,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing System;**2,4,6,10,21,36**;NOV 12, 2009;Build 698
  ;
- ; IHS/ASDS/LSL - 05/17/2001 - V2.4 Patch 6 - New routine to accomodate
- ;     Pharmacy POS.  A somewhat generic API to accept info from
- ;     Pharmacy POS to create a bill in Third Party Billing and
- ;     therefore pass to Accounts Receivable.
- ; IHS/ASDS/LWJ - 06/01/2001 - V2.4 Patch 5 - altered ^DIC call for the
- ;     insurer to no longer access the special lookup routine AUTNKWII
- ; IHS/ASDS/LSL - 06/14/2001 - V2.4 Patch 5 - Added CAN line tag to 
- ;     mark POS bills as cancelled when reversed through POS.
- ; IHS/ASDS/LSL - 07/18/01 - V2.4 Patch 8
- ;     Resolve <DPARM>CAN+3^ABMPSAPI.
- ; IHS/SD/SDR - v2.5 p9 - IM15457
- ;    Use visit location for duz(2)
- ; IHS/SD/SR - v2.5 p9 - IM18926
- ;    Added capability to reprint in TPB on NCPDP format
- ; IHS/SD/SDR - v2.5 p10 - IM21800
- ;   Fix for <UNDEF>DBFX+10^ABMDEFIP
- ; IHS/SDR/SDR - v.25 p12 - UFMS
- ;   Changes to log POS claims for UFMS reporting/export
- ; IHS/SD/SDR - v2.5 p12 - IM25440
- ;   Changed default clinic to 39 (from 25)
- ; IHS/SD/SDR - v2.5 p13 - IM26096
- ;   Stop cashiering session creation for tribal sites
- ;   and don't display warning message
- ; IHS/SD/SDR - abm*2.6*4 - NO HEAT - populate INSURER TYPE
- ; IHS/SD/SDR - abm*2.6*6 - NOHEAT - populate OTHER BILL IDENTIFER in 3P Bill file
- ;IHS/SD/SDR - 2.6*21 - HEAT118656 - Made change to send back error if A/R Bill isn't found (if it was deleted)
+ ;IHS/ASDS/LSL 05/17/2001 2.4*6 New routine to accomodate Pharmacy POS
+ ;  A somewhat generic API to accept info from Pharmacy POS to create a bill in Third Party Billing and
+ ;  therefore pass to Accounts Receivable.
+ ;IHS/ASDS/LWJ 06/01/2001 2.4*5 altered ^DIC call for the insurer to no longer access the special lookup routine AUTNKWII
+ ;IHS/ASDS/LSL 06/14/2001 2.4*5 Added CAN line tag to mark POS bills as cancelled when reversed through POS.
+ ;IHS/ASDS/LSL 07/18/01 2.4*8 Resolve <DPARM>CAN+3^ABMPSAPI
+ ;
+ ;IHS/SD/SDR 2.5*9 IM15457 Use visit location for duz(2)
+ ;IHS/SD/SDR 2.5*9 IM18926 Added capability to reprint in TPB on NCPDP format
+ ;IHS/SD/SDR 2.5*10 IM21800 Fix for <UNDEF>DBFX+10^ABMDEFIP
+ ;IHS/SD/SDR 2.5*12 UFMS Changes to log POS claims for UFMS reporting/export
+ ;IHS/SD/SDR 2.5*12 IM25440 Changed default clinic to 39 (from 25)
+ ;IHS/SD/SDR 2.5*13 IM26096 Stop cashiering session creation for tribal sites and don't display warning message
+ ;
+ ;IHS/SD/SDR 2.6*4 NO HEAT populate INSURER TYPE
+ ;IHS/SD/SDR 2.6*6 NOHEAT populate OTHER BILL IDENTIFER in 3P Bill file
+ ;IHS/SD/SDR 2.6*10 HEAT73780 updated insurer type checks to use new field
+ ;IHS/SD/SDR 2.6*21 HEAT118656 Made change to send back error if A/R Bill isn't found (if it was deleted)
+ ;IHS/SD/SDR 2.6*36 ADO74860 Fixed issue with medication not showing up on claim.  The Drug pointer was being passed and should be used
+ ;  instead of using the Drug name; if there were other drugs with the same/similar name it wouldn't put the Drug because there's no
+ ;  user interaction to select from the list of drug options that would have been displayed
+ ;IHS/SD/SDR 2.6*36 ADO76247 Fixed issue where ABSP is sending fields with the wrong field numbers so we weren't saving them
  ;
  Q
  ;
- ; *********************************************************************
+ ;*******************************
 EN(ABMPOS)         ; PEP
- ; Pass array sub field number.  ie:  ARRAY(Field #)
- ; If field is inside a 3P Bill multiple, array needs to be  
- ; ARRAY(Mult #,field #)
+ ;Pass array sub field number.  ie:  ARRAY(Field #)
+ ;If field is inside a 3P Bill multiple, array needs to be  
+ ;ARRAY(Mult #,field #)
  ;
- ; ABMPOS(.21)             Bill amount
- ; ABMPOS(.23)             Gross amount
- ; ABMPOS(.05)             Patient
- ; ABMPOS(.71)             Service date from
- ; ABMPOS(.72)             Service date to
- ; ABMPOS(.1)              Clinic
- ; ABMPOS(.03)             Visit location
- ; ABMPOS(.08)             Active insurer
- ; ABMPOS(.58)             Pro Authorization number
- ; ABMPOS(.14)             Approving Official
- ; ABMPOS(11,.01)          Visit IEN  ;abm*2.6*2
- ; ABMPOS(41,.01)          Provider multiple, Provider
- ; ABMPOS(23,.01)          Pharmacy multiple, Medication
- ; ABMPOS(23,.03)          Pharmacy multiple, units
- ; ABMPOS(23,.04)          Pharmacy multiple, unit cost
- ; ABMPOS(23,.05)          Pharmacy multiple, dispense fee
- ; ABMPOS(23,19)           Pharmacy multiple, new/refill code
- ; ABMPOS(23,.06)          Pharmacy multiple, Prescription
- ; ABMPOS(23,14)           Pharmacy multiple, Date filled
- ; ABMPOS(23,20)           Pharmacy multiple, Days supply
- ; ABMPOS(73,"REJDATE")    POS Rejection Date  ;abm*2.6*2
- ; ABMPOS(73,CNTR,"CODE")  POS Rejection Code  ;abm*2.6*2
- ; ABMPOS(73,CNTR,"REASON")POS Rejection Reason  ;abm*2.6*2
- ; ABMPOS("OTHIDENT")      Other Bill Identifier for A/R
+ ;ABMPOS(.21)             Bill amount
+ ;ABMPOS(.23)             Gross amount
+ ;ABMPOS(.05)             Patient
+ ;ABMPOS(.71)             Service date from
+ ;ABMPOS(.72)             Service date to
+ ;ABMPOS(.1)              Clinic
+ ;ABMPOS(.03)             Visit location
+ ;ABMPOS(.08)             Active insurer
+ ;ABMPOS(.58)             Pro Authorization number
+ ;ABMPOS(.14)             Approving Official
+ ;ABMPOS(11,.01)          Visit IEN  ;abm*2.6*2
+ ;ABMPOS(41,.01)          Provider multiple, Provider
+ ;ABMPOS(23,.01)          Pharmacy multiple, Medication
+ ;ABMPOS(23,.03)          Pharmacy multiple, units
+ ;ABMPOS(23,.04)          Pharmacy multiple, unit cost
+ ;ABMPOS(23,.05)          Pharmacy multiple, dispense fee
+ ;ABMPOS(23,.19)           Pharmacy multiple, new/refill code
+ ;ABMPOS(23,.06)          Pharmacy multiple, Prescription
+ ;ABMPOS(23,.14)          Pharmacy multiple, Date filled
+ ;ABMPOS(23,.2)           Pharmacy multiple, Days supply
+ ;ABMPOS(73,"REJDATE")    POS Rejection Date  ;abm*2.6*2
+ ;ABMPOS(73,CNTR,"CODE")  POS Rejection Code  ;abm*2.6*2
+ ;ABMPOS(73,CNTR,"REASON")POS Rejection Reason  ;abm*2.6*2
+ ;ABMPOS("OTHIDENT")      Other Bill Identifier for A/R
  ;
- ; First determine proper DUZ(2) (code borrowed from claim generator)
- ; 2 assumptions: 1. Pharmacy and POS do not manipulate DUZ(2) variable
+ ;First determine proper DUZ(2) (code borrowed from claim generator)
+ ;2 assumptions: 1. Pharmacy and POS do not manipulate DUZ(2) variable
  ;                2. DUZ(2) is always the parent (box user is on)
  K ABMDUZ2,ABMARPS,ABMHOLD,ABMAPOK,ABMBILL,ABMFLD,ABMULT,ABMPASAR
  K DINUM,DIC,DA,DIE,X,Y,DD,DO,DLAYGO
  S ABMDUZ2=ABMPOS(.03)
- S ABMARPS=$P($G(^ABMDPARM(DUZ(2),1,4)),U,9)    ; Use A/R parent/sat
- ; Use A/R parent/sat is yes and visit location not defined under parent
- ; in A/R Parent/Satellite file.
+ S ABMARPS=$P($G(^ABMDPARM(DUZ(2),1,4)),U,9)  ;Use A/R parent/sat
+ ;Use A/R parent/sat is yes and visit location not defined under parent in A/R Parent/Satellite file
  I ABMARPS,'$D(^BAR(90052.05,DUZ(2),ABMPOS(.03),0)) S ABMDUZ2=ABMPOS(.03)
- ; Use A/R parent/sat is yes, but DUZ(2) is not the parent for this 
- ; visit location
+ ;Use A/R parent/sat is yes, but DUZ(2) is not the parent for this visit location
  I ABMARPS,$P($G(^BAR(90052.05,DUZ(2),ABMPOS(.03),0)),U,3)'=DUZ(2) S ABMDUZ2=ABMPOS(.03)
  I ABMARPS,$P($G(^BAR(90052.05,DUZ(2),ABMPOS(.03),0)),U,6)>ABMPOS(.71) S ABMDUZ2=ABMPOS(.03)
  I ABMARPS,$P($G(^BAR(90052.05,DUZ(2),ABMPOS(.03),0)),U,7),$P(^(0),U,7)<ABMPOS(.71) S ABMDUZ2=ABMPOS(.03)
  I '$D(^ABMDPARM(ABMDUZ2,0)) Q "Not in 3P Parameters"
- S ABMHOLD=DUZ(2)                     ; Store DUZ(2)
+ S ABMHOLD=DUZ(2)     ;Store DUZ(2)
  S DUZ(2)=ABMDUZ2
  ;
  D NOW^%DTC
- S ABMPOS(.15)=%                      ; Date/Time approved = now
- S ABMPOS(.02)=131                    ; Bill type = outpatient
- S ABMPOS(.06)=24                     ; export mode NCPDP
- S ABMPOS(.07)=901                    ; Visit type = 901 (only POS)
- S ABMPOS(13,.02)=1                   ; Insurer multiple, priority
- S ABMPOS(13,.03)="I"                 ; Insurer multiple, status
- S ABMPOS(41,.02)="A"                 ; Provider multiple, Attending
- S ABMPOS(.1)=39    ; always Pharmacy clinic
+ S ABMPOS(.15)=%       ;Date/Time approved = now
+ S ABMPOS(.02)=131     ;Bill type = outpatient
+ S ABMPOS(.06)=24      ;export mode NCPDP
+ S ABMPOS(.07)=901     ;Visit type = 901 (only POS)
+ S ABMPOS(13,.02)=1    ;Insurer multiple, priority
+ S ABMPOS(13,.03)="I"  ;Insurer multiple, status
+ S ABMPOS(41,.02)="A"  ;Provider multiple, Attending
+ S ABMPOS(.1)=39    ;always Pharmacy clinic
  ;
- S ABMAPOK=1                          ; Pass 3PB to A/R
+ S ABMAPOK=1  ;Pass 3PB to A/R
  K DINUM,DIC
  S DIC(0)="LX"
  S DIC="^ABMDBILL(DUZ(2),"
- S X=$$NXNM^ABMDUTL                   ; Get next Claim number
+ S X=$$NXNM^ABMDUTL   ;Get next Claim number
  I 'X S DUZ(2)=ABMHOLD Q "Next claim number unsuccessful"
- S X=X_"A"                            ; Bill number
+ S X=X_"A"     ;Bill number
  K DD,DO,DA
  S DLAYGO=9002274.4
  D ^DIC
- I +Y<0 S DUZ(2)=ABMHOLD Q "3P Bill create unsuccessful"  ; Bill addition unsuccessful
+ I +Y<0 S DUZ(2)=ABMHOLD Q "3P Bill create unsuccessful"  ;Bill addition unsuccessful
  S (DA,ABMBILL)=+Y
  S DIE=DIC
  S ABMFLD=0
@@ -109,34 +103,43 @@ EN(ABMPOS)         ; PEP
  .Q:ABMPOS(ABMFLD)=""
  .S DR=ABMFLD_"////"_ABMPOS(ABMFLD)
  .D ^DIE
- ;start new code abm*2.6*4 NOHEAT
+ ;start new abm*2.6*4 NOHEAT
  ;S DR=".22////"_$P($G(^AUTNINS(ABMPOS(.08),2)),U)  ;abm*2.6*10 HEAT73780
  S DR=".22////"_$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMPOS(.08),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  D ^DIE
- ;end new code abm*2.6*4 NOHEAT
- ;start new code abm*2.6*6 NOHEAT
+ ;end new abm*2.6*4 NOHEAT
+ ;start new abm*2.6*6 NOHEAT
  S DR=".115////"_ABMPOS("OTHIDENT")
  D ^DIE
- ;end new code abm*2.6*6 NOHEAT
+ ;end new abm*2.6*6 NOHEAT
  F ABMULT=13,23,41 D
  .K DINUM,DIC,DA
  .S DA(1)=ABMBILL
  .S DIC("P")=$P(^DD(9002274.4,ABMULT,0),U,2)
  .S DIC="^ABMDBILL(DUZ(2),"_DA(1)_","_ABMULT_","
  .S DIC(0)="LXIE"
- .S X=$S(ABMULT=13:$P(^AUTNINS(INSDFN,0),U),ABMULT=23:$P(^PSDRUG(ABMPOS(23,.01),0),U),1:$P(^VA(200,ABMPOS(41,.01),0),U))
+ .;S X=$S(ABMULT=13:$P(^AUTNINS(INSDFN,0),U),ABMULT=23:$P(^PSDRUG(ABMPOS(23,.01),0),U),1:$P(^VA(200,ABMPOS(41,.01),0),U))  ;abm*2.6*36 IHS/SD/SDR ADO74860
+ .S X=$S(ABMULT=13:$P(^AUTNINS(INSDFN,0),U),ABMULT=23:ABMPOS(23,.01),1:$P(^VA(200,ABMPOS(41,.01),0),U))  ;abm*2.6*36 IHS/SD/SDR ADO74860
  .S DLAYGO=9002274.4
  .K DD,DO
  .D ^DIC
- .I +Y<0 Q                           ; Addition of multiple unsuccess
+ .I +Y<0 Q    ;Addition of multiple unsuccess
  .S DA=+Y
  .S DIE=DIC
+ .;start new abm*2.6*36 IHS/SD/SDR ADO76247
+ .;these next few lines is to capture data being sent incorrectly from ABSP until they patch for it
+ .I ABMULT=23 D
+ .I $G(ABMPOS(23,19))'="" S ABMPOS(23,.19)=$G(ABMPOS(23,19))  ;new/refill code
+ .;note: the below line changes format from 20230111 to 3230111
+ .I $G(ABMPOS(23,14))'="" S ABMPOS(23,.14)=($E($G(ABMPOS(23,14)),1,4)-1700)_$E($G(ABMPOS(23,14)),5,8)  ;date filled
+ .I $G(ABMPOS(23,20))'="" S ABMPOS(23,.2)=$G(ABMPOS(23,20))  ;days supply
+ .;end new abm*2.6*36 IHS/SD/SDR ADO76247
  .S ABMFLD=.01
  .F  S ABMFLD=$O(ABMPOS(ABMULT,ABMFLD)) Q:'+ABMFLD  D
  ..Q:ABMPOS(ABMULT,ABMFLD)=""
  ..S DR=ABMFLD_"////"_ABMPOS(ABMULT,ABMFLD)
  ..D ^DIE
- ;start new code abm*2.6*2
+ ;start new abm*2.6*2
  ; abm*2.6*2 this section was taken out because it stops other claims from generating.
  ; Visits are being merged and with this code change, it stops claims from creating that should.
  ; Needs to be reviewed, further tested, and included in a future patch of ABM.
@@ -164,25 +167,24 @@ EN(ABMPOS)         ; PEP
  ..S DIC("DR")=".02////"_$G(ABMPOS(73,ABMCNT,"REASON"))_";.03////"_$G(ABMPOS(73,"REJDATE"))
  ..K DD,DO
  ..D ^DIC
- ;end new code abm*2.6*2
- ; This DIE call needs to be done last.  It's the x-ref on this field
- ; that creates the bill in A/R from 3PB. It also defines the A/R
- ; location field on the 3P bill [DUZ(2),DA].
+ ;end new abm*2.6*2
+ ;This DIE call needs to be done last.  It's the x-ref on this field that creates the bill in A/R from 3PB. It also defines the A/R
+ ;location field on the 3P bill [DUZ(2),DA].
  K DIE,DA,DR
  S DIE="^ABMDBILL(DUZ(2),"
  S DA=ABMBILL
- S DR=".04////B"                      ; Set bill status to B
+ S DR=".04////B"  ;Set bill status to B
  D ^DIE
  S ABMPASAR=$P($G(^ABMDBILL(DUZ(2),ABMBILL,2)),U,6)
  I $P($G(^ABMDPARM(DUZ(2),1,4)),U,15)=1 D POSUFMS  ;create/populate UFMS Cashiering session
- S DUZ(2)=ABMHOLD                     ; Restore DUZ(2) 
+ S DUZ(2)=ABMHOLD    ;Restore DUZ(2) 
  K ABMDUZ2,ABMARPS,ABMHOLD,ABMAPOK,ABMBILL,ABMFLD,ABMULT,ABMPOS
  K DINUM,DIC,DA,DIE,X,Y,DD,DO,DLAYGO
  I ABMPASAR="" Q "A/R Bill population unsuccessful"
- Q ABMPASAR                          ; A/R DUZ(2),IEN
+ Q ABMPASAR  ;A/R DUZ(2),IEN
  ;
- ; *********************************************************************
-POSUFMS ; create/populate UFMS Cashiering Session
+ ;*****************************
+POSUFMS ;create/populate UFMS Cashiering Session
  ;location
  K ABMP("LDFN")
  S ABMLOC=$$FINDLOC^ABMUCUTL
@@ -255,11 +257,11 @@ POSUFMS ; create/populate UFMS Cashiering Session
  S DIC("DR")=".02////"_DUZ(2)_";.03////"_ABMBILL
  D ^DIC
  Q
- ; *********************************************************************
+ ;*****************************************
 CAN(ABM,ABM2) ;
- ; For bills that reversed through Pharmacy POS, mark them as cancelled.
- ; Using bill location in A/R, find it in 3PB
- I '$G(ABM) Q ABM                     ; Don't know bill location
+ ;For bills that reversed through Pharmacy POS, mark them as cancelled.
+ ;Using bill location in A/R, find it in 3PB
+ I '$G(ABM) Q ABM    ;Don't know bill location
  S ABMDUZ2=$P(ABM,",")
  S ABMAR=$P(ABM,",",2)
  I ('+ABMDUZ2!('+ABMAR)) Q "Not valid a/r bill location"
@@ -268,26 +270,26 @@ CAN(ABM,ABM2) ;
  S ABMBILL=$$GET1^DIQ(90050.01,ABMAR,.01)
  I ABMBILL="" Q "No A/R Bill found"  ;no A/R bill  ;abm*2.6*21 IHS/SD/SDR HEAT118656
  S ABMBILL=$P(ABMBILL,"-")
- S DUZ(2)=$P($G(^BARBL(ABMDUZ2,ABMAR,0)),U,22)           ; 3P DUZ(2)
- S:DUZ(2)="" DUZ(2)=$P($G(^BARBL(ABMDUZ2,ABMAR,1)),U,8)  ; visit loc
+ S DUZ(2)=$P($G(^BARBL(ABMDUZ2,ABMAR,0)),U,22)     ;3P DUZ(2)
+ S:DUZ(2)="" DUZ(2)=$P($G(^BARBL(ABMDUZ2,ABMAR,1)),U,8)  ;visit loc
  S DIC="^ABMDBILL(DUZ(2),"
  S DIC(0)="XM"
  S X=ABMBILL
  D ^DIC
  I Y'>0 D
- .S DUZ(2)=$P($G(^BARBL(ABMDUZ2,ABMAR,0)),U,8)          ; Parent
+ .S DUZ(2)=$P($G(^BARBL(ABMDUZ2,ABMAR,0)),U,8)  ;Parent
  .D ^DIC
  I Y'>0 Q "3P bill not found"
  S (DA,ABMDA)=+Y
  ;
- ; Bill found, so mark as cancelled.
+ ;Bill found, so mark as cancelled.
  K DR,DIE,DIC,X,Y
  S DR=".04////X"
  S DIE="^ABMDBILL(DUZ(2),"
  D ^DIE
  I $P($G(^ABMDPARM(DUZ(2),1,4)),U,15)=1 D CPOSUFMS  ;create/populate UFMS Cashiering session
  Q "3P bill "_DUZ(2)_","_ABMDA_" cancelled"
-CPOSUFMS ; create/populate UFMS Cashiering Session
+CPOSUFMS ;create/populate UFMS Cashiering Session
  ;location
  K ABMP("LDFN")
  S ABMLOC=$$FINDLOC^ABMUCUTL

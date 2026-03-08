@@ -1,0 +1,142 @@
+ABMRMPRV ; IHS/SD/SDR - Medicare Provider Counts ;
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
+ ;
+ W !!,"This report will lookfor bills with HCPCS G8553 as one of the line items."
+ W !,"It will report either a detail or summary report by provider of bills with this"
+ W !,"HCPCS code."
+ ;
+ S ABMY("TYP")="R"
+DT ;
+ S ABMY("DT")="V"
+ W !!," ============ Entry of DOS Range =============",!
+ S DIR("A")="Enter STARTING DOS for the Report"
+ S DIR(0)="DO^::EP"
+ D ^DIR
+ Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!$D(DIRUT)
+ S ABMY("DT",1)=Y
+ W !
+ S DIR("A")="Enter ENDING DATE for the Report"
+ D ^DIR
+ K DIR
+ G DT:$D(DIRUT)
+ S ABMY("DT",2)=Y
+ I ABMY("DT",1)>ABMY("DT",2) W !!,*7,"INPUT ERROR: Start Date is Greater than than the End Date, TRY AGAIN!",!! G DT
+ Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
+ ;
+ W !!
+ S DIR(0)="SO^A:ALL BILLS;P:PAID BILLS ONLY"
+ D ^DIR
+ Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!$D(DIRUT)
+ S ABMY("PAID")=Y
+ ;
+ K DIR
+ S DIR(0)="SO^S:SUMMARY;D:DETAIL"
+ S DIR("A")="SUMMARY OR DETAIL"
+ D ^DIR
+ Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!$D(DIRUT)
+ S ABMY("RTYP")=Y
+ S ABM("HD",0)=$S(ABMY("PAID")="P":"PAID",1:"ALL")_" MEDICARE PROVIDER COUNTS FOR CPT: G8553"
+ D ^ABMDRHD
+ S ABMQ("RC")="COMPUTE^ABMRMPRV",ABMQ("RX")="POUT^ABMDRUTL",ABMQ("NS")="ABM"
+ S ABMQ("RP")="PRINT^ABMRMPRV"
+ D ^ABMDRDBQ
+ Q
+ ;
+COMPUTE ;EP - Entry Point for Setting up Data
+ S ABM("SUBR")="ABM-MPRV" K ^TMP("ABM-MPRV",$J)
+ S ABM("PG")=0
+SLOOP ;
+ I $D(ABMY("DT")) D  Q
+ .S ABM("RD")=ABMY("DT",1)-1
+ .F  S ABM("RD")=$O(^ABMDBILL(DUZ(2),"AD",ABM("RD"))) Q:'+ABM("RD")!(ABM("RD")>ABMY("DT",2))  D
+ ..S ABM="" F  S ABM=$O(^ABMDBILL(DUZ(2),"AD",ABM("RD"),ABM)) Q:'ABM  D DATA
+ Q
+ ;
+DATA ;
+ Q:$P($G(^ABMDBILL(DUZ(2),ABM,2)),U,2)'="R"  ;Medicare FI only
+ Q:$P($G(^ABMDBILL(DUZ(2),ABM,0)),U,9)'="C"  ;CPT procedure coding method only
+ I ABMY("PAID")="P",'$D(^ABMDBILL(DUZ(2),ABM,3,0)) Q  ;no pymts on bill
+ S ABMHFLG=0,ABMI=0
+ F  S ABMI=$O(^ABMDBILL(DUZ(2),ABM,43,ABMI)) Q:'ABMI  D
+ .S IENS=ABMI_","_ABM_","
+ .I $$GET1^DIQ(9002274.4043,IENS,".01","E")="G8553" S ABMHFLG=1
+ Q:ABMHFLG=0
+ ; if paid only flag, check for pymts
+ S ABMPD=0
+ S ABMI=0
+ F  S ABMI=$O(^ABMDBILL(DUZ(2),ABM,3,ABMI)) Q:'ABMI  D
+ .I +$P($G(^ABMDBILL(DUZ(2),ABM,3,ABMI,0)),U,10)'=0 S ABMPD=1
+ I ABMY("PAID")="P",ABMPD'=1 Q  ;only paid, but no pymt
+ ;
+ S ABMBAMT=$$GET1^DIQ(9002274.4,ABM,".21","E")
+ S ABMDOS=$$GET1^DIQ(9002274.4,ABM,".71","E")
+ S ABMBNUM=$$GET1^DIQ(9002274.4,ABM,".01","E")
+ S ABMI=0
+ F  S ABMI=$O(^ABMDBILL(DUZ(2),ABM,41,ABMI)) Q:'ABMI  D
+ .S IENS=ABMI_","_ABM_","
+ .S ABMPRV=$$GET1^DIQ(9002274.4041,IENS,".01","E")
+ .S ABMPTYP=$$GET1^DIQ(9002274.4041,IENS,".02","E")
+ .S ^TMP("ABM-MPRV",$J,"D",ABMPRV,ABMPTYP,ABMDOS,ABMBNUM)=ABMBAMT_$S((ABMY("PAID")="A"&(ABMPD=1)):"^*",1:"")
+ .S ABMPDF=$S(ABMPD=1:"PD",1:"NPD")
+ .S ^TMP("ABM-MPRV",$J,"PTYPCNT",ABMPRV,ABMPTYP,ABMPDF)=+$G(^TMP("ABM-MPRV",$J,"PTYPCNT",ABMPRV,ABMPTYP,ABMPDF))+1
+ .S ^TMP("ABM-MPRV",$J,"PTYPAMT",ABMPRV,ABMPTYP,ABMPDF)=+$G(^TMP("ABM-MPRV",$J,"PTYPAMT",ABMPRV,ABMPTYP,ABMPDF))+ABMBAMT
+ .S ^TMP("ABM-MPRV",$J,"PRVCNT",ABMPRV)=+$G(^TMP("ABM-MPRV",$J,"PRVCNT",ABMPRV))+1
+ .S ^TMP("ABM-MPRV",$J,"PRVAMT",ABMPRV)=+$G(^TMP("ABM-MPRV",$J,"PRVAMT",ABMPRV))+ABMBAMT
+ .S ^TMP("ABM-MPRV",$J,"TOTCNT")=+$G(^TMP("ABM-MPRV",$J,"TOTCNT"))+1
+ .S ^TMP("ABM-MPRV",$J,"TOTAMT")=+$G(^TMP("ABM-MPRV",$J,"TOTAMT"))+ABMBAMT
+ Q
+PRINT ;
+ I ABMY("RTYP")="S" D  Q
+ .D SHDB
+ .S ABMPRV=""
+ .F  S ABMPRV=$O(^TMP("ABM-MPRV",$J,"PTYPCNT",ABMPRV)) Q:$G(ABMPRV)=""  D  Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
+ ..K ABMCNT,ABMAMT
+ ..I $Y>(IOSL-5) D SHD Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)  W " (cont)"
+ ..S ABMPTYP=""
+ ..F  S ABMPTYP=$O(^TMP("ABM-MPRV",$J,"PTYPCNT",ABMPRV,ABMPTYP)) Q:$G(ABMPTYP)=""  D
+ ...S ABMPDF=""
+ ...F  S ABMPDF=$O(^TMP("ABM-MPRV",$J,"PTYPCNT",ABMPRV,ABMPTYP,ABMPDF)) Q:$G(ABMPDF)=""  D
+ ....W !,ABMPRV,?35,ABMPTYP
+ ....W:ABMY("PAID")="A" ?47,$S(ABMPDF="PD":"PAID",1:"NOT PD")
+ ....W ?55,$J($G(^TMP("ABM-MPRV",$J,"PTYPCNT",ABMPRV,ABMPTYP,ABMPDF)),"8R")
+ ....W ?67,$J($FN($G(^TMP("ABM-MPRV",$J,"PTYPAMT",ABMPRV,ABMPTYP,ABMPDF)),",",2),12)
+ ....S ABMCNT(ABMPRV)=+$G(ABMCNT(ABMPRV))+$G(^TMP("ABM-MPRV",$J,"PTYPCNT",ABMPRV,ABMPTYP,ABMPDF))
+ ....S ABMAMT(ABMPRV)=+$G(ABMAMT(ABMPRV))+$G(^TMP("ABM-MPRV",$J,"PTYPAMT",ABMPRV,ABMPTYP,ABMPDF))
+ ..W !,?55,"--------",?67,"------------"
+ ..W !,?55,$J(ABMCNT(ABMPRV),"8R"),?67,$J($FN(+ABMAMT(ABMPRV),",",2),12),!
+ .W !,?55,"--------",?67,"------------"
+ .W !,"TOTAL",?55,$J(+$G(^TMP("ABM-MPRV",$J,"TOTCNT")),"8R"),?67,$J($FN(+$G(^TMP("ABM-MPRV",$J,"TOTAMT")),",",2),12)
+ ;
+ D DHDB
+ S ABMPRV=""
+ F  S ABMPRV=$O(^TMP("ABM-MPRV",$J,"D",ABMPRV)) Q:$G(ABMPRV)=""  D
+ .S ABMPTYP=""
+ .F  S ABMPTYP=$O(^TMP("ABM-MPRV",$J,"D",ABMPRV,ABMPTYP)) Q:$G(ABMPTYP)=""  D
+ ..S ABMDOS=""
+ ..F  S ABMDOS=$O(^TMP("ABM-MPRV",$J,"D",ABMPRV,ABMPTYP,ABMDOS)) Q:$G(ABMDOS)=""  D
+ ...S ABMBNUM=""
+ ...F  S ABMBNUM=$O(^TMP("ABM-MPRV",$J,"D",ABMPRV,ABMPTYP,ABMDOS,ABMBNUM)) Q:$G(ABMBNUM)=""  D  Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
+ ....I $Y>(IOSL-5) D DHD Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)  W " (cont)"
+ ....W !,ABMPRV,?28,ABMPTYP,?42,ABMBNUM,?52,ABMDOS,?66,$J($FN($P($G(^TMP("ABM-MPRV",$J,"D",ABMPRV,ABMPTYP,ABMDOS,ABMBNUM)),U),",",2),12)
+ ....I $P($G(^TMP("ABM-MPRV",$J,"D",ABMPRV,ABMPTYP,ABMDOS,ABMBNUM)),U,2)'="" W "*"
+ .W !,?42,"--------",?66,"------------"
+ .W !,"SUBTOTAL",?42,$J(+$G(^TMP("ABM-MPRV",$J,"PRVCNT",ABMPRV)),"8R"),?66,$J($FN(+$G(^TMP("ABM-MPRV",$J,"PRVAMT",ABMPRV)),",",2),12),!
+ W !,?42,"--------",?66,"------------"
+ W !,"TOTAL",?42,$J(+$G(^TMP("ABM-MPRV",$J,"TOTCNT")),"8R"),?66,$J($FN(+$G(^TMP("ABM-MPRV",$J,"TOTAMT")),",",2),12)
+ Q
+SHD ;
+ D PAZ^ABMDRUTL Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
+SHDB ;
+ S ABM("PG")=ABM("PG")+1 D WHD^ABMDRHD
+ W !,"PROVIDER",?35,"TYPE",?60,"COUNT",?71,"AMOUNT"
+ S $P(ABM("LINE"),"-",80)="" W !,ABM("LINE") K ABM("LINE")
+ Q
+ ;
+DHD ;
+ D PAZ^ABMDRUTL Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
+DHDB ;
+ S ABM("PG")=ABM("PG")+1 D WHD^ABMDRHD
+ W !?43,"BILL",?70,"BILL"
+ W !,"PROVIDER",?30,"TYPE",?42,"NUMBER",?56,"DOS",?69,"AMOUNT"
+ S $P(ABM("LINE"),"-",80)="" W !,ABM("LINE") K ABM("LINE")
+ Q

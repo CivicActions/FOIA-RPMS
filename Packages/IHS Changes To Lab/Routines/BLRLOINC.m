@@ -1,5 +1,8 @@
-BLRLOINC ;IHS/OIT/MKK - IHS LAB LOINC REPORT [ 12/19/2002  7:25 AM ]
- ;;5.2;LR;**1024**;May 2, 2008
+BLRLOINC ;IHS/OIT/MKK - IHS LAB LOINC REPORT ; [ 12/19/2002  7:25 AM ]
+ ;;5.2;IHS LABORATORY;**1024,1054**;NOV 01, 1997;Build 20
+ ;;
+ ;; MSC/MKK - Modification - LR*5.2*1054 - Analyze Cosmic tests also.  Tweak logic.
+ ;;
  ;;
 EEP ; Ersatz EP
  W !!
@@ -7,32 +10,88 @@ EEP ; Ersatz EP
  W " USE LABEL "
  W "<<<<<<<<<<<<"
  W !!
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054
+ W $C(7),$C(7),$C(7),!
+ W ?9,$$SHOUTMSG^BLRGMENU("Must use Line Labels to access subroutines",60)
+ W $C(7),$C(7),$C(7),!
+ ; ----- END IHS/MSC/MKK - LR*5.2*1054
  Q
  ;
 EP ; EP -- Main Entry Point
- NEW CNTLOINC,PTRLOINC,CNTLT,CNTZZ
- NEW QFLG,SITESPEC,STR
+PEP ; EP - Another Entry Point    ; IHS/MSC/MKK - LR*5.2*1054
+ ; NEW CNTLOINC,PTRLOINC,CNTLT,CNTZZ
+ ; NEW QFLG,SITESPEC,STR
+ NEW (DILOCKTM,DISYS,DT,DTIME,DUZ,IO,IOBS,IOF,IOM,ION,IOS,IOSL,IOST,IOT,IOXY,U,XPARSYS,XQXFLG)     ; IHS/MSC/MKK - LR*5.2*1054
  ;
  D COMLOINC         ; Count Lab Tests with LOINC Codes
  ;
  D REPORT           ; Output Results
  ;
  Q
+ ;
 COMLOINC ; EP - Compile Listing of Tests with LOINC Codes
- S (CNTLOINC,FLAG,CNTLT,TEST,CNTZZ)=0
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054
+ D SETBLRVS
+ S HEADER(1)="Logical Observation Identifiers"
+ S HEADER(2)="Names and Codes (LOINC)"
+ D HEADERDT^BLRGMENU
+ W ?4,"Counting"
+ ; ----- END IHS/MSC/MKK - LR*5.2*1054
+ ;
+ ; S (CNTLOINC,FLAG,CNTLT,TEST,CNTZZ)=0
+ S (CNTLOINC,CNTNLOI,FLAG,CNTLT,TEST,CNTZZ)=0    ; IHS/MSC/MKK - LR*5.2*1054
  F  S TEST=$O(^LAB(60,TEST))  Q:TEST=""!(TEST'?.N)  D
  . S CNTLT=CNTLT+1                 ; Count # of Lab Tests in dictionary
  . ;
+ . I (CNTLT#100)=0 W "."  W:$X>74 !,?4
+ . ;
  . ; Count # of Lab Tests that have a Name that begin with Two Z's
- . I $E($P($G(^LAB(60,TEST,0)),"^",1),1,2)="ZZ" S CNTZZ=CNTZZ+1
+ . ; I $E($P($G(^LAB(60,TEST,0)),"^",1),1,2)="ZZ" S CNTZZ=CNTZZ+1
+ . I $$UP^XLFSTR($E($P($G(^LAB(60,TEST,0)),"^",1),1,2))="ZZ" S CNTZZ=CNTZZ+1   ; IHS/MSC/MKK - LR*5.2*1054
  . ;
  . ; LOINC Codes are stored in the SITE/SPECIMEN multiple, so have to
- . ; go through the multiple and determine if there is a LOINC Code
- . S (FLAG,SITESPEC)=0
- . F  S SITESPEC=$O(^LAB(60,TEST,1,SITESPEC))  Q:SITESPEC=""!(SITESPEC'?.N)!(FLAG)  D
- .. I +$G(^LAB(60,TEST,1,SITESPEC,95.3))>0  S FLAG=1     ; LOINC
+ . ; go through the multiple and determine if there is a LOINC Code.  
+ . ; NOTE: to "qualify" as a LOINC'ed test, ALL Site/Specimen entries must have a LOINC.  ; IHS/MSC/MKK - LR*5.2*1054
+ . ; S (FLAG,SITESPEC)=0
+ . ; F  S SITESPEC=$O(^LAB(60,TEST,1,SITESPEC))  Q:SITESPEC=""!(SITESPEC'?.N)!(FLAG)  D
+ . ; . I +$G(^LAB(60,TEST,1,SITESPEC,95.3))>0  S FLAG=1     ; LOINC
+ . ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054
+ . S (CNTL,SITESPEC,SSCNT)=0
+ . F  S SITESPEC=$O(^LAB(60,TEST,1,SITESPEC))  Q:SITESPEC=""!(SITESPEC'?.N)  D
+ .. S SSCNT=SSCNT+1
+ .. I +$G(^LAB(60,TEST,1,SITESPEC,95.3))>0 S CNTL=CNTL+1
+ . ; ----- END IHS/MSC/MKK - LR*5.2*1054
  . ;
- . I FLAG S CNTLOINC=CNTLOINC+1
+ . ; I FLAG S CNTLOINC=CNTLOINC+1
+ . ;
+ . ; ----- BEGIN IHS/MSC/MKK -- LR*5.2*1054
+ . I $$GET1^DIQ(60,TEST,"SUBSCRIPIT","I")'="CH" D  Q
+ .. I $$GET1^DIQ(60,TEST,999999902,"I") S CNTLOINC=CNTLOINC+1
+ .. E  S CNTNLOI=CNTNLOI+1
+ . ;
+ . ; At this point, tests are "CH" subscripted.
+ . ; If a panel, LOINC stored in the IHS LOINC field
+ . I $$ISPANEL^BLRPOC(TEST) D  Q
+ .. I $$GET1^DIQ(60,TEST,999999902,"I") S CNTLOINC=CNTLOINC+1
+ .. E  S CNTNLOI=CNTNLOI+1
+ . ;
+ . ; Store Site/Specimen if no LOINC
+ . K SITESPEC
+ . S SITESPEC=0
+ . F  S SITESPEC=$O(^LAB(60,TEST,1,SITESPEC))  Q:SITESPEC<1  D
+ .. I $$GET1^DIQ(60.01,SITESPEC_","_TEST,95.3,"I")<1 S SITESPEC(SITESPEC)=""
+ . ;
+ . ; If ALL Site/Specimens have LOINCS, then count test as being "LOINCed"
+ . I $O(SITESPEC(0))<1 S CNTLOINC=CNTLOINC+1  Q
+ . ;
+ . ; Not ALL Site/Specimens have LOINCs.  Count test as being non-LOINCed.
+ . S CNTNLOI=CNTNLOI+1
+ ;
+ W !!
+ D PRESSKEY^BLRGMENU
+ W !!
+ ; ----- END IHS/MSC/MKK -- LR*5.2*1054
  ;
  Q
  ;
@@ -59,7 +118,8 @@ BUILDARY ; EP
  D ADDLNCJ($TR($J("",IOM)," ","-"),.LN)
  ;
  D ADDLINE(" ",.LN)
- D ADDLINE("Number of Lab Tests in Dictionary = "_CNTLT,.LN)
+ ; D ADDLINE("Number of Lab Tests in Dictionary = "_CNTLT,.LN)
+ D ADDLINE(TAB_"Number of Lab Tests in Dictionary = "_CNTLT,.LN)     ; IHS/MSC/MKK - LR*5.2*1054
  D ADDLINE(" ",.LN)
  ;
  I CNTLOINC<1 D
@@ -67,21 +127,25 @@ BUILDARY ; EP
  . D ADDLINE(" ",.LN)
  ;
  I +$G(CNTZZ)>0 D
- . D ADDLINE(TAB_"Number of ZZ'ed Lab Tests in Dictionary = "_CNTZZ,.LN)
+ . ; D ADDLINE(TAB_"Number of ZZ'ed Lab Tests in Dictionary = "_CNTZZ,.LN)
+ . D ADDLINE(TAB_TAB_"Number of ZZ'ed Lab Tests in Dictionary = "_CNTZZ,.LN)   ; IHS/MSC/MKK - LR*5.2*1054
  . D ADDLINE(" ",.LN)
  ;
  D ADDLINE(TAB_"Number of Lab Tests in Dictionary with LOINC codes = "_CNTLOINC,.LN)
  D ADDLINE(" ",.LN)
  ;
- D ADDLINE(TAB_"Number of Lab Tests in Dictionary without LOINC codes = "_NOLOINC,.LN)
+ ; D ADDLINE(TAB_"Number of Lab Tests in Dictionary without LOINC codes = "_NOLOINC,.LN)
+ D ADDLINE(TAB_"Number of Lab Tests in Dictionary without LOINC codes = "_CNTNLOI,.LN)   ; IHS/MSC/MKK - LR*5.2*1054
  D ADDLINE(" ",.LN)
  ;
  D ADDLINE(TAB_"Percentage of Lab Tests in File 60 with LOINC codes = "_($FN((CNTLOINC/CNTLT),"",3)*100)_"%",.LN)
  D ADDLINE(" ",.LN)
  ;
- I (CNTLT-CNTZZ)>0 D
- . D ADDLINE(TAB_"Percentage of Non ZZ'ed Lab Tests in File 60 with LOINC codes = "_($FN((CNTLOINC/(CNTLT-CNTZZ)),"",3)*100)_"%",.LN)
- . D ADDLINE(" ",.LN)
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054 - Just comment out the following lines
+ ; I (CNTLT-CNTZZ)>0 D
+ ; . D ADDLINE(TAB_"Percentage of Non ZZ'ed Lab Tests in File 60 with LOINC codes = "_($FN((CNTLOINC/(CNTLT-CNTZZ)),"",3)*100)_"%",.LN)
+ ; . D ADDLINE(" ",.LN)
+ ; ----- END IHS/MSC/MKK - LR*5.2*1054
  Q
  ;
 ADDLNCJ(MIDSTR,LN,LEFTSTR,RGHTSTR) ; EP
@@ -149,3 +213,21 @@ BLREND ; EP
  E  D ^%ZISC
  D KVA^VADPT
  Q
+ ;
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054
+ ; ============================= UTILITIES =============================
+ ;
+JUSTNEW ; EP
+ NEW (DILOCKTM,DISYS,DT,DTIME,DUZ,IO,IOBS,IOF,IOM,ION,IOS,IOSL,IOST,IOT,IOXY,U,XPARSYS,XQXFLG)
+ ;
+ Q
+ ;
+SETBLRVS(TWO) ; EP - Set the BLRVERN variable(s)
+ K BLRVERN,BLRVERN2
+ ;
+ S BLRVERN=$P($P($T(+1),";")," ")
+ S:$L($G(TWO)) BLRVERN2=$G(TWO)
+ Q
+ ;
+ ; ----- END IHS/MSC/MKK - LR*5.2*1054

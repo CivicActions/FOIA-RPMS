@@ -1,0 +1,64 @@
+BARRTBS2 ; IHS/SD/SDR - TREASURY DEPOSIT/BATCH STATISTICAL - DELIMITED ;08/20/2008
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**39**;OCT 26, 2005;Build 231
+ ;IHS/SD/SDR 1.8*39 ADO106475 New routine for delimited option with sorting by TDN/IPAC Number (option 2)
+ ;
+PRINT ;EP - DELIMITED
+ ;I $G(IO("HFSIO"))["/" S BARL="/"
+ ;E  S BARL="\"
+ ;S BARPATH=$P($G(IO("HFSIO")),BARL,1,($L(IO("HFSIO"),BARL)-1))_BARL
+ ;S BARFNM=$P($G(IO("HFSIO")),BARL,$L(IO("HFSIO"),BARL))
+ D OPEN^%ZISH("FILE",BARPATH,BARFNM,"W")
+ U IO
+ N BAREQUAL,SORTSUB,BATCHNM,BARITMDA,DATA,ITEMTDN
+ ;COLLECTION BATCH COLUMN TOTALS
+ S (BAT1TOT,BAT2TOT,BAT3TOT,BAT4TOT,BAT5TOT,BAT6TOT,BAT7TOT)=0
+ ;ALLOWANCE OR TDN COLUMN TOTALS
+ S (ALORTDN1,ALORTDN2,ALORTDN3,ALORTDN4,ALORTDN5,ALORTDN6,ALORTDN7)=0
+ ;COLUMN GRAND TOTAL
+ S (GRND1TOT,GRND2TOT,GRND3TOT,GRND4TOT,GRND5TOT,GRND6TOT,GRND7TOT)=0
+ ;
+ S Y=BARFROM X ^DD("DD") S EXFROM=Y
+ S Y=BARTO X ^DD("DD") S EXTO=Y
+ S $P(BAREQUAL,"=",IOM+1)=""
+ D NOW^%DTC
+ S Y=% X ^DD("DD") S NOW=Y
+ S NOW=Y
+ S PAGE=0,ESC=0
+ D TOPHDR
+ I '$D(^XTMP("BARRTBSL",$J)) W !!,"NO DATA TO PRINT" D CLOSE^%ZISH("FILE") U 0 Q
+ S SORTSUB=""  ;THIS SUBSCRIPT COULD BE TDN/IPAC OR ALLOWANCE CATEGORY
+ F  S SORTSUB=$O(^XTMP("BARRTBSL",$J,SORTSUB)) Q:SORTSUB=""  D
+ .S BATCHNM=""
+ .F  S BATCHNM=$O(^XTMP("BARRTBSL",$J,SORTSUB,BATCHNM)) Q:BATCHNM=""  D
+ ..S BARITMDA=""
+ ..F CNT=1:1 S BARITMDA=$O(^XTMP("BARRTBSL",$J,SORTSUB,BATCHNM,BARITMDA)) Q:BARITMDA=""  D
+ ...S DATA=$G(^XTMP("BARRTBSL",$J,SORTSUB,BATCHNM,BARITMDA))
+ ...W !
+ ...W $P(BATCHNM,"-",2)_U  ;batch date
+ ...W $TR($P(DATA,U,2),"~")_U  ;TDN
+ ...W $P(^DIC(4,DUZ(2),0),"^")_U  ;location
+ ...W $P(DATA,U)_U  ;collection point
+ ...W BATCHNM_U  ;batch name
+ ...W BARITMDA_U  ;item
+ ...W $P(DATA,U,13)_U  ;A/R Account (Payor)
+ ...W $P(DATA,U,12)_U  ;check#
+ ...W $J($P(DATA,U,3),10,2)_U  ;item total
+ ...W $J($P(DATA,U,4),10,2)_U  ;collections processed
+ ...W $J($P(DATA,U,5),10,2)_U  ;unallocated true
+ ...W $J($P(DATA,U,6),10,2)_U  ;unallocated total
+ ...W $J($P(DATA,U,7),10,2)_U  ;refunded from item
+ ...W $J($P(DATA,U,8),10,2)_U  ;item transfer
+ ...W $J($P(DATA,U,9),10,2)  ;balance
+ D CLOSE^%ZISH("FILE")
+ U 0
+ Q
+TOPHDR ;EP - TOP HEADER
+ W !,"DATE: ",NOW W ?IOM-10,"PAGE ",PAGE
+ W !,"TREASURY DEPOSIT/BATCH STATISTICS FOR"
+ W !,$P(^DIC(4,DUZ(2),0),"^")
+ W !,"FROM "_EXFROM_" TO "_EXTO
+ W !,"SORTED BY TREASURY DEPOSIT NUMBER/IPAC"
+ W !
+ W "Batch Date^TDN_IPAC^Location^Collection Point^Collection Batch^Item^A/R Account^Check#^Item Total^Collections Processed^Unallocated True^Unallocated Total^Refunded From Item^Item Transfer^Balance"
+ Q
+ ;EOR

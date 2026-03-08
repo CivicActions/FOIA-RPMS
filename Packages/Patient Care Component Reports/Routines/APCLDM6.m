@@ -1,5 +1,5 @@
-APCLDM6 ; IHS/CMI/LAB - TOBACCO USE ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLDM6 ; IHS/OHPRD/TMJ - TOBACCO USE ;  [ 11/08/01  7:40 AM ]
+ ;;3.0;IHS PCC REPORTS;**11,20**;FEB 05, 1997
  ;
  ;cmi/anch/maw 9/10/2007 code set versioning in TOBACCO1
  ;

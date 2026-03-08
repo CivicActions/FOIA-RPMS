@@ -1,5 +1,5 @@
-BARPT175 ; IHS/SD/LSL - Post init for V1.7 Patch 5 ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+BARPT175 ; IHS/SD/LSL - Post init for V1.7 Patch 5;  [ 02/09/2004  4:19 PM ]
+ ;;1.7;IHS ACCOUNTS RECEIVABLE;**5**;May 02, 2003
  ;
  Q
  ; *********************************************************************

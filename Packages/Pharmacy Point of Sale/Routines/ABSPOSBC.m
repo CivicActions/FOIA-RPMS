@@ -1,5 +1,5 @@
 ABSPOSBC ; IHS/FCS/DRS - POS billing - new ;   
- ;;1.0;PHARMACY POINT OF SALE;**38,48**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**38,48**;JUN 21, 2001;Build 131
  ;
  Q
  ;

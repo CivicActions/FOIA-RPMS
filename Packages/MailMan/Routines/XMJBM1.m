@@ -1,5 +1,5 @@
-XMJBM1 ;ISC-SF/GMB-Manage Mail in Mailbox (cont.) ;07/19/2000  14:13
- ;;8.0;MailMan;;Jun 28, 2002
+XMJBM1 ;ISC-SF/GMB-Manage Mail in Mailbox (cont'd) ;05/10/99  09:10
+ ;;7.1;MailMan;**50**;Jun 02, 1994
 INIT(XMDUZ,XMRDR,XMABORT) ;
  D CHECK^XMVVITAE
  I XMDUZ'=DUZ,'$$RPRIV^XMXSEC D  Q
@@ -10,69 +10,60 @@ INIT(XMDUZ,XMRDR,XMABORT) ;
 RDR(XMRDR,XMABORT) ;
  S XMRDR=XMV("RDR DEF")
  Q:XMV("RDR ASK")="N"
- N XMRDRTXT,XMOPT,XMOX,XMDIR
- D SET^XMXSEC1("C",34036,.XMOPT,.XMOX) ; C:Classic
- D SET^XMXSEC1("D",34037,.XMOPT,.XMOX) ; D:Detailed Full Screen
- D SET^XMXSEC1("S",34038,.XMOPT,.XMOX) ; S:Summary Full Screen
- I XMRDR="" S XMRDR="C"
- S XMRDRTXT=XMOPT(XMRDR)
- S XMDIR("A")=$$EZBLD^DIALOG(34047) ; Select message reader:
- S XMDIR("B")=XMOX("O",XMRDR)_":"_XMRDRTXT
- S XMDIR("??")="D QRDR^XMJBM1"
- D XMDIR^XMJDIR(.XMDIR,.XMOPT,.XMOX,.XMRDR,.XMABORT)
+ N DIR,DIRUT,X,Y,XMRDRTXT
+ S XMRDRTXT=$S(XMRDR="D":"Detailed Full Screen",XMRDR="S":"Summary Full Screen",1:"Classic")
+ S DIR("A")="Select message reader:  "
+ S DIR("B")=XMRDRTXT
+ S DIR(0)="SAMB^C:Classic;D:Detailed Full Screen;S:Summary Full Screen"
+ S DIR("??")="^D QRDR^XMJBM1"
+ D ^DIR I $D(DIRUT) S XMABORT=1 Q
+ S XMRDR=Y
  Q
 QRDR ;
- N XMTEXT
- ;The Classic reader is the one that has been around forever.
- ;The Full Screen reader has two flavors:
- ;Detailed Full Screen contains a detailed message list.
- ;Summary Full Screen contains a summary message list.
- D BLD^DIALOG(34039,"","","XMTEXT","F")
+ W !,"The Classic reader is the one that has been around forever."
+ W !
+ W !,"The Full Screen reader has two flavors:"
+ W !,"Detailed Full Screen contains a detailed message list."
+ W !,"Summary Full Screen contains a summary message list."
+ W !
  I $P($G(^XMB(3.7,DUZ,0)),U,16)="" D
- . ;You may choose a default MESSAGE READER under
- . ;'Personal Preferences|User Options Edit'.
- . ;Until you do, the Classic reader will be your default.
- . D BLD^DIALOG(34040,"","","XMTEXT","F")
+ . W !,"You may choose a default MESSAGE READER under"
+ . W !,"'Personal Preferences|User Options Edit'."
+ . W !,"Until you do, the Classic reader will be your default."
  E  D
- . ;Your default MESSAGE READER is the _XMRDRTXT_ reader.
- . ;You may change your default MESSAGE READER under
- . ;'Personal Preferences|User Options Edit'.
- . D BLD^DIALOG(34041,XMRDRTXT,"","XMTEXT","F")
- ;If you don't want to be asked this question again, and wish to use the 
- ;XMRDRTXT_ reader exclusively, set the MESSAGE READER PROMPT to
- ;"No, don't ask" under 'Personal Preferences|User Options Edit'.
- D BLD^DIALOG(34042,XMRDRTXT,"","XMTEXT","F")
- D MSG^DIALOG("WH","","","","XMTEXT")
+ . W !,"Your default MESSAGE READER is the ",XMRDRTXT," reader."
+ . W !,"You may change your default MESSAGE READER under"
+ . W !,"'Personal Preferences|User Options Edit'."
+ W !
+ W !,"If you don't want to be asked this question again, and wish to use the "
+ W !,XMRDRTXT," reader exclusively, set the MESSAGE READER PROMPT to"
+ W !,"""No, don't ask"" under 'Personal Preferences|User Options Edit'."
  Q
 ASKBSKT(XMDUZ,XMRDR,XMK,XMKN,XMABORT) ;
- N XMKNUM
+ N XMKNEW,XMKNUM
  F  D ASKBSKT^XMJBN(XMDUZ,0,.XMK,.XMKN,.XMABORT) Q:XMABORT  D  Q:XMKNUM
  . S XMKNUM=+$P($G(^XMB(3.7,XMDUZ,2,XMK,1,0)),U,4)
  . D:'XMKNUM NOMSGS(XMDUZ,XMK,XMKN)
  Q:XMABORT
  Q:'XMKNUM
  Q:XMRDR'="C"
- N XMPARM,XMTEXT
- S XMPARM(1)=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",""),-1)
- S XMPARM(2)=XMKNUM
- S XMPARM(3)=$P(^XMB(3.7,XMDUZ,2,XMK,0),U,2)
- ;Last message number: |1|   Messages in basket: |2| (|3| new)
- ;Enter ??? for help.
- D BLD^DIALOG($S(XMPARM(3):34043.1,1:34043),.XMPARM,"","XMTEXT","F")
- D MSG^DIALOG("WM","","","","XMTEXT")
+ W !,"Last message number: ",$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",""),-1)
+ W "   Messages in basket: ",XMKNUM
+ S XMKNEW=$P(^XMB(3.7,XMDUZ,2,XMK,0),U,2)
+ W:XMKNEW " (",XMKNEW," new)"
+ W !,"Enter ??? for help."
  Q
 NOMSGS(XMDUZ,XMK,XMKN) ;
- W !,$$EZBLD^DIALOG(34044,XMKN) ; No messages in '|1|' basket.
+ W !,"No messages in basket."
  Q:XMK<2
  I XMDUZ'=DUZ,$G(XMV("PRIV"))'["R",$G(XMV("PRIV"))'["W" Q
  W !
  N DIR,DIRUT,X,Y
  S DIR(0)="Y"
- ;Since the '_XMKN_' basket is empty,
- ;do you want to delete it
- D BLD^DIALOG(34045,XMKN,"","DIR(""A"")")
- S DIR("B")=$$EZBLD^DIALOG(39054) ; Yes
+ S DIR("A",1)="Since the '"_XMKN_"' basket is empty,"
+ S DIR("A")="do you want to delete it"
+ S DIR("B")="YES"
  D ^DIR Q:'Y
  D DELBSKT^XMXBSKT(XMDUZ,XMK)
- W !,$$EZBLD^DIALOG(34046) ; Basket deleted.
+ W !,"Basket deleted."
  Q

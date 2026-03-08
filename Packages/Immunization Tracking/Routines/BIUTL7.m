@@ -1,5 +1,5 @@
 BIUTL7 ;IHS/CMI/MWR - UTIL: SCREENMAN CODE; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**12**;MAY 01,2016
+ ;;8.5;IMMUNIZATION;**19,25**;OCT 24, 2011;Build 22
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  SCREENMAN RELATED CODE TO LOAD & SAVE: VISIT, CASE DATA, CONTRAS.
  ;;  PATCH 9: Added Preload of Admin Date and VIS Presented Date. LOADVIS+70
@@ -8,7 +8,8 @@ BIUTL7 ;IHS/CMI/MWR - UTIL: SCREENMAN CODE; MAY 10, 2010
  ;;            Added save of Skin Test Lot Number.  SAVISIT+46
  ;;  PATCH 12: Adjust test for External form of date,     LOADVIS+65
  ;;            and Inj Site not req'd if Cat=Historical.
- ;
+ ;;  PATCH 19: Comment out NDC for V Immunizations.  LOADVIS+59
+ ;;  PATCH 25: Add ordering provider to add/edit visit SAVISIT subroutine
  ;
  ;----------
 LOADVIS(BIVTYPE) ;EP
@@ -30,9 +31,9 @@ LOADVIS(BIVTYPE) ;EP
  .;---> IMMUNIZATIONS *
  .D:BIVTYPE="I"
  ..;
- ..;---> Load the Vaccine.
+ ..;---> Load Vaccine.
  ..D:$G(BI("B"))
- ...;---> Load Vaccine Name and display Short Name below (if different).
+ ...;---> Load Vaccine Name & display Short Name below (if different).
  ...D PUT^DDSVALF(2,,,BI("B"),"I")
  ...D VSHORT(BI("B"))
  ..;
@@ -69,22 +70,18 @@ LOADVIS(BIVTYPE) ;EP
  ..;---> Load VFC Elig if Native and <19.
  ..D VFCSET^BIUTL8
  ..;
- ..;---> Load NDC Code.
- ..I $G(BI("H"))]"" D PUT^DDSVALF(3.8,,,BI("H"),"I")
+ ..;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ ..;---> NDC no longer in V Imm.
+ ..;---> Load NDC.
+ ..;I $G(BI("H"))]"" D PUT^DDSVALF(3.8,,,BI("H"),"I")
+ ..;**********
  ..;
- ..;
- ..;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
  ..;---> Preload Admin Date and Date VIS Presented.
- ..;********** PATCH 12, v8.5, MAY 01,2016, IHS/CMI/MWR
- ..;---> Adjust test for External form of date.
- ..;I $G(BI("EE"))>1 D PUT^DDSVALF(1.5,,,BI("EE"),"E")
- ..;I $G(BI("QQ"))>1 D PUT^DDSVALF(10.2,,,BI("QQ"),"E")
  ..I $G(BI("EE"))]"" D PUT^DDSVALF(1.5,,,BI("EE"),"E")
  ..I $G(BI("QQ"))]"" D PUT^DDSVALF(10.2,,,BI("QQ"),"E")
  ..;
- ..;---> If Category is Historical Event, set Inj Site AND Volume NOT Required.
+ ..;---> If Category is Hist Event, set Inj Site AND Volume NOT Required.
  ..I $G(BI("I"))="E" D REQ^DDSUTL(4,"","",0),REQ^DDSUTL(5,"","",0)
- ..;**********
  .;
  .;---> SKIN TESTS *
  .D:BIVTYPE="S"
@@ -110,7 +107,6 @@ LOADVIS(BIVTYPE) ;EP
  ..;---> Load the Volume.
  ..I $G(BI("W"))]"" D PUT^DDSVALF(2.8,,,BI("W"),"I")
  ..;
- ..;********** PATCH 10, v8.5, MAY 30,2015, IHS/CMI/MWR
  ..;---> Preload Skin Test Lot Number.
  ..I $G(BI("LL"))>1 D PUT^DDSVALF(2.9,,,BI("LL"),"I")
  ..;**********
@@ -148,6 +144,8 @@ LOADVIS(BIVTYPE) ;EP
  ;---> If this is an Immunization, load VFC Eligibility and Local Text.
  I BIVTYPE="I",$G(BI("P"))]"" D PUT^DDSVALF(10.5,,,BI("P"),"I"),ELIGLAB^BIUTL8(BI("P"))
  ;
+ ;---> Load ordering provider
+ I $G(BI("OO")) D PUT^DDSVALF(9.1,,,BI("OO"),"I")
  ;---> If Provider already stored previously, load it and quit.
  I $G(BI("R")) D PUT^DDSVALF(9,,,BI("R"),"I") Q
  ;
@@ -180,7 +178,6 @@ NOPROV(X) ;EP
  I X="E" I '$G(BI("K")) D PUT^DDSVALF(9,,,"") S BI("R")=""
  Q
  ;
- ;********** PATCH 9 & 12, v8.5, OCT 01,2014 & May 01,2016 IHS/CMI/MWR
  ;---> Next 6 calls moved to BIUTL9 for space (<15000k).
  ;
  ;----------
@@ -270,7 +267,7 @@ SAVISIT(BIVTYPE,BI) ;EP
  ;---> not="S" (Skin Test Visit), then set Error Code and quit.
  I ($G(BIVTYPE)'="I")&($G(BIVTYPE)'="S") D ERRCD^BIUTL2(410,,1) Q
  ;
- N A,B,BIDATA,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,V,W,X,Y,Z,EE,QQ,LL S V="|"
+ N A,B,BIDATA,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,V,W,X,Y,Z,EE,QQ,LL,OO S V="|"
  ;
  S A=$G(BI("A"))      ;Patient DFN.
  S B=$G(BI("B"))      ;Vaccine or Skin Test IEN.
@@ -307,6 +304,9 @@ SAVISIT(BIVTYPE,BI) ;EP
  ;---> Add Skin Test Lot Number.
  S LL=$G(BI("LL"))
  ;
+ ;********** PATCH 25, v8.5, MAY 5, 2022, IHS/CMI/LAB
+ ;---> Add Ordering Provider
+ S OO=$G(BI("OO"))
  ;---> Check Site IEN for parameters.
  S:'$G(Z) Z=$G(DUZ(2))
  I '$G(Z) D ERRCD^BIUTL2(105,,1) Q
@@ -315,8 +315,9 @@ SAVISIT(BIVTYPE,BI) ;EP
  ;---> NOTE: Y will be pc 25 (not 24) because BIRPC6 feeds CPT Import to pc 24.
  ;---> Add pieces 27-29.
  ;---> Add piece 30.
- ;---> Piece:     12  13  14  15  16  17  18  19  20  21  22  23 24 25  26 27  28   29   30
- S BIDATA=BIDATA_V_L_V_M_V_N_V_O_V_P_V_Q_V_R_V_S_V_T_V_W_V_X_V_Z_V_V_Y_V_H_V_V_EE_V_QQ_V_LL
+ ;---> Add piece 31.
+ ;---> Piece:     12  13  14  15  16  17  18  19  20  21  22  23 24 25  26 27  28   29   30   31
+ S BIDATA=BIDATA_V_L_V_M_V_N_V_O_V_P_V_Q_V_R_V_S_V_T_V_W_V_X_V_Z_V_V_Y_V_H_V_V_EE_V_QQ_V_LL_V_OO
  ;
  ;**********
  ;

@@ -1,14 +1,6 @@
-LEXAR ;ISL/KER - Look-up (Interpret User Response) ;04/21/2014
- ;;2.0;LEXICON UTILITY;**3,19,25,55,80**;Sep 23, 1996;Build 10
- ;               
- ; Global Variables
- ;    ^TMP("LEXFND"       SACC 2.3.2.5.1
- ;    ^TMP("LEXHIT"       SACC 2.3.2.5.1
- ;    ^TMP("LEXSCH"       SACC 2.3.2.5.1
- ;               
- ; External References
- ;    None
- ;               
+LEXAR ;ISA/FJF/KER-Look-up (Interpret User Response) ;11/30/2008
+ ;;2.0;LEXICON UTILITY;**3,19,25,55**;Sep 23, 1996;Build 15
+ ;
  ; User Responses
  ;
  ; Numeric  -----------------------------------------------
@@ -41,7 +33,7 @@ LEXAR ;ISL/KER - Look-up (Interpret User Response) ;04/21/2014
  ;
  ; --------------------------------------------------------
 EN(LEXUR,LEXVDT) ; Interpret user response
- D VDT^LEXU I '$D(LEX) D APN Q
+ I '$D(LEX) D APN Q
  K LEX("HLP")
  N LEXLL,LEXMAX
  I $D(LEX("LIST",0)),+$G(^TMP("LEXSCH",$J,"NUM",0))>0 D

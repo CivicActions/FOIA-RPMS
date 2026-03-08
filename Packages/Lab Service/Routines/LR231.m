@@ -1,5 +1,5 @@
 LR231 ;DALCIOFO/CYM - LR PATCH ENVIRONMENT CHECK ROUTINE ;02/20/99  09:01
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**231**;Sep 27, 1994
  ;
 INIT ;-->Does not prevent loading of the transport global.

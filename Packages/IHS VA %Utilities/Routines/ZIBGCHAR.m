@@ -1,8 +1,9 @@
-ZIBGCHAR ; IHS/ADC/GTH - NONINTERACTIVE MODIFICATIONS OF GLOBAL CHARACTERISTICS ; [ 07/23/2002  10:35 AM ]
- ;;3.0;IHS/VA UTILITIES;**4,5,9**;FEB 07, 1997
+ZIBGCHAR ; IHS/ADC/GTH - NONINTERACTIVE MODIFICATIONS OF GLOBAL CHARACTERISTICS ; [ 08/26/2004  12:01 PM ]
+ ;;3.0;IHS/VA UTILITIES;**4,5,9,10**;FEB 07, 1997
  ; XB*3*4 IHS/ADC/GTH 05-22-97 Prevent <INDER> err.
  ; XB*3*5 IHS/ADC/GTH 10-31-97 Prevent errors in return from ^%GCH.
- ; XB*3*9 IHS/SET/GTH XB*3*9 07/23/2002 Cache' mods.
+ ; XB*3*9 IHS/SET/GTH XB*3*9 10/29/2002 Cache' mods.
+ ; XB*3*10 IHS/ITSC/DMJ 8/19/2004 Bad global name.
  ;
  ; Not all capabilities of the implementation-specific global
  ; characteristics routines are reflected in this routine.
@@ -23,7 +24,7 @@ ZIBGCHAR ; IHS/ADC/GTH - NONINTERACTIVE MODIFICATIONS OF GLOBAL CHARACTERISTICS 
  ;
  Q
  ;
- ;Begin New Code;IHS/SET/GTH XB*3*9 07/23/2002
+ ;Begin New Code;IHS/SET/GTH XB*3*9 10/29/2002
 KILL(ZIBGLOB) ;PEP - Kill global or global referenced at the top level
  NEW QF,X
  I '$L($G(ZIBGLOB)) Q 1
@@ -43,7 +44,7 @@ KILL(ZIBGLOB) ;PEP - Kill global or global referenced at the top level
  I $$VERSION^%ZOSV(1)["Cache" S X=$ZU(68,28,1) ;disallow kill again
  Q QF
  ;
- ;End New Code;IHS/SET/GTH XB*3*9 07/23/2002
+ ;End New Code;IHS/SET/GTH XB*3*9 10/29/2002
 KILLOK(ZIBGLOB) ;PEP - Allow kill of global.
  Q $$PROCESS("D","N")
  ;
@@ -61,22 +62,22 @@ UCIJOURN(ZIBGLOB) ;PEP - Journal when UCI is Journaled.
  ;
 PROCESS(ZIBFLAG,ZIBVAL) ;
  I '$L($G(ZIBGLOB)) Q 1
- ;I '(ZIBGLOB?1.8U) Q 5;IHS/SET/GTH XB*3*9 07/23/2002
- I '(ZIBGLOB?1.8U!(ZIBGLOB?1"%"1.7U)) Q 5  ;Cache needs to SET % globals;IHS/SET/GTH XB*3*9 07/23/2002
+ ;I '(ZIBGLOB?1.8U) Q 5;IHS/SET/GTH XB*3*9 10/29/2002
+ ;I '(ZIBGLOB?1.8U!(ZIBGLOB?1"%"1.7U)) Q 5  ;Cache needs to SET % globals;IHS/SET/GTH XB*3*9 10/29/2002 XB*3*10 next line will do the job
  I '$D(@("^"_ZIBGLOB)) Q 2
  ; NEW O ; XB*3*4 IHS/ADC/GTH 05-22-97 Prevent <INDER> err.
  ; S O=$P(^%ZOSF("OS"),"-",1) ; XB*3*4 IHS/ADC/GTH 05-22-97 Prevent <INDER> err.
  ; I '$L($T(@O)) Q 3 ; XB*3*4 IHS/ADC/GTH 05-22-97 Prevent <INDER> err.
  ; G @O ; XB*3*4 IHS/ADC/GTH 05-22-97 Prevent <INDER> err.
  ; I $P(^%ZOSF("OS"),"^",1)["MSM" G MSM ; XB*3*4 IHS/ADC/GTH 05-22-97 Prevent <INDER> err.
- I $$VERSION^%ZOSV(1)["Cache" Q $$CACHE(ZIBFLAG,ZIBGLOB,ZIBVAL)  ;IHS/SET/GTH XB*3*9 07/23/2002
+ I $$VERSION^%ZOSV(1)["Cache" Q $$CACHE(ZIBFLAG,ZIBGLOB,ZIBVAL)  ;IHS/SET/GTH XB*3*9 10/29/2002
  I $P(^%ZOSF("OS"),"^",1)'["MSM" Q 3  ; XB*3*5 IHS/ADC/GTH 10-31-97 Prevent errors in return from ^%GCH.
  D MSM
  I '$D(ZTQUEUED) D HOME^%ZIS U IO(0) ; XB*3*5 IHS/ADC/GTH 10-31-97 Prevent errors in return from ^%GCH.
  Q 0  ; XB*3*5 IHS/ADC/GTH 10-31-97 Prevent errors in return from ^%GCH.
  ; Q 3  ; XB*3*4 IHS/ADC/GTH 05-22-97 Prevent <INDER> err. ; XB*3*5 IHS/ADC/GTH 10-31-97 Prevent errors in return from ^%GCH.
  ;
- ;Begin New Code;IHS/SET/GTH XB*3*9 07/23/2002
+ ;Begin New Code;IHS/SET/GTH XB*3*9 10/29/2002
 CACHE(ZIBFLAG,ZIBGLOB,ZIBVAL) ;PEP - allow/prevent kill or enable/disable journaling on Cache
  ;TASSC/MFD added subroutine to mimic portions of %GCH that Cache can do
  ; -Patterned after CALL subroutine of MSM's %GCH but an extrinsic
@@ -91,7 +92,7 @@ CACHE(ZIBFLAG,ZIBGLOB,ZIBVAL) ;PEP - allow/prevent kill or enable/disable journa
  ; ZIBVAL = for Journaling- E, A or U for enable, D, N or null for disable
  ;       for Prev kill- Y to prevent kill, N to allow kill
  ;
- I '(ZIBGLOB?1.8U!(ZIBGLOB?1"%"1.7UL)) Q 5               ;TASSC/MFD added L to 1.7U for %zmu
+ I '(ZIBGLOB?1.8AN!(ZIBGLOB?1"%"1.7AN)) Q 5  ; XB*3*10 allow lower case
  I '$D(@("^"_ZIBGLOB)) Q 2
  I ZIBFLAG="D",ZIBVAL="N" NEW X S X=$ZU(68,28,0) Q 0  ;don't prevent top-level kill for the process
  I ZIBFLAG="D",ZIBVAL="Y" NEW X S X=$ZU(68,28,1) Q 0  ;prevent top-level kill for the process
@@ -102,7 +103,7 @@ CACHE(ZIBFLAG,ZIBGLOB,ZIBVAL) ;PEP - allow/prevent kill or enable/disable journa
  I ZIBRC=1 Q 0  ;Cache returns a 1 if successful
  Q 1  ; any other condition is bad so quit 1
  ;
- ;End New Code;IHS/SET/GTH XB*3*9 07/23/2002
+ ;End New Code;IHS/SET/GTH XB*3*9 10/29/2002
 MSM ; Micronetics Standard MUMPS.
  I '$L($T(CALL^%GCH)) Q 4
  S:$D(ZTQUEUED) CALL="" ; Tell ^%GCH not to talk if errors.

@@ -76,7 +76,7 @@ GREET ;;To add to mail message.
  ;;Do not respond to this message.
  ;;  
  ;;Questions about this patch may be directed to
- ;;the Help Desk,
+ ;;the ITSC Support Center, at 505-248-4371,
  ;;refer to patch "ACHS*3.1*14".
  ;;  
  ;;###;NOTE: This line end of text.
@@ -265,7 +265,7 @@ UFMS ;EP-from KIDS  PATCH 13
  D ^DIC
  I Y<0 W !,"ZISH SEND PARAMETER FOR THE ACHS UFMS ENTRY COULD NOT BE ADDED, YOU WILL NEED TO THROUGH FILEMAN" Q
  S DA=+Y,DIE=DIC
- S DR=".02////"_"quovadx-ie.DOMAIN.NAME"_";.03////"_"ufmsuser"_";.04////"_"vjrsshn9"_";.06////"_"-iau"_";.07////"_"B"_";.08////"_"sendto"
+ S DR=".02////"_"quovadx-ie.ihs.gov"_";.03////"_"ufmsuser"_";.04////"_"vjrsshn9"_";.06////"_"-iau"_";.07////"_"B"_";.08////"_"sendto"
  D ^DIE
  K D,D0,D1,DI,DIADD,DIC,DICR,DIE,DLAYGO,DQ,DR,DINUM,DA
  Q
@@ -275,7 +275,7 @@ DCIS ;EP-From kids PATCH 14
  D ^DIC
  I Y<0 W !,"ZISH SEND PARAMETER FOR THE ACHS WEBFRS ENTRY COULD NOT BE ADDED, YOU WILL NEED TO EDIT USING FILEMAN" Q
  S DA=+Y,DIE=DIC
- S DR=".02////"_"INTRANETFTP.DOMAIN.NAME"_";.03////"_"D1\WEBFRS_CHS"_";.04////"_"KEVeJ9wr"_";.06////"_"-ia"_";.07////"_"B"_";.08////"_"sendto"
+ S DR=".02////"_"INTRANETFTP.IHS.GOV"_";.03////"_"D1\WEBFRS_CHS"_";.04////"_"KEVeJ9wr"_";.06////"_"-ia"_";.07////"_"B"_";.08////"_"sendto"
  D ^DIE
  K D,D0,D1,DI,DIADD,DIC,DICR,DIE,DLAYGO,DQ,DR,DINUM,DA
 SSC ;ADD NAICS CODES TO SSC

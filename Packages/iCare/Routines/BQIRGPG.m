@@ -1,5 +1,5 @@
 BQIRGPG ;GDIT/HS/ALA-Pregnancy Care Mgmt ; 17 Jul 2013  7:49 AM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5,7**;Mar 01, 2021;Build 14
  ;
 CURR(DFN) ;EP - Currently marked as pregnant
  NEW RESULT
@@ -13,6 +13,12 @@ EDD(DFN) ;EP - Definitive Date of Delivery
  S PI=11
  I $P(PDATA,U,PI)'="" S EDD=$P(PDATA,U,PI)
  I $G(EDD)'="" S RES=$$FMTE^BQIUL1(EDD)
+ Q RES
+ ;
+LMP(DFN) ;EP - Last Menstual Period
+ NEW RES
+ S RES=+$$GET1^DIQ(9000017,DFN_",",2,"I")
+ I RES'="" S RES=$$FMTE^BQIUL1(RES)
  Q RES
  ;
 EEDD(DFN) ; EP - Estimated Date of Delivery
@@ -41,6 +47,41 @@ EGA(DFN) ;EP - Estimated gestational age
 GRAV(DFN) ;EP - Gravida Total # of pregnancies
  NEW RES
  S RES=+$$GET1^DIQ(9000017,DFN_",",1103,"E")
+ Q RES
+ ;
+MUL(DFN) ;EP - Multiple births
+ NEW RES
+ S RES=+$$GET1^DIQ(9000017,DFN_",",1105,"E")
+ Q RES
+ ;
+FULL(DFN) ;EP - Full Term births
+ NEW RES
+ S RES=+$$GET1^DIQ(9000017,DFN_",",1107,"E")
+ Q RES
+ ;
+PREM(DFN) ;EP - Premature births
+ NEW RES
+ S RES=+$$GET1^DIQ(9000017,DFN_",",1109,"E")
+ Q RES
+ ;
+ECT(DFN) ;EP - Ectopic pregancies
+ NEW RES
+ S RES=+$$GET1^DIQ(9000017,DFN_",",1111,"E")
+ Q RES
+ ;
+LIV(DFN) ;EP - Living children
+ NEW RES
+ S RES=+$$GET1^DIQ(9000017,DFN_",",1113,"E")
+ Q RES
+ ;
+MIS(DFN) ;EP - Miscarriages
+ NEW RES
+ S RES=+$$GET1^DIQ(9000017,DFN_",",1133,"E")
+ Q RES
+ ;
+ABOR(DFN) ;EP - Abortions
+ NEW RES
+ S RES=+$$GET1^DIQ(9000017,DFN_",",1131,"E")
  Q RES
  ;
 LAB ;EP - Pull out prenatal lab tests
@@ -110,10 +151,6 @@ GLS(DATA,FAKE) ;EP - BQI GET PRENATAL GLOSSARY
  S GLIEN=$O(^BQI(90508.2,"B","Prenatal","")) I GLIEN="" S BMXSEC="Problem with Prenatal glossary in file 90508.2" G DONE
  S IEN=0 F  S IEN=$O(^BQI(90508.2,GLIEN,1,IEN)) Q:'IEN  D
  . S II=II+1,@DATA@(II)=$G(^BQI(90508.2,GLIEN,1,IEN,0))
- ;S GLIEN=$O(^BQI(90506.5,"B","Prenatal","")) I GLIEN="" S BMXSEC="Problem with Prenatal source list" G DONE
- ;S IEN=0 F  S IEN=$O(^BQI(90506.5,GLIEN,10,IEN)) Q:'IEN  D
- ;. S IIEN=$P(^BQI(90506.5,GLIEN,10,IEN,0),U,4)
- ;. S II=II+1,@DATA@(II)="    "_$P(^BQI(90506.5,GLIEN,10,IEN,0),U,3)_" ("_$P($G(^LAB(60,IIEN,0)),U,1)_")"
  I II>0 S @DATA@(II)=@DATA@(II)_$C(30)
  ;
 DONE S II=II+1,@DATA@(II)=$C(31)
@@ -126,3 +163,188 @@ ERR ;
  S BMXSEC="Recording that an error occurred at "_ERRDTM
  I $D(II),$D(DATA) S II=II+1,@DATA@(II)=$C(31)
  Q
+ ;
+TRIM(DFN) ;EP - Current Trimester
+ NEW EDD,RFROM,RTHRU
+ S EDD=$P($G(^AUPNREP(DFN,13)),"^",11) I EDD="" Q ""
+ D TRIM^BQIDCAH1(EDD,1)
+ I DT'<RFROM,DT'>RTHRU Q "1"
+ D TRIM^BQIDCAH1(EDD,2)
+ I DT'<RFROM,DT'>RTHRU Q "2"
+ D TRIM^BQIDCAH1(EDD,3)
+ I DT'<RFROM,DT'>RTHRU Q "3"
+ Q ""
+ ;
+TRIMD(DFN,TRIM) ;EP - Trimester dates
+ NEW EDD,RFROM,RTHRU
+ S EDD=$P($G(^AUPNREP(DFN,13)),"^",11) I EDD="" Q ""
+ D TRIM^BQIDCAH1(EDD,TRIM)
+ Q $$FMTE^BQIUL1(RFROM)_"-"_$$FMTE^BQIUL1(RTHRU)
+ ;
+RSV(DFN) ; EP - RSV Immunization Given
+ NEW EDD,RFROM,RTHRU,TAX,TREF,RVF,RVT,IMN,DFLG,TXT,IMD
+ S EDD=$P($G(^AUPNREP(DFN,13)),"^",11) I EDD="" Q ""
+ S RFROM=$$FMADD^XLFDT(EDD,-56),RTHRU=$$FMADD^XLFDT(EDD,-28)
+ S RVF=9999999-RTHRU,RVT=9999999-RFROM
+ S TAX="BQI PREG IZ RSV CVX CODES",TREF="BQITAX" K @TREF
+ D BLD^BQITUTL(TAX,.TREF)
+ S DFLG=0,IMN="" F  S IMN=$O(@TREF@(IMN)) Q:IMN=""  D
+ . S BG=RVF F  S BG=$O(^AUPNVIMM("AA",DFN,IMN,BG)) Q:BG=""  D
+ .. S IMD=9999999-BG
+ .. I IMD<RFROM!(IMD>RTHRU) Q
+ .. S DFLG=1
+ I 'DFLG S TXT="NO"
+ I DFLG S TXT="YES"
+ Q TXT
+ ; 
+BMI(DFN,TRIM) ;EP - BMI based on EDD
+ ; If TRIM="I", BMI value from before 1st trimester
+ NEW EDD,RFROM,THRU,VALUE
+ S EDD=$P($G(^AUPNREP(DFN,13)),"^",11) I EDD="" Q ""
+ I TRIM="I" D  Q VALUE
+ . D TRIM^BQIDCAH1(EDD,1)
+ . S VALUE=$$MEAS^BQIRGUT1(DFN,"BMI","",RFROM)
+ ;
+ D TRIM^BQIDCAH1(EDD,TRIM)
+ S VALUE=$$MEAS^BQIRGUT1(DFN,"BMI",RFROM,RTHRU)
+ Q VALUE
+ ;
+TRMT(DFN) ;EP - Treatment for Syphilis
+ NEW REF,RSUB,BDN,RXD,TEDD,BEDD,RES,VIS,VSDTM,RDRUG
+ S REF=$NA(^TMP("BQISYTR",$J)) K @REF
+ F RSUB="RXNO BQI BICILLIN (PCN G BENZ)","RXNO BQI PCN G AQ CRYST INJ","RXNO BQI PCN G PROCAINE INJ" D RXNM^BQITUTL(RSUB,.REF)
+ ;D RXNM^BQITUTL("RXNO BQI BICILLIN (PCN G BENZ)",.REF)
+ I '$D(@REF) Q ""
+ S RES=""
+ S BDN="" F  S BDN=$O(^AUPNVMED("AC",DFN,BDN)) Q:BDN=""  D
+ . S RXD=$P($G(^AUPNVMED(BDN,0)),"^",1) I RXD="" Q
+ . I '$D(@REF@(RXD)) Q
+ . S TEDD=$P($G(^AUPNREP(DFN,13)),"^",11) I TEDD="" Q
+ . S BEDD=$$FMADD^XLFDT(TEDD,-280)
+ . S VIS=$P(^AUPNVMED(BDN,0),"^",3) I VIS="" Q
+ . S VSDTM=$P($G(^AUPNVSIT(VIS,0)),"^",1)\1 I VSDTM=0 Q
+ . I VSDTM'<BEDD,VSDTM'>DT S RDRUG(VSDTM,BDN)=RXD
+ S RES=$O(RDRUG(""),-1)
+ Q $$FMTE^BQIUL1(RES)
+ ;
+RPR(DFN,TYP) ;EP - RPR by trimester
+ ; TYP="I", Initial prenatal
+ ; TYP="T", Third Trimester
+ ; TYP="P", Postpartum
+ S DEDD=$P($G(^AUPNREP(DFN,13)),"^",11) I DEDD="" Q ""
+ ;
+ I TYP="I" D  Q RESULT
+ . ; If no prenatal note title, look at cpt code, then first trimester
+ . NEW RVDT,RFROM,RTHRU,RF,RT,NTZ,PNTE,TIN,NFLG
+ . D TRIM^BQIDCAH1(DEDD,"")
+ . ; If prenatal note title, get date of first one in the DEDD timeframe
+ . S PNTE="",NFLG=0 F  S PNTE=$O(^BQI(90508,1,26,"B",PNTE)) Q:PNTE=""  D
+ .. S RF=9999999-RTHRU,RT=9999999-RFROM,RVDT=RF
+ .. F  S RVDT=$O(^TIU(8925,"AA",DFN,PNTE,RVDT)) Q:RVDT=""!(RVDT>RT)  D
+ ... S TIN="" F  S TIN=$O(^TIU(8925,"AA",DFN,PNTE,RVDT,TIN)) Q:TIN=""  S NTZ(RVDT)="",NFLG=1
+ . I NFLG S RF=9999999-$O(NTZ("")),RFROM=$$FMADD^XLFDT(RF,-7),RTHRU=$$FMADD^XLFDT(RF,7)
+ . I 'NFLG D CP("I") I CPRES S NFLG=1
+ . D RLB(DFN,RFROM,RTHRU)
+ . I $G(RESULT)="" D TRIM^BQIDCAH1(DEDD,1) D RLB(DFN,RFROM,RTHRU)
+ ;
+ I TYP="T" D  Q RESULT
+ . ; Third trimester date range
+ . NEW RFROM,RTHRU
+ . D TRIM^BQIDCAH1(DEDD,3)
+ . D RLB(DFN,RFROM,RTHRU)
+ ;
+ I TYP="P" D  Q RESULT
+ . ; Postpartum from definitive EDD to 60 days after
+ . NEW PRFROM,PRTHRU,CURR
+ . S PRFROM=DEDD,PRTHRU=$$FMADD^XLFDT(PRFROM,60)
+ . ; If today is past the 60 days postpartum, OR patient not marked as Pregnant anymore
+ . I DT>PRTHRU S RESULT="" Q
+ . S CURR=$$GET1^DIQ(9000017,DFN_",",1101,"I")
+ . D RLB(DFN,PRFROM,PRTHRU)
+ ;
+ Q RESULT
+ ;
+RLB(DFN,FRFROM,FRTHRU) ;
+ NEW TREF,TAX,TEMP,LIEN,RDAT
+ S TREF="BQITAX" K @TREF
+ S TEMP="BQITMP" K @TEMP
+ S TAX="BQI SYPHILIS REAGIN LOINC" D BLD^BQITUTL(TAX,.TREF)
+ S TAX="BQI SYPHILIS REAGIN TEST TAX" D BLD^BQITUTL(TAX,.TREF,"L")
+ D LABS^BQIRGUT1(DFN,"",.TREF,FRFROM,FRTHRU,"RPR",.TEMP)
+ S RESULT=""
+ S RDAT=$O(@TEMP@(""),-1) I RDAT="" Q
+ S LIEN=$O(@TEMP@(RDAT,"RPR",""))
+ S RESULT=$$FMTMDY^BQIUL1(RDAT)_" ("_@TEMP@(RDAT,"RPR",LIEN)_")"
+ Q
+ ;
+TLB(DFN,FRFROM,FRTHRU) ;
+ NEW TREF,TAX,TEMP,LIEN,RDAT
+ S TREF="BQITAX" K @TREF
+ S TEMP="BQITMP" K @TEMP
+ S TAX="BQI SYPHILIS TP-AB LOINC" D BLD^BQITUTL(TAX,.TREF)
+ S TAX="BQI SYPHILIS TP-AB TEST TAX" D BLD^BQITUTL(TAX,.TREF,"L")
+ D LABS^BQIRGUT1(DFN,"",TREF,FRFROM,FRTHRU,"TPA",TEMP)
+ S RESULT=""
+ S RDAT=$O(@TEMP@(""),-1) I RDAT="" Q
+ S LIEN=$O(@TEMP@(RDAT,"TPA",""))
+ S RESULT=$$FMTMDY^BQIUL1(RDAT)_" ("_@TEMP@(RDAT,"TPA",LIEN)_")"
+ Q
+ ;
+TPA(DFN,TYP) ;EP - TPA by trimester
+ ; TYP="I", Initial prenatal
+ ; TYP="T", Third Trimester
+ ; TYP="P", Postpartum
+ S DEDD=$P($G(^AUPNREP(DFN,13)),"^",11) I DEDD="" Q ""
+ ;
+ I TYP="I" D  Q RESULT
+ . ; If no prenatal note title, look at cpt code, then first trimester
+ . NEW RVDT,RFROM,RTHRU,RF,RT,NTZ,PNTE,TIN,NFLG
+ . D TRIM^BQIDCAH1(DEDD,"")
+ . ; If prenatal note title, get date of first one in the DEDD timeframe
+ . S PNTE="",NFLG=0 F  S PNTE=$O(^BQI(90508,1,26,"B",PNTE)) Q:PNTE=""  D
+ .. S RF=9999999-RTHRU,RT=9999999-RFROM,RVDT=RF
+ .. F  S RVDT=$O(^TIU(8925,"AA",DFN,PNTE,RVDT)) Q:RVDT=""!(RVDT>RT)  D
+ ... S TIN="" F  S TIN=$O(^TIU(8925,"AA",DFN,PNTE,RVDT,TIN)) Q:TIN=""  S NTZ(RVDT)="",NFLG=1
+ . I NFLG S RF=9999999-$O(NTZ("")),RFROM=$$FMADD^XLFDT(RF,-7),RTHRU=$$FMADD^XLFDT(RF,7)
+ . I 'NFLG D CP("I") I CPRES S NFLG=1
+ . D TLB(DFN,RFROM,RTHRU)
+ . I $G(RESULT)="" D TRIM^BQIDCAH1(DEDD,1) D TLB(DFN,RFROM,RTHRU)
+ ;
+ I TYP="T" D  Q RESULT
+ . ; Third trimester date range
+ . NEW RFROM,RTHRU
+ . D TRIM^BQIDCAH1(DEDD,3)
+ . D TLB(DFN,RFROM,RTHRU)
+ ;
+ I TYP="P" D  Q RESULT
+ . ; Postpartum from definitive EDD to 60 days after
+ . NEW PRFROM,PRTHRU,CURR
+ . S PRFROM=DEDD,PRTHRU=$$FMADD^XLFDT(PRFROM,60)
+ . ; If today is past the 60 days postpartum, OR patient not marked as Pregnant anymore
+ . I DT>PRTHRU S RESULT="" Q
+ . S CURR=$$GET1^DIQ(9000017,DFN_",",1101,"I")
+ . D TLB(DFN,PRFROM,PRTHRU)
+ ;
+ Q RESULT
+ ;
+CP(TY) ;
+ NEW BQCD,CN,COD
+ K BQCD
+ I TY="I" D
+ . F COD="0500F ","0501F" S CN=$O(^ICPT("BA",COD,"")) I CN'="" S BQCD(CN)=""
+ I TY="P" D
+ . S CN=$O(^ICPT("BA","0503F ","")) I CN'="" S BQCD(CN)=""
+ S FREF=9000010.18
+ S CPRES=$$ITM^BQICAUT2(RFROM,RTHRU,$G(TAX),DFN,FREF,.BQCD)
+ Q
+ ;
+NOT(DFN) ;EP - Prenatal Note Title
+ NEW RVDT,RFROM,RTHRU,RF,RT,DATE,PNTE,NTC,NTZ
+ S RESULT="",RVDT=""
+ S PNTE="",NTC=0 F  S PNTE=$O(^BQI(90508,1,26,"B",PNTE)) Q:PNTE=""  D
+ . F  S RVDT=$O(^TIU(8925,"AA",DFN,PNTE,RVDT)) Q:RVDT=""  D
+ .. S RF=9999999-RVDT
+ .. S NTZ(RF)=""
+ S RVDT=$O(NTZ(""),-1)
+ S RESULT=$$FMTMDY^BQIUL1(RVDT)
+ Q RESULT

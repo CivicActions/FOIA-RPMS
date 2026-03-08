@@ -1,15 +1,12 @@
-AMQQN0 ; IHS/CMI/THL - NATL LANGUAGE PRELIMINARY SETUP ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
- ;-----
+AMQQN0 ; OHPRD/DG - NATL LANGUAGE PRELIMINARY SETUP ;  [ 01/31/2008   5:08 PM ]
+ ;;2.0;PCC QUERY UTILITY;**12,13,18,20,21**;FEB 07, 2007
+ ;2/9/1999 - patch 12,13 Y2K fixes
 PREP F %=" DURING "," IN " I X[% D DUR Q
  I X[" BORN " D BORN
  I X'[" BETWEEN " F  Q:X'[" AND "  S X=$P(X," AND ")_" &"_$P(X," AND ",2,99)
  I X["&" D AND G EXIT
  I X["BETWEEN" S %=$P(X,"BETWEEN",2) I %[" AND " S AMQQNV2=$P(X," AND ",2),X=$P(X,(" AND "_AMQQNV2))
-RUN D SPEC
- D STRIP
- D UNITS
- D PRELIM
+RUN D SPEC,STRIP,UNITS,PRELIM
 EXIT K Y
  Q
  ;
@@ -18,20 +15,15 @@ SPEC N A,B,C,%,N,I
  S %="PTS'^CLIENTS'^CLIENT'S^EVERYONE'S^EVERYBODY'S^PTS^CLIENTS^EVERYONE^EVERYBODY^PEOPLE^FOLKS"
  F I=1:1 S A=$P(%,U,I) Q:A=""  S A=A_" " I X[A S X=$P(X,A)_"PATIENTS "_$P(X,A,2) Q
  F %=" WHO ARE "," WHO IS "," WHO WERE " F  Q:X'[%  S X=$P(X,%)_" "_$P(X,%,2,99)
- S %=" WHO HAVE "
- I X[% S X=$P(X,%)_" WITH "_$P(X,%,2)
- S %="ALL OF "
- I X[% S X=$P(X,%)_"ALL "_$P(X,%,2)
+ S %=" WHO HAVE " I X[% S X=$P(X,%)_" WITH "_$P(X,%,2)
+ S %="ALL OF " I X[% S X=$P(X,%)_"ALL "_$P(X,%,2)
  I X'["AGE" G SP1
- S %=" THE AGE OF "
- I X[% S X=$P(X,%)_" AGE "_$P(X,%,2)
+ S %=" THE AGE OF " I X[% S X=$P(X,%)_" AGE "_$P(X,%,2)
  S %="ABOVE^GREATER THAN^MORE THAN^OVER^BEYOND^>^LESS THAN^BELOW^HIGHER THAN^UNDER^<"
  F I=1:1 S A=$P(%,U,I) Q:A=""  S Y=" "_A_" AGE " I X[Y S X=$P(X,Y)_" AGE "_A_" "_$P(X,Y,2) Q
-SP1 S %=" WITH "
- I X[%,$L($P(X,%,2)," ")<3 S X=$P(X,%)_" DX OF "_$P(X,%,2)
+SP1 S %=" WITH " I X[%,$L($P(X,%,2)," ")<3 S X=$P(X,%)_" DX OF "_$P(X,%,2)
  F %="WHAT IS ","WHAT WAS " I X[% S X=$P(X,%)_$P(X,%,2,99)
- S %=" OF "
- I X["PATIENT" F  Q:X'[%  S X=$P(X,%,1)_" = "_$P(X,%,2,99)
+ S %=" OF " I X["PATIENT" F  Q:X'[%  S X=$P(X,%,1)_" = "_$P(X,%,2,99)
  S %="FROM^LIVING IN^LIVE IN^LIVES IN"
  F I=1:1 S A=$P(%,U,I) Q:A=""  S A=" "_A_" " I X[A S X=$P(X,A)_" CURRENT COMMUNITY = "_$P(X,A,2) Q
  S %="WHO ARE TAKING^WHO TAKE^TAKING^ON"
@@ -64,10 +56,7 @@ PRELIM F  Q:X'["  "  S X=$P(X,"  ")_S_$P(X,"  ",2,99)
  Q
  ;
 INSERT N A,B
- S A=$P(X,%)
- S B=$P(X,%,2)
- S B=$P(B," ",2,99)
- S X=A_Z_" "_B
+ S A=$P(X,%),B=$P(X,%,2),B=$P(B," ",2,99),X=A_Z_" "_B
  Q
  ;
 AND F I=1:1 S %=$P(X,"&",I) Q:%=""  S AMQQNAP(I)=%
@@ -75,14 +64,10 @@ AND F I=1:1 S %=$P(X,"&",I) Q:%=""  S AMQQNAP(I)=%
  S X=AMQQNAP(1)
  Q
  ;
-BORN S %=" BORN ON "
- I X[% S X=$P(X,%)_" DOB = "_$P(X,%,2) Q
- S %=" BORN DURING "
- I X[% D IN Q
- S %=" BORN IN "
- I X[% D IN Q
- S %=" BORN "
- I X[% S X=$P(X,%)_" DOB "_$P(X,%,2)
+BORN S %=" BORN ON " I X[% S X=$P(X,%)_" DOB = "_$P(X,%,2) Q
+ S %=" BORN DURING " I X[% D IN Q
+ S %=" BORN IN " I X[% D IN Q
+ S %=" BORN " I X[% S X=$P(X,%)_" DOB "_$P(X,%,2)
  Q
  ;
 IN S A=$P(X,%,2)
@@ -90,32 +75,29 @@ IN S A=$P(X,%,2)
  S X=$P(X,%)_" DOB BETWEEN "_A_" AND "_(A+1)
  Q
  ;
-DUR N Y,Z,A,B,C
- S Y=$P(X,%,2)
- S C=%
+DUR N Y,Z,A,B,C S Y=$P(X,%,2),C=%
+ ;beginning Y2K fixes
+ ;I Y?2N S Y=19_Y ;Y2000 commented out
  I Y?1.2N S Y=$$YEAR^AMQQN0(Y) ;Y2000
+ ;end Y2K fixes
  I Y?4N S X=$P(X,%)_" BETWEEN 1/1/"_Y_" AND 12/31/"_Y Q
- D DUR1
- I Y=-1 Q
+ D DUR1 I Y=-1 Q
  I $E(Y,6,7)'="00" Q
- S A=$E(Y,1,3)+1700
- S A=+$E(Y,4,5)_"/1/"_A
- S Z=+$E(Y,4,5)
- S Z=$E("303232332323",Z)+28
- S B=+$E(Y,4,5)_"/"_Z_"/"_($E(Y,1,3)+1700)
+ S A=$E(Y,1,3)+1700,A=+$E(Y,4,5)_"/1/"_A
+ S Z=+$E(Y,4,5),Z=$E("303232332323",Z)+28,B=+$E(Y,4,5)_"/"_Z_"/"_($E(Y,1,3)+1700)
  S X=$P(X,%)_" BETWEEN "_A_" AND "_B
  Q
  ;
-DUR1 N X,%
- S X=Y
- S %DT=""
- D ^%DT
+DUR1 N X,% S X=Y,%DT="" D ^%DT
  Q
  ;
-YEAR(X) ;EP - CONVERTS 2 DIGIT YEAR INTO A FOUR DIGIT YEAR
- N Y,%,%DT
+ ;beginning Y2K fixes
+ ;added this subroutine for Y2K
+ ;Y2000
+YEAR(X) ; CONVERTS 2 DIGIT YEAR INTO A FOUR DIGIT YEAR
+ NEW Y,%,%DT ;Y2000
  S:$L(X)<2 X="0"_X ;Y2000
- S %DT="P"
- D ^%DT
+ S %DT="P" D ^%DT ;Y2000
  Q Y\10000+1700 ;Y2000
  ;
+ ;end Y2K fixes

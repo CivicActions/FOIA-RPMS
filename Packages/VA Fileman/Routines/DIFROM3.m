@@ -1,5 +1,6 @@
-DIFROM3 ;SFISC/XAK-CREATES RTN ENDING IN 'INIT2' (HELP FRAMES) ;02:44 PM  28 Nov 1994
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROM3 ;SFISC/XAK-CREATES RTN ENDING IN 'INIT2' (HELP FRAMES) ;02:44 PM  28 Nov 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S DIRS=" S DIFQ=1"
  S DNAME=E_2,DL=0,(DH,Q)=" ;" K ^UTILITY($J) F DD=1:1 S X=$T(TEXT+DD) Q:X=""  S ^UTILITY($J,DD,0)=$E(X,4,999) S:$E(X,4)="U" ^(0)=^(0)_DIRS

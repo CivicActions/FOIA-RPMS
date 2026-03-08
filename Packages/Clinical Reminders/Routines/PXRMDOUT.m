@@ -1,7 +1,8 @@
-PXRMDOUT ; SLC/PKR - Handle outpatient med findings. ;17-Jun-2015 06:50;du
- ;;2.0;CLINICAL REMINDERS;**4,1001,12,17,1005**;Feb 04, 2005;Build 23
+PXRMDOUT ; SLC/PKR - Handle outpatient med findings. ;10-Apr-2025 06:50
+ ;;2.0;CLINICAL REMINDERS;**4,1001,12,17,1005,1016**;Feb 04, 2005;Build 32
  ;DBIA #5187 for PSSCLINR
  ;IHS/MSC/MGH Patch 1001 and 1005
+ ;IHS/MSC/MIR 04/10/2025 Patch 1016  DOSEUN was added
  ;===============================================
 GETDATA(DAS,FIEVT) ;Return data for an outpatient drug finding.
  ;DBIA #3793
@@ -22,6 +23,10 @@ GETDATA(DAS,FIEVT) ;Return data for an outpatient drug finding.
  I ERX=0 S FIEVT("STOP DATE")=$$FMADD^XLFDT(FIEVT("START DATE"),FIEVT("DAYS SUPPLY"))
  I ERX=1 S FIEVT("STOP DATE")=$$FMADD^XLFDT(FIEVT("START DATE"),END)
  S FIEVT("DURATION")=$$DURATION^PXRMDATE(FIEVT("START DATE"),FIEVT("STOP DATE"))
+ N PSIEN S PSIEN=$O(^PSRX(+DAS,6,0)) Q:'PSIEN
+ N DOSE,DOSEUN S DOSE=$$GET1^DIQ(52.0113,PSIEN_","_+DAS,.01),DOSEUN=$$GET1^DIQ(52.0113,PSIEN_","_+DAS,2)
+ I DOSEUN="",DOSE'=+DOSE S DOSEUN=$P(DOSE," ",$L(DOSE," "))
+ S FIEVT("DOSE UNIT")=DOSEUN
  Q
  ;
  ;===============================================

@@ -1,0 +1,76 @@
+BJPC2P28 ; IHS/CMI/LAB - PCC Suite v2.0 PATCH 28 PRE/POST INIT
+ ;;2.0;IHS PCC SUITE;**28**;MAY 14, 2009;Build 72
+ ;
+ ;
+ ; The following line prevents the "Disable Options..." and "Move Routines..." questions from being asked during the install.
+ I $G(XPDENV)=1 S (XPDDIQ("XPZ1"),XPDDIQ("XPZ2"))=0
+ F X="XPO1","XPZ1","XPZ2","XPI1" S XPDDIQ(X)=0
+ ;KERNEL
+ I '$$INSTALLD("XU*8.0*1018") D SORRY(2)
+ I '$$INSTALLD("DI*22.0*1018") D SORRY(2)
+ I '$$INSTALLD("BJPC*2.0*27") D MES^XPDUTL($$CJ^XLFSTR("Requires BJPC V2.0 patch 27.  Not installed.",80)) D SORRY(2)
+ ;
+ Q
+ ;
+PRE ;
+ S DA=$O(^DIC(19,"B","APCD MENU ENTER LOG DATA",0))
+ I DA S DIE="^DIC(19,",DR="1///Enter Data From LOGS (Radiology/CPT)" D ^DIE K DA,DIE,DR
+ Q
+POST ;
+ ;SET QMAN SITE PARAMETERS TO .06=1 FOR FILE 200 CONVERSION
+ S DA=0 F  S DA=$O(^AMQQ(8,DA)) Q:DA'=+DA  S DIE="^AMQQ(8,",DR=".06///1" D ^DIE K DIE,DR
+ S DA=$O(^APCLVSTS("B","SSN",0))
+ I DA S DIK="^APCLVSTS(" D ^DIK K DA,DIK
+ ;delete qman attributes
+ S DA=$O(^AMQQ(1,"B","PATIENT;SSN",0))
+ I DA S DIK="^AMQQ(1," D ^DIK
+ S DA=$O(^AMQQ(1,"B","PROVIDER;SSN",0))
+ I DA S DIK="^AMQQ(1," D ^DIK
+ S DA=0 F  S DA=$O(^AMQQ(5,"B","SSN",DA)) Q:DA'=+DA  S DIK="^AMQQ(5," D ^DIK
+ ;ADD MENU
+ S X=$$ADD^XPDMENU("APCDCAF EHR CODING AUDIT MENU","APCDCAF REV VISITS BY USER","TRVY")
+ ;fix suicide risk exam
+ S BJPCSRAO=$O(^AMQQ(1,"B","PATIENT;SUICIDE RISK ASSESS",0))
+ I BJPCSRAO D     ;find new IEN starting at 850.700
+ .S BJPCSRAN=""
+ .F X=850.701:.001:999 Q:BJPCSRAN  I '$D(^AMQQ(1,X,0)) S BJPCSRAN=X
+ .M ^AMQQ(1,BJPCSRAN)=^AMQQ(1,BJPCSRAO)
+ .S DA=BJPCSRAN,DIK="^AMQQ(1," D IX^DIK
+ .;fix file 5 pointer
+ .S DA=$O(^AMQQ(5,"B","SUICIDE RISK ASSESSMENT",0)) I DA S DIE="^AMQQ(5,",DR="4///`"_BJPCSRAN D ^DIE K DA,DIE,DR
+ .S DA=BJPCSRAO,DIK="^AMQQ(1," D ^DIK K DA,DIK
+ ;fix suicide screening exam
+ S BJPCSRAO=$O(^AMQQ(1,"B","PATIENT;SUICIDE SCREENING",0))
+ I BJPCSRAO D     ;find new IEN starting at 850.700
+ .S BJPCSRAN=""
+ .F X=850.701:.001:999 Q:BJPCSRAN  I '$D(^AMQQ(1,X,0)) S BJPCSRAN=X
+ .M ^AMQQ(1,BJPCSRAN)=^AMQQ(1,BJPCSRAO)
+ .S DA=BJPCSRAN,DIK="^AMQQ(1," D IX^DIK
+ .;fix file 5 pointer
+ .S DA=$O(^AMQQ(5,"B","SUICIDE SCREENING",0)) I DA S DIE="^AMQQ(5,",DR="4///`"_BJPCSRAN D ^DIE K DA,DIE,DR
+ .S DA=BJPCSRAO,DIK="^AMQQ(1," D ^DIK K DA,DIK
+ Q
+INSTALLD(BJPCSTAL) ;EP - Determine if patch BJPCSTAL was installed, where
+ ; APCLSTAL is the name of the INSTALL.  E.g "AG*6.0*11".
+ ;
+ NEW BJPCY,DIC,X,Y
+ S X=$P(BJPCSTAL,"*",1)
+ S DIC="^DIC(9.4,",DIC(0)="FM",D="C"
+ D IX^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",22,",X=$P(BJPCSTAL,"*",2)
+ D ^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",""PAH"",",X=$P(BJPCSTAL,"*",3)
+ D ^DIC
+ S BJPCY=Y
+ D IMES
+ Q $S(BJPCY<1:0,1:1)
+IMES ;
+ D MES^XPDUTL($$CJ^XLFSTR("Patch """_BJPCSTAL_""" is"_$S(Y<1:" *NOT*",1:"")_" installed.",IOM))
+ Q
+SORRY(X) ;
+ KILL DIFQ
+ I X=3 S XPDQUIT=2 Q
+ S XPDQUIT=X
+ Q

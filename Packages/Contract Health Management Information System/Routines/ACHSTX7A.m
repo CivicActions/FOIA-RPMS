@@ -1,8 +1,9 @@
 ACHSTX7A ; IHS/ITSC/JVK - EXPORT DATA (8A/9) - RECORD 7(638 STATISTICAL DATA FOR DDPS) ; JUL 10, 2008
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**11,14,15,23**;JUN 11,2001;Build 43
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**11,14,15,23,32**;JUN 11,2001;Build 39
  ;ITSC/SET/JVK ACHS*3.1*11 ADD ADDITIONAL FIELDS FOR EXPORT
  ;3.1*14 12.4.2007 IHS/OIT/FCJ ADDED CSV CHANGES
  ;3.1*15 3.4.2009 IHS/OIT/FCJ ADDED CSV CHANGES FOR CPT CODE
+ ;3.1*32 12.2.24 IHS.OIT.FCJ ADA CODE CHANGE
  ;
 DXPX ;EP - ITSC/SET/JVK ACHS*3.1*11 INCREASED FOR LOOP FROM 5 TO 9 ENTRIES 
  S (ACHSAPC(1),ACHSAPC(2))="   ",ACHS=0
@@ -86,8 +87,15 @@ ADA(F,D) ;EP - F=DUZ(2), D=Document EIN.  Return ADA codes, fee, and units.
  ;
  N A,B,C,E
  S (B,C)="",E=0
- F %=0:0 S %=$O(^ACHSF(F,"D",D,11,%)) Q:'%  S A=^(%,0) I $P($P(A,U),";",2)="AUTTADA(" S X=$P($G(^AUTTADA(+A,0)),U),B=B_$S($L(X)=4:X,1:"    "),X="0000"_$P(A,U,4),X=$E(X,$L(X)-3,$L(X)),C=C_$S(+X:X,1:"    "),E=E+$P(A,U,6)
- S B=$E(B_$J("",60),1,60),C=$E(C_$J("",60),1,60)
+ ;NEW ADA CODES 5 CHARACTERS;ST OF CHANGE ;ACHS*3.1*32 
+ ;F %=0:0 S %=$O(^ACHSF(F,"D",D,11,%)) Q:'%  S A=^(%,0) I $P($P(A,U),";",2)="AUTTADA(" S X=$P($G(^AUTTADA(+A,0)),U),B=B_$S($L(X)=4:X,1:"    "),X="0000"_$P(A,U,4),X=$E(X,$L(X)-3,$L(X)),C=C_$S(+X:X,1:"    "),E=E+$P(A,U,6)
+ ;S B=$E(B_$J("",60),1,60),C=$E(C_$J("",60),1,60)
+ F %=0:0 S %=$O(^ACHSF(F,"D",D,11,%)) Q:'%  S A=^(%,0) I $P($P(A,U),";",2)="AUTTADA(" D
+ .S X=$P($G(^AUTTADA(+A,0)),U) I $L(X)'=5 F I=1:1:5-$L(X) S X=X_" "
+ .S B=B_X
+ .S X="0000"_$P(A,U,4),X=$E(X,$L(X)-3,$L(X)),C=C_$S(+X:X,1:"    "),E=E+$P(A,U,6)
+ S B=$E(B_$J("",75),1,75),C=$E(C_$J("",60),1,60)
+ ;ACHS*3.1*32 END OF CHNG
  S X="00000"_$P(E,"."),X=$E(X,$L(X)-4,$L(X))
  S Y="00"_$P(E,".",2),Y=$E(Y,$L(Y)-1,$L(Y))
  S E=X_Y

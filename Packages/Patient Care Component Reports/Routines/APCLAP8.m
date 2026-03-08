@@ -1,5 +1,5 @@
-APCLAP8 ; IHS/CMI/LAB - APC visit counts All Service Categories ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLAP8 ; IHS/OHPRD/TMJ - APC visit counts All Service Categories ; [ 12/16/2003  2:37 PM ]
+ ;;3.0;IHS PCC REPORTS;**11,16**;FEB 05, 1997
  ;To tally average number of visits per day of week by clinic
  ;
 START ; 
@@ -24,9 +24,6 @@ LOC ;
  I APCLLOC=-1 G BD
  ;
 ZIS ;call to XBDBQUE
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G LOC
  S XBRP="^APCLAP8P",XBRC="^APCLAP81",XBRX="XIT^APCLAP8",XBNS="APCL"
  D ^XBDBQUE
  D XIT

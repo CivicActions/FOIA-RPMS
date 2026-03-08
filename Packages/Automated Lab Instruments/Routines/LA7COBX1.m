@@ -1,5 +1,5 @@
 LA7COBX1 ;VA/DALOI/JMC - LAB OBX Segment message builder (CH subscript) cont'd ; 22-Oct-2013 09:22 ; MAW
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,61,63,1018,64,71,1027,68,1033**;NOV 1, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,61,63,1018,64,71,1027,68,1033,1047**;NOV 1, 1997;Build 21
  ;
 CH ; Observation/Result segment for "CH" subscript results.
  ; Called by LA7VOBX
@@ -54,6 +54,8 @@ CH ; Observation/Result segment for "CH" subscript results.
  I $P(LA7X,"!",7) S LA760=$P(LA7X,"!",7)
  E  S LA760=+$O(^LAB(60,"C","CH;"_LRSB_";1",0))
  I LA760 S $P(LA7ALT,"^",4,6)=LA760_"^"_$P(^LAB(60,LA760,0),"^")_"^L"
+ K LA7RFXT
+ I $P($G(^LAB(60,LA760,0)),U,13) S LA7RFXT=LA760 ;maw 2015 chit 01132020
  S LA7OBX(3)=$$OBX3^LA7COBX($P(LA7X,"!",2),$P(LA7X,"!",3),LA7ALT,LA7FS,LA7ECH,$G(LA7INTYP))
  S $P(LA7OBX(3),$E(LA7ECH),7)=2.40  ;MU2
  S $P(LA7OBX(3),$E(LA7ECH),8)=5.2  ;MU2
@@ -91,6 +93,11 @@ CH ; Observation/Result segment for "CH" subscript results.
  . I LA7X="" S LA7X=$P(LA7VAL,"^")
  I $G(LA7NVAF)=1,LA7X="canc" S LA7X="PL Cancelled"
  S LA7OBX(5)=$$OBX5^LA7COBX(LA7X,LA7OBX(2),LA7FS,LA7ECH)
+ K LA7ABF,LA7ABFF  ;maw 2015 chit 01132020
+ I $G(LA7RFXT) S LA7PNTST=$G(LRSB),LA7PNTLN=$P($G(LA7OBX(3)),"^",1,3),LA7PNTRS=$P($G(LA7OBX(5)),"^",2),LA7ABF=1 ;01132020 maw 2015 chit, get parent test
+ I $G(LA7OBX(5))["REACTIVE" S LA7PNTST=$G(LRSB),LA7ABF=1,LA7ABFF="A" ;01132020 maw 2015 chit, get parent test
+ I $G(LA7OBX(5))["POSITIVE" S LA7PNTST=$G(LRSB),LA7ABF=1,LA7ABFF="A" ;01132020 maw 2015 chit, get parent test
+ ;I $G(LA7OBX(5))["REACTIVE" S LA7PNTST=$G(LRSB),LA7PNTLN=$P($G(LA7OBX(3)),"^",1,3),LA7PNTRS=$P($G(LA7OBX(5)),"^",2),LA7ABF=1 ;01132020 maw 2015 chit, get parent test
  ; Log exception when data dictionary appears corrupt.
  I $D(LA7DDERR) D CREATE^LA7LOG(121) K LA7DDERR
  ;
@@ -120,12 +127,13 @@ CH ; Observation/Result segment for "CH" subscript results.
  N LA7AB
  S LA7AB=$G(^LAB(60,LA760,1,LRSPEC,"IHS"))
  I LA7AB]"" S $P(LA7VAL,"^",2)="A"
- I $P(LA7VAL,"^",2)="" S $P(LA7VAL,"^",2)="N"
+ I $G(LA7ABF),$G(LA7ABFF)="A" S $P(LA7VAL,"^",2)="A"  ;maw 2015 chit 01132020 check flag set in OBX5
+ ;I $P(LA7VAL,"^",2)="" S $P(LA7VAL,"^",2)="N"  ;maw 01132020 2015 chit dont populate if not abnormal
  S LA7OBX(8)=$$LOOKTAB^LA7CQRY1("HL7","0078",$E($P(LA7VAL,"^",2)),$E(LA7ECH))
  ;I $E(LA7OBX(8))="H" S ABTXT="Above High Normal"  
  ;I $E(LA7OBX(8))="L" S ABTXT="Below Low Normal"
- I $G(LA7INPT) S LA7OBX(8)=$E(LA7OBX(8))
- I '$G(LA7INPT) D
+ ;I $G(LA7INPT) S LA7OBX(8)=$E(LA7OBX(8))  ;01132020 maw 2015 chit
+ I '$G(LA7INPT),$G(LA7OBX(8))]"" D  ;maw 01242020 2015 chit
  .S $P(LA7OBX(8),$E(LA7ECH),4)=$P(LA7OBX(8),$E(LA7ECH))
  .S $P(LA7OBX(8),$E(LA7ECH),5)=$P(LA7OBX(8),$E(LA7ECH),2)
  .S $P(LA7OBX(8),$E(LA7ECH),6)="L"
@@ -181,12 +189,17 @@ CH ; Observation/Result segment for "CH" subscript results.
  . S LA7OBX(23)=$$OBX23^LA7COBX(4,LA7DIV,LA7FS,LA7ECH)
  . S $P(LA7OBX(23),$E(LA7ECH,1),6)="CLIA"_$E(LA7ECH,4)_"2.16.840.1.113883.4.7"_$E(LA7ECH,4)_"ISO"
  . S $P(LA7OBX(23),$E(LA7ECH,1),7)="XX"
+ . ;S $P(LA7OBX(23),$E(LA7ECH,1),6)=""  ;maw 2015 chit 09102019
+ . ;S $P(LA7OBX(23),$E(LA7ECH,1),7)=""  ;maw 2015 chit 09102019
  . S $P(LA7OBX(23),$E(LA7ECH,1),10)=$P($G(^DIC(4,LA7DIV,99)),U)
  . S LA7DT=$S($P(LA7VAL,"^",6):$P(LA7VAL,"^",6),$P(LA76304(0),"^",3):$P(LA76304(0),"^",3),1:$$NOW^XLFDT)
  . S LA7OBX(24)=$$OBX24^LA7COBX(4,LA7DIV,LA7DT,LA7FS,LA7ECH)
  . S $P(LA7OBX(24),$E(LA7ECH),6)="USA"
  . S $P(LA7OBX(24),$E(LA7ECH),7)="L"
- . S $P(LA7OBX(24),$E(LA7ECH),9)=$P(LA7OBX(24),$E(LA7ECH),5)  ;MU2 county code same as zip for now
+ . ;S $P(LA7OBX(24),$E(LA7ECH),6)=""  ;maw 2015 chit 09102019
+ . ;S $P(LA7OBX(24),$E(LA7ECH),7)=""  ;maw 2015 chit 09102019
+ . ;S $P(LA7OBX(24),$E(LA7ECH),9)=$P(LA7OBX(24),$E(LA7ECH),5)  ;MU2 county code same as zip for now
+ . S $P(LA7OBX(24),$E(LA7ECH),9)=$$GET1^DIQ(4,LA7DIV,4.05)  ;maw 2015 chit 09102019 since no county in file 4 set to zip mailing
  ;
  S LA7OBX(25)=$$OBX25^LA7COBX($$GET1^DIQ(9009029,DUZ(2),3027,"I"),DUZ(2),LA7FS,LA7ECH)
  S $P(LA7OBX(25),$E(LA7ECH),9)="NPI"_$E(LA7ECH,4)_"2.16.840.1.113883.4.6"_$E(LA7ECH,4)_"ISO"

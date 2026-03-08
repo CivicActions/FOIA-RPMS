@@ -1,5 +1,6 @@
-DIFROM41 ;SFISC/XAK-CREATES 'INIT3' (CONT.) ;11:02 AM  13 Sep 1994
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROM41 ;SFISC/XAK-CREATES 'INIT3' (CONT.) ;11:02 AM  13 Sep 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S L=0 F DD=DD:1 S L=L+1,X=$T(TXT+L) Q:X=""  S ^UTILITY($J,DD,0)=$E(X,4,999)
  Q

@@ -1,15 +1,15 @@
-XMGAPI3 ;WASH ISC/REW/LH-Deliver Broadcast Msg & Mark for Vaporization ;04/17/2002  08:59
- ;;8.0;MailMan;;Jun 28, 2002
+XMGAPI3 ;WASH ISC/REW/LH - Deliver Broadcast Msg & Mark for Vaporization ;10/14/98  09:12
+ ;;7.1;MailMan;**29,44,67,50**;Jun 02, 1994
  ; Entry points used by MailMan options (not covered by DBIA):
  ; ENT    XMR-BROADCAST-VA-WIDE
  ; ENT    XMYB-BROADCAST-VA-WIDE
 ENT(XMTO) ; Meant to be invoked by a server.  Delivers a message
  ; either to all users or to a specific user.
- ; The message must have been sent by the POSTMASTER@DOMAIN.NAME.
+ ; The message must have been sent by the POSTMASTER@FORUM.VA.GOV.
  ; The AUTOMATIC DELETE DATE for this message is set for each user
  ; to be in 7 days; 30 days if sent to a specific user.
  ; The message is made 'information only' and 'closed'.
- ; XMTO   *=to all users
+ ; XMTO   *=to all employees
  ;        DUZ=to only one person -- typically .6 to route to SHARED,MAIL
  ; Variables set in the server invoker:
  ; XQSOP  Server basket name
@@ -18,7 +18,7 @@ ENT(XMTO) ; Meant to be invoked by a server.  Delivers a message
  N XMDUZ,XMKN
  S (XMDUZ,DUZ)=.5
  S XMKN="S."_XQSOP
- I $P(XMFROM,"@")'["POSTMASTER"!($P(XMFROM,"@",2)'["FORUM.") D
+ I $P(XMFROM,"@")'["POSTMASTER"!($P(XMFROM,"@",2)'["FORUM.VA.GOV") D
  . D ERR1(XMDUZ,XMKN,XMFROM)
  E  D
  . D SEND(XMDUZ,XMKN,XQMSG,XMTO,XMFROM)
@@ -43,13 +43,14 @@ CLEANUP(XMKN,XMZ) ; Successfully delivered message, so remove from Postmaster Se
  D CLEANUP^XMXADDR
  D ZAPSERV^XMXMSGS1(XMKN,XMZ)
  Q
-ERR1(XMDUZ,XMKN,XMFROM) ; Send message back to sender if not POSTMASTER@DOMAIN.NAME
+ERR1(XMDUZ,XMKN,XMFROM) ; Send message back to sender if not POSTMASTER@FORUM
  N A
  S A(1)="You may not send a message to the "_XMKN_" server."
- S A(2)="Only the Postmaster at DOMAIN.NAME has this permission."
+ S A(2)="Only the Postmaster at FORUM.VA.GOV has this permission."
  D SENDMSG^XMXSEND(XMDUZ,"Sender of Message to Server Unacceptable","A",XMFROM)
  K XMERR,^TMP("XMERR",$J)
  Q
+ ;
 ERR2(XMDUZ,XMKN,XMTO,XMFROM) ; Send a message back to sender if single recipient is invalid
  N A,I,J
  S A(1)="Your message to the "_XMKN_" server was not accepted"

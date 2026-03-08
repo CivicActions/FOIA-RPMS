@@ -1,5 +1,5 @@
 BIREPF1 ;IHS/CMI/MWR - REPORT, FLU IMM; AUG 10,2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW OR PRINT INFLUENZA IMMUNIZATION REPORT.
  ;;  PATCH 1: Include Flu/H1N1 parameter for body of report when queued.
@@ -32,7 +32,11 @@ START(BIX) ;EP
  S:$G(BIUP)="" BIUP="u"
  ;
  D SETVARS^BIUTL5 N VALMCNT
+ ;IHS/LAB patch 31 delimited save print type for later use
+ S BISPD=BIX
  I $G(BIX)="PRINT" D PRINT,RESET^BIREPF Q
+ I $G(BIX)="CSV" D DELIM^BIREPCSV("BIREPF1","FLU REPORT","FLU"),RESET^BIREPF Q  ;IHS/LAB patch 31 delimited output
+ ;
  ;
  ;---> Set BIAG for Age Range in header of report.
  ;---> Set BIRPDT for Report Date ("Quarterly, etc.).

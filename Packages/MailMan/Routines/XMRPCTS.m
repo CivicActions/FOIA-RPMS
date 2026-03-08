@@ -1,8 +1,6 @@
-XMRPCTS ;(KC-VAMC)/XXX-Steal TWIX's from PCTS Host [RCVR] ;03/18/2002  09:10
- ;;8.0;MailMan;;Jun 28, 2002
- ; Entry points used by MailMan options (not covered by DBIA):
- ; PCTS     XMNET-TWIX-SEND
-PCTS ;
+XMRPCTS ;(KC-VAMC)/XXX-Steal TWIX's from PCTS Host [RCVR] ;04/08/98  10:36
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**6,11,31,61**;Jun 02, 1994
  S %=$$DSP("==>STARTING PCTS DIALOGUE<=="),XMRPCTS("R")=0
  S XMCOUNT=0
 ST I $$NEWERR^%ZTER N $ETRAP,$ESTACK S $ETRAP="D ERR^XMRPCTSA"

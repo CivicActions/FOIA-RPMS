@@ -1,5 +1,5 @@
 ACHSDNL2 ; IHS/ITSC/PMF - DENIAL LTR/FS (LTR1) (3/6) ;    [ 01/05/2005  8:25 AM ]
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**3,4,6,7,12,18,22**;JUNE 11,2001;Build 13
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**3,4,6,7,12,18,30**;JUNE 11,2001;Build 39
  ;ACHS*3.1*3  new method of displaying chart number
  ;ACHS*3.1*4  allow multiple office copies
  ;ACHS*3.1*6  3.27.03 IHS/SET/FCJ print vendor amount and other resource
@@ -8,6 +8,7 @@ ACHSDNL2 ; IHS/ITSC/PMF - DENIAL LTR/FS (LTR1) (3/6) ;    [ 01/05/2005  8:25 AM 
  ;ACHS*3.1*12  1.4.04 IHS/SET/JVK  ADD CHECK FOR PAWNEE BEN PKG
  ;ACHS*3.1*18 6.11.10 IHS/SET/ABK  ADD Top, REV and Left Margin parameter fetches, 
  ;                                 and implement.
+ ;ACHS*3.1*30 5.20.2022 IHS.OIT.FCJ MOD FOR ESIG
  ;
  ;{ABK, 6/11/10} SET TOPM AND DIWL FROM CHS DENIAL PARAMETERS
  S T2=$G(^ACHSDENR(DUZ(2),0)),DIWL=$P(T2,U,9),TOPM=$P(T2,U,11)
@@ -27,7 +28,9 @@ START ;
  S ACHSCNT=0
  S ACHSPG=1
 DATE ;
- W !!,?DIWL-1,$$FMTE^XLFDT($$DN^ACHS(0,2)),!!
+ ;W !!,?DIWL-1,$$FMTE^XLFDT($$DN^ACHS(0,2)),!!  ;ACHS*3.1*30
+ I (ACHDLTYP=1)!(ACHDLTYP=2) W !!,?DIWL-1,$$FMTE^XLFDT($$DN^ACHS(0,2)),!!    ;ACHS*3.1*30
+ I (ACHDLTYP=3)!(ACHDLTYP=4) W !!,?DIWL-1,$$FMTE^XLFDT($$DN^ACHS(0,11)),!!   ;ACHS*3.1*30
  I '$D(ACHDCPAT) W !?DIWL-1,ACHDNAME D:ACHDONFL ADDR^ACHSDNL5 S:'ACHDONFL X=ACHDADDR D:'ACHDONFL SUBADDR^ACHSDNL5 W !!?DIWL-1,"The following letter was sent to the patient for denial of service:",!!
  S X="Document number: "_$$DN^ACHS(0,1)
  W ?76-$L(X),X,!!
@@ -96,11 +99,11 @@ PROV ;
  ;ACHS*3.1*6 3.27.03 IHS/SET/FCJ ADD EST/ACT CHRGS MOD BELOW MOVED INTO DO
  ;I $$DN^ACHS(100,2),$D(^AUTTVNDR($$DN^ACHS(100,2),0)) W $P($G(^AUTTVNDR($$DN^ACHS(100,2),0)),U),! G OTHER
  I $$DN^ACHS(100,2),$D(^AUTTVNDR($$DN^ACHS(100,2),0)) D  G OTHER
- .W $P($G(^AUTTVNDR($$DN^ACHS(100,2),0)),U),!  ;ACHS*3.1*22 Add LF
+ .W $P($G(^AUTTVNDR($$DN^ACHS(100,2),0)),U)
  .Q:$P($G(^ACHSDENR(DUZ(2),0)),U,6)="N"
  .S Y=$G(^ACHSDEN(DUZ(2),"D",ACHSA,100)) I Y="" W ! Q
- .S X=$P(Y,U,9) I X]"" S X2="2$" D COMMA^%DTC W ?10,"Amount Denied: ",X,"(ACT.)",! Q  ;ACHS*3.1*22 REMV LF
- .S X=$P(Y,U,8) I X]"" S X2="2$" D COMMA^%DTC W ?10,"Amount Denied: ",X,"(EST.)",!    ;ACHS*3.1*22 REMV LF
+ .S X=$P(Y,U,9) I X]"" S X2="2$" D COMMA^%DTC W !,?10,"Amount Denied: ",X,"(ACT.)",! Q
+ .S X=$P(Y,U,8) I X]"" S X2="2$" D COMMA^%DTC W !,?10,"Amount Denied: ",X,"(EST.)",!
  ;ACHS*3.1*6 3.27.03 IHS/SET/FCJ END OF CHANGES
  ;ACHS*3.1*7 11/4/03 ITSC/SET/JVK FIX PRINT EST AND ACT AMTS.
  ;COMMENT LINE BELOW ADD DO LOOP

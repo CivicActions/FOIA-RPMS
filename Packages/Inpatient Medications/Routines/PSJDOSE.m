@@ -1,5 +1,5 @@
-PSJDOSE ;BIR/MV-POSSIBLE DOSES UTILITY ;16 Jan 2001  1:53 PM
- ;;5.0; INPATIENT MEDICATIONS ;**50,65,106,111**;16 DEC 97
+PSJDOSE ;BIR/MV-POSSIBLE DOSES UTILITY ;04-Mar-2020 09:30;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**50,65,106,111,1025**;16 DEC 97;Build 33
  ;
  ; Reference to ^PSSORPH is supported by DBIA #3234.
  ;
@@ -8,6 +8,7 @@ PSJDOSE ;BIR/MV-POSSIBLE DOSES UTILITY ;16 Jan 2001  1:53 PM
  ;          Dosage Order^DD IEN^DUPD/BCMA DUPD^1(if BCMA DUPD exist
  ;PSJDSUPD: Set to 1 if need to prompt for the Units Per Dose
  ;
+ ;IHD/MSC/MGH   Modified 01/16/20 for zeros
 EDITDOSE ;Editing Dosage Ordered for active order
  ;*Need to set PSJDSFLG to null when call EDITDOSE.
  NEW PSGOER1,PSJDD,PSJDSUPD,PSJDSSEL,PSJX,Y
@@ -83,6 +84,14 @@ AGAIN ;Prompt for dosage order again
  ;* Can't accept just a numeric value
  I PSJY?.N!(PSJY?.N1".".N) D ENHLP^PSGOEM(53.1,109) G AGAIN
  ;
+ ;IHS/MSC/MGH Check for leading or trailing zeros
+ N ERR,LOOP,POI,PSSLIQ,CHK
+ D ZEROS^APSPLIQ(.ERR,PSJY)
+ I $D(ERR)>1 D  G AGAIN
+ .S LOOP="" F  S LOOP=$O(ERR(LOOP)) Q:'+LOOP  S X="" W !,$G(ERR(LOOP))
+ .S PSTXT=PSJY
+ .S CHK=$$PARSE^APSPLIQ(PSTXT)
+ ;END MODS
  ;* Free text
  G:'$$CONT(PSJY) AGAIN
  K PSJDSSEL

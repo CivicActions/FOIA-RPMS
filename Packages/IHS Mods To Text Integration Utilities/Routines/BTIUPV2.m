@@ -1,7 +1,8 @@
-BTIUPV2 ; IHS/MSC/MGH - Problem Objects ;16-Aug-2016 12:00;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1014,1016,1017**;MAR 20, 2013;Build 7
+BTIUPV2 ; IHS/MSC/MGH - Problem Objects ;04-Aug-2020 10:23;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1014,1016,1017,1020,1022**;MAR 20, 2013;Build 11
  ;4/13/13
  ;IHS/MSC/MGH Patch 1016 added normal/abnormal qualifier
+ ;IHS/GDIT/MSC/MGH Patch 1020 added fractures
  ;
  Q
 VPOV(TARGET) ; returns diagnoses for current vuecentric visit context
@@ -30,6 +31,7 @@ GETPOV(RETURN,VIEN) ;return every diagnosis for current visit
  . S NARR=$$GET1^DIQ(9000010.07,IEN,.04)
  . I $P(NARR,"|",1)["*" S NARR=$P(NARR,"|",2)
  . I $P(NARR,"|",2)=" " S NARR=$P(NARR,"|",1)
+ . S NARR=$TR(NARR,"|","-")
  . S STAT=$$GET1^DIQ(9000010.07,IEN,.12,"I")
  . S ENTER=$$GET1^DIQ(9000010.07,IEN,1216,"I")
  . S ARRAY(STAT,ENTER,NARR,IEN)=""
@@ -39,7 +41,7 @@ GETPOV(RETURN,VIEN) ;return every diagnosis for current visit
  ..S NARR="" F  S NARR=$O(ARRAY(STAT,ENTER,NARR)) Q:NARR=""  D
  ...S IEN=0 S IEN=$O(ARRAY(STAT,ENTER,NARR,IEN)) Q:IEN=""  D    ;Only get the first one
  .... S CNT=$G(CNT)+1,PCNT=$G(PCNT)+1
- .... K BTIU D ENP^XBDIQ1(9000010.07,IEN,".01:.29;1102","BTIU(","IE")
+ .... K BTIU D ENP^XBDIQ1(9000010.07,IEN,".01:.29;1102,1106","BTIU(","IE")
  .... S LINE=""
  .... I (BTIU(.12)="PRIMARY") S LINE=" [P] "         ;mark if primary dx
  .... S CODE=$G(BTIU(.01))
@@ -49,9 +51,9 @@ GETPOV(RETURN,VIEN) ;return every diagnosis for current visit
  ..... S PAT=BTIU(.02,"I")
  ..... S CON=$$ACONTROL^BTIULO5(PAT)
  ..... I CON'="" S LINE=LINE_" Control: "_CON
- .... F I=.06,.05,.09,.13,.11,.29 D                   ;check for other fields
+ .... F I=.06,.05,.09,.13,.11,.29,1106 D                   ;check for other fields
  ..... I (I=.09),BTIU(.09)]"" S LINE=LINE_"; "_$$ECODE^BTIULO5(IEN) Q
- ..... I BTIU(I)]"" S LINE=LINE_"; "_BTIU(I)
+ ..... I $G(BTIU(I))'="" S LINE=LINE_"; "_BTIU(I)
  .... S RETURN(CNT)=$J(PCNT,2)_") "_NARR_LINE
  .... ;Return qualifiers
  ....F X=13,17,18,14 D
@@ -99,7 +101,7 @@ TEXT2(IEN) ;do the text
  .S TXT=$G(^AUPNVOB(IEN,11,TXTIEN,0))
  .S PRNT=PRNT2_TXT S PRNT2=""
  .I $L(PRNT)>500 S PRNT2=$E(PRNT,501,$L(PRNT))
- .D WRAP^BTIUPV1(.WRAP,PRNT,70)
+ .D WRAP^BTIUPV1(.WRAP,PRNT,80)
  ;Process each wrapped line
  I $D(WRAP)>1 D PROC(.WRAP)
  Q

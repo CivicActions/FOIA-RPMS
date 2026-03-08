@@ -1,5 +1,5 @@
-APCLOSP ; IHS/CMI/LAB - print Operational summary ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLOSP ; IHS/OHPRD/TMJ - print Operational summary ;  [ 03/14/01  6:43 AM ]
+ ;;3.0;IHS PCC REPORTS;**9,18**;FEB 05, 1997
  ;
  ;
 START ;

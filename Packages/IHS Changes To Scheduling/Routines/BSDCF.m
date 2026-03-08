@@ -1,5 +1,5 @@
 BSDCF ; IHS/ANMC/LJF - CHART FINDER ;  [ 06/19/2002  11:29 AM ]
- ;;5.3;PIMS;**1005,1007**;MAY 28, 2004
+ ;;5.3;PIMS;**1005,1007,1022**;MAY 28, 2004;Build 18
  ;IHS/OIT/LJF 01/19/2006 PATCH 1005 added ability to call with patient defined
  ;cmi/anch/maw added line in ACTIONS for delivery date on chart finder patch 1007 item 1007.20
  ;cmi/anch/maw added line in ACTIONS for listing of provider if there patch 1007 item 1007.21
@@ -23,10 +23,15 @@ EN ; -- main entry point for BSDRM CHART FINDER
 HDR ; -- header code
  NEW X
  S VALMHDR(1)=$$SP(15)_$$CONF^BDGF
- S X=$G(IORVON)_$$GET1^DIQ(2,DFN,.01)_$G(IORVOFF)
- S X=$$PAD(X,32)_"#"_$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
- S X=$$PAD(X,48)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
- S VALMHDR(2)=$$PAD(X,68)_"Sex: "_$$GET1^DIQ(2,DFN,.02)
+ ;202307 77892 maw p1022 PPN
+ S X=$G(IORVON)_$$GETPREF^AUPNSOGI(DFN,"E",1)_$G(IORVOFF)
+ ;S X=$G(IORVON)_$$GET1^DIQ(2,DFN,.01)_$G(IORVOFF)
+ S X=$$PAD(X,50)_$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
+ S X=$$PAD(X,58)_$$GET1^DIQ(2,DFN,.03)
+ S VALMHDR(2)=$$PAD(X,72)_$$GET1^DIQ(2,DFN,.02)
+ ;S X=$$PAD(X,32)_"#"_$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
+ ;S X=$$PAD(X,48)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
+ ;S VALMHDR(2)=$$PAD(X,68)_"Sex: "_$$GET1^DIQ(2,DFN,.02)
  I $$DEAD^BDGF2(DFN) S VALMHDR(3)=$$SP(25)_$G(IORVON)_"** Patient Died on "_$$DOD^BDGF2(DFN)_" **"_$G(IORVOFF)
  E  S VALMHDR(3)=$$PCLINE^SDPPTEM(DFN,DT)
  S VALMHDR(4)=$$SP(15)_"Includes actions for "_$$RANGE^BDGF(BSDBD,DT)

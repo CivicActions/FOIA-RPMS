@@ -1,13 +1,12 @@
-XQ55 ; SEA/AMF,MJM,JLI - SEARCH FOR USERS ACCESS TO AN OPTION;
- ;;8.0;KERNEL;**140,342,483,508**;Jul 10, 1995;Build 1
- ;;Per VHA Directive 2004-038, this routine should not be modified
+XQ55 ; SEA/AMF,MJM,JLI - SEARCH FOR USERS ACCESS TO AN OPTION [4/12/04 4:36am]
+ ;;8.0;KERNEL;**140,342**;Jul 10, 1995
 INIT ;
  S XQDSH="-------------------------------------------------------------------------------"
  D ^XQDATE S XQDT=%Y
 OPT W ! S DIC=19,DIC(0)="AEQM" D ^DIC G:Y=-1 OUT S XQOPT=+Y
 MPAT W !!,"Show menu paths" S %=2 D YN^DICN G:%<0 OUT S XQMP=2-% I '% W !!,"If you answer 'YES', the listing will include the menu path(s) each user has",!,"to access the specified option." G MPAT
  K ^TMP($J),XQR,XQP
- S K=^DIC(19,XQOPT,0),XQHDR="Access to '"_$P(K,U,2)_"'  ["_$P(K,U,1)_"]",XQSCD=0,XQCOM=0,XQNOPRNT=0
+ S K=^DIC(19,XQOPT,0),XQHDR="Access to '"_$P(K,U,2)_"'  ["_$P(K,U,1)_"]",XQSCD=0
 LOOP1 S K=XQOPT,(L,X(0))=0,XQD=K K XQR,XQA,XQK,XQRV S XQR(K)="" I '$L($P(^DIC(19,K,0),U,3)) D TREE1
  G LOOP2
  Q
@@ -25,43 +24,23 @@ SETGLO ;
  Q
 LOOP2 ;
  S XQPA(0)=0,XQP=0 F  S XQP=$O(^TMP($J,XQP)) Q:XQP=""  S XQN=^TMP($J,XQP,0) S XQPS="AP" D USERS S XQPS="AD" D USERS
- D USERS1 I XQNOPRNT G MUS ; 080115 - add in options from the common menu
  G LOOP3
 USERS ;
  S XQU=0 F  S XQU=$O(^VA(200,XQPS,XQP,XQU)) Q:XQU'>0  I $D(^VA(200,XQU,.1)),+$$ACTIVE^XUSER(XQU) D EACHU
  Q
-USERS1 ; 080115 code added to handle options on the COMMON (XUCOMMAND) menu
- N XUCOMMON
- S XUCOMMON=$O(^DIC(19,"B","XUCOMMAND",0))
- S XQP=0 F  S XQP=$O(^TMP($J,XQP)) Q:XQP=""  S XQN=^TMP($J,XQP,0) F J=1:1:XQN Q:'$D(^TMP($J,XQP,J))  I $P($P(^TMP($J,XQP,J),U,2),",")=XUCOMMON D
- . D  Q:'Y
- . . W !,"***"
- . . W !,"*** This option is available from the 'SYSTEM COMMAND OPTIONS' ***"
- . . W !,"*** (XUCOMMAND) menu available to all active users unless ***"
- . . W !,"*** protected by a KEY - DO YOU REALLY WANT THE ENTIRE LIST ***"
- . . W !,"*** OF THESE USERS??? ***",!
- . . N DIR S DIR(0)="Y" D ^DIR S:'Y XQNOPRNT=1 Q:'Y
- . . Q
- . S XQU=0,XQPS="(C)" F  S XQU=$O(^VA(200,XQU)) Q:XQU'>0  I $D(^VA(200,XQU,.1)),+$$ACTIVE^XUSER(XQU),$$KEYCHECK() S II=1 D SETU
- Q
- ;
 EACHU ;
  S II=1
- F J=1:1:XQN Q:'$D(^TMP($J,XQP,J))  I $$KEYCHECK() D SETU ; 080115
+ F J=1:1:XQN Q:'$D(^TMP($J,XQP,J))  D
+ .S XQK=$P(^TMP($J,XQP,J),U,1),XX=$L(XQK,",")-1,XQGO=1
+ .I XX F X=1:1:XX S Y=$P(XQK,",",X) I Y'="",('$D(^XUSEC(Y,XQU))) S XQGO=0
+ .S XQK=$P(^TMP($J,XQP,J),U,3),XX=$L(XQK,",")-1
+ .I XX F X=1:1:XX S Y=$P(XQK,",",X) I Y'="",($D(^XUSEC(Y,XQU))) S XQGO=0
+ .D:XQGO SETU
  Q
- ;
-KEYCHECK() ; 080115 extracted common code
- ; returns 1 if user has access to the option, 0 if the user does not have access
- S XQK=$P(^TMP($J,XQP,J),U,1),XX=$L(XQK,",")-1,XQGO=1
- I XX F X=1:1:XX S Y=$P(XQK,",",X) I Y'="",('$D(^XUSEC(Y,XQU))) S XQGO=0
- S XQK=$P(^TMP($J,XQP,J),U,3),XX=$L(XQK,",")-1
- I XX F X=1:1:XX S Y=$P(XQK,",",X) I Y'="",($D(^XUSEC(Y,XQU))) S XQGO=0
- Q XQGO
- ;
 SETU ;
  S XQPA=$P(^TMP($J,XQP,J),U,2)
  I '$D(XQPA(XQPA)) S I=XQPA(0)+1,XQPA(0)=I,XQPA(0,I)=XQPA,XQPA(XQPA)=I
- S XQPA=XQPA(XQPA) S:XQPS="AD" XQPA=XQPA_"(S)",XQSCD=1 S:XQPS="(C)" XQPA=XQPA_"(C)",XQCOM=1 ; 080115
+ S XQPA=XQPA(XQPA) S:XQPS="AD" XQPA=XQPA_"(S)",XQSCD=1
  S I=$P(^VA(200,XQU,0),U,1)_U_XQU S:$D(^TMP($J,0,I)) II=$O(^TMP($J,0,I,"A"),-1)+1 S ^TMP($J,0,I,II)=XQPA
  Q
 LOOP3 ;
@@ -101,12 +80,11 @@ MENUPAT ;
  W !!,$E(XQDSH,1,27),"     MENU PATH(S)     ",$E(XQDSH,1,29),!
  F I=1:1:XQPA(0) S K=XQPA(0,I) W !,I,".",?4 F N=1:1 Q:'$L($P(K,",",N))  W:N>1 " ... " W $P(^DIC(19,$P(K,",",N),0),U,1)
  I XQSCD W !,"(S) - secondary menu pathway"
- I XQCOM W !,"(C) - SYSTEM COMMAND OPTIONS (XUCOMMAND) menu pathway"
  Q
-MUS G:X="^" OUT I $G(XQPG),$E(IOST,1)="C" W !!,"Press return when finished viewing " R X:DTIME W @IOF G OUT
+MUS G:X="^" OUT I XQPG,$E(IOST,1)="C" W !!,"Press return when finished viewing " R X:DTIME W @IOF G OUT
  I $D(ZTSK) K ^%ZTSK(ZTSK)
 OUT ;
  D ^%ZISC
 KILL K XQDT,XQGO,XQN,XQP,XQR,XQRV,XQOPT,XQPA,XQUI,XQSCD,XQDSH,XQU,N,K,J,X,XQA,XQD,XQHDR,XQK,XQP,XQPS,XQMP,XQPG,XX
- K DIC,I,II,JJ,L,POP,Y,XQNOPRNT I $D(ZTQUEUED),$D(ZTSK),ZTSK>0 K ^%ZTSK(ZTSK)
+ K DIC,I,II,JJ,L,POP,Y I $D(ZTQUEUED),$D(ZTSK),ZTSK>0 K ^%ZTSK(ZTSK)
  Q

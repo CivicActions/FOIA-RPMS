@@ -1,7 +1,7 @@
 APCDCAFC ; IHS/CMI/LAB - report on T/C VISITS WITH ANCILLARY ;
- ;;2.0;IHS PCC SUITE;**2,8,11**;MAY 14, 2009;Build 58
+ ;;2.0;IHS PCC SUITE;**2,8,11,31**;MAY 14, 2009;Build 10
  ;IHS/CMI/LAB - patch 1 Y2K
- ;
+ ;IHS/CMI/LAB - added location of encounter screen, patch 31
  ;
 START ;
  D EOJ
@@ -28,10 +28,24 @@ ED ;get ending date
  I $D(DIRUT) G BD
  S APCDED=Y
  ;
+FAC ;
+ K APCDQ
+ W !!,$G(IORVON)_"Please enter which FACILITY's visits will be reviewed."_$G(IORVOFF),!
+ S APCDLOCT=""
+ K APCDLOCS
+ S DIR(0)="S^A:ALL Locations/Facilities;S:Selected set or Taxonomy of Locations;O:ONE Location/Facility",DIR("A")="Include Visits to Which Location/Facilities",DIR("B")="A"
+ S DIR("A")="Enter a code indicating what LOCATIONS/FACILITIES are of interest",DIR("B")="A" K DA D ^DIR K DIR,DA
+ G:$D(DIRUT) GETDATES
+ S APCDLOCT=Y
+ I APCDLOCT="A" G SURE
+ D @(APCDLOCT_"LOC")
+ G:$D(APCDQ) FAC
 SURE ;
  W !!,"Are you sure you want to mark all ",$P(^DIC(40.7,APCDCLIN,0),U)," clinic visits"
- W !,"in the date range ",$$FMTE^XLFDT(APCDBD)," to ",$$FMTE^XLFDT(APCDED)," as"
- S DIR(0)="Y",DIR("A")="reviewed/complete",DIR("B")="N" KILL DA D ^DIR KILL DIR
+ W !,"in the date range ",$$FMTE^XLFDT(APCDBD)," to ",$$FMTE^XLFDT(APCDED)," for locations:",!
+ I APCDLOCT="A" W ?3,"ALL Locations/Facilities" I 1
+ E  S X=0 F  S X=$O(APCDLOCS(X)) Q:X'=+X  W !?3,$P(^DIC(4,X,0),U,1)
+ W ! S DIR(0)="Y",DIR("A")="as reviewed/complete",DIR("B")="N" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) D EOJ Q
  I 'Y D EOJ Q
 SORT ;
@@ -55,10 +69,14 @@ PROCESS ;EP - called from XBDBQUE
  F  S APCDT=$O(^AUPNVSIT("B",APCDT)) Q:'APCDT!(APCDT>APCDEND)  D
  . S APCDV=0
  . F  S APCDV=$O(^AUPNVSIT("B",APCDT,APCDV)) Q:'APCDV  D
+ .. Q:'$D(^AUPNVSIT(APCDV,0))
  .. Q:$P($G(^AUPNVSIT(APCDV,11)),U,11)="R"  ;already completed
  .. Q:'$D(^AUPNVPOV("AD",APCDV))
  .. S C=$$CLINIC^APCLV(APCDV)
  .. I C'=APCDCLIN Q  ;not clinic chosen
+ .. S APCDVLOC=$P(^AUPNVSIT(APCDV,0),U,6)
+ .. Q:APCDVLOC=""  ;no location of encounter
+ .. I $D(APCDLOCS),'$D(APCDLOCS(APCDVLOC)) Q  ;not a location we want
  .. ;v = has V65.49 or V65.19   O = has other POV
  .. S V=0,O=0,X=0 F  S X=$O(^AUPNVPOV("AD",APCDV,X)) Q:X'=+X  D
  ... S I=$P(^AUPNVPOV(X,0),U)
@@ -176,6 +194,18 @@ INFORM ;let user know what is gong on
  F I=1:1 S X=$P($T(INTRO+I),";;",2) Q:X="END"  W !,X
  K I,X
  Q
+OLOC ;EP - one location
+ S DIC="^AUTTLOC(",DIC(0)="AEMQ",DIC("A")="Which LOCATION: " D ^DIC K DIC
+ I Y=-1 S APCDQ="" Q
+ S APCDLOCS(+Y)=""
+ Q
+SLOC ;EP - taxonomy of locations
+ S X="LOCATION OF ENCOUNTER",DIC="^AMQQ(5,",DIC(0)="FM",DIC("S")="I $P(^(0),U,14)" D ^DIC K DIC,DA I Y=-1 W "OOPS - QMAN NOT CURRENT - QUITTING" S APCDQ="" Q
+ D PEP^AMQQGTX0(+Y,"APCDLOCS(")
+ I '$D(APCDLOCS) S APCDQ="" Q
+ I $D(APCDLOCS("*")) S APCDLOCT="A" K APCDLOCS W !!,"**** all locations will be included ****",! Q
+ Q
+ ;
 INTRO ;;
  ;;This option is used to automatically mark as REVIEWED/COMPLETE all
  ;;visits to a particular clinic in a date range that you select.

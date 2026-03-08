@@ -1,22 +1,26 @@
-ABMDESMU ; IHS/ASDST/DMJ - Summarized Claim Misc. Info ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**13,23**;NOV 12, 2009;Build 427
+ABMDESMU ; IHS/SD/SDR - Summarized Claim Misc. Info ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**13,23,28,29,37**;NOV 12, 2009;Build 739
  ;
- ;IHS/DSD/LSL09/02/98 - Patch 2 - NOIS NDA-0898-180038 0.00 charges on HCFA because version 2.0 does not assume
- ;             1 for units.  Modify code to set units to 1 if not already defined.
+ ;IHS/DSD/LSL09/02/98 Patch 2 NOIS NDA-0898-180038 0.00 charges on HCFA because version 2.0 does not assume
+ ;     1 for units.  Modify code to set units to 1 if not already defined.
  ;IHS/ASDS/LSL - 07/28/00 - V2.4 Patch 3 - NOIS NDA-0700-180063
  ;     Modified Supply section to quit if the item has been deleted from the Charge Master (Supply) file.
  ;
- ;IHS/SD/SDR V2.5 P2 - 5/9/02 - NOIS HQW-0302-100190 - Modified to display 2nd and 3rd modifiers and units
- ;IHS/SD/SDR v2.5 p5 - 5/18/04 - Modified to put POS and TOS by line item
- ;IHS/SD/SDR V2.5 P8 - IM10618/IM11164 - Prompt/display provider
- ;IHS/SD/SDR v2.5 p9 - task 1 - Use new service line provider multiple
- ;IHS/SD/SDR v2.5 p11 - NPI
- ;IHS/SD/SDR v2.5 p12 - IM25331 - Add provider taxonomy to CMS-1500 block 24K
- ;IHS/SD/SDR,AML v2.5 p13 - IM25899 - Alignment changes
+ ;IHS/SD/SDR V2.5 P2 5/9/02 NOIS HQW-0302-100190 - Modified to display 2nd and 3rd modifiers and units
+ ;IHS/SD/SDR v2.5 p5 5/18/04 Modified to put POS and TOS by line item
+ ;IHS/SD/SDR V2.5 P8 IM10618/IM11164 Prompt/display provider
+ ;IHS/SD/SDR v2.5 p9 task 1 Use new service line provider multiple
+ ;IHS/SD/SDR v2.5 p11 NPI
+ ;IHS/SD/SDR v2.5 p12 IM25331 Add provider taxonomy to CMS-1500 block 24K
+ ;IHS/SD/SDR,AML v2.5 p13 IM25899 Alignment changes
  ;
  ;IHS/SD/SDR v2.6 CSV
- ;IHS/SD/SDR 2.6*13 - Added check for new export mode 35
+ ;IHS/SD/SDR 2.6*13 Added check for new export mode 35
  ;IHS/SD/AML 2.6*23 HEAT247169 If the export mode is 27 or 35 and there's a NDC print 'N4' and the NDC with the description
+ ;IHS/SD/SDR 2.6*28 CR10648 Put CPT Narrative in array
+ ;IHS/SD/SDR 2.6*29 CR10410 Added Medicare non-covered changes
+ ;IHS/SD/SDR 2.6*29 CR10888 Fixed units on Charge Summary screen
+ ;IHS/SD/SDR 2.6*37 ADO89299 Made changes to print DEA# if NDC is entered and is for controlled substance
  ;
 MISC ;EP for MISC charges
  I $G(ABMP("VTYP",993)),'$G(ABMPRINT) Q:ABMP("VTYP",993)'=ABMP("EXP")
@@ -24,16 +28,23 @@ MISC ;EP for MISC charges
  S ABMX=0 F ABMS("I")=ABMS("I"):1 S ABMX=$O(@(ABMP("GL")_"43,"_ABMX_")")) Q:'ABMX  S ABMX("X")=ABMX D MISC1
  Q
  ;
-MISC1 S ABMX(0)=@(ABMP("GL")_"43,"_ABMX("X")_",0)")
+MISC1 ;
+ S ABMX(0)=@(ABMP("GL")_"43,"_ABMX("X")_",0)")
+ S ABMX(2)=$G(@(ABMP("GL")_"43,"_ABMX("X")_",2)"))  ;abm*2.6*28 IHS/SD/SDR CR10648
  S ABMZ("UNIT")=$P(ABMX(0),U,3)
  S:'+ABMZ("UNIT") ABMZ("UNIT")=1
  S ABMX("SUB")=(ABMZ("UNIT")*$P(ABMX(0),U,4))
  S ABMS("TOT")=ABMS("TOT")+ABMX("SUB")
+ ;start new abm*2.6*29 IHS/SD/SDR CR10410
+ S ABMCNDCK=U_$P(ABMX(0),U,5)_U_$P(ABMX(0),U,8)_U_$P(ABMX(0),U,9)
+ D CNCD21CK^ABMDESM1
+ ;end new abm*2.6*29 IHS/SD/SDR CR10410
  I $P(^ABMDEXP(ABMP("EXP"),0),U)'["UB" G MISCH
  ; ABMS(revn)=Totl Charge^units^Unit Charge^CPT Code
 MISCU S ABMX("R")=$P(ABMX(0),U,2) Q:ABMX("R")=""
  I $D(ABMS(ABMX("R"))) S $P(ABMS(ABMX("R")),U)=$P(ABMS(ABMX("R")),U)+ABMX("SUB")
  E  S ABMS(ABMX("R"))=ABMX("SUB")
+ S $P(ABMS(ABMX("R")),U,2)=+$P(ABMS(ABMX("R")),U,2)+ABMZ("UNIT")  ;abm*2.6*29 IHS/SD/SDR CR10888
  Q
  ;
 MISCH ;ABMS ARRAY FOR HCFA 1500
@@ -63,6 +74,19 @@ MISCH ;ABMS ARRAY FOR HCFA 1500
  .I $G(ABMP("NPIS"))="N" S $P(ABMS(ABMS("I")),U,9)=$$PTAX^ABMEEPRV(ABMDPRV)
  S $P(ABMS(ABMS("I")),U,19)=$P(ABMX(0),"^",19) ;abm*2.6*23 IHS/SD/AML HEAT247169
  I (ABMP("EXP")=27!(ABMP("EXP")=35))&($P(ABMS(ABMS("I")),U,19)'="") S $P(ABMS(ABMS("I")),U,8)="N4"_$P(ABMS(ABMS("I")),U,19)_" "_$P(ABMS(ABMS("I")),U,8)  ;abm*2.6*23 IHS/SD/AML HEAT247169
+ I "^35^"[("^"_ABMP("EXP")_"^") S $P(ABMS(ABMS("I")),U,12)=$P(ABMX(2),U,2)  ;abm*2.6*28 IHS/SD/SDR CR10648
+ ;
+ ;start new abm*2.6*37 IHS/SD/SDR ADO89299
+ ;DEA# for controlled substance
+ I ((ABMP("EXP")=35)&($P(ABMX(0),U,19)'="")) D
+ .S ABM("NDC")=$O(^PSDRUG("ZNDC",$TR($P(ABMX(0),U,19),"-"),0))
+ .S ABMDPRV=$O(@(ABMP("GL")_"43,"_ABMX_",""P"",""C"",""D"",0)"))  ;ordering provider
+ .I +$G(ABMDPRV)'=0 D
+ ..S ABMDPRV=$P($G(@(ABMP("GL")_"43,"_ABMX_",""P"","_ABMDPRV_",0)")),U)
+ ..S ABMA("CSUB")=$P($G(^PSDRUG(+ABM("NDC"),0)),U,3)  ;DEA, SPECIAL HDLG
+ ..I (ABMA("CSUB")[2)!(ABMA("CSUB")[3)!(ABMA("CSUB")[4)!(ABMA("CSUB")[5) S $P(ABMS(ABMS("I")),U,13)=$P(ABMX(2),U,6)
+ ;end new abm*2.6*33 IHS/SD/SDR ADO89299
+ ;
  Q
  ;
 REVN ;EP for REVENUE charges
@@ -84,10 +108,15 @@ ROO ;EP for R&B Charges
  Q
  ;
 ROO1 S ABMX(0)=@(ABMP("GL")_"25,"_ABMX("X")_",0)")
+ S ABMX(2)=$G(@(ABMP("GL")_"25,"_ABMX("X")_",2)"))  ;abm*2.6*28 IHS/SD/SDR CR10648
  S ABMZ("UNIT")=$P(ABMX(0),U,2)
  S:'+ABMZ("UNIT") ABMZ("UNIT")=1
  S ABMX("SUB")=(ABMZ("UNIT")*$P(ABMX(0),U,3))
  S ABMS("TOT")=ABMS("TOT")+ABMX("SUB")
+ ;start new abm*2.6*29 IHS/SD/SDR CR10410
+ S ABMCNDCK=""
+ D CNCD21CK^ABMDESM1
+ ;end new abm*2.6*29 IHS/SD/SDR CR10410
  I $P(^ABMDEXP(ABMP("EXP"),0),U)'["UB" G ROOH
 ROOU S ABMX("R")=$P(ABMX(0),U,1)
  I $D(ABMS(ABMX("R"))) S $P(ABMS(ABMX("R")),U)=$P(ABMS(ABMX("R")),U)+ABMX("SUB"),$P(ABMS(ABMX("R")),U,2)=$P(ABMS(ABMX("R")),U,2)+ABMZ("UNIT")
@@ -99,6 +128,7 @@ ROOH S ABMS(ABMS("I"))=ABMX("SUB")
  S $P(ABMS(ABMS("I")),U,4)="R&B"
  S $P(ABMS(ABMS("I")),U,6)=ABMZ("UNIT")
  S $P(ABMS(ABMS("I")),U,8)=$P(^AUTTREVN(+ABMX(0),0),U,2)
+ I "^35^"[("^"_ABMP("EXP")_"^") S $P(ABMS(ABMS("I")),U,12)=$P(ABMX(2),U,2)  ;abm*2.6*28 IHS/SD/SDR CR10648
  Q
  ;
 CPT I ABMX("C")]"" S ABMX("C")=$P($$CPT^ABMCVAPI(ABMX("C"),ABMP("VDT")),U,2)  ;CSV-c

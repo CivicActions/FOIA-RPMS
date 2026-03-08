@@ -1,5 +1,5 @@
-APCDCAF ; IHS/CMI/LAB - MENTAL HLTH ROUTINE 16-AUG-1994 ;
- ;;2.0;IHS PCC SUITE;**2,7,8,11,15,20**;MAY 14, 2009;Build 25
+APCDCAF ; IHS/CMI/LAB - MENTAL HLTH ROUTINE 16-AUG-1994 ; 07 Jul 2021  6:30 PM
+ ;;2.0;IHS PCC SUITE;**2,7,8,11,15,20,25,26**;MAY 14, 2009;Build 48
  ;
  ;
 EN ; EP -- main entry point
@@ -18,14 +18,14 @@ HDR ;EP -- header code
  S VALMHDR(2)="* an asterisk beside the visit number indicates the visit has an error"
  Q
  ;
-INIT ;EP -- init variables/list array
+INIT ;EP - init variables/list array
  S VALMSG="Q - Quit/?? for more actions/+ next/- previous"
  D GATHER
  D RECDISP
  S VALMCNT=APCDRCNT
  Q
  ;
-HELP ;EP -- help code
+HELP ;EP
  S X="?" D DISP^XQORM1 W !!
  Q
  ;
@@ -33,7 +33,7 @@ EXIT ; -- exit code
  K APCDRCNT,^TMP($J),^TMP("APCDCAF",$J)
  Q
  ;
-EXPND ; -- expand code
+EXPND ;
  Q
  ;
 SCW(C) ;EP
@@ -58,7 +58,7 @@ GATHER ;
  ..Q:$$DEMO^APCLUTL($P(APCDV0,U,5),APCDDEMO)
  ..Q:$P(APCDV0,U,7)=""
  ..Q:'$$SCW($P(APCDV0,U,7))
- ..Q:'$P(APCDV0,U,9)        ;NO DEP ENTRIES
+ ..Q:'$P(APCDV0,U,9)
  ..Q:$P(APCDV0,U,11)        ;DELETED
  ..Q:$P(APCDV0,U,3)="C"     ;CONTRACT
  ..I $P(^APCDSITE(DUZ(2),0),U,28)=0,APCDPRVT'="X" Q:'$D(^AUPNVPRV("AD",APCDVIEN))  ;no provider
@@ -127,12 +127,9 @@ RECDISP ;
  ;
 ONEDATE ;
  W !!,"This item is used to display all visits for a patient on the",!,"same date as the visit you select from the list."
- K DIR
- S DIR(0)="NO^1:"_APCDRCNT,DIR("A")="Which Visit"
- D ^DIR K DIR S:$D(DUOUT) DIRUT=1
- I Y="" W !,"No VISIT selected." D EOP G ONEDATEX
- I $D(DIRUT) W !,"No VISIT selected." D EOP G ONEDATEX
- S APCDVSIT=^TMP("APCDCAF",$J,"IDX",Y,Y)
+ S APCDALAB="Which visit"
+ D GREC^APCDCAF4
+ I 'APCDVSIT W !,"No visit selected." D EOP G ONEDATEX
  ;RELINKER?
  D EP^APCDKDE
  S APCDCAFD=$P($P(^AUPNVSIT(APCDVSIT,0),U),".")
@@ -173,7 +170,7 @@ REC ;
  Q
  ;
 ERRORCHK(V) ;EP
- NEW E,X,C
+ NEW E,X,C,Y,Z
  S E=""
  I $P(^AUPNVSIT(V,0),U,7)="E" Q ""
  I $P(^AUPNVSIT(V,0),U,7)'="I",'$D(^AUPNVPOV("AD",V)) S E="NO POV"
@@ -183,13 +180,14 @@ ERRORCHK(V) ;EP
  S X=0,C=0 F  S X=$O(^AUPNVPRV("AD",V,X)) Q:X'=+X  D
  .I $P(^AUPNVPRV(X,0),U,4)="P" S C=C+1
  I C>1 S:E]"" E=E_"," S E=E_"MULT PRIM PROV"
+ ;I C=0,$P(^AUPNVSIT(V,0),U,7)="A" S:E]"" E=E_"," S E=E_"NO PRIM PROV"
  I $$FINDPEND^APCDCAF6(V) S:E]"" E=E_"," S E=E_"CHART DEFICIENCIES"
  Q E
-RBLK(V,L) ;left blank fill
+RBLK(V,L) ;
  NEW %,I
  S %=$L(V),Z=L-% F I=1:1:Z S V=V_" "
  Q V
-LBLK(V,L) ;left blank fill
+LBLK(V,L) ;
  NEW %,I
  S %=$L(V),Z=L-% F I=1:1:Z S V=" "_V
  Q V
@@ -308,11 +306,9 @@ BACK ;EP go back
 NOTEDISP ;
  K DIR
  I $T(BROWS1^TIURA2)="" W !!,"TIU not installed" D EOP G NOTEX
- S DIR(0)="NO^1:"_APCDRCNT,DIR("A")="Display Note for which Visit"
- D ^DIR K DIR S:$D(DUOUT) DIRUT=1
- I Y="" W !,"No VISIT selected." D EOP G NOTEX
- I $D(DIRUT) W !,"No VISIT selected." D EOP G NOTEX
- S APCDVSIT=^TMP("APCDCAF",$J,"IDX",Y,Y)
+ S APCDALAB="Display Note for which visit"
+ D GREC^APCDCAF4
+ I 'APCDVSIT W !,"No visit selected." D EOP G NOTEX
  D FULL^VALM1
  I '$D(^AUPNVNOT("AD",APCDVSIT)) W !!,"That visit does not have any notes to view" D EOP G NOTEX
  S (C,X)=0 F  S X=$O(^AUPNVNOT("AD",APCDVSIT,X)) Q:X'=+X  S C=C+1
@@ -343,12 +339,9 @@ NOTEX ;
  ;
 CASHX ;EP
  D FULL^VALM1
- K DIR
- S DIR(0)="NO^1:"_APCDRCNT,DIR("A")="Display Chart Audit History for which Visit"
- D ^DIR K DIR S:$D(DUOUT) DIRUT=1
- I Y="" W !,"No VISIT selected." D EOP G CASHXX
- I $D(DIRUT) W !,"No VISIT selected." D EOP G CASHXX
- S APCDVSIT=^TMP("APCDCAF",$J,"IDX",Y,Y)
+ S APCDALAB="Display Chart Audit History for which Visit"
+ D GREC^APCDCAF4
+ I 'APCDVSIT W !,"No visit selected." D EOP G CASHXX
  D VIEWR^XBLM("DCAH^APCDCAF")
  ;
 CASHXX ;
@@ -386,12 +379,9 @@ RESORTX ;
 HS ;
  D FULL^VALM1
  I $G(APCDCAFP) S (DFN,APCHSPAT,APCDPAT,Y)=APCDCAFP G HS1
- K DIR
- S DIR(0)="NO^1:"_APCDRCNT,DIR("A")="Select Visit for Patient's Health summary"
- D ^DIR K DIR S:$D(DUOUT) DIRUT=1
- I Y="" W !,"No VISIT selected." D EOP G HSX
- I $D(DIRUT) W !,"No VISIT selected." D EOP G HSX
- S APCDVSIT=^TMP("APCDCAF",$J,"IDX",Y,Y)
+ S APCDALAB="Select Visit for Patient's Health summary"
+ D GREC^APCDCAF4
+ I 'APCDVSIT W !,"No visit selected." D EOP G HSX
  S (Y,APCDPAT,DFN,APCHSPAT)=$P(^AUPNVSIT(APCDVSIT,0),U,5)
 HS1 ;
  S X="" I DUZ(2),$D(^APCCCTRL(DUZ(2),0))#2 S X=$P(^(0),U,3) I X,$D(^APCHSCTL(X,0)) S X=$P(^APCHSCTL(X,0),U)
@@ -419,11 +409,9 @@ EOP ;EP
 BH ;EP
  K DIR
  I '$D(^XUSEC("AMHZ CODING REVIEW",DUZ)) W !!,"You do not have the security access to see Behavioral Health Notes.",!,"Please see your supervisor for access.  The security key needed is AMHZ CODING REVIEW.",! D PAUSE^APCDALV1,BHX Q
- S DIR(0)="NO^1:"_APCDRCNT,DIR("A")="Display Behavioral Health Note for which Visit"
- D ^DIR K DIR S:$D(DUOUT) DIRUT=1
- I Y="" W !,"No VISIT selected." D EOP G BHX
- I $D(DIRUT) W !,"No VISIT selected." D EOP G BHX
- S APCDVSIT=^TMP("APCDCAF",$J,"IDX",Y,Y)
+ S APCDALAB="Display Behavioral Health Note for which Visit"
+ D GREC^APCDCAF4
+ I 'APCDVSIT W !,"No visit selected." D EOP G BHX
  D FULL^VALM1
  I '$D(^AMHREC("AVISIT",APCDVSIT)) D  G BHX
  .W !!,"There is no visit in the Behavioral Health module that is associated"

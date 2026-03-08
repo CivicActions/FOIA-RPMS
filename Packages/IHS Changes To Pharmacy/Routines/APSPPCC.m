@@ -1,5 +1,5 @@
-APSPPCC ;IHS/CIA/DKM/PLS - PCC Hook for Pharmacy Package ;22-Sep-2014 14:55;DU
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1003,1004,1006,1007,1008,1009,1010,1013,1015,1017,1018**;Sep 23, 2004;Build 21
+APSPPCC ;IHS/CIA/DKM/PLS - PCC Hook for Pharmacy Package ;11-Dec-2024 16:07;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1003,1004,1006,1007,1008,1009,1010,1013,1015,1017,1018,1036**;Sep 23, 2004;Build 17
  ; EP - Called by event protocol.
  ;   DATA  = Event message.  May either be a global reference or
  ;           a local array passed by reference.
@@ -13,6 +13,7 @@ APSPPCC ;IHS/CIA/DKM/PLS - PCC Hook for Pharmacy Package ;22-Sep-2014 14:55;DU
  ;                          02/10/11 - Added support of POV for Suspense
  ;                          01/28/14 - Line REFPRV+3
  ;                          06/04/14 - Added support of adding POV to visits
+ ;                          12/03/24 - LOCADJ p1036 FID - 73897
 EN(DATA,REPROC) ;EP
  N MSG
  I $D(DATA)=1 M MSG=@DATA
@@ -49,7 +50,7 @@ TASK ;EP
 PROCESS(IEN,REF,MSG,BUL) ;EP
  N PRV,SIG,RX0,RX2,RX3,PCC,LOC,DAT,DIV,INS,RTS,PHM,QTY,DAY,CAN,DFN,OPV
  N VMED,VM0,VSTR,VSIT,ERR,ACT,COM,RXID,PLOC,PRI,POV,DRG,STA,RF0,LFN,X
- N DEFOLOC,VSVCCAT
+ N DEFOLOC,VSVCCAT,UNHOLD
  S ERR="",MSG=$G(MSG),BUL=$G(BUL)
  L +^APSPPCC(IEN):5
  I  D
@@ -178,7 +179,9 @@ DOIT ;EP
  D ADD("VST^DT^"_DAT)
  D:$D(POV)&PRV ADD("PRV^"_PRV_"^^^^"_PRI)
  D:PHM ADD("PRV^"_PHM_"^^^^0")
-POV I $D(POV) D
+POV ;
+ I $G(UNHOLD) S POV="Z76.0"
+ I $D(POV) D
  .;D:POV'="" ADD("POV^"_$P(POV,U)_"^^"_$P(POV,U,2)_"^0^2")  ;IHS/MSC/PLS - 02/04/2008 - Changed to secondary
  .;D:POV'="" ADD("POV^"_$P(POV,U)_"^^"_$P(POV,U,2)_U_$S(REF:0,1:1)_U_$S(REF:2,1:1))  ;IHS/MSC/PLS - 04/21/2011
  .;D:REF ADD("POV^"_"V68.1"_"^^"_$$PRVNARR("MEDICATION REFILL")_"^1^2")  ;IHS/MSC/PLS - 02/04/2008 - Changed to primary
@@ -252,7 +255,12 @@ INPAT(DFN,VAINDT) ;
  ;   1) Refill orders - Orders processed using options other than PSO LMOE FINISH
  ;   2) Renew orders - Orders processed using options other than PSO LMOE FINISH
  ;
-LOCADJ(LOC,RXIEN,RXN) ;EP
+LOCADJ(LOC,RXIEN,RXN) ;-
+ ;IHS/MSC/PLS - p1036 FID - 73897
+ I $G(XQORMSG(4))["Medication Removed from Hold" D
+ .;Quit if Fill Date = Issue Date
+ .Q:($P($G(^PSRX(RXIEN,2)),U,2)=$P($G(^PSRX(RXIEN,0)),U,13))
+ .S LOC=0,UNHOLD=1
  I $G(PSOFROM)="REFILL",$G(XQY0)'["PSO LMOE FINISH" S LOC=0
  I $G(PSOFROM)="NEW",RXN?.N1.U,$G(XQY0)'["PSO LMOE FINISH" S LOC=0
  ; IHS/MSC/PLS - 01/27/2009 - If new prescription and Fill Date <> Issue Date

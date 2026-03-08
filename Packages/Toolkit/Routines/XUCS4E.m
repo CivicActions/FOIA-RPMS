@@ -1,0 +1,33 @@
+XUCS4E ;CLARKSBURG/SO BUILD RAW STATISTICS DATA (multiple 8987.34) ;2/18/96  15:04 [ 04/02/2003   8:47 AM ]
+ ;;7.3;TOOLKIT;**1001**;APR 1, 2003
+ ;;7.3;TOOLKIT;**14**;Apr 25, 1995
+ D ^XUCSUTL2
+EDIT ; Begin Editing of file 8987.2
+ ; Update 8987.21 Multiple
+ D EDIT^XUCSUTL ; Do common edit
+ S DA(2)=XUCSDA2,DA(1)=XUCSDA1
+ S DIC="^XUCS(8987.2,"_DA(2)_",1,"_DA(1)_",3,"
+ S DIC(0)="FLMXZ",DIC("P")=$P(^DD(8987.21,4,0),U,2),X=1 D ^DIC
+ S DIE=DIC K DIC S DA=+Y
+SETDR ; Setup DR Array
+ S DR=".5///^S X=^TMP($J,""XUCS"",0)"
+ S DR(1,8987.34,1)="1///^S X=XUCSA(""PR"")"
+ S DR(1,8987.34,2)="2///^S X=XUCSA(""PW"")"
+ S DR(1,8987.34,3)="3///^S X=XUCSA(""PW"")+XUCSA(""PR"")"
+ S DR(1,8987.34,4)="4///^S X=^TMP($J,""XUCS"",23)"
+ S DR(1,8987.34,5)="5///^S X=^TMP($J,""XUCS"",24)"
+ S DR(1,8987.34,6)="6///^S X=XUCSA(""GFETCH"")"
+ S DR(1,8987.34,7)="7///^S X=XUCSA(""GFETCH"")+^TMP($J,""XUCS"",23)+^TMP($J,""XUCS"",24)"
+ S DR(1,8987.34,8)="8///^S X=XUCSA(""LR"")"
+ S DR(1,8987.34,9)="9///^S X=XUCSA(""LW"")"
+ S DR(1,8987.34,10)="10///^S X=XUCSA(""GRDDP"")"
+ S DR(1,8987.34,11)="11///^S X=XUCSA(""GRRVG"")"
+ S DR(1,8987.34,12)="12///^S X=^TMP($J,""XUCS"",51)"
+ S DR(1,8987.34,13)="13///^S X=^TMP($J,""XUCS"",52)"
+ S DR(1,8987.34,14)="14///^S X=^TMP($J,""XUCS"",51)+^TMP($J,""XUCS"",52)"
+ S DR(1,8987.34,15)="15///^S X=XUCSA(""GRRVG"")-XUCSA(""RVGMISS"")"
+ ; Now edit the 8987.34 Multiple
+ D ^DIE K DIE,DR,DA,Y
+ K XUCSDA1,XUCSDA2,^TMP($J,"XUCS")
+ D KILL^XUCSUTL
+ Q

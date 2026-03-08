@@ -1,5 +1,5 @@
 BQITASK1 ;PRXM/HC/ALA-Reminders Update Task ; 24 May 2007  1:10 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**1,5**;Mar 01, 2021;Build 20
  ;
 EN ;EP - Entry point
  ;NEW UID
@@ -7,6 +7,9 @@ EN ;EP - Entry point
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BQIRMDR D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
 REM ;EP - Redo reminders
+ ; Start up Forecaster compile
+ ;D JIMF^BQITASK5("Weekly")
+ ;
  NEW DA
  S DA=$O(^BQI(90508,0)) I 'DA Q
  S BQIUPD(90508,DA_",",4.07)=$$NOW^XLFDT()
@@ -16,27 +19,29 @@ REM ;EP - Redo reminders
  K BQIUPD
  ;
  ; Re-evaluate Reminders
- D CHK^BQIRMDR("Weekly")
+ D CHK^BQIRMZDR("Weekly")
  ;
  D DZ
  ;
- S BQDFN=0,ERRCNT=0
- F  S BQDFN=$O(^AUPNPAT(BQDFN)) Q:'BQDFN  D  Q:ERRCNT>100
- . NEW CRMDT
- . S CRMDT=$P($G(^BQIPAT(BQDFN,0)),"^",8)
- . I $$FMDIFF^XLFDT(DT,CRMDT\1)<7 Q
+ S BQMDFN=0,ERRCNT=0
+ F  S BQMDFN=$O(^AUPNVSIT("AC",BQMDFN)) Q:'BQMDFN  D  Q:ERRCNT>100
+ . I $D(^XTMP("BQINIGHT",BQMDFN)) Q
  . NEW BQIDATA
  . S BQIDATA=$NA(^BQIPAT)
- . K @BQIDATA@(BQDFN,40)
+ . K @BQIDATA@(BQMDFN,40)
  . ; If deceased, don't include
- . I $P($G(^DPT(BQDFN,.35)),U,1)'="" Q
+ . I $P($G(^DPT(BQMDFN,.35)),U,1)'="" Q
  . ; If no active HRN, don't include
- . I '$$HRN^BQIUL1(BQDFN) Q
+ . I '$$HRN^BQIUL1(BQMDFN) Q
  . ; If no visit in last 3 years, quit
- . I '$$VTHR^BQIUL1(BQDFN) Q
+ . I '$$VTHR^BQIUL1(BQMDFN) Q
  . ; If no visit in last 2 years, quit
  . ;I '$$VTWR^BQIUL1(BQDFN) Q
- . D PAT^BQIRMDR(BQDFN)
+ . NEW RMDAT
+ . S RMDAT=$P($G(^BQIPAT(BQMDFN,0)),"^",8)
+ . I RMDAT'="",$$FMDIFF^XLFDT(DT,RMDAT)<10 Q
+ . D IRPT^BQIRMIZ(BQMDFN,"W")
+ . D PAT^BQIRMZDR(BQMDFN,0,"W")
  ;
  NEW DA
  S DA=$O(^BQI(90508,0)) I 'DA Q
@@ -44,7 +49,7 @@ REM ;EP - Redo reminders
  S BQIUPD(90508,DA_",",4.09)="@"
  S BQIUPD(90508,DA_",",24.06)="@"
  D FILE^DIE("","BQIUPD","ERROR")
- K BQIUPD,ERRCNT,BQDFN
+ K BQIUPD,ERRCNT,BQMDFN,ERROR,RMDAT
  Q
  ;
 ORM ; EP - Update all patients for one reminder
@@ -57,9 +62,9 @@ ORM ; EP - Update all patients for one reminder
  . ; If no active HRN, don't include
  . I '$$HRN^BQIUL1(BQDFN) Q
  . ; If no visit in last 3 years, quit
- . ;I '$$VTHR^BQIUL1(BQDFN) Q
+ . I '$$VTHR^BQIUL1(BQDFN) Q
  . ; If no visit in last 2 years, quit
- . I '$$VTWR^BQIUL1(BQDFN) Q
+ . ;I '$$VTWR^BQIUL1(BQDFN) Q
  . S IEN=0
  . F  S IEN=$O(^XTMP("BQIRMOM",IEN)) Q:IEN=""  D
  .. S RCAT=$P(^XTMP("BQIRMOM",IEN),U,1)

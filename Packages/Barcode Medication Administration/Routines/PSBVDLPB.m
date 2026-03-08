@@ -1,11 +1,13 @@
-PSBVDLPB ;BIRMINGHAM/EFC-BCMA IV VIRTUAL DUE LIST ;Mar 2004
- ;;3.0;BAR CODE MED ADMIN;**11,13,38,32**;Mar 2004;Build 32
+PSBVDLPB ;BIRMINGHAM/EFC-BCMA IV VIRTUAL DUE LIST ;31-Mar-2023 09:39;DU
+ ;;3.0;BAR CODE MED ADMIN;**11,13,38,32,1033**;Mar 2004;Build 34
  ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
  ;
  ; Reference/IA
  ; EN^PSJBCMA/2828
  ; $$GET^XPAR/2263
  ; File 200/10060
+ ;
+ ; Modified - IHS/MSC/PLS - 03/31/2023 - Line EN+139
  ;
 EN(DFN,PSBDT) ; Default Order List Return for Today
  ;
@@ -147,7 +149,9 @@ EN(DFN,PSBDT) ; Default Order List Return for Today
  .S (PSBYES,PSBODD,PSBYTF)=0
  .S:$$PSBDCHK1^PSBVT1(PSBSCH) PSBYES=1
  .I PSBYES,PSBADST="" D ERROR^PSBMLU(PSBONX,PSBOITX,DFN,"Admin times required",PSBSCH) Q
- .F I=1:1 Q:$P(PSBSCH,"-",I)=""  I $P(PSBSCH,"-",I)?2N!($P(PSBSCH,"-",I)?4N) S PSBYES=1,PSBYTF=1
+ .;IHS/MSC/PLS - p1033
+ .;F I=1:1 Q:$P(PSBSCH,"-",I)=""  I $P(PSBSCH,"-",I)?2N!($P(PSBSCH,"-",I)?4N) S PSBYES=1,PSBYTF=1
+ .F I=1:1 Q:$P($TR(PSBSCH,",","-"),"-",I)=""  I $P($TR(PSBSCH,",","-"),"-",I)?2N!($P($TR(PSBSCH,",","-"),"-",I)?4N) S PSBYES=1,PSBYTF=1
  .I PSBSCHT="C",PSBYTF="1",PSBADST="" D ERROR^PSBMLU(PSBONX,PSBOITX,DFN,"Admin times required",PSBSCH) Q
  .S PSBFREQ=$$GETFREQ^PSBVDLU1(DFN,PSBONX)
  .I PSBFREQ="O" S PSBFREQ=1440

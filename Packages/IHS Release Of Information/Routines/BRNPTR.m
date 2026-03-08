@@ -1,5 +1,5 @@
 BRNPTR ; IHS/PHXAO/TMJ - PT RECORD ; 
- ;;2.0;RELEASE OF INFO SYSTEM;;APR 10, 2003
+ ;;2.0;RELEASE OF INFO SYSTEM;**6**;APR 10, 2003;Build 11
  ;
  ;
 START ;Get Patient
@@ -14,6 +14,7 @@ START ;Get Patient
  Q
  ;
 GETPAT ;Get Patient Name
+ N Y
  S DIC="^AUPNPAT(",DIC(0)="AEMQ" D ^DIC K DIC
  Q:Y<0
  S BRNPAT=+Y
@@ -21,6 +22,8 @@ GETPAT ;Get Patient Name
  ;
  ;
 GETANS ;Ask if User wants to Print Suspended Disclosures
+ ;
+ N DIRUT,Y
  ;
  S DIR(0)="YO",DIR("A")="Do You Wish to print SUSPENDED Disclosures",DIR("B")="NO" K DA D ^DIR K DIR
  I $D(DIRUT) S BRNQ=1 Q
@@ -61,7 +64,7 @@ PRINT ;Print the Disclosure Records
  Q
  ;
 HEADER ;Print the Header for Display
- W !!,?5,"CUMMULATIVE DISCLOSURE RECORDS FOR: "_$P($G(^DPT(BRNPAT,0)),U),!
+ W !!,?5,"CUMULATIVE DISCLOSURE RECORDS FOR: "_$P($G(^DPT(BRNPAT,0)),U),!  ;IHS/GDIT/AEF BRN*2.0*6 FID100138
  W ?5,"HEALTH RECORD #: " W ?25,$$HRN^AUPNPAT(BRNPAT,DUZ(2),2),!
  W ?5,"DISPLAY DATE: "_$$FMTE^XLFDT(DT,"1P")
  ;W !!,?5,"PT NAME",?40,"DISCLOSURE #",?55,"DISC DT",!!

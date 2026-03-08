@@ -1,0 +1,10 @@
+ATXFP ;IHS/CMI/LAB-CREATED BY ^ATXSTX ON APR 09, 2021;
+ ;;5.1;TAXONOMY;**37**;FEB 04, 1997;Build 72
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^ATXFPA ;    BGP MYOPATHY/MYALGIA
+ D ^ATXFPB ;    BGP HYSTERECTOMY PROCEDURES
+ D ^ATXFPC ;    BGP IPC CKD STG 5 DXS
+ Q

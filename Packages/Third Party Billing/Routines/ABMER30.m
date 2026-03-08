@@ -1,14 +1,14 @@
 ABMER30 ; IHS/SD/SDR - UB92 EMC RECORD 30 (Third Party Payor) ;     
- ;;2.6;IHS 3P BILLING SYSTEM;**14,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**14,21,37**;NOV 12, 2009;Build 739
  ;Original;DMJ;01/22/96 10:43 AM
  ;
- ; IHS/ASDS/LSL - 06/05/00 - V2.4 Patch 1 - NOIS NDA-0500-100042
- ;     Modify to not subtract ABMP("PAYED") to gain total
+ ;IHS/ASDS/LSL 2.4*1 06/05/00 NOIS NDA-0500-100042 Modify to not subtract ABMP("PAYED") to gain total
  ;
- ; IHS/SD/SDR - v2.5 p10 - IM19557 - Correct due from patient
- ; IHS/SD/SDR - v2.5 p11 - IM24315 - Made change to check new parameter for UB relationship code
+ ;IHS/SD/SDR 2.5*10 IM19557 Correct due from patient
+ ;IHS/SD/SDR 2.5*11 IM24315 Made change to check new parameter for UB relationship code
  ;
- ;IHS/SD/SDR - 2.6*21 - HEAT123457 - Updated 61044 check from 'equals' to 'contains'
+ ;IHS/SD/SDR 2.6*21 HEAT123457 Updated 61044 check from 'equals' to 'contains'
+ ;IHS/SD/SDR 2.6*37 ADO80078 Updated to check insurer/multiple, not just insurer (since the same insurer could be on bill twice)
  ;
 START ;START HERE
  K ABMREC(30),ABMREC(31),ABME,ABM,ABMP("PAYED")
@@ -127,7 +127,8 @@ LOOP2 ;LOOP HERE
 250 ;EP - Third Party Payments Received (SOURCE: FILE= FIELD=)
  ; form locator #54
  I '$D(ABMP("PAYED")) D PAYED^ABMERUTL
- S ABMR(30,250)=+$G(ABMP("PAYED",ABME("INS")))
+ ;S ABMR(30,250)=+$G(ABMP("PAYED",ABME("INS")))  ;abm*2.6*37 IHS/SD/SDR ADO80078
+ S ABMR(30,250)=+$G(ABMP("PAYED",ABME("INS"),ABMM))  ;abm*2.6*37 IHS/SD/SDR ADO80078
  ; If non-ben patient and Prepay amt
  I ABME("ITYPE")="N" S ABMR(30,250)=ABMR(30,250)+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),"^",9)
  S ABMR(30,250)=$$FMT^ABMERUTL(ABMR(30,250),"10NRJ2")

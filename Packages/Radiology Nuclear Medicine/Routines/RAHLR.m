@@ -1,9 +1,11 @@
-RAHLR ;HISC/CAH/BNT - Generate Common Order (ORM) Message ; 06 Oct 2013  11:08 AM
- ;;5.0;Radiology/Nuclear Medicine;**2,12,10,25,71,82,75,80,84,94,1005**;Mar 16, 1998;Build 13
+RAHLR ;HISC/CAH/BNT IHS/OIT/NST - Generate Common Order (ORM) Message ; 20 Sep 2024  11:08 AM
+ ;;5.0;Radiology/Nuclear Medicine;**2,12,10,25,71,82,75,80,84,94,1005,1009,1010,1012**;Mar 16, 1998;Build 13
  ;Generates msg whenever a case is registered or cancelled or examined
  ;              registered        cancelled        examined
  ; Order control : NW                CA               XO
  ; Order status  : IP                CA               CM
+ ;07/20/2023 ISI/NST BRA*5*1012  Add ICD Code to OBR31.1 and DG1
+ ;07/20/2023 ISI/NST BRA*5*1010  Remove "CR" as default modality
  ;07/28/2008 BAY/KAM RA*5*94 Remove GMT offset from OBR-7 & add Reason for Study to OBX segment
  ;02/14/2006 BAY/KAM RA*5*71 Add ability to update exam data to V/R
  ;
@@ -105,8 +107,36 @@ EN ; Called from the RA REG & RA CANCEL & RA EXAMINED protocols
  ;
  S $P(HLA("HLS",3),HLFS,23)=HLDT1,$P(HLA("HLS",3),HLFS,19)=$S($D(^DIC(42,+$P(RACN0,"^",6),0)):$P(^(0),"^"),$D(^SC(+$P(RACN0,"^",8),0)):$P(^(0),"^"),1:"Unknown")
  ;
+ ;ihs/cmi/maw 20210811 patch 1009 modality
+ N BRAMODAE,BRAMODAI,BRAIEN
+ ;S BRAMODAE="CR"  ; IHS/OIT/NST 1010 remove default modality
+ S BRAIEN=+$O(^RAMIS(71,+RAPROC,"MDL",0))
+ I $G(BRAIEN) D
+ . S BRAMODAI=$G(^RAMIS(71,+RAPROC,"MDL",BRAIEN,0))
+ . I $G(BRAMODAI) S BRAMODAE=$$ESCAPE^RAHLRU($P($G(^RAMIS(73.1,BRAMODAI,0)),U))
+ S $P(HLA("HLS",3),HLFS,25)=$G(BRAMODAE)
+ ;ihs/cmi/maw patch 1009 end of modality mods
  ; OBR-31.2 = Reason for Study P75
- S $P(HLA("HLS",3),HLFS,32)=$E(HLECH)_$$ESCAPE^RAHLRU($P($G(^RAO(75.1,+$P(RACN0,"^",11),.1)),U))
+ ;ihs/cmi/maw 20210420 patch 1009 CR10046
+ N RARFS
+ S RARFS=$P($G(^RAO(75.1,+$P(RACN0,"^",11),.1)),U)
+ S RARFS=$TR(RARFS,"|"," ")
+ S RARFS=$TR(RARFS,"^"," ")
+ S RARFS=$TR(RARFS,"~"," ")
+ S RARFS=$TR(RARFS,"&"," ")
+ S RARFS=$TR(RARFS,"\"," ")
+ ;S $P(HLA("HLS",3),HLFS,32)=$E(HLECH)_$$ESCAPE^RAHLRU($P($G(^RAO(75.1,+$P(RACN0,"^",11),.1)),U))  ;maw orig
+ ;IHS/OIT/NST 20240830 Patch 1012 
+ N BRAOIFN,BRACLIND,BRACI,BRACI2,BRAICDN,BRAICDT
+ S BRAOIFN=+$P(RACN0,"^",11)
+ S BRACI=$$GET1^DIQ(75.1,BRAOIFN,91)  ; ICD Code e.g. S82.00
+ S BRACI2=$TR(BRACI,".","")           ; e.g. S82
+ S BRACLIND=$$ICDDX^ICDEX(BRACI,DT)   ; ICD string
+ S BRAICDN=$P(BRACLIND,U,4)           ; ICD Name  e.g., ANKLE FRACTURE
+ S BRAICDT=$S($P(BRACLIND,U,20)=1:"I9",$P(BRACLIND,U,20)=30:"I10",1:"")  ; ICD Type  e.g., I10
+ ;
+ S $P(HLA("HLS",3),HLFS,32)=BRACI2_$E(HLECH)_$$ESCAPE^RAHLRU(RARFS)
+ ;ihs/cmi/maw patch 1009 end of mods
  ;
  ; OBR-36 = Exam Date/Time
  S $P(HLA("HLS",3),HLFS,37)=$$FMTHL7^XLFDT(OBR36)
@@ -131,6 +161,11 @@ ALLER ;Compile 'OBX' Segment for Allergies
  I $L(X) S RAN=RAN+1,HLA("HLS",RAN)="OBX"_HLFS_HLFS_"TX"_HLFS_"A"_$E(HLECH)_"ALLERGIES"_$E(HLECH)_"L"_HLFS_HLFS_X D OBX11^RAHLRU
 OBXTCM ;Compile 'OBX' Segment for Tech Comment
  D OBXTCM^RAHLRU
+DG1 ; IHS/OIT/NST patch 1012 Add 'DG1' Segment for clinical indication
+ ;DG1||I10|S82^ANKLE FRACTURE^I10|ANKLE FRACTURE||
+ S RAN=RAN+1
+ S HLA("HLS",RAN)="DG1"_HLFS_HLFS_BRAICDT_HLFS_BRACI2_$E(HLECH)_BRAICDN_$E(HLECH)_BRAICDT_HLFS_BRAICDN
+ ; end IHS/OIT/NST patch 1012
  ;
 EXIT ; set HL7 message type & return to protocol
  K ^UTILITY($J,"W")

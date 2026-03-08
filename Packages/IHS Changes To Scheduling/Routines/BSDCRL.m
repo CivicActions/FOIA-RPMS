@@ -1,5 +1,5 @@
 BSDCRL ; IHS/ANMC/LJF - CHART REQUESTS LIST ;  [ 08/20/2004  11:52 AM ]
- ;;5.3;PIMS;**1001**;APR 26, 2002
+ ;;5.3;PIMS;**1001,1022**;MAY 28, 2004;Build 18
  ;
  NEW BSDDT,VAUTD,VAUTC,BSDSRT
 DATES ; -- select date
@@ -105,12 +105,21 @@ GETCR ; -- for clinic, get appts & chart requests for date
  .. ;
  .. ; set display line
  .. S NODE=$G(^SC(BSDCLN,"C",BSDT,1,BSDN,9999999))
- .. S LINE=$J(HRCN,6)_"  "_$E($$GET1^DIQ(2,PAT,.01),1,18)    ;pat
- .. S LINE=$$PAD(LINE,28)_$$GET1^DIQ(44,BSDCLN,1)         ;cln abbrev
- .. S LINE=$$PAD(LINE,37)_$E($$FMTE^XLFDT(+NODE),1,18)    ;requested on
- .. S LINE=$$PAD(LINE,57)_$$GET1^DIQ(200,+$P(NODE,U,2),1)  ;requested by
- .. S LINE=$$PAD(LINE,62)_$E($$FMTE^XLFDT($P(NODE,U,4)),1,18)  ;printed
+ .. ;202307 77892 maw p1022 PPN
+ .. N PRF
+ .. S PRF=$$GETPREF^AUPNSOGI(PAT,"E",1)
+ .. S LINE=$J(HRCN,6)_" "_$G(PRF)    ;pat
+ .. S LINE=$$PAD(LINE,38)_$$GET1^DIQ(44,BSDCLN,1)         ;cln abbrev
+ .. S LINE=$$PAD(LINE,47)_$$DTS^BSDU3(+NODE)    ;requested on
+ .. S LINE=$$PAD(LINE,62)_$$GET1^DIQ(200,+$P(NODE,U,2),1)  ;requested by
+ .. S LINE=$$PAD(LINE,67)_$$DTS^BSDU3($P(NODE,U,4))  ;printed
  .. S LINE=$$PAD(LINE,82)_$P(NODE,U,3)                    ;deliver to
+ .. ;S LINE=$J(HRCN,6)_"  "_$E($$GET1^DIQ(2,PAT,.01),1,18)    ;pat
+ .. ;S LINE=$$PAD(LINE,28)_$$GET1^DIQ(44,BSDCLN,1)         ;cln abbrev
+ .. ;S LINE=$$PAD(LINE,37)_$E($$FMTE^XLFDT(+NODE),1,18)    ;requested on
+ .. ;S LINE=$$PAD(LINE,57)_$$GET1^DIQ(200,+$P(NODE,U,2),1)  ;requested by
+ .. ;S LINE=$$PAD(LINE,62)_$E($$FMTE^XLFDT($P(NODE,U,4)),1,18)  ;printed
+ .. ;S LINE=$$PAD(LINE,82)_$P(NODE,U,3)                    ;deliver to
  .. ;
  .. S BSDCNT=BSDCNT+1 S:$P(NODE,U,4)="" BSDNP=BSDNP+1   ;counts
  .. S ^TMP("BSDCRL1",$J,SORT,TERM,+PAT,BSDT)=LINE

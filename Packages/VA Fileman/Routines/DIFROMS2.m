@@ -1,6 +1,6 @@
-DIFROMS2 ;SFISC/DCL/TKW-INSTALL DD FROM SOURCE ARRAY ;9:06 AM  14 Jul 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**11,53**;Mar 30, 1999
+DIFROMS2 ;SFISC/DCL-INSTALL DD FROM SOURCE ARRAY;8/17/95  16:17 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**6,10**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q
@@ -21,7 +21,6 @@ FILE ;
  ;I $TR($E(@DIFRFIA@(DIFRFILE,0,5)),"NY","ny")="y",$D(^DIC(DIFRFILE)) D ERR(2) Q  ;INSTALL ONLY IF NEW * * PHASING OUT * *
  N %1,DSEC,D,DA,DIC,DIK,DIFRD,DIFRDATA,DIFRFLD,DIFRDIC,DIFRGL,DIFRX,I,X,Y,Z
  S DSEC=$P(DIFR02,"^") ; **>> add file security if new file only <<**
- I 'DSEC,'$D(^DIC(DIFRFILE,0))#2 S DSEC=1 ; Check to see if the file was Deleted during Pre-Install
  ;delete DD wp text for file, field and x-ref description and field tech description
  ;also delete "NM" nodes when installing full DD at specified level
  I 'DIFRFDD D
@@ -74,7 +73,7 @@ FILE ;
  .S DA(1)=D,DIK="^DD("_D_"," D IXALL^DIK
  .I $D(^DIC(D,"%",0)) S DIK="^DIC(D,""%""," D IXALL^DIK
  .Q
- I 'DIFRFDD D  G IXKEY
+ I 'DIFRFDD D  G DIKZ
  .Q:'$D(@DIFRSA@("^DD",DIFRFILE,DIFRFILE,.01))
  .S $P(@(^DIC(DIFRFILE,0,"GL")_"0)"),"^",2)=$$HDR2P^DIFROMSS(DIFRFILE)
  .Q
@@ -85,15 +84,6 @@ FILE ;
  .S ^DD(DIFRFILE,0,"VRPK")=$P(DIFRVR,"^",2)
  .Q
  S DIFRDATA=$D(@(DIFRGL_"0)")),^(0)=DIFRDIC_"^"_$S(DIFRDATA#2:$P(^(0),"^",3,9),1:"^")
- ;
-IXKEY ; Bring INDEX and KEY entries
- K ^TMP("DIFROMS2",$J,"TRIG")
- S DIFRD=0
- F  S DIFRD=$O(@DIFRSA@("IX",DIFRFILE,DIFRD)) Q:'DIFRD  D DDIXIN^DIFROMSX(DIFRFILE,DIFRD,DIFRSA)
- K ^TMP("DIFROMS2",$J,"TRIG")
- S DIFRD=0
- F  S DIFRD=$O(@DIFRSA@("KEY",DIFRFILE,DIFRD)) Q:'DIFRD  D DDKEYIN^DIFROMSY(DIFRFILE,DIFRD,DIFRSA)
- ;
 DIKZ I $D(^DD(DIFRFILE,0,"DIK")) D
  .N %X,DIKJ,DIR,DMAX,X,Y,DIFRDIKA
  .D EN2^DIKZ(DIFRFILE,"",^DD(DIFRFILE,0,"DIK"),^DD("ROU"),"DIFRDIKA")

@@ -1,5 +1,5 @@
 BQITD031 ;PRXM/HC/ALA-CVD Known Definition ; 19 Jun 2006  5:01 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;1.1;ICARE MANAGEMENT SYSTEM;**3**;Jun 17, 2008
  ; Utilities called by BQITD03
  ;
  Q
@@ -196,30 +196,31 @@ DEL(VSDT,CT,VCT,PVST,VST) ; EP - Delete diagnoses from temporary file
  F  S TIEN=$O(@TMREF@(DFN,VSDT,TIEN)) Q:TIEN=""  D
  . I '$D(VST(TIEN)),TIEN'=PVST K @TMREF@(DFN,VSDT,TIEN)
  Q
+ ;
 PRB ;  EP - Check Problem File for instance of taxonomy
  ; Called by BQITD03
- ;
+ ;  Input
  ;     PVIEN - Taxonomy entry
  ;     TPGLOB - Problem file temporary global reference
  ;
  NEW IEN,PGREF,PFREF,DFN,VSDTM
- ;  Go through the problem file, starting with the most recent entry
+ ;  Go through problem file, starting with most recent entry
  S IEN="",PGREF="^AUPNPROB",PFREF=9000011,PROB=0
  F  S IEN=$O(@PGREF@("B",PVIEN,IEN),-1) Q:IEN=""  D
  . ;  get the patient record
  . S DFN=$$GET1^DIQ(PFREF,IEN,.02,"I") I DFN="" Q
- . ;  get the date of the problem, since not all dates exist, the
+ . ;  get date of the problem, since not all dates exist, the
+ . ;  hierachy is 'DATE ENTERED', and then 'DATE LAST MODIFIED'.
  . ;
  . ;  Check class - if Family ignore
  . I $$GET1^DIQ(PFREF,IEN,.04,"I")="F" Q
- . ;  hierarchy is 'DATE ENTERED', and then 'DATE LAST MODIFIED'.
  . S VSDTM=$$PROB^BQIUL1(IEN)\1 Q:VSDTM=0
  . ;  if there is a specified timeframe for the instance and the
  . ;  problem date doesn't fall within that timeframe, quit
  . I $G(TMFRAME)'="",VSDTM<ENDT Q
- . ;  if the problem is not an 'active' one, quit
+ . ;  if problem is not an 'active' one, quit
  . I $$GET1^DIQ(PFREF,IEN,.12,"I")'="A" Q
- . ;  set the qualifying criteria for this patient and diagnostic category
+ . ;  set qualifying criteria for this patient and diagnostic category
  . S @TPGLOB@(DFN,VSDTM,PVIEN)="P"_U_IEN
  . S $P(@TPGLOB@(DFN,VSDTM,PVIEN),U,6)=TAX
  . S @TPGLOB@(DFN)=$G(@TPGLOB@(DFN))+1

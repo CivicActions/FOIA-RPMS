@@ -1,6 +1,6 @@
-DDSMSG ;SFISC/MKO-PRINT MESSAGES ;3:14 PM  9 Feb 2001 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**75**;Mar 30, 1999
+DDSMSG ;SFISC/MKO-PRINT MESSAGES ;10:19 AM  12 Jun 1996 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**20**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ERR ;Print "DIERR" messages in help box
@@ -16,7 +16,7 @@ ERR ;Print "DIERR" messages in help box
  .. D LD($G(^TMP("DIERR",$J,DDSN,"TEXT",DDSL)),"!")
  .. I DDH'<DDSLMT D SC^DDSU S:$D(DTOUT)!($D(DUOUT)) DDSE=1
  ;
- I $G(DDH) S:$G(DDH(1,"T"))?1.C DDH(1,"T")="" D SC^DDSU
+ I $G(DDH) S:DDH(1,"T")?1.C DDH(1,"T")="" D SC^DDSU
  S DDSKM=1
  K DIERR,^TMP("DIERR",$J)
  Q
@@ -26,8 +26,7 @@ HLP(DDSG) ;Print messages from @DDSG in help area
  S:$G(DDSG)="" DDSG=$NA(@DDSREFT@("HLP"))
  ;
  K DDH
- I $G(DDQ)-1=DDSHBX,'$X K DDQ
- D:$G(DDQ)>DDSHBX SETDDH
+ I $D(DDSID),DY-1>DDSHBX!$X D SETDDH
  S DDSLMT=$G(DDC,15),(DDSE,DDSL)=0
  ;
  F  S DDSL=$O(@DDSG@(DDSL)) Q:'DDSL!DDSE  D
@@ -37,7 +36,7 @@ HLP(DDSG) ;Print messages from @DDSG in help area
  . S DDSNXTF=$G(@DDSG@(DDSL+1,"F"),"!")
  . I DDH'<DDSLMT,DDSNXTF["!"!(DDSNXTF'["?") D SC^DDSU S:$D(DTOUT)!($D(DUOUT)) DDSE=1
  ;
- I $G(DDH) S:$G(DDH(1,"T"))?1.C DDH(1,"T")="" D SC^DDSU
+ I $G(DDH) S:DDH(1,"T")?1.C DDH(1,"T")="" D SC^DDSU
  K:DDSG=$NA(@DDSREFT@("HLP")) @DDSG
  S:'$D(DDSID) DDSKM=1
  Q
@@ -46,8 +45,7 @@ WP(DDSR) ;Print the contents of a wp field @DDSR in help area
  N DDSE,DDSL,DDSLMT,DDSNXTF
  ;
  K DDH
- I $G(DDQ)-1=DDSHBX,'$X K DDQ
- D:$G(DDQ)>DDSHBX SETDDH
+ I $D(DDSID),DY-1>DDSHBX!$X D SETDDH
  S DDSLMT=$G(DDC,15),(DDSE,DDSL)=0
  ;
  F  S DDSL=$O(@DDSR@(DDSL)) Q:'DDSL!DDSE  D
@@ -55,7 +53,7 @@ WP(DDSR) ;Print the contents of a wp field @DDSR in help area
  . S DDSNXTF=$G(@DDSR@(DDSL+1,"F"),"!")
  . I DDH'<DDSLMT,DDSNXTF["!"!(DDSNXTF'["?") D SC^DDSU S:$D(DTOUT)!($D(DUOUT)) DDSE=1
  ;
- I $G(DDH) S:$G(DDH(1,"T"))?1.C DDH(1,"T")="" D SC^DDSU
+ I $G(DDH) S:DDH(1,"T")?1.C DDH(1,"T")="" D SC^DDSU
  S:'$D(DDSID) DDSKM=1
  Q
  ;
@@ -64,8 +62,7 @@ MSG(DDSMSG,DDSFLG,DDSFMT) ;Print local var or array DDSMSG in help area
  ;DDSFMT : Format if one line is sent
  N DDSL
  K DDH
- I $G(DDQ)-1=DDSHBX,'$X K DDQ
- D:$G(DDQ)>DDSHBX SETDDH
+ I $D(DDSID),DY-1>DDSHBX!$X D SETDDH
  ;
  I $D(DDSMSG)=1 D
  . D LD(DDSMSG,$S($G(DDSFMT)]"":DDSFMT,1:"!"))
@@ -75,15 +72,14 @@ MSG(DDSMSG,DDSFLG,DDSFMT) ;Print local var or array DDSMSG in help area
  Q:'$G(DDH)
  ;
  I $G(DDH) D
- . S:$G(DDH(1,"T"))?1.C DDH(1,"T")=""
- . S:$G(DDSFLG)[1 DDH(1,"T")=$C(7)_$G(DDH(1,"T"))
+ . S:DDH(1,"T")?1.C DDH(1,"T")=""
+ . S:$G(DDSFLG)[1 DDH(1,"T")=$C(7)_DDH(1,"T")
  . D SC^DDSU
  S:'$D(DDSID) DDSKM=1
  Q
  ;
 SETDDH ;Setup DDH and DDQ for identifiers and executable help
  ;that called EN^DDIOL
- S:$X>IOM $X=IOM
  S DDH=1
  S DDH(1,"T")=$TR($J("",$X)," ",$C(0))
  S DDQ=$S(DY>(IOSL-1):IOSL-1,1:DY)-1_U_$X

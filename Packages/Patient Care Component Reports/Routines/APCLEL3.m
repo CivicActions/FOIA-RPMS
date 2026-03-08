@@ -1,5 +1,5 @@
-APCLEL3 ; IHS/CMI/LAB - patients with elder care assessment ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLEL3 ;IHS/CMI/LAB - patients with elder care assessment [ 03/22/01  8:56 PM ]
+ ;;3.0;IHS PCC REPORTS;**8,9**;FEB 05, 1997
  ;
  ;
 START ;
@@ -19,9 +19,6 @@ DATE ;get visit date range for functional assessment
  I APCLED<APCLBD D  G DATE
  . W !!,$C(7),"Sorry, Ending Date MUST not be earlier than Beginning Date."
 ZIS ;call to XBDBQUE
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G DATE
  S XBRP="PRINT^APCLEL3",XBRC="PROC^APCLEL3",XBRX="EXIT^APCLEL3",XBNS="APCL"
  D ^XBDBQUE
  D EXIT
@@ -42,7 +39,6 @@ PROC ;EP - called from XBDBQUE
  ;check for functional status in date range.  Set numerator cntr
  S DFN=0 F  S DFN=$O(^AUPNPAT(DFN)) Q:DFN'=+DFN  D
  .Q:$$DOD^AUPNPAT(DFN)]""
- .Q:$$DEMO^APCLUTL(DFN,$G(APCLDEMO))
  .;has pt had functional assessment
  .S X=$$FA(DFN,APCLBD,APCLED)
  .I X="" Q

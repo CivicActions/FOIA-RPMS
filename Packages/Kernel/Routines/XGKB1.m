@@ -1,9 +1,10 @@
-XGKB1 ;SFISC/VYD - Read with Escape Processing cont. ;11/06/08  15:08
- ;;8.0;KERNEL;**244,514**;Jul 10, 1995;Build 14
+XGKB1 ;SFISC/VYD - Read with Escape Processing cont. ;06/19/2002  13:18 [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**244**;Jul 10, 1995
  ;;Special thanks to MELDRUM.KEVIN@ISC-SLC.VA.GOV
  ;
 VAXDSM ; $ZB ($KEY) values for VAX DSM
 MSM ; $ZB ($KEY) values for MSM
+GTM ; $ZB ($KEY) values for GT.M
  F I=2:1:31 D
  . S X=$TR($T(KBD+I)," ","")
  . S ^XUTL("XGKB",$P(X,";",4))=$P(X,";",3)
@@ -12,7 +13,6 @@ MSM ; $ZB ($KEY) values for MSM
  Q
  ;
  ;
-GTM ; $ZB ($KEY) values for GT.M
 DTM ; $ZB ($KEY) values for DTM
  F I=2:1 S X=$TR($T(KBD+I)," ","") Q:$P(X,";",3)="ZZZ"  D
  . S @("^XUTL(""XGKB"",$C("_$P(X,";",5)_"))=$P(X,"";"",3)")

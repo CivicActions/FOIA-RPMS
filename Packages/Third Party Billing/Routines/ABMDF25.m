@@ -1,12 +1,11 @@
-ABMDF25 ; IHS/SD/SDR - ADA-2000 Dental Export Routine ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF25 ; IHS/SD/SDR - ADA-2000 Dental Export Routine ;   [ 05/10/2004  7:48 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**8,10**;APR 05, 2002
  ;Original;TMD;09/12/95 8:48 AM
  ;
  ; IHS/SD/SDR - v2.5 p6 - 5/10/2004 - new export mode
+ ;
  ; IHS/SD/SDR - v2.5 p10 - IM20395
  ;    Split out lines bundled by rev code
- ;
- ; IHS/SD/SDR - v2.6 CSV
  ;
  ;************************************************************************************
  K ABM
@@ -34,6 +33,7 @@ XIT ;
 ENT ;EP for getting data and printing form
  K ABMF
  Q:'$D(^ABMDBILL(DUZ(2),ABMP("BDFN"),0))     ; Quit if no bill data
+ ;Q:'$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,0))  ; Quit if no dental data
  Q:'$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,0))&('$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,0)))  ; Quit if no dental and misc data
  D ENT^ABMDF25A,BODY
  Q
@@ -91,11 +91,31 @@ OTHER ;
  F  S ABMRCD=$O(ABMRV(ABMRCD)) Q:ABMRCD=""  D
  .S ABMED=""
  .F  S ABMED=$O(ABMRV(ABMRCD,ABMED)) Q:ABMED=""  D  Q:$D(DUOUT)
+ ..;start old code abm*2.5*10 IM20395
+ ..;D RESET:ABM("I")=0
+ ..;S ABM("F")=ABM("F")+1
+ ..;S ABMMS=$P(^ICPT($O(^ICPT("B",ABMED,"")),0),U,2)  ;CPT name
+ ..;S ABMMSDT=$P(ABMRV(ABMRCD,ABMED),U,10)  ;date
+ ..;S ABMMSQTY=$P(ABMRV(ABMRCD,ABMED),U,5)  ;quantity
+ ..;S ABMMSCHG=$P(ABMRV(ABMRCD,ABMED),U,6)  ;charge
+ ..;I ABMMSDT]"" D
+ ..;.S $P(ABMF(ABM("F")),U)=ABMMSDT
+ ..;.S $P(ABMF(ABM("F")),U,6)=ABMED
+ ..;S $P(ABMF(ABM("F")),U,7)=ABMMS
+ ..;S $P(ABMF(ABM("F")),U,8)=ABMMSCHG
+ ..;S ABM("TCHRG")=ABM("TCHRG")+ABMMSCHG
+ ..;S ABM("I")=ABM("I")+1
+ ..;I ABM("I")=10 D
+ ..;.Q:($O(ABMRV(ABMRCD,ABMED))=""&($O(ABMRV(ABMRCD))=""))
+ ..;.S ABM("MORE")=1
+ ..;.D ^ABMDF25X
+ ..;.S ABM("I")=0
+ ..;end old code start new code IM20395
  ..S ABMCNTR=0
  ..F  S ABMCNTR=$O(ABMRV(ABMRCD,ABMED,ABMCNTR)) Q:ABMCNTR=""  D
  ...D RESET:ABM("I")=0
  ...S ABM("F")=ABM("F")+1
- ...S ABMMS=$P($$CPT^ABMCVAPI($O(^ICPT("B",ABMED,"")),ABMP("VDT")),U,3)  ;CPT name  ;CSV-c
+ ...S ABMMS=$P(^ICPT($O(^ICPT("B",ABMED,"")),0),U,2)  ;CPT name
  ...S ABMMSDT=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,10)  ;date
  ...S ABMMSQTY=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,5)  ;quantity
  ...S ABMMSCHG=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,6)  ;charge
@@ -111,6 +131,7 @@ OTHER ;
  ....S ABM("MORE")=1
  ....D ^ABMDF25X
  ....S ABM("I")=0
+ ;end new code IM20395
  ;
  ; Put RX data on dental form
 RXDATA N ABMRV
@@ -119,6 +140,27 @@ RXDATA N ABMRV
  F  S ABMRCD=$O(ABMRV(ABMRCD)) Q:ABMRCD=""  D
  .S ABMED=0
  .F  S ABMED=$O(ABMRV(ABMRCD,ABMED)) Q:'+ABMED  D  Q:$D(DUOUT)
+ ..;start old code abm*2.5*10 IM20395
+ ..;D RESET:ABM("I")=0
+ ..;S ABM("F")=ABM("F")+1
+ ..;S ABMRX=$P(ABMRV(ABMRCD,ABMED),U,9)     ; NDC# name
+ ..;S ABMRXDT=$P(ABMRV(ABMRCD,ABMED),U,10)  ; date/time
+ ..;S ABMRXQTY=$P(ABMRV(ABMRCD,ABMED),U,5)  ; Quantity
+ ..;S ABMRXCHG=$P(ABMRV(ABMRCD,ABMED),U,6)  ; Charge
+ ..;S $P(ABMF(ABM("F")),U,4)=$E(ABMRX,1,3)
+ ..;S $P(ABMF(ABM("F")),U,5)=$E(ABMRX,4,8)
+ ..;S $P(ABMF(ABM("F")),U,7)=$E(ABMRX,9,99)
+ ..;I ABMRXDT]"" S $P(ABMF(ABM("F")),U)=ABMRXDT
+ ..;;  old code from format 18  S $P(ABMF(ABM("F")),U,8)=ABMRXQTY
+ ..;S $P(ABMF(ABM("F")),U,8)=ABMRXCHG
+ ..;S ABM("TCHRG")=ABM("TCHRG")+ABMRXCHG
+ ..;S ABM("I")=ABM("I")+1
+ ..;I ABM("I")=10 D
+ ..;.Q:($O(ABMRV(ABMRCD,ABMED))=""&($O(ABMRV(ABMRCD))=""))
+ ..;.S ABM("MORE")=1
+ ..;.D ^ABMDF25X                         ; Print form
+ ..;.S ABM("I")=0
+ ..;end old code start new code IM20395
  ..S ABMCNTR=0
  ..F  S ABMCNTR=$O(ABMRV(ABMRCD,ABMED,ABMCNTR)) Q:ABMCNTR=""  D
  ...D RESET:ABM("I")=0
@@ -139,6 +181,7 @@ RXDATA N ABMRV
  ....S ABM("MORE")=1
  ....D ^ABMDF25X                         ; Print form
  ....S ABM("I")=0
+ ;end new code IM20395
  ;
  D TAIL:ABM("I")
  Q

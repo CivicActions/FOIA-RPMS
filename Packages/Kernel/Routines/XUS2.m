@@ -1,6 +1,7 @@
 XUS2 ;SF/RWF - TO CHECK OR RETURN USER ATTRIBUTES ;2/1/2012
- ;;8.0;KERNEL;**59,180,313,419,437,574**;Jul 10, 1995;Build 8
+ ;;8.0;KERNEL;**59,180,313,419,437,574,1019**;Jan 28, 1997;Build 27
  ;Per VHA Directive 2004-038, this routine should not be modified
+ ; GDIT/HS/BEE 01/15/18 - XU*8.0*1019 - Changes to audit access/verify changes
  Q
  ;
 ACCED ; ACCESS CODE EDIT from DD
@@ -20,10 +21,16 @@ AASK ;Ask for Access code
 AASK1 ;
  W "Enter a new ACCESS CODE <Hidden>: " D GET Q:$D(DIRUT)
  I X="@" D DEL D:Y'=1 DIRUT S XUH="",XUEX=1 Q
- I X[$C(34)!(X[";")!(X["^")!(X[":")!(X'?.UNP)!($L(X)>20)!($L(X)<6)!(X="MAIL-BOX") D CLR W $C(7),$$AVHLPTXT(1) D AHELP Q
- I 'XUAUTO,((X?6.20A)!(X?6.20N)) D CLR W $C(7),$$AVHLPTXT(1),! Q
- S XUU=X,X=$$EN^XUSHSH(X),XUH=X,XMB(1)=$O(^VA(200,"A",XUH,0)) I XMB(1),XMB(1)'=DA S XMB="XUS ACCESS CODE VIOLATION",XMB(1)=$P(^VA(200,XMB(1),0),"^"),XMDUN="Security" D ^XMB
- I $D(^VA(200,"AOLD",XUH))!$D(^VA(200,"A",XUH)) D CLR W $C(7),"This has been used previously as an ACCESS CODE.",! Q
+ ; GDIT/HS/BEE 01/15/18 - XU*8.0*1019 - Modified lines to add audit call on failed access entry
+ ;I X[$C(34)!(X[";")!(X["^")!(X[":")!(X'?.UNP)!($L(X)>20)!($L(X)<6)!(X="MAIL-BOX") D CLR W $C(7),$$AVHLPTXT(1) D AHELP Q
+ ;I 'XUAUTO,((X?6.20A)!(X?6.20N)) D CLR W $C(7),$$AVHLPTXT(1),! Q
+ ;S XUU=X,X=$$EN^XUSHSH(X),XUH=X,XMB(1)=$O(^VA(200,"A",XUH,0)) I XMB(1),XMB(1)'=DA S XMB="XUS ACCESS CODE VIOLATION",XMB(1)=$P(^VA(200,XMB(1),0),"^"),XMDUN="Security" D ^XMB
+ ;I $D(^VA(200,"AOLD",XUH))!$D(^VA(200,"A",XUH)) D CLR W $C(7),"This has been used previously as an ACCESS CODE.",! Q
+ I X[$C(34)!(X[";")!(X["^")!(X[":")!(X'?.UNP)!($L(X)>20)!($L(X)<6)!(X="MAIL-BOX") D CLR W $C(7),$$AVHLPTXT(1) D AHELP D AE Q
+ I 'XUAUTO,((X?6.20A)!(X?6.20N)) D CLR W $C(7),$$AVHLPTXT(1),! D AE Q
+ S XUU=X,X=$$EN^XUSHSH(X),XUH=X,XMB(1)=$O(^VA(200,"A",XUH,0)) I XMB(1),XMB(1)'=DA S XMB="XUS ACCESS CODE VIOLATION",XMB(1)=$P(^VA(200,XMB(1),0),"^"),XMDUN="Security" D AE D ^XMB
+ I $D(^VA(200,"AOLD",XUH))!$D(^VA(200,"A",XUH)) D CLR W $C(7),"This has been used previously as an ACCESS CODE.",! D AE Q
+ ; GDIT/HS/BEE 01/15/18 - XU*8.0*1019 - End of changes
  S XUEX=1 ;Now we can quit
  Q
  ;
@@ -37,6 +44,7 @@ AST(XUH) ;Change ACCESS CODE and index.
  N FDA,IEN,ERR
  S IEN=DA_","
  S FDA(200,IEN,2)=XUH D FILE^DIE("","FDA","ERR")
+ D DVC^XUSBUSA("XUS2") ; GDIT/HS/BEE 01/15/18 - XU*8.0*1019 - Capture verify code deletion
  W !,"The VERIFY CODE has been deleted as a security measure.",!,"You will need to enter a new VERIFY code so the user can sign-on.",$C(7)
  D VST("",1)
  I $D(^XMB(3.7,DA,0))[0 S Y=DA D NEW^XM ;Make sure has a Mailbox
@@ -84,13 +92,27 @@ VCHK(S,EC) ;Call with String and Encrypted versions
  ;Updated per VHA directive 6210 Strong Passwords
  N PUNC,NA,XUPAT S PUNC="~`!@#$%&*()_-+=|\{}[]'<>,.?/"
  S NA("FILE")=200,NA("FIELD")=.01,NA("IENS")=DA_",",NA=$$HLNAME^XLFNAME(.NA),XUPAT=XUSVCMIN_".20"
- I ($L(S)<XUSVCMIN)!($L(S)>20)!(S'?.UNP)!(S[";")!(S["^")!(S[":") Q "1^"_$$AVHLPTXT
- I (S?@(XUPAT_"A"))!(S?@(XUPAT_"N"))!(S?@(XUPAT_"P"))!(S?@(XUPAT_"AN"))!(S?@(XUPAT_"AP"))!(S?@(XUPAT_"NP")) Q "2^VERIFY CODE must be a mix of alpha and numerics and punctuation."
- I $D(^VA(200,DA,.1)),EC=$P(^(.1),U,2) Q "3^This code is the same as the current one."
- I $D(^VA(200,DA,"VOLD",EC)) Q "4^This has been used previously as the VERIFY CODE."
- I EC=$P(^VA(200,DA,0),U,3) Q "5^VERIFY CODE must be different than the ACCESS CODE."
- I S[$P(NA,"^")!(S[$P(NA,"^",2)) Q "6^Name cannot be part of code."
+ ; GDIT/HS/BEE 01/15/18 - XU*8.0*1019 - Modified lines to add audit call on failed verify entry
+ ;I ($L(S)<XUSVCMIN)!($L(S)>20)!(S'?.UNP)!(S[";")!(S["^")!(S[":") Q "1^"_$$AVHLPTXT
+ ;I (S?@(XUPAT_"A"))!(S?@(XUPAT_"N"))!(S?@(XUPAT_"P"))!(S?@(XUPAT_"AN"))!(S?@(XUPAT_"AP"))!(S?@(XUPAT_"NP")) Q "2^VERIFY CODE must be a mix of alpha and numerics and punctuation."
+ ;I $D(^VA(200,DA,.1)),EC=$P(^(.1),U,2) Q "3^This code is the same as the current one."
+ ;I $D(^VA(200,DA,"VOLD",EC)) Q "4^This has been used previously as the VERIFY CODE."
+ ;I EC=$P(^VA(200,DA,0),U,3) Q "5^VERIFY CODE must be different than the ACCESS CODE."
+ ;I S[$P(NA,"^")!(S[$P(NA,"^",2)) Q "6^Name cannot be part of code."
+ I ($L(S)<XUSVCMIN)!($L(S)>20)!(S'?.UNP)!(S[";")!(S["^")!(S[":") D VE Q "1^"_$$AVHLPTXT
+ I (S?@(XUPAT_"A"))!(S?@(XUPAT_"N"))!(S?@(XUPAT_"P"))!(S?@(XUPAT_"AN"))!(S?@(XUPAT_"AP"))!(S?@(XUPAT_"NP")) D VE Q "2^VERIFY CODE must be a mix of alpha and numerics and punctuation."
+ I $D(^VA(200,DA,.1)),EC=$P(^(.1),U,2) D VE Q "3^This code is the same as the current one."
+ I $D(^VA(200,DA,"VOLD",EC)) D VE Q "4^This has been used previously as the VERIFY CODE."
+ I EC=$P(^VA(200,DA,0),U,3) D VE Q "5^VERIFY CODE must be different than the ACCESS CODE."
+ I S[$P(NA,"^")!(S[$P(NA,"^",2)) D VE Q "6^Name cannot be part of code."
+ ; GDIT/HS/BEE 01/15/18 - XU*8.0*1019 - End of changes
  Q 0
+ ;
+ ; GDIT/HS/BEE 01/15/18 - XU*8.0*1019 - New VE line/tag - Audit invalid verify code entry
+VE D FVC^XUSBUSA($S(+$G(DDSDA):+DDSDA,+$G(DA):+DA,1:+$G(DUZ)),0) Q
+ ;
+ ; GDIT/HS/BEE 01/15/18 - XU*8.0*1019 - New AE line/tag - Audit invalid access code entry
+AE D FAC^XUSBUSA($S(+$G(DDSDA):+DDSDA,+$G(DA):+DA,1:+$G(DUZ)),0) Q
  ;
 VST(XUH,%) ;
  W:$L(XUH)&% !,"OK, Verify code has been changed!"
@@ -158,6 +180,7 @@ CHKCUR() ;Check user knows current code, Return 1 if OK to continue
 CHK1 W "Please enter your CURRENT verify code: " D GET Q:$D(DIRUT) 0
  I $P(^VA(200,DA,.1),U,2)=$$EN^XUSHSH(X) Q 1
  D CLR W "Sorry that is not correct!",!
+ D FVC^XUSBUSA($S(+$G(DDSDA):+DDSDA,+$G(DA):+DA,1:+$G(DUZ)),1) ; GDIT/HS/BEE 01/15/18 - XU*8.0*1019 - Added line to audit invalid entry
  S XUK=XUK+1 G:XUK<3 CHK1
  Q 0
  ;

@@ -1,5 +1,5 @@
-ABMF400 ; IHS/SD/SDR - 3P BILLING - Find Medicare 400/900 references ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMF400 ; IHS/SD/SDR - 3P BILLING - Find Medicare 400/900 references ;  [ 03/09/2004  3:25 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**14**;OCT 9, 2007
  ;
 EN ;EP
  W !!,"Now going through 3P Exp Local Mods file looking for Medicare references..."

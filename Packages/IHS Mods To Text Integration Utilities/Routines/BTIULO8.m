@@ -1,5 +1,5 @@
-BTIULO8 ;IHS/ITSC/LJF - IHS OBJECTS ADDED IN PATCHES;08-Jul-2013 15:26;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1002,1006,1012**;NOV 04, 2004;Build 45
+BTIULO8 ;IHS/ITSC/LJF - IHS OBJECTS ADDED IN PATCHES;22-Sep-2021 13:43;MGH
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1002,1006,1012,1013,1024**;NOV 04, 2004;Build 3
  ;1006 Updated family history object
  ;
 TODAYRAD(PAT,PROV) ;EP; returns all radiology exams taken today;PATCH 1002 new code
@@ -63,3 +63,32 @@ FAMHX(PAT,DATE) ;EP; returns multi-line listing of patient's family history;PATC
  ;
  I '$D(^TMP("BTIULO",$J)) Q "No Family History Found for Patient"
  Q "~@^TMP(""BTIULO"",$J)"
+ ;
+LASTCOV(DFN,TIUCOVIM,TIUCNT,TIUDATE,BRIEF) ;EP; returns last # of of a specific Covid Immunization
+ ; TIUCOVIM  = Immunization codes separated by ^ then generic name at end after ;
+ ;             example TIUIMM="202^207^208^213;Covid Vax"
+ ; TIUCNT    = # of results to return
+ ; TIUDATE=1 = return date immunization taken
+ ; IHS/CIA/MGH Parameter BRIEF added to remove caption from display
+ N I,X,D,TIUDE,TIUANS,TIUCODE,TIUDATA,DATE,CNT,ARR,SHRTNAME
+ Q:'$G(DFN) ""  Q:'$G(TIUCOVIM) ""
+ ; -- set all codes sent into array
+ F I=1:1 S X=$P(TIUCOVIM,U,I) Q:'X  S TIUCODE(+X)=""
+ ; -- set data elements to return
+ F I=4,25,56 S TIUDE(I)=""
+ ; -- get imm hx from imm app
+ D IMMHX^BIRPC(.TIUDATA,DFN,.TIUDE)
+ ; -- evaluate results
+ S D="|" F I=1:1 S X=$P(TIUDATA,U,I) Q:X=""  D
+ .Q:$P(X,D)'="I"                           ;not immunization
+ .Q:'$D(TIUCODE($P(X,D,3)))                ;not in imm set sent
+ .S DATE=$P(X,D,4),ARR(DATE,$P(X,D,2))=""
+ K ^TMP("BTIULO",$J)
+ ; loop thru array backwards to display most recent first
+ S (CNT,DATE)="" F  S DATE=$O(ARR(DATE),-1) Q:'DATE!(CNT'<TIUCNT)  D
+ .S SHRTNAME="" F  S SHRTNAME=$O(ARR(DATE,SHRTNAME)) Q:SHRTNAME=""!(CNT'<TIUCNT)  D
+ ..S CNT=CNT+1,^TMP("BTIULO",$J,CNT,0)=SHRTNAME_$S($G(TIUDATE):" : "_$$FMTE^XLFDT(DATE),1:"")
+ ; -- return results
+ I '$D(^TMP("BTIULO",$J)) S ^TMP("BTIULO",$J,1,0)="No Covid Immunization Found"
+ Q "~@^TMP(""BTIULO"",$J)"
+ ;

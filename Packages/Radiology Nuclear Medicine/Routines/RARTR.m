@@ -1,5 +1,5 @@
-RARTR ;HISC/CAH COLUMBIA/REB AISC/MJK,RMO-Queue/print Reports ; 06 Oct 2013  11:06 AM
- ;;5.0;Radiology/Nuclear Medicine;**5,13,16,27,43,55,75,92,99,1005**;Mar 16, 1998;Build 13
+RARTR ;HISC/CAH COLUMBIA/REB AISC/MJK,RMO IHS/OIT/BT -Queue/print Reports ; 15 Nov 2022  11:20 AM
+ ;;5.0;Radiology/Nuclear Medicine;**5,13,16,27,43,55,75,92,99,1005,1010**;Mar 16, 1998;Build 13
  ;Supported IA #2056 reference to GET1^DIQ
 PRT ; Begin print/build of e-mail message
  ;
@@ -168,7 +168,7 @@ INIT ; initialize exam/report variables
  S RACN=+$P(X,"^",4),RAST=$P(X,"^",5),RATAB=5
  S:'$D(RABTCH) RABTCH=0 S (DIWL,DIWF)=0
  Q:'$D(^RADPT(RADFN,0))  S RANUM=1,RAY1=^(0)
- Q:'$D(^DPT(RADFN,0))  S RAY0=^(0)
+ Q:'$D(^DPT(RADFN,0))  S RAY0=^(0),$P(RAY0,"^")=$$GETPREF^AUPNSOGI(RADFN,"E",1)_" "
  Q:'$D(^RADPT(RADFN,"DT",RADTI,0))  S RAY2=^(0)
  S RACNI=$O(^RADPT(RADFN,"DT",RADTI,"P","B",RACN,0))
  S (RAY3,RALB)=$S($D(^RADPT(RADFN,"DT",RADTI,"P",+RACNI,0)):^(0),1:-1)

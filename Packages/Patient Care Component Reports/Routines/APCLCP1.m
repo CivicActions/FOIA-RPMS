@@ -1,5 +1,5 @@
-APCLCP1 ; IHS/CMI/LAB - DISC tally activity time ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCP1 ; IHS/OHPRD/TMJ - DISC tally activity time ; [ 02/06/02  9:21 AM ]
+ ;;3.0;IHS PCC REPORTS;**11**;FEB 05, 1997
  ;
 START ; 
  I '$G(DUZ(2)) W $C(7),$C(7),!!,"SITE NOT SET IN DUZ(2) - NOTIFY SITE MANAGER!!",!! Q
@@ -25,26 +25,7 @@ ED ;get ending date
  S APCLED=Y
  S X1=APCLBD,X2=-1 D C^%DTC S APCLSD=X
  ;
-LOC ;get location
- K APCLLOC
- S DIR(0)="S^O:One Location;T:Taxonomy of or Selected set of Locations;A:All Locations"
- S DIR("A")="Include visits from which set of locations",DIR("B")="A" KILL DA D ^DIR KILL DIR
- G:$D(DIRUT) BD
- I Y="A" K APCLLOC G CLINIC
- I Y="O" D O G:$D(APCLQ) LOC
- I Y="T" D T G:$D(APCLQ) LOC
-CLINIC ;
- K APCLCLN
- S DIR(0)="S^O:One Clinic;T:Taxonomy or Selected Set of Clinics;A:All Clinics"
- S DIR("A")="Include visits from which set of clinics",DIR("B")="A" KILL DA D ^DIR KILL DIR
- G:$D(DIRUT) LOC
- I Y="A" K APCLCLN G ZIS
- I Y="O" D OC G:$D(APCLQ) CLINIC
- I Y="T" D TC G:$D(APCLQ) CLINIC
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G CLINIC
  S XBRP="^APCLCP1P",XBRC="^APCLCP11",XBRX="XIT^APCLCP1",XBNS="APCL"
  D ^XBDBQUE
  D XIT
@@ -65,41 +46,3 @@ INFORM ;
  Q
  ;
  ;
-O ;EP one location
- K APCLQ
- S DIC="^AUTTLOC(",DIC(0)="AEMQ",DIC("A")="Which LOCATION: " D ^DIC K DIC
- I Y=-1 S APCLQ="" Q
- S APCLLOC(+Y)=""
- Q
-T ;EP taxonomy
- K APCLQ
- K APCLLOC
- S X="ENCOUNTER LOCATION",DIC="^AMQQ(5,",DIC(0)="FM",DIC("S")="I $P(^(0),U,14)" D ^DIC K DIC,DA I Y=-1 W "OOPS - QMAN NOT CURRENT - QUITTING" S APCLQ=1 Q
- D PEP^AMQQGTX0(+Y,"APCLLOC(")
- I '$D(APCLLOC) S APCLQ=1 Q
- I $D(APCLLOC("*")) K APCLLOC W !!,$C(7),$C(7),"ALL locations is NOT an option with this choice",! G T
- S X="" F  S X=$O(APCLLOC(X)) Q:X=""  S APCLLOC(X)=""
- Q
- ;S DIC="^ATXAX(",DIC(0)="AEMQ",DIC("A")="Which TAXONOMY: ",DIC("S")="I $P(^(0),U,15)=9999999.06" D ^DIC K DIC
- ;I Y=-1 S APCLQ="" Q
- ;S X=0 F  S X=$O(^ATXAX(+Y,21,"B",X)) Q:X=""  S APCLLOC(X)=""
- Q
-OC ;EP one location
- K APCLQ
- S DIC="^DIC(40.7,",DIC(0)="AEMQ",DIC("A")="Which CLINIC: " D ^DIC K DIC
- I Y=-1 S APCLQ="" Q
- S APCLCLN(+Y)=""
- Q
-TC ;EP taxonomy
- K APCLQ
- K APCLCLN
- S X="CLINIC",DIC="^AMQQ(5,",DIC(0)="FM",DIC("S")="I $P(^(0),U,14)" D ^DIC K DIC,DA I Y=-1 W "OOPS - QMAN NOT CURRENT - QUITTING" S APCLQ=1 Q
- D PEP^AMQQGTX0(+Y,"APCLCLN(")
- I '$D(APCLCLN) S APCLQ=1 Q
- I $D(APCLCLN("*")) K APCLCLN W !!,$C(7),$C(7),"ALL CLINICs is NOT an option with this choice",! G TC
- S X="" F  S X=$O(APCLCLN(X)) Q:X=""  S APCLCLN(X)=""
- Q
- ;S DIC="^ATXAX(",DIC(0)="AEMQ",DIC("A")="Which TAXONOMY: ",DIC("S")="I $P(^(0),U,15)=40.7" D ^DIC K DIC
- ;I Y=-1 S APCLQ="" Q
- ;S X=0 F  S X=$O(^ATXAX(+Y,21,"B",X)) Q:X=""  S APCLCLN(X)=""
- Q

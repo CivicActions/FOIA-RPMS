@@ -1,5 +1,5 @@
-RAORDU1 ;HISC/CAH - AISC/SAW-Utility for Rad/NM Orders Module ;05/15/09  12:56
- ;;5.0;Radiology/Nuclear Medicine;**10,41,75,99**;Mar 16, 1998;Build 5
+RAORDU1 ;HISC/CAH - AISC/SAW - IHS/OIT/BT,NST - Utility for Rad/NM Orders Module ; 07 Aug 2024  1:46 PM
+ ;;5.0;Radiology/Nuclear Medicine;**10,41,75,99,1007,1009,1010,1012**;Mar 16, 1998;Build 11
  ;P#99 - changed Pregnant title to Pregnant at time of order entry.
 CP ;Create protocols for Rad/Nuc Med in OE/RR Protocol file (#100)
  ;based upon entries in the Rad/Nuc Med Common Procedure file (#71.3)
@@ -33,14 +33,40 @@ DISP ;Display request with defaults
  S:'$D(RAMOD)#2 RAMOD=""
  S J="",$P(J,"-",80)="" W !!,J
  I $D(RAMOD)>9 S RAMOD="" F I=1:1 Q:'$D(RAMOD(I))  S RAMOD=RAMOD_$S(I'=1:", ",1:"")_RAMOD(I) S RAI=0 S RAI=+$O(^RAMIS(71.2,"B",RAMOD(I),RAI)) I $P($G(^RAMIS(71.2,RAI,0)),U,2)="p" S RAACI="p"
- W !?10,"Patient: ",RANME I RASEX'="M" S:'$D(RAPREG) RAPREG="" W "   Pregnant at time of order entry: ",$S(RAPREG="y":"YES",RAPREG="u":"UNKNOWN",RAPREG="n":"NO",1:"")
+ W !?10,"Patient: ",RANME
+ I RASEX'="M" D
+ . S:'$D(RAPREG) RAPREG=""
+ . N PRGCAP S PRGCAP="Pregnant at time of order entry: "_$S(RAPREG="y":"YES",RAPREG="u":"UNKNOWN",RAPREG="n":"NO",1:"")
+ . W:$L(RANME)<21 ?40,PRGCAP W:$L(RANME)>20 !?19,PRGCAP
+ . Q
  W !?8,"Procedure: ",$S($D(^RAMIS(71,RAPRI,0)):$P(^(0),"^"),1:"UNKNOWN"),!?2,"Proc. Modifiers: ",RAMOD
  S:'$D(RAMT) RAMT=$S($G(RAACI)="p":"p",$E(RACAT)="I":"w",1:"a") S RAMT=RAMT_"^"_$P($P(^DD(75.1,19,0),RAMT_":",2),";") W !?9,"Category: ",RACAT,?49,"Mode of Transport: ",$P(RAMT,"^",2)
  S:'$D(RAIP) RAIP="n" W !,"     Desired Date: ",RAWHEN,?46,"Isolation Procedures: ",$S(RAIP="y":"YES",1:"NO")
  S:'$D(RARU) RARU=9 W !,"  Request Urgency: ",$S($D(RARU):$P($P(^DD(75.1,6,0),RARU_":",2),";"),1:"ROUTINE"),?46,"Scheduled for Pre-op: ",$S($D(RAPREOP1):"YES",1:"NO")
- I $D(RAILOC) W !,"Submit Request To: ",$S($D(^RA(79.1,+RAILOC,0)):$S($D(^SC(+$P(^(0),"^"),0)):$P(^(0),"^"),1:"Unknown"),1:"Unknown")
+ ;I $D(RAILOC) W !,"Submit Request To: ",$S($D(^RA(79.1,+RAILOC,0)):$S($D(^SC(+$P(^(0),"^"),0)):$P(^(0),"^"),1:"Unknown"),1:"Unknown")  ;maw orig
+ I +$G(RAILOC) W !,"Submit Request To: ",$S($D(^RA(79.1,+RAILOC,0)):$S($D(^SC(+$P(^(0),"^"),0)):$P(^(0),"^"),1:"Unknown"),1:"Unknown")  ;ihs/cmi/maw 20210420 patch 1009 CR10772
+ ;
+ ;IHS/CMI/DAY - Patch 1007 - Is Patient Registered at Imaging Loc
+ ;I $D(RAILOC) D  ;maw orig
+ I +$G(RAILOC) D  ;ihs/cmi/maw 20210420 patch 1009 CR10772
+ .S BRADIVI=$P(^RA(79.1,RAILOC,"DIV"),U)
+ .I BRADIVI="" Q
+ .I $G(RADFN)="" Q
+ .I $D(^AUPNPAT(RADFN,41,BRADIVI)) Q
+ .W !!,"WARNING: The IMAGING LOCATION: "
+ .W $$GET1^DIQ(79.1,RAILOC,.01),!
+ .W "is associated with the "
+ .W $$GET1^DIQ(79.1,RAILOC,25)
+ .W " Division",!
+ .W !
+ .W "The Patient is NOT Registered at this Division/Site",!!
+ .K DIR S DIR(0)="EO" D ^DIR K DIR
+ ;End Patch
+ ;
  W !," Request Location: ",$S($P($G(^SC(+RALIFN,0)),U)]"":$E($P($G(^SC(+RALIFN,0)),U),1,26),1:"Unkown") I $$ORVR^RAORDU()'<3 W ?46,"Nature of order:  SVC CORRECTION"
  D DISREA(RAREAST) ;display the reason for study
+ ;
+ I $G(BRACLIND) W !?8,"Diagnosis: ",$P(BRACLIND,U,4),"  ",$P(BRACLIND,U,2)  ; IHS BRA*5.0*1012
  ;*Billing Aware Project:
  ;   Display New ICD-9 Dx and their related SC/EI/MST/HNC responses.
  ;

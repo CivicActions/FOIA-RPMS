@@ -1,5 +1,5 @@
-APCLPYR3 ; IHS/CMI/LAB - Patients by Payer (Insurer) - Medicaid ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLPYR3 ;CMI/BJI/DAY - Patients by Payer (Insurer) - Medicaid ; [ 11/16/2005  10:51 AM ]
+ ;;3.0;IHS PCC REPORTS;**18**;FEB 05, 1997
  Q
  ;
 MCDLOOP ;EP

@@ -1,6 +1,8 @@
 XUP ;SFISC/RWF - Setup enviroment for programmers ;1/30/08  11:12
- ;;8.0;KERNEL;**208,258,284,432,469**;Jul 10, 1995;Build 16
+ ;;8.0;KERNEL;**208,258,284,432,469,1019**;Jul 10, 1995;Build 27
  ;Per VHA Directive 2004-038, this routine should not be modified.
+ ; GDIT/HS/BEE 12/14/17 - XU*8.0*1019 - Audit successful/unsuccessful logins
+ ;
  W !,"Setting up programmer environment"
  S U="^",$ECODE="",$ETRAP="" ;Clear error and error trap
  X ^%ZOSF("TYPE-AHEAD")
@@ -47,6 +49,8 @@ ASKDUZ ;Ask for Access Code
  S X=$$UP^XLFSTR(X) S:X[":" XUTT=1,X=$P(X,":",1)_$P(X,":",2)
  D ^XUSHSH S Y=$O(^VA(200,"A",X,0))
  K DUZ D DUZ(+Y)
+ I +$G(DUZ) D SLOG^XUSBUSA("XUP",DUZ) ; GDIT/HS/BEE 12/14/17 - XU*8.0*1019 - Added line to audit successful logins
+ I '$G(DUZ) D FLOG^XUSBUSA("XUP") ; GDIT/HS/BEE 12/14/17 - XU*8.0*1019 - Added line to audit unsuccessful logins
  Q
  ;
 DUZ(DA) ;Build DUZ for a user.  Used by Mailman.

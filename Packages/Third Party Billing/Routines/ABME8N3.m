@@ -1,14 +1,17 @@
-ABME8N3 ; IHS/ASDST/DMJ - 837 N3 Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8N3 ; IHS/ASDST/DMJ - 837 N3 Segment [ 03/09/2004  12:19 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1,5,8,9**;APR 05, 2002
  ;Address Information
  ;
  ; 01/29/04 V2.5 P5 - 837 Modifications
  ;    Remove trailing spaces from address of Patient and policy holder
  ;    name
+ ;
  ; IHS/SD/SDR - V2.5 P8 - IM12246/IM17548
  ;    Added code for Service Facility (9002274.35)
+ ;
  ; IHS/SD/SDR - V2.5 P8 - task 6
  ;    point of pickup address if ambulance
+ ;
  ; IHS/SD/SDR - v2.5 p9 - task 1
  ;    Added code for ordering provider address
  ;
@@ -19,7 +22,8 @@ EP(X,Y) ;EP - START HERE
  S:X=3 X=9000003.1
  S ABME("RTYPE")="N3"
  D LOOP
- K ABME
+ ;K ABME,ABM  ;abm*2.5*9 task 1
+ K ABME  ;abm*2.5*9 task 1
  Q
 LOOP ;LOOP HERE
  F I=10:10:30 D
@@ -34,21 +38,33 @@ LOOP ;LOOP HERE
 20 ;N301 - Address 1
  S ABMR("N3",20)=""
  I X=2 D
+ .; Begin change IHS/SD/SDR/LSL V2.5 P5
+ .; S ABMR("N3",20)=$P($G(^DPT(Y,.11)),"^",1)
  .S ABMR("N3",20)=$$TRIM^ABMUTLP($P($G(^DPT(Y,.11)),U),"R"," ")
+ .; End change IHS/SD/SDR/LSL V2.5 P5
  I X=4 D
- .S ABMR("N3",20)=$P($G(^DIC(4,Y,1)),U)
+ .S ABMR("N3",20)=$P($G(^DIC(4,Y,1)),"^",1)
  I X=9000003.1 D
+ .; Begin change IHS/SD/SDR/LSL V2.5 P5
+ .; S ABMR("N3",20)=$P($G(^AUPN3PPH(Y,0)),"^",9)
  .S ABMR("N3",20)=$$TRIM^ABMUTLP($P($G(^AUPN3PPH(Y,0)),U,9),"R"," ")
+ .; End change IHS/SD/SDR/LSL V2.5 P5
  I X=9999999.06 D
  .S ABMR("N3",20)=$P($G(^AUTTLOC(Y,0)),"^",12)
  I X=9999999.18 D
  .S ABMR("N3",20)=$P($G(^AUTNINS(Y,1)),"^",2)
+ ; IHS/SD/SR V2.5 P8 start new code IM12246
  I X=9002274.35 D
  .S ABMR("N3",20)=$P($G(^AUTTVNDR($P($G(^ABMRLABS(Y,0)),U),13)),U)
+ ; IHS/SD/SDR V2.5 P8 end new code IM12246
+ ;start new code IHS/SD/SDR 8/2/05 task 6
  I X=9002274.4 D
  .S ABMR("N3",20)=$P($G(^ABMDBILL(DUZ(2),Y,12)),U,3)
+ ;end new code task 6
+ ;start new code abm*2.5*9 task 1
  I X=200 D
  .S ABMR("N3",20)=$P($G(^VA(200,Y,.11)),U)
+ ;end new code abm*2.5*9 task 1
  Q
 30 ;N302 - Address 2
  S ABMR("N3",30)=""

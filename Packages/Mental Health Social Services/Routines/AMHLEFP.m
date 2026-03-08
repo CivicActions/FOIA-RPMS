@@ -1,5 +1,5 @@
 AMHLEFP ; IHS/CMI/LAB - PRINT ENCOUNTER RECORD ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;4.0;IHS BEHAVIORAL HEALTH;**11**;JUN 02, 2010;Build 27
  ;
  ;print individual forms for each member of group
 START ;
@@ -24,7 +24,12 @@ PAT ;one or all patients
  S DIR(0)="Y",DIR("A")="Do you wish to print forms for one particular PATIENT",DIR("B")="Y" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  G:$D(DIRUT) GETDATES
  G:'Y PROV
- I Y=1 S DIC("A")="Enter PATIENT Name: ",DIC=9000001,DIC(0)="AEQMZ" D ^DIC G PAT:Y<0 S AMHPAT=+Y I '$$ALLOWP^AMHUTIL(DUZ,AMHPAT) D NALLOWP^AMHUTIL S AMHPAT="" G PAT
+ I Y=1 S DIC("A")="Enter PATIENT Name: ",DIC=9000001,DIC(0)="AEQMZ" D ^DIC
+ G PAT:Y<0
+ S AMHPAT=+Y
+ D PFLAG^AMHUTIL(AMHPAT)
+ W !?25,"Ok" S %=1 D YN^DICN I %'=1 S AMHPAT="",DFN="" G PAT
+ I '$$ALLOWP^AMHUTIL(DUZ,AMHPAT) D NALLOWP^AMHUTIL S AMHPAT="" G PAT
 PROV ;limit by provider
  K DIC
  S AMHPROV=""

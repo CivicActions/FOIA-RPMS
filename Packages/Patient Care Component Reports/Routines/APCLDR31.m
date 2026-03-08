@@ -1,5 +1,5 @@
-APCLDR31 ; IHS/CMI/LAB - patients dm list - chinle ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLDR31 ;IHS/CMI/LAB - patients dm list - chinle [ 12/19/03  7:55 AM ]
+ ;;3.0;IHS PCC REPORTS;**10,15,19**;FEB 05, 1997
  ;
  ;
 PRINT ;EP - called from xbdbque

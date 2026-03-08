@@ -1,8 +1,8 @@
 BARUFCNR ; IHS/SD/SDR - TREASURY DEPOSIT NUMBER RECONCILIATION REPORT ; 09/03/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**4,6,7,17,21**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**4,6,7,17,21,33**;OCT 26, 2005;Build 133
  ;
- ; IHS/SD/SDR - v1.8 p6 - DD 4.1.2
- ;   Added apply to and Dt Tx'ed to UFMS
+ ;IHS/SD/SDR 1.8*6 DD 4.1.2 Added apply to and Dt Tx'ed to UFMS
+ ;IHS/SD/SDR 1.8*33 ADO60817 Updated to use 'C' xref; DINUM was removed so it needs extra loop for date/time, then DFN
  ;
  Q
 EN ;EP;
@@ -47,8 +47,18 @@ LOOP ;loop through transactions
  K BARCNT,BARTOT
  K BARNSCNT,BARNSTOT
  K BARUCNT,BARUTOT
- S BARBEGDT=BARY("DT",1)
- F  S BARBEGDT=$O(^BARTR(DUZ(2),BARBEGDT)) Q:BARBEGDT=""!(BARBEGDT>(BARY("DT",2)))  D
+ ;S BARBEGDT=BARY("DT",1)  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ ;F  S BARBEGDT=$O(^BARTR(DUZ(2),BARBEGDT)) Q:BARBEGDT=""!(BARBEGDT>(BARY("DT",2)))  D  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+ S BARBDT=BARY("DT",1)-.000001
+ S BARY("DT",2)=BARY("DT",2)+.999999
+ F  S BARBDT=$O(^BARTR(DUZ(2),"C",BARBDT)) Q:BARBDT=""!(BARBDT>(BARY("DT",2)))  D LOOP2
+ D OUTPUT
+ Q
+LOOP2 ;
+ S BARBEGDT=0
+ F  S BARBEGDT=$O(^BARTR(DUZ(2),"C",BARBDT,BARBEGDT)) Q:'BARBEGDT  D
+ .;end new bar*1.8*33 IHS/SD/SDR ADO60817
  .Q:$P($G(^BARTR(DUZ(2),BARBEGDT,1)),U)'=40  ;payments only
  .S BARCRDEB=$$GET1^DIQ(90050.03,BARBEGDT,3.5,"E")
  .S BARBCH=$P($G(^BARTR(DUZ(2),BARBEGDT,0)),U,14)
@@ -96,7 +106,7 @@ LOOP ;loop through transactions
  .;
  .D NSCHK  ;now check for these trans on NOT SENT list
  .D UFMSCHK  ;check if in UFMS file
- D OUTPUT
+ ;D OUTPUT  ;bar*1.8*33 IHS/SD/SDR ADO60817
  Q
 NSCHK ;
  Q:'$D(^BARSESS(DUZ(2),"NS",BARBEGDT))  ;trans not on NS list

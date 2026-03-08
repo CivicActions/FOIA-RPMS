@@ -1,19 +1,16 @@
 ABSPDB2 ; IHS/OIT/CASSevern/Pieran ran 1/19/2011 - Handling of NCPDP Reversal "B2" Claims for D.0
- ;;1.0;PHARMACY POINT OF SALE;**42,43**;JUN 21, 2001;Build 38
- ;
- ;
- ;
- ;			SO FAR THIS IS JUST A COPY OF ABSPB1 "BILLING" TRANSACTION....MOST OF BELOW CODE WILL BE REPLACED!!!
+ ;;1.0;PHARMACY POINT OF SALE;**42,43**;JUN 21, 2001;Build 131
+ ; SO FAR THIS IS JUST A COPY OF ABSPB1 "BILLING" TRANSACTION....MOST OF BELOW CODE WILL BE REPLACED!!!
  ; This routine will replace the ABSPOSCF for D.0, so that we no
  ; longer need to use the formats file.
  ; This will go through and get the data for each and every segment and field
  ; format it and place it in the CLAIM file ^ABSPC(CLAIMIEN
  ; The ABSP() Array is already set up in: GETINFO^ABSPOSCC before we get here.
  ;INPUT = ACTION
- ;		  "CLAIMHD" = Set up only the claim header for creating ^ABSPC entry
- ;		  "CLAIMRST" = Set up Rest of Claim info and fill in ^ABSPC entry
- ;		  "OUTHD"	= Create the actual Output HEADER Record
- ;		  "OUTRST"  = Create the actual Output Rest of the Record.
+ ; "CLAIMHD" = Set up only the claim header for creating ^ABSPC entry
+ ; "CLAIMRST" = Set up Rest of Claim info and fill in ^ABSPC entry
+ ; "OUTHD" = Create the actual Output HEADER Record
+ ; "OUTRST" = Create the actual Output Rest of the Record.
 EN(ACTION,MEDN,IEN) ;EP
  N INSARRAY,DO,SPECIAL,SUPPRESS
  S RECORD=$G(RECORD)
@@ -27,15 +24,15 @@ EN(ACTION,MEDN,IEN) ;EP
  I $D(INSARRAY(9002313.42)) D SETSPEC
  I $D(INSARRAY(9002313.46)) D SETSUPR
  D CHECKOVER^ABSPDB1F(D0,.SPECIAL) ;Check for Manual Over-Rides for this Claim
- ;I $D(SPECIAL) D ADDSEG^ABSPB1F(.SPECIAL,.ADDSEG)		;Figure out based on Special fields which segments we need
+ ;I $D(SPECIAL) D ADDSEG^ABSPB1F(.SPECIAL,.ADDSEG)  ;Figure out based on Special fields which segments we need
  I (ACTION="CLAIMHD")!(ACTION="OUTHD") D
  . D HEADER ;Every time
  . D INSURANCE ;Every time;IHS/OIT/CASSevern/Pieran/RCS; Patch 43 - Add back in
  I (ACTION="CLAIMRST")!(ACTION="OUTRST") D
  . I +$G(IEN(9002313.01))=0 S IEN(9002313.01)=1
  . D CLAIM^ABSPDB2A ;Every time
- . ;D PRICING^ABSPDB2A		;Pretty much every time
- . ;I $D(ADDSEG("DURRPPS")) D DURRPPS^ABSPDB2A			;Very common...but for over-rides only
+ . ;D PRICING^ABSPDB2A  ;Pretty much every time
+ . ;I $D(ADDSEG("DURRPPS")) D DURRPPS^ABSPDB2A  ;Very common...but for over-rides only
  Q
  ;Go through field by field and construct the Header
  ;The header is the one segment that is completely unchanged between version 5.1 and D.0
@@ -70,7 +67,7 @@ HEADER ;HEADER Segment
 102APD S RECORD=RECORD_$G(ABSP(9002313.02,MEDN,FIELD,"I"))
  Q
  ;TRANSACTION CODE "B2" for Reversal
-103GET S ABSP("X")="B2"	
+103GET S ABSP("X")="B2"
  Q
 103FMT S ABSP("X")=$$ANFF^ABSPECFM(ABSP("X"),2)
  Q
@@ -78,7 +75,7 @@ HEADER ;HEADER Segment
  Q
 103APD S RECORD=RECORD_"B2"
  Q
- ;PCN #	
+ ;PCN #
 104GET I '$D(SPECIAL(104)) S ABSP("X")=$G(INSARRAY(9002313.4,DO,100.17))
  ELSE  X SPECIAL(104)
  Q

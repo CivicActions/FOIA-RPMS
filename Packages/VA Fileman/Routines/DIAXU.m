@@ -1,5 +1,6 @@
-DIAXU ;SFISC/DCM-UPDATE DESTINATION FILE ;8/16/96  16:42
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIAXU ;SFISC/DCM-UPDATE DESTINATION FILE ;8/16/96  16:42 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**8**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
 DIAX ;called from ^DIAX (Update Destination File option)

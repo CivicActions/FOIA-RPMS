@@ -1,8 +1,8 @@
 BARRAGE ; IHS/SD/LSL - AGING RPT - AGE FEB 4,1997 ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
- ;
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**35**;OCT 26, 2005;Build 187
+ ;Aging reports -Menu option RPT-Reports menu AGE-Aging Report
+ ;IHS/SD/SDR 1.8*35 ADO60910 Updated to display PPN preferred name
 START ; EP
- ; Aging reports -Menu option RPT-Reports menu AGE-Aging Report
  ;
  S BAR("SITE")=$P(^DIC(4,DUZ(2),0),"^",1)
  S DIR(0)="S^F:FACILITY;I:INSURER;C:CLINIC;P:PATIENT"
@@ -19,7 +19,7 @@ START ; EP
 END ;
  K BAR,BARS,BARBRZ
  Q
- ; *********************************************************************
+ ;***************************************
  ;
 PRINT ;
  ; Print
@@ -34,7 +34,7 @@ PRINT2 ; EP
  D EN1^DIP
  D ^%ZISC,HOME^%ZIS
  Q
- ; *********************************************************************
+ ;***************************************
  ;
 AGE ;
  ; Age
@@ -43,7 +43,7 @@ AGE ;
  I $G(TO)="" S TO="zzzzzzzz"
  S FLDS="[BAR AGE PRNT]"
  Q
- ; *********************************************************************
+ ;***************************************
  ;
 FAC ;
  ; Single Facility print
@@ -59,7 +59,7 @@ FAC ;
  S FR=BAR("CNAME")
  S TO=BAR("CNAME")
  Q
- ; *********************************************************************
+ ;***************************************
  ;
 INS ;
  ;Single Insurer print
@@ -76,7 +76,7 @@ INS ;
  S FR=BAR("CNAME")
  S TO=BAR("CNAME")
  Q
- ; *********************************************************************
+ ;***************************************
  ;
 CLIN ;
  ; Single Clinic print
@@ -92,7 +92,7 @@ CLIN ;
  S FR=BAR("CNAME")
  S TO=BAR("CNAME")
  Q
- ; *********************************************************************
+ ;***************************************
  ;
 PAT ;
  ; Single Patient print
@@ -102,6 +102,7 @@ PAT ;
  S DIC("A")="Select Patient or press <RETURN> for all Patients: "
  S DIC="^AUPNPAT("
  S DIC(0)="AEQMZI"
+ S DIC("W")="D DICWPAT^BARUTL0(1)"  ;bar*1.8*35 IHS/SD/SDR ADO60910
  D ^DIC
  I ($D(DUOUT))!($D(DTOUT)) S BAR("QFLG")=1
  I Y<0 Q
@@ -111,7 +112,7 @@ PAT ;
  S TO=DFN
  ; 'end' use dfn in specifying patient
  Q
- ; *********************************************************************
+ ;***************************************
  ;
 XBLM ;
  S Y=$$DIR^XBDIR("S^P:PRINT Output;B:BROWSE Output on Screen","Do you wish to ","P","","","",1)

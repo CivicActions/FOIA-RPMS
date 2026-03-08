@@ -1,5 +1,5 @@
 BQIDCMSP ;VNGT/HS/ALA-MY PATIENTS-SPECIALTY PROVIDER ; 12 Dec 2008  1:42 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;2.0;ICARE MANAGEMENT SYSTEM;**2**;May 29, 2009
  ;
  Q
  ;
@@ -42,8 +42,6 @@ FND(DATA,PARMS,MPARMS) ;EP - Find records
  . ; if no filters defined assume living patients otherwise let filter decide
  . I $O(^BQICARE(OWNR,1,PLIEN,15,0))="",$P($G(^DPT(DFN,.35)),U,1)'="" Q
  . ; If patient has no active HRNs, quit
- . I '$$HRN^BQIUL1(DFN) Q
- . ; If patient has no visit in last 3 years, quit
- . ;I '$$VTHR^BQIUL1(DFN) Q
+ . I '$$HRN^BQIUL1(DFN),'$$VTHR^BQIUL1(DFN) Q
  . S @DATA@(DFN)=""
  Q

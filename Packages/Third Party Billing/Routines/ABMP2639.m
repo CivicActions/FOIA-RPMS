@@ -1,0 +1,35 @@
+ABMP2639 ; IHS/SD/SDR - 3P BILLING 2.6 Patch 39 PRE INIT ;  
+ ;;2.6;IHS Third Party Billing;**39**;NOV 12, 2009;Build 776
+ ;
+ Q
+POST ;
+EXP37 ;
+ K DIC,DR,DINUM,DLAYGO,DIE
+ S DIC="^ABMDEXP("
+ S DIC(0)="LM"
+ S DLAYGO=9002274
+ S X="ADA-2024",DINUM=37
+ K DD,DO
+ D ^DIC
+ Q:Y<0
+ S DA=+Y
+ S DIE="^ABMDEXP("
+ S DR=".04////ABMDF37;.05////ABMDF37X;.06///C;.07///ADA Claim Form dated 2024, J43024;.08///1,2,3,4,9,16,17,18,32,33,45;.11////ABMDES4;.15///H"
+ D ^DIE
+ ;
+EXPMOD ;Expire ADA-2006 export mode
+ S DIE="^ABMDEXP("
+ S DA=29
+ S DR="11////1"  ;1 indicates the code is inactive
+ D ^DIE
+QUES45 ;
+ K DIC,X,DINUM,DR,DLAYGO
+ S DIC="^ABMQUES("
+ S DIC(0)="LM"
+ S DLAYGO=9002274
+ S DINUM=45,X="Date Last SRP"
+ S DIC("DR")=".02////W45;.03////ABMDE301;.04////45;1////ABMDE3D"
+ K DD,DO
+ D ^DIC
+ ;
+ Q

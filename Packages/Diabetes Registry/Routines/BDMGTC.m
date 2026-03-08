@@ -1,5 +1,5 @@
 BDMGTC ; cmi/anch/maw - BDM DMS GUI Table Lookup ;
- ;;2.0;BDM DIABETES MANAGEMENT SYSTEM;**9,10,12**;JUN 14, 2007;Build 51
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**9,10,12,13,16**;JUN 14, 2007;Build 122
  ;
  ;
 TAXPRT(RETVAL,BDMSTR) ;EP -- return Taxonomy list
@@ -90,7 +90,7 @@ SNOPRTS(RETVAL,BDMSTR) ;-- return SNOMED ITEMS
  ;
 TUENDS(BDMRET) ;-- tobacco use health factors table
  S X="MERR^BDMGU",@^%ZOSF("TRAP") ; m error trap
- N BDMHF,BDMI,BDMERR,BDMPIEN,BDMDA,BDMTU,BDMTOB
+ N BDMHF,BDMI,BDMERR,BDMPIEN,BDMDA,BDMTU,BDMTOB,C
  K ^BDMTMP($J)
  S BDMRET="^BDMTMP("_$J_")"
  S BDMI=0
@@ -98,8 +98,11 @@ TUENDS(BDMRET) ;-- tobacco use health factors table
  S ^BDMTMP($J,BDMI)="T00080HF"_$C(30)
  N TDA,TIEN
  S TDA=0 F  S TDA=$O(^AUTTHF("B",TDA)) Q:TDA=""  D
- . Q:$E(TDA,1,10)'="ELECTRONIC"
  . S TIEN=0 F  S TIEN=$O(^AUTTHF("B",TDA,TIEN)) Q:'TIEN  D
+ .. S C=$P($G(^AUTTHF(TIEN,0)),U,3)
+ .. I 'C Q
+ .. S C=$P($G(^AUTTHF(C,0)),U,2)
+ .. I C'="C019" Q
  .. S BDMTOB(TIEN)=""
  S BDMDA=0 F  S BDMDA=$O(^AUTTHF("AC",BDMDA)) Q:BDMDA=""  D
  . S BDMPIEN=0 F  S BDMPIEN=$O(^AUTTHF("AC",BDMDA,BDMPIEN)) Q:'BDMPIEN  D
@@ -110,6 +113,26 @@ TUENDS(BDMRET) ;-- tobacco use health factors table
  .. S BDMHF=$P($G(^AUTTHF(BDMPIEN,0)),U)
  .. S BDMI=BDMI+1
  .. S ^BDMTMP($J,BDMI)=BDMHF_$C(30)
+ S ^BDMTMP($J,BDMI+1)=$C(31)_$G(BDMERR)
+ Q
+ ;
+COMPDXT(BDMRET,BDMSTR) ;-- return diagnosis on complications for register
+ S X="MERR^BDMGU",@^%ZOSF("TRAP") ; m error trap
+ N BDMREG,P,RDA,CMPDX,CDA
+ S P="|"
+ K ^BDMTMP($J)
+ S BDMRET="^BDMTMP("_$J_")"
+ S BDMI=0
+ S BDMERR=""
+ S ^BDMTMP($J,BDMI)="T00080COMPLICATIONDX"_$C(30)
+ S BDMREG=$P(BDMSTR,P)
+ S RDA=0 F  S RDA=$O(^ACM(44.1,"RG",BDMREG,RDA)) Q:'RDA  D
+ . S CMPDX=$G(^ACM(44.1,RDA,0))
+ . Q:CMPDX=""
+ . S CMPDX(CMPDX)=""
+ S CDA=0 F  S CDA=$O(CMPDX(CDA)) Q:CDA=""  D
+ . S BDMI=BDMI+1
+ . S ^BDMTMP($J,BDMI)=CDA_$C(30)
  S ^BDMTMP($J,BDMI+1)=$C(31)_$G(BDMERR)
  Q
  ;

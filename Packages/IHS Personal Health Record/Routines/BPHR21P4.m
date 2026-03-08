@@ -1,0 +1,21 @@
+BPHR21P4 ;GDIT/HCS/ALA-Version 2.1 Patch 4 ; 09 Apr 2020  8:53 AM
+ ;;2.1;IHS PERSONAL HEALTH RECORD;**4**;Apr 01, 2014;Build 3
+ ;
+PRE ;EP
+ NEW DA,DIK
+ S DIK="^BPHRCLS("
+ S DA=0 F  S DA=$O(^BPHRCLS(DA)) Q:'DA  D ^DIK
+ Q
+ ;
+POS ;EP - Postinstall
+ ; Import BPHR classes
+ K ERR
+ D IMPORT^BPHRCLAS(1,.ERR)
+ I $G(ERR) Q
+ ;
+ ; Set the SERVICES to SERVICES2
+ NEW BPUPD,DA
+ S DA=0 F  S DA=$O(^BPHR(90670.2,DA)) Q:'DA  D
+ . S BPUPD(90670.2,DA_",",.11)="/axis2/services2"
+ D FILE^DIE("","BPUPD","ERROR")
+ Q

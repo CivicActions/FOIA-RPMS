@@ -1,5 +1,6 @@
-DDGFUPDB ;SFISC/MKO-UPDATE BLOCK COORDINATES ;03:28 PM  17 Aug 1993
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDGFUPDB ;SFISC/MKO-UPDATE BLOCK COORDINATES ;03:28 PM  17 Aug 1993 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 BLK(DDGFORIG) ;
  ;Update image with adjusted block coordinates

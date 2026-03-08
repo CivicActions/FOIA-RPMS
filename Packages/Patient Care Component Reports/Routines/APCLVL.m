@@ -1,5 +1,5 @@
-APCLVL ; IHS/CMI/LAB - PCC VISIT GENERAL RETRIEVAL DRIVER ROUTINE ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLVL ; IHS/OHPRD/TMJ - PCC VISIT GENERAL RETRIEVAL DRIVER ROUTINE ; [ 08/23/01  3:42 PM ]
+ ;;3.0;IHS PCC REPORTS;**10,16,19**;FEB 05, 1997
  ;visit general retrieval
 START ; 
  I '$D(IOF) D HOME^%ZIS
@@ -8,22 +8,6 @@ START ;
  K APCLQUIT ;--- this variable controls whether or not a user terminated input
 TYPE ;--- get type of report (patient, date range or search template)
  D INFORM^APCLVL01
-ORDER ;EP - called from qman
- S APCLLMOR=""
- W !!,"When the list of items for selection, print and sort are displayed to you"
- W !,"in list manager, would you like them sorted alphabetically or in a pre-defined"
- W !,"order.  The pre-defined order is set by the software and is how the list has"
- W !,"historically been displayed."
- W !
- S DIR(0)="S^P:Predefined Order (the original ordering);A:Alphabetical Order;G:Groups of Related Items",DIR("A")="What order would you like the Items displayed in",DIR("B")="P" KILL DA D ^DIR KILL D
- I $D(DIRUT) D XIT Q
- S APCLLMOR=Y
- ;IHS/CMI;GRL redirect if from Qman
- I $G(APCLSEAT),$G(AMQQFILE)=9000010 G BD
- I $G(APCLSEAT),$G(AMQQFILE)=9000001,APCLTYPE["V" G BD
- I $G(APCLSEAT),$G(AMQQFILE)=9000001,APCLTYPE["S" G PS1
- ;
-N ;
  S (APCLPCNT,APCLPTCT)=0 ;APCLPTCT -- pt total for # of "V"isits
  K APCLTYPE ;--- just in case variable left around
  K DIR,X,Y
@@ -131,7 +115,7 @@ GETDATES ;
  S APCLLHDR="DATE RANGE SELECTION" W !!?((80-$L(APCLLHDR))/2),APCLLHDR
  W !!,"This is a required response.  Remember, if you are using a Search Template of",!,"Visits, the Date Range entered here must correspond to the date range"
  W !,"used to generate the template or be a subset of that date range.",!
-BD ;EP - CALLED FROM QMAN get beginning date
+BD ;get beginning date
  W ! K DIR,X,Y S DIR(0)="D^:DT:EP",DIR("A")="Enter Beginning Visit Date for search" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I $D(DIRUT) D DEL G TYPE
  S APCLBD=Y
@@ -166,9 +150,6 @@ SAVE ;
  D SAVE^APCLVL3
  Q
 ZIS ;call to XBDBQUE
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G XIT
  K APCLOPT
  I 'APCLTCW S APCLTCW=IOM
  S APCLDONE=""
@@ -179,7 +160,7 @@ DEMO ;
  .S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
  .I $D(DIRUT) S APCLQUIT="" Q
  .S APCLOPT=Y
- G:$G(APCLQUIT) XIT
+ G:$G(APCLQUIT) SAVE
  I $G(APCLOPT)="B" D BROWSE,XIT Q
  S XBRP="^APCLVLP",XBRC="^APCLVL1",XBRX="XIT^APCLVL",XBNS="APCL"
  D ^XBDBQUE

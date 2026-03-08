@@ -1,6 +1,9 @@
 XUS ;SFISC/STAFF - SIGNON ;11/29/2011
- ;;8.0;KERNEL;**16,26,49,59,149,180,265,337,419,434,584,1007,1018**;Jul 10, 1995;Build 8
+ ;;8.0;KERNEL;**16,26,49,59,149,180,265,337,419,434,584,1007,1018,1019,1020**;Jul 10, 1995;Build 8
  ;Per VHA Directive 2004-038, this routine should not be modified
+ ; GDIT/HS/BEE 12/14/17 - XU*8.0*1019 - Audit successful/unsuccessful logins
+ ;IHS/OIT/FBD - XU*8.0*1020: Modified CHECKAV to include calling app on $$SLOG^XUSBUSA and $$FLOG^XUSBUSA API calls
+ ;
  ;Sign-on message numbers are 30810.51 to 30810.99
  S U="^" D INTRO^XUS1A()
  K  K ^XUTL("ZISPARAM",$I)
@@ -86,8 +89,10 @@ ACCEPT(TO) ;Read A/V and echo '*' char.
  . Q
  Q A
  ;
-CHECKAV(X1) ;Check A/V code return DUZ or Zero. (Called from XUSRB)
+CHECKAV(X1,XUAPP) ;Check A/V code return DUZ or Zero. (Called from XUSRB)
+                ;XU*8.0*1020 - XUAPP var added to parameter call list
  N %,%1,X,Y,IEN,DA,DIK
+ S XUAPP=$G(XUAPP) S:XUAPP="" XUAPP="Kernel"  ;XU*8.0*1020 - ENSURE A VALUE EXISTS FOR XUAPP
  S IEN=0
  ;Start CCOW
  I $E(X1,1,7)="~~TOK~~" D  Q:IEN>0 IEN
@@ -105,10 +110,23 @@ CHECKAV(X1) ;Check A/V code return DUZ or Zero. (Called from XUSRB)
  S X=$P(X1,";",2) S:XUF %1="Verify: "_X S X=$$EN^XUSHSH(X)  ;IHS/OIT/FBD - XU*8.0*1018 - REPLACED VA-DISTRIBUTED $$EN^ROUTINE CALL WITH $$EN^XUSHSH
  I $P(XUSER(1),"^",2)'=X D LBAV Q 0
  I $G(XUFAC(1)) S DIK="^XUSEC(4,",DA=XUFAC(1) D ^DIK
+ ;D SLOG^XUSBUSA("XUS",IEN) ; GDIT/HS/BEE 12/14/17 - XU*8.0*1019 - Added line to audit successful logins  ;XU*8.0*1020 - COMMENTED OUT
+ S XUAPP=XUAPP_" - Successful access/verify code check" ;XU*8.0*1020 - MODIFIED TO INCLUDE CALLING APP INFO
+ D SLOG^XUSBUSA("XUS",IEN,XUAPP) ;XU*8.0*1020 - MODIFIED TO INCLUDE CALLING APP INFO
  Q IEN
 LBAV ;Log Bad AV
  D:XUF FAC
- I IEN S X=$P($G(^VA(200,IEN,1.1)),U,2)+1,$P(^(1.1),"^",2)=X
+ ;I IEN S X=$P($G(^VA(200,IEN,1.1)),U,2)+1,$P(^(1.1),"^",2)=X 
+ ;Modified previous line to audit unsuccessful verify code login attempts
+ ;I IEN S X=$P($G(^VA(200,IEN,1.1)),U,2)+1,$P(^(1.1),"^",2)=X D FLOG^XUSBUSA("XUS",$G(IEN),X) Q  ; GDIT/HS/BEE 12/14/17 - XU*8.0*1019
+ ;XU*8.0*1020 - COMMENTED OUT PREVIOUS LINE AND REPLACED WITH FOLLOWING CONDITIONAL BLOCK
+ I IEN D  Q  ;XU*8.0*1020
+ . S X=$P($G(^VA(200,IEN,1.1)),U,2)+1,$P(^(1.1),"^",2)=X  ;XU*8.0*1020
+ . S XUAPP=XUAPP_" - unsuccessful verify code check" ;XU*8.0*1020 - INCORPORATE CALLING APP INFO IF NOT ALREADY SPECIFIED
+ . D FLOG^XUSBUSA("XUS",$G(IEN),X,XUAPP)  ;XU*8.0*1020 - MODIFIED TO INCLUDE CALLING APP INFO
+ ;D FLOG^XUSBUSA("XUS","") ; GDIT/HS/BEE 12/14/17 - XU*8.0*1019 - Audit access code login failure  ;XU*8.0*1020 - COMMENTED OUT
+ S XUAPP=XUAPP_" - unsuccessful access code check" ;XU*8.0*1020 - INCORPORATE CALLING APP INFO IF NOT ALREADY SPECIFIED
+ D FLOG^XUSBUSA("XUS","","",XUAPP)  ;XU*8.0*1020 - MODIFIED TO INCLUDE CALLING APP INFO
  Q
  ;
 USER(IX) ;Build XUSER

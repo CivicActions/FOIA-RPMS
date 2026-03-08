@@ -1,5 +1,5 @@
 AMHRPS1 ; IHS/CMI/LAB - PROCESS REPORT ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;4.0;IHS BEHAVIORAL HEALTH;**11**;JUN 02, 2010;Build 27
  ;
  ;
  ;
@@ -34,7 +34,7 @@ PROC ;
  Q:'$D(^AMHRPRO("AD",AMHR))  ;quit if no problems entered
  Q:$D(^XTMP("AMHRPS",AMHJOB,AMHBTH,"PATIENTS",DFN))  ;quit if already counted this patient
  ;find pov
- S (AMHFOUND,X)=0,AMHSORT="" F  S X=$O(^AMHRPRO("AD",AMHR,X)) Q:X'=+X!(AMHFOUND)  S P=$P(^AMHRPRO(X,0),U),P=$P(^AMHPROB(P,0),U) I $D(AMHPROB(P)) S AMHFOUND=1,AMHSORT=P
+ S (AMHFOUND,X)=0,AMHSORT="" F  S X=$O(^AMHRPRO("AD",AMHR,X)) Q:X'=+X!(AMHFOUND)  S P=$P(^AMHRPRO(X,0),U) I $P($G(^AMHPROB(P,0)),U,19) S AMHFOUND=1,AMHSORT=$P(^AMHPROB(P,0),U,1)
  Q:'AMHFOUND  ; quit if not visit for problem
 SETTMP ;
  S AMHRAGE="" D GETAGE

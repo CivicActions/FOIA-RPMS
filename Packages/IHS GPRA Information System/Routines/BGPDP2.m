@@ -1,5 +1,5 @@
-BGPDP2 ; IHS/CMI/LAB - print ind 2 ;
- ;;7.0;IHS CLINICAL REPORTING;;JAN 24, 2007
+BGPDP2 ; IHS/CMI/LAB - print ind 2 ;   [ 08/19/02  3:12 PM ]
+ ;;1.0;IHS GPRA REPORTING;**1**;JUN 12, 2002
  ;
  ;
 I2A ;EP ; 

@@ -1,12 +1,13 @@
 BEDDUTIL ;VNGT/HS/BEE-BEDD Utility Routine ; 08 Nov 2011  12:00 PM
- ;;2.0;BEDD DASHBOARD;**1,2**;Jun 04, 2014;Build 26
+ ;;2.0;IHS EMERGENCY DEPT DASHBOARD;**1,2,4,5,7**;Jun 04, 2014;Build 21
  ;
  Q
  ;
-CHECKAV(BEDDAV) ;EP - Auth AC/VC, Ret DUZ
+ ;GDIT/HS/BEE 01/21/20 - CR#11397 - BEDD*2.0*5 Added BEDDAPP input parm
+CHECKAV(BEDDAV,BEDDAPP) ;EP - Auth AC/VC, Ret DUZ
  ;
- ; Input: BEDDAV-ACCESS_";"_VERIFY
- ; Output: DUZ
+ ;In: BEDDAV-ACCESS_";"_VERIFY
+ ;Out: DUZ
  ;
  N BEDDDUZ,XUF
  ;
@@ -17,7 +18,9 @@ CHECKAV(BEDDAV) ;EP - Auth AC/VC, Ret DUZ
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  S XUF=0
- S BEDDDUZ=$$CHECKAV^XUS(BEDDAV)
+ ;GDIT/HS/BEE 01/21/20 - CR#11397 - BEDD*2.0*5 Added BEDDAPP input parm
+ ;S BEDDDUZ=$$CHECKAV^XUS(BEDDAV)
+ S BEDDDUZ=$$CHECKAV^XUS(BEDDAV,$G(BEDDAPP))
  I BEDDDUZ=0 Q 0
  ;
  ;Ret DUZ if user inactive
@@ -26,14 +29,14 @@ CHECKAV(BEDDAV) ;EP - Auth AC/VC, Ret DUZ
  ;
 AUTH(BEDDDUZ) ;EP - Auth User for ED Access
  ;
- ; Input: BEDDDUZ - User's DUZ
- ; Output: 0-Not Auth/1-Auth
+ ;In: BEDDDUZ - User's DUZ
+ ;Out: 0-Not Auth/1-Auth
  ;
  N BEDDKEY
  ;
  S:$G(U)="" U="^"
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  I $G(BEDDDUZ)<1 Q 0
@@ -49,14 +52,14 @@ SNAME(SITE) ;EP - Ret Site Name
  ;
 SITE(BEDDST) ;EP - Assemble List of Sites From File 40.8
  ;
- ; Input: BEDDSITE - Empty Arr
- ; Output: BEDDSITE - List of file 4 entries pointed to by file 40.8 entries
+ ;In: BEDDSITE - Empty Arr
+ ;Out: BEDDSITE - File 4 entries pointed to by file 40.8 entries
  ;
  N BEDDSITE,BEDDIEN
  ;
  S:$G(U)="" U="^"
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  S BEDDSITE="" F  S BEDDSITE=$O(^DG(40.8,"B",BEDDSITE)) Q:BEDDSITE=""  D
@@ -69,80 +72,87 @@ SITE(BEDDST) ;EP - Assemble List of Sites From File 40.8
  ;
 BEDDLST(BEDD,SITE) ;EP - Assemble ED List
  ;
- ; Input: BEDD - Empty Array
- ;        SITE - Site to look up
- ; Output: BEDD - List of Dashboard Pats
+ ;Input:
+ ;BEDD - Empty Array
+ ;SITE - Site to look up
+ ;Output:
+ ;BEDD - List of Dashboard Pats
  ;
- S SITE=$G(SITE)
+ ;Run cleanup routine
+ D DAILY^BEDDVFIX
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
- NEW BEDDDAY,BEDDIEN,BEDDGL,BEDDTOT,BEDDBDY,PNDLKBDY,BEDDGLD
+ ;GDIT/HS/BEE 9/23/2020;BEDD*2.0*6;CR#9750;Pull patient list from ER ADMISSION file
+ NEW BEDDDFN,BEDDGLD,BEDDTOT,MEDIAN
  ;
- ;BEDD*2.0*1;Pull pending look back days
- S PNDLKBDY=10
- I +$G(SITE)=0,SITE'="Whiteboard" D
- . NEW SIEN,ST,EXEC
- . S SIEN=$O(^BEDD.EDSYSTEMD("")) Q:SIEN=""
- . S EXEC="S ST=##CLASS(BEDD.EDSYSTEM).%OpenId(SIEN,0)" X EXEC
- . S EXEC="S SITE=ST.Site" X EXEC
- I +$G(SITE)]"" D
- . NEW SYSIEN,EXEC,EDSYSTEM,ISITE
- . S ISITE=$S(SITE="Whiteboard":"999999",1:SITE)
- . S EXEC="S SYSIEN=$O(^BEDD.EDSYSTEMI(""SiteIdx"","" ""_ISITE,""""))" X EXEC
- . I $G(SYSIEN)="" Q
- . S EXEC="S EDSYSTEM=##CLASS(BEDD.EDSYSTEM).%OpenId(SYSIEN,0)" X EXEC
- . S EXEC="S PNDLKBDY=EDSYSTEM.PendingStsLookBack" X EXEC
- . I +PNDLKBDY=0 S PNDLKBDY=10
- ;
- K BEDD
- ;
- ;BEDD*2.0*1;Use parameter
- S BEDDBDY=$P($H,",")-PNDLKBDY,BEDDDAY=""
- S BEDDGL="^BEDD.EDVISITI(""ArrIdx"")"
  S BEDDGLD="^BEDD.EDVISITD"
- F  S BEDDDAY=$O(@BEDDGL@(BEDDDAY),-1) Q:((BEDDDAY="")!(BEDDDAY<BEDDBDY))  D
- . S BEDDIEN="" F  S BEDDIEN=$O(@BEDDGL@(BEDDDAY,BEDDIEN),-1) Q:BEDDIEN=""  D
- .. ;
- .. ;Remove deleted entries
- .. I '$D(@BEDDGLD@(BEDDIEN)) Q
- .. ;
- .. NEW TRG,ROOM,EDWTIM,EDSTAT,EDTRG,EDROOM,PTDFN
- .. S (EDSTAT,EDTRG,EDROOM,EDWTIM,PTDFN)=""
- .. ;
- .. ;Ret entry
- .. D BEDDED^BEDDUTW(BEDDIEN,.EDSTAT,.EDTRG,.EDROOM,.EDWTIM,.PTDFN)
- .. ;
- .. I EDSTAT=9 Q
- .. I EDSTAT=8 Q
- .. ;
- .. ;Strip dupes
- .. Q:$G(PTDFN)=""
- .. I $D(BEDD("D",PTDFN)) Q
- .. S BEDD("D",PTDFN)=""
- .. ;
- .. S TRG="" I EDTRG'="" S TRG=EDTRG
- .. S:TRG="" TRG=" "
- .. S ROOM=" " I EDROOM'="" S ROOM=EDROOM
- .. I EDSTAT=1 S BEDD(EDSTAT,BEDDIEN)=EDWTIM
- .. I EDSTAT=2 S BEDD(EDSTAT,TRG,BEDDIEN)=EDWTIM
- .. I EDSTAT=3 S BEDD(EDSTAT,ROOM,BEDDIEN)=EDWTIM
- .. I EDSTAT=4 S BEDD(EDSTAT,TRG,BEDDIEN)=EDWTIM
- .. S BEDD("SUM",EDSTAT,BEDDIEN)=EDWTIM
- .. S $P(BEDDTOT(EDSTAT),"^")=$P($G(BEDDTOT(EDSTAT)),"^")+1
- .. S $P(BEDDTOT(EDSTAT),"^",2)=$P($G(BEDDTOT(EDSTAT)),"^",2)+EDWTIM
- .. ;
- .. ;Track entries
- .. S BEDD("L",BEDDIEN)=""
+ S BEDDDFN=0 F  S BEDDDFN=$O(^AMERADM(BEDDDFN)) Q:'BEDDDFN  D
+ . ;
+ . NEW VIEN,BEDDIEN,DEL,ISOBJ,EXEC,ED,EDSTAT,EDTRG,EDROOM,EDWTIM,TRG,ROOM,PTDFN,WARN,EDPTRG
+ . ;
+ . ;Get the visit
+ . S VIEN=$$GET1^DIQ(9009081,BEDDDFN_",",1.1,"I") Q:VIEN=""
+ . S BEDDIEN=$O(^BEDD.EDVISITI("ADIdx",VIEN,"")) Q:BEDDIEN=""
+ . ;
+ . ;Remove deleted entries
+ . I '$D(@BEDDGLD@(BEDDIEN)) Q
+ . ;
+ . ;Remove deleted entries
+ . S (DEL,ISOBJ)=""
+ . S EXEC="S ED=##CLASS(BEDD.EDVISIT).%OpenId(BEDDIEN,0)" X EXEC
+ . S EXEC="I '$ISOBJECT(ED) S ISOBJ=1" X EXEC Q:ISOBJ
+ . S EXEC="S DEL=ED.Deleted" X EXEC Q:DEL
+ . ;
+ . S (EDSTAT,EDTRG,EDROOM,EDWTIM,PTDFN)=""
+ . ;
+ . ;Ret entry
+ . ;GDIT/HS/BEE 10/06/20 ;BEDD*2.0*6;CR#5100;Treat as triaged if triage provider
+ . ;D BEDDED^BEDDUTW(BEDDIEN,.EDSTAT,.EDTRG,.EDROOM,.EDWTIM,.PTDFN)
+ . D BEDDED^BEDDUTW(BEDDIEN,.EDSTAT,.EDTRG,.EDROOM,.EDWTIM,.PTDFN,.EDPTRG)
+ . ;
+ . I EDSTAT=9 Q
+ . I EDSTAT=8 Q
+ . ;
+ . ;Strip dupes
+ . Q:$G(PTDFN)=""
+ . I $D(BEDD("D",PTDFN)) Q
+ . S BEDD("D",PTDFN)=""
+ . ;
+ . ;Retrieve warnings
+ . S WARN=$$WARN^BEDDUTW1(BEDDIEN)
+ . S BEDD("WARN",BEDDIEN)=WARN
+ . S TRG="" I EDTRG'="" S TRG=EDTRG
+ . S:TRG="" TRG=" "
+ . S ROOM=" " I EDROOM'="" S ROOM=EDROOM
+ . I EDSTAT=1 S BEDD(EDSTAT,BEDDIEN)=EDWTIM
+ . I EDSTAT=2 S BEDD(EDSTAT,TRG,BEDDIEN)=EDWTIM
+ . I EDSTAT=3 S BEDD(EDSTAT,ROOM,BEDDIEN)=EDWTIM
+ . I EDSTAT=4 S BEDD(EDSTAT,TRG,BEDDIEN)=EDWTIM
+ . S BEDD("SUM",EDSTAT,BEDDIEN)=EDWTIM
+ . ;
+ . ;Check for MSE Time Warning
+ . S BEDD("MSE",BEDDIEN)=$P(WARN,"^",12)
+ . ;
+ . ;Check for LOS Time Warning
+ . S BEDD("LOS",BEDDIEN)=+$P(WARN,"^",11)
+ . ;
+ . S $P(BEDDTOT(EDSTAT),"^")=$P($G(BEDDTOT(EDSTAT)),"^")+1
+ . S $P(BEDDTOT(EDSTAT),"^",2)=$P($G(BEDDTOT(EDSTAT)),"^",2)+EDWTIM
+ . ;GDIT/HS/BEE 10/26/20;BEDD*2.0*6;CR#4656;Track for median values
+ . S BEDDTOT(EDSTAT,+EDWTIM,BEDDIEN)=""
+ . S BEDDTOT(5)=$G(BEDDTOT(5))+1
+ . S BEDDTOT(5,+$P(WARN,"^",11),BEDDIEN)=""
+ . ;
+ . ;Track entries
+ . S BEDD("L",BEDDIEN)=""
+ ;
+ ;Calculate Median values
+ S MEDIAN=$$MEDIAN^BEDDUTL2(.BEDDTOT)
  ;
  ;Assemble Totals
- S EDSTAT="" F  S EDSTAT=$O(BEDDTOT(EDSTAT)) Q:EDSTAT=""  D
- . NEW CNT,WTG,AVG
- . S CNT=$P(BEDDTOT(EDSTAT),"^")
- . S WTG=$P(BEDDTOT(EDSTAT),"^",2)
- . S AVG="" I CNT>0,WTG>0 S AVG=WTG\CNT
- . S BEDD("TSUM",EDSTAT)=CNT_"^"_WTG_"^"_AVG
+ D TOTAL^BEDDUTL2(.BEDD,.BEDDTOT,MEDIAN)
  ;
  ;Check (and Repair) Room Occupancy
  D RMAV^BEDDUTW(.BEDD)
@@ -151,15 +161,15 @@ BEDDLST(BEDD,SITE) ;EP - Assemble ED List
  ;
 GETCC(BEDDIEN,BEDDCOMP,TYPE) ;EP - Get V NARRATIVE TEXT
  ;
- ; Input:
- ; BEDDIEN - V NARRATIVE TEXT Entry IEN
- ; BEDDCOMP - BEDD.EDVISIT - Complaint field value
- ;     TYPE - Return type - P-Presenting, C-Chief, Null-All
+ ;Input:
+ ;BEDDIEN - V NARRATIVE TEXT Entry IEN
+ ;BEDDCOMP - BEDD.EDVISIT - Complaint field value
+ ;TYPE - Return type - P-Presenting, C-Chief, Null-All
  ;
- ; Output:
- ; V NARRATIVE TEXT (1st) or Complaint value (2nd)
+ ;Output:
+ ;V NARRATIVE TEXT (1st) or Complaint value (2nd)
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  S TYPE=$G(TYPE)
@@ -185,16 +195,16 @@ GETCC(BEDDIEN,BEDDCOMP,TYPE) ;EP - Get V NARRATIVE TEXT
  ;
 GETF(BEDDFILE,BEDDIEN,BEDDFLD,BEDDIE) ; EP - Ret val from spec file/field
  ;
- ; Input:
- ; BEDDFILE - RPMS file numb
- ; BEDDIEN  - File IEN
- ; BEDDFLD  - Field to ret
- ; BEDDIE   - Int/Ext disp
+ ;Input:
+ ;BEDDFILE - RPMS file numb
+ ;BEDDIEN  - File IEN
+ ;BEDDFLD  - Field to ret
+ ;BEDDIE   - Int/Ext disp
  ;
- ; Output:
- ; Val in the field
+ ;Output:
+ ;Val in the field
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  I BEDDFILE=""!(BEDDFLD="") Q ""
@@ -205,13 +215,13 @@ GETF(BEDDFILE,BEDDIEN,BEDDFLD,BEDDIE) ; EP - Ret val from spec file/field
  ;
 GETOSTAT(DFN) ; EP - Get Order Summ By Pack Type
  ;
- ; Input:
- ; DFN - Patient IEN
+ ;Input:
+ ;DFN - Patient IEN
  ;
- ; Output:
- ; Package Order Summ for T and T-1
+ ;Output:
+ ;Package Order Summ for T and T-1
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  NEW BEDDORD,BEDDOST,BEDDIX,BYDT,X,X1,X2,YDT
@@ -244,11 +254,11 @@ GETOSTAT(DFN) ; EP - Get Order Summ By Pack Type
  ;
 LOGSEC(DUZ,DFN) ;EP - Adds/updates entry in DG Security Log file
  ;
- ; Input:
- ; DUZ - User IEN
- ; DFN - Patient IEN
+ ;Input:
+ ;DUZ - User IEN
+ ;DFN - Patient IEN
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  NEW DGOPTI,DGOPT2
@@ -259,9 +269,9 @@ LOGSEC(DUZ,DFN) ;EP - Adds/updates entry in DG Security Log file
  ;
  Q
  ;
-PPR(BEDDVIEN,OBJID,DFN) ;EP - Ret the Primary Prov
+PPR(BEDDVIEN,OBJID,DFN) ;EP - Ret Primary Prov
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  NEW PPR,EDOBJ,PIEN
@@ -276,13 +286,13 @@ PPR(BEDDVIEN,OBJID,DFN) ;EP - Ret the Primary Prov
  ;
 XNOW(FORM) ;EP - Ret Curr Ext Date and Time
  ;
- ; Input:
- ; FORM (Optional) - Sec parm of XLFDT call
+ ;Input:
+ ;FORM (Optional) - Sec parm of XLFDT call
  ;
- ; Output:
- ; Date/Time in MMM DD,CCYY@HH:MM:SS format
+ ;Output:
+ ;Date/Time in MMM DD,CCYY@HH:MM:SS format
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  S FORM=$G(FORM,"")
@@ -292,13 +302,13 @@ XNOW(FORM) ;EP - Ret Curr Ext Date and Time
  ;
 FNOW() ;EP - Return Current FileMan Date and Time
  ;
- ; Input:
- ; None
+ ;Input:
+ ;None
  ;
- ; Output:
- ; Date/Time in FileMan CYYMMDD.HHMMSS format
+ ;Output:
+ ;Date/Time in FileMan CYYMMDD.HHMMSS format
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  NEW %,%H,%I,X
@@ -307,14 +317,14 @@ FNOW() ;EP - Return Current FileMan Date and Time
  ;
 DATE(DATE) ;EP - Convert stand dt/time to FileMan dt/time
  ;
- ; Input:
- ; DATE - In stand format
+ ;Input:
+ ;DATE - In stand format
  ;
- ; Output:
- ; Date/Time in FileMan CYYMMDD.HHMMSS format
- ; -1 is if it couldn't conv to FileMan date
+ ;Output:
+ ;Date/Time in FileMan CYYMMDD.HHMMSS format
+ ;-1 is if it couldn't conv to FileMan date
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  NEW %DT,X,Y
@@ -329,17 +339,17 @@ DATE(DATE) ;EP - Convert stand dt/time to FileMan dt/time
  ;
 NEW(D,AMERDFN,D0,D1,DFN,NODSP) ;EP - Create ED Entry - Called from AMER routine
  ;
- ; Input:
- ; D   - Current entry information - Quit if defined
- ; AMERDFN/DFN - Patient's DFN entry
- ; D0/D1 - VIEN/ADT info
- ; NODSP - Do not display to screen
+ ;Input:
+ ;D   - Current entry information - Quit if defined
+ ;AMERDFN/DFN - Patient's DFN entry
+ ;D0/D1 - VIEN/ADT info
+ ;NODSP - Do not display to screen
  ;
  NEW BEDDSYS,BEDDADT,BEDDDFN,VIEN,ID,X
  ;
  S BEDDADT=$G(D1),BEDDDFN=$G(DFN),VIEN=$G(D0),NODSP=$G(NODSP)
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  ;Check if entry already def
@@ -366,13 +376,13 @@ NEW(D,AMERDFN,D0,D1,DFN,NODSP) ;EP - Create ED Entry - Called from AMER routine
  ;
 XCLIN(CODE) ;EP - Ret Ext Clinic
  ;
- ; Input:
- ; CODE - CODE field val from 40.7
+ ;Input:
+ ;CODE - CODE field val from 40.7
  ;
- ; Output:
- ; NAME (.01) 40.7 val
+ ;Output:
+ ;NAME (.01) 40.7 val
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  NEW DIC,X,Y
@@ -384,13 +394,13 @@ XCLIN(CODE) ;EP - Ret Ext Clinic
  ;
 PTALG(DFN) ;EP - Ret Patient Allergies
  ;
- ; Input:
- ; DFN - Pat IEN
+ ;Input:
+ ;DFN - Pat IEN
  ;
- ; Output:
- ; List of Allergies
+ ;Output:
+ ;List of Allergies
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  NEW PTALG,X,BEDDI
@@ -407,28 +417,28 @@ PTALG(DFN) ;EP - Ret Patient Allergies
  ;
 PTPCP(DFN) ;EP - Ret Patient PCP
  ;
- ; Input:
- ; DFN - Pat IEN
+ ;Input:
+ ;DFN - Pat IEN
  ;
- ; Output:
- ; Pat PCP
+ ;Output:
+ ;Pat PCP
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  Q $P($$DPCP(DFN),"^",2)
  ;
 TRGUPD(VIEN) ;EP - Update ER ADMISSION TRIAGE NURSE/ADMITTING PROV/ACUITY
  ;
- ; Input:
- ; VIEN - Pointer to 9000010 VISIT file
+ ;Input:
+ ;VIEN - Pointer to 9000010 VISIT file
  ;
- ; Output
- ; Pointer to TRG MEASUREMENT TYPE (if def)
+ ;Output
+ ;Pointer to TRG MEASUREMENT TYPE (if def)
  ;
  I $G(VIEN)="" Q ""
  ;
- ;Error Trap
+ ;Err Trap
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BEDDUTIL D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
  ;
  NEW AMUPD,ERROR,BEDDTRG,BEDDTRGD,BEDDTRGN,BEDDTRGI,DFN,MYTRG
@@ -457,13 +467,13 @@ BLDTRG(MYTRG) ;EP - Build Acuity MYTRG array
 INJCAUSE(OBJID) ;EP - Ret Cause of Injury - Not Implemented
  Q ""
  ;
-INJSTG(OBJID) ;EP - Ret Setting of Injury - Not Implemented
+INJSTG(OBJID) ;EP - Ret Inj Setting - Not Implemented
  Q ""
  ;
-IND(OBJID) ;EP - Ret the Industry - Not Implemented
+IND(OBJID) ;EP - Ret Industry - Not Implemented
  Q ""
  ;
-OCC(OBJID) ;EP - Ret the Occupation - Not Implemented
+OCC(OBJID) ;EP - Ret Occupation - Not Implemented
  Q ""
  ;
 TODLH(DTTM) ;EP - Convert Ext Date to $H
@@ -489,18 +499,18 @@ MINWTG(HDT,HTM) ;EP - Calc Diff in Minutes from $H
 FM2HT(FMDT) ;EP - Conv FMan Date/Time to $H time portion
  Q $P($$FMTH^XLFDT(FMDT),",",2)
  ;
-DPCP(DFN) ;EP -- Get patient's designated primary care provider
+DPCP(DFN) ;EP -- Get patients designated primary care prov
  ;
- ;Description
- ;  Checks 'Designated Provider Management System' first
- ;  for patient's primary care provider, otherwise it
- ;  checks Patient file.
+ ;Desc
+ ;Checks 'Designated Provider Management System' first
+ ;for patient's PCP, otherwise
+ ;checks Patient file.
  ;Input
- ;  DFN
+ ;DFN
  ;Output
- ;  DPCPN^DPCPNM
- ;    DPCPN  - Primary Care Provider internal entry number
- ;    DPCPNM - Primary Care Provider Name
+ ;DPCPN^DPCPNM
+ ;DPCPN-Primary Care Prov IEN
+ ;DPCPNM-Primary Care Prov Name
  ;
  NEW DPCAT,DPIEN,DPCPN,DPCPNM
  S DPCPN=""

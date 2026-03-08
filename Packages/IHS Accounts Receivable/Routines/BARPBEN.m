@@ -1,26 +1,24 @@
 BARPBEN ; IHS/SD/LSL - AUTO POSTING OF BENEFICIARY ACCOUNTS ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**21,23**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**21,23,37**;OCT 26, 2005;Build 210
  ;;
- ; IHS/SD/LSL - 04/29/03 - V1.8
- ;     Tweaked code for national release.  Original routine AZLKAP01.
+ ;IHS/SD/LSL 1.8 04/29/03 Tweaked code for national release. Original routine AZLKAP01.
  ;     Thanks to California area (7/10/2000)
- ;
- ;APR 2012 P.OTTIS TICKET # 66991 CODE FIX: <UNDEF> LOOP+21
- ;                        # 64722
- ;                        # 57240
+ ;IHS/SD/POT APR 2012 TICKET#66991 CODE FIX: <UNDEF> LOOP+21; #64722; #57240
+ ;IHS/SD/SDR 1.8*37 ADO60825 Added logic to check to keep cashiering session open if still in option
  ; ********************************************************************
  Q
  ;
 EN ; EP
  ; SELECT ACCOUNT
  Q:$G(XQUIT)=1  ;IHS/SD/TPF BAR*1.8*21 HEAT43451
- D:'$D(BARUSR) INIT^BARUTL                     ; Setup basic AR var
- S BAR("PRIVACY")=1                            ; Privacy Act applies
+ S ^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID)=+$G(^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID))+1 ;bar*1.8*37 IHS/SD/SDR ADO60825
+ D:'$D(BARUSR) INIT^BARUTL                     ;Setup basic AR var
+ S BAR("PRIVACY")=1                            ;Privacy Act applies
  S BAR("LOC")="BILLING"                        ;Always Billing location
  I $D(^XTMP("BAR-BEN")) D  Q
- . W !!!,"***AUTO POSTING JOB IN PROGRESS ***"
- . D EOP^BARUTL(0)
- D ASK                                         ; Ask user prompts
+ .W !!!,"***AUTO POSTING JOB IN PROGRESS ***"
+ .D EOP^BARUTL(0)
+ D ASK                                         ;Ask user prompts
  Q:'+BARACDA!('$D(BARSBY))
  I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) Q
  S BARQ("RC")="LOOP^BARPBEN"
@@ -28,6 +26,7 @@ EN ; EP
  S BARQ("RX")="POUT^BARRUTL"
  S BARQ("NS")="BAR"
  D ^BARDBQUE
+ S ^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID)=+$G(^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID))-1 ;bar*1.8*37 IHS/SD/SDR ADO60825
  D PAZ^BARRUTL
  Q
  ; ********************************************************************
@@ -42,6 +41,7 @@ ASK ;
  S DIC("S")="N ZZ S ZZ=$$GET1^DIQ(90050.02,+Y,.01) I ZZ[""BENEFIC"",ZZ[""PATIENT"",ZZ'[""NON"""
  S DIC(0)="AEQZ"
  D ^DIC
+ I Y'>0 S ^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID)=+$G(^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID))-1 ;bar*1.8*37 IHS/SD/SDR ADO60825
  Q:Y'>0
  S BARACDA=+Y
  S BARACNM=Y(0,0)
@@ -63,11 +63,11 @@ ASK ;
  S DIR("B")="B"
  D ^DIR
  K DIR,DIC
- I "BP"'[Y Q
+ ;I "BP"'[Y Q  ;bar*1.8*37 IHS/SD/SDR ADO60825
+ I "BP"'[Y S ^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID)=+$G(^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID))-1 Q  ;bar*1.8*37 IHS/SD/SDR ADO60825
  S BARSBY=Y
  Q
- ; ********************************************************************
- ; ********************************************************************
+ ;********************************************************************
  ;
 LOOP ; EP
  ; Loop ABAL index
@@ -78,12 +78,12 @@ LOOP ; EP
  S ^XTMP("BAR-BEN",$J,0)=DT_U_DT_U_"AUTO POSTING OF BENEFICIARY BILLS LOG"
  S BARBLDA=0
  F  S BARBLDA=$O(^BARBL(DUZ(2),"ABAL",BARACDA,BARBLDA)) Q:'+BARBLDA  D
- . D GET
- . S HAVETRIEN=0 ;P.OTTIS TICKET # 66991
- . D POST
- . I HAVETRIEN=0 QUIT  ;P.OTTIS TICKET # 66991
- . Q:BARTRIEN<1
- . D LOG
+ .D GET
+ .S HAVETRIEN=0 ;P.OTTIS TICKET # 66991
+ .D POST
+ .I HAVETRIEN=0 QUIT  ;P.OTTIS TICKET # 66991
+ .Q:BARTRIEN<1
+ .D LOG
  Q
  ; ********************************************************************
  ;

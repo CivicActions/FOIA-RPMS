@@ -1,18 +1,16 @@
-XPDIU ;SFISC/RSD - UNload/Convert/Rollup Distribution Global ;08/14/2008
- ;;8.0;KERNEL;**15,41,44,51,58,101,108,506**;Jul 10, 1995;Build 19
- ;Per VHA Directive 2004-038, this routine should not be modified.
+XPDIU ;SFISC/RSD - UNload/Convert/Rollup Distribution Global ;03/23/99  08:46 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1001,1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**15,41,44,51,58,101,108**;Jul 10, 1995
 EN1 ;unload
  N %,DA,DIK,DIR,DIRUT,X,XPD,XPDST,XPDT,XPDQ,XPDQUIT,Y
  ;remove dangling transport globals
  S DA=0 F  S DA=$O(^XTMP("XPDI",DA)) Q:'DA  I '$D(^XPD(9.7,DA)) K ^XTMP("XPDI",DA)
- ;must be the starting package and still exist in the transport global
- S (DA,XPDST)=$$LOOK^XPDI1("I $D(^XPD(9.7,""ASP"",Y,1,Y)),$D(^XTMP(""XPDI"",Y))") Q:'DA
+ ;must be Loaded or Queued and be the starting package
+ S (DA,XPDST)=$$LOOK^XPDI1("I $P(^(0),U,9)<2,$D(^XPD(9.7,""ASP"",Y,1,Y))") Q:'DA
  S XPDQ=^XPD(9.7,DA,0),DIR(0)="Y",DIR("A")="Want to continue with the Unload of this Distribution",DIR("B")="NO"
- ;check if install has status of start
- I $P(XPDQ,U,9)=2 W !!,"***WARNING***  Install ",$P(XPDQ,U)," has already started!",!,"   Unloading this install might leave your system in an unstable state!!",!!
  S DIR("?")="YES will delete the Transport Global and the entry in the Install file for these Packages."
- I $P(XPDQ,U,9)=1,$P(XPDQ,U,6) W !,"This Distribution is Queued for Install with task number ",$P(XPDQ,U,6),!,"Don't forget to delete Taskman Task.",!
- W ! D ^DIR I 'Y!$D(DIRUT) D QUIT^XPDI1(XPDST) Q
+ I $P(XPDQ,U,9)=1,$P(XPDQ,U,6) W !,"This Distribution is Queued for Install with task number ",$P(XPDQ,U,6),!,"Don't forget to delete Taskman Task."
+ D ^DIR I 'Y!$D(DIRUT) D QUIT^XPDI1(XPDST) Q
  S XPD=0,DIK="^XPD(9.7,"
  ;need to kill the XTMP("XPDI") and the entry in the install file
  F  S XPD=$O(XPDT(XPD)) Q:'XPD  S DA=+XPDT(XPD) D ^DIK K ^XTMP("XPDI",DA)
@@ -47,16 +45,9 @@ EN2 ;convert
  ..S DIC="^DIC(9.4,",DIC(0)="X",X=$P(^XTMP("XPDI",XPDA,"PKG",XPDPKG,0),U)
  ..D ^DIC I Y<0 S XPDPKG=0 Q
  ..S XPDPKG=+Y
- ..Q
  .S DA=$$BLD^XPDIP(XPDBLD) D:DA
  ..K ^XTMP("XPDT",DA)
- ..;check that component files exists
- ..S Y=$O(^XTMP("XPDI",XPDA,"BLD",0)),X=0 I Y F  S X=+$O(^XTMP("XPDI",XPDA,"BLD",Y,"KRN",X)) Q:'X  D
- ...;if file doesn't exist, kill it and 'B' x-ref
- ...I '$D(^DIC(X,0)) K ^XTMP("XPDI",XPDA,"BLD",Y,"KRN",X),^("B",X)
- ...Q
  ..S ^XTMP("XPDT",DA)=XPDPMT M ^XTMP("XPDT",DA)=^XTMP("XPDI",XPDA)
- ..Q
  .I 'DA W !,XPDNM,"   ** Couldn't add to Build file **" S XPDQUIT=1 Q
  .;kill Install file entry
  .S DA=XPDA D ^DIK

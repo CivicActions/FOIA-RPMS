@@ -1,5 +1,5 @@
 APCDRPOV ; IHS/CMI/LAB - DISPLAY VISIT ;
- ;;2.0;IHS PCC SUITE;**2,10,11,20**;MAY 14, 2009;Build 25
+ ;;2.0;IHS PCC SUITE;**2,10,11,20,25**;MAY 14, 2009;Build 37
  ;
  W !!,"This option is used to resequence the purpose of visit (diagnoses)"
  W !,"on a visit.  This allows you to determine which will be the first diagnosis"
@@ -95,4 +95,5 @@ POVDISP ;
  .;now delete old one
  .S DA=APCDX,DIK="^AUPNVPOV(" D ^DIK K DA,DIK
  S AUPNVSIT=APCDVSIT D MOD^AUPNVSIT
+ D PVCK^APCDCAF3
  G DSPLY

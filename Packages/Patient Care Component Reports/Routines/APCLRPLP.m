@@ -1,5 +1,5 @@
 APCLRPLP ; IHS/CMI/LAB - print patient list ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**28**;MAY 14, 2009;Build 72
  ;IHS/CMI/LAB - y2k
  ;
  ;
@@ -40,6 +40,6 @@ HEAD1 ;
  ;end Y2K
  W !,"AREA: ",$P(^AUTTAREA($P(^AUTTLOC(APCLLOC,0),U,4),0),U),?52,"SU: ",$P(^AUTTSU($P(^AUTTLOC(APCLLOC,0),U,5),0),U),?100,"FACILITY:",?111,$E($P(^DIC(4,APCLLOC,0),U),1,21)
  W !!?46,"BIRTH",?72,"BLOOD",?80,"--- ELIGIBILITY ---"
- W !,?1,"HRN NO",?20,"NAME",?46,"DATE",?56,"SEX",?62,"TRB",?67,"BEN",?72,"QUNTM",?80,"MCR",?84,"MCD",?88,"PVT",?92,"VET",?96,"CHS",?100,"RESIDENCE",?117,"SOC SEC NO"
+ W !,?1,"HRN NO",?20,"NAME",?46,"DATE",?56,"SEX",?62,"TRB",?67,"BEN",?72,"QUNTM",?80,"MCR",?84,"MCD",?88,"PVT",?92,"VET",?96,"CHS",?100,"RESIDENCE"
  W !,$TR($J("",132)," ","-")
  Q

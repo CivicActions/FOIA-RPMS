@@ -1,5 +1,5 @@
 BEDDPRT ;GDIT/HS/BEE-BEDD Admit Print Handling Routine ; 08 Nov 2011  12:00 PM
- ;;2.0;BEDD DASHBOARD;**2**;Jun 04, 2014;Build 26
+ ;;2.0;BEDD DASHBOARD;**2,4**;Jun 04, 2014;Build 19
  ;
  Q
  ;
@@ -185,6 +185,35 @@ EMBCARD(DUZ,DFN,DEV,AGCOPY) ;Print Embossed Cards
  D LOG^BEDDUTIU(DUZ,"P","P","BEDDADM","BEDD: Printed ER Embossed Card/Armband",DFN) I 1
  ;
  S DATA=$$QUEUE^CIAUTSK("START^AGCARD","BEDD: Embossed Card for "_$P($G(^DPT(DFN,0)),U)_".",,"DFN^AGCOPY","`"_+DEV)
+ ;
+ Q
+ ;
+APPW(DUZ,DFN,DEV,AGCOPY) ;Print ADT PPW
+ ;
+ NEW DATA,X,VAIN,WARD,BEDDCOPY
+ ;
+ I $G(DEV)="" Q
+ I $G(DFN)="" Q
+ ;
+ ;Check for 0 copies
+ I +$G(AGCOPY)=0 Q
+ ;
+ ;Make sure initial variables are set
+ S X="S:$G(U)="""" U=""^""" X X
+ S X="S:$G(DT)="""" DT=$$DT^XLFDT" X X
+ ;
+ ;Set up DUZ
+ D DUZ^XUP(DUZ)
+ ;
+ D INP^VADPT ;I '$G(VAIN(4)) Q
+ S WARD=+VAIN(4)
+ ;
+ ;Log BUSA entry
+ D LOG^BEDDUTIU(DUZ,"P","P","BEDDADM","BEDD: ADT Patient Wristband Print",DFN) I 1
+ ;
+ ;Task each copy
+ F BEDDCOPY=1:1:AGCOPY D
+ . S DATA=$$QUEUE^CIAUTSK("SET^DGPWB","BEDD: ADT Patient Wristband Print",,"DFN^WARD","`"_+DEV)
  ;
  Q
  ;

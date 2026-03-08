@@ -1,7 +1,8 @@
 ADEGRL1 ; IHS/HQT/MJL - DENTAL ENTRY PART 2 ;12:36 PM  [ 03/26/2003  11:22 AM ]
- ;;6.0;ADE;**26**;APRIL 1999;Build 13
+ ;;6.0;ADE;**26,38**;MAR 25, 1999;Build 158
  ;IHS/MFD FAC SUBRTN REDONE FOR MULTI-FACILITY LOOKUP PER DG/OHPRD
  ;;IHS/OIT/GAB 10.2014 Modified for 2015 Code Updates - PATCH 26
+ ;;IHS/OIT/GAB 11.2022 File 3,6,16 Removal - Patch 38
 FAC ;EP
  W !,"Select Location of Encounter: ",$S($D(ADEFAC):ADEFAC_"// ",1:"") R X:DTIME
  K DIC,Y S DIC="^ADEPARAM(DUZ(2),1,",DIC(0)="EZMQ" D ^DIC K DIC Q:"^"[X
@@ -10,20 +11,30 @@ FAC ;EP
  K AUPNLK("ALL") D UNIV^ADEGRL0 G:'Y FAC
  S (ADEFACD,DUZ(2))=+Y(0),ADEFAC=Y(0,0)
  Q
-REPD K DIC,Y S DIC=6,DIC("A")="Select Attending Dentist: ",DIC(0)="MAEZQ"
+REPD ;K DIC,Y S DIC=6,DIC("A")="Select Attending Dentist: ",DIC(0)="MAEZQ"
+ ;/IHS/OIT/GAB Commented above line and added below line for File 3,6,16 removal, File200 update PATCH 38
+ K DIC,Y S DIC=200,DIC("A")="Select Attending Dentist:  ",DIC(0)="MAEZQ"
  S DIC("S")="D SCRN1^ADEGRL1"
  S:$D(ADEREP) DIC("B")=ADEREP D ^DIC K DIC Q:Y=-1
  S (ADEREPD)=$P(Y,U),(ADEREP)=Y(0,0)
  Q
  ;I $D(^DIC(6,Y,9999999)),$P(^DIC(6,Y,9999999),U)=$S(ADECON:"2",1:"1"),$P(^DIC(6,Y,0),U,4)]"",^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)=52,$P(^DIC(16,Y,0),U,9)]""
-SCRN1 I $D(^DIC(6,Y,9999999)),$S(ADECON:"2",1:"138")[$P(^DIC(6,Y,9999999),U),$P(^DIC(6,Y,0),U,4)]"",+^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)=52,$P(^DIC(16,Y,0),U,9)]""
+SCRN1 ;I $D(^DIC(6,Y,9999999)),$S(ADECON:"2",1:"138")[$P(^DIC(6,Y,9999999),U),$P(^DIC(6,Y,0),U,4)]"",+^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)=52,$P(^DIC(16,Y,0),U,9)]""
+ ;/IHS/OIT/GAB PATCH 38 Commented above line and added below line for File200 update cks AFFILIATION(1=IHS),PROV CLASS=52,SSN is a number
+ I $D(^VA(200,Y,9999999)),$S(ADECON:"2",1:"138")[$P($G(^VA(200,Y,9999999)),U),$P($G(^VA(200,Y,"PS")),U,5)]"",+$G(^DIC(7,$P($G(^VA(200,Y,"PS")),U,5),9999999))=52,$P($G(^VA(200,Y,1)),U,9)]""
  E  Q
- I $S('$D(^DIC(6,Y,"I")):1,^DIC(6,Y,"I")']"":1,1:0)
+ ;I $S('$D(^DIC(6,Y,"I")):1,^DIC(6,Y,"I")']"":1,1:0)
+ ;/IHS/OIT/GAB PATCH 38 - commented above line and added below line for File 3,6,16 removal-File200 update, ck inactive date, send back 0 if inactivated, 1 if not
+ I $S('$D(^VA(200,Y,"PS")):1,'$P($G(^VA(200,Y,"PS")),U,4):1,1:0) ;if no data exists $S=1/True, else 0/False=inactivated Provider
  Q
  ;
-SCRN2 I $P(^DIC(6,Y,0),U,4)]"",$D(^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)),+^(9999999)=46
+SCRN2 ;I $P(^DIC(6,Y,0),U,4)]"",$D(^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)),+^(9999999)=46
+ ;/IHS/OIT/GAB PATCH 38 - Commented above line and added below line for File200 update - check the Provider Class for Hygienist
+ I $P($G(^VA(200,Y,"PS")),U,5)]"",$G(^DIC(7,$P(^VA(200,Y,"PS"),U,5),9999999)),+^(9999999)=46
  E  Q
- I $S('$D(^DIC(6,Y,"I")):1,^DIC(6,Y,"I")']"":1,1:0)
+ ;I $S('$D(^DIC(6,Y,"I")):1,^DIC(6,Y,"I")']"":1,1:0)
+ ;/IHS/OIT/GAB PATCH 38 - Commented above line and added below line for File 3,6,16 removal, File200 update - check for inactive date in F200
+ I $S('$D(^VA(200,Y,"PS")):1,'$P($G(^VA(200,Y,"PS")),U,4):1,1:0) ;if no data exists $S=1/True, else 0/False=inactivated Provider
  Q
 LINE W $E(ADELIN,1,40-($L(ADETITL)/2)),ADETITL,$E(ADELIN,1,39-($L(ADETITL)/2)) Q
 RESET ;EP
@@ -32,7 +43,9 @@ RESET ;EP
  S:'$D(ADEREP) (ADEREP,ADEREPD)=""
  S:ADEDIR&(ADEREP="") ADEREPD=$P(^ADEPARAM($P(^AUTTSITE(1,0),U),0),U,3)
  I ADEDIR,ADEREPD]"" S Y=ADEREPD D SCRN1 S:'$T (ADEREPD,ADEREP)=""
- S:ADEREPD]"" ADEREP=$P(^DIC(16,ADEREPD,0),U)
+ ;S:ADEREPD]"" ADEREP=$P(^DIC(16,ADEREPD,0),U)
+ ;/IHS/OIT/GAB PATCH 38 - Commented above line and added below line for File 3,6,16 removal, File200 update
+ S:ADEREPD]"" ADEREP=$P(^VA(200,ADEREPD,0),U)
 RESET3 N DIR
  ;S ADEFACD=$O(^ADEPARAM(0))  ;IHS/NPO/FBD-3/26/2003-ORIGINAL LINE - COMMENTED OUT
  S ADEFACD=DUZ(2)  ;IHS/NPO/FBD-3/26/2003-PICKING THE RIGHT FACILITY

@@ -1,5 +1,5 @@
-APCLCVP ; IHS/CMI/LAB - Indian Beneficiary Calendar Year Visit Summary ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCVP ; IHS/OHPRD/TMJ - Indian Beneficiary Calendar Year Visit Summary ;  [ 11/08/01  4:12 PM ]
+ ;;3.0;IHS PCC REPORTS;**5,11**;FEB 05, 1997
  ;IHS/CMI/LAB - reformatted to include a 2nd column
 START ;
  S APCLBDD=$$FMTE^XLFDT(APCLBD)

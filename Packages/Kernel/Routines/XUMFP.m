@@ -1,5 +1,5 @@
-XUMFP ;CIOFO-SF/RAM,ALB/BRM - Master File C/S Parameters ; 10/11/02 2:50pm
- ;;8.0;KERNEL;**206,217,246,262,369**;Jul 10, 1995;Build 27
+XUMFP ;CIOFO-SF/RAM,ALB/BRM - Master File C/S Parameters  [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**206,217,246,262**;Jul 10, 1995
  ;
  ;
  ;
@@ -148,7 +148,7 @@ MAIN(IFN,IEN,TYPE,PARAM,ERROR) ; -- parameters for master file server
  ;
  ;  *** insert code below ***
  ; insert file number in string below to add an additional file
- I "^4^4.1^5.12^5.13^730^5^45.7^4.11^49^9.8^"'[(U_IFN_U) S ERROR="1^file not supported" Q
+ I "^4^4.1^5.12^5.13^730^5^45.7^4.11^49^"'[(U_IFN_U) S ERROR="1^file not supported" Q
  ;  *** end insert code ***
  ;
  ;    note: also create a subroutine for each supported file with
@@ -158,7 +158,7 @@ MAIN(IFN,IEN,TYPE,PARAM,ERROR) ; -- parameters for master file server
  ;             This file should use the XUMFP namespace.
  ;
  I "^4^4.1^5.12^5.13^"[(U_IFN_U) D @("F"_$TR(IFN,".","P"))
- I "^730^5^4.11^49^9.8^"[(U_IFN_U) D ZL7
+ I "^730^5^4.11^49^"[(U_IFN_U) D ZL7
  ;
  K PARAM
  ;

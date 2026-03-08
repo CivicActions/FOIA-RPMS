@@ -1,5 +1,5 @@
-XMUT5Q ;(WASH ISC)/CAP-Delivery Queue Analysis ;04/17/2002  12:03
- ;;8.0;MailMan;;Jun 28, 2002
+XMUT5Q ;(WASH ISC)/CAP - FILE RESULTS/RESCHEDULE ;01/09/98  10:11
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  Q
 QUIT ;End process
  D REC
@@ -92,7 +92,7 @@ ENUSER ;Entry point called by VMS job that calculates active logons
  I X-Y<.003 F %=22,23 S X=$P(XMA0,",",%-20) I X>$P(Y,"^",%) S $P(Y,"^",%)=X,$P(Y,"^",21)=$P(Y,"^",21)+X
  S ^XMBX(4.2998,DA,0)=Y L -^XMBX(4.2998) K DA,XMA0
  Q
-ERR W $C(7),"  ???" S X="" Q
+ERR W *7,"  ???" S X="" Q
  ;
 NOTASK ;Run in foreground
  S XMUT5NO=1,XMUT5=1

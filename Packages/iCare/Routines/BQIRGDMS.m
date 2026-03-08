@@ -1,5 +1,5 @@
 BQIRGDMS ;GDIT/HS/ALA-Diabetes Care Summary fields ; 19 Oct 2012  9:17 AM
- ;;2.4;ICARE MANAGEMENT SYSTEM;**3**;Apr 01, 2015;Build 5
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5**;Mar 01, 2021;Build 20
  ;
 DOO(DFN) ;EP
  NEW X,DOO,BDMSDFN,BDMSPAT
@@ -53,19 +53,6 @@ TOB(DFN) ;EP
  I $P(BDMTOBS,U,1)=2 S VAL="1^YES"
  I $P(BDMTOBS,U,1)=1 S VAL="1^NO"
  Q VAL
- ;NEW GPYR,MEAS,PIEN,DEN,NUM,VAL
- ;S VAL=0
- ;S GPYR=$P($G(^BQI(90508,1,"GPRA")),U,1)
- ;S MEAS=GPYR_"_269"
- ;S PIEN=$O(^BQIPAT(DFN,30,"B",MEAS,"")) I PIEN="" Q VAL
- ;S DEN=$P($G(^BQIPAT(DFN,30,PIEN,0)),U,4)
- ;S NUM=+$P($G(^BQIPAT(DFN,30,PIEN,0)),U,3)
- ;
- ;I DEN="" Q VAL
- ;I DEN D
- ;. I 'NUM S VAL="1^NO" Q
- ;. S VAL="1^YES"
- ;Q VAL
  ;
 ACE(DFN) ;EP
  NEW APCHSBEG,%,BDMSDFN,BDMSPAT
@@ -280,8 +267,7 @@ DIETP(V) ;are any providers an 07 or 29
  S H="",Z=0 F  S Z=$O(^AUPNVPRV("AD",V,Z)) Q:Z'=+Z!(H)  D
  .S Y=$P(^AUPNVPRV(Z,0),U) ;provider ien
  .I Y=0 Q
- .I $P(^DD(9000010.06,.01,0),U,2)[200 S Y=$$PROVCLSC^XBFUNC1(Y) I Y=29!(Y="07") S H=1 Q
- .I $P(^DD(9000010.06,.01,0),U,2)[6 S Y=$P($G(^DIC(6,Y,0)),U,4) I Y S Y=$P($G(^DIC(7,Y,9999999)),U,1) I Y="07"!(Y=29) S H=1
+ .S Y=$$PROVCLSC^XBFUNC1(Y) I Y=29!(Y="07") S H=1 Q
  .Q
  Q H
  ;

@@ -1,9 +1,9 @@
 BMCRTC1 ; IHS/OIT/FCJ- LIST APPROVED REFERRALS WITH TOC PENDING; 15 Mar 2013  9:02 AM
- ;;4.0;REFERRED CARE INFO SYSTEM;**8,12**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**8,12,16**;JAN 09, 2006;Build 168
  ;IHS/ITSC/FCJ PATCH 8 NEW ROUTINE
  ;
  ; This routine lists approved referrals where the TOC status is pending
- ;
+ ;4.0*16 12.15.2023 IHS.OIT.FCJ ADD "C1" SUFFIX FOR CALLIN
  ;
 START ;
  W !!,"This report prints out a list of all approved referrals for which the status",!,"of the transition of care document is pending.",!!
@@ -90,6 +90,7 @@ PRINTR ;Print Ref
  S Y=BMCRIEN
  D ^BMCREF
  W BMCRNUMB_BMCSUF
+ W:BMCSUF="" $$CALLIN^BMCRLU(BMCRIEN)         ;BMC*4.0*16
  W ?16,$E(BMCREC("PAT NAME"),1,25)
  W ?48,$$FMTE^XLFDT($P(BMCRREC,U),"2D")
  ;

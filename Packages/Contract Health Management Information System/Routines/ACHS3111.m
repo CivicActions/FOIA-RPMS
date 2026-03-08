@@ -142,7 +142,7 @@ GREET ;;To add to mail message.
  ;;You need do nothing in response to this message.
  ;;  
  ;;Questions about this patch, which is a product of the RPMS DBA
- ;;direct questions to the Help Desk,
+ ;;direct questions to the ITSC Support Center, at 505-248-4371,
  ;;refer to patch "ACHS*3.1*11".
  ;;  
  ;;###;NOTE: This line end of text in this message.

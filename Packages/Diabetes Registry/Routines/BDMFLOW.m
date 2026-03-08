@@ -1,5 +1,5 @@
-BDMFLOW ; IHS/CMI/LAB - flowsheet bdm ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**1,3,8**;JUN 14, 2007;Build 53
+BDMFLOW ; IHS/CMI/LAB - flowsheet bdm ; 20 Nov 2019  2:42 PM
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**1,3,8,13**;JUN 14, 2007;Build 66
  ;
  ;
  ;
@@ -94,7 +94,7 @@ PVCH ;IHS/CMI/LAB - now check for dx in past year per Bill and Charlton by pcp
  K ^TMP($J,"ALL VISITS"),BDMV,BDMY
  Q
 FLOWCP ;
- S BDMP=^AUPNPROB(BDMPI,0) Q:$P(BDMP,U,12)'="A"
+ S BDMP=^AUPNPROB(BDMPI,0) Q:$P(BDMP,U,12)="D"  Q:$P(BDMP,U,12)="I"
  S BDMCM=$P(^ICD9(+$P(BDMP,U,1),0),U,1)
  F BDMCI=0:0 S BDMCI=$O(^APCHSFLC(BDMFDF,2,BDMCI)) Q:'BDMCI  D FLOWCR Q:BDMFOK
  Q

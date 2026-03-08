@@ -1,7 +1,8 @@
 ABMDREX1 ; IHS/SD/SDR - Re-Create batch of Selected Bills ;    
- ;;2.6;IHS Third Party Billing System;**2,3,4,6,10,14,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing System;**2,3,4,6,10,14,21,35**;NOV 12, 2009;Build 659
  ;IHS/SD/SDR 2.6*21 - split routine from ABMDREEX
  ;IHS/SD/SDR 2.6*21 HEAT207484 Made change to stop error <UNDEF>EXPMODE+66^ABMDREEX when no bills meet selected criteria
+ ;IHS/SD/SDR 2.6*35 ADO60707 Fixed so you can '^' out at Are you sure prompt
  ;
 ZIS ;EP
  ;start new abm*2.6*3
@@ -23,7 +24,8 @@ ZIS ;EP
  D ^DIR
  K DIR
  ;I Y'=1 K ABME Q  ;abm*2.6*3
- I Y'=1 D  Q:Y=1
+ ;I Y'=1 D  Q:Y=1  ;abm*2.6*35 IHS/SD/SDR ADO60707
+ I Y'=1 D  Q:(Y=1)!$D(DUOUT)!$D(DTOUT)!$D(DIRUT)!$D(DIROUT)  ;abm*2.6*35 IHS/SD/SDR ADO60707
  .W !!
  .K X,Y,DIR,DIE,DIC,DA
  .S DIR(0)="Y"

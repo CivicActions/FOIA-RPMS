@@ -1,5 +1,5 @@
 BQITASK ;PRXM/HC/ALA-Scheduled Task Program ; 20 Dec 2006  4:56 PM
- ;;2.7;ICARE MANAGEMENT SYSTEM;**1**;Dec 19, 2017;Build 12
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**3,7**;Mar 01, 2021;Build 14
  Q
  ;
 EN ;EP - Entry point
@@ -165,6 +165,10 @@ GPR ;EP - Entry point to get GPRA values for all users
  ;  For every patient in the database, call the GPRA API
  S BQIDFN=0
  F  S BQIDFN=$O(^AUPNPAT(BQIDFN)) Q:'BQIDFN  D
+ . S CRDT=$P($G(^BQIPAT(BQIDFN,0)),"^",5) I CRDT="" S CRDT=$$FMADD^XLFDT(DT,-8)
+ . I $G(BQIYR)=$P($G(^BQIPAT(BQIDFN,0)),"^",2)&($$FMDIFF^XLFDT(DT,CRDT\1)<7) Q
+ . ;I $$FMDIFF^XLFDT(DT,CRDT\1)<7 Q
+ . ;
  . ; Remove any previous GPRA data
  . K @BQIDATA@(BQIDFN,30)
  . ;
@@ -174,14 +178,10 @@ GPR ;EP - Entry point to get GPRA values for all users
  . I '$$HRN^BQIUL1(BQIDFN) Q
  . ; If patient has no visits in past 3 years, quit
  . I '$$VTHR^BQIUL1(BQIDFN) Q
- . ;I '$$VTWR^BQIUL1(BQIDFN) Q
  . I $P($G(^AUPNPAT(BQIDFN,0)),U,1)="" Q
  . ;  if the patient doesn't already exist in the iCare Patient file, add them
  . I $G(^BQIPAT(BQIDFN,0))="" D NPT(BQIDFN)
  . I $P($G(^BQIPAT(BQIDFN,0)),"^",1)="" S $P(^BQIPAT(BQIDFN,0),"^",1)=BQIDFN,^BQIPAT("B",BQIDFN,BQIDFN)=""
- . ;
- . ;S CRDT=$P($G(^BQIPAT(BQIDFN,0)),"^",5)
- . ;I $$FMDIFF^XLFDT(DT,CRDT\1)<7 Q
  . ;
  . D @("BQI^"_BQIROU_"(BQIDFN,.BQIGREF)")
  . ; if the patient doesn't meet any GPRA logic, quit
@@ -253,7 +253,7 @@ FIL(BQGLB,DFN) ;EP - File diagnosis category
  ;
  S DA(1)=DFN
  I '$D(^BQIPAT(DFN,20,0)) S ^BQIPAT(DFN,20,0)="^90507.52P^^"
- S (X,DINUM)=BQTN,DIC(0)="L",DIC="^BQIPAT("_DA(1)_",20,",DLAYGO=90507.52,DIC("P")=DLAYGO
+ S (X,DINUM)=BQTN,DIC(0)="FL",DIC="^BQIPAT("_DA(1)_",20,",DLAYGO=90507.52,DIC("P")=DLAYGO
  K DO,DD D FILE^DICN
  S DA=+Y S:DA=-1 DA=BQTN
  S IENS=$$IENS^DILF(.DA)
@@ -270,7 +270,7 @@ FIL(BQGLB,DFN) ;EP - File diagnosis category
  F  S TXT=$O(@BQGLB@(DFN,"CRITERIA",TXT)) Q:TXT=""  D
  . I '$D(^BQIPAT(DFN,20,BQTN,1,0)) S ^BQIPAT(DFN,20,BQTN,1,0)="^90507.521^^"
  . NEW DA
- . S DA(2)=DFN,DA(1)=BQTN,X=TXT,DIC(0)="L"
+ . S DA(2)=DFN,DA(1)=BQTN,X=TXT,DIC(0)="FL"
  . S DIC="^BQIPAT("_DA(2)_",20,"_DA(1)_",1,",DLAYGO=90507.521
  . K DO,DD D FILE^DICN
  . S TXN=+Y
@@ -278,7 +278,7 @@ FIL(BQGLB,DFN) ;EP - File diagnosis category
  . F TYP="P" S EVN=0 D
  .. F  S EVN=$O(@BQGLB@(DFN,"CRITERIA",TXT,TYP,EVN)) Q:EVN=""  D
  ... NEW DA,IENS
- ... S DA(3)=DFN,DA(2)=BQTN,DA(1)=TXN,DIC(0)="L",DLAYGO=90507.5211,X=TYP_EVN
+ ... S DA(3)=DFN,DA(2)=BQTN,DA(1)=TXN,DIC(0)="FL",DLAYGO=90507.5211,X=TYP_EVN
  ... S DIC="^BQIPAT("_DA(3)_",20,"_DA(2)_",1,"_DA(1)_",1,"
  ... D ^DIC
  ... S DA=+Y,IENS=$$IENS^DILF(.DA)
@@ -293,7 +293,7 @@ FIL(BQGLB,DFN) ;EP - File diagnosis category
  ... S MEVN=""
  ... F  S MEVN=$O(@BQGLB@(DFN,"CRITERIA",TXT,TYP,EVN,MEVN)) Q:MEVN=""  D
  .... NEW DA,IENS
- .... S DA(3)=DFN,DA(2)=BQTN,DA(1)=TXN,DIC(0)="L",DLAYGO=90507.5211,X=TYP_EVN
+ .... S DA(3)=DFN,DA(2)=BQTN,DA(1)=TXN,DIC(0)="FL",DLAYGO=90507.5211,X=TYP_EVN
  .... S DIC="^BQIPAT("_DA(3)_",20,"_DA(2)_",1,"_DA(1)_",1,"
  .... D ^DIC
  .... I $P(Y,U,3)'=1 D
@@ -323,14 +323,14 @@ FIL(BQGLB,DFN) ;EP - File diagnosis category
  ;
  I CSTAT="V"!(CSTAT="S") D EN^BQITDPRC(.TGDATA,DFN,BQTN,"P",,"SYSTEM UPDATE",5) Q
  ; Check for new factors, if none, quit
- I '$$CMP^BQITDUTL(DFN,BQTN) D DEL^BQITASK Q
+ I '$$CMP^BQITDUTL(DFN,BQTN) D DEL Q
  D EN^BQITDPRC(.TGDATA,DFN,BQTN,"P",,"SYSTEM UPDATE",5)
  Q
  ;
 NPT(DFN) ;EP - New patient
  ;  if the patient doesn't already exist in the iCare Patient file, add them
  NEW DIC,X,DINUM,DLAYGO
- S (X,DINUM)=DFN,DLAYGO=90507.5,DIC="^BQIPAT(",DIC(0)="L",DIC("P")=DLAYGO
+ S (X,DINUM)=DFN,DLAYGO=90507.5,DIC="^BQIPAT(",DIC(0)="FL",DIC("P")=DLAYGO
  K DO,DD D FILE^DICN
  Q
  ;
@@ -344,4 +344,54 @@ DEL ;EP - Delete criteria
 RCHK ; Register check
  ; if patient is in a register, check status to determine "A" else "P"
  I $$REG^BQITDUTL(DFN,BQTN)=1 D EN^BQITDPRC(.TGDATA,DFN,BQTN,"A",,"SYSTEM UPDATE",8) Q
+ NEW VAL
+ S VAL=$$CMP^BQITDUTL(DFN,BQTN) I 'VAL Q
+ D UPAT(RIEN,DFN,BQTN,CSTAT,$P(VAL,"^",2),"SYSTEM UPDATE",9)
+ Q
+ ;
+UPAT(BQIRDA,BQIDFN,BQITAG,BQISTA,DATE,USR,SCOM,BQTX) ;EP - Update patient record
+ NEW BQIUPD,ERROR,DIC,DA,PUSR,PSTAT,PCOM
+ ;
+ ; Build history record
+ K FDA
+ S PSTAT=$P(^BQIREG(BQIRDA,0),U,3)
+ S PUSR=$P(^BQIREG(BQIRDA,0),U,5)
+ S PCOM=$P(^BQIREG(BQIRDA,0),U,6)
+ ;
+ S DIC(0)="FL",DA(1)=BQIRDA,DIC="^BQIREG("_DA(1)_",10,",DIE=DIC
+ I $G(^BQIREG(DA(1),10,0))="" S ^BQIREG(DA(1),10,0)="^90509.01D^^"
+ S X=$$NOW^XLFDT()
+ K DO,DD D FILE^DICN S DA=+Y I DA=-1 Q
+ ;
+ S IENS=$$IENS^DILF(.DA)
+ S FDA(90509.01,IENS,.02)=PSTAT
+ S FDA(90509.01,IENS,.03)=PUSR
+ S FDA(90509.01,IENS,.04)=PCOM
+ S FDA(90509.01,IENS,.05)=$P(^BQIREG(BQIRDA,0),U,4)
+ D FILE^DIE("","FDA","ERROR")
+ ; Move comments
+ D WP^DIE(90509.01,IENS,1,"","^BQIREG(BQIRDA,1)")
+ ; Move factors
+ S NDA=0
+ F  S NDA=$O(^BQIREG(DA(1),5,NDA)) Q:'NDA  D
+ . S ^BQIREG(DA(1),10,DA,5,NDA,0)=^BQIREG(DA(1),5,NDA,0)
+ . S ^BQIREG(DA(1),10,DA,5,"B",NDA,NDA)=""
+ . K ^BQIREG(DA(1),5,NDA)
+ I $G(^BQIREG(DA(1),5,0))'="" S ^BQIREG(DA(1),10,DA,5,0)=$G(^BQIREG(DA(1),5,0))
+ K ^BQIREG(DA(1),5)
+ ;
+ D MOV^BQITDPRC(BQIDFN,BQITAG)
+ ; 
+ ; Set the new current values
+ S BQIUPD(90509,BQIRDA_",",.03)=BQISTA
+ S BQIUPD(90509,BQIRDA_",",.04)=DATE
+ S BQIUPD(90509,BQIRDA_",",.05)=USR
+ S BQIUPD(90509,BQIRDA_",",.06)=SCOM
+ S BQIUPD(90509,BQIRDA_",",1)="@"
+ D FILE^DIE("","BQIUPD","ERROR")
+ K ERROR
+ ;
+ I $D(BQTX)>0 D WP^DIE(90509,BQIRDA_",",1,"","BQTX","ERROR")
+ ;
+ D HIER^BQITDPRC
  Q

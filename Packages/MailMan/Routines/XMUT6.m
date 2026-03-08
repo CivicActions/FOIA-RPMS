@@ -1,5 +1,5 @@
-XMUT6 ;(WASH ISC)/CAP-Check delivery queue ;04/17/2002  12:07
- ;;8.0;MailMan;;Jun 28, 2002
+XMUT6 ;(WASH ISC)/CAP - CHECK OUT DELIVERY QUEUE ;01/09/98  10:44
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  W !!,"Checking Delivery Queue: " S %H=$H D YX^%DTC W Y
  D GO^XMUT5B I M("T")+R("T")<1 W !!,"NOTHING IS IN THE DELIVERY QUEUE !!" Q
  ;

@@ -1,8 +1,41 @@
-DINIT002 ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ; 3/30/99  10:41:48
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINIT002 ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS  [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
+ ;;^DD(.84,4,21,1,0)
+ ;;=Actual text of the message.  If parameters (variable pieces of text) are
+ ;;^DD(.84,4,21,2,0)
+ ;;=to be inserted into the dialogue when the message is built, the parameter
+ ;;^DD(.84,4,21,3,0)
+ ;;=will appear as a 'window' in this TEXT field, surrounded by vertical bars.
+ ;;^DD(.84,4,21,4,0)
+ ;;=The data within the 'window' will represent a subscript of the input
+ ;;^DD(.84,4,21,5,0)
+ ;;=parameter list that is passed to BLD^DIALOG or $$EZBLD^DIALOG when
+ ;;^DD(.84,4,21,6,0)
+ ;;=building the message. This same subscript should be used as the .01 of the
+ ;;^DD(.84,4,21,7,0)
+ ;;=PARAMETER field in this file to document the parameter.
+ ;;^DD(.84,5,0)
+ ;;=PARAMETER^.845^^3;0
+ ;;^DD(.84,6,0)
+ ;;=POST MESSAGE ACTION^K^^6;E1,245^K:$L(X)>245 X D:$D(X) ^DIM
+ ;;^DD(.84,6,3)
+ ;;=This is Standard MUMPS code.  This code will be executed whenever this message is retrieved through a call to BLD^DIALOG or $$EZBLD^DIALOG.
+ ;;^DD(.84,6,9)
+ ;;=@
+ ;;^DD(.84,6,21,0)
+ ;;=^^6^6^2941122^
+ ;;^DD(.84,6,21,1,0)
+ ;;=If some special action should be taken whenever this message is built,
+ ;;^DD(.84,6,21,2,0)
+ ;;=MUMPS code can be entered here.  This code will be executed by the
+ ;;^DD(.84,6,21,3,0)
+ ;;=BLD^DIALOG or $$EZBLD^DIALOG routines, immediately after the message text
+ ;;^DD(.84,6,21,4,0)
+ ;;=has been built in the output array.  For example, the code could set a
  ;;^DD(.84,6,21,5,0)
  ;;=special flag into a global or local variable to notify the calling routine
  ;;^DD(.84,6,21,6,0)
@@ -101,109 +134,3 @@ Q Q
  ;;=Describe the use of this dialogue.
  ;;^DD(.842,.01,"DT")
  ;;=2930614
- ;;^DD(.844,0)
- ;;=TEXT SUB-FIELD^^.01^1
- ;;^DD(.844,0,"DT")
- ;;=2930811
- ;;^DD(.844,0,"NM","TEXT")
- ;;=
- ;;^DD(.844,0,"UP")
- ;;=.84
- ;;^DD(.844,.01,0)
- ;;=TEXT^WL^^0;1^Q
- ;;^DD(.844,.01,3)
- ;;=Enter the actual text of the dialogue, with optional parameter windows.
- ;;^DD(.844,.01,"DT")
- ;;=2930811
- ;;^DD(.845,0)
- ;;=PARAMETER SUB-FIELD^^1^2
- ;;^DD(.845,0,"DT")
- ;;=2931105
- ;;^DD(.845,0,"IX","B",.845,.01)
- ;;=
- ;;^DD(.845,0,"NM","PARAMETER")
- ;;=
- ;;^DD(.845,0,"UP")
- ;;=.84
- ;;^DD(.845,.01,0)
- ;;=PARAMETER SUBSCRIPT^MF^^0;1^K:$L(X)>20!($L(X)<1) X
- ;;^DD(.845,.01,1,0)
- ;;=^.1
- ;;^DD(.845,.01,1,1,0)
- ;;=.845^B
- ;;^DD(.845,.01,1,1,1)
- ;;=S ^DI(.84,DA(1),3,"B",$E(X,1,30),DA)=""
- ;;^DD(.845,.01,1,1,2)
- ;;=K ^DI(.84,DA(1),3,"B",$E(X,1,30),DA)
- ;;^DD(.845,.01,3)
- ;;=This entry corresponds to the subscript of an entry in either the text or output parameter list to the BLD^DIALOG and $$EZBLD^DIALOG routine.  Answer must be 1-20 characters in length.
- ;;^DD(.845,.01,21,0)
- ;;=^^7^7^2941122^
- ;;^DD(.845,.01,21,1,0)
- ;;=This multiple is used for documentation purposes only.  The entry in the
- ;;^DD(.845,.01,21,2,0)
- ;;=.01 field of this multiple will correspond to a subscript in either the
- ;;^DD(.845,.01,21,3,0)
- ;;=text or output parameter list, that are passed to the routines that build
- ;;^DD(.845,.01,21,4,0)
- ;;=dialogue messages, BLD^DIALOG and $$EZBLD^DIALOG. This routine will insert
- ;;^DD(.845,.01,21,5,0)
- ;;=into each 'window' from the TEXT field, the corresponding entry out of the
- ;;^DD(.845,.01,21,6,0)
- ;;=text parameter list.  For errors only, it passes any entries from the
- ;;^DD(.845,.01,21,7,0)
- ;;=output parameter list back to the user as entries in its output array.
- ;;^DD(.845,.01,"DT")
- ;;=2931105
- ;;^DD(.845,1,0)
- ;;=PARAMETER DESCRIPTION^F^^0;2^K:$L(X)>230!($L(X)<1) X
- ;;^DD(.845,1,3)
- ;;=Describe the Parameter for documentation purposes.  Answer must be 1-230 characters in length.
- ;;^DD(.845,1,21,0)
- ;;=^^5^5^2941122^
- ;;^DD(.845,1,21,1,0)
- ;;=This field is used for documentation purposes only.  It describes the text
- ;;^DD(.845,1,21,2,0)
- ;;=and/or output parameter(s) that are passed to BLD^DIALOG and
- ;;^DD(.845,1,21,3,0)
- ;;=$$EZBLD^DIALOG. The same parameter can be used both as a text parameter
- ;;^DD(.845,1,21,4,0)
- ;;=(i.e., inserted into the text when it is built), and as an output
- ;;^DD(.845,1,21,5,0)
- ;;=parameter (i.e., a parameter passed back in a list to the user)
- ;;^DD(.845,1,"DT")
- ;;=2930614
- ;;^DD(.847,0)
- ;;=TRANSLATION SUB-FIELD^^1^2
- ;;^DD(.847,0,"DT")
- ;;=2940524
- ;;^DD(.847,0,"IX","B",.847,.01)
- ;;=
- ;;^DD(.847,0,"NM","TRANSLATION")
- ;;=
- ;;^DD(.847,0,"UP")
- ;;=.84
- ;;^DD(.847,.01,0)
- ;;=LANGUAGE^M*P.85'X^DI(.85,^0;1^S DIC("S")="I Y>1" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X S:$G(X) DINUM=X
- ;;^DD(.847,.01,1,0)
- ;;=^.1
- ;;^DD(.847,.01,1,1,0)
- ;;=.847^B
- ;;^DD(.847,.01,1,1,1)
- ;;=S ^DI(.84,DA(1),4,"B",$E(X,1,30),DA)=""
- ;;^DD(.847,.01,1,1,2)
- ;;=K ^DI(.84,DA(1),4,"B",$E(X,1,30),DA)
- ;;^DD(.847,.01,3)
- ;;=Enter the number or name for a non-English language.
- ;;^DD(.847,.01,12)
- ;;=English language cannot be selected.
- ;;^DD(.847,.01,12.1)
- ;;=S DIC("S")="I Y>1"
- ;;^DD(.847,.01,21,0)
- ;;=^^3^3^2941118^^
- ;;^DD(.847,.01,21,1,0)
- ;;=Pointer to the LANGUAGE file. If FileMan system variable DUZ("LANG") is
- ;;^DD(.847,.01,21,2,0)
- ;;=set to an integer greater than 1, we use that number to extract dialogue
- ;;^DD(.847,.01,21,3,0)
- ;;=text for the specified language from this multiple.

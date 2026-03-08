@@ -1,12 +1,12 @@
-DDW8 ;SFISC/MKO-COPY, CUT, PASTE ;2:15 PM  5 Jul 1996
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDW8 ;SFISC/MKO-COPY, CUT, PASTE ;10:39 AM  23 Jun 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CUT() ;Cut selected text
  N DDWADJ,DDWC1,DDWC2,DDWCSV,DDWISIN,DDWNDEL,DDWR1,DDWR2,DDWRSV
  I '$D(DDWMARK) D ERR("No text selected.") Q
  ;
- S DDWED=1
  S DDWISIN=$$ISINSEL()
  D PMARK(DDWMARK,.DDWR1,.DDWC1,.DDWR2,.DDWC2)
  D COPYBUF
@@ -63,7 +63,6 @@ PASTE() ;Paste text
  I $D(DDWMARK) D ERR("You curently have text selected.") Q
  I '$D(^TMP("DDWB",$J)) D ERR("The buffer contains no text.") Q
  ;
- S DDWED=1
  N DDWBSIZ,DDWFC,DDWI,DDWLST,DDWNSV,DDWTXT,DDWX
  S DDWBSIZ=$O(^TMP("DDWB",$J,""),-1)
  ;

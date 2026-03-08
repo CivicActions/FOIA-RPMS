@@ -1,5 +1,5 @@
-XUTMK ;SEA/RDS - Taskman: Option, ZTMCLEAN/ZTMQCLEAN ;11/1/07  14:44
- ;;8.0;KERNEL;**49,67,118,169,222,275,446**;Jul 10, 1995;Build 44
+XUTMK ;SEA/RDS - Taskman: Option, ZTMCLEAN/ZTMQCLEAN ;01/13/2004  16:39
+ ;;8.0;KERNEL;**49,67,118,169,222,275**;Jul 10, 1995
  ;
 SETUP ;Setup Variables And Synchronize ^%ZTSK With ^%ZTSCH
  S ZTDTH=0
@@ -76,10 +76,10 @@ TASK ;Clean the TASK nodes.
  Q
  ;
 SUB ;Sync the SUB nodes
- D SUBCHK^%ZTMS5($G(DILOCKTM,2))
+ D SUBCHK^%ZTMS5
  Q
 CLEARIO ;Clear any empty IO lists
- L +^%ZTSCH("IO"):5 Q:'$T
+ L +^%ZTSCH("IO"):2 Q:'$T
  S ^%ZTSCH("WAIT","MGR")="XUTMK",^%ZTSCH("WAIT","SUB")="XUTMK"
  L -^%ZTSCH("IO")
  N %ZTIO,%ZTPAIR S %ZTIO="" H 10 ;Let jobs see flag
@@ -98,8 +98,7 @@ CLEARIO ;Clear any empty IO lists
  Q
  ;
 MONITOR ;Move any Monitor data,
- N ZT1,ZT2,ZR,ZR2,IEN,ZFDA,X,DA,DIK
- I '($D(^%ZIS(14.71,0))#2) S ^%ZIS(14.71,0)="TASKMAN MONITOR^14.71D^"
+ N ZT1,ZT2,ZR,ZR2,IEN,ZFDA,X
  S ZT1="",IEN=0,ZR=$NA(^%ZTSCH("MON"))
  F  S ZT1=$O(@ZR@(ZT1)),ZT2=0 Q:ZT1=""  D
  . F  S ZT2=$O(@ZR@(ZT1,ZT2)) Q:ZT2=""  D
@@ -110,11 +109,6 @@ MONITOR ;Move any Monitor data,
  . . D UPDATE^DIE("","ZFDA")
  . . K @ZR@(ZT1,ZT2),ZFDA ;Clear Global and Local.
  . . Q
- . Q
- ;Remove old data
- S ZT1=0,ZR2=$$HTFM^XLFDT($H-365)
- F  S ZT1=$O(^%ZIS(14.71,ZT1)) Q:'ZT1  S ZT2=$G(^(ZT1,0)) Q:$P(ZT2,U)>ZR2  D
- . S DA=ZT1,DIK="^%ZIS(14.71," D ^DIK
  . Q
  Q
  ;

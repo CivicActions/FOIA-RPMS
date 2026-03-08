@@ -1,5 +1,5 @@
-ABMPT256 ; IHS/ASDST/LSL - 3P BILLING 2.5 Patch 6 POST INIT ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMPT256 ; IHS/ASDST/LSL - 3P BILLING 2.5 Patch 6 POST INIT ;  [ 03/09/2004  3:25 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**6,7**;APR 05, 2002
  ;
  ; IHS/SD/SDR v2.5 p6 - 7/15/04 - Added code for two new error messages (201;202)
  ;     Other code mostly from v2.5 p5 but updated to check if codes already exist so they aren't
@@ -16,6 +16,7 @@ EN ; EP
  D QUES               ;make sure right questions are on 837 formats
  Q
  ;
+ ; start new code IHS/SD/SDR 7/15/04 v2.5 p6
 ERRCD201 ;add error code 201
  K DIC,DIE
  S DIC="^ABMDERR("
@@ -48,6 +49,7 @@ ERRCD202 ; add error code 202
  S DR=".02////Proceed to the 3P PROVIDER TAXONOMY CODE file in Fileman.  Choose the X12 Taxonomy code and add the proivder class to the PROVIDER CLASS field;.03////E"
  D ^DIE
  Q
+ ; end new code IHS/SD/SDR 7/15/04 v2.5 p6
 ERRCD192 ;
  ; Create 3P Error Code 192 - Imprecise Injury Date
  ; The code error for all 3 837 modes of export, else warning
@@ -144,7 +146,7 @@ CODES ; change admission type and admission source codes to 1-digit codes
  .S DIC(0)="LM"
  .S X=$P(^ABMDCODE(0),U,3)+1
  .S DIC("DR")=".02////K;.03////"_ABMDESC
- .S DIC("DR")=DIC("DR")_";.01////"_ABMCD
+ .S DIC("DR")=DIC("DR")_";.01////"_ABMCD  ;IHS/SD/SDR 12/7/04 V2.5 P7
  .K DD,DO
  .D ^DIC
  Q

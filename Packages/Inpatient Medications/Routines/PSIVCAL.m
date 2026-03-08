@@ -1,10 +1,11 @@
-PSIVCAL ;BIR/RGY,PR-CALCULATES START AND STOP DATES ;12 Mar 99 / 12:42 PM
- ;;5.0; INPATIENT MEDICATIONS ;**4,26,41,47,63,67,69,58,94,80,110,111,177,120,134**;16 DEC 97;Build 124
+PSIVCAL ;BIR/RGY,PR-CALCULATES START AND STOP DATES ;01-Mar-2024 16:30;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**4,26,41,47,63,67,69,58,94,80,110,111,177,120,134,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^PS(50.7 is supported by DBIA #2180.
  ; Reference to ^PS(52.6 is supported by DBIA #1231.
  ; Reference to ^PS(55 is supported by DBIA #2191.
  ;
+ ; Modified by MIR 02/22/2024 - ENSTOP+36 feature 103811
 ENT ;NEEDS PSIVTYPE (P(4))
  I $G(PSJREN) D  Q:P(2)
  . I $G(P("OLDON")) N P2 S P2=$G(@("^PS(55,"_DFN_",""IV"","_+P("OLDON")_",0)")),P2=$P(P2,"^",2) I P2 S P(2)=P2
@@ -69,7 +70,7 @@ ENSTOP ; WILL CALCULATE STOP DATE FOR ORDER
  F X=0:0 S X=$O(DRG("AD",X)) Q:'X  I $P(^PS(52.6,+$P(DRG("AD",+X),U),0),"^",4),($P(^(0),"^",4))<+PSIDAY S PSIDAY=$P(^(0),"^",4)
  I WALL,($$FMADD^XLFDT(PSIVSTRT,PSIDAY,"D"))>WALL S PSIDAY=$$FMDIFF^XLFDT(WALL,PSIVSTRT,1) S:PSIDAY<1 PSIDAY=""
  S DRGT=$S($D(DRG("AD")):"AD",1:"SOL") F ADX=0:0 S ADX=$O(DRG(DRGT,ADX)) Q:'ADX!($G(DRGTMP)&($G(DRGTN)["AD")&(DRGT="SOL"))  D
- . S OIX=+$P(DRG(DRGT,ADX),"^",6),DDLX=$P(^PS(50.7,OIX,0),"^",5) Q:'DDLX  D DDLIM(.PSIDAY,.P3)
+ . S OIX=+$P(DRG(DRGT,ADX),"^",6) I OIX S DDLX=$P(^PS(50.7,OIX,0),"^",5) Q:'DDLX  D DDLIM(.PSIDAY,.P3)
  I '$G(DRG("AD",0)),$G(DRGTMP),($G(DRGTN)["SOL") S OIX=$P($G(DRGTMP),"^",6) I OIX S DDLX=$P(^PS(50.7,OIX,0),"^",5) I DDLX  D DDLIM(.PSIDAY,.P3)
  I $G(PSIVLIM)["a",'$G(P("OVRIDE")) S DDLX=$P(PSIVLIM,"a",2)_"L" I $G(DDLX) D DDLIM(.PSIDAY,.P3)
  I $G(P(2)) I P3>P(2) S X=P3
@@ -102,7 +103,7 @@ P S CD=PSIVNOW,PSGSA="",(PSIVSD,OD)=DT_.0001,X=P(11) D CHK S P(11)=X D ENP4^PSIV
  S Y=$P(PSGSA," ",$L(PSGSA," ")-1) Q
 AH F PSIVADM=0:-1 S CD=PSIVNOW,(X,X1)=DT,X2=PSIVADM D:X2 C^%DTC S X=$P(X,".") S (OD1,PSIVSD,OD)=X_.0001,PSIVMIN=P(15) D ENP3^PSIVWL Q:PSIVADM<-4!(PSGSA]"")
  S Y=$P(PSGSA," ",$L(PSGSA," ")-1) Q
-MDNGHT(Y)          ;Sets Start Date/Time on orders placed between midnight and 12:30
+MDNGHT(Y) ;Sets Start Date/Time on orders placed between midnight and 12:30
  S Y=$$FMADD^XLFDT(Y,-1,0,0,0),Y=$P(Y,".")_".24" Q Y
  ;
 DDLIM(PSIVDUR,STPDT) ;  Day Dose Limit
@@ -124,7 +125,7 @@ GETLIM(DFN,PSJORD) ; Convert IV Limits to minutes (only if in 'time' form).
  N MULT S MULT=$S($E(LIM)="h":60,$E(LIM)="d":1440,$E(LIM)="m":LIM,$E(LIM)="l":LIM,$E(LIM)="a":LIM,1:0) I MULT S LIM=MULT*$E(LIM,2,99)
  Q LIM
  ;
-GETMIN(LIM,DFN,PSJORD,DAYS) ; Return the duration of the IV Limit in minutes (includes IV Limits in volume and doses format) 
+GETMIN(LIM,DFN,PSJORD,DAYS) ; Return the duration of the IV Limit in minutes (includes IV Limits in volume and doses format)
  S LIM=$$GETMIN^PSIVUTL1(LIM,DFN,PSJORD,.DAYS)
  Q LIM
 DOSES(DDLX,PRAY) ; Find stop date when 'doses' are sent as an IV Limit

@@ -1,5 +1,7 @@
-LRLNC0 ;DALOI/CA/FHS-MAP LAB TESTS TO LOINC CODES ; 13-Aug-2013 09:15 ; MKK
- ;;5.2;LAB SERVICE;**1015,215,232,278,280,1018,399,407,1033**;NOV 01, 1997
+LRLNC0 ;DALOI/CA/FHS-MAP LAB TESTS TO LOINC CODES ; 26-Apr-2023 11:50 ; MKK
+ ;;5.2;LAB SERVICE;**1015,215,232,278,280,1018,399,407,1033,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
  ;
  ;Reference to ^DD supported by IA # 10154
  ;=================================================================
@@ -82,6 +84,7 @@ TEST W @IOF
  K DIR,LRNLT
  S DIR(0)="PO^60:QENMZ,",DIR("A")="VistA Lab Test to "_$S($D(LRDEL):"Delete/Unmap",1:"Link/Map")_" to LOINC "
  S DIR("?")="Select Lab test you wish to "_$S($D(LRDEL):"delete/unmap",1:"link/map")_" to a LOINC Code"
+ S DIR("S")="I +$G(^(.3))=0"  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  D ^DIR K DIR
  I $D(DIRUT)!'Y K DIRUT S LREND=1 K LRDEL Q
  S LRIEN=+Y,LRTEST=$P(Y,U,2)

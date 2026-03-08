@@ -1,5 +1,5 @@
-APCLD51E ; IHS/CMI/LAB - IHS Diabetes Audit 2005 ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLD51E ; IHS/CMI/LAB - IHS Diabetes Audit 2005 ;      [ 03/02/2007  1:36 PM ]
+ ;;3.0;IHS PCC REPORTS;**16,17,19**;FEB 05, 1997
  ;
 BEGIN ;EP - called from option
  D TAXCHK^APCLD519

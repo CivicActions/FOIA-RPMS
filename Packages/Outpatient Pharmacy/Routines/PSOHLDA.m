@@ -1,6 +1,6 @@
-PSOHLDA ;BIR/MFR - HOLD/UNHOLD functionality (cont.) ;07/15/96
- ;;7.0;OUTPATIENT PHARMACY;**148,225**;DEC 1997;Build 29
- ;
+PSOHLDA ;BIR/MFR - HOLD/UNHOLD functionality (cont.) ;25-Jun-2025 06:53;PLS
+ ;;7.0;OUTPATIENT PHARMACY;**148,225,1036**;DEC 1997;Build 17
+ ;Modified - IHS/MSC/PLS - 11/22/2024 - FID 114104
 HOLD ;hold function
  I $P($G(^PSRX(DA,"STA")),"^")=3 Q
  S RSDT=$S($P(^PSRX(DA,2),"^",13):$P(^PSRX(DA,3),"^"),1:"@"),(PSUS,ACT,RXF,RFN,I)=0 F  S I=$O(^PSRX(DA,1,I)) Q:'I  D
@@ -19,6 +19,9 @@ HOLD ;hold function
  S PSOHNX=+$P($G(^PSRX(+$G(DA),"H")),"^") D
  .I $G(PSOHNX),$P($G(^PSRX(DA,"H")),"^",2)'="" S COMM=$P($G(^("H")),"^",2) Q
  .S COMM="Medication placed on Hold "_$E(DT,4,5)_"-"_$E(DT,6,7)_"-"_$E(DT,2,3)
+ ;IHS/MSC/PLS - 11/22/2024 - FID 114104
+ ;Updated expiration date of CII prescription when placed on hold
+ D EXPDT(+DA)
  D EN^PSOHLSN1(DA,"OH","",COMM,PSONOOR) K COMM,PSOHNX
  ;
  ; - Closes any OPEN/UNRESOLVED REJECTs and Reverses ECME Claim
@@ -46,4 +49,17 @@ RMB ;remove Rx if found in array BBRX()
  S PSOX2=BBRX(I) D:PSOX2[(DA_",")
  .S PSOX9="" F J=1:1 S PSOX3=$P(PSOX2,",",J) Q:'PSOX3  S:PSOX3'=DA PSOX9=PSOX9_$S('PSOX9:"",1:",")_PSOX3
  .S:PSOX9]"" BBRX(I)=PSOX9_"," K:PSOX9="" BBRX(I)
+ Q
+ ;Logic similar to EXPDT^APSPAUTO but limited to CII prescriptions
+ ; p1036
+EXPDT(RX) ;-
+ N RX0,DE,OEXPDT,X2,ISSDT,DIE,DA,DR
+ S RX0=^PSRX(RX,0)
+ S ISSDT=$P(RX0,U,13)
+ S DE=+$$GET1^DIQ(50,$P(RX0,U,6),3)
+ Q:DE'=2
+ S X2=+$$GET^XPAR("ALL","APSP CS II RX EXPIRE DAYS")
+ S OEXPDT=$$FMADD^XLFDT(ISSDT,$S(X2:X2,1:+$$EXPDATE^PSOUTLA2("1^1",ISSDT)))
+ ;Set calculated expiration date into field
+ S DIE="^PSRX(",DA=RX,DR="26///"_OEXPDT D ^DIE
  Q

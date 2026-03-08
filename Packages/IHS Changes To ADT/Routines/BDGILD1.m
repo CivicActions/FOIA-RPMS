@@ -1,5 +1,5 @@
 BDGILD1 ; IHS/ANMC/LJF - ADMISSIONS BY DATE ; 
- ;;5.3;PIMS;**1009,1016**;APR 26, 2002;Build 20
+ ;;5.3;PIMS;**1009,1016,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw 05/02/2008 PATCH 1009 modified insurance calls to NEWINS^BDGF2
  ;
@@ -53,7 +53,13 @@ INIT ; -- init variables and list array
  ... ;
  ... ; build display lines
  ... S DFN=^TMP("BDGILD1A",$J,SORT,DATE,IEN)
- ... S LINE=$E($$GET1^DIQ(2,DFN,.01),1,20)                  ;pat name
+ ... ;202307 77894 maw p1022 PPN
+ ... N PRF
+ ... S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ ... S LINE=$G(PRF)                  ;pat name
+ ... D SET(LINE,.VALMCNT)
+ ... S LINE=""
+ ... ;S LINE=$E($$GET1^DIQ(2,DFN,.01),1,20)                  ;pat name
  ... S LINE=$$PAD(LINE,23)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)   ;chart #
  ... S LINE=$$PAD(LINE,31)_$$NUMDATE^BDGF(DATE\1)           ;admit date
  ... S X=$$GET1^DIQ(405,IEN,.17,"I")   ;discharge ien for date
@@ -123,7 +129,12 @@ SORT(TYPE,N) ; returns external format of sort for this report & admission
  I TYPE=6 Q $$GET1^DIQ(9000001,DFN,1117)      ;current community
  ;    and service unit
  I TYPE=7 Q $$GET1^DIQ(9999999.05,+$$GET1^DIQ(9000001,DFN,1117,"I"),.05)
- Q $$GET1^DIQ(405,N,.03)                      ;patient name sort
+ ;202307 77894 maw p1022 PPN
+ N PRF,PRFI
+ S PRFI=$$GET1^DIQ(405,N,.03,"I")
+ S PRF=$$GETPREF^AUPNSOGI(PRFI,"E",1)
+ Q $G(PRF)                      ;patient name sort
+ ;Q $$GET1^DIQ(405,N,.03)                      ;patient name sort
  ;
  ;
 SET(DATA,NUM) ; puts display line into array

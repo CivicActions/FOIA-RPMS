@@ -1,5 +1,5 @@
 BEDDMREC ;VNGT/HS/BEE-BEDD Patient Medication Reconciliation  ; 08 Nov 2011  12:00 PM
- ;;2.0;BEDD DASHBOARD;;Jun 04, 2014;Build 13
+ ;;2.0;BEDD DASHBOARD;**8**;Jun 04, 2014;Build 5
  ;
  ;Adapted from BEDDMEDREC/CNHS/RPF
  ;
@@ -36,7 +36,9 @@ START ;Display Report
  ;
  NEW PNAME,PSEX,PDOB,PSITE,PCHRT,RPTDTM,LINE,PAGE,APTDT,PLOC
  ;
- S PNAME=$$GET1^DIQ(2,DFN_",",.01,"E")
+ ;GDIT/HS/BEE;BEDD*2.0*8;BEDD*2.0*8;Feature 75969, change to display PPN
+ ;S PNAME=$$GET1^DIQ(2,DFN_",",.01,"E")
+ S PNAME=$$PPN^AMERUTIL(DFN,0)
  S PSEX=$$GET1^DIQ(2,DFN_",",.02,"E")
  S PDOB=$$FMTE^BEDDUTIL($$GET1^DIQ(2,DFN_",",.03,"I"))
  S PSITE=$$GET1^DIQ(4,DUZ(2)_",",.01,"E")

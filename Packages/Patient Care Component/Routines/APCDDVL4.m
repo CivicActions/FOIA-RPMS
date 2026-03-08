@@ -1,5 +1,5 @@
-APCDDVL4 ; IHS/CMI/LAB - report on T/C VISITS WITH ANCILLARY ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDDVL4 ; IHS/CMI/TUCSON - report on T/C VISITS WITH ANCILLARY ; [ 05/16/99  8:00 AM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**9**;MAR 09, 1999
  ;IHS/CMI/LAB - patch 1 Y2K
  ;
  ;
@@ -21,9 +21,6 @@ SORT ;
  S DIR(0)="S^T:Terminal Digit Order;H:Health Record Number Order;D:Visit Date Order",DIR("A")="Sort the report by",DIR("B")="T" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I $D(DIRUT) G ED
  S APCDCSRT=Y
-DEMO ;
- D DEMOCHK^APCLUTL(.APCDDEMO)
- I APCDDEMO=-1 G BD
 ZIS ;call to XBDBQUE
  S XBRP="PRINT^APCDDVL4",XBRC="PROCESS^APCDDVL4",XBRX="EOJ^APCDDVL4",XBNS="APCD"
  D ^XBDBQUE
@@ -41,7 +38,6 @@ PROCESS ;EP - called from XBDBQUE
  . S APCDV=0
  . F  S APCDV=$O(^AUPNVSIT("B",APCDT,APCDV)) Q:'APCDV  D
  .. S G=0 D
- ... Q:$$DEMO^APCLUTL($P(^AUPNVSIT(APCDV,0),U,5),APCDDEMO)
  ... I $P(^AUPNVSIT(APCDV,0),U,7)="T" S G=1  ;telephone serv cat
  ... I $P(^AUPNVSIT(APCDV,0),U,7)="C" S G=1  ;chart review serv cat
  ... S C=$$CLINIC^APCLV(APCDV,"C")

@@ -1,7 +1,8 @@
 ADEAPC ;IHS/HQW/MJL - DENTAL PCC LINK  [ 08/26/2008  7:16 AM ]
- ;;6.0;ADE;**12,16,20**;APRIL 1999;Build 16
+ ;;6.0;ADE;**12,16,20,38**;MAR 25, 1999;Build 158
  ;IHS/SET/HMW 20050414 Rewrote this routine to call BSDAPI
  ;IHS/CMI/LAB 20080826 Added interactive PCC Link
+ ;IHS/OIT/GAB 11.2022 File 3,6,16 Removal - ADE Patch 38
  ;
  ;------->INITIALIZE
  Q:'$D(^ADEPARAM(+^AUTTSITE(1,0),0))  ;Q:$P(^(0),U,5)'="y"  ;IHS/SET/HMW 2-6-2003 **12** PCC Link mandatory
@@ -51,7 +52,9 @@ ADEAPC ;IHS/HQW/MJL - DENTAL PCC LINK  [ 08/26/2008  7:16 AM ]
  . . ;unless it's the same as the ADE-entered provider
  . . I $D(^AUPNVPRV("AD",ADEV)) D
  . . . N ADEVPRV,APCDALVR,DA,DIE,ADEPRV,ADEDA
- . . . S ADEPRV=$S($P(^DD(9000010.06,.01,0),U,2)["P6":$P(^ADEPCD(ADEDFN,0),U,4),1:^DIC(16,$P(^ADEPCD(ADEDFN,0),U,4),"A3"))
+ . . . ;S ADEPRV=$S($P(^DD(9000010.06,.01,0),U,2)["P6":$P(^ADEPCD(ADEDFN,0),U,4),1:^DIC(16,$P(^ADEPCD(ADEDFN,0),U,4),"A3"))
+ . . . ;/IHS/OIT/GAB **38** File 3,6,16 Changes commented out line above, replaced with next line for Reporting Dentist
+ . . . S ADEPRV=$P($G(^ADEPCD(ADEDFN,0)),U,4) Q:'ADEPRV  ;IHS/OIT/GAB **38** File 3,6,16 Changes
  . . . S ADEDA=0 F  S ADEDA=$O(^AUPNVPRV("AD",ADEV,ADEDA)) Q:'+ADEDA  D
  . . . . N DA
  . . . . S DA=ADEDA

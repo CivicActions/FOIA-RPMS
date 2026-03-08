@@ -1,5 +1,5 @@
-ABMUGTOT ; IHS/SD/SDR - 3PB/UFMS Grand Total Report only   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMUGTOT ; IHS/SD/SDR - 3PB/UFMS Grand Total Report only   [ 05/24/2007  11:50 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**15**;MAY 24, 2007
  ; New routine - v2.5 p15
  ;
 START ;START HERE

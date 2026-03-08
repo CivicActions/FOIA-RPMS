@@ -1,5 +1,5 @@
 BDWDDR ;IHS/CMI/LAB - Main Driver EXPORT DATE RANGE;
- ;;1.0;IHS DATA WAREHOUSE;**2**;JAN 23, 2006
+ ;;1.0;IHS DATA WAREHOUSE;**2,11**;JAN 24, 2006;Build 14
  ;
  ;
  ;
@@ -60,7 +60,8 @@ PROCESS ;EP - process new run
  S BDW("BT")=$H
  S BDWMSGH=$$DW1HDR^BHLEVENT(90213,BDWLOG)
  S ^BDWTMP(BDWIEDST,BDWMSGH)=""
- S DIE="^BDWXLOG(",DA=BDWLOG,DR=".15///R;.03////"_BDW("RUN START")_";.12////"_BDWMSGH D ^DIE K DA,DIE,DR
+ S BDWT=$$PROD^XUPROD()  ;IHS/CMI/LAB bdw patch 11
+ S DIE="^BDWXLOG(",DA=BDWLOG,DR=".15///R;.03////"_BDW("RUN START")_";.12////"_BDWMSGH_";.24///"_$S(BDWT:"P",1:"T") D ^DIE K DA,DIE,DR
  S BDWCNT=$S('$D(ZTQUEUED):"X BDWCNT1  X BDWCNT2",1:"S BDWTOTV=BDWTOTV+1"),BDWCNT1="F BDWCNTL=1:1:$L(BDWTOTV)+1 W @BDWBS",BDWCNT2="S BDWTOTV=BDWTOTV+1 W BDWTOTV,"")"""
  W:'$D(ZTQUEUED) !,"Generating transactions.  Counting visits.  (1)"
  S BDWSD=BDWSD_".9999"
@@ -203,7 +204,7 @@ XIT ;exit, eoj cleanup
  K AUPNCPT
  Q
 WRITE() ; use XBGSAVE to save the temp global (BDWDATA) to a delimited
- ; file that is exported to the DW system at 127.0.0.1
+ ; file that is exported to the DW system at 161.223.90.8
  ;
  N XBGL,XBQ,XBQTO,XBNAR,XBMED,XBFLT,XBUF,XBFN
  N BDWASU,BDWJUL,DT,X2,X1,X
@@ -219,13 +220,13 @@ WRITE() ; use XBGSAVE to save the temp global (BDWDATA) to a delimited
  NEW DA,DIE,DR
  S DA=BDW("RUN LOG"),DIE="^BDWXLOG(",DR=".21///"_XBFN D ^DIE K DA,DIE,DR
  ;S XBUF="/usr3/dsd/ljara/"  ;used in testing to make it fail
- ;S XBQTO="-l dwxfer:regpcc 127.0.0.1"
+ ;S XBQTO="-l dwxfer:regpcc 161.223.90.8"
  S XBS1="DATA WAREHOUSE SEND"
  ;
  D ^XBGSAVE
  ;
  I XBFLG=0 D
- . W:'$D(ZTQUEUED) !,"VISIT audit file successfully created and transferred.",!!
+ . W:'$D(ZTQUEUED) !,"VISIT audit file successfully created.",!!
  . K ^BDWDATA
  ;
  I XBFLG'=0 D
@@ -266,8 +267,8 @@ INTRO ;introductory text
  ;;
  ;;Please do not run this export without checking with NPIRS first.
  ;;DRE exports cannot be loaded into the NDW without first making
- ;;special arrangements.  You can contact the
- ;;Help Desk.
+ ;;special arrangements.  You can contact NPIRS by e-mailing them at
+ ;;NPIRSHD@ihs.gov or by contacting the OIT Help Desk at 1-888-830-7280.
  ;;
  ;;You should use the GDW and RERX options for all regularly scheduled 
  ;;exports.

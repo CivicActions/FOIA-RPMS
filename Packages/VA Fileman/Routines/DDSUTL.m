@@ -1,5 +1,6 @@
 DDSUTL ;SFISC/MKO-PROGRAMMER UTILITIES ;11:37 AM  25 Jul 1995
- ;;22.0;VA FileMan;;Mar 30, 1999
+ ;;21.0;VA FileMan;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**4,11**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 MSG(TXT) ;

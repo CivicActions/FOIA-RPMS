@@ -1,5 +1,6 @@
 DDSR ;SFISC/MKO-PAINT ;3:11 PM  11 Jun 1996
- ;;22.0;VA FileMan;;Mar 30, 1999
+ ;;21.0;VA FileMan;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**14,20**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 R ;All pages
  ;Called after wp, mults, & deletions

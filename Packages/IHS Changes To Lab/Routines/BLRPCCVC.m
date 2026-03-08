@@ -1,5 +1,7 @@
 BLRPCCVC ;IHS/OIT/MKK - IHS LAB LINK TO PCC ; 11-Apr-2016 07:53 ; MKK
- ;;5.2;IHS LABORATORY;**1022,1024,1025,1027,1033,1039**;NOV 01, 1997;Build 38
+ ;;5.2;IHS LABORATORY;**1022,1024,1025,1027,1033,1039,1052**;NOV 01, 1997;Build 17
+ ;
+ ; IHS/MSC/MKK - LR*5.2*1052 - 29-Sep-2022 - Item 75892 - User Fix
  ;
  ; Create BLRAPI4 INPUT array so that call to GETVISIT^APCDAPI4 will have
  ; valid INPUT variables.
@@ -54,7 +56,8 @@ EP ; EP
  S BLRAPI4("TIME RANGE")=-1                      ; Don't use Time Range
  ;
  ; Try to determine the user who entered the data
- I +$G(BLRLOGDA)>0 S USER=$P($G(^BLRTXLOG(BLRLOGDA,20)),"^",6)
+ S USER=""                        ; IHS/MSC/MKK - LR*5.2*1052 - Item 75892 - User Fix
+ I +$G(BLRLOGDA)>0 S USER=$P($G(^BLRTXLOG(BLRLOGDA,20)),"^",6)  ; VERIFIER POINTER [#2006]
  I +$G(USER)<1 S USER=$G(BLRDUZ)  ; IHS/OIT/MKK MODIFICATIONS LR*5.2*1027
  I +$G(USER)<1 S USER=DUZ
  S BLRAPI4("USR")=USER

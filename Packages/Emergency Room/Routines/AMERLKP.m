@@ -1,7 +1,12 @@
 AMERLKP ;GDIT/HS/ALA-Patient Lookup ; 16 Oct 2013  7:49 AM
- ;;3.0;ER VISIT SYSTEM;**5**;MAR 03, 2009;Build 14
+ ;;3.0;ER VISIT SYSTEM;**5,14**;MAR 03, 2009;Build 4
  ;
 SCAN ;EP
+ ;
+ ;GDIT/HS/BEE;AMER*3.0*14;Feature 89183, change to use AUPLK, display PPN
+ D NEWLKP Q
+ ;
+ ;Old code - no longer used
  ;
  NEW DIR,X,Y,TEXT,TYPE,II,BN,QFL,%H,%I
  ;
@@ -68,6 +73,79 @@ DONE ;
  Q
  ;
 LKUP D FIND^DIC(FILE,"",FIELD,FLAGS,TEXT,"",XREF,"","","","ERROR")
+ Q
+ ;
+NEWLKP ;
+ ;GDIT/HS/BEE;AMER*3.0*14;Feature 89183, change to use AUPLK, display PPN
+ NEW DIC,AUPX,AUPQF,AUPS,TMP,DFN,RCNT,ONAME,PNAME
+ NEW DIR,DTOUT,DUOUT,DIRUT,DIROUT,X,Y,AMER
+ ;
+ S DIR("A")="Enter patient NAME, DOB, or LOCAL CHART NUMBER"
+ S DIR(0)="F^3:30"
+ D ^DIR
+ I $D(DIROUT) S QUIT="^^" Q
+ I $D(DTOUT) S QUIT="^" Q
+ I $D(DUOUT) S QUIT="^" Q
+ I $G(Y)="" Q
+ S TEXT=Y
+ ;
+ S TEXT=$G(TEXT) I (TEXT="?")!(TEXT="??") Q
+ ;
+ S DIC(0)="M",AUPX=$G(TEXT),AUPQF=0
+ ;
+ D CHKPAT^AUPNLK
+ ;
+ ;Loop through and sort results
+ S DFN="" F  S DFN=$O(AUPS(DFN)) Q:DFN=""  D
+ . ;
+ . ;Get original name
+ . S ONAME=$$GET1^DIQ(2,DFN_",",.01,"E")
+ . ;
+ . ;Always show preferred name
+ . S PNAME=$$GETPREF^AUPNSOGI(DFN,"E")
+ . I PNAME="" S PNAME=ONAME
+ . Q:PNAME=""
+ . ;
+ . ;Filter results on location
+ . Q:'$D(^AUPNPAT(DFN,41,DUZ(2),0))
+ . ;
+ . S TMP(PNAME,DFN)=DFN_U_PNAME
+ ;
+ ;Limit Results to Maximum Requested
+ S RCNT=0,PNAME="" F  S PNAME=$O(TMP(PNAME)) Q:PNAME=""  S DFN="" F  S DFN=$O(TMP(PNAME,DFN)) Q:DFN=""  D
+ . S RCNT=RCNT+1,AMER(RCNT)=TMP(PNAME,DFN)
+ ;
+ ; For each patient found in the search, get the list data
+ S RCNT=0,QFL=0,II=0
+ F  S RCNT=$O(AMER(RCNT)) Q:'RCNT  D  Q:(QFL'=0)
+ . NEW DFN,NAME,AUPDICW,ALIAS,AMXX,DIC
+ . S DFN=$P(AMER(RCNT),"^")
+ . S NAME=$E($$GETPREF^AUPNSOGI(DFN,"E"),1,33)
+ . S AUPDICW="D IHSDUPE^AUPNLKID D ^AUPNLKID"
+ . S Y=DFN,II=II+1
+ . ;
+ . ;Perform audit log call
+ . D LOG^AMERBUSA("P","Q","AMERLKP","AMER: Scan Patient Names or Chart Numbers",DFN)
+ . ;
+ . ;Display the patient information
+ . I TEXT?1A.E,$E(NAME,1,$L(TEXT))'=TEXT S ALIAS=$$ALIAS(DFN,TEXT)
+ . S AMXX=^DPT(DFN,0),DIC="^DPT("
+ . W !,II_".  "_$S($G(ALIAS)'="":ALIAS_"  "_NAME,1:NAME) X AUPDICW
+ . I II#5=0 S QFL=$$ASK(II)
+ I II,II#5'=0 S QFL=$$ASK(II)
+ ;
+ ;Display the item
+ I QFL>0 D
+ . NEW DFN,NAME,AMXX,Y,AUPDICW,DIC,DIR,X,Y
+ . S DFN=$P(AMER(QFL),U),NAME=$$GETPREF^AUPNSOGI(+DFN,"E")
+ . S AMXX=^DPT(DFN,0),DIC="^DPT(",Y=DFN
+ . S AUPDICW="D IHSDUPE^AUPNLKID D ^AUPNLKID"
+ . W !!,NAME X AUPDICW
+ ;
+ ;Display prompt to continue
+ W !! S DIR(0)="E",DIR("A")="Press 'Return to continue"
+ D ^DIR
+ ;
  Q
  ;
 ERR ;

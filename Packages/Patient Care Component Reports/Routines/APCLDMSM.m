@@ -1,5 +1,5 @@
-APCLDMSM ; IHS/CMI/LAB - print Self Monitoring Pts for dm patients ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLDMSM ;IHS/CMI/LAB - print Self Monitoring Pts for dm patients  [ 09/27/2005  1:09 PM ]
+ ;;3.0;IHS PCC REPORTS;**17**;FEB 05, 1997
  ;
  ;
  ;this routine will go through the Diabetes Register
@@ -63,9 +63,6 @@ SORTED ;
  I $D(DIRUT) G ENDDATE
  S APCLSORT=Y
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G SORTED
  S XBRP="PRINT^APCLDMSM",XBRC="PROC^APCLDMSM",XBRX="EOJ^APCLDMSM",XBNS="APCL"
  D ^XBDBQUE
  Q
@@ -84,7 +81,6 @@ PROC ;
  .;check register status
  .I APCLSTAT]"",$P($G(^ACM(41,APCLDMX,"DT")),U,1)'=APCLSTAT Q
  .S DFN=$P(^ACM(41,APCLDMX,0),U,2)
- .Q:$$DEMO^APCLUTL(DFN,$G(APCLDEMO))
  .Q:$$DOD^AUPNPAT(DFN)]""  ;don't display deceased patients
  .S APCLHF=$$LASTHF(DFN,"DIABETES SELF MONITORING",$$FMADD^XLFDT(APCLED,-365),"B")
  .I APCLHF["YES" S APCLHFG=1

@@ -1,5 +1,5 @@
 BDGSD1 ; IHS/ANMC/LJF - APPTS FOR CURRENT INPTS ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
 ASK ;EP; ask user questions
  ; Called by ^BDGSD when choice 2 is selected
@@ -66,9 +66,15 @@ INIT ; -- init variables and list array
  .. S DFN=0 F  S DFN=$O(^TMP("BDGSD1A",$J,WARD,DATE,DFN)) Q:'DFN  D
  ... ;
  ... ; main data line
+ ... ;202307 77894 maw p1022 PPN
+ ... N PRF
+ ... S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
  ... S NODE=$G(^DPT(DFN,"S",DATE,0))                       ;appt data
  ... S LINE=$$PAD($$SP(3)_$$TIME^BDGF(DATE),13)            ;appt time
- ... S LINE=LINE_$E($$GET1^DIQ(2,DFN,.01),1,20)            ;patient name
+ ... S LINE=LINE_$G(PRF)            ;patient name
+ ... D SET(LINE,.VALMCNT)
+ ... S LINE=""
+ ... ;S LINE=LINE_$E($$GET1^DIQ(2,DFN,.01),1,20)            ;patient name
  ... S LINE=$$PAD(LINE,35)_$J($$HRCN^BDGF2(DFN,DUZ(2)),7)  ;chart #
  ... S LINE=$$PAD(LINE,48)_$$GET1^DIQ(44,+NODE,.01)        ;clinic
  ... D SET(LINE,.VALMCNT)

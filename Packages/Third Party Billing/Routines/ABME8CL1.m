@@ -1,5 +1,5 @@
-ABME8CL1 ; IHS/ASDST/DMJ - 837 CL1 Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8CL1 ; IHS/ASDST/DMJ - 837 CL1 Segment [ 09/15/2003  3:15 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1,4,9**;APR 05, 2002
  ;Transaction Set Header
  ;
  ; IHS/SD/SDR - v2.5 p9 - IM17283
@@ -23,8 +23,8 @@ LOOP ;LOOP HERE
  Q
 20 ;CL101 - Admission Type Code
  N X
- S X=$P(ABMB5,U)
- S X=$P($G(^ABMDCODE(+X,0)),U)
+ S X=$P(ABMB5,"^",1)
+ S X=$P($G(^ABMDCODE(+X,0)),"^",1)
  S:+X X=+X
  S:X=0 X=""
  S ABMR("CL1",20)=X
@@ -32,7 +32,7 @@ LOOP ;LOOP HERE
 30 ;CL102 - Admission Source Code
  N X
  S X=$P(ABMB5,"^",2)
- S X=$P($G(^ABMDCODE(+X,0)),U)
+ S X=$P($G(^ABMDCODE(+X,0)),"^",1)
  S:+X X=+X
  S:X=0 X=""
  S ABMR("CL1",30)=X
@@ -40,9 +40,9 @@ LOOP ;LOOP HERE
 40 ;CL103 - Patient Status Code
  N X
  S X=$P(ABMB5,"^",3)
- S X=$P($G(^ABMDCODE(+X,0)),U)
+ S X=$P($G(^ABMDCODE(+X,0)),"^",1)
  S ABMR("CL1",40)=X
- S ABMR("CL1",40)=$$FMT^ABMERUTL(ABMR("CL1",40),"2NR")
+ S ABMR("CL1",40)=$$FMT^ABMERUTL(ABMR("CL1",40),"2NR")  ;abm*2.5*9 IM17283
  Q
 50 ;CL104 - Nursing Home Residential Status Code-not used
  S ABMR("CL1",50)=""

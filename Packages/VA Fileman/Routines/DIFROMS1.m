@@ -1,5 +1,6 @@
-DIFROMS1 ;SFISC/DCL/TKW-MOVE DD TO TARGET ARRAY ;5/5/98  12:59
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROMS1 ;SFISC/DCL-MOVE DD TO TARGET ARRAY;8/3/95  13:33 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**10**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  Q
@@ -63,15 +64,8 @@ FILE N DSEC,DIFRD,DIFRX,DIFR01,DIFRFDD
  ..K @DIFRTA@("^DD",DIFRFILE,DIFRD,0,"VR")
  ..Q
  .Q
-IXKEY ; Send entries from KEY and INDEX file
- S DIFRD=0
- F  S DIFRD=$O(@DIFRFIA@(DIFRFILE,DIFRD)) Q:DIFRD'>0  D
- . I $O(^DD("IX","B",DIFRD,0)) D DDIXOUT^DIFROMSX(DIFRFILE,DIFRD,DIFRFDD,DIFRTA)
- . I $O(^DD("KEY","B",DIFRD,0)) D DDKEYOUT^DIFROMSY(DIFRFILE,DIFRD,DIFRTA)
- . Q
  Q
  ;
- Q
 SUBNUM(F,FD) ;
  ;Returns 0 if FielD in File is not multiple, otherwise subfile#.
  N SUBNUM S SUBNUM=+$P($G(^DD(F,FD,0)),U,2)

@@ -1,5 +1,5 @@
-AMHLENS ; IHS/CMI/LAB - add no show record ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLENS ; IHS/CMI/LAB - add no show record ; [ 09/29/03  12:51 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**1,6**;JAN 27, 2003
  ;
  ;
  ;; ;

@@ -1,5 +1,5 @@
 ABMEF21 ; IHS/ASDST/DMJ - Electronic 837 version 4010 Institutional ;      
- ;;2.6;IHS Third Party Billing System;**2,3,8**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**2,3,8,10**;NOV 12, 2009;Build 43
  ;
  ; IHS/SD/SDR - v2.5 p8 - IM15585 - code to check if patient changes, not just subscriber
  ; IHS/SD/SDR -abm*2.6*2 - 5PMS100005 - function call to populate EXPORT NUMBER RE-EXPORT multiple
@@ -19,7 +19,8 @@ START ;
  .W !,"Insurer NOT identified.",!
  .D EOP^ABMDUTL(1)
  S ABMPINS=ABMP("INS")
- S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)
+ ;S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*10 HEAT73780
+ S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  S ABMPITYP=ABMP("ITYPE")
  ;start old code abm*2.6*8
  ;D OPEN

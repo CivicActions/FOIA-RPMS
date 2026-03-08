@@ -1,9 +1,9 @@
 BSTSDTS0 ;GDIT/HS/BEE-Standard Terminology DTS Calls/Processing ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3,4,5,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
-CNCSR(OUT,BSTSWS) ;EP - DTS4 Search Call - Concept Lookup
+CNCSR(OUT,BSTSWS) ;EP - Search Call - Conc Lookup
  ;
  N II,STS,SEARCH,STYPE,MAX,DTSID,NMID
  N BSTRT,BSCNT,SLIST,DLIST,RES,RCNT,CNT,ST
@@ -20,38 +20,38 @@ CNCSR(OUT,BSTSWS) ;EP - DTS4 Search Call - Concept Lookup
  S BSCNT=+$G(BSTSWS("BCTCHCT")) S:BSCNT=0 BSCNT=MAX
  S NMID=$G(BSTSWS("NAMESPACEID")) S:NMID="" NMID=36 S:NMID=30 NMID=36
  ;
- ;Perform Lookup on Conc Id
+ ;Lookup on Conc Id
  S STS=$$CNCSR^BSTSCMCL(.BSTSWS,.RES) I $G(BSTSWS("DEBUG")) W !!,STS
  ;
- ;Sort results (should only be one)
+ ;Sort results (should be one)
  S DTSID="" F  S DTSID=$O(@DLIST@(DTSID)) Q:DTSID=""  S @SLIST@(@DLIST@(DTSID),DTSID)=""
  ;
- ;Loop through results and retrieve det
+ ;Loop through res and retrieve det
  S II="",RCNT=0 F  S II=$O(@SLIST@(II),-1) Q:II=""  D  Q:RCNT
  . S DTSID="" F  S DTSID=$O(@SLIST@(II,DTSID)) Q:DTSID=""  D  Q:RCNT
  .. ;
  .. N STATUS,CONC,ERSLT,SNAPDT
  .. ;
- .. ;Update entry
+ .. ;Upd entry
  .. S BSTSWS("DTSID")=DTSID
  .. ;
- .. ;Change snapshot date
+ .. ;Change snapshot dt
  .. S SNAPDT=$$DTCHG^BSTSUTIL(DT,2)_".0001"
  .. S SNAPDT=$$FMTE^BSTSUTIL(SNAPDT)
  .. S BSTSWS("SNAPDT")=SNAPDT
  .. ;
- .. ;Clear result file
+ .. ;Clear res file
  .. K @DLIST
  .. ;
- .. ;Get Detail for concept
+ .. ;Get Det for conc
  .. S STATUS=$$DETAIL^BSTSCMCL(.BSTSWS,.ERSLT)
  .. I $G(BSTSWS("DEBUG")) W !!,"Detail Call Status: ",STATUS
  .. ;
- .. ;File Detail
+ .. ;File Det
  .. S STATUS=$$UPDATE(NMID)
  .. I $G(BSTSWS("DEBUG")) W !!,"Update Call Status: ",STATUS
  .. ;
- .. ;Look again to see if concept logged
+ .. ;Look again to see if conc logged
  .. S CONC=$$CONC(DTSID,.BSTSWS,1,1)
  .. I CONC]"" D  Q
  ... I CONC'=BSTSWS("SEARCH") Q
@@ -59,7 +59,7 @@ CNCSR(OUT,BSTSWS) ;EP - DTS4 Search Call - Concept Lookup
  ;
  Q STS
  ;
-UPDATE(NMID,ROUT) ;EP - Add/Update Concept and Term(s)
+UPDATE(NMID,ROUT) ;EP - Add/Upd Conc and Term(s)
  ;
  ;Update UNII
  I $G(NMID)=5180 Q $$UUPDATE^BSTSDTS1(NMID,$G(ROUT))
@@ -67,10 +67,14 @@ UPDATE(NMID,ROUT) ;EP - Add/Update Concept and Term(s)
  ;Update RxNorm
  I $G(NMID)=1552 Q $$RUPDATE^BSTSDTS1(NMID,$G(ROUT))
  ;
- ;This update section only applies to SNOMED
+ ;GDIT/HS/BEE;FEATURE#123647;Check for new CVX version
+ ;Update CVX
+ I $G(NMID)=5190 Q $$CUPDATE^BSTSDTS7(NMID,$G(ROUT))
+ ;
+ ;Section only applies to SNOMED
  I $G(NMID)'=36 Q $$SUPDATE^BSTSDTS3(NMID,$G(ROUT))
  ;
- N GL,CONCDA,BSTSC,INMID,ERROR,TCNT,I,CVRSN,ST,NROUT,TLIST,STYPE,RTR,SVOUT
+ N GL,CONCDA,BSTSC,INMID,ERROR,TCNT,I,CVRSN,ST,NROUT,TLIST,STYPE,RTR,SVOUT,TUPDT
  ;
  S GL=$NA(^TMP("BSTSCMCL",$J,1))
  S ROUT=$G(ROUT,"")
@@ -78,32 +82,32 @@ UPDATE(NMID,ROUT) ;EP - Add/Update Concept and Term(s)
  ;Look for Conc Id
  I $P($G(@GL@("CONCEPTID")),U)="" Q 0
  ;
- ;Look for existing entry
+ ;Look for existing ent
  I $G(@GL@("DTSID"))="" Q 0
  S CONCDA=$O(^BSTS(9002318.4,"D",NMID,@GL@("DTSID"),""))
  ;
- ;Pull internal Code Set ID
+ ;Pull int Code Set ID
  S INMID=$O(^BSTS(9002318.1,"B",NMID,"")) Q:INMID="" "0"
  ;
- ;Pull the current ver
+ ;Pull current ver
  S CVRSN=$$GET1^DIQ(9002318.1,INMID_",",.04,"I")
  ;
- ;BSTS*1.0*8;Save Replacement
  D REPL^BSTSRPT(CONCDA,GL)
  ;
+ ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives - No longer retiring
  ;Handle retired concepts
- I CONCDA]"",'$$RET^BSTSDTS3(CONCDA,CVRSN,GL) Q 0
+ ;I CONCDA]"",'$$RET^BSTSDTS3(CONCDA,CVRSN,GL) Q 0
  ;
- ;None found - create new entry
+ ;None found - create
  I CONCDA="" S CONCDA=$$NEWC()
  ;
- ;Verify entry found/created
+ ;Verify found/created
  I +CONCDA<0 Q 0
  ;
- ;Pull internal Code Set ID
+ ;Pull int Code Set ID
  S INMID=$O(^BSTS(9002318.1,"B",NMID,"")) Q:INMID="" "0"
  ;
- ;Pull current version
+ ;Pull current vrsn
  S CVRSN=$$GET1^DIQ(9002318.1,INMID_",",.04,"I")
  ;
  ;Get Rev Out
@@ -121,102 +125,23 @@ UPDATE(NMID,ROUT) ;EP - Add/Update Concept and Term(s)
  S BSTSC(9002318.4,CONCDA_",",.13)="N"
  S BSTSC(9002318.4,CONCDA_",",.04)=CVRSN
  S BSTSC(9002318.4,CONCDA_",",.12)=DT
- ;BSTS*1.0*8;Reset new field
  S BSTSC(9002318.4,CONCDA_",",.15)="@"
+ ;
+ ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives - concept status
+ S BSTSC(9002318.4,CONCDA_",",.16)=$S($G(@GL@("STS"))="I":1,1:0)
  S BSTSC(9002318.4,CONCDA_",",1)=$G(@GL@("FSN",1))
  ;
  ;Save ISA
- I $D(@GL@("ISA"))>1 D
- . ;
- . N ISACT
- . S ISACT="" F  S ISACT=$O(@GL@("ISA",ISACT)) Q:ISACT=""  D
- .. ;
- .. ;Save/update each ISA entry
- .. ;
- .. ;First see if IsA code saved
- .. N DAISA,DA,IENS,DTSID,ISACD,NEWISA,DIC,Y,X,DLAYGO
- .. S ISACD=$P($G(@GL@("ISA",ISACT,0)),U) Q:ISACD=""
- .. S (NEWISA,DAISA)=$O(^BSTS(9002318.4,"D",NMID,ISACD,""))
- .. ;
- .. ;Not found - add partial entry to concept file
- .. I DAISA="" S DAISA=$$NEWC()
- .. S BSTSC(9002318.4,DAISA_",",.08)=$G(ISACD)
- .. I NEWISA="" S BSTSC(9002318.4,DAISA_",",.03)="P"
- .. S BSTSC(9002318.4,DAISA_",",.07)=INMID ;Code Set
- .. S BSTSC(9002318.4,DAISA_",",.04)=CVRSN ;Version
- .. S BSTSC(9002318.4,DAISA_",",.11)="N" ;Up to Date
- .. S BSTSC(9002318.4,DAISA_",",.12)=DT ;Update date
- .. S BSTSC(9002318.4,DAISA_",",1)=$G(@GL@("ISA",ISACT,1))
- .. ;
- .. ;Now add IsA pointer in current conc entry
- .. S DA(1)=CONCDA
- .. S DIC(0)="L",DIC="^BSTS(9002318.4,"_DA(1)_",5,",X=DAISA
- .. S DLAYGO=9002318.45 D ^DIC I +Y<0 Q
- .. ;
- .. ;Save additional IsA fields
- .. S DA(1)=CONCDA,DA=+Y,IENS=$$IENS^DILF(.DA)
- .. S BSTSC(9002318.45,IENS,".02")=$$DTS2FMDT^BSTSUTIL($P($G(@GL@("ISA",ISACT,1,0)),U,2))
+ D ISA^BSTSDTS6(GL,NMID,CVRSN,CONCDA,.BSTSC,INMID)
  ;
  ;Save Children (subconcepts)
- I $D(@GL@("SUBC"))>1 D
- . ;
- . N SUBCCT
- . S SUBCCT="" F  S SUBCCT=$O(@GL@("SUBC",SUBCCT)) Q:SUBCCT=""  D
- .. ;
- .. ;Save/update each SubConcept entry
- .. ;
- .. ;First see if Subconcept code saved
- .. N DASUBC,DA,IENS,DTSID,SUBCCD,NEWSUBC,DIC,Y,X,DLAYGO
- .. S SUBCCD=$P($G(@GL@("SUBC",SUBCCT,0)),U) Q:SUBCCD=""
- .. S (NEWSUBC,DASUBC)=$O(^BSTS(9002318.4,"D",NMID,SUBCCD,""))
- .. ;
- .. ;Not found - add partial entry to conc file
- .. I DASUBC="" S DASUBC=$$NEWC()
- .. S BSTSC(9002318.4,DASUBC_",",.08)=$G(SUBCCD)
- .. I NEWSUBC="" S BSTSC(9002318.4,DASUBC_",",.03)="P"
- .. S BSTSC(9002318.4,DASUBC_",",.07)=INMID ;Code Set
- .. S BSTSC(9002318.4,DASUBC_",",.04)=CVRSN ;Version
- .. S BSTSC(9002318.4,DASUBC_",",.11)="N" ;Up to Date
- .. S BSTSC(9002318.4,DASUBC_",",.12)=DT ;Update Date 
- .. S BSTSC(9002318.4,DASUBC_",",1)=$G(@GL@("SUBC",SUBCCT,1))
- .. ;
- .. ;Now add SUBC pointer in current conc entry
- .. S DA(1)=CONCDA
- .. S DIC(0)="L",DIC="^BSTS(9002318.4,"_DA(1)_",6,",X=DASUBC
- .. S DLAYGO=9002318.46 D ^DIC I +Y<0 Q
- .. ;
- .. ;Save additional SUBC fields
- .. S DA(1)=CONCDA,DA=+Y,IENS=$$IENS^DILF(.DA)
- .. S BSTSC(9002318.46,IENS,".02")=$$DTS2FMDT^BSTSUTIL($P($G(@GL@("SUB",SUBCCT,1,0)),U,2))
+ D CHILD^BSTSDTS6(GL,NMID,CVRSN,CONCDA,.BSTSC,INMID)
  ;
  ;Need to interim save because subsets look at .07
  I $D(BSTSC) D FILE^DIE("","BSTSC","ERROR")
  ;
  ;Save Subsets
- ;
- ;Clear out existing entries
- D
- . NEW SB
- . S SB=0 F  S SB=$O(^BSTS(9002318.4,CONCDA,4,SB)) Q:'SB  D
- .. NEW DA,DIK
- .. S DA(1)=CONCDA,DA=SB
- .. S DIK="^BSTS(9002318.4,"_DA(1)_",4," D ^DIK
- I $D(@GL@("SUB"))>1 D
- . ;
- . NEW SB
- . S SB="" F  S SB=$O(@GL@("SUB",SB)) Q:SB=""  D
- .. ;
- .. NEW DIC,X,Y,DA,X,Y,IENS,DLAYGO
- .. S DA(1)=CONCDA
- .. S DIC(0)="LX",DIC="^BSTS(9002318.4,"_DA(1)_",4,"
- .. S X=$P($G(@GL@("SUB",SB)),U) Q:X=""
- .. ;BSTS*1.0*8;Log ALL SNOMED
- .. I X="IHS PROBLEM ALL SNOMED" S BSTSC(9002318.4,CONCDA_",",.15)="Y"
- .. S DLAYGO=9002318.44 D ^DIC
- .. I +Y<0 Q
- .. S DA=+Y
- .. S IENS=$$IENS^DILF(.DA)
- .. S BSTSC(9002318.44,IENS,".02")=$$DTS2FMDT^BSTSUTIL($P($G(@GL@("SUB",SB)),U,2))
+ D SUB^BSTSDTS4(CONCDA,GL,.BSTSC)
  ;
  ;Save ICD Mapping
  ;
@@ -243,7 +168,7 @@ UPDATE(NMID,ROUT) ;EP - Add/Update Concept and Term(s)
  .. I DA="" S DA=$$NEWI(CONCDA)
  .. Q:DA<0
  .. ;
- .. ;Add in additional fields
+ .. ;Add additional fields
  .. S IENS=$$IENS^DILF(.DA)
  .. S BSTSC(9002318.43,IENS,".02")=ICDCD
  .. S BSTSC(9002318.43,IENS,".03")="IC9"
@@ -252,71 +177,55 @@ UPDATE(NMID,ROUT) ;EP - Add/Update Concept and Term(s)
  ;
  ;Save ICD10 Mapping Next
  I $D(@GL@("A10"))>1 D
- . N ICD
- . S ICD="" F  S ICD=$O(@GL@("A10",ICD)) Q:ICD=""  D
+ . N ICD,MG
+ . ;GDIT/HS/BEE;03/27/2024;FEATURE#86669;Handle unconditional map groups
+ . ;S ICD="" F  S ICD=$O(@GL@("A10",ICD)) Q:ICD=""  D
+ . S MG="" F  S MG=$O(@GL@("A10",MG)) Q:MG=""  S ICD="" F  S ICD=$O(@GL@("A10",MG,ICD)) Q:ICD=""  D
  .. N DA,IENS,ICDCD
  .. ;
  .. ;Look up
  .. S DA(1)=CONCDA
- .. S ICDCD=$P($G(@GL@("A10",ICD)),U) Q:ICDCD=""
+ .. S ICDCD=$P($G(@GL@("A10",MG,ICD)),U) Q:ICDCD=""
  .. S DA=$O(^BSTS(9002318.4,DA(1),3,"C",ICDCD,""))
  .. ;
  .. ;Create new
  .. I DA="" S DA=$$NEWI(CONCDA)
  .. Q:DA<0
  .. ;
- .. ;Add in additional fields
+ .. ;Add additional fields
  .. S IENS=$$IENS^DILF(.DA)
  .. S BSTSC(9002318.43,IENS,".02")=ICDCD
  .. S BSTSC(9002318.43,IENS,".03")="10D"
  .. S BSTSC(9002318.43,IENS,".04")=$$DTS2FMDT^BSTSUTIL($P($P($G(@GL@("A10",ICD)),U,5)," "))
  .. S BSTSC(9002318.43,IENS,".05")=$$DTS2FMDT^BSTSUTIL($P($G(@GL@("A10",ICD)),U,6))
  ;
+ ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives - moved code to free up space
  ;Save ICD9 to SNOMED Mapping
+ D ICD9^BSTSDTS4(CONCDA,GL)
  ;
- ;Clear out existing entries
- D
- . NEW SB
- . S SB=0 F  S SB=$O(^BSTS(9002318.4,CONCDA,13,SB)) Q:'SB  D
- .. NEW DA,DIK
- .. S DA(1)=CONCDA,DA=SB
- .. S DIK="^BSTS(9002318.4,"_DA(1)_",13," D ^DIK
- ;
- ;Now save mappings
- I $D(@GL@("RICD9"))>1 D
- . ;
- . NEW SB
- . S SB="" F  S SB=$O(@GL@("RICD9",SB)) Q:SB=""  D
- .. ;
- .. NEW DIC,X,Y,DA,X,Y,IENS,DLAYGO
- .. S DA(1)=CONCDA
- .. S DIC(0)="LX",DIC="^BSTS(9002318.4,"_DA(1)_",13,"
- .. S X=$P($G(@GL@("RICD9",SB)),U) Q:X=""
- .. S DLAYGO=9002318.413 D ^DIC
- ;
- ;BSTS*1.0*6;Update Condition mappings
  ;Save Conditional Mappings
  D SAVEMAP^BSTSMAP1(CONCDA,.BSTSC,GL)
  ;
- ;BSTS*1.0*7;Update Equivalency Concepts
  D EQLAT^BSTSDTS4(CONCDA,.BSTSC,GL)
  ;
  I $D(BSTSC) D FILE^DIE("","BSTSC","ERROR")
  ;
  ;Now save Terminology entries
  ;
- ;Synonyms/Preferred/FSN
+ ;Syn/Pref/FSN
  ;
  S STYPE="" F  S STYPE=$O(@GL@("SYN",STYPE)) Q:STYPE=""  S TCNT="" F  S TCNT=$O(@GL@("SYN",STYPE,TCNT)) Q:TCNT=""  D
  . ;
- . N TERM,TYPE,DESC,BSTST,ERROR,TMIEN,AIN,AOUT
+ . N TERM,TYPE,DESC,BSTST,ERROR,TMIEN,AIN,AOUT,ITERM,TERMNSP,TERMSTS,TIEN
  . ;
  . ;Pull values
  . S TERM=$G(@GL@("SYN",STYPE,TCNT,1)) Q:TERM=""
  . ;
+ . ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives - don't quit if inactive
  . ;Quit if found
- . I $D(TLIST(TERM)) Q
- . S TLIST(TERM)=""
+ . S TERMSTS=$P($G(@GL@("SYN",STYPE,TCNT,0)),U,7)
+ . ;I $D(TLIST(TERM)),'TERMSTS Q
+ . ;I 'TERMSTS S TLIST(TERM)=""
  . ;
  . S TYPE=$P($G(@GL@("SYN",STYPE,TCNT,0)),U,2)
  . S TYPE=$S(TYPE=1:"P",1:"S")
@@ -324,14 +233,22 @@ UPDATE(NMID,ROUT) ;EP - Add/Update Concept and Term(s)
  . S DESC=$P($G(@GL@("SYN",STYPE,TCNT,0)),U) Q:DESC=""
  . S AIN=$$DTS2FMDT^BSTSUTIL($P($G(@GL@("SYN",STYPE,TCNT,0)),U,3))
  . S AOUT=$$DTS2FMDT^BSTSUTIL($P($G(@GL@("SYN",STYPE,TCNT,0)),U,4))
+ . ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives - Namespace and status
+ . S TERMNSP=$P($G(@GL@("SYN",STYPE,TCNT,0)),U,6)
+ . ;S ITERM=$P($G(@GL@("SYN",STYPE,TCNT,0)),U,5) S ITERM=$S(ITERM=32768:1,1:"")
+ . S ITERM=$S(TERMNSP=32768:1,1:"@")
  . S:AOUT="" AOUT="@"
  . ;
  . ;Look up entry
  . S TMIEN=$O(^BSTS(9002318.3,"D",INMID,DESC,""))
  . ;
- . ;Entry not found - create new
+ . ;Entry not found - create
  . I TMIEN="" S TMIEN=$$NEWT()
  . I TMIEN<0 Q
+ . ;
+ . ;Save that it was created/upd, skip if already updated and active
+ . Q:$G(TUPDT(TMIEN))
+ . S TUPDT(TMIEN)='TERMSTS
  . ;
  . ;Save/update other fields
  . S BSTST(9002318.3,TMIEN_",",.02)=DESC
@@ -344,20 +261,38 @@ UPDATE(NMID,ROUT) ;EP - Add/Update Concept and Term(s)
  . S BSTST(9002318.3,TMIEN_",",.07)=AOUT
  . S BSTST(9002318.3,TMIEN_",",.1)=DT
  . S BSTST(9002318.3,TMIEN_",",.11)="N"
+ . S BSTST(9002318.3,TMIEN_",",.12)=ITERM
+ . ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives - Namespace and status
+ . S BSTST(9002318.3,TMIEN_",",.13)=TERMSTS
+ . S BSTST(9002318.3,TMIEN_",",.14)=TERMNSP
  . S BSTST(9002318.3,TMIEN_",",1)=TERM
  . D FILE^DIE("","BSTST","ERROR")
  . ;
- . ;Reindex - needed for custom indices
+ . ;Reindex
  . D
  .. NEW DIK,DA
  .. S DIK="^BSTS(9002318.3,",DA=TMIEN
  .. D IX^DIK
  ;
- ;Save ICD Mapping information
- I '$D(ERROR) S STS=$$ICDMAP^BSTSDTS2(CONCDA,GL)
+ ;Mark any existing that weren't touched as inactive
+ S TIEN="" F  S TIEN=$O(^BSTS(9002318.3,"C",36,CONCDA,TIEN)) Q:'TIEN  I '$D(TUPDT(TIEN)) D
+ . NEW TUPD,TERR,TCONC
+ . ;
+ . ;If term isn't linked to current concept, remove index
+ . S TCONC=$$GET1^DIQ(9002318.3,TIEN_",",.03,"I")
+ . I TCONC'=CONCDA D  Q
+ .. K ^BSTS(9002318.3,"C",36,CONCDA,TIEN)
+ . ;
+ . S TUPD(9002318.3,TIEN_",",.13)=1
+ . D FILE^DIE("","TUPD","TERR")
  ;
+ ;Save ICD Map info
+ I '$D(ERROR) S STS=$$ICDMAP^BSTSDTS2(CONCDA,GL)
+ I '$D(ERROR) S STS=$$ICDMAP^BSTSDTSM(CONCDA,GL)
+ ;
+ ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives - No longer retiring
  ;Need to check for retired concepts again since it may have just been added
- S RTR=$$RET^BSTSDTS3(CONCDA,CVRSN,GL)
+ ;S RTR=$$RET^BSTSDTS3(CONCDA,CVRSN,GL)
  ;
  Q $S($D(ERROR):"0^Update Failed",1:1)
  ;
@@ -371,7 +306,7 @@ CONC(DTSID,BSTSWS,SKPOD,SKPDT) ;EP - Determine if Code on File (and up to date)
  ;Get namespace
  S NMID=$G(BSTSWS("NAMESPACEID")) S:NMID="" NMID=36 S:NMID=30 NMID=36
  ;
- ;Pull the conc IEN
+ ;Pull conc IEN
  S CIEN=$O(^BSTS(9002318.4,"D",NMID,DTSID,"")) Q:CIEN="" ""
  ;
  ;Quit if out of date
@@ -388,13 +323,13 @@ CONC(DTSID,BSTSWS,SKPOD,SKPDT) ;EP - Determine if Code on File (and up to date)
  ;
  Q CONC
  ;
-GCDSDTS4(BSTSWS) ;EP - DTS4 update codeset
+GCDSDTS4(BSTSWS) ;EP - update codeset
  ;
  N RESULT,STS,II,BSTSUP,ERROR
  ;
  S STS=$$GCDSDTS4^BSTSCMCL(.BSTSWS,.RESULT)
  ;
- ;Update Local BSTS CODESET file (9002318.1)
+ ;Update Local BSTS CODESET file
  S II="" F  S II=$O(RESULT(II),-1) Q:II=""  D
  . ;
  . N DIC,X,Y,DLAYGO,DIC
@@ -407,16 +342,16 @@ GCDSDTS4(BSTSWS) ;EP - DTS4 update codeset
  ;
  Q STS
  ;
-GVRDTS4(BSTSWS) ;EP - DTS4 update versions
+GVRDTS4(BSTSWS) ;EP - update vrsns
  ;
  NEW RESULT,STS
  ;
- ;Reset Scratch global and make call to DTS
+ ;Reset Scratch gbl and make DTS call
  S RESULT=$NA(^TMP("BSTSCMCL",$J))
  K @RESULT
  S STS=$$GVRDTS4^BSTSCMCL(.BSTSWS)
  ;
- ;Update file with results
+ ;Upd file with results
  I STS D
  . NEW NMID,NMIEN,VDT,CNT,VRID,CVID,BSTS,ERR
  . S NMID=$G(BSTSWS("NAMESPACEID"))
@@ -430,22 +365,20 @@ GVRDTS4(BSTSWS) ;EP - DTS4 update versions
  ... ;Look for existing entry
  ... S DA=$O(^BSTS(9002318.1,NMIEN,1,"B",VDT,""))
  ... ;
- ... ;Create new record
+ ... ;Create record
  ... S:DA="" DA=$$NEWV(NMIEN,VDT)
  ... I +DA<0 Q
  ... S VRID=VDT
  ... S DA(1)=NMIEN,IENS=$$IENS^DILF(.DA)
  ... ;
- ... ;Add/Update remaining fields
+ ... ;Add/Upd remaining fields
  ... S BSTSUP(9002318.11,IENS,".02")=NAME
- ... ;BSTS*1.0*6;Fixed date issue
- ... ;S BSTSUP(9002318.11,IENS,".03")=RDT
  ... S BSTSUP(9002318.11,IENS,".03")=$$DTS2FMDT^BSTSUTIL($P(RDT,"."))
  ... D FILE^DIE("","BSTSUP","ERROR")
  . ;
  Q STS
  ;
-NEWV(NMIEN,VDT) ;Create new ICD Mapping entry
+NEWV(NMIEN,VDT) ;Create ICD Mapping entry
  N DIC,X,Y,DA,DLAYGO
  S DIC(0)="L",DA(1)=NMIEN
  S DLAYGO=9002318.11,DIC="^BSTS(9002318.1,"_DA(1)_",1,"
@@ -454,7 +387,7 @@ NEWV(NMIEN,VDT) ;Create new ICD Mapping entry
  Q +Y
  ;
  ;
-NEWC() ;Create new concept entry
+NEWC() ;Create concept entry
  N DIC,X,Y,DLAYGO
  S DIC(0)="L",DIC=9002318.4
  L +^BSTS(9002318.4,0):1 E  Q ""
@@ -463,7 +396,7 @@ NEWC() ;Create new concept entry
  L -^BSTS(9002318.4,0)
  Q +Y
  ;
-NEWT() ;Create new terminology entry
+NEWT() ;Create terminology entry
  N DIC,X,Y,DLAYGO
  S DIC(0)="L",DIC=9002318.3
  L +^BSTS(9002318.3,0):1 E  Q ""
@@ -472,7 +405,7 @@ NEWT() ;Create new terminology entry
  L -^BSTS(9002318.3,0)
  Q +Y
  ;
-NEWI(CIEN) ;Create new ICD Mapping entry
+NEWI(CIEN) ;Create ICD Mapping entry
  N DIC,X,Y,DA,DLAYGO
  S DIC(0)="L",DA(1)=CIEN
  S DIC="^BSTS(9002318.4,"_DA(1)_",3,"

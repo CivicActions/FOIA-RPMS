@@ -1,5 +1,5 @@
 BARRCXL2 ; IHS/SD/LSL - Cancelled Bills Report - Print ;08/20/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**7,19**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**7,19,30**;OCT 26, 2005;Build 55
  ;
  ; IHS/SD/LSL - 03/10/03 - Routine created
  ;      Called by BARRCXL
@@ -8,6 +8,7 @@ BARRCXL2 ; IHS/SD/LSL - Cancelled Bills Report - Print ;08/20/2008
  ;                                 Report rewritten
  ;    Moved orig code to the end of routine
  ; ^TMP($J,"BAR-CXL",BARBCANC,   Mirrors 3PB rpt
+ ; BAR*1.8*30 IHS/SD/CPC 5/12/2020
  Q
  ; *************************
  ;
@@ -28,8 +29,8 @@ DETAIL ;
  S BAR("COL")=BAR("COL")_",!,?39,""# BILLS"",?51,""AMT BILLED"",?70,""BALANCE"""
  D HDB^BARRPSRB  ; Print HIPAA etc
  I '$D(^TMP($J,"BAR-CXL")) D  Q           ; No data - quit
- . W !!!!!?25,"*** NO DATA TO PRINT ***"
- . D EOP^BARUTL(0)
+ .W !!!!!?25,"*** NO DATA TO PRINT ***"
+ .D EOP^BARUTL(0)
  ;
 CASHIER ;
  S BARBCANC=""  ; CANCELLING OFFICIAL
@@ -54,7 +55,7 @@ DETLOC ;
  ; For each visit location (detail)
  Q:$G(BAR("F1"))
  W !?5,"VISIT Location: ",BARLOC
- N BAR3SORT S BAR3SORT=""	 ; 3RD SORT EITHER VISIT TYP or CLINIC
+ N BAR3SORT S BAR3SORT=""     ; 3RD SORT EITHER VISIT TYP or CLINIC
  F  S BAR3SORT=$O(^TMP($J,"BAR-CXL",BARBCANC,BARLOC,BAR3SORT)) Q:BAR3SORT=""!($G(BAR("F1")))  D DETPAT
  Q:$G(BAR("F1"))
  D SUMLTOT  ; DETAIL LOCATION TOTAL
@@ -75,10 +76,10 @@ DETBILL ;
  N HRN,DOS,BARBREAS
  S (BARBILL,HRN,DOS)=""
  F  S BARBILL=$O(^TMP($J,"BAR-CXL",BARBCANC,BARLOC,BAR3SORT,BARPAT,BARBILL)) Q:BARBILL=""!($G(BAR("F1")))  D
- . S MORE=$G(^TMP($J,"BAR-CXL",BARBCANC,BARLOC,BAR3SORT,BARPAT,BARBILL,"MORE"))
- . S BARACCT=$P(MORE,U),DOS=$P(MORE,U,2),HRN=$P(MORE,U,3),BARBREAS=$P(MORE,U,4)
- . S Y=DOS D DD^%DT S DOS=Y
- . D DETLINE
+ .S MORE=$G(^TMP($J,"BAR-CXL",BARBCANC,BARLOC,BAR3SORT,BARPAT,BARBILL,"MORE"))
+ .S BARACCT=$P(MORE,U),DOS=$P(MORE,U,2),HRN=$P(MORE,U,3),BARBREAS=$P(MORE,U,4)
+ .S Y=DOS D DD^%DT S DOS=Y
+ .D DETLINE
  Q
  ; *****************************
  ;
@@ -111,12 +112,12 @@ SUMMARY ;
 SUBCSH  ;
  Q:$G(BAR("F1"))
  S BARBCANC="" F  S BARBCANC=$O(^TMP($J,"BAR-CXL",BARBCANC)) Q:BARBCANC=""!($G(BAR("F1")))  D
- . D SUBHD  ;  Print CancOff'cl Name
- . S BARLOC=""
- . F  S BARLOC=$O(^TMP($J,"BAR-CXL",BARBCANC,BARLOC)) Q:BARLOC=""!($G(BAR("F1")))  D SUMLOC
- . S BARTMP=^TMP($J,"BAR-CXL",BARBCANC)
- . W "Cancelling Official Subtotal: "  ;,$J(+^TMP($J,"BAR-CXL",BARBCANC),10),!
- . Q:$G(BAR("F1"))  D TOTALS
+ .D SUBHD  ;  Print CancOff'cl Name
+ .S BARLOC=""
+ .F  S BARLOC=$O(^TMP($J,"BAR-CXL",BARBCANC,BARLOC)) Q:BARLOC=""!($G(BAR("F1")))  D SUMLOC
+ .S BARTMP=^TMP($J,"BAR-CXL",BARBCANC)
+ .W "Cancelling Official Subtotal: "  ;,$J(+^TMP($J,"BAR-CXL",BARBCANC),10),!
+ .Q:$G(BAR("F1"))  D TOTALS
  Q:$G(BAR("F1"))
  D SUMTOT
  Q
@@ -204,8 +205,8 @@ SUBHD  ;
  ;S BAR("COL")="W !?3,""BILL"",?19,""PATIENT NAME"",?41,""AMT BILLED"",?55,""DOS"",?72,""BALANCE"""
  ;D HDB^BARRPSRB
  ;I '$D(^TMP($J,"BAR-CXL")) D  Q           ; No data - quit
- .; W !!!!!?25,"*** NO DATA TO PRINT ***"
- . ;D EOP^BARUTL(0)
+ ;.; W !!!!!?25,"*** NO DATA TO PRINT ***"
+ ;. ;D EOP^BARUTL(0)
  ;
  ;S BARLOC=""
  ;F  S BARLOC=$O(^TMP($J,"BAR-CXL",BARLOC)) Q:BARLOC=""  D DETLOC Q:$G(BAR("F1"))

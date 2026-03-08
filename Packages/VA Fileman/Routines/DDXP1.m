@@ -1,5 +1,6 @@
-DDXP1 ;SFISC/DPC-CREATE/EDIT FOREIGN FORMAT ;1/8/93  09:09
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDXP1 ;SFISC/DPC-CREATE/EDIT FOREIGN FORMAT ;1/8/93  09:09 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 EN1 ;
  K DA S DLAYGO=0

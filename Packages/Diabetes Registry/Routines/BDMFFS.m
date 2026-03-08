@@ -1,5 +1,5 @@
-BDMFFS ; cmi/anch/maw - DMS FLOW SHEET MANAGEMENT UTILITY ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;;AUG 11, 2006
+BDMFFS ;IHS/CIM/THL - DMS FLOW SHEET MANAGEMENT UTILITY;  [ 03/07/05  11:37 AM ]
+ ;;1.0;DIABETES MANAGEMENT SYSTEM;**4,5**;OCT 01, 2000
  ;
  ;This routine was originally marked as Patch #5
  ;but is not called from any routine.  The protocols
@@ -217,6 +217,7 @@ FSCADD ;EP;TO ADD ITEM TO FLOW SHEET
  .F  S X=$O(^APCHSFLC(BDMFSDA,1,X)) Q:'X  D
  ..S Y=$G(^APCHSFLC(BDMFSDA,1,X,0))
  ..S:$P(Y,U)]"" BDM(X)=$P(Y,U)_U_$S($P(Y,U,2)]"":$P(Y,U,2),1:$P(Y,U))
+ .;D ^BDMFFS1 ;IHS/CMI/TMJ PATCH #5 1/4/05
  .Q:$D(BDMQUIT)
  .S X=$P(BDM("LOW"),U)
  E  D
@@ -386,7 +387,7 @@ MEMLIST ;LIST MEMBERS OF EACH COMPONENT FOR DISPLAY WITH COMPONENTS
  .D Z(X)
  Q
 HEADER ;EP;TO SET HEADER CODE
- S VALMSG="- Prev Screen  Q Quit  ?? More Actions"
+ S VALMSG="- Prev Screen  Q Quit  ?? More Actions" ;IHS/CIM/THL PATCH 5
  Q
 Z(X) ;SET TMP GLOBAL
  S VALMCNT=VALMCNT+1

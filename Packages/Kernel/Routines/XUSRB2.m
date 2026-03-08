@@ -1,13 +1,12 @@
-XUSRB2 ;SFISC/RWF - RPC Broker Kernel Utilities. ;1/30/08  11:37
- ;;8.0;KERNEL;**115,150,277,337,469**;Jul 10, 1995;Build 16
- ;Per VHA Directive 2004-038, this routine should not be modified.
+XUSRB2 ;SFISC/RWF - RPC Broker Kernel Utilities. ;01/13/2003  15:32 [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**115,150,277**;Jul 10, 1995
  Q
  ;
 DIVGET(RET,IEN) ;Get Division data
  ;IEN is userid (DUZ or username) for future use.
  N %,XUDIV
  S XUDIV=0,%=$$CHKDIV^XUS1(.XUDIV) ;Get users div.
- I (%>0)&($P(%,U,2)'>0) D UPDIV(+%) ;Set users default div.
+ S:(%>0)&($P(%,U,2)'>0) DUZ(2)=+% ;Set users default div.
  S RET(0)=XUDIV ;RET(0) is number of divisions.
  I XUDIV S %=0 D  S RET(0)=XUDIV
  . ;RET(%) is divison array eg. ien;station name;station#
@@ -16,16 +15,8 @@ DIVGET(RET,IEN) ;Get Division data
 DIVSET(RET,DIV) ;Set users Division
  S RET=0,DIV=$$FIND1^DIC(200.02,","_DUZ_",","MX",$G(DIV))
  Q:DIV'>0
- N X
  I '$D(^VA(200,DUZ,2,DIV,0)) Q
- S RET=1 ;1=set, 0=not set
- D UPDIV(+DIV) ;Update Sign-on log
- Q
- ;
-UPDIV(V) ;Update the Sign-on Log & DUZ(2)
- N IX
- S DUZ(2)=V
- S IX=$G(^XUTL("XQ",$J,0)) I IX S $P(^XUSEC(0,IX,0),U,17)=DUZ(2)
+ S DUZ(2)=DIV,RET=1 ;1=set, 0=not set
  Q
  ;
 USERINFO(RET) ;generic user information for seeding VistaUser object.
@@ -42,5 +33,4 @@ USERINFO(RET) ;generic user information for seeding VistaUser object.
  S %=+XU5,RET(5)=$P($G(^DIC(49,%,0)),U) ;Service/Section
  S RET(6)=$G(DUZ("LANG")) ;User language
  S RET(7)=DTIME ;Users DTIME
- S RET(8)=$$VPID^XUPS(DUZ) ;Return VPID
  Q

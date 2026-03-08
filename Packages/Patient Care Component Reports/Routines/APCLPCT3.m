@@ -1,5 +1,5 @@
-APCLPCT3 ; IHS/CMI/LAB - continuation of APCLPCT2 ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLPCT3 ; IHS/OHPRD/TMJ - continuation of APCLPCT2 ;  [ 08/19/02  11:51 AM ]
+ ;;3.0;IHS PCC REPORTS;**7,12,20**;FEB 05, 1997
  ;
  ;
 VISITS ;

@@ -1,5 +1,5 @@
-BDMRML ; IHS/CMI/LAB - patients w/o dm on problem list ; 28 Nov 2017  1:25 PM
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**9,10,11**;JUN 14, 2007;Build 30
+BDMRML ; IHS/CMI/LAB - patients w/o dm on problem list ; 29 Aug 2025  10:13 AM
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**9,10,11,13,16,19**;JUN 14, 2007;Build 159
  ;
  ;
 START ;
@@ -7,8 +7,11 @@ START ;
 GETINFO ;
  K BDMSTAT
 R ;
+ K BDMRDA
  S BDMREG=""
  S DIC="^ACM(41.1,",DIC(0)="AEMQ",DIC("A")="Enter the Name of the Register: " D ^DIC
+ ;D REG^BDMFUTIL
+ ;I $G(BDMRDA)="" W !,"No register selected." S BDMQUIT="" D EXIT Q
  I Y=-1 W !,"No register selected." S BDMQUIT="" D EXIT Q
  S BDMREG=+Y
 RS ;get status
@@ -54,7 +57,8 @@ CMMNTS ;
  I $D(BDMCOMM("*")) W !,"* ISN'T ALLOWED, CHOOSE ALL" K BDMCOMM G CMMNTS
 SEX ;
  S BDMSEX=""
- S DIR(0)="S^M:MALES;F:FEMALES;U:UNKNOWN;A:ALL Genders",DIR("A")="Include which Gender(s)",DIR("B")="A" KILL DA D ^DIR KILL DIR
+ ;S DIR(0)="S^M:MALES;F:FEMALES;U:UNKNOWN;A:ALL GENDERS",DIR("A")="Include which Patients",DIR("B")="A" KILL DA D ^DIR KILL DIR
+ S DIR(0)="S^M:MALES;F:FEMALES;U:UNKNOWN;A:ALL SEXES",DIR("A")="Include which Patients",DIR("B")="A" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G CMMNTS
  S BDMSEX=Y
 CM ;
@@ -87,7 +91,8 @@ WF1 ;which status
 SORT ;
  S BDMSORT1="",BDMSORT2=""
  W !!,"This list can be sorted by a primary and optionally a secondary sort value.",!
- S DIR(0)="S^P:Patient Name;S:Register Status;A:Age;C:Community;G:Gender;M:Case Manager;W:Where Followed",DIR("A")="Select Primary Sort Value" KILL DA D ^DIR KILL DIR
+ ;S DIR(0)="S^P:Patient Name;S:Register Status;A:Age;C:Community;G:Gender;M:Case Manager;W:Where Followed",DIR("A")="Select Primary Sort Value" KILL DA D ^DIR KILL DIR
+ S DIR(0)="S^P:Patient Name;S:Register Status;A:Age;C:Community;G:Sex;M:Case Manager;W:Where Followed",DIR("A")="Select Primary Sort Value" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G WF
  S BDMSORT1=Y,BDMSOR1T=Y(0)
 SSORT ;
@@ -98,18 +103,25 @@ SSORT ;
  S DIR(0)=DIR(0)_$S(BDMSORT1'="S":";S:Register Status",1:"")
  S DIR(0)=DIR(0)_$S(BDMSORT1'="A":";A:Age",1:"")
  S DIR(0)=DIR(0)_$S(BDMSORT1'="C":";C:Community",1:"")
- S DIR(0)=DIR(0)_$S(BDMSORT1'="G":";G:Gender",1:"")
+ ;S DIR(0)=DIR(0)_$S(BDMSORT1'="G":";G:Gender",1:"")
+ S DIR(0)=DIR(0)_$S(BDMSORT1'="G":";G:Sex",1:"")
  S DIR(0)=DIR(0)_$S(BDMSORT1'="M":";M:Case Manager",1:"")
  S DIR(0)=DIR(0)_$S(BDMSORT1'="W":";W:Where Followed",1:"")
  S DIR("A")="Select Secondary Sort Value" KILL DA D ^DIR KILL DIR
- I X="" S BDMSORT2="P",BDMSOR2T="Patient Name" G TEMP
+ I X="" S BDMSORT2="P",BDMSOR2T="Patient Name" G DEC
  I $D(DIRUT) G SORT
  S BDMSORT2=Y,BDMSOR2T=Y(0)
  ;I BDMSORT2="" S BDMSORT2="P",BDMSOR2T="Patient Name"
+DEC ;should deceased patients (those with DOD in reg) be included in the report
+ S BDMDECP=""
+ W !!,"Should patients meeting the above criteria that have a Date of Death documented"
+ S DIR(0)="Y",DIR("A")="in patient registration be included in the list",DIR("B")="N" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) G SORT
+ S BDMDECP=Y
 TEMP ;
  S BDMTEMP=""
- S DIR(0)="S^P:Print the List;B:Browse the List on the Screen;S:Save as a Search Template",DIR("A")="Output Type",DIR("B")="P" KILL DA D ^DIR KILL DIR
- I $D(DIRUT) G SORT
+ S DIR(0)="S^P:Print the List;B:Browse the List on the Screen;S:Save as a Search Template",DIR("A")="Output Type",DIR("B")="B" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) G DEC
  S BDMTEMP=Y
  I BDMTEMP="P" G ZIS
  I BDMTEMP="B" G ZIS
@@ -139,7 +151,8 @@ INFORM ;
  W ?5,"- Register Status",!
  W ?5,"- Age",!
  W ?5,"- Community of Residence",!
- W ?5,"- Gender",!
+ ;W ?5,"- Gender",!
+ W ?5,"- Sex",!
  W ?5,"- Case Manager",!
  W ?5,"- Where Followed",!
  W !
@@ -157,7 +170,7 @@ PROC ;EP - called from XBDBQUE
  S BDMX=0 F  S BDMX=$O(^ACM(41,"B",BDMREG,BDMX)) Q:BDMX'=+BDMX  D
  .S DFN=$P(^ACM(41,BDMX,0),U,2)
  .Q:$$DEMO^BDMUTL(DFN,$G(BDMDEMO))
- .Q:$$DOD^AUPNPAT(DFN)]""
+ .I 'BDMDECP Q:$$DOD^AUPNPAT(DFN)]""
  .I $D(BDMSTAT) S X=$P($G(^ACM(41,BDMX,"DT")),U,1) Q:X=""  Q:'$D(BDMSTAT(X))
  .I $D(BDMAGET) Q:$$AGE^AUPNPAT(DFN)>$P(BDMAGET,"-",2)
  .I $D(BDMAGET) Q:$$AGE^AUPNPAT(DFN)<$P(BDMAGET,"-",1)
@@ -174,6 +187,7 @@ PROC ;EP - called from XBDBQUE
  .S BDMTOT=BDMTOT+1
  Q
 PRINT ;EP - called from xbdbque
+ D LOG^BUSAAPI("O","P","P",$S($G(XQY0)]"":$P(XQY0,U),1:"BDMRML"),"DIABETES REGISTER MASTER LIST")
  S BDMIOSL=$S($G(BDMGUI):55,1:IOSL)
  S BDM80D="-------------------------------------------------------------------------------"
  S BDMPG=0 D HEAD
@@ -270,7 +284,7 @@ W ;
 TEST ;
  D BDMG("R",1,"A")
  Q
-BDMG(BDMIEN,BDMREG,BDMAGET,BDMSTAT,BDMCOMT,BDMCOMM,BDMSEX,BDMCM,BDMWF,BDMSORT1,BDMSORT2,BDMTEMP,BDMDEMO,BDMSTMP) ;EP - GUI DMS Entry Point
+BDMG(BDMIEN,BDMREG,BDMAGET,BDMSTAT,BDMCOMT,BDMCOMM,BDMSEX,BDMCM,BDMWF,BDMSORT1,BDMSORT2,BDMTEMP,BDMDEMO,BDMSTMP,BDMDECP) ;EP - GUI DMS Entry Point
  S BDMND=$G(BDMND)
  S BDMGUI=1
  S BDMLDAT=$G(BDMLDAT)

@@ -1,5 +1,5 @@
 BQIUL2 ;PRXM/HC/ALA-Miscellaneous BQI utilities ; 01 Nov 2007  2:20 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.7;ICARE MANAGEMENT SYSTEM;**2**;Dec 19, 2017;Build 10
  ;
 STC(FIL,FLD,VAL) ; EP - Find a value for a set of codes code
  ;  Input Parameters
@@ -147,9 +147,10 @@ LAVD(DFN) ;EP -- Get patient's last AMBULATORY visit
  .. I $P(^AUPNVSIT(VIEN,0),U,9)=1 Q
  .. ; Check for Primary Care clinic
  .. S CLN=$P(^AUPNVSIT(VIEN,0),U,8)
- .. I CLN'="" D  Q:QFL
- ... I $P($G(^DIC(40.7,CLN,9999999)),"^",2)'=1 S QFL=1
- .. S LVISIT=VIEN,QFL=1
+ .. I CLN'="" D  Q:'QFL
+ ... I $P($G(^DIC(40.7,CLN,9999999)),"^",2)'=1 Q
+ ... S QFL=1
+ .. S LVISIT=VIEN
  Q LVISIT
  ;
 LAVDT(DFN) ;EP -- Get patient's last AMBULATORY visit date/time
@@ -169,7 +170,8 @@ LAVC(DFN) ;EP -- Get patient's last AMBULATORY visit clinic
  I VIEN="" Q ""
  S CST=$$GET1^DIQ(9000010,VIEN_",",.08,"I")
  I CST="" Q ""
- Q $$GET1^DIQ(9000010,VIEN_",",.08,"E")_" "_$$GET1^DIQ(40.7,CST_",",1,"E")
+ ;Q $$GET1^DIQ(9000010,VIEN_",",.22,"E")
+ Q $$GET1^DIQ(9000010,VIEN_",",.22,"E")_" ("_$$GET1^DIQ(9000010,VIEN_",",.08,"E")_" "_$$GET1^DIQ(40.7,CST_",",1,"E")_")"
  ;
 LALC(DFN) ;EP -- Get patient's last AMBULATORY visit location
  ;Input

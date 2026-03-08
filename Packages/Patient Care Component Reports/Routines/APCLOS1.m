@@ -1,5 +1,5 @@
-APCLOS1 ; IHS/CMI/LAB - process operational summary ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLOS1 ; IHS/OHPRD/TMJ - process operational summary ;  [ 03/14/01  6:42 AM ]
+ ;;3.0;IHS PCC REPORTS;**3,5,9**;FEB 05, 1997
  ;IHS/CMI/LAB - fixed setting of APCLFY to include $G
  ;CMI/TUCSON/LAB - patch 3 fix FY variable
  ;

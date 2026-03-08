@@ -1,16 +1,17 @@
-BHSENC2 ;IHS/CIA/MGH - Encounters from PCC ;09-Mar-2016 09:59;du
- ;;1.0;HEALTH SUMMARY COMPONENTS;**8,13**;Jan 6,2006;Build 6
+BHSENC2 ;IHS/CIA/MGH - Encounters from PCC ;06-Apr-2020 15:42;DU
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**8,13,16**;Jan 6,2006;Build 1
  ;===================================================================
  ;Taken from APCH2H
  ; IHS/TUCSON/LAB - PART 2B OF BHS -- SUMMARY PRODUCTION COMPONENTS ;  [ 02/20/04  1:17 PM ]
  ;;2.0;IHS RPMS/PCC Health Summary;**6,11**;JUN 24, 1997
+ ;IHS/MSC/MGH added telehealth visis patch 16
  ;=====================================================================
 OUTPT ; ********** OUTPATIENT ENCOUNTERS WITHOUT CHR * 9000010/9000010.07 **********
  ; <SETUP>
  N BHSPAT,BHSN,BHSNTE,X
  S BHSPAT=DFN
  Q:'$D(^AUPNVSIT("AA",BHSPAT))
- S BHSOVT="ARSCOTE" ; NOTE: THIS CONTROLS TYPES OF VISITS DISPLAYED
+ S BHSOVT="ARSCOTEM" ; NOTE: THIS CONTROLS TYPES OF VISITS DISPLAYED
  D CKP^GMTSUP Q:$D(GMTSQIT)
  ; <DISPLAY>
  S BHSPVD=0

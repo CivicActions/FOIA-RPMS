@@ -1,5 +1,5 @@
-BGP1DSTM ; IHS/CMI/LAB - national patient list 20 Dec 2004 9:24 AM 07 Mar 2010 2:31 PM ;
- ;;11.1;IHS CLINICAL REPORTING SYSTEM;;JUN 27, 2011;Build 33
+BGP1DSTM ; IHS/CMI/LAB - national patient list 20 Dec 2004 9:24 AM 07 Mar 2010 2:31 PM ; 29 Mar 2011  10:05 AM
+ ;;11.0;IHS CLINICAL REPORTING;**4**;JAN 06, 2011;Build 84
  ;
  ;
  ;
@@ -270,7 +270,7 @@ ENDDATE ;
  I $D(DIRUT) Q
  S (BGPPER,BGPVDT)=Y
  Q
-STMP ;EP
+STMP ;
 EN1 ;EP Help
  K BGPQUIT S BGPSTMP=""
  W !!!,"Enter a search template name for the following list of patients:"

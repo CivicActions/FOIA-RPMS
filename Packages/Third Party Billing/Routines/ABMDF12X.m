@@ -1,6 +1,14 @@
-ABMDF12X ; IHS/ASDST/DMJ - ADA-94 FORM ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF12X ; IHS/ASDST/DMJ - ADA-94 FORM ;  [ 11/08/2002  9:58 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**2,8,9**;APR 05, 2002
  ;Original;TMD;09/12/95 8:49 AM
+ ;
+ ;  IHS/DSD/DMJ - 7/20/98 - PATCH 2 - NOIS XFA-0698-200102
+ ;                Meds showing up on split bill for ADA & HCFA.
+ ;                Modified to show meds on HCFa only
+ ;                also add code so claim generator will not bomb
+ ;                if auto approve is turned on and Y2K fix to
+ ;                print 4 digit year in 3 birthdate fields.
+ ;
  ; IHS/SD/SDR - V2.5 P2 - 4/17/02 - NOIS PJB-0302-90027
  ;     Modified to fix problem with format for ADA-94 17b print
  ;     format
@@ -28,6 +36,10 @@ MARG ;Set left and top margins
  ;
  ;Loop thru line number array
 LOOP S ABM("LN")=$O(ABMF(ABM("LN"))) I +ABM("LN")=0!(ABM("LN")>62) G XIT
+ ;
+ ;Check for invalid line numbers
+ ;F ABM("I")=8,10,12,14,16,18,20,21,22,24,26,28,30,32,34,35,36,38,40,42,44,46,48,50,55,56,57 I ABM("LN")=ABM("I") Q
+ ;I  G LOOP
  ;
  ;Set to correct format line
  S ABM("FL")=ABM("LN")
@@ -67,6 +79,7 @@ TEST S ABMF("TEST")=1
 XIT I '$D(ABM("MORE")) K ABMF,ABM
  E  K ABM("MORE")
  Q
+ ;IHS/SD/EFG V2.5 P8 IM16385-changed line 36, field 6 position from 54 to 53
 TEXT ;;TABS;;FIELD LENGTH
  ;            FORMAT ($-$ FORMAT,L-LNGTH REQ'D,C-CENTER,R-RIGHT,D-DATE)
 1 ;;1^22^46;;1^1^32

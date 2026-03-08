@@ -1,5 +1,5 @@
-RAO7RO ;HISC/GJC,FPT-Request message from OE/RR. ;9/11/98  11:56
- ;;5.0;Radiology/Nuclear Medicine;**1,2,13,15,75**;Mar 16, 1998;Build 4
+RAO7RO ;HISC/GJC,FPT-Request message from OE/RR. ; Apr 24, 2020@08:45:37
+ ;;5.0;Radiology/Nuclear Medicine;**1,2,13,15,75,145,169,1009**;Mar 16, 1998;Build 21
  ;
  ;------------------------- Variable List -------------------------------
  ; RAFLG=flag indicates ORC reached     RAHLFS="|"
@@ -72,7 +72,8 @@ EN1(RAMSG) ; Pass in the message from OE/RR.  Decipher information.
  .. F  S RALOC=$O(^RA(79.1,"BIMG",RAIMGTYI,RALOC)) Q:RALOC=""  D  Q:RAION]""
  ... ; Find Imaging Location within Imaging Type with Request device..
  ... Q:$P(^RA(79.1,RALOC,0),U,16)=""
- ... Q:^RA(79.1,RALOC,"DIV")'=+$$KSP^XUPARAM("INST")
+ ...; p.145 MWA missing "DIV" node causes error added $G() 
+ ... Q:$G(^RA(79.1,RALOC,"DIV"))'=+$$KSP^XUPARAM("INST")
  ... S RAION=$P(^RA(79.1,RALOC,0),U,16)
  . I RAION]"" D
  .. D PSETUP Q:RAION']""
@@ -128,8 +129,11 @@ EN1(RAMSG) ; Pass in the message from OE/RR.  Decipher information.
  . S:$D(XQY0)#2 RAVAR("XQY0")="" S RAVAR("RAERR")=""
  . D ERR^RAO7UTL(RATXT,.RAMSG,.RAVAR)
  . Q
- ;if order control of 'DE', CPRS files data into their OE/RR Errors file
- ;I RAORD="DE"
+ ;
+ ;an order control of 'DE' means that CPRS rejected the backdoor order. the
+ ;RIS must update the radiology order correctly (REQUEST STATUS = 'CANCELLED')
+ ;RA5P169
+ ;I RAORD="DE" DO EN1^RAO7ROCN(.RAMSG)  ;ihs/cmi/maw 20210301 PATCH 1009
  ;purge DBS specific variables before exiting
  ;
 PURGE ; kill & quit

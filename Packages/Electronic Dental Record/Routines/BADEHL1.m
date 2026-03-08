@@ -1,9 +1,15 @@
 BADEHL1 ;IHS/MSC/MGH/PLS/VAC/AMF - Dentrix HL7 interface  ;20-Feb-2013;fje
- ;;1.0;DENTAL/EDR INTERFACE;**1,2,3**;FEB 22, 2010;Build 4
+ ;;1.0;DENTAL/EDR INTERFACE;**1,2,3,7,8,10**;FEB 22, 2010;Build 61
  ;; Modified - IHS/MSC/AMF - 11/23/10 - More descriptive alert messages
  ;; Modified - IHS/MSC/VAC, IHS/SAIC/FJE, IHS/MSC/PLS,AMF - 9/10/10,1/3/11 - Fix for DUZ(2) problem
  ;; Modified - SAIC/FJE Patch 2 Sets LOCK for HLB,HLA,HLC globals, allows inactive patient messages to pass to DENTRIX after upload.
  ;; Modified - GDIT/DMB Patch 3 Remove LOCK for HLB,HLA,HLC globals based on new adapters
+ ;; Mofified - IHS/OIT/GAB Patch 7 Added variable for Patient Push by Location (from the BADEPUSH routine)
+ ;; Modified - IHS/OIT/GAB Patch 8 Add Patient Name if not found from Name Component entry & Updated the Alternate PID field to get
+ ;;               the Alternate ID's (HRN's) and limit the field to 250 chars (BADE Production field limit)
+ ;; Modified - IHS/GDIT/GAB Patch 10 Set HL7 Field Separator (|) and Encoding Characters (^~\&) to prevent PID alerts
+ ;; HLPM("FIELD SEPARATOR") and HLPM("ENCODING CHARACTERS") are set to default in $$NEWMSG^HLOAPI ("|" and "^~\&")
+ ;; Modified - IHS/GDIT/GAB Patch 10 Add the Cell Phone number to the PID segment
  Q
  ; Build Outbound A28 or A31 HL7 segments
 NEWMSG(DFN,EVNTTYPE) ;EP
@@ -123,15 +129,20 @@ PID(DFN) ;EP
  I $P($G(^DPT(DFN,0)),U,1)="" S ERR="PID ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
  N ASU,PID,SGM,X,LP,VAL,HLQ,MSTS
  S HLQ=HL1("Q")
+ ;IHS/GDIT/GAB **10** Added below two lines for PID Alert; VAFHLU routine (called by VAFHLPID) ensure field separator and encoding characters are set
+ S HL("FS")="|"
+ S HL("ECH")="^~\&"
  S PID=$$EN^VAFHLPID(DFN,"2,3,5,6,7,8,11,13,14,16,17,19,",1)
  ;Q:PID=""
  I PID="" S ERR="PID ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
  D SET(.ARY,"PID",0)
  D SET(.ARY,1,1)
  D SET(.ARY,DFN,2)
- ;IHS/MSC/PLS,AMF 1/3/11 Fix for DUZ problem
+ ;IHS/MSC/PLS,AMF 1/3/11 Fix for DUZ problem 
  ;S HRCN=$$HRCNF^BDGF2(DFN,DUZ(2))
  ;S HRCN=$$GETCHART(DFN,DUZ(2))
+ ;IHS/OIT/GAB Patch 7 - Added below line for new site implementations to transmit by facility selected in BADEPUSH routine
+ S AGDUZ2=$G(^XTMP("BADELOC",0,"PATFAC"))  ;AGDUZ2 & ^XTMP("BADELOC" should be null if not conducting patient push
  S HRCN=$$FINDHRN(DFN,$S($G(AGDUZ2):AGDUZ2,1:DUZ(2)))
  ;end fix for DUZ problem
  S ASU=0
@@ -143,6 +154,7 @@ PID(DFN) ;EP
  ;D SET(.ARY,"MR",3,5)  ; Medical Record
  ;S ASU=$$ASUFAC^BADEHL1(DFN)  ;Get all HRCNs for this patient
  S FLD=$P(PID,HLFS,6)  ; Patient Name
+ I FLD="" S FLD=$P($G(^DPT(DFN,0)),"^") ;/IHS/OIT/GAB 11/2022 PATCH 8 - Added when name component entry cannot be found
  I FLD="" S ERR="PID ERROR" D NOTIF(DFN,"No name.  Can't create PID.") Q  ;SAIC/FJE 08/04/2011;IHS/MSC/AMF 11/23/10 More descriptive alert
  F LP=1:1:$L(FLD,$E(HLECH)) S VAL=$P(FLD,$E(HLECH),LP) D
  .D SET(.ARY,VAL,5,LP)
@@ -160,14 +172,15 @@ PID(DFN) ;EP
  .;Fix for zipcode
  .S:LP=5 VAL=$$FIXZIP(DFN,VAL)
  .D SET(.ARY,VAL,11,LP)
- I $L($P(PID,HLFS,14)) D
- .D SET(.ARY,$P(PID,HLFS,14),13)  ; Patient Home Phone
- .D SET(.ARY,"PRN",13,2)
- .D SET(.ARY,"PH",13,3)
- I $L($P(PID,HLFS,15)) D
- .D SET(.ARY,$P(PID,HLFS,15),14)  ; Patient Work Phone
- .D SET(.ARY,"WPH",14,2)
- .D SET(.ARY,"PH",14,3)
+ D PHONE^BADEUTIL(DFN)  ;/IHS/GDIT/GAB **10** Replaced next 8 lines with PHONE function, adds Cell number
+ ;I $L($P(PID,HLFS,14)) D
+ ;.D SET(.ARY,$P(PID,HLFS,14),13)  ; Patient Home Phone
+ ;.D SET(.ARY,"PRN",13,2)
+ ;.D SET(.ARY,"PH",13,3)
+ ;I $L($P(PID,HLFS,15)) D
+ ;.D SET(.ARY,$P(PID,HLFS,15),14)  ; Patient Work Phone
+ ;.D SET(.ARY,"WPH",14,2)
+ ;.D SET(.ARY,"PH",14,3)
  ; PID-15 (Language) not captured in RPMS
  S MSTS=$$GET1^DIQ(2,DFN,.05,"I")
  D SET(.ARY,$$GET1^DIQ(11,MSTS,90001),16,1)  ; Marital Status HL7 Code
@@ -182,10 +195,10 @@ PID(DFN) ;EP
  ;Add Aliases to segment
 ALIAS(DFN) ;EP
  N AL,FLD,LP,ALN,CNT
- ;Q:'$G(DFN)
  I '$G(DFN) S ERR="ALAIS ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
  S CNT=2
  S AL=0 F  S AL=$O(^DPT(DFN,.01,AL)) Q:'AL  D
+ .Q:CNT>2  ;/IHS/GDIT/GAB **10** Add this line, reduce number of patient names transmitted
  .S ALN=$P(^DPT(DFN,.01,AL,0),U)
  .S FLD=$$HLNAME^HLFNC(ALN)
  .F LP=1:1:$L(FLD,$E(HLECH)) S VAL=$P(FLD,$E(HLECH),LP) D
@@ -195,7 +208,6 @@ ALIAS(DFN) ;EP
  Q
  ; Create Primary Provider segment
 PD1(DFN) ;EP
- ;Q:'$G(DFN)
  I '$G(DFN) S ERR="PID ERROR" D NOTIF(DFN,"Can't create PID for:  "_DFN) Q  ;SAIC/FJE 08/04/2011
  N PPRV,FLD,LP,PD1
  D SET(.ARY,"PD1",0)
@@ -251,6 +263,7 @@ NK1 ;EP
 ASUFAC(DFN) ;Set up all the ASUFAC numbers for this patient
  N IEN,DATA,LOC,HRN,DATE,ASUFAC,FAC,LP,VAL,REP,PART
  S IEN=0,FAC=""
+ S FCNT=0  ;/IHS/OIT/GAB PATCH 8 - Added counter for PID segment/Field 4 (ALT PID)
  F  S IEN=$O(^AUPNPAT(DFN,41,IEN)) Q:'IEN  D
  .S DATA=$G(^AUPNPAT(DFN,41,IEN,0))
  .S LOC=$P(DATA,U,1),DATE=$$HLDATE^HLFNC($P(DATA,U,3))
@@ -259,21 +272,30 @@ ASUFAC(DFN) ;Set up all the ASUFAC numbers for this patient
  .E  S FAC=FAC_"~"_ASUFAC_"^"_DATE
  I FAC="" Q 0
  F REP=1:1:$L(FAC,$E(HLECH,2,2)) S PART=$P(FAC,$E(HLECH,2,2),REP) D
+ .Q:FCNT>200  ;/IHS/OIT/GAB PATCH 8 - Quit if total greater than 200 characters
  .F LP=1:1:$L(PART,$E(HLECH)) S VAL=$P(PART,$E(HLECH),LP) D
+ ..D PIDCNT  ;/IHS/OIT/GAB PATCH 8 - Added this line and the next line, Set counter for PID segment/Field 4
+ ..Q:FCNT>200
  ..D SET(.ARY,VAL,4,LP,,REP)
  ..D SET(.ARY,"ASUFAC",4,LP+1,,REP)
  Q 1
 GETCHART(P,L) ;
  N S,C,%
- ; ----- IHS/SAIC/FJE 11/5/2010 
- S (X,LL)=0 F  S X=$O(^AUPNPAT(P,41,X)) Q:+X=0!(LL=L)  D
- .S Y=$G(^AUPNPAT(P,41,X,0))
- .Q:$L($P(Y,"^",3))
- .Q:'$L($P(Y,"^",2))
- .S LL=$P(Y,"^",1)
- I +LL I LL'=L S L=LL
- K LL,X,Y
+ ; ----- IHS/SAIC/FJE 11/5/2010
+ ;S (X,LL)=0 F  S X=$O(^AUPNPAT(P,41,X)) Q:+X=0!(LL=L)  D
+ ;.S Y=$G(^AUPNPAT(P,41,X,0))
+ ;;.Q:$L($P(Y,"^",3))
+ ;.Q:'$L($P(Y,"^",2))
+ ;.S LL=$P(Y,"^",1)
+ ;I +LL I LL'=L S L=LL
+ ;K LL,X,Y
  ; ----- end IHS/SAIC/FJE 11/5/2010
+ ;/IHS/OIT/GAB PATCH 8 Commented above 7 lines and added 4 lines to correct Alternate Patient ID in the PID Segment
+ S X=0 S X=$G(^AUPNPAT(P,41,L,0))  ;get patient location data 
+ Q:'X
+ Q:'$L($P(X,"^",2))  ;quit if no HRN
+ K X
+ ;------end /IHS/OIT/GAB 11/2022; below returns the ASUFAC_HRN
  S S=$P(^AUTTLOC(L,0),U,10)
  I S="" Q S
  S S=$E("000000",1,6-$L(S))_S
@@ -339,3 +361,7 @@ SET(ARY,V,F,C,S,R) ;EP
 FIXZIP(DFN,ZIP) ;EP
  Q:$G(ZIP) ZIP
  Q $$GET1^DIQ(2,DFN,.116)
+PIDCNT ;/IHS/OIT/GAB PATCH 8 - COUNT THE ALT PATIENT ID FIELD
+ I LP=1 S FCNT=FCNT+$L(PART)-1  ;subtract the extra "^", doesn't count
+ I LP=2 S FCNT=FCNT+$L("ASUFAC")
+ Q

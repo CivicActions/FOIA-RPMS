@@ -1,5 +1,5 @@
 ABSPOSI1 ; IHS/FCS/DRS - support for the prescrip. field on the form ;    [ 09/12/2002  10:10 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,10,44**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,10,44,54**;JUN 01, 2001;Build 131
  ;----------------------------------------------------------------------
  ;IHS/SD/lwj 03/10/04 patch 10
  ; Routine adjusted to call ABSPFUNC to retrieve
@@ -127,7 +127,8 @@ EFFECTS N ERR ; side effects of putting a value in the prescription field
  . S RX=X,RXI=$P(X,"`",2) ; display the `internal form
  . N R0 S R0=$G(^PSRX(RXI,0)) I R0="" D IMPOSS^ABSPOSUE("DB,P","TI","VALIDATE should have caught this",,"EFFECTS",$T(+0))
  . S PAT=$P(R0,U,2)
- . S PATNAME=$P(^DPT(PAT,0),U)
+ . ;S PATNAME=$P(^DPT(PAT,0),U)
+ . S PATNAME=$P(^DPT(PAT,0),U)_$$PPN1^ABSPUTL(PAT)  ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  . S DRUG=$P(R0,U,6) ; get pointer to drug file ; ABSP*1.0T7*11 ; removed "N DRUG", the NEW happened at the calling level and DRUG is needed below
  . ;OIT/CAS/RCS 10022012 - Patch 44, only allow 40 characters for the drug name, HEAT # 86226
  . I DRUG S DRUGNAME=$E($P($G(^PSDRUG(DRUG,0)),U),1,40) ; get drug name
@@ -154,7 +155,8 @@ EFFECTS N ERR ; side effects of putting a value in the prescription field
  . I RX="" S RX=X ; display the V`VSTDFN form if no VCN defined yet
  . S NDC="" ; no default for charge code
  . S PAT=$P(V0,U,5)
- . S PATNAME=$P(^DPT(PAT,0),U)
+ . ;S PATNAME=$P(^DPT(PAT,0),U)
+ . S PATNAME=$P(^DPT(PAT,0),U)_$$PPN1^ABSPUTL(PAT)   ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  . S DRUGNAME="" ; no charge item yet
  . S (RXI,RXR,AWPMED)="" ; no prescription
  . S FILLDATE=$$MMMDD($P($P(V0,U),"@"))

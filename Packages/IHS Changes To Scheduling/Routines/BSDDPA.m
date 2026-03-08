@@ -1,5 +1,5 @@
 BSDDPA ; IHS/ITSC/LJF, WAR - DISPLAY PAT APPTS ;  [ 04/16/2004  4:40 PM ]
- ;;5.3;PIMS;**1003,1004**;MAY 28, 2004
+ ;;5.3;PIMS;**1003,1004,1022**;MAY 28, 2004;Build 18
  ;IHS/ITSC/LJF 05/13/2005 PATCH 1003 added EP; to EN subroutine
  ;IHS/OIT/LJF 07/20/2005 PATCH 1004 check if patient active on a wait list
  ;                                  expanded default end date to 6 months from today
@@ -33,10 +33,12 @@ EN ;EP; -- main entry point for SD IHS APPT MADE BY;IHS/ITSC/LJF PATCH 1003
 HDR ; -- header code
  NEW X
  S VALMHDR(1)=$$SP(15)_$$CONF^BDGF
- S X=$G(IORVON)_$$GET1^DIQ(2,DFN,.01)_$G(IORVOFF)
- S X=$$PAD(X,40)_"#"_$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
- S X=$$PAD(X,52)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
- S VALMHDR(2)=$$PAD(X,69)_"Sex: "_$E($$GET1^DIQ(2,DFN,.02),1)
+ ;202307 77892 maw p1022 PPN
+ S X=$G(IORVON)_$$GETPREF^AUPNSOGI(DFN,"E",1)_$G(IORVOFF)
+ ;S X=$G(IORVON)_$$GET1^DIQ(2,DFN,.01)_$G(IORVOFF)
+ S X=$$PAD(X,48)_$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
+ S X=$$PAD(X,55)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
+ S VALMHDR(2)=$$PAD(X,73)_"Sex: "_$E($$GET1^DIQ(2,DFN,.02),1)
  I $$DEAD^BDGF2(DFN) S VALMHDR(3)=$$SP(25)_$G(IORVON)_"** Patient Died on "_$$DOD^BDGF2(DFN)_" **"_$G(IORVOFF)
  E  S VALMHDR(3)=$$PCLINE^SDPPTEM(DFN,DT)
  Q

@@ -1,6 +1,6 @@
-DIP0 ;SFISC/XAK-COMPUTED FIELD ON A SORT, EDITING A SORT TEMPLATE ;02:12 PM  10 Nov 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**2**;Mar 30, 1999
+DIP0 ;SFISC/XAK-COMPUTED FIELD ON A SORT, EDITING A SORT TEMPLATE ;12/13/96  15:11 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**35**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S P=P_Q,DPP=$P(X,U,1)
 C ;
@@ -12,27 +12,15 @@ XA F %=0:0 S %=$O(X(%)) Q:%=""  S @(DA_"%)=X(%)")
  ;
  ;
 COLON D ^DICOMPW K DUOUT
- I $D(X),$S($D(DIL(+DP)):DIL(+DP)=DL,1:1) S DPP(DJ,DL,+Y)=DP_U_(Y["m")_U_X,DIL(+DP)=DL,N=+Y,DL=+DP,DV=$J("",DJ*2-2)_$O(^DD(DL,0,"NM",0))_" FIELD" S:$D(DIPP(DIJ,+DP))#2 $P(DIPP(DIJ),U,3)=DIPP(DIJ,+DP) D XA,L G Y^DIP
+ I $D(X),$S($D(DIL(+DP)):DIL(+DP)=DL,1:1) S DPP(DJ,DL,+Y)=DP_U_(Y["m")_U_X,DIL(+DP)=DL,N=+Y,DL=+DP,DV=$J("",DJ*2-2)_$O(^DD(DL,0,"NM",0))_" FIELD" S:$D(DIPP(DIJ,+DP)) $P(DIPP(DIJ),U,3)=DIPP(DIJ,+DP) D XA,L G Y^DIP
 X I $D(BY)#2,BY]"" S X=DM_C_BY,BY="" G C
  G B^DIP
  ;
 EDT ;
  S DIE="^DIBT(",DR=".01;3;6",DA=X,DIPP=DI,DIOVRD=1 D ^DIE S DI=DIPP,DE=$S(L=0!L:"SORT",1:L) K DR,DIE,DIPP,DIOVRD I '$D(DA)!($D(Y)) S (X,DJ)=+$G(DPP(0)) Q
- S %=$G(DPP(0,"IX")) I $P(%,U,2)]"",$P(%,U,4) D  I $G(DPP(0))']"" S (X,DJ)=0 Q
- . N X,I,Y,F,T,O,Q,DIEDITBY S DIEDITBY=1 K FR(0),TO(0),DISPAR(0),DIPP
- . S BY(0)="^"_$P(%,U,2),L(0)=$P(%,U,4)
- . F I=L(0):1 Q:'$D(DPP(I))  M DIPP(I)=DPP(I) K DPP(I)
- . F I=1:1:(L(0)-1) D  Q:'$G(L(0))
- .. S F=$P($G(DPP(I,"F")),U,2),T=$P($G(DPP(I,"T")),U,2) S:F]"" FR(0,I)=F S:T]"" TO(0,I)=T
- .. S O=$P($G(DPP(I)),U,4),Q="" S:O["!" Q=Q_"!" S:O["#" Q=Q_"#" S:$P($G(DPP(I)),U,5)]"" Q=Q_"^"_$P(DPP(I),U,5) S:Q]"" DISPAR(0,I)=Q
- .. I $G(DISPAR(0,I))]"",$G(DPP(I,"OUT"))]"" S DISPAR(0,I,"OUT")=DPP(I,"OUT")
- .. K DPP(I) Q
- . D BYOK^DIP100
- . I $G(DPP(0))]"" S X=DPP(0) F I=0:0 S I=$O(DIPP(I)) Q:'I  S X=X+1 M DPP(X)=DIPP(I)
- . K DIPP Q
  S DIPP="",DIJ=0 F DJ=$G(DPP(0)):0 S DJ=$O(DPP(DJ)) Q:'DJ  S DIJ=DIJ+1,%X="DPP(DJ,",%Y="DIPP(DIJ," D %XY^%RCR
  S DIJ=0 F DJ=$G(DPP(0)):0 S DJ=$O(DPP(DJ)) Q:DJ=""  D
- . S DIJ=DIJ+1 N X S X=$P(DPP(DJ),U,4),X=$TR(X,"B",""),X=$S(X[Q:$P(X,Q,($L(X,Q)-1)),1:X)
+ . S DIJ=DIJ+1 N X S X=$P(DPP(DJ),U,4),X=$S(X[Q:$P(X,Q,($L(X,Q)-1)),1:X)
  . S $P(DIPP(DIJ),U,3)=X_$P(DPP(DJ),U,3)_$P(DPP(DJ),U,5)
  . S %=+DPP(DJ) D E1 S %X=0 D E2 K DPP(DJ)
  . Q
@@ -45,7 +33,7 @@ E2 S %X=$O(DPP(DJ,%X)) I %X'>0 K %X Q
  G E2:'$D(DPP(DJ,%X,100)) S %=%X D E1 S %=DPP(DJ,%X,100)
  I $P(%,U,3) S DIPP(DIJ,+%)=$P(DIPP(DIJ),U,3),$P(DIPP(DIJ),U,3)=$P(^DIC(+%,0),U)_":",$P(DIPP(DIJ),U)=+% G E2
  I %'["Y(1)" S %=$F(%,"OVF0") Q:'%  S %=+$E(DPP(DJ,%X,100),%+2,99),%=$P(DPP(DJ,%X,100),U)_U_DPP(DJ,"OVF0",%) Q:%'["Y(1)"
-WHO S G=$TR($P($P($P(%,"Y(1)",2),")):^(",2),")"),""""),P=$P(%,"Y(1)",3),P=$P($P(P,"U,",2),")") I G]"",P]"" S P=+$O(^DD(%X,"GL",G,P,0))
+ S G=$P($P($P(%,"Y(1)",2),")):^(",2),")",1),P=$P(%,"Y(1)",3),P=$P($P(P,"U,",2),")",1),P=+$O(^DD(%X,"GL",G,P,0))
  I P,$D(^DD(%X,P,0)) S:DIJJ DIPP(DIJ,+%)=DIPP(DIJ,%X),DIPP(DIJ,%X)=$P(^(0),U)_":" S:'DIJJ DIPP(DIJ,+%)=$P(DIPP(DIJ),U,3),$P(DIPP(DIJ),U,3)=$P(^(0),U)_":"
  G E2
  ;

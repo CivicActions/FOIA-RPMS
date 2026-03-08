@@ -1,5 +1,5 @@
 BQICONPL ;GDIT/HS/ALA-Consults by Panel ; 06 Jan 2015  4:00 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**1,5**;Mar 01, 2021;Build 20
  ;
  ;
  Q
@@ -38,6 +38,7 @@ EN(DATA,OWNR,PLIEN,PLIST) ;EP -- BQI GET CONSULTS BY PANEL
  . D PAT(.DATA,OWNR,PLIEN,DFN)
  ;
 DONE ;
+ I II=0,$G(@DATA@(II))="" D PAT(.DATA,OWNR,PLIEN,"")
  S II=II+1,@DATA@(II)=$C(31)
  Q
  ;
@@ -78,6 +79,7 @@ PAT(DATA,OWNR,PLIEN,DFN) ;EP - Build record by patient
  I TEMPL'="" S TQFL=0 D  G FIN:'TQFL
  . S LYIEN=$$TPN^BQILYUTL(DUZ,TEMPL)
  . I LYIEN="" S TQFL=1 Q
+ . I $O(^BQICARE(OWNR,1,PLIEN,27,0))'="" S TQFL=1 Q
  . I '$D(@TMP@(123)) S CRE=CRE+1,VALUE(CRE)=VALUE(0)_"^"
  . S CNN="" F  S CNN=$O(@TMP@(123,CNN)) Q:CNN=""  S CNIEN=$$TKO^BQIUL1(CNN,","),CRE=CRE+1,VALUE(CRE)=VALUE(0)_CNIEN_"^"
  . S DOR=""
@@ -92,7 +94,7 @@ PAT(DATA,OWNR,PLIEN,DFN) ;EP - Build record by patient
  .... S STVW=GIEN D CVAL
  .... F C=1:1:CRE S VALUE(C)=VALUE(C)_VAL_"^"
  ... I $$GET1^DIQ(90506.1,GIEN_",",3.01,"E")="Consults" D
- .... I '$D(@TMP) S VALUE(CRE)=VALUE(CRE)_"^"
+ .... I '$D(@TMP) S VAL="",VALUE(CRE)=VALUE(CRE)_VAL_"^"
  .... S STVW=GIEN S CNN="",C=0 F  S CNN=$O(@TMP@(123,CNN)) Q:CNN=""  D CNVL S C=C+1,VALUE(C)=VALUE(C)_VAL_"^"
  . F C=1:1:CRE S VALUE(C)=$$TKO^BQIUL1(VALUE(C),"^")
  . I DFN="" S VALUE(1)=""
@@ -118,7 +120,7 @@ PAT(DATA,OWNR,PLIEN,DFN) ;EP - Build record by patient
  .... S STVW=SIEN D CVAL
  .... F C=1:1:CRE S VALUE(C)=VALUE(C)_VAL_"^"
  ... I $$GET1^DIQ(90506.1,SIEN_",",3.01,"E")="Consults" D
- .... I '$D(@TMP) S VALUE(CRE)=VALUE(CRE)_"^"
+ .... I '$D(@TMP) S VAL="",VALUE(CRE)=VALUE(CRE)_VAL_"^"
  .... S STVW=SIEN S CNN="",C=0 F  S CNN=$O(@TMP@(123,CNN)) Q:CNN=""  D CNVL S C=C+1,VALUE(C)=VALUE(C)_VAL_"^"
  .. F C=1:1:CRE S VALUE(C)=$$TKO^BQIUL1(VALUE(C),"^")
  .. I DFN="" S VALUE(1)=""
@@ -126,6 +128,7 @@ PAT(DATA,OWNR,PLIEN,DFN) ;EP - Build record by patient
  ... F C=1:1:CRE S CLNG=$L(HEADR,"^")-$L(VALUE(C),"^") D
  .... I CLNG>0 S $P(VALUE(C),"^",$L(HEADR,"^"))=""
  .... I CLNG<0 S VALUE(C)=$P(VALUE(C),"^",1,$L(HEADR,"^"))
+ .... I CLNG=0 S VALUE(C)=VALUE(C)_"^"
  ... F C=1:1:CRE S II=II+1,VALUE(C)=$$TKO^BQIUL1(VALUE(C),"^"),@DATA@(II)=VALUE(C)_$C(30)
  . K VALUE S VALUE(0)=BVALUE
  . ;
@@ -146,14 +149,15 @@ PAT(DATA,OWNR,PLIEN,DFN) ;EP - Build record by patient
  .... S STVW=SIEN D CVAL
  .... F C=1:1:CRE S VALUE(C)=VALUE(C)_VAL_"^"
  ... I $$GET1^DIQ(90506.1,SIEN_",",3.01,"E")="Consults" D
- .... I '$D(@TMP) S VALUE(CRE)=VALUE(CRE)_"^"
+ .... I '$D(@TMP) S VAL="",VALUE(CRE)=VALUE(CRE)_VAL_"^"
  .... S STVW=SIEN S CNN="",C=0 F  S CNN=$O(@TMP@(123,CNN)) Q:CNN=""  D CNVL S C=C+1,VALUE(C)=VALUE(C)_VAL_"^"
- . F C=1:1:CRE S VALUE(C)=$$TKO^BQIUL1(VALUE(C),"^")
- . I DFN="" S VALUE(1)=""
- . I $D(VALUE) D
+ .. F C=1:1:CRE S VALUE(C)=$$TKO^BQIUL1(VALUE(C),"^")
+ .. I DFN="" S VALUE(1)=""
+ .. I $D(VALUE) D
  .. F C=1:1:CRE S CLNG=$L(HEADR,"^")-$L(VALUE(C),"^") D
  ... I CLNG>0 S $P(VALUE(C),"^",$L(HEADR,"^"))=""
  ... I CLNG<0 S VALUE(C)=$P(VALUE(C),"^",1,$L(HEADR,"^"))
+ ... I CLNG=0 S VALUE(C)=VALUE(C)_"^"
  .. F C=1:1:CRE S II=II+1,VALUE(C)=$$TKO^BQIUL1(VALUE(C),"^"),@DATA@(II)=VALUE(C)_$C(30)
  . K VALUE S VALUE(0)=BVALUE
  . ;
@@ -189,7 +193,7 @@ STAND() ;EP - Get standard display
  . S KEY=$$GET1^DIQ(90506.1,IEN_",",3.1,"E")
  . I KEY'="",'$$KEYCHK^BQIULSC(KEY,DUZ) Q
  . I $P($G(^BQI(90506.1,IEN,3)),"^",4)'="O" D
- .. I '$D(@TMP) S VALUE(CRE)=VALUE(CRE)_"^"
+ .. I '$D(@TMP) S VAL="",VALUE(CRE)=VALUE(CRE)_VAL_"^"
  .. S STVW=IEN S CNN="",C=0 F  S CNN=$O(@TMP@(123,CNN)) Q:CNN=""  D CNVL S C=C+1,VALUE(C)=VALUE(C)_VAL_"^"
  F C=1:1:CRE S VALUE(C)=$$TKO^BQIUL1(VALUE(C),"^")
  I DFN="" S VALUE(1)=""
@@ -197,6 +201,7 @@ STAND() ;EP - Get standard display
  . F C=1:1:CRE S CLNG=$L(HEADR,"^")-$L(VALUE(C),"^") D
  .. I CLNG>0 S $P(VALUE(C),"^",$L(HEADR,"^"))=""
  .. I CLNG<0 S VALUE(C)=$P(VALUE(C),"^",1,$L(HEADR,"^"))
+ .. I CLNG=0 S VALUE(C)=VALUE(C)_"^"
  F C=1:1:CRE S II=II+1,VALUE(C)=$$TKO^BQIUL1(VALUE(C),"^"),@DATA@(II)=VALUE(C)_$C(30)
  K VALUE S VALUE(0)=BVALUE
  Q
@@ -330,7 +335,7 @@ CHR ;EP Consult Header
  ... S CODE=$P(^BQICARE(OWNR,1,PLIEN,30,DUZ,27,IEN,0),"^",1)
  ... S SIEN=$O(^BQI(90506.1,"B",CODE,"")) I SIEN="" Q
  ... I $P(^BQI(90506.1,SIEN,0),U,10)=1 Q
- ... S HDR=$P(^BQI(90506.1,STVW,0),"^",8)
+ ... S HDR=$P(^BQI(90506.1,SIEN,0),"^",8)
  ... S CHEADR=CHEADR_HDR_"^"
  . S CHEADR=$$TKO^BQIUL1(CHEADR,"^")
  . ;

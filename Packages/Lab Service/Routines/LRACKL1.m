@@ -1,5 +1,5 @@
 LRACKL1 ;DALOI/FHS/JMC/RLM-CONTINUES CHUTES & LADDERS ;03/24/92 18:40 [ 04/24/2003  7:03 AM ]
- ;;5.2T9;LR;*1018*;Nov 17, 2004
+ ;;5.2;LR;*1018*;Nov 18, 2004
  ;;5.2;LAB SERVICE;**272**;Sep 27, 1994
  ; Reference to ^DIC( supported by IA #2374
  ; Reference to ^SC( supported by IA # 908

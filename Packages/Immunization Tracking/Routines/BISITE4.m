@@ -1,12 +1,15 @@
-BISITE4 ;IHS/CMI/MWR - SELECT GPRA COMMUNITIES.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**14**;AUG 01,2017
+BISITE4 ;IHS/CMI/MWR - SELECT GPRA COMMUNITIES.; MAY 10, 2010 [ 06/24/2025  10:16 PM ] ; 19 Aug 2025  11:21 AM
+ ;;8.5;IMMUNIZATION;**22,29,30,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  SELECT COMMUNITIES TO BE INCLUDED IN GPRA GROUPS AND REPORTS.
  ;;  PATCH 8: Update Help Text to exclude influenza.  TEXT2+3
  ;;  PATCH 9: Update options to include Hep B. TEXT1+24
  ;;  PATCH 12: Use BIDUZ2.  GETGPRA+9
  ;;  PATCH 13: Add Flu Season Date Range parameter. FLUDATS+0
- ;;  PATCH 14: Update options and  Help TEXT2 to include Hep A&B  RISKP+0
+ ;;  PATCH 14: Update options and  Help TEXT2 to include Hep A&B RISKP+0
+ ;;  PATCH 21: Correct call to TEXT1 at INPTCHK+6
+ ;;  PATCH 22: Changes to include COVID.   RISKP+0
+ ;;  PATCH 31 - FID-98855 RZV 19-49 yrs
  ;
  ;
  ;----------
@@ -56,7 +59,7 @@ GETGPRA(BIGPRA,BIDUZ2,BIERR) ;PEP - Return GPRA Communities Array.
  ;
  I '$G(BIDUZ2) S BIDUZ2=$G(DUZ(2))
  I '$G(BIDUZ2) D ERRCD^BIUTL2(109,.BIERR) Q
- ;********** PATCH 12, v8.5, MAY 01,2016, IHS/CMI/MWR
+ ;********** PATCH 12, v8.5, OCT 24,2011, IHS/CMI/MWR
  ;---> Use BIZUZ2 as passed rather than DUZ(2).
  ;I '$O(^BISITE(DUZ(2),2,0)) D ERRCD^BIUTL2(110,.BIERR) Q
  I '$O(^BISITE(BIDUZ2,2,0)) D ERRCD^BIUTL2(110,.BIERR) Q
@@ -73,7 +76,7 @@ INPTCHK ;EP
  ;---> Called by Protocol BI SITE INPATIENT CHECK ENABLE.
  ;
  Q:$$BISITE^BISITE2
- D FULL^VALM1,TITLE^BIUTL5("ENABLE/DISABLE INPATIENT VISIT CHECK"),TEXT5
+ D FULL^VALM1,TITLE^BIUTL5("ENABLE/DISABLE INPATIENT VISIT CHECK"),TEXT1
  N BIDFLT,DIR,DIRUT,Y
  S DIR(0)="SOA^E:Enable;D:Disable"
  S DIR("A")="     Please select either Enable or Disable: "
@@ -215,10 +218,13 @@ TEXT1 ;EP
  ;
  ;
  ;
- ;;********** PATCH 14, v8.5, AUG 01,2017, IHS/CMI/MWR
- ;---> Update options and  Help TEXT2 to include Hep B and Hep A for CLD/HepC.
+ ;********** PATCH 22, v8.5, OCT 24,2011, IHS/CMI/MWR
+ ;---> Update options to include COVID.
  ;----------
 RISKP ;EP
+ ;V8.5 PATCH 29 - FID-106359 Relocate MenB to site parameter
+ ;V8.5 PATCH 31 - FID-118921 Nirsevimab for 9-18 mts
+ ;V8.5 PATCH 31 - FID-98855 RZV 19-49 mts
  ;---> Edit the parameter that determines whether the Risk Status
  ;---> for patients with regard to Flu and Pneumo should be checked
  ;---> (in the Visit files) when forecasting those vaccines.
@@ -226,23 +232,23 @@ RISKP ;EP
  ;
  Q:$$BISITE^BISITE2
  D FULL^VALM1,TITLE^BIUTL5("ENABLE/DISABLE RISK FACTOR CHECKS"),TEXT2
- N BIERR,BIDFLT,BIDFLT1,BISEL,DIR,DIRUT,X,Y
- S BIDFLT=$$RISKP^BIUTL2(BISITE),BISEL=""
- S X=$E(BIDFLT,1)
- I $E(BIDFLT,2)&($E(BIDFLT,2)'=9) S X=X_","_$E(BIDFLT,2)
- I $E(BIDFLT,3)&($E(BIDFLT,3)'=9) S X=X_","_$E(BIDFLT,3)
+ N BIERR,BIDFLT,BIDFLT1,BISEL,DIR,DIRUT,X,Y,J
+ S BIDFLT=$$RISKP^BIUTL2(BISITE),BISEL="",X=""
+ F J=1:1 S Y=$E(BIDFLT,J) Q:Y=""  I Y?1N S:X="" X=Y I X'=Y S X=X_","_Y
  S DIR("B")=X
- S DIR(0)="FOA^0:5",DIR("A")="     Select one or more of the above, separated by commas: "
+ S DIR(0)="LOA^0:8",DIR("A")="     Select one or more of the above, separated by commas: "
  ;
- S DIR("?")="     Enter 1, 2, or 3, or any combination of them, separated by commas."
+ S DIR("?",1)="     Enter each of the numbers for risk factors to include."
+ S DIR("?")="     For example, enter 2-4,8 or 3,5,7 to specify the risk factor(s) to include."
  D ^DIR
  I $D(DIRUT) D RESET^BISITE Q
  ;
  ;---> Save user selection.
- I Y[1 S BISEL=1
- I Y[2 S BISEL=BISEL_2
- I Y[3 S BISEL=BISEL_3
+ S BISEL=$TR(Y,",")
+ I BISEL[0,BISEL S BISEL=$TR(BISEL,0)
  I 'BISEL S BISEL=0
+ ;
+ ;**********
  ;
  ;---> If selection includes Pneumo, then ask about Smoking Factors.
  D:(BISEL[1)
@@ -254,9 +260,10 @@ RISKP ;EP
  .S DIR(0)="Y",DIR("A")="     Enter Yes or No"
  .S DIR("B")=$S(BIDFLT[9:"YES",1:"NO")
  .D ^DIR
- .I Y S BISEL=BISEL_9
+ .I Y S BISEL=BISEL_"S"
  ;
- N BIFLD,BIERR S BIFLD(.19)=BISEL
+ N BIFLD,BIERR
+ S BIFLD(.19)=BISEL
  D FDIE^BIFMAN(9002084.02,BISITE,.BIFLD,.BIERR,1)
  I BIERR]"" W !!?3,BIERR D DIRZ^BIUTL3()
  ;
@@ -265,6 +272,7 @@ RISKP ;EP
  ;
  ;
  ;----------
+ ;V8.5 PATCH 29 - FID-106359 Relocate MenB to site parameter
 TEXT2 ;EP
  ;;When forecasting immunizations for a patient, this program is able
  ;;to look at the patient's medical history of visits and attempt to
@@ -273,14 +281,21 @@ TEXT2 ;EP
  ;;chronic liver disease (CLD) or hepatitis C.  If the patient fits the
  ;;High Risk criteria, the program will forecast the patient as due for
  ;;those immunizations.
+ ;;COVID Immunocompromised option will forecast the patient as due for
+ ;;an additional dose of COVID vaccine.
  ;;
- ;;This parameter allows you to select which, if any, High Risk forecasting
+ ;;This parameter allows you to select which High Risk forecasting
  ;;is enabled on your system.  The choices are as follows:
  ;;
  ;;   0 - None
  ;;   1 - Pneumo for High Risk history
  ;;   2 - Hep B for Diabetes Mellitus
  ;;   3 - Hep A and Hep B for CLD/Hep C
+ ;;   4 - COVID Immunocompromised
+ ;;   5 - Men B for 16 to 23 yrs
+ ;;   6 - RSV for 60 to 74 yrs
+ ;;   7 - HPV for 9 to 10 yrs
+ ;;   8 - RecombZV for 19 to 49 yrs
  ;;
  D PRINTX("TEXT2")
  Q
@@ -388,6 +403,9 @@ TEXT4 ;EP
  ;----------
 PRINTX(BILINL,BITAB) ;EP
  Q:$G(BILINL)=""
- N I,T,X S T="" S:'$D(BITAB) BITAB=5 F I=1:1:BITAB S T=T_" "
+ N I,T,X
+ S T=""
+ S:'$D(BITAB) BITAB=5
+ F I=1:1:BITAB S T=T_" "
  F I=1:1 S X=$T(@BILINL+I) Q:X'[";;"  W !,T,$P(X,";;",2)
  Q

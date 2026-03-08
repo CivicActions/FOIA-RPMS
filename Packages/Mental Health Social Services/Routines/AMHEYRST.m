@@ -1,5 +1,5 @@
-AMHEYRST ; IHS/CMI/LAB - RESET TX LOG AUGUST 14, 1992 ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHEYRST ; IHS/CMI/LAB - RESET TX LOG AUGUST 14, 1992 ;  [ 11/15/2004   8:13 AM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4**;JAN 27, 2003
  ;
  W !!,"This routine will reset the BH Data Transmission Log.  You must be",!,"absolutely sure that you have corrected the underlying problem that caused ","the Transmission process to fail in the first place!",!!
  W "The BH Data Transmission log entry you choose will be REMOVED from the log",!,"file and all Utility and Data globals associated with that run will be killed!!",!!

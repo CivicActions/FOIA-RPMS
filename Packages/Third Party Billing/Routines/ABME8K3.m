@@ -1,10 +1,10 @@
-ABME8K3 ; IHS/ASDST/DMJ - 837 K3 Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8K3 ; IHS/ASDST/DMJ - 837 K3 Segment [ 02/04/2003  11:07 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1,13**;APR 05, 2002
  ;Transaction Set Header
  ;
  ; IHS/SD/SDR - v2.5 p13 - POA changes
  ;
-EP ;EP - START HERE
+EP ;EP - START HERE  ;abm*2.5*13 POA - changed START to EP
  K ABMREC("K3"),ABMR("K3")
  S ABME("RTYPE")="K3"
  D LOOP
@@ -22,6 +22,7 @@ LOOP ;LOOP HERE
  Q
 20 ;K301 - Fixed Format Information
  S ABMR("K3",20)=""
+ ;start new code abm*2.5*13 POA
  S ABMSTR=""
  S ABMPRI=0
  F  S ABMPRI=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),17,"C",ABMPRI)) Q:+ABMPRI=0  D
@@ -29,6 +30,7 @@ LOOP ;LOOP HERE
  .F  S ABMMIEN=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),17,"C",ABMPRI,ABMMIEN))  Q:+ABMMIEN=0  D
  ..S ABMSTR=$G(ABMSTR)_$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),17,ABMMIEN,0)),U,5)
  I $G(ABMSTR)'="" S ABMR("K3",20)="POA"_ABMSTR_"Z"
+ ;end new code POA
  Q
 30 ;K302 - Record Format Code - not used
  S ABMR("K3",30)=""

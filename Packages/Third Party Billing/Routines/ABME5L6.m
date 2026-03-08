@@ -1,6 +1,8 @@
 ABME5L6 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS Third Party Billing System;**6,8**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,8,28,34**;NOV 12, 2009;Build 645
  ;Header Segments
+ ;IHS/SD/AML 2.6*28 CR8341 Added code to print HI*BJ and HI*PR when bill type is 121.
+ ;IHS/SD/SDR 2.6*34 ADO60694/CR7384 Added HI*DR segment for DRG.
  ;
 START ;START HERE
  D DXSET^ABMUTL8(ABMP("BDFN"))
@@ -8,12 +10,26 @@ START ;START HERE
  D EP^ABME5HI("BK")
  D WR^ABMUTL8("HI")
  ;admitting (BJ) or patient's reason for visit (PR)
- I $E(ABMP("BTYP"),1,2)=11 D EP^ABME5HI("BJ")  D WR^ABMUTL8("HI")
- I $E(ABMP("BTYP"),1,2)'=11,$G(ABMDX("ADM"))'="" D EP^ABME5HI("PR")  D WR^ABMUTL8("HI")
+ ;start old abm*2.6*28 IHS/SD/AML CR8341 - Allow 121 to display segments
+ ;I $E(ABMP("BTYP"),1,2)=11 D EP^ABME5HI("BJ")  D WR^ABMUTL8("HI")
+ ;I $E(ABMP("BTYP"),1,2)'=11,$G(ABMDX("ADM"))'="" D EP^ABME5HI("PR")  D WR^ABMUTL8("HI")
+ ;end old start new abm*2.6*28 IHS/SD/AML CR8341 - Allow 121 to display segments
+ I ($G(ABMDX("ADM"))'="") D
+ .I ($E(ABMP("BTYP"),1,2)=11)!($E(ABMP("BTYP"),1,2)=12) D EP^ABME5HI("BJ")  D WR^ABMUTL8("HI") Q
+ .D EP^ABME5HI("PR") D WR^ABMUTL8("HI")
+ ;end new abm*2.6*28 IHS/SD/AML CR8341 - Allow 121 to display segments
  ;external cause of injury (BN)
  I $D(ABMDXE) D
  .D EP^ABME5HI("BN")
  .D WR^ABMUTL8("HI")
+ ;
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60694
+ ;Diagnosis Related Grouper (DRG)
+ I +$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),5)),U,13)'=0 D
+ .D EP^ABME5HI("DR")
+ .D WR^ABMUTL8("HI")
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60694
+ ;
  ;other (BF)
  I $G(ABMDX(2))'="" D
  .D EP^ABME5HI("BF")

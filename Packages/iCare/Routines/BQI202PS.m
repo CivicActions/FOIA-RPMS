@@ -1,5 +1,5 @@
 BQI202PS ;VNGT/HS/ALA-Version 2.0 Patch 2 Post-Install ; 11 Dec 2008  1:47 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;2.0;ICARE MANAGEMENT SYSTEM;**2**;May 29, 2009
  ;
 EN ; Entry point
  ;

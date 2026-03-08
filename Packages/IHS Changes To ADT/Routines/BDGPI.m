@@ -1,5 +1,5 @@
 BDGPI ; IHS/ANMC/LJF,WAR - PATIENT INQUIRY ;  [ 01/05/2005  10:24 AM ]
- ;;5.3;PIMS;**1001,1003**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1003,1022**;MAY 28, 2004;Build 18
  ;IHS/ITSC/LJF 5/27/2004 PATCH 1001 added Admission LOS to display
  ;             5/13/2005 PATCH 1003 added parameter to day surgery expanded view
  ;
@@ -78,22 +78,31 @@ SECTION1 ; -- set up demographic data for display
  . D SET($$SP(10)_$G(IORVON)_"DO NOT DISCLOSE INFORMATION ABOUT PATIENT"_$G(IORVOFF),.VALMCNT,BDGS,BDGI)
  ;
  ; name, cwad display, chart # and date of birth
- S LINE=$$GET1^DIQ(2,DFN,.01)_" "_$TR($$CWAD^BDGF2(DFN)," ","")
- S LINE=$$PAD(LINE,32)_"HRCN: "_$$HRCN^BDGF2(DFN,DUZ(2))
- S LINE=$$PAD(LINE,54)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
+ ;202307 77894 maw p1022 PPN
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S LINE=$E($G(PRF),1,30)_" "_$TR($$CWAD^BDGF2(DFN)," ","")
+ S LINE=$$PAD(LINE,42)_"HRCN: "_$$HRCN^BDGF2(DFN,DUZ(2))
+ S LINE=$$PAD(LINE,64)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
+ ;S LINE=$$GET1^DIQ(2,DFN,.01)_" "_$TR($$CWAD^BDGF2(DFN)," ","")
+ ;S LINE=$$PAD(LINE,32)_"HRCN: "_$$HRCN^BDGF2(DFN,DUZ(2))
+ ;S LINE=$$PAD(LINE,54)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
  D SET(LINE,.VALMCNT,BDGS,BDGI)
  ;
  ; street address, home phone and primary care provider
  S LINE=$$PAD($$GET1^DIQ(2,DFN,.111),31)
  S LINE=LINE_"PHONE: "_$$GET1^DIQ(2,DFN,.131)
- S LINE=$$PAD(LINE,54)_"SEX: "_$$GET1^DIQ(2,DFN,.02)
+ S LINE=$$PAD(LINE,64)_"SEX: "_$$GET1^DIQ(2,DFN,.02)
+ ;S LINE=$$PAD(LINE,54)_"SEX: "_$$GET1^DIQ(2,DFN,.02)
  D SET(LINE,.VALMCNT,BDGS,BDGI)
  ;
  ; city, state, eligibility, primary care provider
  S LINE=$$GET1^DIQ(2,DFN,.114)_", "_$$STATE(DFN)_" "_$$GET1^DIQ(2,DFN,.116)
  S LINE=$$PAD(LINE,32)_"ELIG: "_$E($$GET1^DIQ(9000001,DFN,1112),1,15)
- S X=$$GET1^DIQ(2,DFN,.09),X=$E(X,1,3)_"-"_$E(X,4,5)_"-"_$E(X,6,9)
- S LINE=$$PAD(LINE,54)_"SSN: "_X
+ ;S X=$$GET1^DIQ(2,DFN,.09),X=$E(X,1,3)_"-"_$E(X,4,5)_"-"_$E(X,6,9)
+ S X=$$GET1^DIQ(2,DFN,.09),X="XXX-XX-"_$E(X,6,9)  ;20230623 84858 p1022 maw filter SSN
+ S LINE=$$PAD(LINE,64)_"SSN: "_X
+ ;S LINE=$$PAD(LINE,54)_"SSN: "_X
  D SET(LINE,.VALMCNT,BDGS,BDGI)
  ;
  ; service unit based on community of residence

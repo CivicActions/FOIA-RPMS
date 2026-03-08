@@ -1,5 +1,5 @@
 ABSPOSE2 ; IHS/SD/lwj - E1 generation routine ; [ 10/24/2005 10:09:07 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**21,24,40,42,48**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**21,24,40,42,48,51,52**;JUN 01, 2001;Build 131
  ;
  ;IHS/SD/RLT - 05/22/07 - Patch 21
  ;  Enhanced E1 - modified version of ABSPOSE1
@@ -7,7 +7,13 @@ ABSPOSE2 ; IHS/SD/lwj - E1 generation routine ; [ 10/24/2005 10:09:07 AM ]
  ;
  ;IHS/SD/RLT - 02/13/08 - Patch 24
  ;  Fixed Medicare name and DOB lookup (IM27373)
+ ;
+ ;/IHS/OIT/RAM - 10 JAN 2019 - Patch 51
+ ;  Fix requirement to send NPI instead of NCPDP.
+ ;  Add prompt for Division if more than one division has an NPI number.
+ ;
  Q
+ ;
 MAIN ;EP
  N POP
  S POP=0
@@ -16,7 +22,7 @@ MAIN ;EP
  ;
  Q
 PROCESS ;
- N E1PNAM,E1PIEN,E1PINFO,E1PHARM,E1IEN,E1DATE
+ N E1PNAM,E1PIEN,E1PINFO,E1PHARM,E1IEN,E1DATE,E1NPI
  ;
  S POP=1
  ; get patient
@@ -29,6 +35,12 @@ PROCESS ;
  S E1PHARM=$$GETPHARM    ;ien ^ABSP(9002313.56
  Q:E1PHARM<1
  ;
+ ; /IHS/OIT/RAM ; P51 ; Now that we need NPIs, a pharmacy may be multidivisional and have more than one...
+ ;              ; If there's none, warn the user and exit. If there's one, just use it with no further
+ ;              ; user interation. If multiples, ask user which NPI to use. 
+ S E1NPI=$$GETNPI(E1PHARM)
+ I +E1NPI=0 Q
+ ;
  ; get ^ABSPE rec
  S E1IEN=$$GETABSPE      ;ien ^ABSPE
  Q:E1IEN<1    ;had prev one, didn't want new one
@@ -40,6 +52,12 @@ PROCESS ;
  D CRTE1
  U $P W !!,"Transmitting eligibility check, please stand by.....",!!
  D SEND^ABSPOSAE(TDATA,E1IEN)  ;send trans
+ ; MOVE DISPLAY TO LOCAL ROUTINE DUE TO E3 EXISTING.
+ Q:'$$DEVICE^ABSPOS6D
+ U IO
+ ;D DISPLAY^ABSPOSE1(E1IEN)
+ D DISPLAY(E1IEN)
+ D BYE^ABSPOSU5
  S POP=0
  ;
  Q
@@ -86,6 +104,30 @@ GETPHARM() ; Prompt for pharmacy.
  . S:(($G(DUOUT))!($G(DTOUT))!(Y>0)) PDONE=1
  ;
  Q +Y
+ ;
+GETNPI(PHARM) ; /IHS/OIT/RAM ; P51 ; Get NPI(s) for Outpatient Site. If none, warn user & exit.
+ ;         If one, use it and return. If more than one, prompt user for clarification.
+ ;
+ N I,I2,I3,J,J2,J3,K,K2,K3,NPI,NPITMP,OPS,Y,PDONE,OPSCNT,DIC,DIR
+ ;
+ S (OPS,OPSCNT,PDONE,NPI,Y)=0
+ ;
+ F  S OPS=$O(^ABSP(9002313.56,PHARM,"OPSITE",OPS)) Q:'+OPS  D
+ . S NPITMP=$$GET1^DIQ(9002313.5601,OPS_","_PHARM,.02)
+ . I NPITMP'="" S OPSCNT=OPSCNT+1 S NPI(OPSCNT)=NPITMP
+ I OPSCNT=0 D NPIWARN Q 0
+ I OPSCNT=1 Q NPI(OPSCNT)
+ ;
+ W !,"For the Pharmacy: ",$$GET1^DIQ(9002313.56,PHARM,.01)," there are ",OPSCNT," Outpatient Sites:",!!
+ F I=1:1:OPSCNT D
+ . W I,") Site: ",$$GET1^DIQ(9002313.5601,I_","_PHARM,.01),?43,"NPI: ",NPI(I),!
+ S DIR(0)="N^1:"_OPSCNT
+ S DIR("A")="Which NPI would you like to send? "
+ S DIR("B")="1"
+ D ^DIR  W !
+ I $D(DTOUT)!($D(DUOUT))!($D(DIRUT)) W "User Aborted. Exiting. ",! Q 0
+ Q NPI(+Y)
+ ;
 GETDATE() ; Prompt for service date.
  N CURDISP,X1,X2,BEGDT,ENDDT,E1DT
  ;
@@ -113,8 +155,8 @@ GETDATE() ; Prompt for service date.
  S:E1DT="^"!(E1DT="^^")!(E1DT=-1) E1DT=""
  Q E1DT
  ;
-GETABSPE() ; If E1 previously sent, find it and prompt to send again.
- ; If doesn't exist, create new one.
+GETABSPE() ;If E1 previously sent, find it and prompt to send again
+ ;If doesn't exist, create new one.
  ;
  N X,DIC,DLAYGO,Y,NEWE1,CRTNWE1,E1IEN
  S DIC="^ABSPE(",DIC(0)="XZ"
@@ -130,31 +172,30 @@ GETABSPE() ; If E1 previously sent, find it and prompt to send again.
  ;
  ; Yes, send again - delete old entry
  I NEWE1 D
- . N DIK,DA
- . S DIK="^ABSPE("
- . S DA=E1IEN
- . D ^DIK
- . K DIK,DA
- . S CRTNWE1=1
+ .N DIK,DA
+ .S DIK="^ABSPE("
+ .S DA=E1IEN
+ .D ^DIK
+ .K DIK,DA
+ .S CRTNWE1=1
  ;
  ; create new entry
  I CRTNWE1 D
- . S DIC="^ABSPE("
- . S X="`"_E1PIEN
- . S DLAYGO=9002313.7,DIC(0)="LXZ"
- . D ^DIC
+ .S DIC="^ABSPE("
+ .S X="`"_E1PIEN
+ .S DLAYGO=9002313.7,DIC(0)="LXZ"
+ .D ^DIC
  ;
  Q +Y
  ;
 PRMPT(E1IEN) ;Display previous response and prompt to send again.
- ;
  N RESULT,DIR,STATUS
  ;
- ; if previous result an error, send new E1
+ ;if previous result an error, send new E1
  S RESULT=$$GET1^DIQ(9002313.7,E1IEN_",",9999999,"E")
  Q:RESULT'="" 1
  ;
- ; if status rejected, send new E1
+ ;if status rejected, send new E1
  S STATUS=$$GET1^DIQ(9002313.7,E1IEN_",",112,"E")
  Q:STATUS="R" 1
  ;
@@ -178,14 +219,13 @@ CRTE1 ; Creates transmission record, updates ^ABSPE.
  ;
  S TDATA=""
  S DIE="^ABSPE(",DA=E1IEN
- S FS=$C(28),SS=$C(30)     ;field and segment separators
+ S FS=$C(28),SS=$C(30)  ;field and segment separators
  ;
  D HEADER
  D PATIENT
  D INSURER
  ;
  ;update ^ABSPE with the patient and insurance information
- ;
  D ^DIE
  ;
  ;update ^ABSPE with raw message
@@ -194,9 +234,7 @@ CRTE1 ; Creates transmission record, updates ^ABSPE.
  Q
  ;
 HEADER ; Header Seg
- ;
  N XDATA
- ;
  S XDATA=$G(^ABSP(9002313.56,E1PHARM,0))  ;E1PHARM set from call to GETPHARM
  ;
  ;101 BIN (Emdeon plan # hard coded to 006015) + 102 Version (always 51) +
@@ -207,12 +245,19 @@ HEADER ; Header Seg
  ;
  ;104 Processor control number (Emdeon terminal id for sending pharmacy)
  S TDATA=TDATA_$S($D(^ABSP(9002313.99,1,"ABSPICNV")):2222222222,1:$TR($J($P(XDATA,U,6),10)," ","0"))
- ;109 Transaction Count (1 for the E1)+202 Service Prov ID Qual (always 07)
- S TDATA=TDATA_107
+ ;P51 -- OLD -- 109 Transaction Count (1 for the E1)+202 Service Prov ID Qual (always 07) -- *was* 07 for NCPDP.
+ ;S TDATA=TDATA_107
+ ;P51 -- NEW -- 109 Transaction Count (1 for the E1)+202 Service Prov ID Qual (NOW 01 for NPI requirement 1 Jan 19)
+ S TDATA=TDATA_101
  ;
- ;201 Service Provider ID
- S TDATA=TDATA_$$ANFF^ABSPECFM($P(XDATA,U,2),15)  ;NCPDP number
+ ;P51 -- OLD -- 201 Service Provider ID
+ ;S TDATA=TDATA_$$ANFF^ABSPECFM($P(XDATA,U,2),15)  ;NCPDP number
  ;S TDATA=TDATA_$$ANFF^ABSPECFM("1234567",15)  ;forces rejection
+ ;
+ ;/IHS/OIT/RAM ; P51 ; With new requirement for NPI, go find NPI for site. If empty, show error and exit
+ ;      ; Also, if miltidivisional and there's more than one NPI, display and ask user which to use
+ S TDATA=TDATA_$$ANFF^ABSPECFM(E1NPI,15)  ;NPI number
+ ; OLD: S TDATA=TDATA_$$ANFF^ABSPECFM($P(XDATA,U,2),15)  ;NCPDP number
  ;
  ;401 Data of Service
  ;Date can be -90 to +90 of current date.
@@ -313,9 +358,11 @@ INSURER ; Insurance Seg
  ;
  ;302 Cardholder ID - medicare cardholder
  ; id, else use last 4 of SSN
- S ABSP302=$$GET1^DIQ(9000003,E1PIEN_",",.03,"E")
- S ABSP302S=$$GET1^DIQ(9000003,E1PIEN_",",.04,"E")
- S:ABSP302'="" ABSP302=ABSP302_ABSP302S
+ ; /IHS/OIT/RAM ; 15 JAN 2018 ; UPDATE TO ACCESS MBI IF EXISTS.
+ S ABSP302=$$GETMCR^AGUTL(E1PIEN) ; USE THE MBI API TO RETRIEVE LATEST MBI (IF EXISTS)
+ ; S ABSP302=$$GET1^DIQ(9000003,E1PIEN_",",.03,"E") ; /IHS/OIT/RAM ; P51 ; UNNEEDED, AS MBI API TAKES CARE OF THIS.
+ ; S ABSP302S=$$GET1^DIQ(9000003,E1PIEN_",",.04,"E") ; /IHS/OIT/RAM ; P51 ; UNNEEDED, AS MBI API TAKES CARE OF THIS.
+ ; S:ABSP302'="" ABSP302=ABSP302_ABSP302S ; /IHS/OIT/RAM ; P51 ; UNNEEDED, AS MBI API TAKES CARE OF THIS.
  I ABSP302="" D
  . S ABSP302=$$GET1^DIQ(2,E1PIEN_",",.09,"E")
  . S ABSP302=$E(ABSP302,$L(ABSP302)-3,$L(ABSP302))
@@ -498,3 +545,10 @@ DATE(CCYYMMDD) ;
  S Y=CCYYMMDD-17000000
  D DD^%DT
  Q Y
+ ;
+NPIWARN ; DISPLAY WARNING ABOUT PHARMACY WITH NO NPI.
+ W !,"The selected pharmacy does not have an NPI associated with it."
+ W !,"You may want to check into that as the Medicare Eligibility check"
+ W !,"won't function correctly without one.",!
+ Q
+ ;

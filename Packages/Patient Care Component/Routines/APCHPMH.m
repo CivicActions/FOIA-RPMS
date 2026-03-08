@@ -1,5 +1,5 @@
-APCHPMH ; IHS/CMI/LAB - Patient Wellness Handout ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHPMH ;IHS/CMI/GRL - Patient Wellness Handout; 
+ ;;2.0;IHS RPMS/PCC Health Summary;**15,16**;JUN 24, 1997
  ;
 EN ;
  N APCHSEGN,APCHSTYP
@@ -20,9 +20,6 @@ ZIS ;
  Q
  ;
 EHR  ;*16*  CMI/GRL support for EHR
- S APCHPWHT=$O(^APCHPWHT("B","ADULT REGULAR",0))
- D EHR^APCHPWHG(DFN,APCHPWHT)
- Q
  D EN^XBNEW("PRINT^APCHPMH","DFN")
  Q
 BROWSE ;
@@ -58,9 +55,9 @@ W ;write out array
  ;W:$D(IOF) @IOF
  K APCHQUIT
  W !,"********** Patient Wellness Handout ********** ["_$P(^VA(200,DUZ,0),U,2)_"]  "_$$FMTE^XLFDT(DT)_" **********"
- S APCHX=0 F  S APCHX=$O(^TMP($J,"APCHPWH",APCHX)) Q:APCHX'=+APCHX!($D(APCHQUIT))  D
+ S APCHX=0 F  S APCHX=$O(^TMP("APCHPHS",$J,"PMH",APCHX)) Q:APCHX'=+APCHX!($D(APCHQUIT))  D
  .I $Y>(IOSL-3) D HEADER Q:$D(APCHQUIT)
- .W !,^TMP($J,"APCHPWH",APCHX)
+ .W !,^TMP("APCHPHS",$J,"PMH",APCHX)
  .Q
  I $D(APCHQUIT) S APCHSQIT=1
  D EOJ
@@ -69,7 +66,6 @@ W ;write out array
 EOJ ;
  ;
  K ^TMP("APCHPHS",$J)
- K ^TMP($J,"APCHPWH")
  D EN^XBVK("APCH")
  D EN^XBVK("APCD")
  K BIDLLID,BIDLLPRO,BIDLLRUN,BIRESULT,BISITE

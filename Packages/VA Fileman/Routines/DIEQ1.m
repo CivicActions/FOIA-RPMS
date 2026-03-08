@@ -1,5 +1,6 @@
-DIEQ1 ;SFISC/XAK,YJK-HELP WRITE ;5/27/94  7:29 AM
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIEQ1 ;SFISC/XAK,YJK-HELP WRITE ;5/27/94  7:29 AM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 T S A1="T" F DG=2:1 S X=$T(T+DG) Q:X=""  S DST=$E(X,4,99) D DS^DIEQ
  K A1,DST Q

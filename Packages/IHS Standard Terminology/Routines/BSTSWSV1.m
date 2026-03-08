@@ -1,12 +1,13 @@
 BSTSWSV1 ;GDIT/HS/BEE-Standard Terminology Web Service Handling (CONT) ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
-SCODE(NMID) ;EP - Get a list of concepts in subsets
+SCODE(NMID,IN) ;EP - Get a list of concepts in subsets
  ;
  ;Input
  ; NMID (Optional) - Codeset to run
+ ;   IN - Input array
  ;
  ;Output
  ; Function returns - [1]^[2]^[3]
@@ -37,6 +38,8 @@ SCODE(NMID) ;EP - Get a list of concepts in subsets
  . ;Call DTS
  . I TYPE="D" D
  .. I NMID=1552 S CSTS=$$RCODE^BSTSDTS5(.BSTSWS) Q
+ .. ;GDIT/HS/BEE;FEATURE#123647;Added CVX
+ .. I NMID=5190 S CSTS=$$CCODE^BSTSDTS7(.BSTSWS) Q
  .. S CSTS=$$SCODE^BSTSDTS4(.BSTSWS)
  . ;
  . ;Log call times (needs completed)
@@ -248,6 +251,23 @@ UPDT(BIEN,VAL,OVMSG) ;EP - Update the CHECK FOR DTS CONNECTION ON
  ;Update CHECK FOR DTS CONNECTION ON
  S BSTS(9002318.2,BIEN_",",.13)=VAL
  S BSTS(9002318.2,BIEN_",",3)=$E(ERRMSG,1,245)
+ I VAL="@" D
+ . NEW SITE,LSTDT,X1,X2,X
+ . ;
+ . ;Re-enable daily checks
+ . S BSTS(9002318.2,BIEN_",",4.04)="0"
+ . ;
+ . ;Get Site Parameter IEN
+ . S SITE=$O(^BSTS(9002318,0)) I 'SITE Q
+ . ;
+ . ;Schedule job to run tomorrow if not already scheduled
+ . I '$$PSCHD^BSTSVOF1("BSTSVRSN") D
+ .. NEW ZTRTN,ZTDESC,ZTIO,ZTDTH
+ .. S ZTRTN="CHECK^BSTSVRSN"
+ .. S ZTDESC="BSTS - Schedule check to run"
+ .. S ZTIO=""
+ .. S ZTDTH=$$FMADD^XLFDT(DT_".1030",,24)
+ .. D ^%ZTLOAD
  D FILE^DIE("","BSTS","ERR")
  ;
  Q

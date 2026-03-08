@@ -1,5 +1,5 @@
 BPHRMUPM ;GDIT/HS/ALA-PHR MU Performance Measure ; 20 Aug 2013  9:54 AM
- ;;2.1;IHS PERSONAL HEALTH RECORD;**1**;Apr 01, 2014;Build 23
+ ;;2.1;IHS PERSONAL HEALTH RECORD;**1,4**;Apr 01, 2014;Build 3
  ;
 PHR(DFN,BDT,EDT,RESULT,PROV) ;PEP - API call for Performance Measure
  ; Input Parameters
@@ -7,8 +7,20 @@ PHR(DFN,BDT,EDT,RESULT,PROV) ;PEP - API call for Performance Measure
  ;  BDT - Begining Date
  ;  EDT - Ending Date
  ;
- ; Output - RESULT format below
- ;          Signed up for PHR (0=No, 1=Yes)^date^accessed PHR (0=No, 1=Yes)^last date^used secure messaging (0=No, 1=Yes)^last date^direct address
+ ; Output - RESULT format
+ ;   Piece	Description
+ ;    1	     Signed up for PHR (0=No, 1=Yes)
+ ;    2	     date
+ ;    3	     accessed PHR (0=No, 1=Yes)
+ ;    4	     last date
+ ;    5	     used secure messaging (0=No, 1=Yes)
+ ;    6	     last date
+ ;    7	     direct address
+ ;    8	     API Access(0=No, 1=Yes)
+ ;    9	     date of API Access
+ ;   10	     PED measure (0=No, 1=Yes)
+ ;   11	     date of PED
+ ;   12	     Error message
  ;
  ; Get Patient ICN
  NEW BPHREUID,BPARRAY,BPHRP,BPHRR,EXEC,STS,RETRY,MAX,CONNEC,TRY,FAIL,DA,PROD
@@ -20,7 +32,7 @@ PHR(DFN,BDT,EDT,RESULT,PROV) ;PEP - API call for Performance Measure
  S BPHREUID=$P($G(^DPT(DFN,"MPI")),U,1)
  I BPHREUID="" Q
  ;
- I $P($G(^AUTTLOC(DUZ(2),21)),"^",5)="" S $P(RESULT,"^",10)="Location does not have DIRECT email address" Q
+ I $P($G(^AUTTLOC(DUZ(2),21)),"^",5)="" S $P(RESULT,"^",12)="Location does not have DIRECT email address" Q
  ;
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BPHRMUPM D UNWIND^%ZTER"
  ;
@@ -56,7 +68,7 @@ PHR(DFN,BDT,EDT,RESULT,PROV) ;PEP - API call for Performance Measure
  . I $P($G(STS),U,1)=1 S OK=1 Q
  . I $P($G(STS),U,1)=0 D
  .. S TRY=TRY+1 I TRY>RETRY S FAIL=FAIL+1,TRY=0
- .. I FAIL>MAX S $P(RESULT,U,1)=-1,$P(RESULT,U,10)=$P($G(STS),U,2),QFL=1 Q
+ .. I FAIL>MAX S $P(RESULT,U,1)=-1,$P(RESULT,U,12)=$P($G(STS),U,2),QFL=1 Q
  .. HANG CONNEC
  ;
  I QFL Q
@@ -80,6 +92,16 @@ PHR(DFN,BDT,EDT,RESULT,PROV) ;PEP - API call for Performance Measure
  I $G(BPHRR("SDIRECT"))'="" D
  . NEW VAL
  . S VAL=$G(BPHRR("SDIRECT")),$P(RESULT,U,7)=VAL
+ I $G(BPHRR("HAPI"))="" S $P(RESULT,U,8)=0
+ I $G(BPHRR("HAPI"))'="" D
+ . NEW VAL
+ . S VAL=$G(BPHRR("HAPI"))
+ . S $P(RESULT,U,8)=1,$P(RESULT,U,9)=$$GMT(VAL)
+ I $G(BPHRR("PED"))="" S $P(RESULT,U,10)=0
+ I $G(BPHRR("PED"))'="" D
+ . NEW VAL
+ . S VAL=$G(BPHRR("PED"))
+ . S $P(RESULT,U,10)=1,$P(RESULT,U,11)=$$GMT(VAL)
  ;
  Q
  ;
@@ -110,7 +132,7 @@ ERR ;EP - Error Trap
  NEW ERRAY,EXEC
  I $ZE["ZSOAP" D
  . S EXEC="Set ERRAY=$System.Status.DecomposeStatus(%objlasterror,.ERRAY)" X EXEC
- . S $P(RESULT,"^",1)=-1,$P(RESULT,"^",10)=$S($G(ERRAY(1))'="":$G(ERRAY(1)),1:$ZE)
+ . S $P(RESULT,"^",1)=-1,$P(RESULT,"^",12)=$S($G(ERRAY(1))'="":$G(ERRAY(1)),1:$ZE)
  D ^%ZTER
  Q
  ;

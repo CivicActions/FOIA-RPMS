@@ -1,5 +1,5 @@
 BIREPT1 ;IHS/CMI/MWR - REPORT, TWO-YR-OLD RATES; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW OR PRINT TWO-YR-OLD IMMUNIZATION RATES REPORT.
  ;
@@ -10,6 +10,7 @@ START(BIX) ;EP
  ;---> Parameters:
  ;     1 - BIX    (req) If BIX="PRINT", then print Report.
  ;                      If BIX="VIEW", then view Report (default).
+ ;                      If BIX="CSV", then create delimited output to screen or host file  IHS/LAB patch 31 delimited output
  ;---> Variables:
  ;     1 - BIQDT   (req) Quarter Ending Date.
  ;     2 - BITAR   (opt) Two-Yr-Old Report Age Range, default="19-35".
@@ -37,7 +38,10 @@ START(BIX) ;EP
  N BITOTPTS
  ;
  D SETVARS^BIUTL5 N VALMCNT
+ ;IHS/LAB patch 31 delimited save print type for later use
+ S BISPD=BIX
  I $G(BIX)="PRINT" D PRINT,RESET^BIREPT Q
+ I $G(BIX)="CSV" D DELIM^BIREPCSV("BIREPT1","TWO YR OLD REPORT","TWO"),RESET^BIREPT Q  ;IHS/LAB patch 31 delimited output
  ;
  ;
  ;---> Set BIAG for Age Range in header of report.

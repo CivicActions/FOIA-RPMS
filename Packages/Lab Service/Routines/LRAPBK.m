@@ -1,5 +1,5 @@
 LRAPBK ;AVAMC/REG/CYM - AP LOG BOOK ;2/9/98  15:36 ; [ 04/11/2003  9:58 AM ]
- ;;5.2T9;LR;**1002,1006,1018**;Nov 17, 2004
+ ;;5.2;LR;**1002,1006,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**51,72,201,274**;Sep 27, 1994
  ; The code for functionality of LR*5.2*51 has changed with patch 72.
  ; The functionality that came with LR*5.2*51 remains the same.

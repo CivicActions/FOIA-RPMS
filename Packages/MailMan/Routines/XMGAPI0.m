@@ -1,8 +1,6 @@
-XMGAPI0 ;(WASH ISC)/CAP-Validate/Get Subject APIs ;04/17/2002  08:56
- ;;8.0;MailMan;;Jun 28, 2002
- ; Entry points (DBIA 1142):
- ; $$SUBCHK - Validate a proposed message subject
- ; $$SUBGET - Retrieve the subject of a message
+XMGAPI0 ;(WASH ISC)/CAP- SUBJECT GET / CHECK ;10/16/96  06:56
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**31**;Jun 02, 1994
 ENT(Y,Z) ;Check Input Subject
  ;Param1=String
  ;Param2=Silent Flag
@@ -19,14 +17,14 @@ E I $E(Y,$L(Y))=" " S Y=$E(Y,1,$L(Y)-1) G E
  ;
  G U:Y'?.E1C.E I 'Z Q "5-Subject cannot contain control characters.^"_Y
  F X=1:1 I $E(Y,X)?1C S Y=$E(Y,1,X-1)_$E(Y,X+1,99) Q:Y'?.E1C.E  S X=X-1
- W $C(7),!,"Control characters removed ("""_Y_""" is Subject accepted).",!
+ W *7,!,"Control characters removed ("""_Y_""" is Subject accepted).",!
  ;
 U I Y="" Q ""
  I Y="?" S A=1,%="Enter a Message Subject, between 3 & 65 characters long or '^' to exit." G S:Z Q "4-"_%_U_Y
  I $L(Y)<3 S A=1,%="SUBJECT must be at least 3 characters long." G S:Z Q "1-"_%_U_Y
  I Y?1"R"2N.N S A=1,%="Subject names of this format (1""R""1.N) are RESERVED" G S:Z Q "2-"_%_U_Y
 Q Q A_U_Y
-S W !,$C(7),%,!
+S W !,*7,%,!
  G Q
 SUBGET(X) ;Return Subject of a Message (""=Error, Else returns Subject)
  S X=$P($G(^XMB(3.9,X,0)),U) I X="" Q ""

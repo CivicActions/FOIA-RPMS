@@ -1,5 +1,5 @@
 BCHVD ; IHS/CMI/LAB - BROWSE VISITS ; 
- ;;2.0;IHS RPMS CHR SYSTEM;;OCT 23, 2012;Build 27
+ ;;2.0;IHS RPMS CHR SYSTEM;**1**;OCT 23, 2012;Build 6
  ;
  ;
 START ;
@@ -140,7 +140,7 @@ FF ;EP
  I $E(IOST)="C",IO=IO(0) W ! S DIR(0)="EO" D ^DIR K DIR I Y=0!(Y="^")!($D(DTOUT)) S BCHQUIT=1 Q
  I $E(IOST)'="C" Q:'$P(BCHR0,U,8)  W !!,$TR($J(" ",79)," ","*"),!,$P(^DPT($P(BCHR0,U,8),0),U),?32,"HRN: " D
  .S H=$P($G(^AUPNPAT($P(BCHR0,U,8),41,DUZ(2),0)),U,2)
- .W H,?46,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(BCHR0,U,8),0),U,3),"2D"),?59,"SSN: ","XXX-XX-"_$E($P(^DPT($P(BCHR0,U,8),0),U,9),6,9),!
+ .W H,?46,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(BCHR0,U,8),0),U,3),"2D"),!
  W:$D(IOF) @IOF
  Q
 HDR ; -- header code

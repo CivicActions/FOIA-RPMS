@@ -1,10 +1,12 @@
-LRUTW ; IHS/DIR/FJE - DISPLAY LAB TEST INFO FOR LAB 2/14/89 17:19 ;
- ;;5.2;LR;**1013**;JUL 15, 2002
+LRUTW ; IHS/DIR/FJE - DISPLAY LAB TEST INFO FOR LAB ; 26-Apr-2023 13:25 ; MKK
+ ;;5.2;LAB SERVICE;**1013,1054**;NOV 01, 1997;Build 20
  ;
- ;;5.2;LAB SERVICE;;Sep 27, 1994
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
  N N,LRCSREC,AGE,SEX
  S AGE="??",SEX="M",IOP="HOME" D ^%ZIS W @IOF
-ASK S DIC="^LAB(60,",DIC(0)="AEMOQZ",DIC("S")="I $E($P(^(0),U,3),1)'[""N""" D ^DIC K DIC G:X=""!(X[U)!(Y<0) END S LRIFN=+Y
+ASK ; S DIC="^LAB(60,",DIC(0)="AEMOQZ",DIC("S")="I $E($P(^(0),U,3),1)'[""N""" D ^DIC K DIC G:X=""!(X[U)!(Y<0) END S LRIFN=+Y
+ S DIC="^LAB(60,",DIC(0)="AEMOQZ",DIC("S")="I $E($P(^(0),U,3),1)'[""N"",+$G(^(.3))=0" D ^DIC K DIC G:X=""!(X[U)!(Y<0) END S LRIFN=+Y  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  D HDR I $D(^LAB(60,LRIFN,5)),$P(^(5,0),U,4) W !,"Synonym: " F X=0:0 S X=$O(^LAB(60,LRIFN,5,X)) Q:'X  D:$Y>21 SYN W !?5,$P(^LAB(60,LRIFN,5,X,0),U,1)
  I $D(^LAB(60,LRIFN,2)),$P(^(2,0),U,4) W !,"Tests in panel:" F X=0:0 S X=$O(^LAB(60,LRIFN,2,X)) Q:'X  D:$Y>21 PANEL W !?5,$P(^LAB(60,+^LAB(60,LRIFN,2,X,0),0),U,1)
  I $D(^LAB(60,LRIFN,1,0)),$P(^LAB(60,LRIFN,1,0),U,4)>0 D NORM

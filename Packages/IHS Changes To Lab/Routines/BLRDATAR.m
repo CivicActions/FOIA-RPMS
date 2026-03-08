@@ -1,7 +1,9 @@
 BLRDATAR ; IHS/OIT/MKK - DATARAY SPECIFIC     ; [ 12/10/2010  10:30 AM ]
- ;;5.2;IHS LABORATORY;**1028**;NOV 01, 1997;Build 46
+ ;;5.2;IHS LABORATORY;**1028,1054**;NOV 01, 1997;Build 20
  ;
  ; Cloned from pieces of BLRIPLUP & BLRLABLZ
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 76305 - Preferred Name & Legal Sex Controlled by XPAR
  ;
 EN ; EP
  S:$D(ZTQUEUED) ZTREQ="@"
@@ -15,6 +17,7 @@ EN ; EP
  S LRTXT=""
  S FLAG=0
  F I1=1:1 S J=$O(LRTS(J)) Q:J<1  I ($L(LRTXT)+$L(LRTS(J))'>24) S LRTXT=LRTXT_LRTS(J) S:$O(LRTS(J))>0 FLAG=1,LRTXT=LRTXT_";"
+ ; 
  ;
 FLAG ; EP
  S:FLAG=0 LRDTXT=LRTXT S:FLAG=1 LRDTXT=".............."
@@ -49,7 +52,8 @@ BAR ; EP - Barcode label; Accession # Barcoded
  W "HRCN:",$G(HRCN),!                              ; Health Record Number (09)
  W $$DOBSTR($G(DOB)),!                             ; Date of Birth        (10)
  W "Urgency:",$$BLRURG($G(LRURG0)),!               ; Urgency              (11)
- W "Pt Name:",$E($G(PNM),1,27),!                   ; Patient Name         (12)
+ ; W "Pt Name:",$E($G(PNM),1,27),!                 ; Patient Name         (12)
+ W "Pt Name:",$E($$GETPREF^BLRUTILD(LRDFN),1,27),! ; Patient Name         (12)   ; IHS/MSC/MKK - LR*5.2*1054
  W "Sex:",$G(SEX),!                                ; Sex                  (13)
  ;
  W !
@@ -72,7 +76,8 @@ PRT ; EP - plain label..no barcode
  W "HRCN:",$G(HRCN),!                              ; Health Record Number (09)
  W $$DOBSTR($G(DOB)),!                             ; Date of Birth        (10)
  W "Urgency:",$$BLRURG($G(LRURG0)),!               ; Urgency              (11)
- W "Pt Name:",$E($G(PNM),1,27),!                   ; Patient Name         (12)
+ ; W "Pt Name:",$E($G(PNM),1,27),!                 ; Patient Name         (12)
+ W "Pt Name:",$E($$GETPREF^BLRUTILD(LRDFN),1,27),! ; Patient Name         (12)   ; IHS/MSC/MKK - LR*5.2*1054
  W "Sex:",$G(SEX),!                                ; Sex                  (13)
  ;
  Q

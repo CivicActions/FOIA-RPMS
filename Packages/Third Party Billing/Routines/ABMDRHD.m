@@ -1,17 +1,20 @@
 ABMDRHD ; IHS/SD/SDR - Report Header Generator ; 
- ;;2.6;IHS Third Party Billing;**1,3,4,11,14,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing;**1,3,4,11,14,21,31,32**;NOV 12, 2009;Build 621
  ;Original;TMD;03/25/96 11:34 AM
  ;
- ;IHS/SD/SDR - v2.5 p8 - Added code for cancellation dates
- ;IHS/SD/SDR - abm*2.6*1 - NO HEAT - Added time to report headers
- ;IHS/SD/SDR - abm*2.6*3 - HEAT12210 - fix header if 132 (was wrapping)
- ;IHS/SD/SDR - abm*2.6*4 - NO HEAT - Fixed header for closed/exported dates
- ;IHS/SD/SDR - 2.6*14 - ICD10 009 - Updated to print ICD10 header
- ;IHS/SD/SDR - 2.6*14 - HEAT165197 (CR3109) - Updated DX tag to display codes using new variables
- ;IHS/SD/SDR - 2.6*21 - HEAT184442 - Adeed ICD-10 to header when ICD-10 Diagnosis Range is selected; wasn't clear before when only
+ ;IHS/SD/SDR 2.5*8 Added code for cancellation dates
+ ;
+ ;IHS/SD/SDR 2.6*1 NO HEAT Added time to report headers
+ ;IHS/SD/SDR 2.6*3 HEAT12210 fix header if 132 (was wrapping)
+ ;IHS/SD/SDR 2.6*4 NO HEAT Fixed header for closed/exported dates
+ ;IHS/SD/SDR 2.6*14 ICD10 009 Updated to print ICD10 header
+ ;IHS/SD/SDR 2.6*14 HEAT165197 (CR3109) Updated DX tag to display codes using new variables
+ ;IHS/SD/SDR 2.6*21 HEAT184442 Added ICD-10 to header when ICD-10 Diagnosis Range is selected; wasn't clear before when only
  ;   DIAGNOSIS RANGE was displayed.  Also updated header so if they select BOTH but don't enter anything for ICD-9, it won't print the
  ;   'and' and will only print the ICD-10 range selected.
- ;IHS/SD/SDR - 2.6*21 - VMBP RQMT_96 - Added code for all new insurer types.
+ ;IHS/SD/SDR 2.6*21 VMBP RQMT_96 Added code for all new insurer types
+ ;IHS/SD/SDR 2.6*31 CR11834 Added Pended Dates to header
+ ;IHS/SD/SR 2.6*32 CR11501 Fixed headers for employee productivity report
  ;
 HD ;EP for setting Report Header
  S ABM("LVL")=0,ABM("CONJ")="for ",ABM("TXT")="ALL BILLING SOURCES"
@@ -51,10 +54,41 @@ LOC ;EP
 DT I '$D(ABMY("DT")) G APPR
  S ABM("CONJ")="with "
  ;S ABM("TXT")=$S(ABMY("DT")="A":"APPROVAL DATES",ABMY("DT")="V":"VISIT DATES",ABMY("DT")="P":"PAYMENT DATES",ABMY("DT")="C":"CANCELLATION DATES",ABMY("DT")="X":"CLOSED DATES",1:"EXPORT DATES") D CHK  ;abm*2.6*4 NOHEAT
- S ABM("TXT")=$S(ABMY("DT")="A":"APPROVAL DATES",ABMY("DT")="V":"VISIT DATES",ABMY("DT")="P":"PAYMENT DATES",ABMY("DT")="C":"CANCELLATION DATES",ABMY("DT")="M":"CLOSED DATES",1:"EXPORT DATES") D CHK  ;abm*2.6*4 NOHEAT
- S ABM("CONJ")="from ",ABM("TXT")=$$SDT^ABMDUTL(ABMY("DT",1)) D CHK
- S ABM("CONJ")="to ",ABM("TXT")=$$SDT^ABMDUTL(ABMY("DT",2)) D CHK
+ ;S ABM("TXT")=$S(ABMY("DT")="A":"APPROVAL DATES",ABMY("DT")="V":"VISIT DATES",ABMY("DT")="P":"PAYMENT DATES",ABMY("DT")="C":"CANCELLATION DATES",ABMY("DT")="M":"CLOSED DATES",1:"EXPORT DATES") D CHK  ;abm*2.6*4 NOHEAT  ;abm*2.6*31 IHS/SD/SDR CR11834
+ ;S ABM("TXT")=$S(ABMY("DT")="A":"APPROVAL",ABMY("DT")="V":"VISIT",ABMY("DT")="P":"PAYMENT",ABMY("DT")="C":"CANCELLATION",ABMY("DT")="M":"CLOSED",ABMY("DT")="H":"PENDED",1:"EXPORT")_" DATES" D CHK  ;abm*2.6*31 IHS/SD/SDR CR11834
+ ;
+ ;start old abm*2.6*32 IHS/SD/SDR CR11501
+ ;S ABM("CONJ")="from ",ABM("TXT")=$$SDT^ABMDUTL(ABMY("DT",1)) D CHK
+ ;S ABM("CONJ")="to ",ABM("TXT")=$$SDT^ABMDUTL(ABMY("DT",2)) D CHK
+ ;end old start new abm*2.6*32 IHS/SD/SDR CR11501
+ S ABM("TXT")=$S(ABMY("DT")="A":"APPROVAL",ABMY("DT")="V":"VISIT",ABMY("DT")="P":"PAYMENT",ABMY("DT")="C":"CANCELLATION",ABMY("DT")="M":"CLOSED",ABMY("DT")="H":"PENDED",ABMY("DT")="T":"ACTIVITY",1:"EXPORT")_" DATES" D CHK
+ I '$D(ABM("EMPP")) D
+ .S ABM("CONJ")="from ",ABM("TXT")=$$SDT^ABMDUTL(ABMY("DT",1)) D CHK
+ .S ABM("CONJ")="to ",ABM("TXT")=$$SDT^ABMDUTL(ABMY("DT",2)) D CHK
+ ;
+ I $D(ABM("EMPP")) D
+ .S ABM("CONJ")="from ",ABM("TXT")=$$CDT^ABMDUTL(ABMY("DT",1)) D CHK
+ .S ABM("CONJ")="to ",ABM("TXT")=$$CDT^ABMDUTL(ABMY("DT",2)) D CHK
+ ;end new abm*2.6*32 IHS/SD/SDR CR11501
+ ;
 APPR I '$D(ABM("APPR")),$D(ABMY("APPR")) S ABM("CONJ")="by ",ABM("TXT")=$P(^VA(200,ABMY("APPR"),0),U) D CHK
+ ;start new abm*2.6*32 IHS/SD/SDR CR11501
+BILLT ;
+ I $D(ABMY("BOTHPOS")) S ABM("CONJ")="for ",ABM("TXT")="Both Billing and POS staff" D CHK
+ I $D(ABMY("NOTPOS")) S ABM("CONJ")="for ",ABM("TXT")="All Billing staff" D CHK
+ I $D(ABMY("POSONLY")) S ABM("CONJ")="for ",ABM("TXT")="All POS staff" D CHK
+ I $D(ABMY("BILLT")) D
+ .S ABM("TXT")=""
+ .S ABM("CONJ")="for BILLING TECH(S) "
+ .F ABMA=0
+ .F  S ABMA=$O(ABMY("BILLT",ABMA)) Q:'ABMA  D
+ ..I ABM("TXT")="" S ABM("TXT")=$P($G(^VA(200,ABMA,0)),U)
+ ..E  S ABM("TXT")=ABM("TXT")_", "_$P($G(^VA(200,ABMA,0)),U)
+ .D CHK
+PTTYP ;
+ I $D(ABM("EMPP")) D
+ .I $D(ABMY("PTYP")) S ABM("CONJ")="for ",ABM("TXT")=ABMY("PTYP","NM") D CHK
+ ;end new abm*2.6*32 IHS/SD/SDR CR11501
 PRV I $D(ABMY("PRV")) S ABM("CONJ")="provided by ",ABM("TXT")=$P(^VA(200,ABMY("PRV"),0),U) D CHK
 DX I '$D(ABMY("DX")) G PX
  ;start old code abm*2.6*14 ICD10 009
@@ -80,7 +114,8 @@ PX I '$D(ABMY("PX")) G XIT
 XIT K ABM("CONJ"),ABM("TXT"),ABM("LVL")
  Q
  ;
-CHK I ($L(ABM("HD",ABM("LVL")))+1+$L(ABM("CONJ"))+$L(ABM("TXT")))<($S($D(ABM(132)):104,1:52)+$S(ABM("LVL")>0:28,1:0)) S ABM("HD",ABM("LVL"))=ABM("HD",ABM("LVL"))_" "_ABM("CONJ")_ABM("TXT")
+CHK ;
+ I ($L(ABM("HD",ABM("LVL")))+1+$L(ABM("CONJ"))+$L(ABM("TXT")))<($S($D(ABM(132)):104,1:52)+$S(ABM("LVL")>0:28,1:0)) S ABM("HD",ABM("LVL"))=ABM("HD",ABM("LVL"))_" "_ABM("CONJ")_ABM("TXT")
  E  S ABM("LVL")=ABM("LVL")+1,ABM("HD",ABM("LVL"))=ABM("CONJ")_ABM("TXT")
  Q
  ;
@@ -94,6 +129,14 @@ WHD ;EP for writing Report Header
  W ABM("HD",0),?$S($D(ABM(132)):103,1:48) S Y=% X ^DD("DD") W Y,"   Page ",ABM("PG")  ;abm*2.6*1 NO HEAT  ;abm*2.6*3 HEAT12210
  W:$G(ABM("HD",1))]"" !,ABM("HD",1)
  W:$G(ABM("HD",2))]"" !,ABM("HD",2)
+ ;
+ ;start new abm*2.6*32 IHS/SD/SDR CR11501
+ ;write all headers on emp prod report
+ I $D(ABM("EMPP")) D
+ S ABMC=2
+ F  S ABMC=$O(ABM("HD",ABMC)) Q:'ABMC  W !,ABM("HD",ABMC)
+ ;end new abm*2.6*32 IHS/SD/SDR CR11501
+ ;
  W !,"Billing Location: ",$P($G(^AUTTLOC(DUZ(2),0)),U,2)
  W !,ABM("LINE") K ABM("LINE")
  Q

@@ -1,29 +1,21 @@
 ABMDE0 ; IHS/ASDST/DMJ - Claim Summary Page ; 10 Nov 2009  2:48 PM
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009;Build 133
+ ;;2.6;IHS 3P BILLING SYSTEM;**29,34**;NOV 12, 2009;Build 645
  ;
- ; IHS/ASDS/LSL - 08/13/2001 - V2.4 Patch 9 NOIS HQW-0798-100082
- ;     If all insurers are unbillable - ask if delete claim
+ ;IHS/ASDS/LSL 08/13/2001 2.4*9 NOIS HQW-0798-100082 If all insurers are unbillable - ask if delete claim
  ;
- ; IHS/SD/SDR - v2.5 p8 - Fix supplied by Carlene McIntyre for
- ;    OmniCell link
+ ;IHS/SD/SDR 2.5*8 Fix supplied by Carlene McIntyre for OmniCell link
+ ;IHS/SD/SDR,TPF 2.5*8 added code for pending status (12)
+ ;IHS/SD/SDR 2.5*8 task 57 Added code for Rx changes (dt disc. and RTS)
+ ;IHS/SD/SDR 2.5*8 task 5 Added code for CLIA number to populate on claims if none on claim and default is present
+ ;IHS/SD/SDR 2.5*9 per Adrian -Only display meds check if claim status isn't Uneditable or Complete
+ ;IHS/SD/SDR 2.5*11 IM22787 Modified so future term date for replacement insurer will work
  ;
- ; IHS/SD/SDR,TPF - v2.5 p8 - added code for pending status (12)
- ;
- ; IHS/SD/SDR - v2.5 p8 - task 57
- ;   Added code for Rx changes (dt disc. and RTS)
- ;
- ; IHS/SD/SDR - v2.5 p8 - task 5
- ;   Added code for CLIA number to populate on claims if none on
- ;   claim and default is present
- ;
- ; IHS/SD/SDR - v2.5 p9 - per Adrian
- ;    Only display meds check if claim status isn't Uneditable or
- ;    Complete
- ;
- ; IHS/SD/SDR - v2.5 p11 - IM22787
- ;    Modified so future term date for replacement insurer will work
- ;
- ; *********************************************************************
+ ;IHS/SD/SDR 2.6*29 CR10404 Made so CLIA number will only populate on the claim automatically when claim is Flagged As Billable;
+ ;  Sites were deleting it and then it was adding it back on erroneously
+ ;IHS/SD/SDR 2.6*34 ADO60696 CR7333 Added Close option to menu.  It will only display if the user has security key
+ ;  ABMDZ CE CLOSE CLAIM.  Also changed pending to work same as closed, so if the user '^' out, they will get a message
+ ;  the claim isn't pended and put them back on page 0 of the claim editor.
+ ;*********************************************************************
  ;
 OPT K ABM,ABMV,ABME,ABMZ
  G XIT:$D(ABMP("DDL")),CONT:$G(ABMP("OPT"))="V"
@@ -59,6 +51,12 @@ CONT ; EP
  D ^ABMDE0X
  W $$EN^ABMVDF("IOF")
  S ABMP("OPT")="VCFNJQ"
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60696
+ S ABMBTCK=0
+ S ABMBTKEY=$O(^DIC(19.1,"B","ABMDZ CE CLOSE CLAIM",0))
+ I +$G(ABMBTKEY)'=0 I $G(^VA(200,DUZ,51,ABMBTKEY,0))'="" S ABMBTCK=1
+ I ABMBTCK=1 S ABMP("OPT")="VCFLNJQ"
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60696
  I $P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,4)="U"!($P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,4)="X") D
  . S ABMP("OPT")="VNJQ"
  . S ABMP("DFLT")="Q"
@@ -72,25 +70,38 @@ CONT ; EP
  .W " by "_$P($G(^VA(200,$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,19),0)),U,2)  ;new person inits
  .W !
  D SEL^ABMDEOPT
- I "CFV"'[$E(Y) G XIT
+ ;I "CFV"'[$E(Y) G XIT  ;abm*2.6*34 IHS/SD/SDR ADO60696
+ I "CFLV"'[$E(Y) G XIT  ;abm*2.6*34 IHS/SD/SDR ADO60696
  G XIT:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
  K ABM,ABMZ
  I $E(X)="V" D  G OPT
- . D ^ABMDECK
- . S ABMP("SCRN")=0
- . K DUOUT,DTOUT,DIRUT,DIROUT
- . S ABMP("OPT")="V"
+ .D ^ABMDECK
+ .S ABMP("SCRN")=0
+ .K DUOUT,DTOUT,DIRUT,DIROUT
+ .S ABMP("OPT")="V"
  I $E(X)="C"!($E(X)="A") D ^ABMDEOK G XIT:$D(ABMP("OVER")),OPT
- I $E(X)="F" D  S Y="Q" G XIT
+ ;I $E(X)="F" D  S Y="Q" G XIT  ;abm*2.6*34 IHS/SD/SDR ADO60696
+ I $E(X)="F" D  I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,4)'="P" S Y="F" G XIT  ;abm*2.6*34 IHS/SD/SDR ADO60696
  .D EN^ABMSTAT($G(ABMP("CDFN")))
  .S ABMP("SCRN")=0
  .K DUOUT,DTOUT,DIRUT,DIROUT
  .S ABMP("OPT")="V"
+ .I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,4)'="P" W !!,"<Claim "_ABMP("CDFN")_" not pended>",! H 2  ;abm*2.6*34 IHS/SD/SDR ADO60696
+ .S Y="F"  ;abm*2.6*34 IHS/SD/SDR ADO60696
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60696
+ I "Ll"[$E(Y) D  G XIT  ;L=Close Claim
+ .S ABM("C#")=ABMP("CDFN")
+ .K Y
+ .D CLOSE^ABMDCOPN  ;this is the OCMG code to close, so they work exactly the same
+ .K DUOUT,DTOUT,DIRUT,DIROUT,ABM,ABMZ
+ .I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,4)'="X" S Y="L" Q  ;they choose not to close the claim, go back to page 0
+ .S Y="Q"  ;this causes it to go to the Select CLAIM or PATIENT: prompt
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60696
  ;
 XIT ;
  I $G(ABMP("JUMP1")) D
- . S ABMP("SCRN")=1
- . K ABMP("JUMP1")
+ .S ABMP("SCRN")=1
+ .K ABMP("JUMP1")
  K ABM,ABMV,ABME,ABMZ
  Q
  ;
@@ -102,15 +113,15 @@ ELIG ;EP - CHECK ELIGIBILITY
  N INSGOOD,INS
  S (INSGOOD,INS)=0
  F  S INS=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,INS)) Q:'+INS  D
- . S:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,INS,0)),U,3)'="U" INSGOOD=1
+ .S:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,INS,0)),U,3)'="U" INSGOOD=1
  I '+INSGOOD D
- . D ^ABMDE0X
- . D DISP^ABMDE0A
- . W !?3,$$EN^ABMVDF("RVN"),"NOTE:",$$EN^ABMVDF("RVF")
- . W " CANNOT OPEN CLAIM - NO ELIGIBILITY FOUND FOR THIS PATIENT.",!
- . D ENT2^ABMDECAN
- . S Y="Q"
- . S ABMNOELG=1
+ .D ^ABMDE0X
+ .D DISP^ABMDE0A
+ .W !?3,$$EN^ABMVDF("RVN"),"NOTE:",$$EN^ABMVDF("RVF")
+ .W " CANNOT OPEN CLAIM - NO ELIGIBILITY FOUND FOR THIS PATIENT.",!
+ .D ENT2^ABMDECAN
+ .S Y="Q"
+ .S ABMNOELG=1
  Q
 PCC ;check pcc primary visit         
  K ABMNOPCC
@@ -151,14 +162,15 @@ PUTMEDS ;
  Q
 CLIACHK ;
  ;reference
- I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,23)="" D
+ I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,4)'="F" Q  ;abm*2.6*29 IHS/SD/SDR CR10404
+ I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,23)="" D  ;ref lab CLIA
  .K DIE,DA,DR
  .S DIE="^ABMDCLM(DUZ(2),"
  .S DA=ABMP("CDFN")
  .S DR=".923////"_$P($G(^ABMDPARM(DUZ(2),1,4)),U,12)
  .D ^DIE
  ;in-house
- I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,22)="" D
+ I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,22)="" D  ;in-house CLIA
  .K DIE,DA,DR
  .S DIE="^ABMDCLM(DUZ(2),"
  .S DA=ABMP("CDFN")

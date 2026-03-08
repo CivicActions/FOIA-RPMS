@@ -1,6 +1,6 @@
-DDSZ ;SFISC/MKO-FORM COMPILER ;9:41 AM  19 Nov 2001 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**94**;Mar 30, 1999
+DDSZ ;SFISC/MKO-FORM COMPILER ;11:26 AM  16 Nov 1994
+ ;;21.0;VA FileMan;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;Prompt, compile
@@ -102,44 +102,6 @@ BLK(DDSFRM,DDSPG,DDSDDP,DDSPY,DDSPX,DDSB,DDSBO,DDSH,DDSDO,DDSNDD,DDSSCR,DDSNAV,D
  K DDSBX,DDSBY,DDSDN,DDSPTB,DDSTP
  Q
  ;
-ENGRP(DDSFRM) ;Compile a form and all forms that use any of the blocks
- ;on that form
- N DDSLST
- D FRMLST(DDSFRM,.DDSLST)
- ;
- ;Compile all forms in DDSLST
- S DDSFRM=0 F  S DDSFRM=$O(DDSLST(DDSFRM)) Q:'DDSFRM  D EN(DDSFRM)
- Q
- ;
-DELGRP(DDSFRM) ;Uncompile a form and all forms that use any of the blocks
- ;on that form
- N DDSLST
- D FRMLST(DDSFRM,.DDSLST)
- ;
- ;Uncompile all forms in DDSLST
- S DDSFRM=0 F  S DDSFRM=$O(DDSLST(DDSFRM)) Q:'DDSFRM  D DEL(DDSFRM)
- Q
- ;
-ENLIST(DDSROOT) ;Compile all forms in @DDSROOT
- N DDSFRM
- S DDSFRM=0 F  S DDSFRM=$O(@DDSROOT@(DDSFRM)) Q:'DDSFRM  D EN(DDSFRM)
- Q
- ;
-FRMLST(DDSFRM,DDSLST) ;Build list of forms that contain blocks on this form
- N DDSPG,DDSBK
- S DDSPG=0 F  S DDSPG=$O(^DIST(.403,DDSFRM,40,DDSPG)) Q:'DDSPG  D
- . D BLDLST($P($G(^DIST(.403,DDSFRM,40,DDSPG,0)),U,2),.DDSLST)
- . S DDSBK=0 F  S DDSBK=$O(^DIST(.403,DDSFRM,40,DDSPG,40,DDSBK)) Q:'DDSBK  D
- .. D BLDLST($P($G(^DIST(.403,DDSFRM,40,DDSPG,40,DDSBK,0)),U),.DDSLST)
- Q
- ;
-BLDLST(DDSBK,DDSLST) ;Build list of forms that contain a given block
- N DDSFRM
- Q:'$G(DDSBK)
- S DDSFRM=0 F  S DDSFRM=$O(^DIST(.403,"AB",DDSBK,DDSFRM)) Q:'DDSFRM  S DDSLST(DDSFRM)=""
- S DDSFRM=0 F  S DDSFRM=$O(^DIST(.403,"AC",DDSBK,DDSFRM)) Q:'DDSFRM  S DDSLST(DDSFRM)=""
- Q
- ;
 DELALL ;Delete compile global for all forms
  N DDSFRM,DDSFNUM,DDSREFS
  W:'$D(DDSQUIET) !,"Deleting compiled form data ...",!
@@ -148,6 +110,7 @@ DELALL ;Delete compile global for all forms
  F  S DDSFNUM=$O(^DIST(.403,DDSFNUM)) Q:'DDSFNUM  D
  . Q:$D(^DIST(.403,DDSFNUM,0))[0
  . S DDSFRM=DDSFNUM_U_$P(^DIST(.403,DDSFNUM,0),U)
+ . S DDSREFS=$$REF^DDS0(DDSFRM)
  . W:'$D(DDSQUIET) !?3,$P(DDSFRM,U,2),?35,"(#"_+DDSFRM_")"
  . D DEL(DDSFRM)
  Q

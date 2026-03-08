@@ -1,5 +1,5 @@
 ICPTID ;SLC/KER - CPT IDENTIFIERS ; 04/18/2004
- ;;6.0;CPT/HCPCS;**19**;May 19, 1997;Build 44
+ ;;6.0;CPT/HCPCS;**19**;May 19, 1997;Build 9
  ;
  ; External References
  ;   DBIA   2056  $$GET1^DIQ

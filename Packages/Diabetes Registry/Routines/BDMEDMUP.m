@@ -1,5 +1,5 @@
 BDMEDMUP ; IHS/CMI/LAB - EDITS FOR AUPNVSIT (VISIT:9000010) 24-MAY-1993 ; 20 Sep 2013  2:49 PM
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**7,8,10**;JUN 14, 2007;Build 12
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**7,8,10,13,15,16,18**;JUN 14, 2007;Build 147
  ;
  W:$D(IOF) @IOF
  W !,$$CTR("DMS DATA ENTRY",80)
@@ -16,6 +16,20 @@ BDMEDMUP ; IHS/CMI/LAB - EDITS FOR AUPNVSIT (VISIT:9000010) 24-MAY-1993 ; 20 Sep
  W !,"The problem number must be entered in the correct field in the following"
  W !,"format: XXnn, where XX is the facility abbreviation and nn is the"
  W !,"problem number, e.g.: MU7",!
+ W !,"Note:  If possible, it is highly recommended that you use the IHS "
+ W !,"Electronic Health Record (EHR) to enter patient-related health information"
+ W !,"performed outside of your facility, including historical data."
+ W !,"In addition, it is highly recommended that all immunization information "
+ W !,"is entered through the EHR or the immunization tracking system. IHS sends"
+ W !,"and receives immunization information from state immunization registries;"
+ W !,"therefore, immunizations performed outside of the facility may exist in"
+ W !,"those systems already. These systems include options for obtaining "
+ W !,"immunization history and immunization forecasting, whereas, the DMU option"
+ W !,"does not have this capability.",!
+ K DIR S DIR(0)="E",DIR("A")="Press enter to continue" D ^DIR K DIR
+ W !!,"One more warning:  Any medications entered through this option will NOT "
+ W !,"be in the EHR Medications tab and they will NOT be checked for any drug"
+ W !,"interactions or order checking.",!!
  S DIR(0)="Y",DIR("A")="Do you wish to continue",DIR("B")="Y" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) D XIT Q
  I 'Y D XIT Q
@@ -37,10 +51,11 @@ UPDPCC ;update pcc
  D EN(BDMEDA,.BDMEDMER)
  Q
 EN(BDMEDA,BDMEDMER) ;PEP - called from DM GUI
- ;I DUZ=2836 S ^LORITMP(1)=BDMEDA
  S BDMEERR=0
  K BDMEDMER
  Q:'$D(^BDMEDMUP(BDMEDA,0))
+ K BDMDETAL
+ S BDMDETAC=0  ;counter for busa
  S BDMEREC=^BDMEDMUP(BDMEDA,0)
  S BDMEREC1=$G(^BDMEDMUP(BDMEDA,11))
  ;S BDMERE14=$G(^BDMEDMUP(BDMEDA,14))
@@ -61,6 +76,8 @@ EN(BDMEDA,BDMEDMER) ;PEP - called from DM GUI
  D FLU^BDMEDMU1
  D PNEU^BDMEDMU1
  D TD^BDMEDMU1
+ D SHINGRIX^BDMEDMU1
+ D TDAP^BDMEDMU1
  D HEPB^BDMEDMU1
  D PPD^BDMEDMU2
  D EKG^BDMEDMU2
@@ -72,6 +89,8 @@ EN(BDMEDA,BDMEDMER) ;PEP - called from DM GUI
  D BTLHF^BDMEDMU3
  D ENDSHF^BDMEDMU2
 DEL S DA=BDMEDA,DIK="^BDMEDMUP(" D ^DIK
+ ;BUSA LOG THAT USER UPDATED USING DMU
+ D LOG^BUSAAPI("O","O","A",$S($G(XQY0)]"":$P(XQY0,U),1:"BDMDEDMUP"),"UPDATED PATIENT DM DATA","BDMDETAL")
  Q
 REF ;update refusals?
  S DIR(0)="Y",DIR("A")="Do you want to enter any Patient REFUSALS/SERVICES NOT DONE",DIR("B")="N" KILL DA D ^DIR KILL DIR
@@ -186,6 +205,9 @@ BSD ;
  I T]"" Q  ;errored
  S V=$O(BDMEBSDV(0)) S BDMEVSIT=V
  I $G(BDMEBSDV(V))="ADD" D DEDT^APCDEA2(BDMEVSIT)
+ ;BUSA, STORE VISIT IEN
+ S BDMDETAC=BDMDETAC+1
+ S BDMDETAL(BDMDETAC)=BDMEDMPT_U_BDMEVSIT
  Q
 EVSIT ;EP - get/create event visit
  I $L($T(^BSDAPI4)) D  Q
@@ -200,6 +222,9 @@ EVSIT ;EP - get/create event visit
  S APCDALVR("APCDDATE")=BDMEDMDT_".12"
  D ^APCDALV
  S BDMEVSIT=$G(APCDALVR("APCDVSIT"))
+ ;BUSA, STORE VISIT IEN
+ S BDMDETAC=BDMDETAC+1
+ S BDMDETAL(BDMDETAC)=BDMEDMPT_U_BDMEVSIT
  I $G(APCDALVR("APCDVSIT","NEW")) D DEDT^APCDEA2(BDMEVSIT)
  K APCDALVR
  Q

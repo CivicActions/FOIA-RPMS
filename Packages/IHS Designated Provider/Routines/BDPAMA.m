@@ -1,5 +1,5 @@
 BDPAMA ;IHS/CMI/LAB - ASSIGN MESSAGE AGENT ; 05 Jun 2018  11:09 AM
- ;;2.0;IHS PCC SUITE;**10,21**;MAY 14, 2009;Build 34
+ ;;2.0;IHS PCC SUITE;**10,21,27**;MAY 14, 2009;Build 64
  ;
  ; Subscripted BDPREC is EXTERNAL form.
  ;   BDPREC("PAT NAME")=patient name
@@ -47,13 +47,22 @@ OLDPROV ; GET OLD EXISTING PROVIDER
  Q
  ;
 COUNT ;Count of # Patients for this Old Provider
+ NEW BDPI,BDPYI,BDPMA,P,X
  S BDPI="",BDPQ=0,BDPYI=0
- F  S BDPI=$O(^BDPRECN("AC",BDPOPROV,BDPI)) Q:BDPI=""  S BDPYI=BDPYI+1
+ F  S BDPI=$O(^BDPRECN("AC",BDPOPROV,BDPI)) Q:BDPI=""  S BDPYI=BDPYI+1 D
+ .S P=$P(^BDPRECN(BDPI,0),U,2)  ;patient
+ .S X=$P($$MA^BDPAPI(P),U) S:X BDPMA(X)=$G(BDPMA(X))+1 ;S:'X BDPMA("NONE")=$G(BDPMA("NONE"))+1
+ I 'BDPYI W !!?10,"There are ",BDPYI," patients currently assigned to this Provider." S BDPQ=1 W !! D EOP^BDP Q
+ ;DISPLAY MESSAGE AGENTS PATCH 27
  W !!?10,"There are ",BDPYI," patients currently assigned to this Provider."
- I BDPYI=0 S BDPQ=1 ;More than one patient exists for Provider
+ W !!?10,"CURRENT MESSAGE AGENTS ASSIGNED TO THESE PATIENTS:"
+ S X=0,C=0 F  S X=$O(BDPMA(X)) Q:X'=+X  D
+ .W !?15,$P(^VA(200,X,0),U,1)," is assigned to ",BDPMA(X)," of these patients"
+ .S C=C+BDPMA(X)
+ I C<BDPYI W !?15,(BDPYI-C)," have no message agent assigned.",!
  K BDPI,BDPYI
  W !
- W !
+ ;DISPLAY MESSAGE AGENT FOR ALL OF THIS PROVIDER'S PATIENTS
  Q
  ;
  ;

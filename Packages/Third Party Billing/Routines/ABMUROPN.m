@@ -1,5 +1,5 @@
-ABMUROPN ; IHS/SD/SDR - 3PB/UFMS Re-open Session Option   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMUROPN ; IHS/SD/SDR - 3PB/UFMS Re-open Session Option   [ 05/24/2007  11:50 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**12**;MAY 24, 2007
  ;
  ; New routine - v2.5 p12 SDD item 4.9.2.3
  ; Re-open Cashiering Session

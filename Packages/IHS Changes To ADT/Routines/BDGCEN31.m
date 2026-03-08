@@ -1,5 +1,5 @@
 BDGCEN31 ; IHS/ANMC/LJF - BED MOVEMENT LISTING CONT. ;  [ 06/20/2002  12:59 PM ]
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
  ;
 LOOP ; initialize subtotals for wards
@@ -49,8 +49,12 @@ FIND ; within ward loop by patient and display data
  .. F  S DFN=$O(^TMP("BDGCEN31",$J,WARD,SUB,DATE,NAME,DFN)) Q:'DFN  D
  ... ;
  ... ; display patient data
+ ... ;202307 77894 maw p1022 PPN
+ ... N PRF
+ ... S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
  ... S LINE=$$PAD($P($$FMTE^XLFDT(DATE),":",1,2),22)
- ... S LINE=$$PAD(LINE_NAME,55)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)
+ ... S LINE=$$PAD(LINE_$G(PRF),55)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)
+ ... ;S LINE=$$PAD(LINE_NAME,55)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)
  ... D SET(LINE,.VALMCNT)
  ... ;
  ... ; increment counts within type of movement

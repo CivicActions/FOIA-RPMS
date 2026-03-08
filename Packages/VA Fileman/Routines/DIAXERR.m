@@ -1,5 +1,6 @@
-DIAXERR ;SFISC/DCM-EXTRACT MAPPING UTILITIES ;5/1/96  16:49
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIAXERR ;SFISC/DCM-EXTRACT MAPPING UTILITIES ;5/1/96  16:49 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**8**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ERR(A) ;

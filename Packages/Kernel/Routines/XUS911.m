@@ -44,7 +44,7 @@ PASS1 ;
  Q
 LIST ;
  ;D:$Y>19 NEWPG Q:XQUI  S (X,Y)=XQJN,X1=16 I X>127 D CNV^XTBASE ;IHS/ANMC/CLS commented out
- D:$Y>19 NEWPG Q:XQUI    S (X,Y)=XQJN,X1=16;;IHS/ANMC/CLS 11/4/94 per Floyd Dennis so job # > 127 doesn't print in hex
+ D:$Y>19 NEWPG Q:XQUI  S (X,Y)=XQJN,X1=16;  ;IHS/ANMC/CLS 11/4/94 per Floyd Dennis so job # > 127 doesn't print in hex
  Q:MWRUSR'=XQUN  ;IHS/ANMC/MWR
  W !,Y,?12,$E(XQUN,1,19),?33,$P(XQV,U,1),?42,$P(XQV,U,2),?50,$P(XQV,U,3,99)
  Q

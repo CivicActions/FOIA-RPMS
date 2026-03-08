@@ -1,5 +1,8 @@
 BMCFDRA ; IHS/PHXAO/TMJ - DRIVER TO PRINT ALT RESOURCE LETTER ;  
- ;;4.0;REFERRED CARE INFO SYSTEM;**4**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**4,15,16**;JAN 09, 2006;Build 168
+ ;4.0*15 4.20.2023 IHS.OIT.FCJ ADD PREFERRED NAME FOR SCREEN DISPLAYS
+ ;4.0*16 1.29.24 IHS.OIT.FCJ ADDED TEST FOR APT LETTER PRINT CHS SUPERVISOR
+ ;
 START ;
  W:$D(IOF) @IOF
  W "**********  REFERRAL FORM PRINT  **********",!!
@@ -13,7 +16,7 @@ GETTYPE ;Select Alternate Resource Contact & set Text Verbiage
  S BMCCPRVP=$P($G(^BMCALT(BMCCPRV,0)),U)
 GETREF ;get referral entry
  W !! S BMCREF=""
- S DIC="^BMCREF(",DIC(0)="AEMQ",DIC("A")="Select Referral by Patient Name, date of referral or referral #: " D ^DIC K DA,DIC
+ S DIC="^BMCREF(",DIC(0)="AEMQS",DIC("A")="Select Referral by Patient Name, date of referral or referral #: " D ^DIC K DA,DIC  ;BMC*4.0*15 ADDED "S" TO DIC(0)
  G:Y=-1 XIT
  S BMCREF=+Y
  I $D(^BMCTFORM(BMCFTYPE,11)) X ^BMCTFORM(BMCFTYPE,11) G:BMCQUIT GETREF
@@ -57,7 +60,10 @@ WP ;EP - Entry point to print wp fields pass node in BMCWP
  S DIWR=$S($G(BMCIOM):BMCIOM,1:IOM),DIWL=0 F  S BMCX=$O(@G) Q:BMCX'=+BMCX  D
  .S Y=$P(G,")")_",0)"
  .S X="" I $G(BMCCAP)]"",BMCX=1 S X=BMCCAP
- .S X=X_@Y D ^DIWP
+ .;S X=X_@Y D ^DIWP    ;BMC*4.0*16
+ .S X=X_@Y     ;BMC*4.0*16
+ .I $G(BMCCSPVR) S X=$REPLACE(X,"BMCCSPVR",BMCCSPVR)    ;BMC*4.0*16
+ .D ^DIWP      ;BMC*4.0*16
  .Q
 WPS ;EP
  S Z=0 F  S Z=$O(^UTILITY($J,"W",DIWL,Z)) Q:Z'=+Z  S P=P+1,BMCWP(P)=^UTILITY($J,"W",DIWL,Z,0)

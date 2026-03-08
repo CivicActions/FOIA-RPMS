@@ -1,13 +1,8 @@
-BIREPL2 ;IHS/CMI/MWR - REPORT, ADULT IMM; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**12**;MAY 01,2016
+BIREPL2 ;IHS/CMI/MWR - REPORT, ADULT IMM; MAY 10, 2010 ; 21 May 2025  12:59 PM [ 05/21/2025  11:59 AM ]
+ ;;8.5;IMMUNIZATION;**12,26,27,29,30,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW ADULT IMMUNIZATION REPORT, GATHER DATA.
- ;;  PATCH 3: Remove Date Range line (no longer relevant).  HEAD+33
- ;;  PATCH 3: Set HPV upper limit display for males to 21 years. DISPLAY+69
- ;;  PATCH 12: Add new Composite Measures.  DISPLAY+25
  ;
- ;
- ;----------
 HEAD(BIQDT,BICC,BIHCF,BIBEN,BICPTI,BIUP) ;EP
  ;---> Produce Header array for ADULT Immunization Report.
  ;---> Parameters:
@@ -17,8 +12,6 @@ HEAD(BIQDT,BICC,BIHCF,BIBEN,BICPTI,BIUP) ;EP
  ;     4 - BIBEN  (req) Beneficiary Type array.
  ;     5 - BICPTI (req) 1=Include CPT Coded Visits, 0=Ignore CPT
  ;     6 - BIUP    (req) User Population/Group (Registered, Imm, User, Active).
- ;
- ;---> Check for required Variables.
  Q:'$G(BIQDT)
  Q:'$D(BICC)
  Q:'$D(BIHCF)
@@ -27,33 +20,37 @@ HEAD(BIQDT,BICC,BIHCF,BIBEN,BICPTI,BIUP) ;EP
  Q:'$D(BIUP)
  ;
  K VALMHDR
- N BILINE,X S BILINE=0
+ N BILINE,X
+ S BILINE=0
  ;
- N X S X=""
+ N X
+ S X=""
  ;---> If Header array is NOT being for Listmananger include version.
  S:'$D(VALM("BM")) X=$$LMVER^BILOGO()
  ;
- D WH^BIW(.BILINE,X)
- S X=$$REPHDR^BIUTL6(DUZ(2)) D CENTERT^BIUTL5(.X)
- D WH^BIW(.BILINE,X)
- ;
- S X="*  Adult Immunization Report  *" D CENTERT^BIUTL5(.X)
+ I $G(BISPD)'="CSV" D WH^BIW(.BILINE,X)
+ S X=$$REPHDR^BIUTL6(DUZ(2)) I $G(BISPD)'="CSV" D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
- S X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT)
- ;********** PATCH 3, v8.5, SEP 10,2012, IHS/CMI/MWR
- ;---> Remove Date Range line (no longer relevant).
- ;D WH^BIW(.BILINE,X)
- D WH^BIW(.BILINE,X,1)
+ S X="*  Adult Immunization Report  *" I $G(BISPD)'="CSV" D CENTERT^BIUTL5(.X)
+ D WH^BIW(.BILINE,X)
  ;
- ;S X=$$SP^BIUTL5(28)_"Date Range: "_$$SLDT1^BIUTL5(BIQDT-10000)_" - "_$$SLDT1^BIUTL5(BIQDT)
+ S:$G(BISPD)'="CSV" X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT) S:$G(BISPD)="CSV" X="Report Date: "_$$SLDT1^BIUTL5(DT)
+ D WH^BIW(.BILINE,X,$S($G(BISPD)="CSV":"",1:1))
+ ;
+ ;
+ S:$G(BISPD)'="CSV" X=$$SP^BIUTL5(30)_"End Date: "_$$SLDT1^BIUTL5(BIQDT) S:$G(BISPD)="CSV" X="End Date: "_$$SLDT1^BIUTL5(BIQDT)
+ D WH^BIW(.BILINE,X,$S($G(BISPD)="CSV":"",1:1))
+ ;
+ ;S X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT)
  ;D WH^BIW(.BILINE,X,1)
+ ;
  ;**********
  ;
  S X=" "_$$BIUPTX^BIUTL6(BIUP)
  I BICPTI S X=$$PAD^BIUTL5(X,52)_"* CPT Coded Visits Included"
  D WH^BIW(.BILINE,X)
- D WH^BIW(.BILINE,$$SP^BIUTL5(79,"-"))
+ I $G(BISPD)'="CSV" D WH^BIW(.BILINE,$$SP^BIUTL5(79,"-"))
  ;
  D
  .;---> If specific Communities were selected (not ALL), then print
@@ -69,11 +66,8 @@ HEAD(BIQDT,BICC,BIHCF,BIBEN,BICPTI,BIUP) ;EP
  .D SUBH^BIOUTPT5("BIBEN","Beneficiary Type",,"^AUTTBEN(",.BILINE,.BIERR,,13)
  .I $G(BIERR) D ERRCD^BIUTL2(BIERR,.X) D WH^BIW(.BILINE,X) Q
  .;
- .S X=$$SP^BIUTL5(59)_"Number   Percent"
- .D WH^BIW(.BILINE,X)
+ .I $G(BISPD)'="CSV" S X=$$SP^BIUTL5(59)_"Number   Percent" D WH^BIW(.BILINE,X)
  ;
- ;---> If Header array is being built for Listmananger,
- ;---> reset display window margins for Communities, etc.
  D:$D(VALM("BM"))
  .S VALM("TM")=BILINE+3
  .S VALM("LINES")=VALM("BM")-VALM("TM")+1
@@ -93,7 +87,8 @@ START(BIQDT,BICC,BIHCF,BIBEN,BICPTI,BIUP) ;EP
  ;     5 - BICPTI (req) 1=Include CPT Coded Visits, 0=Ignore CPT (default).
  ;     6 - BIUP    (req) User Population/Group (Registered, Imm, User, Active).
  ;
- N BILINE,BITMP,X S BILINE=0
+ N BILINE,BITMP,X
+ S BILINE=0
  K ^TMP("BIREPL1",$J)
  ;
  ;---> Check for required Variables.
@@ -106,7 +101,7 @@ START(BIQDT,BICC,BIHCF,BIBEN,BICPTI,BIUP) ;EP
  S:$G(BIUP)="" BIUP="u"
  ;
  D GETSTATS^BIREPL3(BIQDT,.BICC,.BIHCF,.BIBEN,BICPTI,BIUP,.BITOTS)
- D DISPLAY(BITOTS,.BILINE)
+ D DISPLAY(.BITOTS,.BILINE)
  S VALMCNT=BILINE
  Q
  ;
@@ -115,243 +110,243 @@ START(BIQDT,BICC,BIHCF,BIBEN,BICPTI,BIUP) ;EP
 DISPLAY(BITOTS,BILINE) ;EP
  ;---> Write Adult Stats for display.
  ;---> Parameters:
- ;     1 - BITOTS (req) Totals delimited by "^":
- ;                      Pc   Variable
- ;                       1 - BI19=Total over 19
- ;                       2 - BIT19 = Number over 19 w/Tetanus past 10 years.
- ;                       3 - BITDAP = Number over 19 w/Tdap past 10 years.
- ;
- ;                       4 - BIHPVF  = Total number of Females age 19-26
- ;                       5 - BIHPVF1 = Number Females 19-26 w/HPV-1
- ;                       6 - BIHPVF2 = Number Females 19-26 w/HPV-2
- ;                       7 - BIHPVF3 = Number Females 19-26 w/HPV-3
- ;                       8 - BIHPVF  = Total number of Males age 19-26
- ;                       9 - BIHPVM1 = Number Males 19-26 w/HPV-1
- ;                      10 - BIHPVM2 = Number Males 19-26 w/HPV-2
- ;                      11 - BIHPVM3 = Number Males 19-26 w/HPV-3
- ;
- ;                      12 - BI60=Total over 60
- ;                      13 - BIZ60 = Number over 60 w/Zoster ever.
- ;                      14 - BI65=Total over 65
- ;                      15 - BIT65 = Number over 65 w/Tetanus past 10 years.
- ;                      16 - BIP65 = Number over 65 w/Pneumo at or after 65 years.
- ;                      17 - BIP65E = Number over 65 w/Pneumo EVER.
- ;
- ;********** PATCH 12, v8.5, MAY 01,2016, IHS/CMI/MWR
- ;---> New Composite Measure Variables.
- ;                      18 - BIC19=Total >19 <60
- ;                      19 - BIC191=Tdap ever
- ;                      20 - BIC192=(Td or Tdap) <10 yrs
- ;                      21 - BIC193=(Tdap ever) AND ((Tdap or Td) <10 yrs)
- ;
- ;                      22 - BIC60=Total >60 <65
- ;                      23 - BIC601=Tdap ever
- ;                      24 - BIC602=(Td or Tdap) <10 yrs
- ;                      25 - BIC603=Zoster
- ;                      26 - BIC604=(Tdap ever) AND ((Tdap or Td) <10 yrs) AND Zoster
- ;
- ;                      27 - BIC65=Total >65
- ;                      28 - BIC651=Tdap ever
- ;                      29 - BIC652=(Td or Tdap) <10 yrs
- ;                      30 - BIC653=Zoster
- ;                      31 - BIC654=Pneumo >65 yrs
- ;                      32 - BIC655=(Tdap ever) AND ((Tdap or Td) <10 yrs) AND Zoster AND Pneumo
- ;                      33 - BICUTDD=Overall UTD Denominator
- ;                      34 - BICUTDN-Overall UTD Numerator
- ;
- ;
+ ;     1 - BITOTS (req) 
  ;     1 - BILINE (ret) Number of lines written to Listman scroll area.
  ;
- I $G(BITOTS)="" D ERRCD^BIUTL2(667,.X) D WRITE(.BILINE,X) Q
+ I '$D(BITOTS) D ERRCD^BIUTL2(667,.X) D WRITE(.BILINE,X) Q
+ I $G(BISPD)="CSV" D CSV^BIREPL5(.BITOTS,.BILINE) Q
  ;
- ;---> Set totals into BIV local array, 1-15.
- ;**********
- ;N BIV,I F I=1:1:17 S BIV(I)=$P(BITOTS,U,I)
- N BIV,I F I=1:1:34 S BIV(I)=$P(BITOTS,U,I)
- ;**********
  ;
  S X=$$PAD("  Total Number of Patients 19 years and older",56)_": "
- S X=X_$$C(BIV(1),0,8) D WRITE(.BILINE,X,1)
+ S X=X_$$C(BITOTS("PTS19+"),0,8) D WRITE(.BILINE,X,1)
  ;
- S X=$$PAD("    TETANUS: # patients w/Td in past 10 years",56)
- S X=X_": "_$$C(BIV(2),0,8)
- I BIV(1) S X=X_$J((BIV(2)/BIV(1))*100,7,1)
+ S X=$$PAD("    TETANUS: # patients Tdap EVER",56)
+ S X=X_": "_$$C(BITOTS("19+TDAPEVER"),0,8)
+ I BITOTS("PTS19+") S X=X_$J((BITOTS("19+TDAPEVER")/BITOTS("PTS19+"))*100,7,1)
  D WRITE(.BILINE,X)
  ;
- S X=$$PAD("    TETANUS: # patients w/Tdap in past 10 years",56)
- S X=X_": "_$$C(BIV(3),0,8)
- I BIV(1) S X=X_$J((BIV(3)/BIV(1))*100,7,1)
+ S X=$$PAD("    TETANUS: # patients Tdap EVER AND",56)
+ D WRITE(.BILINE,X)
+ S X=$$PAD("      [Td OR Tdap in past 10 years]",56)
+ S X=X_": "_$$C(BITOTS("19+TDAP&TD10YR"),0,8)
+ I BITOTS("PTS19+") S X=X_$J((BITOTS("19+TDAP&TD10YR")/BITOTS("PTS19+"))*100,7,1)
  D WRITE(.BILINE,X,1)
  ;
- ;---> Females (pcs 4-7).
- S X=$$PAD("    HPV: Total # Female patients age 19-26",56)
- S X=X_": "_$$C(BIV(4),0,8)
- I BIV(1) S X=X_$J((BIV(4)/BIV(1))*100,7,1)
+ ;---> HEP B
+ S X=$$PAD("  Total Number of Patients 19-59",56)_": "
+ S X=X_$$C(BITOTS("PTS19-59"),0,8) D WRITE(.BILINE,X,1)
+ ;
+ S X=$$PAD("    HEP B: # patients - Series initiated",56)
+ S X=X_": "_$$C(BITOTS("19-59HEPB1"),0,8)  ;p26 piece 3
+ I BITOTS("PTS19-59") S X=X_$J((BITOTS("19-59HEPB1")/BITOTS("PTS19-59"))*100,7,1)
  D WRITE(.BILINE,X)
  ;
- S X=$$PAD("    HPV: # Female patients age 19-26 w/HPV1",56)
- S X=X_": "_$$C(BIV(5),0,8)
- I BIV(4) S X=X_$J((BIV(5)/BIV(4))*100,7,1)
+ S X=$$PAD("    HEP B: # patients - Dose 2 initiated",56)
+ S X=X_": "_$$C(BITOTS("19-59HEPB2"),0,8)  ;p26 piece 3
+ I BITOTS("PTS19-59") S X=X_$J((BITOTS("19-59HEPB2")/BITOTS("PTS19-59"))*100,7,1)
  D WRITE(.BILINE,X)
  ;
- S X=$$PAD("    HPV: # Female patients age 19-26 w/HPV2",56)
- S X=X_": "_$$C(BIV(6),0,8)
- I BIV(4) S X=X_$J((BIV(6)/BIV(4))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    HPV: # Female patients age 19-26 w/HPV3",56)
- S X=X_": "_$$C(BIV(7),0,8)
- I BIV(4) S X=X_$J((BIV(7)/BIV(4))*100,7,1)
+ S X=$$PAD("    HEP B: # patients - Series completed",56)
+ S X=X_": "_$$C(BITOTS("19-59HEPBC"),0,8)  ;p26 piece 3
+ I BITOTS("PTS19-59") S X=X_$J((BITOTS("19-59HEPBC")/BITOTS("PTS19-59"))*100,7,1)
  D WRITE(.BILINE,X,1)
  ;
- ;---> Males (pcs 8-11).
- ;
- ;********** PATCH 3, v8.5, SEP 10,2012, IHS/CMI/MWR
- ;---> Change male age to display "19-21".
- S X=$$PAD("    HPV: Total # Male patients age 19-21",56)
- S X=X_": "_$$C(BIV(8),0,8)
- I BIV(1) S X=X_$J((BIV(8)/BIV(1))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    HPV: # Male patients age 19-21 w/HPV1",56)
- S X=X_": "_$$C(BIV(9),0,8)
- I BIV(8) S X=X_$J((BIV(9)/BIV(8))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    HPV: # Male patients age 19-21 w/HPV2",56)
- S X=X_": "_$$C(BIV(10),0,8)
- I BIV(8) S X=X_$J((BIV(10)/BIV(8))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    HPV: # Male patients age 19-21 w/HPV3",56)
- ;**********
- ;
- S X=X_": "_$$C(BIV(11),0,8)
- I BIV(8) S X=X_$J((BIV(11)/BIV(8))*100,7,1)
+ ;;---> HPV
+ S X=$$PAD("  Total Number of Patients age 19-26",56)
+ S X=X_": "_$$C(BITOTS("PTS19-26"),0,8)
+ I BITOTS("PTS19+") S X=X_$J((BITOTS("PTS19-26")/BITOTS("PTS19+"))*100,7,1)
  D WRITE(.BILINE,X,1)
  ;
- ;---> Total patients over 60 & Zoster. (pcs 12-13).
- S X=$$PAD("  Total Number of Patients 60 years and older",56)
- S X=X_": "_$$C(BIV(12),0,8)
- I BIV(1) S X=X_$J((BIV(12)/BIV(1))*100,7,1)
+ S X=$$PAD("    HPV: # patients - Series initiated",56)
+ S X=X_": "_$$C(BITOTS("19-26HPV1"),0,8)
+ I BITOTS("PTS19-26") S X=X_$J((BITOTS("19-26HPV1")/BITOTS("PTS19-26"))*100,7,1)
  D WRITE(.BILINE,X)
  ;
- S X=$$PAD("    ZOSTER: # patients w/Zostavax ever",56)
- S X=X_": "_$$C(BIV(13),0,8)
- I BIV(12) S X=X_$J((BIV(13)/BIV(12))*100,7,1)
+ S X=$$PAD("    HPV: # patients - Dose 2 initiated",56)
+ S X=X_": "_$$C(BITOTS("19-26HPV2"),0,8)
+ I BITOTS("PTS19-26") S X=X_$J((BITOTS("19-26HPV2")/BITOTS("PTS19-26"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    HPV: # patients - Series completed",56)
+ S X=X_": "_$$C(BITOTS("19-26HPVC"),0,8)
+ I BITOTS("PTS19-26") S X=X_$J((BITOTS("19-26HPVC")/BITOTS("PTS19-26"))*100,7,1)
  D WRITE(.BILINE,X,1)
  ;
+ ;---> Total patients over 50 and shingrix
+ S X=$$PAD("  Total Number of Patients 50 years and older",56)
+ S X=X_": "_$$C(BITOTS("PTS50+"),0,8)
+ I BITOTS("PTS19+") S X=X_$J((BITOTS("PTS50+")/BITOTS("PTS19+"))*100,7,1)
+ D WRITE(.BILINE,X,1)
  ;
- ;---> Total patients over 65 (pcs 14-16).
+ ;V8.5 PATCH 29 - FID-  Edit display spelling
+ S X=$$PAD("    Shingrix: # patients - Series initiated",56)
+ S X=X_": "_$$C(BITOTS("50+SHINGRIX1"),0,8)
+ I BITOTS("PTS50+") S X=X_$J((BITOTS("50+SHINGRIX1")/BITOTS("PTS50+"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    Shingrix: # patients - Series completed",56) ;THL 6/28/23 Typo corrected
+ S X=X_": "_$$C(BITOTS("50+SHINGRIXC"),0,8)
+ I BITOTS("PTS50+") S X=X_$J((BITOTS("50+SHINGRIXC")/BITOTS("PTS50+"))*100,7,1)
+ D WRITE(.BILINE,X,1)
+ ;
+ ;19-64 lines
+ S X=$$PAD("  Total Number of Patients age 19-64",56)
+ S X=X_": "_$$C(BITOTS("PTS19-64"),0,8)
+ I BITOTS("PTS19+") S X=X_$J((BITOTS("PTS19-64")/BITOTS("PTS19+"))*100,7,1)
+ D WRITE(.BILINE,X,1)
+ ;
+ S X=$$PAD("    PCV13 and PPSV23: # patients - fully vaccinated",56)
+ S X=X_": "_$$C(BITOTS("19-64PCV13PPSV23"),0,8)
+ I BITOTS("PTS19-64") S X=X_$J((BITOTS("19-64PCV13PPSV23")/BITOTS("PTS19-64"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    PCV20: # patients - fully vaccinated",56)
+ S X=X_": "_$$C(BITOTS("19-64PCV20"),0,8)
+ I BITOTS("PTS19-64") S X=X_$J((BITOTS("19-64PCV20")/BITOTS("PTS19-64"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    PPSV23 and PCV15: # patients - fully vaccinated",56)
+ S X=X_": "_$$C(BITOTS("19-64PCV15PPSV23"),0,8)
+ I BITOTS("PTS19-64") S X=X_$J((BITOTS("19-64PCV15PPSV23")/BITOTS("PTS19-64"))*100,7,1)
+ D WRITE(.BILINE,X,1)
+ ;
+ ;65 and older lines
  S X=$$PAD("  Total Number of Patients 65 years and older",56)
- S X=X_": "_$$C(BIV(14),0,8)
- I BIV(1) S X=X_$J((BIV(14)/BIV(1))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    TETANUS: # patients w/Td in past 10 years",56)
- S X=X_": "_$$C(BIV(15),0,8)
- I BIV(14) S X=X_$J((BIV(15)/BIV(14))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- ;S X=$$PAD("    INFLUENZA: # pts w/Influenza vaccine in past year",56)
- ;S X=X_": "_$$C(BIV(9),0,8)
- ;I BIV(7) S X=X_$J((BIV(9)/BIV(7))*100,7,1)
- ;D WRITE(.BILINE,X,1)
- ;
- S X=$$PAD("    PNEUMOVAX: # patients w/Pneumovax at or over 65 yrs",56)
- S X=X_": "_$$C(BIV(16),0,8)
- I BIV(14) S X=X_$J((BIV(16)/BIV(14))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    PNEUMOVAX: # patients w/Pneumovax ever",56)
- S X=X_": "_$$C(BIV(17),0,8)
- I BIV(14) S X=X_$J((BIV(17)/BIV(14))*100,7,1)
+ S X=X_": "_$$C(BITOTS("PTS65+"),0,8)
+ I BITOTS("PTS19+") S X=X_$J((BITOTS("PTS65+")/BITOTS("PTS19+"))*100,7,1)
  D WRITE(.BILINE,X,1)
  ;
- ;---> Now write total patients considered who had refusals.
- N M,N S (M,N)=0 F  S M=$O(BITMP("REFUSALS",M)) Q:'M  S N=N+1
- S X="  Total Patients included who had Refusals on record....:"_$J(N,8)
+ S X=$$PAD("    Tetanus: # patients w/Td/Tdap in past 10 years",56)
+ S X=X_": "_$$C(BITOTS("65+TDAP/TD10YR"),0,8)
+ I BITOTS("PTS65+") S X=X_$J((BITOTS("65+TDAP/TD10YR")/BITOTS("PTS65+"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    PCV13 and PPSV23: # patients - fully vaccinated",56)
+ S X=X_": "_$$C(BITOTS("65+PCV13PPSV23"),0,8)
+ I BITOTS("PTS65+") S X=X_$J((BITOTS("65+PCV13PPSV23")/BITOTS("PTS65+"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    PCV20: # patients - fully vaccinated",56)
+ S X=X_": "_$$C(BITOTS("65+PCV20"),0,8)
+ I BITOTS("PTS65+") S X=X_$J((BITOTS("65+PCV20")/BITOTS("PTS65+"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    PPSV23 and PCV15: # patients - fully vaccinated",56)
+ S X=X_": "_$$C(BITOTS("65+PCV15PPSV23"),0,8)
+ I BITOTS("PTS65+") S X=X_$J((BITOTS("65+PCV15PPSV23")/BITOTS("PTS65+"))*100,7,1)
+ D WRITE(.BILINE,X,1)
+ ;
+ S X="  Total Patients included who had Refusals on record....:"_$J(BITOTS("REFUSALS"),8)
  D WRITE(.BILINE,X,2)
- ;
- ;
- ;
- ;********** PATCH 12, v8.5, MAY 01,2016, IHS/CMI/MWR
- ;---> New Composite Measures display.
  ;
  S X=$$PAD("  * * * NEW GPRA COMPOSITE MEASURE SECTION * * *")
  D WRITE(.BILINE,X,1)
  ;
- S X=$$PAD("  Total Number of Patients ages 19 through 59 years",56)_": "
- S X=X_$$C(BIV(18),0,8) D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    Received 1 dose of Tdap ever",56)
- S X=X_": "_$$C(BIV(19),0,8)
- I BIV(18) S X=X_$J((BIV(19)/BIV(18))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    Received 1 dose of Tdap or Td <10 years",56)
- S X=X_": "_$$C(BIV(20),0,8)
- I BIV(18) S X=X_$J((BIV(20)/BIV(18))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    Received 1 dose Tdap ever AND Tdap or Td <10 years",56)
- S X=X_": "_$$C(BIV(21),0,8)
- I BIV(1) S X=X_$J((BIV(21)/BIV(18))*100,7,1)
+ ;IHS/CMI/LAB - BI*8.5*29  - added HPV lines patch 29
+ ;;---> HPV
+ S X=$$PAD("  Total Number of Patients ages 19 through 26 years",56)
+ S X=X_": "_$$C(BITOTS("PTS19-26"),0,8)
  D WRITE(.BILINE,X,1)
  ;
- ;
- S X=$$PAD("  Total Number of Patients ages 60 through 64 years",56)_": "
- S X=X_$$C(BIV(22),0,8) D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    Received 1 dose of Tdap ever",56)
- S X=X_": "_$$C(BIV(23),0,8)
- I BIV(22) S X=X_$J((BIV(23)/BIV(22))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    Received 1 dose of Tdap or Td <10 years",56)
- S X=X_": "_$$C(BIV(24),0,8)
- I BIV(22) S X=X_$J((BIV(24)/BIV(22))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    Received 1 dose of Zoster ever",56)
- S X=X_": "_$$C(BIV(25),0,8)
- I BIV(22) S X=X_$J((BIV(25)/BIV(22))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    Received Tdap ever AND Tdap/Td <10 yrs AND Zoster",56)
- S X=X_": "_$$C(BIV(26),0,8)
- I BIV(22) S X=X_$J((BIV(26)/BIV(22))*100,7,1)
+ S X=$$PAD("    Received HPV Series complete",56)
+ S X=X_": "_$$C(BITOTS("19-26HPVC"),0,8)
+ I BITOTS("PTS19-26") S X=X_$J((BITOTS("19-26HPVC")/BITOTS("PTS19-26"))*100,7,1)
  D WRITE(.BILINE,X,1)
  ;
- ;
- S X=$$PAD("  Total Number of Patients 65 years and older",56)_": "
- S X=X_$$C(BIV(27),0,8) D WRITE(.BILINE,X)
+ ;composite for 19-49 years
+ S X=$$PAD("  Total Number of Patients ages 19 through 49 years",56)_": "
+ S X=X_$$C(BITOTS("PTS19-49"),0,8) D WRITE(.BILINE,X,1)
  ;
  S X=$$PAD("    Received 1 dose of Tdap ever",56)
- S X=X_": "_$$C(BIV(28),0,8)
- I BIV(27) S X=X_$J((BIV(28)/BIV(27))*100,7,1)
+ S X=X_": "_$$C(BITOTS("19-49TDAPEVER"),0,8)
+ I BITOTS("PTS19-49") S X=X_$J((BITOTS("19-49TDAPEVER")/BITOTS("PTS19-49"))*100,7,1)
  D WRITE(.BILINE,X)
  ;
- S X=$$PAD("    Received 1 dose of Tdap or Td <10 years",56)
- S X=X_": "_$$C(BIV(29),0,8)
- I BIV(27) S X=X_$J((BIV(29)/BIV(27))*100,7,1)
+ S X=$$PAD("    Received 1 dose of Tdap or Td < 10 years",56)
+ S X=X_": "_$$C(BITOTS("19-49TDAP/TD10YR"),0,8)
+ I BITOTS("PTS19-49") S X=X_$J((BITOTS("19-49TDAP/TD10YR")/BITOTS("PTS19-49"))*100,7,1)
  D WRITE(.BILINE,X)
  ;
- S X=$$PAD("    Received 1 dose of Zoster ever",56)
- S X=X_": "_$$C(BIV(30),0,8)
- I BIV(27) S X=X_$J((BIV(30)/BIV(27))*100,7,1)
+ S X=$$PAD("    Received 1 dose of Tdap ever AND Tdap or Td < 10 yrs",56)
+ S X=X_": "_$$C(BITOTS("19-49TDAP&TD10YR"),0,8)
+ I BITOTS("PTS19-49") S X=X_$J((BITOTS("19-49TDAP&TD10YR")/BITOTS("PTS19-49"))*100,7,1)
  D WRITE(.BILINE,X)
  ;
- S X=$$PAD("    Received 1 dose of Pneumo after 65 yrs OR last 5yrs",56)
- S X=X_": "_$$C(BIV(31),0,8)
- I BIV(27) S X=X_$J((BIV(31)/BIV(27))*100,7,1)
- D WRITE(.BILINE,X)
- ;
- S X=$$PAD("    Received Tdap AND Tdap/Td <10y AND Zoster AND Pneumo",56)
- S X=X_": "_$$C(BIV(32),0,8)
- I BIV(27) S X=X_$J((BIV(32)/BIV(27))*100,7,1)
+ S X=$$PAD("    Received HEP B Series complete",56)
+ S X=X_": "_$$C(BITOTS("19-49HEPBC"),0,8)  ;p26 piece 3
+ I BITOTS("PTS19-49") S X=X_$J((BITOTS("19-49HEPBC")/BITOTS("PTS19-49"))*100,7,1)
  D WRITE(.BILINE,X,1)
  ;
+ S X=$$PAD("    Received ALL of the above (appropriately vaccinated)",56)
+ S X=X_": "_$$C(BITOTS("19-49ALL"),0,8)  ;p26 piece 3
+ I BITOTS("PTS19-49") S X=X_$J((BITOTS("19-49ALL")/BITOTS("PTS19-49"))*100,7,1)
+ D WRITE(.BILINE,X,1)
+ ;
+ ; composite 50-59
+ S X=$$PAD("  Total Number of Patients ages 50 through 59 years",56)_": "
+ S X=X_$$C(BITOTS("PTS50-59"),0,8) D WRITE(.BILINE,X,1)
+ ;
+ S X=$$PAD("    Received 1 dose of Tdap ever",56)
+ S X=X_": "_$$C(BITOTS("50-59TDAPEVER"),0,8)
+ I BITOTS("PTS50-59") S X=X_$J((BITOTS("50-59TDAPEVER")/BITOTS("PTS50-59"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    Received 1 dose of Tdap or Td < 10 years",56)
+ S X=X_": "_$$C(BITOTS("50-59TDAP/TD10YR"),0,8)
+ I BITOTS("PTS50-59") S X=X_$J((BITOTS("50-59TDAP/TD10YR")/BITOTS("PTS50-59"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    Received 1 dose of Tdap ever AND Tdap or Td < 10 yrs",56)
+ S X=X_": "_$$C(BITOTS("50-59TDAP&TD10YR"),0,8)
+ I BITOTS("PTS50-59") S X=X_$J((BITOTS("50-59TDAP&TD10YR")/BITOTS("PTS50-59"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    Received HEP B Series complete",56)
+ S X=X_": "_$$C(BITOTS("50-59HEPBC"),0,8)  ;p26 piece 3
+ I BITOTS("PTS50-59") S X=X_$J((BITOTS("50-59HEPBC")/BITOTS("PTS50-59"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    Received Shingrix series complete",56)
+ S X=X_": "_$$C(BITOTS("50-59SHINC"),0,8)  ;p26 piece 3
+ I BITOTS("PTS50-59") S X=X_$J((BITOTS("50-59SHINC")/BITOTS("PTS50-59"))*100,7,1)
+ D WRITE(.BILINE,X,1)
+ ;
+ S X=$$PAD("    Received ALL of the above (appropriately vaccinated)",56)
+ S X=X_": "_$$C(BITOTS("50-59ALL"),0,8)  ;p26 piece 3
+ I BITOTS("PTS50-59") S X=X_$J((BITOTS("50-59ALL")/BITOTS("PTS50-59"))*100,7,1)
+ D WRITE(.BILINE,X,1)
+ ;
+ ; composite 60-65
+ S X=$$PAD("  Total Number of Patients ages 60 through 65 years",56)_": "
+ S X=X_$$C(BITOTS("PTS60-65"),0,8) D WRITE(.BILINE,X,1)
+ ;
+ S X=$$PAD("    Received 1 dose of Tdap ever",56)
+ S X=X_": "_$$C(BITOTS("60-65TDAPEVER"),0,8)
+ I BITOTS("PTS60-65") S X=X_$J((BITOTS("60-65TDAPEVER")/BITOTS("PTS60-65"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    Received 1 dose of Tdap or Td < 10 years",56)
+ S X=X_": "_$$C(BITOTS("60-65TDAP/TD10YR"),0,8)
+ I BITOTS("PTS60-65") S X=X_$J((BITOTS("60-65TDAP/TD10YR")/BITOTS("PTS60-65"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    Received 1 dose of Tdap ever AND Tdap or Td < 10 yrs",56)
+ S X=X_": "_$$C(BITOTS("60-65TDAP&TD10YR"),0,8)
+ I BITOTS("PTS60-65") S X=X_$J((BITOTS("60-65TDAP&TD10YR")/BITOTS("PTS60-65"))*100,7,1)
+ D WRITE(.BILINE,X)
+ ;
+ S X=$$PAD("    Received Shingrix series complete",56)
+ S X=X_": "_$$C(BITOTS("60-65SHINC"),0,8)  ;p26 piece 3
+ I BITOTS("PTS60-65") S X=X_$J((BITOTS("60-65SHINC")/BITOTS("PTS60-65"))*100,7,1)
+ D WRITE(.BILINE,X,1)
+ ;
+ S X=$$PAD("    Received ALL of the above (appropriately vaccinated)",56)
+ S X=X_": "_$$C(BITOTS("60-65ALL"),0,8)  ;p26 piece 3
+ I BITOTS("PTS60-65") S X=X_$J((BITOTS("60-65ALL")/BITOTS("PTS60-65"))*100,7,1)
+ D WRITE(.BILINE,X,1)
+ ;COMPOSITE 66+
+ D MORE^BIREPL4
+ G E
  ;
  S X=$$PAD("  Total Number of Patients 19 years and older",56)_": "
  S X=X_$$C(BIV(33),0,8) D WRITE(.BILINE,X)
@@ -362,13 +357,10 @@ DISPLAY(BITOTS,BILINE) ;EP
  S X=X_": "_$$C(BIV(34),0,8)
  I BIV(33) S X=X_$J((BIV(34)/BIV(33))*100,7,1)
  D WRITE(.BILINE,X,1)
- ;**********
  ;
  S VALMCNT=BILINE
- Q
+E Q
  ;
- ;
- ;----------
 WRITE(BILINE,BIVAL,BIBLNK) ;EP
  ;---> Write lines to ^TMP (see documentation in ^BIW).
  ;---> Parameters:
@@ -383,12 +375,9 @@ WRITE(BILINE,BIVAL,BIBLNK) ;EP
  S VALMCNT=BILINE
  Q
  ;
- ;
 C(X,X2,X3) ;
  D COMMA^%DTC
  Q X
  ;
- ;
- ;----------
 PAD(D,L,C) ;EP
  Q $$PAD^BIUTL5($G(D),$G(L),".")

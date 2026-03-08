@@ -1,10 +1,12 @@
 ABMELGCK ; IHS/SD/SDR - Recreate cancelled claim from PCC ;
- ;;2.6;IHS 3P BILLING SYSTEM;**14,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**14,21,33,37**;NOV 12, 2009;Build 739
  ;Allows user to look up eligibility for visit by patient
  ;This runs "eligiblity checker" portion of CG and outputs
  ;ABML array of info found
- ;IHS/SD/SDR - 2.6*21 - HEAT123571 - defined ABMP("VDT") to stop <UNDEF>OPCK+13^ABMDVCK1 error
- ;IHS/SD/SDR - 2.6*21 - HEAT137034 - Added visit type to display
+ ;IHS/SD/SDR 2.6*21 HEAT123571 - defined ABMP("VDT") to stop <UNDEF>OPCK+13^ABMDVCK1 error
+ ;IHS/SD/SDR 2.6*21 HEAT137034 - Added visit type to display
+ ;IHS/SD/SDR 2.6*33 ADO60185 CR11502 Added preferred name to display
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
  ;
 START ;EP
  S DIC="^AUPNPAT("
@@ -27,7 +29,15 @@ START ;EP
  D ELG^ABMDLCK(ABMVDFN,.ABML,ABMPDFN,ABMVDT)
  ;
  W !!
- W !,"For patient ",$P($G(^DPT(ABMPDFN,0)),U),", for visit ",$$CDT^ABMDUTL($P($G(^AUPNVSIT(ABMVDFN,0)),U)),!
+ ;W !,"For patient ",$P($G(^DPT(ABMPDFN,0)),U),", for visit ",$$CDT^ABMDUTL($P($G(^AUPNVSIT(ABMVDFN,0)),U)),!  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ W !,"For patient ",$P($G(^DPT(ABMPDFN,0)),U)
+ ;I $$GETPREF^AUPNSOGI(ABMPDFN,"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ I $$GETPREF^AUPNSOGI(ABMPDFN,"I",1)'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .;W $$EN^ABMVDF("RVN"),"* - ",$$GETPREF^AUPNSOGI(ABMPDFN,""),$$EN^ABMVDF("RVF")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .W " - ",$$GETPREF^AUPNSOGI(ABMPDFN,"I",1)_"*"  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ W !?3,"for visit ",$$CDT^ABMDUTL($P($G(^AUPNVSIT(ABMVDFN,0)),U)),!
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  ;W "PRIORITY",?9,"INSURER",?37,"STATUS",?50,"REASON UNBILLABLE",!  ;abm*2.6*21 IHS/SD/SDR HEAT137034
  W "PRIORITY",?9,"INSURER",?37,"VTYP",?42,"STATUS",?53,"REASON UNBILLABLE",!  ;abm*2.6*21 IHS/SD/SDR HEAT137034
  F A=1:1:80 W "-"

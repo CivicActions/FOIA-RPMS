@@ -1,7 +1,7 @@
-DIVR1 ;SFISC/DCM-VERIFY FIELDS API ;9:16 AM  1 Jul 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**7**;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DIVR1 ;SFISC/DCM-VERIFY FIELDS API ;8/16/96  16:43 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**8**;Aug 22, 1995
+ ;Per VHA Directive 10-93-142, this routine should not be modified
 EN ;
  I '$D(DIVRREC) S DIVRREC=""
  N %ZIS,POP,ZTRTN,ZTSAVE,SUB
@@ -48,7 +48,7 @@ DIVRDR N FLD,PC,Z,END,OUT,F,Y,Q,S
  . . F  S FLD=$O(^DD(DIVRFILE,FLD)) Q:FLD'>0!(FLD>END)  D SET Q:$D(DIRUT)
  . S FLD=PC I $$VFIELD^DILFD(DIVRFILE,PC,"D") D SET  Q
  Q
-SET N TYP,IT,T,W,PC3,M,Y,KEY
+SET N TYP,IT,T,W,PC3,M,Y
  S Y=FLD,Y(0)=^DD(DIVRFILE,FLD,0),TYP=$P(Y(0),U,2),IT=$P(Y(0),U,5,99),PC3=$P(Y(0),U,3)
  F T="N","D","P","S","V","F" Q:TYP[T
  F W="FREE TEXT","SET OF CODES","DATE","NUMERIC","POINTER","VARIABLE POINTER","K" I T[$E(W) S:W="K" W="MUMPS" Q
@@ -57,7 +57,6 @@ SET N TYP,IT,T,W,PC3,M,Y,KEY
  I TYP D MULT Q
  I 'R D:$Y>(IOSL-4) FF Q:$D(DIRUT)  W !!?TAB,$P(^DD(DIVRFILE,FLD,0),U)_" (#"_FLD_")",?40,W
  I TYP["*",TYP'["X" S IT="Q" I $D(^DD(DIVRFILE,FLD,12.1)) X ^(12.1) I $D(DIC("S")) S IT(1)=DIC("S"),IT="X IT(1) E  K X"
- S KEY=$D(^DD("KEY","F",DIVRFILE,FLD))>9
  D XDE
  Q
 XDE I F D
@@ -73,10 +72,7 @@ MULT D:$Y>(IOSL-4) FF Q:$D(DIRUT)
  F  S FLD=$O(^DD(DIVRFILE,FLD)) Q:FLD'>0  D SET Q:$D(DIRUT)
  S TAB=TAB-2 K @("D"_V)
  Q
-R I X?." " Q:TYP'["R"&'KEY  D  Q
- . I X="" S M="Missing"_$S(KEY:" key value",1:"")
- . E  S M="Equals only 1 or more spaces"
- . D X
+R I X?." " Q:TYP'["R"  S M="Missing" D X Q
  D @T Q
 P I @("$D(^"_PC3_"X,0))") D F Q
  S M="No '"_X_"' in pointed-to File" D X Q

@@ -1,5 +1,5 @@
-APCHPST ; IHS/CMI/LAB - Patient Health Summary - Pre-visit ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHPST ;IHS/CMI/GRL Patient Health Summary - Pre-visit; [ 02/11/2005  11:05 PM ]
+ ;;2.0;IHS RPMS/PCC Health Summary;**14**;JUN 24, 1997
  ;
  Q  ;NOT READY YET
 EN ;

@@ -1,5 +1,5 @@
 ABME5PAT ; IHS/ASDST/DMJ - 837 PAT Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,10**;NOV 12, 2009;Build 43
  ;Patient Information
  ;  
 START ;START HERE
@@ -38,11 +38,11 @@ LOOP ;LOOP HERE
  Q
 80 ;PAT07 - Unit or Basis for Measurement Code
  S ABMR("PAT",80)=""
- S:$P($G(^ABMDBILL(DUZ(2),+ABMB0,12)),U,11) ABMR("PAT",80)="01" ;5010 837P
+ ;S:$P($G(^ABMDBILL(DUZ(2),+ABMB0,12)),U,11) ABMR("PAT",80)="01" ;5010 837P  ;abm*2.6*10 HEAT75684
  Q
 90 ;PAT08 - Weight
  S ABMR("PAT",90)=""
- S:$P($G(^ABMDBILL(DUZ(2),+ABMB0,12)),U,11) ABMR("PAT",90)=$P($G(^ABMDBILL(DUZ(2),+ABMB0,12)),U,11) ;5010 837P
+ ;S:$P($G(^ABMDBILL(DUZ(2),+ABMB0,12)),U,11) ABMR("PAT",90)=$P($G(^ABMDBILL(DUZ(2),+ABMB0,12)),U,11) ;5010 837P  ;abm*2.6*10 HEAT75684
  Q
 100 ;PAT09 - Pregnancy Indicator
  S ABMR("PAT",100)=""

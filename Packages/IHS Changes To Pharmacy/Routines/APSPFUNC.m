@@ -1,6 +1,9 @@
-APSPFUNC ;IHS/CIA/PLS - MISC FUNCTIONS ;10-May-2016 13:29;DU
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1002,1004,1005,1006,1007,1008,1009,1010,1011,1013,1015,1017,1020,1021**;Sep 23, 2004;Build 14
- ;
+APSPFUNC ;IHS/CIA/PLS - MISC FUNCTIONS ;25-Feb-2022 09:55;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1002,1004,1005,1006,1007,1008,1009,1010,1011,1013,1015,1017,1020,1021,1023,1024,1026,1027,1030**;Sep 23, 2004;Build 7
+ ;IHS/GDIT/MSC/MGH Patch 1023 DIGIT entry point added
+ ;                            DIG entry point added
+ ;                 Patch 1026 - Added DEA Exp Date check
+ ; 11/02/2020 - VITCWT+1 - Changed SD to 3
 HRC(DFN,D) ;EP; -- IHS health record number
  ; Input: IEN to File 200
  ;          D - 1 for dashes (default = 0)
@@ -36,7 +39,7 @@ VITCHT(VAL) ; EP
  Q $J($G(VAL)*2.54,0,2)
  ; Return weight in kg
 VITCWT(VAL) ; EP
- Q $J($G(VAL)/2.2046226,0,2)
+ Q $J($G(VAL)/2.2046226,0,3)
  ; Return vital date in format MM/DD/YYYY
 VITDT(VAL) ; EP
  Q $$FMTE^XLFDT(VAL,"5DZ0")
@@ -45,7 +48,7 @@ VITDT(VAL) ; EP
 VITALF(DFN,TYP) ; EP
  N VAL,RES
  S VAL=$$VITAL(DFN,TYP)
- S RES=$$VITDT($P(VAL,U,3))_"^^^^^^^"_$P(VAL,U,2)_U_$$VITCWT($P(VAL,U,2))
+ S RES=$$VITDT($P(VAL,U,3))_"^^^^^^^"_$P(VAL,U,2)_U_$S(TYP="WT":$$VITCWT($P(VAL,U,2)),TYP="HT":$$VITCHT($P(VAL,U,2)),1:"")
  Q RES
  ; Return NDC value
  ; Input: RX - Presciption IEN
@@ -278,15 +281,21 @@ DEAVAUS(PRV) ;EP -
  ;        else return null
  ;        Facility DEA#-VA#-USPHS (ie AU1234567-BB1234-USPHS)
  Q:$G(PRV)="" ""
- N DEAID,VAID,RET,FACID
+ N DEAID,VAID,RET,FACID,N1,XDT
  S RET=""
  S DEAID=$$GET1^DIQ(200,PRV,53.2)  ;Provider DEA#
  S VAID=$$GET1^DIQ(200,PRV,53.3)   ;Provider VA#
  S FACID=$$GET1^DIQ(4,DUZ(2),52) ;Facility DEA#
- I $L(DEAID) D
- .S RET=DEAID
- E  I $L(VAID) D
- .S RET=FACID_"-"_VAID_"-"_"USPHS"
+ S N1=$G(^VA(200,PRV,"QAR"))     ;Expiration date
+ S XDT=$P(N1,U,9)
+ I XDT="" D
+ .I $L(DEAID) S RET=DEAID
+ .E  I $L(VAID) D
+ ..S RET=FACID_"-"_VAID_"-"_"USPHS"
+ E  D
+ .I $L(DEAID)&(XDT>(DT+1)) S RET=DEAID
+ .E  I $L(VAID) D
+ ..S RET=FACID_"-"_VAID_"-"_"USPHS"
  Q RET
  ; Returns remaining refill count
  ; Input: RX : Prescription IEN - Required
@@ -310,7 +319,7 @@ FMTSSN(SSN) ;EP-
  N X
  S SSN=$TR(SSN,"-","")
  S X=$E(SSN,6,$L(SSN))
- Q "XXX-XX-"_$S($L(X):X,1:"XXXX")
+ Q "XXX-XX-XXXX"  ;$S($L(X):X,1:"XXXX") - 2/25/2022 P1030
  ; Prompt user for processing on pending flagged order
 PMTFORD(POIEN) ;EP-
  N DRG,ORDITM,P0,FLG,ISSDT,PRV,HLP
@@ -396,3 +405,20 @@ APRTY ;EP-
  ; Return status of Beyond Use field in 59.5
 BYU(SITE) ;EP-
  Q +$S('$G(SITE):0,1:$G(^PS(59.5,SITE,9999999)))
+ ; Return string with only significant digits
+DIGIT(ENTRY) ;EP SIGNIFICANT DIGITS EPCS
+ N X,X1
+ S X=$G(ENTRY)
+ S X1=+X I $E(X1,1)="." S X1="0"_X1
+ Q X1
+DIG(ORDER,RXIEN) ;INDICATOR FOR DIGITAL SIGNATURE EPCS
+ N SIG,SS,PHM,VER
+ S SIG="",RXIEN=$G(RXIEN)
+ S SS=$P($G(^OR(100,ORDER,8,1,0)),U,4)
+ I SS=7 D
+ .S PHM=$$GPHM^APSPES1(RXIEN)
+ .I +PHM D
+ ..S VER=$$GET1^DIQ(9009033.9,PHM,6.2)
+ ..I VER["v10_6" S SIG="SI"
+ ..E  S SIG="True"
+ Q SIG

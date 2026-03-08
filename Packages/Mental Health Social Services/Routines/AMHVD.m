@@ -1,5 +1,5 @@
 AMHVD ; IHS/CMI/LAB - BROWSE VISITS ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**4**;JUN 18, 2010;Build 28
+ ;;4.0;IHS BEHAVIORAL HEALTH;**4,11**;JUN 02, 2010;Build 27
  ;
  ;
 START ;
@@ -14,6 +14,8 @@ PAT ;
  S DIC="^AUPNPAT(",DIC(0)="AEMQ" D ^DIC K DIC,DA,DR,DLAYGO,DIADD
  I Y<0 W !,"No Patient Selected." Q
  S DFN=+Y
+ D PFLAG^AMHUTIL(DFN)
+ W !?25,"Ok" S %=1 D YN^DICN I %'=1 S DFN="" G PAT
  I '$$ALLOWP^AMHUTIL(DUZ,DFN) D NALLOWP^AMHUTIL S DFN="" G PAT
  S Y=DFN D ^AUPNPAT
  I $G(AUPNDOD)]"" W !!?10,"***** PATIENT'S DATE OF DEATH IS ",$$FMTE^XLFDT(AUPNDOD),!! H 2
@@ -114,7 +116,7 @@ GATHER ;
  K ^TMP("AMHVD",$J)
  NEW AMHX,AMHI,AMHJ,AMHY,AMHZ,AMHC,AMHD
  S AMHC=0
- S X="Patient Name: "_$P(^DPT(DFN,0),U),$E(X,45)="DOB: "_$$FMTE^XLFDT($P(^DPT(DFN,0),U,3)) D S(X)
+ S X="Patient Name: "_$$GETPREF^AUPNSOGI(DFN,"E",1)_"    DOB: "_$$FMTE^XLFDT($P(^DPT(DFN,0),U,3)) D S(X)
  S X="HRN: "_$$HRN^AUPNPAT(DFN,DUZ(2)) D S(X)
  I $O(^AMHPSUIC("AC",DFN,0)) D
  .S X="****** Suicide Forms on File ******" D S(X,2)
@@ -219,7 +221,7 @@ FF ;EP
  I $E(IOST)="C",IO=IO(0) W ! S DIR(0)="EO" D ^DIR K DIR I Y=0!(Y="^")!($D(DTOUT)) S AMHQUIT=1 Q
  I $E(IOST)'="C" Q:'$P(AMHR0,U,8)  W !!,$TR($J(" ",79)," ","*"),!,$P(^DPT($P(AMHR0,U,8),0),U),?32,"HRN: " D
  .S H=$P($G(^AUPNPAT($P(AMHR0,U,8),41,DUZ(2),0)),U,2)
- .W H,?46,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(AMHR0,U,8),0),U,3),"2D"),?59,"SSN: ",$$SSN^AMHUTIL($P(AMHR0,U,8)),!
+ .W H,?46,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(AMHR0,U,8),0),U,3),"2D"),!   ;IHS/CMI/LAB P11 REMOVED SSN
  W:$D(IOF) @IOF
  Q
 HDR ; -- header code

@@ -1,5 +1,5 @@
 ABMEF17 ; IHS/ASDST/DMJ - Electronic UB-92 Version 060 ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;Original;DMJ;07/08/96 4:53 PM
  ;
  ; IHS/ASDS/LSL - 05/09/00 - V2.4 Patch 1 - NOIS NCA-0500-180017
@@ -23,7 +23,8 @@ START ;
  ..D ^DIC
  ..Q:Y<0
  ..S ABMP("INS")=+Y
- .S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)
+ .;S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*10 HEAT73780
+ .S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  I 'ABMP("INS") D  Q
  .W !,"Insurer NOT identified.",!
  .S DIR="E"

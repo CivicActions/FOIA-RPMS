@@ -1,5 +1,5 @@
-PXRMTAXD ; SLC/PKR - Routines used by taxonomy data dictionary. ;21-Apr-2016 17:20;DU
- ;;2.0;CLINICAL REMINDERS;**26,1007**;Feb 04, 2005;Build 12
+PXRMTAXD ; SLC/PKR - Routines used by taxonomy data dictionary. ;09-Dec-2020 20:03;DU
+ ;;2.0;CLINICAL REMINDERS;**26,1007,1010**;Feb 04, 2005;Build 17
  ;
  ;===================================
 CDINPTR(CODE) ;Input transform for code field of Use in Dialogs Code multiple.
@@ -250,7 +250,14 @@ SUID(DA,X) ;Set the "AUID" Use in Dialog index.
  S CODESYS=$P(^PXD(811.2,DA(3),20,DA(2),1,DA(1),0),U,1)
  I $D(^PXD(811.2,DA(3),20,"AUID",CODESYS,X(1))) Q
  ;DBIA #5679
- S RESULT=$$PERIOD^LEXU(X(1),CODESYS,.DATA)
+ I CODESYS="CPT"!(CODESYS="CPC") D
+ .N IEN,NODE
+ .S IEN=$O(^ICPT("B",X(1),""))
+ .S NODE=$G(^ICPT(IEN,0))
+ .S DATA($P(NODE,U,8))=$P(NODE,U,7)_U_U_IEN_U_$P(NODE,U,2)
+ .S DATA($P(NODE,U,8),0)=$P(NODE,U,2)
+ .S RESULT=1
+ E  S RESULT=$$PERIOD^LEXU(X(1),CODESYS,.DATA)
  I +RESULT=-1 Q
  S ACTDT=0
  F  S ACTDT=$O(DATA(ACTDT)) Q:ACTDT=""  D

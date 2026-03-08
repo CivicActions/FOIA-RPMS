@@ -1,19 +1,17 @@
-DIEH1 ;SFISC/DPC-DBS HELP CON'T ;2:53 PM  25 May 2001 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**85**;Mar 30, 1999
+DIEH1 ;SFISC/DPC-DBS HELP CON'T ;11/20/97  08:34 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**44**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;;
 DT(DIEHDT) ;
  N P,Q
- I DIEHDT'["N" S P(1)=$S(DIEHDT["M":"or 0157",1:"or 012057")
+ I DIEHDT'["N" S P(1)="or 012057"
  D
  . I DIEHDT["P" S P(2)="assumes a date in the PAST." Q
  . I DIEHDT["F" S P(2)="assumes a date in the FUTURE." Q
  . S P(2)="uses CURRENT YEAR.  Two digit year"
  . S P(3)="  assumes no more than 20 years in the future, or 80 years in the past."
  . Q
- I DIEHDT["M" D BLD^DIALOG(9110.7,.P,.P) Q
- ;
  I DIEHDT'["X" D
  . N X S X="You may omit the precise day, as:  JAN, 1957."
  . I $G(P(3))]"" S P(4)=X Q

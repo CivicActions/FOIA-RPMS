@@ -141,7 +141,7 @@ DONE ;
  I $E(IOST)="C",IO=IO(0) S DIR(0)="EO",DIR("A")="End of taxonomy check.  Press ENTER" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  Q
 WRITE() ;EP use XBGSAVE to save the temp global (BDWDATA) to a delimited
- ; file that is exported to the DW system at 127.0.0.1
+ ; file that is exported to the DW system at 161.223.90.8
  ;
  N XBGL,XBQ,XBQTO,XBNAR,XBMED,XBFLT,XBUF,XBFN
  N BDWASU,BDWJUL,DT,X2,X1,X
@@ -157,7 +157,7 @@ WRITE() ;EP use XBGSAVE to save the temp global (BDWDATA) to a delimited
  NEW DA,DIE,DR
  S DA=BDW("RUN LOG"),DIE="^BDWBLOG(",DR=".21///"_XBFN D ^DIE K DA,DIE,DR
  ;S XBUF="/usr3/dsd/ljara/"  ;used in testing to make it fail
- ;S XBQTO="-l dwxfer:regpcc 127.0.0.1"
+ ;S XBQTO="-l dwxfer:regpcc 161.223.90.8"
  S XBS1="DATA WAREHOUSE SEND"
  D ^XBGSAVE
  ;

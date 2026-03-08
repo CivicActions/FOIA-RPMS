@@ -1,5 +1,5 @@
 BSTSAPI ;GDIT/HS/BEE-Standard Terminology API Program ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;1.0;IHS STANDARD TERMINOLOGY;**3,6,7,8**;Sep 10, 2014;Build 35
  ;
  Q
  ;
@@ -171,8 +171,6 @@ DESC(IN) ;PEP - Function Call: Returns detail information for a specified Descri
  ; [5] - Prompt for Abnormal/Normal Findings (1-Yes,0-No)
  ; [6] - Prompt for Laterality (1-Yes,0-No)
  ; [7] - Default status (Chronic, Personal History, Sub-acute, Admin, Social)
- ; [8] - Prompt for Healing (RDNM, RDN, RD)
- ; [9] - List of healing choices to display (ex. 717128007|NL Union;28087009|Delayed)
  ;
  Q $$DESC^BSTSAPIA($G(IN))
  ;
@@ -189,7 +187,7 @@ CONC(IN) ;PEP - Returns detail information for a specified Concept Id
  ;     - P6 (Optional) - Mapping Parameters - Ex. EPI=288527008;VST=2087394;AF=With;PRB=50239
  ;
  ;Output
- ; Function returns - [1]^[2]^[3]^[4]^[5]^[6]^[7]^[8]^[9]^[10]^[11]
+ ; Function returns - [1]^[2]^[3]^[4]
  ; [1] - Description Id of Fully Specified Name
  ; [2] - Fully Specified Name
  ; [3] - Description Id of Preferred Term
@@ -199,8 +197,6 @@ CONC(IN) ;PEP - Returns detail information for a specified Concept Id
  ; [7] - Prompt for Abnormal/Normal Findings (1-Yes,0-No)
  ; [8] - Prompt for Laterality (1-Yes,0-No)
  ; [9] - Default status (Chronic, Personal History, Sub-acute, Admin, Social)
- ; [10] - Prompt for Healing (RDNM, RDN, RD)
- ; [11] - List of healing choices to display (ex. 717128007|NL Union;28087009|Delayed)
  ;
  Q $$CONC^BSTSAPIA($G(IN))
  ;

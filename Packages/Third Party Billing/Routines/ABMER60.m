@@ -1,5 +1,5 @@
 ABMER60 ; IHS/ASDST/DMJ - UB92 EMC RECORD 60 (Inpatient Ancillary Services) ; 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS Third Party Billing System;**10**;APR 24, 2006
  ;Original;DMJ;07/08/96 4:56 PM
  ;
  ; IHS/FCS/DRS 09/17/01 ABM*2.4*9 
@@ -32,6 +32,16 @@ LOOP ;LOOP HERE
  S L=0
  S J=219 F  S J=$O(ABMRV(J)) Q:'J  D
  .S K=-1 F  S K=$O(ABMRV(J,K)) Q:K=""  D
+ ..;start old code abm*2.5*10 IM20395
+ ..;S L=L+1 I L#3=1 D
+ ..;.S ABME("S#")=ABME("S#")+1
+ ..;.F I=10:10:30 D @(I_"^ABMER60"),ADD
+ ..;F I=40:10:120 D @(I_"^ABMER60"),ADD
+ ..;Q:J=9999
+ ..;S ABM("ACTOT")=+$P(ABMRV(J,K),"^",6)
+ ..;S ABM("NCTOT")=+$P(ABMRV(J,K),"^",7)
+ ..;D ADTT
+ ..;end old code start new code IM20395
  ..S M=0
  ..F  S M=$O(ABMRV(J,K,M)) Q:M=""  D
  ...S L=L+1 I L#3=1 D
@@ -42,6 +52,7 @@ LOOP ;LOOP HERE
  ...S ABM("ACTOT")=+$P(ABMRV(J,K,M),U,6)
  ...S ABM("NCTOT")=+$P(ABMRV(J,K,M),U,7)
  ...D ADTT
+ ;end new code IM20395
  I '$G(ABMP("NOFMT")) S ABMREC(60,ABME("S#"))=ABMREC(60,ABME("S#"))_$S(L#3=1:ABME("SPACE1"),L#3=2:ABME("SPACE2"),1:"")
  Q
  ;
@@ -64,32 +75,38 @@ ADD ;ADD TO RECORD
  Q
  ;
 40 ;Outpatient Revenue Code 1 (SOURCE: FILE=, FIELD=)
- S ABMR(60,40)=$P(ABMRV(J,K,M),U)
+ ;S ABMR(60,40)=$P(ABMRV(J,K),"^",1)  ;abm*2.5*10 IM20395
+ S ABMR(60,40)=$P(ABMRV(J,K,M),U)  ;abm*2.5*10 IM20395
  S ABMR(60,40)=$$FMT^ABMERUTL(ABMR(60,40),"4NR")
  Q
  ;
 50 ;HCPCS Procedure Code 1
- S ABMR(60,50)=$P(ABMRV(J,K,M),U,2)
+ ;S ABMR(60,50)=$P(ABMRV(J,K),"^",2)  ;abm*2.5*10 IM20395
+ S ABMR(60,50)=$P(ABMRV(J,K,M),U,2)  ;abm*2.5*10 IM20395
  S ABMR(60,50)=$$FMT^ABMERUTL(ABMR(60,50),5)
  Q
  ;
 60 ;Modifier 1 (CPT-4 and HCPCS) 1 (SOURCE: FILE=, FIELD=)
- S ABMR(60,60)=$P(ABMRV(J,K,M),U,3)
+ ;S ABMR(60,60)=$P(ABMRV(J,K),"^",3)  ;abm*2.5*10 IM20395
+ S ABMR(60,60)=$P(ABMRV(J,K,M),U,3)  ;abm*2.5*10 IM20395
  S ABMR(60,60)=$$FMT^ABMERUTL(ABMR(60,60),2)
  Q
  ;
 70 ;Modifier 2 (CPT-4 and HCPCS) 1 (SOURCE: FILE=, FIELD=)
- S ABMR(60,70)=$P(ABMRV(J,K,M),U,4)
+ ;S ABMR(60,70)=$P(ABMRV(J,K),"^",4)  ;abm*2.5*10 IM20395
+ S ABMR(60,70)=$P(ABMRV(J,K,M),U,4)  ;abm*2.5*10 IM20395
  S ABMR(60,70)=$$FMT^ABMERUTL(ABMR(60,70),2)
  Q
  ;
 80 ;Units of Service 1 (SOURCE: FILE= FIELD=)
- S ABMR(60,80)=$P(ABMRV(J,K,M),U,5)
+ ;S ABMR(60,80)=$P(ABMRV(J,K),"^",5)  ;abm*2.5*10 IM20395
+ S ABMR(60,80)=$P(ABMRV(J,K,M),U,5)  ;abm*2.5*10 IM20395
  S ABMR(60,80)=$$FMT^ABMERUTL(ABMR(60,80),"7NR")
  Q
  ;
 90 ;Charges Total 1 (SOURCE: FILE= FIELD=)
- S ABMR(60,90)=$P(ABMRV(J,K,M),U,6)
+ ;S ABMR(60,90)=$P(ABMRV(J,K),"^",6)  ;abm*2.5*10 IM20395
+ S ABMR(60,90)=$P(ABMRV(J,K,M),U,6)  ;abm*2.5*10 IM20395
  S ABMR(60,90)=$$FMT^ABMERUTL(ABMR(60,90),"10NRJ2")
  Q
  ;

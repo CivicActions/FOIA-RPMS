@@ -1,5 +1,5 @@
 LRAPQACN ;AVAMC/REG - CONSULTATION RPTS ;8/12/95  12:05 [ 04/28/2003  12:10 PM ]
- ;;5.2T9;LR;**1002,1008,1018**;Nov 17, 2004
+ ;;5.2;LR;**1002,1008,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**72,242,252**;Sep 27, 1994
  W !!,"Consultation search with report.",!,"This report may take a while and should be queued to print at non-peak hours.",!,"OK to continue " S %=2 D YN^LRU G:%'=1 END
  D ^LRAP G:'$D(Y) END S LRN="065" F B=1:1 D ASK Q:X[U!(X="")!(X["ALL")

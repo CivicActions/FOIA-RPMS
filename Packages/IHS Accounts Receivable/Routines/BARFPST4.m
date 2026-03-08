@@ -1,5 +1,5 @@
-BARFPST4 ; IHS/SD/LSL - A/R FLAT RATE POSTING #3 ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+BARFPST4 ; IHS/SD/LSL - A/R FLAT RATE POSTING #3 ;20200804
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**30**;OCT 26, 2005;Build 55
  ;;
 DOC ;
  ; LSL - 01/01/2000 - Created routine
@@ -7,7 +7,7 @@ DOC ;
  ;       May be called from FBL View Flat Rate Bills Option or
  ;       by choosing REVIEW from Select Command Prompt in the 
  ;       FRP Flat Rate Posting Option.
- ;;
+ ;IHS/SD/CPC - BAR*1.8*30 CR10550
  Q
  ; *********************************************************************
  ;
@@ -67,9 +67,11 @@ REVIEW2 ;
  S DA(1)=BARIN1,DA=BARIN2
  W !?6,"Item Number: ",$$VAL^XBDIQ1(90051.1101,"BARIN1,BARIN2",.01)
  W ?52,"Ending Balance: ",$J(BAREND,9,2)
- W !?5,"Check Number: ",$$VAL^XBDIQ1(90051.1101,"BARIN1,BARIN2",11)
- W ?48,"# of Bills to Post: ",$J(BARC,9)
- W !?12,"Payor: ",$$VAL^XBDIQ1(90051.1101,"BARIN1,BARIN2",201)
+ ;W !?5,"Check Number: ",$$VAL^XBDIQ1(90051.1101,"BARIN1,BARIN2",11)   ;BAR*1.8*30 CR10550
+ W !?12,"Payor: ",$$VAL^XBDIQ1(90051.1101,"BARIN1,BARIN2",201)   ;BAR*1.8*30 CR10550
+ W ?48,"# of Bills to Post: ",$J(BARC,9)   ;BAR*1.8*30 CR10550
+ ;W !?12,"Payor: ",$$VAL^XBDIQ1(90051.1101,"BARIN1,BARIN2",201)   ;BAR*1.8*30 CR10550
+ W !?5,"Check Number: ",$$VAL^XBDIQ1(90051.1101,"BARIN1,BARIN2",11)   ;BAR*1.8*30 CR10550
  W !?3,"Payment Amount: ",$J(BARREV(BARIEN,.09),9,2)
  ; Write Adjustment data in header portion
  S BARA=0

@@ -1,0 +1,232 @@
+BDMPO15 ; IHS/CMI/LAB -IHS -CUMULATIVE REPORT ;
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**18**;JUN 14, 2007;Build 147
+ ;
+ ;
+CUML ;EP
+ K BDMCUML
+ S BDMCUML(10)="Birth Sex"
+ S BDMCUML(20)="Age"
+ S BDMCUML(25)="Classification"
+ S BDMCUML(30)="Duration of Prediabetes"
+ S BDMCUML(40)="Body Mass Index (BMI) Category"
+ S BDMCUML(50)="Blood Sugar Control"
+ S BDMCUML(60)="Blood Pressure (BP) - Based on one value or mean of two or three values"
+ S BDMCUML(70)="Hypertension"
+ S BDMCUML(80)="Tobacco and Nicotine Use"
+ S BDMCUML(90)="Prediabetes Treatment"
+ S BDMCUML(95)="Statin Prescribed (Currently)"
+ S BDMCUML(100)="Education"
+ S BDMCUML(190)="LDL Cholesterol obtained during audit period"
+ S BDMCUML(195)="HDL Cholesterol obtained during audit period"
+ S BDMCUML(200)="Triglycerides obtained during audit period"
+ S BDMCUML(145)=""
+ ;
+ ;
+PROCESS ;
+ S BDMPD=0 F  S BDMPD=$O(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD)) Q:BDMPD'=+BDMPD  D CUML1
+ Q
+ ;
+CUML1 ;
+GENDER ;
+ ;gender BDMCUML(10)="Gender^total^females^males"
+ S $P(BDMCUML(10),U,2)=$P(BDMCUML(10),U,2)+1  ;total patients
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,20))
+ S P=$S($E(V)="F":3,$E(V)="M":4,1:5)  ;
+ S $P(BDMCUML(10),U,P)=$P(BDMCUML(10),U,P)+1
+AGE ;
+ S V=$$AGE^AUPNPAT(BDMPD,BDMADAT)
+ ;BDMCUML(20)="Age^total^<15^15-44^45-64^>65^unknown"
+ S $P(BDMCUML(20),U,2)=$P(BDMCUML(20),U,2)+1
+ S P=$S(V<15:3,V>14&(V<45):4,V>44&(V<65):5,V>64:6,1:7)
+ S $P(BDMCUML(20),U,P)=$P(BDMCUML(20),U,P)+1
+CLASS ;25
+ ;BDMCUML(25)="Classification^total patients^# w/prediabetes^# w/ imparied fasting glucose^# w/ impaired glucose tolerance"
+ S $P(BDMCUML(25),U,2)=$P(BDMCUML(25),U,2)+1
+ S X=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,220))  ;PREDM
+ I $E(X)!($P(X,U,3)) S $P(BDMCUML(25),U,3)=$P(BDMCUML(25),U,3)+1  ;add 1 to predm
+ S X=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,200))  ;ifg
+ I $E(X)!($P(X,U,3)) S $P(BDMCUML(25),U,4)=$P(BDMCUML(25),U,4)+1  ;add 1 to ifg
+ S X=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,210))  ;igt
+ I $E(X)!($P(X,U,3)) S $P(BDMCUML(25),U,5)=$P(BDMCUML(25),U,5)+1  ;add 1 to igt
+DURDMC ;
+ ;BDMCUML(30)="Duration of Diabetes^total^<10^10 or more^no date of dx on problem list or cms register^less than 1 year"
+ S $P(BDMCUML(30),U,2)=$P(BDMCUML(30),U,2)+1
+ ;
+ S V=$$DURDM(BDMPD)
+ S P=$S(V="":5,V<10:3,1:4)
+ S $P(BDMCUML(30),U,P)=$P(BDMCUML(30),U,P)+1
+ I V]"",V<1 S $P(BDMCUML(30),U,6)=$P(BDMCUML(30),U,6)+1
+ ;
+BMI ;
+ ;BDMCUML(40)="Weight Control (BMI) - does not add up to 100%^total^total^overweight^obese^height or weight missing"
+ S H=$$LASTHT^BDMDN13(BDMPD,BDMRED,"I") S:H]"" H=$$STRIP^XLFSTR($J(H,5,2)," ")
+ S W=+$$LASTWT^BDMDN13(BDMPD,BDMBDAT,BDMRED),W=$S(W=0:"",1:W) I W]"" S W=W\1
+ S V=$$BMIEPI^BDMDN19(H,W)
+ S $P(BDMCUML(40),U,2)=$P(BDMCUML(40),U,2)+1
+ D
+ .I V=""!(H="")!(W="") S $P(BDMCUML(40),U,5)=$P(BDMCUML(40),U,5)+1 Q
+ .I V<25 S $P(BDMCUML(40),U,6)=$P(BDMCUML(40),U,6)+1 Q
+ .I $$OW^BDMDN14(BDMPD,V,BDMADAT) S $P(BDMCUML(40),U,3)=$P(BDMCUML(40),U,3)+1 Q
+ .I $$OB^BDMDN14(BDMPD,V,BDMADAT) S $P(BDMCUML(40),U,4)=$P(BDMCUML(40),U,4)+1
+ .I $$SOB^BDMDN14(BDMPD,V,BDMADAT) S $P(BDMCUML(40),U,7)=$P(BDMCUML(40),U,7)+1 Q
+ ;
+HGB ;
+ ;use last hgba1c value only
+ ;BDMCUML(50)=
+ S $P(BDMCUML(50),U,2)=$P(BDMCUML(50),U,2)+1
+ S V=$P($G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,78)),U,2)
+ S P=""
+ I V=""!(V="?") S P=6 G HGBS
+ I V["<" S P=3
+ I V[">" S P=5
+ I P G HGBS
+ S V=$$STV^BDMDN18(V,,1)
+ I V="" S P=6 G HGBS
+ S V=+V
+ I V<5.7 S P=3
+ I V>5.6,V<6.5 S P=4
+ I V>6.4 S P=5
+HGBS ;
+ S $P(BDMCUML(50),U,P)=$P(BDMCUML(50),U,P)+1
+ ;
+BPC ;blood pressure control
+ ;take last 3 bp's and get mean systolic and mean diastolic
+ S $P(BDMCUML(60),U,2)=$P(BDMCUML(60),U,2)+1
+ S S=$$SYSMEAN^BDMDN15(BDMPD,BDMRBD,BDMRED)
+ S D=$$DIAMEAN^BDMDN15(BDMPD,BDMRBD,BDMRED)
+ D
+ .I S=""!(D="") S $P(BDMCUML(60),U,7)=$P(BDMCUML(60),U,7)+1 Q
+ .I S<120&(D<70) S $P(BDMCUML(60),U,3)=$P(BDMCUML(60),U,3)+1 Q
+ .I S<130&(D<80) S $P(BDMCUML(60),U,4)=$P(BDMCUML(60),U,4)+1 Q
+ .I S<140&(D<90) S $P(BDMCUML(60),U,5)=$P(BDMCUML(60),U,5)+1 Q
+ .S $P(BDMCUML(60),U,6)=$P(BDMCUML(60),U,6)+1
+ ;
+HTN ;
+ S $P(BDMCUML(70),U,2)=$P(BDMCUML(70),U,2)+1  ;total pts htn denom
+ S H=$E($G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,34)))
+ I $E(H)="Y" S $P(BDMCUML(70),U,3)=$P(BDMCUML(70),U,3)+1
+ ;
+TOBACCO ;
+ ;
+TOBSCR ;
+ S (TS,TU,C,V,V1,ES,EU)=""
+ S $P(BDMCUML(80),U,2)=$P(BDMCUML(80),U,2)+1  ;TOTAL DENOM
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,215))  ;S^U
+ S V1=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,28))  ;COUNSEL
+ I +V=1 S $P(BDMCUML(80),U,3)=$P(BDMCUML(80),U,3)+1,TS=1  ;screened
+ I 'TS G DMTX
+ I +$P(V,U,2)=1 S $P(BDMCUML(80),U,4)=$P(BDMCUML(80),U,4)+1,TU=1
+ I 'TU G DMTX
+ ;counsel
+ I +V1 S $P(BDMCUML(80),U,5)=$P(BDMCUML(80),U,5)+1  ;counseled
+DMTX ;diabetes treatment
+ S $P(BDMCUML(90),U,2)=$P(BDMCUML(90),U,2)+1
+ ;label^total^metformin^glp^sglt-2^piog^tirez^acarbose
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,54)) I V="X" S $P(BDMCUML(90),U,3)=$P(BDMCUML(90),U,3)+1
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,100)) I V="X" S $P(BDMCUML(90),U,4)=$P(BDMCUML(90),U,4)+1
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,103)) I V="X" S $P(BDMCUML(90),U,5)=$P(BDMCUML(90),U,5)+1
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,56)) I V="X" S $P(BDMCUML(90),U,6)=$P(BDMCUML(90),U,6)+1
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,58)) I V="X" S $P(BDMCUML(90),U,7)=$P(BDMCUML(90),U,7)+1
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,55)) I V="X" S $P(BDMCUML(90),U,8)=$P(BDMCUML(90),U,8)+1
+ ;
+STATIN ;
+ S $P(BDMCUML(95),U,2)=$P(BDMCUML(95),U,2)+1  ;total pats
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,300))
+ I $E(V)=1 S $P(BDMCUML(95),U,3)=$P(BDMCUML(95),U,3)+1  ;yes prescribed
+ I $E(V)=3 S $P(BDMCUML(95),U,4)=$P(BDMCUML(95),U,4)+1
+ I $E(V)'=3 S $P(BDMCUML(95),U,5)=$P(BDMCUML(95),U,5)+1   ;DENOM FOR yes
+ ;
+EDUC ;
+ S:'$D(BDMCUML(130)) BDMCUML(130)="DIABETES-RELATED EDUCATION - Yearly"
+ S $P(BDMCUML(130),U,2)=$P(BDMCUML(130),U,2)+1
+ S G=0,V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,44))
+ I $E(V)="Y" S $P(BDMCUML(130),U,3)=$P(BDMCUML(130),U,3)+1 S G=1
+ I $E(V)="R" S $P(BDMCUML(130),U,7)=$P(BDMCUML(130),U,7)+1
+ S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,46))
+ I $E(V)="Y"!($E(V)=1) S $P(BDMCUML(130),U,4)=$P(BDMCUML(130),U,4)+1 S G=1
+ I $E(V)="R"!($E(V)=3) S $P(BDMCUML(130),U,8)=$P(BDMCUML(130),U,8)+1
+ ;S V=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,48))
+ ;I $E(V)="R" S $P(BDMCUML(130),U,9)=$P(BDMCUML(130),U,9)+1
+ ;I $E(V)="Y" S $P(BDMCUML(130),U,5)=$P(BDMCUML(130),U,5)+1 S G=1
+ I G S $P(BDMCUML(130),U,6)=$P(BDMCUML(130),U,6)+1
+LDL ;
+ S:'$D(BDMCUML(190)) BDMCUML(190)="LDL Cholesterol"
+ S $P(BDMCUML(190),U,2)=$P(BDMCUML(190),U,2)+1
+ S V=$$LDL^BDMDN18(BDMPD,BDMBDAT,BDMADAT,"I")
+ I V="" S $P(BDMCUML(190),U,7)=$P(BDMCUML(190),U,7)+1 G HDL
+ S V=$P(V,U)
+ ;S V=$$STV^BDMDN18(V,4)
+ S V=$$STV^BDMDN18(V,,0) I $E(V)'=+$E(V)!(+V=0) S $P(BDMCUML(190),U,8)=$P(BDMCUML(190),U,8)+1 G HDL
+ I V<100 S $P(BDMCUML(190),U,3)=$P(BDMCUML(190),U,3)+1 G HDL
+ I V<190 S $P(BDMCUML(190),U,4)=$P(BDMCUML(190),U,4)+1 G HDL
+ ;I V<189.1 S $P(BDMCUML(190),U,5)=$P(BDMCUML(190),U,5)+1 G HDL
+ S $P(BDMCUML(190),U,6)=$P(BDMCUML(190),U,6)+1
+HDL ;
+ S:'$D(BDMCUML(195)) BDMCUML(195)="HDL Cholesterol"
+ S V=$$HDL^BDMDN18(BDMPD,BDMBDAT,BDMADAT,"I")
+ S S=$P(^DPT(BDMPD,0),U,2)  ;GENDER
+ I S="F" D
+ .S $P(BDMCUML(195),U,2)=$P(BDMCUML(195),U,2)+1
+ .I V="" S $P(BDMCUML(195),U,5)=$P(BDMCUML(195),U,5)+1 Q
+ .S V=$P(V,U)
+ .S V=$$STV^BDMDN18(V,,0) I $E(V)'=+$E(V)!(+V=0) S $P(BDMCUML(195),U,5)=$P(BDMCUML(195),U,5)+1 Q
+ .S V=$P(V,"."),V=$$STV^BDMDN18(V,,0)
+ .I $E(V)'=+$E(V)!(+V=0)!(V="") S $P(BDMCUML(195),U,5)=$P(BDMCUML(195),U,5)+1 Q
+ .I V<50 S $P(BDMCUML(195),U,3)=$P(BDMCUML(195),U,3)+1 Q
+ .S $P(BDMCUML(195),U,4)=$P(BDMCUML(195),U,4)+1 Q
+ I S="M" D
+ .S $P(BDMCUML(195),U,6)=$P(BDMCUML(195),U,6)+1
+ .I V="" S $P(BDMCUML(195),U,9)=$P(BDMCUML(195),U,9)+1 Q
+ .S V=$P(V,U)
+ .S V=$$STV^BDMDN18(V,,0) I $E(V)'=+$E(V)!(+V=0) S $P(BDMCUML(195),U,9)=$P(BDMCUML(195),U,9)+1 Q  ;unable to determine result, not a number
+ .S V=$P(V,"."),V=$$STV^BDMDN18(V,,0)
+ .I $E(V)'=+$E(V)!(+V=0)!(V="") S $P(BDMCUML(195),U,9)=$P(BDMCUML(195),U,9)+1 Q  ;unable to determine result, not a number
+ .I V<40 S $P(BDMCUML(195),U,7)=$P(BDMCUML(195),U,7)+1 Q
+ .S $P(BDMCUML(195),U,8)=$P(BDMCUML(195),U,8)+1 Q
+TRIG ;
+ S:'$D(BDMCUML(200)) BDMCUML(200)="Triglycerides"
+ S $P(BDMCUML(200),U,2)=$P(BDMCUML(200),U,2)+1
+ S V=$$TRIG^BDMDN18(BDMPD,BDMBDAT,BDMADAT,"I")
+ I V="" S $P(BDMCUML(200),U,7)=$P(BDMCUML(200),U,7)+1 G QUAN
+ S V=$P(V,U)
+ S V=$$STV^BDMDN18(V,,0) I $E(V)'=+$E(V) S $P(BDMCUML(200),U,5)=$P(BDMCUML(200),U,5)+1 G QUAN ;unable to determine result, not a number
+ I V<150 S $P(BDMCUML(200),U,3)=$P(BDMCUML(200),U,3)+1 G QUAN
+ I V<500 S $P(BDMCUML(200),U,8)=$P(BDMCUML(200),U,8)+1 G QUAN
+ I V<1000 S $P(BDMCUML(200),U,9)=$P(BDMCUML(200),U,9)+1 G QUAN
+ S $P(BDMCUML(200),U,4)=$P(BDMCUML(200),U,4)+1
+QUAN ;
+ S $P(BDMCUML(145),U,2)=$P(BDMCUML(145),U,2)+1  ;TOTAL # of patients
+ S Q=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,92))
+ S V=$E($G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,92)))  ;test done?
+ ;S T=$P($G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,92)),U,5)  ;type of test
+ S R=$S($P(Q,U,6)]"":$P(Q,U,6),1:$P(Q,U,2))  ;value/result
+ ;CONVERT RESULT LIKE IN WEB EXPORT
+ S S=$$AS^BDMDN18(R),S=$$STV^BDMDN18(S,,2)
+ S:S="." S=""
+ I S="" S V=0  ;X=$E(X,1,5)
+ I V'=1 S $P(BDMCUML(145),U,4)=$P(BDMCUML(145),U,4)+1  ;no UACR
+ I V=1 D
+ .S $P(BDMCUML(145),U,3)=$P(BDMCUML(145),U,3)+1  ;TOTAL WITH UACR
+ .I R[">" S $P(BDMCUML(145),U,14)=$P(BDMCUML(145),U,14)+1 Q
+ .;I $$UP^XLFSTR(R)["COMMENT" S $P(BDMCUML(145),U,12)=$P(BDMCUML(145),U,12)+1 Q
+ .S R=$$STV^BDMDN18(R,,2)
+ .I R="" S $P(BDMCUML(145),U,15)=$P(BDMCUML(145),U,15)+1 Q  ;NO RESULT
+ .S R=+R
+ .I R<30 S $P(BDMCUML(145),U,12)=$P(BDMCUML(145),U,12)+1 Q  ;NORMAL UACR
+ .I R'>300 S $P(BDMCUML(145),U,13)=$P(BDMCUML(145),U,13)+1 Q  ;INREASCED 30-300
+ .S $P(BDMCUML(145),U,14)=$P(BDMCUML(145),U,14)+1  ;INCREASED >300
+ ;
+ Q
+DURDM(P) ;get the earliest date of all dates
+ NEW D1P,D2P,D1IGT,D2IGT,D1IFG,D2IFG,V,X
+ S V=""
+ S X=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,220))  ;PREDM
+ S D1P=$P(X,U,2) I D1P,D1P>V S V=D1P
+ S D2P=$P(X,U,3) I D2P,D2P>V S V=D2P
+ S X=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,200))  ;ifg
+ S D1IFG=$P(X,U,2) I D1IFG,D1IFG>V S V=D1IFG
+ S D2IFG=$P(X,U,3) I D2IFG,D2IFG>V S V=D2IFG
+ S X=$G(^XTMP("BDMPO1",BDMJOB,BDMBTH,"AUDIT",BDMPD,210))  ;igt
+ S D1IGT=$P(X,U,2) I D1IGT,D1IGT>V S V=D1IGT
+ S D2IGT=$P(X,U,3) I D2IGT,D2IGT>V S V=D2IGT
+ Q V

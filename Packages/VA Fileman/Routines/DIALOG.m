@@ -1,12 +1,13 @@
-DIALOG ;SFISC/TKW - BUILD FILEMAN DIALOGUE ;10:29 AM  14 May 2001 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
-V ;;22.0;VA FileMan;**28,87**;Mar 30, 1999
+DIALOG ;SFISC/TKW - BUILD FILEMAN DIALOGUE ;9/30/94  10:52 [ 09/10/1998  11:23 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 BLD(D0,DIPI,DIPE,DIALOGO,DIFLAG) ;BUILD FILEMAN DIALOG
  ;1)DIALOG file IEN, 2)Internal params, 3)External params, 4)Output array name, 5)S=Suppress blank line between messages, F=Format output like ^TMP
  N DINAKED S DINAKED=$$LGR^%ZOSV
  I $G(^DI(.84,+$G(D0),0))="" G Q1
  N E,I,J,K,L,M,N,P,R,S,X,O,DILANG S DILANG=+$G(DUZ("LANG")),DIFLAG=$G(DIFLAG)
+ I $G(DIPI)]"",$O(DIPI(""))="" S DIPI(1)=DIPI
  I $G(DIPE)]"",$O(DIPE(""))="" S DIPE(1)=DIPE
  I '$O(^DI(.84,D0,4,DILANG,1,0))!('DILANG) S DILANG=1
  S P=$P(^DI(.84,+D0,0),U,3)["y",R=$P(^(0),U,2) S:'R R=1
@@ -32,13 +33,13 @@ BLD(D0,DIPI,DIPE,DIALOGO,DIFLAG) ;BUILD FILEMAN DIALOG
  S @DIALOGO@("E",D0,N)=""
  ;
 Q2 I $G(^DI(.84,D0,6))]"" X ^(6)
-Q1 Q:DINAKED=""  I DINAKED["(" Q:$O(@(DINAKED))]""  Q
+Q1 Q:DINAKED=""  I DINAKED["(" Q:$O(@(DINAKED))  Q
  I $D(@(DINAKED))
  Q
  ;
 PARAM S S=$F(K(M),"|",L) G:'S QP S E=$F(K(M),"|",S) G:'E QP
- S X=$E(K(M),S,E-2) G:X="" PARAM
- S DIPI(X)=$S($G(DIPI(X))]"":DIPI(X),1:$G(DIPI)),L=S+$L(DIPI(X))-$L(X)
+ S L=S,X=$E(K(M),S,E-2) G:X="" PARAM
+ S DIPI(X)=$G(DIPI(X))
  I ($L(K(M))+$L(DIPI(X)))<245 S K(M)=$E(K(M),1,S-2)_DIPI(X)_$E(K(M),E,9999) G:K(M)]"" PARAM K K(M) S M=M-1 G QP
  I $L($E(K(M),1,S-2))+$L(DIPI(X))<245 S K(M+1)=$E(K(M),E,9999),K(M)=$E(K(M),1,S-2)_DIPI(X),M=M+1,L=0 G PARAM
  I $L(DIPI(X))+$L($E(K(M),E,9999))<245 S K(M+1)=DIPI(X)_$E(K(M),E,9999),K(M)=$E(K(M),1,S-2),M=M+1,L=0 G PARAM

@@ -1,27 +1,27 @@
-XMXREPLY ;ISC-SF/GMB-Reply to a msg ;04/24/2002  10:29
- ;;8.0;MailMan;;Jun 28, 2002
+XMXREPLY ;ISC-SF/GMB-Reply to a msg ;05/26/99  08:05
+ ;;7.1;MailMan;**50**;Jun 02, 1994
 REPLYMSG(XMDUZ,XMK,XMKZ,XMBODY,XMINSTR,XMZR) ;
  ; XMDUZ    DUZ of who the msg is from
  ; XMBODY   Body of the msg
  ;          Must be closed root, passed by value.  See WP_ROOT
  ;          definition for WP^DIE(), FM word processing filer.
  ; XMINSTR("FROM")     String saying from whom (default is XMDUZ)
- ; XMINSTR("STRIP")    String containing chars to strip from msg text
+ ; XMINSTR("STRIP")    String containing characters to strip from the message text
  ; XMINSTR("SCR HINT") Hint to guess the scramble key
  ;                     (must be the hint from original message)
  ; XMINSTR("SCR KEY")  Scramble key, if original message was scrambled.
  ;                     (must be the key from original message, as
  ;                     entered by the user: unscrambled!)
  ; *NOTE: SCR hint and key needed only for remote replies.  Even then,
- ;        they are ignored.  That info is gotten from the original msg.
- ; XMINSTR("NET REPLY") Should reply go over the network? 1=yes; 0=no
+ ;        I'm not sure they're really needed.
+ ; XMINSTR("NET REPLY") 0=reply should NOT go over the network; 1=it should
  ; XMINSTR("NET SUBJ") Subject for network reply msg, else default to
  ;          "Re: original msg subject"
  ; XMZSENDR XMDUZ of the person who created and sent the msg
  ; If you are not a recipient or the sender, you may not reply.
  ; If msg is in SHARED,MAIL and your DUZ is .6, ERROR! G H^XUS ***
  ; If msg is info only AND you are not the sender, you may not reply.
- ; If msg is info only and broadcast to all local users, may not reply
+ ; If msg is info only and was broadcast to all local users, may not reply
  ; If you are info only, you may not reply.
  ; If msg is from a remote POSTMASTER, may not reply.
  ; If msg is in waste basket or no basket, move it to a basket.
@@ -32,7 +32,7 @@ REPLYMSG(XMDUZ,XMK,XMKZ,XMBODY,XMINSTR,XMZR) ;
  K XMERR,^TMP("XMERR",$J)
  D CHKMSG^XMXSEC1(XMDUZ,.XMK,.XMKZ,.XMZ,.XMZREC) Q:$D(XMERR)
  Q:'$$REPLY^XMXSEC(XMDUZ,XMZ,XMZREC)
- D:XMK<1 FLTR^XMXMSGS2(XMDUZ,XMK,$S(XMK=.5:$$EZBLD^DIALOG(37004),1:""),XMZ) ; Move msg from WASTE basket
+ D:XMK<1 FLTR^XMXMSGS2(XMDUZ,XMK,$S(XMK=.5:"WASTE",1:""),XMZ) ; Move msg from WASTE basket
  D CRE8XMZ^XMXSEND("R"_XMZ,.XMZR) Q:$D(XMERR)  ; Create a place for the response in the msg file
  D MOVEBODY^XMXSEND(XMZR,XMBODY) ; Put the msg body in place
  D CHEKBODY^XMXSEND(XMZR,$G(XMINSTR("STRIP")))
@@ -43,10 +43,8 @@ REPLYMSG(XMDUZ,XMK,XMKZ,XMBODY,XMINSTR,XMZR) ;
  N XMFROM,XMREPLTO
  D REPLYTO(XMZ,.XMFROM,.XMREPLTO)
  D INIT^XMXADDR
- S XMINSTR("EXACT")=1 ; Match on exact domain name
- D CHKADDR^XMXADDR(XMDUZ,$$REMADDR^XMXADDR3($G(XMREPLTO,XMFROM)),.XMINSTR)
- K XMINSTR("EXACT")
- D:'$D(XMERR) NETREPLY(XMDUZ,XMZ,XMZR,$S($G(XMINSTR("NET SUBJ"))'="":XMINSTR("NET SUBJ"),$E($P(XMZREC,U,1),1,4)=$$EZBLD^DIALOG(37006):$E($P(XMZREC,U,1),1,65),1:$E($$EZBLD^DIALOG(37006)_$P(XMZREC,U,1),1,65)),.XMINSTR) ;Re:
+ D CHKADDR^XMXADDR(XMDUZ,$$REMADDR^XMXADDR1($G(XMREPLTO,XMFROM)),.XMINSTR)
+ D:'$D(XMERR) NETREPLY(XMDUZ,XMZ,XMZR,$S($G(XMINSTR("NET SUBJ"))'="":XMINSTR("NET SUBJ"),$E($P(XMZREC,U,1),1,4)="Re: ":$E($P(XMZREC,U,1),1,65),1:$E("Re: "_$P(XMZREC,U,1),1,65)),.XMINSTR)
  D CLEANUP^XMXADDR
  Q
 DOREPLY(XMDUZ,XMZ,XMZR,XMINSTR) ;
@@ -59,11 +57,10 @@ NETREPLY(XMDUZ,XMZ,XMZR,XMZRSUBJ,XMINSTR) ;
  N XMFDA,XMIENS
  S XMIENS=XMZR_","
  S XMFDA(3.9,XMIENS,.01)=XMZRSUBJ
- I $D(XMSECURE) D  ; Scramble hint / Scramble key
- . S XMFDA(3.9,XMIENS,1.8)=$P(^XMB(3.9,XMZ,0),U,10) ;XMINSTR("SCR HINT")
- . S XMFDA(3.9,XMIENS,1.85)=^XMB(3.9,XMZ,"K") ;XMINSTR("SCR KEY")
- I $G(^XMB(3.9,XMZ,5))'="" D  ; In response to remote msg id
- . S XMFDA(3.9,XMIENS,9.5)=$E(^XMB(3.9,XMZ,5),1,110)
+ I $D(XMSECURE) D
+ . S XMFDA(3.9,XMIENS,1.8)=XMINSTR("SCR HINT") ; Scramble hint
+ . S XMFDA(3.9,XMIENS,1.85)=XMINSTR("SCR KEY") ; Scramble key
+ S XMFDA(3.9,XMIENS,9.5)=$E(^XMB(3.9,XMZ,5),1,110) ; In response to remote msg id
  D FILE^DIE("","XMFDA")
  D SEND^XMKP(XMDUZ,XMZR)
  Q
@@ -83,12 +80,11 @@ MOVER(XMDUZ,XMZ,XMZR,XMINSTR) ;
 REPLYTO(XMZ,XMFROM,XMREPLTO) ; Get from and reply-to address, if any
  N XMHDR,XMFIND
  S XMFIND="^FROM^REPLY-TO^"
- D HDRFIND^XMR3(XMZ,XMFIND,.XMHDR)
+ D HDRFIND^XMR1(XMZ,XMFIND,.XMHDR)
  I $D(XMHDR("FROM")) S XMFROM=XMHDR("FROM")
- E  S XMFROM=$P($G(^XMB(3.9,XMZ,0)),U,2)  ; not really remote msg?
  I $D(XMHDR("REPL")) S XMREPLTO=XMHDR("REPL")
  Q
 REPLYTO1(XMZ) ;
  N XMFROM,XMREPLTO
  D REPLYTO(XMZ,.XMFROM,.XMREPLTO)
- Q $$REMADDR^XMXADDR3($G(XMREPLTO,XMFROM))
+ Q $$REMADDR^XMXADDR1($G(XMREPLTO,XMFROM))

@@ -1,5 +1,5 @@
 AMHRPSU3 ; IHS/CMI/LAB - Suicide Form data element tally ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**1,8**;JUN 02, 2010;Build 7
+ ;;4.0;IHS BEHAVIORAL HEALTH;**1,8,11**;JUN 02, 2010;Build 27
  ;
  ;
 START ;

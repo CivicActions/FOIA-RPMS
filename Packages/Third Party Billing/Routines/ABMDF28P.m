@@ -1,6 +1,7 @@
 ABMDF28P ; IHS/SD/SDR - PRINT UB-04 ;    
- ;;2.6;IHS Third Party Billing;**27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS Third Party Billing;**27,37**;NOV 12, 2009;Build 739
  ;IHS/SD/AML,SDR 2.6*27 CR8897 Split to routine ABMDF28Y due to size.  Fixes for revenue codes in ABMRV array printing correctly.
+ ;IHS/SD/SDR 2.6*37 ADO76009 Corrected bill amount for flat rate covered days
  K I,J,L
  S I=0
  S ABMPGCNT=1
@@ -13,7 +14,9 @@ ABMDF28P ; IHS/SD/SDR - PRINT UB-04 ;
  ...I $P($G(^ABMDVTYP(ABMP("VTYP"),0)),U)["EPSDT",(+$P($G(ABMRV(I,J,L)),U,2)=0) D
  ....S $P(ABMRV(I,J,L),U,9)="OUTPATIENT CLINIC"
  ...;S:J'="ZZTOT" ABMRV("ZZTOT")=ABMRV("ZZTOT")+$P(ABMRV(I,J,L),U,6)  ;abm*2.6*23 HEAT347035
- ...S:J'="ZZTOT" ABMRV("ZZTOT")=+$G(ABMRV("ZZTOT"))+$P(ABMRV(I,J,L),U,6)  ;abm*2.6*23 HEAT347035
+ ...;S:J'="ZZTOT" ABMRV("ZZTOT")=+$G(ABMRV("ZZTOT"))+$P(ABMRV(I,J,L),U,6)  ;abm*2.6*23 HEAT347035  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ...I '$D(ABMP("FLAT")) S:(J'="ZZTOT") ABMRV("ZZTOT")=+$G(ABMRV("ZZTOT"))+$P(ABMRV(I,J,L),U,6)  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ...I $D(ABMP("FLAT")) S:(J'="ZZTOT") ABMRV("ZZTOT")=+$G(ABMRV("ZZTOT"))+($P(ABMRV(I,J,L),U,8)*$P(ABMRV(I,J,L),U,5))  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ...;Grand tot noncovered chgs
  ...;S:J'="ZZTOT" ABMRV("NCTOT")=ABMRV("NCTOT")+$P(ABMRV(I,J,L),U,7)  ;abm*2.6*23 HEAT347035
  ...S:J'="ZZTOT" ABMRV("NCTOT")=+$G(ABMRV("NCTOT"))+$P(ABMRV(I,J,L),U,7)  ;abm*2.6*23 HEAT347035

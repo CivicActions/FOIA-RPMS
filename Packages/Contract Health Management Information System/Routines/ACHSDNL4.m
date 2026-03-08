@@ -1,8 +1,9 @@
 ACHSDNL4 ; IHS/ITSC/PMF - DENIAL LTR/FS (FS1) (5/6) ;7/27/10  16:17
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**3,14,18,23**;JUN 11,2001;Build 43
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**3,14,18,32**;JUN 11,2001;Build 39
  ;ACHS*3.1*3  change chart number display
  ;3.1*14 12.4.2007 IHS/OIT/FCJ ADDED CSV CHANGES
  ;ACHS*3.1*18 4/1/2010;IHS/OIT/ABK;Change every occurrance of Deferred to Unmet Need
+ ;ACHS*3.1*32 6.21.24 IHS.OIT.FCJ NEW STANDARD MED PRIORITIES
  ;
 START ;
  D CPI^ACHS    ;CONFIDENTIAL INFO MESSAGE
@@ -57,7 +58,8 @@ TYPE ;
  . I $P($P(Y,";",%),":")=X W $P($P(Y,";",%),":",2) S %=0 Q
  ;
 PRIOR ; --- Medical Priority
- I $$DN^ACHS(400,2) W !,"        PRIORITY: ",$P($G(^ACHSMPRI($$DN^ACHS(400,2),0)),U)
+ ;I $$DN^ACHS(400,2) W !,"        PRIORITY: ",$P($G(^ACHSMPRI($$DN^ACHS(400,2),0)),U)  ;ACHS*3.1*32
+ I $$DN^ACHS(400,2) W !,"        PRIORITY: ",$P($G(^ACHSMPR($$DN^ACHS(400,2),0)),U)    ;ACHS*3.1*32
  W !,"   DATE OF ISSUE: ",$$FMTE^XLFDT($$DN^ACHS(0,2)),!,"       ISSUED BY: "
  S X=$$DN^ACHS(0,3)
  I X W $P($G(^VA(200,X,0)),U)

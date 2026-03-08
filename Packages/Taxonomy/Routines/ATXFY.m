@@ -1,0 +1,11 @@
+ATXFY ;IHS/CMI/LAB-CREATED BY ^ATXSTX ON SEP 30, 2022;
+ ;;5.1;TAXONOMY;**45**;FEB 04, 1997;Build 96
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^ATXFYA ;    BGP CPT FOOT EXAM
+ D ^ATXFYB ;    BGP CPT MAMMOGRAM
+ D ^ATXFYC ;    BGP ECQM HYPERCHOL DXS
+ D ^ATXFYD ;    BGP MAMMOGRAM DXS
+ Q

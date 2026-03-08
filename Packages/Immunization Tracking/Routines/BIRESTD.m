@@ -1,5 +1,5 @@
 BIRESTD ;IHS/CMI/MWR - CHECK AND RESTANDARDIZE VACCINE TABLE.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**1006,1013,1016,1017,1020,1027,1028**;OCT 24, 2011;Build 84
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  CHECK IMMUNIZATION (VACCINE) TABLE AGAINST HL7 STANDARD;
  ;;  RESTANDARDIZE IF NECESSARY.
@@ -65,7 +65,19 @@ RESTAND(BIERROR,BIPRMPT) ;EP
  ;
  ;---> First, rebuild ^BITN global.
  D ^BITN
+ ;PATCH 1020
+ ;FIX CPT CODE ON 168 IF IT ISN'T THE CORRECT ONE
+ S X=0,G="" F  S X=$O(^ICPT("B",90653,X)) Q:X'=+X!(G)  D
+ .I $P(^ICPT(X,0),U,2)="IIV ADJUVANT VACCINE IM" S G=X
+ S $P(^AUTTIMM(272,0),U,11)=G
+ S $P(^BITN(272,0),U,11)=G
  ;
+ ;SPECIAL FOR LINES IN ROUTINE THAT WERE TOO LONG
+ F X=108,148,149,217,229,236,242,243,248,253,254,255,257,259,260,264,265,270,272,275,289,290,298,301,303,304,305,306,338,356,367,369 D
+ .S $P(^BITN(X,0),U,12)="15,16,88,111,123,125,126,127,128,135,140,141,144,149,150,151,153,155,158,161,166,168,171,185,186,197,200,201,202,205,231,320,331,333"
+ F X=310,311,312,313,314,315,320,321,322,323,325,329,330,331,332,333,334,335,336,337,344,345,346,347,348,349,370 D
+ .S $P(^BITN(X,0),U,12)="207,208,210,211,212,213,217,218,219,221,500,221,225,226,227,228,229,300,301,230,302,308,309,310,311,312,313,334"
+ ;207,208,210,211,212,213,217,218,219,221,500,221,225,226,227,228,229,300,301,230,302,308,309,310,311,312,313
  ;---> Remove any non-standard entries in the Vaccine Table.
  N N S N=0
  F  S N=$O(^AUTTIMM(N)) Q:'N  D
@@ -74,7 +86,7 @@ RESTAND(BIERROR,BIPRMPT) ;EP
  ;---> Copy every HL7 Standard Table piece to the Vaccine Table.
  D COPYNEW(.BIERROR)
  ;
- ;---> RestandardizE the Vaccine Manufacturer Table.
+ ;---> Restandardize the Vaccine Manufacturer Table.
  Q:BIERROR
  W:BIPRMPT>0 !!?5,"Restandardization of Vaccine Table complete."
  D RESTDMAN(.BIERROR)
@@ -100,12 +112,25 @@ COPYNEW(BIPOP) ;EP
  .I '$D(^BITN(BIN,0)) D ERRCD^BIUTL2(505,,1) S BIPOP=1 Q
  .;
  .;---> Copy HL7 Standard Table pieces to the Vaccine Table.
- .;---> Imm v8.3: Remove .07 field, "ACTIVE"; (leave local site setting).  vvv83
- .N BIPC F BIPC=1,2,3,8,9,10,11,12,13,14,15,16,17,18,21:1:26 D
+ .;---> Imm v8.3: Remove .07 field, "ACTIVE"; (leave local site setting).
+ .;---> P1004 remove .13 VIS Default Date and .16 Include in Forecast.
+ .;---> P1027 remove .18 default volume
+ .N BIPC F BIPC=1,2,3,8,9,10,11,12,14,15,17,21:1:26 D
  ..S $P(^AUTTIMM(BIN,0),U,BIPC)=$P(^BITN(BIN,0),U,BIPC)
  .;
  .;---> Set Status, .07, if not already set (i.e., don't overwrite local settings).
  .I $P(^AUTTIMM(BIN,0),U,7)="" S $P(^AUTTIMM(BIN,0),U,7)=$P(^BITN(BIN,0),U,7)
+ .;
+ .;---> Update VIS Default Date only if the update is later than the local site date.
+ .I $P(^BITN(BIN,0),U,13)>$P(^AUTTIMM(BIN,0),U,13) D
+ ..S $P(^AUTTIMM(BIN,0),U,13)=$P(^BITN(BIN,0),U,13)
+ .;
+ .;---> Set Include in Forecast .16, if not already set.
+ .I $P(^AUTTIMM(BIN,0),U,16)="" S $P(^AUTTIMM(BIN,0),U,16)=$P(^BITN(BIN,0),U,16)
+ .;
+ .;---> Set defalut volume (.18), if not already set (i.e., don't overwrite local settings).
+ .I $P(^AUTTIMM(BIN,0),U,18)="" S $P(^AUTTIMM(BIN,0),U,18)=$P(^BITN(BIN,0),U,18)
+ .;
  .;
  .Q:'$D(^BITN(BIN,1))
  .;---> Reset 1 node as well.  Include 1.15 - vvv83.
@@ -154,8 +179,13 @@ REIND2 ;EP
  F  S BIN=$O(^AUTTIMAN(BIN)) Q:BIN=""  K @("^AUTTIMAN("""_BIN_""")")
  ;
  ;---> Now re-index table.
- S BIN=0
- F  S BIN=$O(^AUTTIMAN(BIN)) Q:'BIN  D
- .N DA,DIK S DA=BIN,DIK="^AUTTIMAN("
- .D IX1^DIK
+ ;********** PATCH 1001, v8.5, MAR 01,2020, IHS/CMI/MWR
+ ;---> Use IXALL so that zero "Bookkeeper" node is set.
+ N DIK S DIK="^AUTTIMAN(" D IXALL^DIK
+ ;
+ ;S BIN=0
+ ;F  S BIN=$O(^AUTTIMAN(BIN)) Q:'BIN  D
+ ;.N DA,DIK S DA=BIN,DIK="^AUTTIMAN("
+ ;.D IX1^DIK
+ ;**********
  Q

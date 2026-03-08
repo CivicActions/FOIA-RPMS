@@ -1,5 +1,6 @@
-DDMP1 ;SFISC/DPC-ASCII IMPORT UTIILTIES ;9/19/96  14:58
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDMP1 ;SFISC/DPC-ASCII IMPORT UTIILTIES ;9/19/96  14:58 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**30**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 GETFMT(DDMPFMT) ;
  ; Sets up format info.

@@ -1,6 +1,8 @@
-BLRRLEVT ;cmi/anch/maw - BLR Reference Lab Event ; 13-Oct-2017 14:04 ; MAW
- ;;5.2;IHS LABORATORY;**1027,1030,1031,1033,1034,1035,1036,1039,1041**;NOV 01, 1997;Build 23
+BLRRLEVT ;cmi/anch/maw - BLR Reference Lab Event ; 02-Aug-2023 13:35 ; MKK
+ ;;5.2;IHS LABORATORY;**1027,1030,1031,1033,1034,1035,1036,1039,1041,1043,1051,1054**;NOV 01, 1997;Build 20
  ;
+ ; MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 75697 - Ref Lab Reflex Tests Fix
+ ; MSC/MKK - LR*5.2*1054 - Item 75697 - Ensure no Errors if/when LRUID=""
  Q
  ;
 LEDI ;-- LEDI III insurance stuff
@@ -123,6 +125,12 @@ SENDOUT(AC,LRT) ;-- check if a valid sendout test
  Q 1
  ;
 ACC ;EP - cmi/flag/maw added the following for ref lab accessions
+ ;maw 07292020 next 4 lines for BLE
+ N BLRELR
+ I $P($G(^BLRSITE($S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),3)),U,9),+$G(LRTS),BLRPHASE="A",'$G(BLRGUI) S BLRELR=$$CHK^BLEAAO(+$G(LRTS))  ;maw BLE if using ELR lets get the AAO
+ I $G(BLRELR),$G(LRUID) D  ;get ask at order for ELR
+ . I '$G(LRORD) S LRORD=$G(^LRO(68,+$G(LRAA),1,+$G(LRAD),1,+$G(LRAN),.1))
+ . D AAO^BLEAAO(+LRTS,LRUID,$G(LRORD),$G(DFN))
  I $P($G(^BLRSITE($S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),"RL")),U,22) D LEDI Q
  K BLRRL,BLRRLC  ;kill off existing BLRRL array
  N BLRLDIO
@@ -139,6 +147,7 @@ ACC ;EP - cmi/flag/maw added the following for ref lab accessions
  I $G(BLRALTDZ),$P($G(^BLRSITE(BLRALTDZ,"RL")),U,10)="D" K BLRALTDZ,BLRRL("ALTDUZ2")  ;don't need variables if they use a true multidivisional site
  I $G(BLRALTDZ),$P($G(^BLRSITE(BLRALTDZ,"RL")),U,10)="" K BLRALTDZ,BLRRL("ALTDUZ2")  ;don't need variables if they use a true multidivisional site
  S BLRRL("RL")=+$G(^BLRSITE($S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),"RL"))  ;ref lab site maw modified 5/29/2007
+ ;I $G(LROLLOC)]"",$$TESTING^BLRRLEVN(LROLLOC) S BLRRL("RL")=$S($P($G(^BLRSITE(DUZ(2),"RLA")),U,13):$P(^BLRSITE(DUZ(2),"RLA"),U,13),1:BLRRL("RL"))  ;maw p1042 for testing another reference lab
  Q:'BLRRL("RL")
  Q:'$$NOMAP(BLRRL("RL"),+$G(LRTS),$G(LROLLOC))  ;ihs/cmi/maw 07/15/2015 p1035 maintenance dont proceed if not a mapped test
  S BLRRL("RLE")=$P($G(^BLRRL(BLRRL("RL"),0)),U)  ;get external name
@@ -153,7 +162,9 @@ ACC ;EP - cmi/flag/maw added the following for ref lab accessions
  I '$G(LRORD) S LRORD=$G(^LRO(68,+$G(LRAA),1,+$G(LRAD),1,+$G(LRAN),.1))  ;p1034
  S BLRO=$O(^BLRRLO("B",LRORD,0))  ;p1034
  I '$G(BLRO) S BLRO=$$ORD^BLRRLEDI(LRORD,DFN)  ;added non ledi p1034
- I '$O(^BLRRLO("ACC",LRUID,0)) S BLRA=$$ACC^BLRRLEDI(LRUID,LRORD,DFN,LRCDT)  ;added non ledi p1034
+ ; I '$O(^BLRRLO("ACC",LRUID,0)) S BLRA=$$ACC^BLRRLEDI(LRUID,LRORD,DFN,LRCDT)  ;added non ledi p1034 
+ ; I '$O(^BLRRLO("ACC",+$G(LRUID),0)) S BLRA=$$ACC^BLRRLEDI(LRUID,LRORD,DFN,LRCDT)  ; IHS/MSC/MKK - LR*5.2*1051 - Item 75697 - Ensure no Errors if/when LRUID=""
+ I +$G(LRUID),'$O(^BLRRLO("ACC",+$G(LRUID),0)) S BLRA=$$ACC^BLRRLEDI(LRUID,LRORD,DFN,LRCDT)  ; IHS/MSC/MKK - LR*5.2*1054 - Item 75697 - Ensure no Errors if/when LRUID=""
  I '$G(BLRRLCNT) S BLRRLCNT=0
 AAA I '$O(BLRRLC(0)),$P($G(XQY0),U)'="LRPHMAN" S BLRRLSUC=$$COM^BLRRLCOM(BLRRL("LRTS"),0)  ;cmi/anch/maw modified due to routine collect no LRTS 9/8/2004
  I ('$G(LRQUIET))&$O(BLRRLC(0)) D
@@ -181,7 +192,8 @@ AAA I '$O(BLRRLC(0)),$P($G(XQY0),U)'="LRPHMAN" S BLRRLSUC=$$COM^BLRRLCOM(BLRRL("
  . D PRTLC^BLRRLEVN(BLRNORD,LRUID,DFN,LRLLOC,LRODT,LRPRAC,LRTSTS)
  . I '$G(BLRLCLNT(BLRNORD)) D CLIENT^BLRRLHL,CLIENTG^BLRRLEDI(BLRNORD,LRUID)
  . S BLRLCLNT(BLRNORD)=1
- I '$G(BLRRLCLA),'+$G(LRQUIET) D CLIENT^BLRRLHL,CLIENTG^BLRRLEDI(LRORD,LRUID)
+ ; I '$G(BLRRLCLA),'+$G(LRQUIET) D CLIENT^BLRRLHL,CLIENTG^BLRRLEDI(LRORD,LRUID)
+ I '$G(BLRRLCLA),'+$G(LRQUIET) D CLIENT^BLRRLHL,CLIENTG^BLRRLEDI(LRORD,+$G(LRUID))   ; IHS/MSC/MKK - LR*5.2*1054 - Item 75697 - Ensure no Errors if/when LRUID=""
  ;I '+$G(LRQUIET),$P($G(^BLRSITE($S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),"RL")),U,15)'="C" D BILL^BLRRLHL   ; IHS/MSC/SAT - LR*5.2*1031
  I '+$G(LRQUIET),$P($G(^BLRSITE($S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),"RL")),U,15)="T" D  ;ihs/cmi/maw - LR*5.2*1034
  . K BLRDXS,BLRDFLG

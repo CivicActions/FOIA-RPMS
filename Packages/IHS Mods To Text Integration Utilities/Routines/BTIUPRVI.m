@@ -1,5 +1,5 @@
-BTIUPRVI ; IHS/MSC/JS - Problem/Visit Objects ;24-Apr-2014 15:51;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1012,1013**;MAR 20, 2013;Build 33
+BTIUPRVI ; IHS/MSC/JS - Problem/Visit Objects ;03-Mar-2020 17:12;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1012,1013,1022**;MAR 20, 2013;Build 11
  ;Obects for visit-related problem entries from V Visit instructions
  ;V treatment/regimen and V referral files
  Q
@@ -31,6 +31,8 @@ VIDT(DFN,TARGET,NUM) ; Visit Instructions by date
  ..S IEN="" F  S IEN=$O(ARRAY(INVDT,PRIEN,IEN)) Q:IEN=""  D
  ...S SIGN=$$GET1^DIQ(9000010.58,IEN,.04,"E")
  ...S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ ...S NARR=$TR(NARR,"|","-")
+ ...I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  ...I SPRIEN'=PRIEN D
  ....S SPRIEN=PRIEN
  ....D PDATA(IEN)
@@ -64,6 +66,8 @@ VIPR(DFN,TARGET,NUM) ;Visit instructions by problem
  .S CNT=0
  .Q:STAT="D"
  .S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ .S NARR=$TR(NARR,"|","-")
+ .I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  .S VCNT=VCNT+1
  .S @TARGET@(VCNT,0)=NARR
  .S SDATE=0
@@ -104,6 +108,8 @@ VTRDT(DFN,TARGET,NUM) ; Visit Treatment/Regimens  by date
  .S @TARGET@(VCNT,0)=EDATE
  .S PRIEN="" F  S PRIEN=$O(ARRAY(INVDT,PRIEN)) Q:PRIEN=""  D
  ..S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ ..S NARR=$TR(NARR,"|","-")
+ ..I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  ..S VCNT=VCNT+1,CNT=CNT+1
  ..S @TARGET@(VCNT,0)="  "_NARR
  ..S IEN="" F  S IEN=$O(ARRAY(INVDT,PRIEN,IEN)) Q:IEN=""  D
@@ -135,6 +141,8 @@ VTRPR(DFN,TARGET,NUM) ; Visit Treatment/Regimens  by problem
  ...S ARRAY(PRIEN,INVDT,IEN)=""
  S PRIEN="" F  S PRIEN=$O(ARRAY(PRIEN)) Q:PRIEN=""  D
  .S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ .S NARR=$TR(NARR,"|","-")
+ .I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  .S VCNT=VCNT+1
  .S @TARGET@(VCNT,0)=NARR
  .S INVDT="" F  S INVDT=$O(ARRAY(PRIEN,INVDT)) Q:INVDT=""  D
@@ -172,6 +180,8 @@ REFPR(DFN,TARGET,NUM) ; V referrals by problem
  ...S ARRAY(PRIEN,INVDT,IEN)=""
  S PRIEN="" F  S PRIEN=$O(ARRAY(PRIEN)) Q:PRIEN=""  D
  .S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ .S NARR=$TR(NARR,"|","-")
+ .I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  .S VCNT=VCNT+1
  .S @TARGET@(VCNT,0)="Problem: "_NARR
  .S INVDT="" F  S INVDT=$O(ARRAY(PRIEN,INVDT)) Q:INVDT=""  D
@@ -216,6 +226,8 @@ REFDT(DFN,TARGET,NUM) ; V referrals  by date
  ..S PRIEN=$P($G(^AUPNVREF(IEN,0)),U,4)
  ..I +PRIEN D
  ...S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ ...S NARR=$TR(NARR,"|","-")
+ ...I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  ...S VCNT=VCNT+1
  ...S @TARGET@(VCNT,0)="Problem: "_NARR
  ..S SNO=$P($G(^AUPNVREF(IEN,0)),U,1)

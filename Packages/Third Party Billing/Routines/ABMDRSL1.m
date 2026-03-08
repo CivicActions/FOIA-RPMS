@@ -1,16 +1,18 @@
-ABMDRSL1 ; IHS/ASDST/DMJ - Selective Report Parameters-PART 2 ; 
- ;;2.6;IHS Third Party Billing;**1,4,6,11,21**;NOV 12, 2009;Build 379
+ABMDRSL1 ; IHS/SD/SDR - Selective Report Parameters-PART 2 ; 
+ ;;2.6;IHS Third Party Billing;**1,4,6,11,21,31,32**;NOV 12, 2009;Build 621
  ;Original;TMD;07/14/95 12:27 PM
  ;
- ;IHS/SD/SDR - V2.5 P8 - Added code for Cancelling official
- ;IHS/SD/SDR - v2.5 p8 - Added code for pending status (12)
- ;IHS/SD/SDR - v2.5 p13 - NO IM
+ ;IHS/SD/SDR 2.5*8 Added code for Cancelling official
+ ;IHS/SD/SDR 2.5*8 Added code for pending status (12)
+ ;IHS/SD/SDR 2.5*13 NO IM
  ;
- ;IHS/SD/SDR - 2.6*1 - HEAT4482 - Added claim status prompt
- ;IHS/SD/SDR - 2.6*4 - NOHEAT - fixed report headers for closed/exported dates
- ;IHS/SD/SDR - 2.6*21 - HEAT241429 - Added code to do Visit Dates only for Denied Bills Report
- ;IHS/SD/SDR - 2.6*21 - VMBP - Updated p11 changes to include Serena ref#s
- ;IHS/SD/SDR - 2.6*21 - VMBP - Updated to include all new insurer types
+ ;IHS/SD/SDR 2.6*1 HEAT4482 Added claim status prompt
+ ;IHS/SD/SDR 2.6*4 NOHEAT fixed report headers for closed/exported dates
+ ;IHS/SD/SDR 2.6*21 HEAT241429 Added code to do Visit Dates only for Denied Bills Report
+ ;IHS/SD/SDR 2.6*21 VMBP Updated p11 changes to include Serena ref#s
+ ;IHS/SD/SDR 2.6*21 VMBP Updated to include all new insurer types
+ ;IHS/SD/SDR 2.6*31 CR11834 Updated to prompt for pended date
+ ;IHS/SD/SDR 2.6*32 CR11501 Added Billing Tech prompt
  ;
 LOC ;EP
  W ! K DIC,ABMY("LOC")
@@ -105,14 +107,17 @@ DT ;EP
  K DIR,ABMY("DT")
  I $G(ABM("DT"))="C" S Y=4 G DTYP
  ;I $D(ABM("STA")),($G(ABM("STA"))'="X") S Y=2 G DTYP  ;abm*2.6*4 NOHEAT
- I $D(ABM("STA")),($G(ABM("STA"))'="M") S Y=2 G DTYP  ;abm*2.6*4 NOHEAT
+ ;I $D(ABM("STA")),($G(ABM("STA"))'="M") S Y=2 G DTYP  ;abm*2.6*4 NOHEAT  ;abm*2.6*31 IHS/SD/SDR CR11834
+ I $D(ABM("STA")),("^M^H^"'[("^"_ABM("STA")_"^")) S Y=2 G DTYP  ;abm*2.6*4 NOHEAT  ;abm*2.6*31 IHS/SD/SDR CR11834
  I $D(ABM("DNYDT")) S Y=2 G DTYP  ;abm*2.6*21 IHS/SD/SDR HEAT241429
  S DIR(0)="SO^1:Approval Date;2:Visit Date"
  G DDIR:$G(ABMP("TYP"))=2
  I $D(ABM("PAY")) S DIR(0)=DIR(0)_";3:Payment Date"
  E  S DIR(0)=DIR(0)_";3:Export Date"
+ I $D(ABM("EMPP")) G DTYP3  ;abm*2.6*32 IHS/SD/SDR CR11501
  ;I $G(ABM("STA"))="X" G DTYP2  ;Closed  ;abm*2.6*4 NOHEAT
- I $G(ABM("STA"))="M" G DTYP2  ;Closed  ;abm*2.6*4 NOHEAT
+ ;I $G(ABM("STA"))="M" G DTYP2  ;Closed  ;abm*2.6*4 NOHEAT  ;abm*2.6*31 IHS/SD/SDR CR11834
+ I "^M^H^"[("^"_$G(ABM("STA"))_"^") G DTYP2  ;Closed or Pended  ;abm*2.6*31 IHS/SD/SDR CR11834
  ;
 DDIR ;
  S DIR("A")="Select TYPE of DATE Desired"
@@ -140,12 +145,15 @@ DTYP ;
  Q
 DTYP2 ;
  S DIR(0)="SO^1:Closed Date;2:Visit Date"
+ I ABM("STA")="H" S DIR(0)="SO^1:Pended Date;2:Visit Date"  ;abm*2.6*31 IHS/SD/SDR CR11834
  S DIR("A")="Select TYPE of DATE Desired"
  D ^DIR
  Q:$D(DIROUT)!$D(DIRUT)
  ;S ABMY("DT")=$S(Y=1:"X",1:"V")  ;abm*2.6*4 NOHEAT
- S ABMY("DT")=$S(Y=1:"M",1:"V")  ;abm*2.6*4 NOHEAT
- S Y=$S(Y=1:"CLOSED",1:"VISIT")_" DATE"
+ ;S ABMY("DT")=$S(Y=1:"M",1:"V")  ;abm*2.6*4 NOHEAT  ;abm*2.6*31 IHS/SD/SDR CR11834
+ S ABMY("DT")=$S(ABM("STA")="H"&(Y=1):"H",Y=1:"M",1:"V")  ;abm*2.6*31 IHS/SD/SDR CR11834
+ ;S Y=$S(Y=1:"CLOSED",1:"VISIT")_" DATE"  ;abm*2.6*31 IHS/SD/SDR CR11834
+ S Y=$S(ABM("STA")="H"&(Y=1):"PENDED",Y=1:"CLOSED",1:"VISIT")_" DATE"  ;abm*2.6*31 IHS/SD/SDR CR11834
  W !!," ============ Entry of ",Y," Range =============",!
  S DIR("A")="Enter STARTING "_Y_" for the Report"
  S DIR(0)="DO^::EP"
@@ -160,6 +168,31 @@ DTYP2 ;
  S ABMY("DT",2)=Y
  I ABMY("DT",1)>ABMY("DT",2) W !!,*7,"INPUT ERROR: Start Date is Greater than than the End Date, TRY AGAIN!",!! G DT
  Q
+ ;
+ ;start new abm*2.6*32 IHS/SD/SDR CR11501
+DTYP3 ;EP
+ S DIR(0)="SO^1:Activity Date;2:Visit Date"
+ S DIR("A")="Select TYPE of DATE Desired"
+ D ^DIR
+ Q:$D(DIRUT)
+ S ABMY("DT")=$S(Y=1:"T",1:"V")
+ S Y=$S(Y=1:"ACTIVITY",1:"VISIT")_" DATE"
+ W !!," ============ Entry of ",Y," Range =============",!
+ S DIR("A")="Enter STARTING "_Y_" for the Report"
+ I ABMY("DT")="T" S DIR(0)="DO^::ETX"  ;activity - date and optional time
+ E  S DIR(0)="DO^::EX"  ;visit - date only
+ D ^DIR
+ G DT:$D(DIRUT)
+ S ABMY("DT",1)=Y
+ W !
+ S DIR("A")="Enter ENDING DATE for the Report"
+ D ^DIR
+ K DIR
+ G DT:$D(DIRUT)
+ S ABMY("DT",2)=Y
+ I ABMY("DT",1)>ABMY("DT",2) W !!,*7,"INPUT ERROR: Start Date is Greater than than the End Date, TRY AGAIN!",!! G DT
+ Q
+ ;end new abm*2.6*32 IHS/SD/SDR CR11501
  ;
 APPR ;EP
  K ABMY("APPR")
@@ -186,6 +219,40 @@ CLOS ;EP
  D ^DIC
  S:+Y>0 ABMY("CLOS")=+Y
  Q
+ ;start new abm*2.6*32 IHS/SD/SDR CR11501
+BILLT ;EP
+ ;user running report must have security key to run the report for anyone besides themselves
+ S ABMBTCK=0
+ S ABMBTKEY=$O(^DIC(19.1,"B","ABMDZ EMP PROD REPORT",0))
+ I +$G(ABMBTKEY)'=0 I $G(^VA(200,DUZ,51,ABMBTKEY,0))'="" S ABMBTCK=1
+ I ABMBTCK=0 D  Q
+ .W !!,"Only a user with security key ABMDZ EMP PROD REPORT can run this report for"
+ .W !,"anyone other than themselves",!
+ .H 2
+ ;
+ D ^XBFMK
+ S DIR(0)="SO^1:One Person's Activity;2:All billing staff;3:All POS Staff;4:Both Billing and POS Staff"
+ S DIR("A")="Select"
+ D ^DIR
+ Q:$D(DIRUT)!$D(DIROUT)!$D(DTOUT)!$D(DUOUT)
+ ;
+ K ABMY("BILLT")
+ K ABMY("NOTPOS"),ABMY("POSONLY"),ABMY("BOTHPOS")
+ ;
+ I Y=1 D  Q  ;one person's activity
+ .K ABMY("BILLT")
+ .F  D  Q:+Y<0
+ ..W !
+ ..S DIC="^VA(200,"
+ ..S DIC(0)="QEAM"
+ ..D ^DIC
+ ..S:+Y>0 ABMY("BILLT",+Y)="",ABMY("BILLT")=1
+ ;
+ I Y=2 S ABMY("NOTPOS")="" Q  ;all billing staff
+ I Y=3 S ABMY("POSONLY")="" Q  ;all POS staff
+ I Y=4 S ABMY("BOTHPOS")="" Q  ;both billing and POS staff
+ Q
+ ;end new abm*2.6*32 IHS/SD/SDR CR11501
  ;
 PRV ;EP
  K ABMY("PRV")

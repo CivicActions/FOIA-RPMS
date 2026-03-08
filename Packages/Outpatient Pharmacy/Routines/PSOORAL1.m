@@ -1,23 +1,23 @@
-PSOORAL1 ;BHAM ISC/SAB - Build Listman activity logs ;04-Apr-2013 22:40;PLS
- ;;7.0;OUTPATIENT PHARMACY;**71,156,148,247,240,287,1015**;DEC 1997;Build 62
- ;
- ; Modified - IHS/MSC/PLS - 04/04/13 - Lines ACT+9 and ACT+11
+PSOORAL1 ;BHAM ISC/SAB - Build Listman activity logs ;14-Jul-2023 08:56;DU
+ ;;7.0;OUTPATIENT PHARMACY;**71,156,148,247,240,287,1034**;DEC 1997;Build 37
+ ; Modified - IHS/MSC/PLS - 07/13/2023 - Patch 1034 Added support for Pickup Log Info
  N RX0,VALMCNT K DIR,DTOUT,DUOUT,DIRUT,^TMP("PSOAL",$J) S DA=$P(PSOLST(ORN),"^",2),RX0=^PSRX(DA,0),J=DA,RX2=$G(^(2)),R3=$G(^(3)),CMOP=$O(^PSRX(DA,4,0))
- S IEN=0,DIR(0)="LO^1:"_$S(CMOP:8,1:7),DIR("A",1)=" ",DIR("A",2)="Select Activity Log by  number",DIR("A",3)="1.  Refill      2.  Partial      3.  Activity     4.  Labels"
- S DIR("A")=$S(CMOP:"5.  Copay       6.  ECME         7.  CMOP Events  8.  All Logs",1:"5.  Copay       6.  ECME         7.  All Logs")
- S DIR("B")=$S(CMOP:8,1:7) D ^DIR S PSOELSE=+Y I +Y S Y=$S(CMOP&(Y[8):"1,2,3,4,5,6,7",'CMOP&(Y[7):"1,2,3,4,5,6",1:Y) S ACT=Y D FULL^VALM1 D
+ ;IHS/MSC/PLS - Patch 1034
+ S IEN=0,DIR(0)="LO^1:"_$S(CMOP:9,1:8),DIR("A",1)=" ",DIR("A",2)="Select Activity Log by number",DIR("A",3)="1.  Refill      2.  Partial      3.  Activity     4.  Labels"
+ S DIR("A",4)=$S(CMOP:"5.  Copay       6.  ECME         7.  CMOP Events  8.  Pickup",1:"5.  Copay       6.  ECME         7.  Pickup")
+ S DIR("A")=$S(CMOP:"9.  All Logs",1:"8.  All Logs")
+ S DIR("B")=$S(CMOP:9,1:8) D ^DIR S PSOELSE=+Y I +Y S Y=$S(CMOP&(Y[9):"1,2,3,4,5,6,7,8",'CMOP&(Y[8):"1,2,3,4,5,6,7",1:Y) S ACT=Y D FULL^VALM1 D
  .S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Rx #: "_$P(RX0,"^")_"   Original Fill Released: " I $P(RX2,"^",13) S DTT=$P(RX2,"^",13) D DAT S ^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_DAT K DAT,DTT
  .I $P(RX2,"^",15) S DTT=$P(RX2,"^",15) D DAT S ^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_"(Returned to Stock "_DAT_")" K DAT,DTT
  .S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Routing: "_$S($P(RX0,"^",11)="W":"Window",1:"Mail")_$S($P($G(^PSRX(DA,"OR1")),"^",5):"      Finished by: "_$P(^VA(200,$P(^PSRX(DA,"OR1"),"^",5),0),"^"),1:"")
  .D:$G(^PSRX(DA,"H"))]""&($P(PSOLST(ORN),"^",3)="HOLD") HLD^PSOORAL2
- .F LOG=1:1:$L(ACT,",") Q:$P(ACT,",",LOG)']""  S LBL=$P(ACT,",",LOG) D @$S(LBL=1:"RF^PSOORAL2",LBL=2:"PAR^PSOORAL2",LBL=3:"ACT",LBL=5:"COPAY",LBL=6:"ECME",LBL=7:"^PSORXVW2",1:"LBL")
+ .F LOG=1:1:$L(ACT,",") Q:$P(ACT,",",LOG)']""  S LBL=$P(ACT,",",LOG) D @$S(LBL=1:"RF^PSOORAL2",LBL=2:"PAR^PSOORAL2",LBL=3:"ACT",LBL=5:"COPAY",LBL=6:"ECME",LBL=7:$S(CMOP:"^PSORXVW2",1:"PLOG^APSPPAL1"),LBL=8:"PLOG^APSPPAL1",1:"LBL")
  I 'PSOELSE S VALMBCK="" K PSOELSE Q
  K ST0,RFL,RFLL,RFL1,II,J,N,PHYS,L1,DIRUT,PSDIV,PSEXDT,MED,M1,FFX,DTT,DAT,R3,RTN,SIG,STA,P1,PL,P0,Z0,Z1,EXDT,IFN,DIR,DUOUT,DTOUT,PSOELSE
  K LBL,I,RFDATE,%H,%I,RN,RFT
  S PSOAL=IEN K IEN,ACT,LBL,LOG D EN^PSOORAL S VALMBCK="R"
  Q
 ACT ;activity log
- ;IHS/MSC/PLS - 04/04/13 - Added support for Reissue at line ACT+9 and +11
  N CNT
  S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=" ",IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Activity Log:"
  S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="#   Date        Reason         Rx Ref         Initiator Of Activity",IEN=IEN+1,$P(^TMP("PSOAL",$J,IEN,0),"=",79)="="
@@ -25,9 +25,9 @@ ACT ;activity log
  S CNT=0
  F N=0:0 S N=$O(^PSRX(DA,"A",N)) Q:'N  S P1=^(N,0),DTT=P1\1 D DAT D
  .I $P(P1,"^",2)="M" Q
- .S IEN=IEN+1,CNT=CNT+1,^TMP("PSOAL",$J,IEN,0)=CNT_"   "_DAT_"    ",$P(RN," ",15)=" ",REA=$P(P1,"^",2),REA=$F("HUCELPRWSIVDABXGKNZ",REA)-1
+ .S IEN=IEN+1,CNT=CNT+1,^TMP("PSOAL",$J,IEN,0)=CNT_"   "_DAT_"    ",$P(RN," ",15)=" ",REA=$P(P1,"^",2),REA=$F("HUCELPRWSIVDABXGKN",REA)-1
  .I REA D
- ..S STA=$P("HOLD^UNHOLD^DISCONTINUED^EDIT^RENEWED^PARTIAL^REINSTATE^REPRINT^SUSPENSE^RETURNED^INTERVENTION^DELETED^DRUG INTERACTION^PROCESSED^X-INTERFACE^PATIENT INSTR.^PKI/DEA^DISP COMPLETED^REISSUE","^",REA)
+ ..S STA=$P("HOLD^UNHOLD^DISCONTINUED^EDIT^RENEWED^PARTIAL^REINSTATE^REPRINT^SUSPENSE^RETURNED^INTERVENTION^DELETED^DRUG INTERACTION^PROCESSED^X-INTERFACE^PATIENT INSTR.^PKI/DEA^DISP COMPLETED^","^",REA)
  ..S ^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_STA_$E(RN,$L(STA)+1,15)
  .E  S $P(STA," ",15)=" ",^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_STA
  .K STA,RN S $P(RN," ",15)=" ",RF=+$P(P1,"^",4)

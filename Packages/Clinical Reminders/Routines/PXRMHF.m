@@ -1,6 +1,7 @@
-PXRMHF ;SLC/PKR - Handle Health Factor findings. ;23-Mar-2015 10:36;DU
- ;;2.0;CLINICAL REMINDERS;**6,1001,17,18,1005**;Feb 04, 2005;Build 23
+PXRMHF ;SLC/PKR - Handle Health Factor findings. ;28-Oct-2024 10:36;DU
+ ;;2.0;CLINICAL REMINDERS;**6,1001,17,18,1005,1016**;Feb 04, 2005;Build 32
  ;IHS/MSC/MGH Patch 1001 wrap lookup with $G
+ ;IHS/MSC/MIR Patch 1016 GETDATA+3 and STRTEND
  ;
  ;=====================================================
 CATSORT(FIEVAL,FIND0,FARR) ;Sort all the true health factor findings
@@ -118,6 +119,7 @@ EVALTERM(DFN,FINDPA,ENODE,TERMARR,TFIEVAL) ;Evaluate health factor terms.
 GETDATA(DAS,FIEVT) ;Return data for a specified V Health Factor entry.
  ;DBIA #4250
  D VHF^PXPXRM(DAS,.FIEVT)
+ D STRTEND         ;Return Start/End Dates and Period Length
  Q
  ;
  ;=====================================================
@@ -178,3 +180,15 @@ WARN(HF0) ;Issue a warning if a health factor is missing its category.
  D SEND^PXRMMSG("PXRMXMZ",XMSUB,"",DUZ)
  Q
  ;
+STRTEND ;Return Start/End Dates and Length
+ N STRT,END,LEN S LEN=""
+ S STRT=$P($G(^AUPNVHF(DAS,0)),U,7),FIEVT("START DATE")=$$FMTE^XLFDT(STRT)
+ S END=$P($G(^AUPNVHF(DAS,0)),U,8),FIEVT("END DATE")=$$FMTE^XLFDT(END)
+ I STRT,'END S END=$$DT^XLFDT
+ I STRT D
+ .N YR,MN,DY S YR=$E(END,1,3)-$E(STRT,1,3)
+ .S MN=$E(END,4,5)-$E(STRT,4,5) S:MN<0 YR=YR-1,MN=12+MN
+ .S DY=$E(END,6,7)-$E(STRT,6,7) S:DY<0 MN=MN-1,DY=30+DY S:MN<0 YR=YR-1,MN=12+MN
+ .S LEN=$S(YR:YR_" year"_$S(YR>1:"s",1:"")_" ",1:"")_$S(MN:MN_" month"_$S(MN>1:"s",1:"")_" ",1:"")_$S(DY:DY_" day"_$S(DY>1:"s",1:""),1:"")
+ S FIEVT("LENGTH")=$S(LEN:LEN,1:"")
+ Q

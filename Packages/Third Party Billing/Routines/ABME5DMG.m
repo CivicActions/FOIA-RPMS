@@ -1,6 +1,10 @@
-ABME5DMG ; IHS/ASDST/DMJ - 837 DMG Segment 
- ;;2.6;IHS Third Party Billing System;**6**;NOV 12, 2009;Build 379
+ABME5DMG ; IHS/SD/SDR - 837 DMG Segment 
+ ;;2.6;IHS Third Party Billing System;**6,31**;NOV 12, 2009;Build 615
  ;Demographic Information
+ ;IHS/SD/SDR 2.6*31 CR8848 Updated to get Railroad DOB; also fixed to get correct insurer's DOB; it was using the wrong
+ ;  variable so it was getting the primary insurer's DOB every time.  Also changed PI to check the PH DOB first, then
+ ;  default to the patient.
+ ;
 EP(X,Y) ;EP
  ;x=file
  ;y=ien
@@ -28,16 +32,24 @@ LOOP ;LOOP HERE
 30 ;DMG02 - Date of Birth
  N ABMTMPT,ABMTMPI,ABMTMPHI
  S ABMDOB=0
- S ABMTMPT=$P(ABMP("INS",ABMI),U,2)  ;ins type
+ ;S ABMTMPT=$P(ABMP("INS",ABMI),U,2)  ;ins type  ;abm*2.6*31 IHS/SD/SDR CR8848
+ S ABMTMPT=$P(ABMP("INS",ABMPST),U,2)  ;ins type  ;abm*2.6*31 IHS/SD/SDR CR8848
  ; if Medicaid or Kidscare, get Medicaid DOB
  I ABMTMPT="K"!(ABMTMPT="D") D
- .S ABMTMPI=$P(ABMP("INS",ABMI),U,6)  ;ien to MCD Elig.
+ .I ((ABMP("REL")'=18)&(ABMLOOP="2010CA")) Q  ;abm*2.6*31 IHS/SD/SDR CR8851
+ .;S ABMTMPI=$P(ABMP("INS",ABMI),U,6)  ;ien to MCD Elig.  ;abm*2.6*31 IHS/SD/SDR CR8848
+ .S ABMTMPI=$P(ABMP("INS",ABMPST),U,6)  ;ien to MCD Elig.  ;abm*2.6*31 IHS/SD/SDR CR8848
  .Q:'+ABMTMPI
  .S ABMDOB=$P($G(^AUPNMCD(ABMTMPI,21)),U,2)
  ; else if Medicare, get Medicare DOB
- E  I ABMTMPT="R" S ABMDOB=$P($G(^AUPNMCR(ABMP("PDFN"),21)),U,2)
+ ;E  I ABMTMPT="R" S ABMDOB=$P($G(^AUPNMCR(ABMP("PDFN"),21)),U,2)  ;abm*2.6*31 IHS/SD/SDR CR8848
+ ;start new abm*2.6*31 IHS/SD/SDR CR8848
+ I ABMTMPT="R"&($P($G(^AUTNINS(ABMP("INS"),0)),U)["MEDICARE") S ABMDOB=$P($G(^AUPNMCR(ABMP("PDFN"),21)),U,2)
+ I ABMTMPT="R"&($P($G(^AUTNINS(ABMP("INS"),0)),U)["RAILROAD") S ABMDOB=$P($G(^AUPNRRE(ABMP("PDFN"),21)),U,2)
+ ;end new abm*2.6*31 IHS/SD/SDR CR8848
  ; else must be private, get Policy Holder DOB
- E  D
+ ;E  D  ;abm*2.6*31 IHS/SD/SDR CR8848
+ I "^K^D^R^"'[("^"_ABMTMPT_"^") D  ;abm*2.6*31 IHS/SD/SDR CR8848
  .S ABMTMPI=$P(ABMP("INS",ABMI),U,8)  ;IEN ins mult of prvt elig
  .Q:'+ABMTMPI
  .S ABMTMPHI=$P($G(^AUPNPRVT(ABMP("PDFN"),11,ABMTMPI,0)),U,8)
@@ -49,6 +61,9 @@ LOOP ;LOOP HERE
  Q
 40 ;DMG03 - Gender Code
  S ABMR("DMG",40)=""
+ ;start new abm*2.6*31 IHS/SD/SDR CR8848
+ I $G(ABMP("SEX",ABMPST))'="" S ABMR("DMG",40)=ABMP("SEX",ABMPST) Q
+ ;end new abm*2.6*31 IHS/SD/SDR CR8848
  I ABMFILE=2 D
  .S ABMR("DMG",40)=$P(^DPT(ABMFIEN,0),"^",2)
  I ABMFILE=9000003.1 D

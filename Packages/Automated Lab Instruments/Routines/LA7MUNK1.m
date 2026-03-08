@@ -1,5 +1,5 @@
 LA7MUNK1 ;ihs/cmi/maw - MU2 NK1 Segment ; 22-Oct-2013 09:22 ; MAW
- ;;5.2;BLR IHS REFERENCE LAB;**1033**;NOV 01, 1997
+ ;;5.2;BLR IHS REFERENCE LAB;**1033,1047**;NOV 01, 1997;Build 21
  ;
 NK12(CS,DATA)  ;-- nok name
  N MMN,MLNM,M2,MFNM,MMI,MSFX,MPRX,MPSFX,NK12
@@ -43,6 +43,18 @@ NK15(CS,DF,DATA)  ;nok communications
  Q NK15
  ;
 NK113(CS,DF,CSS) ;-- next of kin organization
+ N NK113,DATA
+ S DATA=$G(^DPT(DF,.291))
+ S NK113=""
+ I $G(DATA)]"" D
+ . S $P(NK113,CS)=$P(DATA,U,3)
+ . S $P(NK113,CS,2)="L"
+ . S $P(NK113,CS,6)="RPMS_MPI"_CSS_"2.16.840.1.114222.4.10.3"_CSS_"ISO"
+ . S $P(NK113,CS,7)="XX"
+ . S $P(NK113,CS,10)=$P(DATA,U,5)  ;in ZIP+4 field
+ Q NK113
+ ;
+NK114(CS,DF,CSS) ;-- next of kin organization 2015 chit
  N NK113,DATA
  S DATA=$G(^DPT(DF,.291))
  S NK113=""

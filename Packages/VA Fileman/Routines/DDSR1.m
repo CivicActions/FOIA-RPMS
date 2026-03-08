@@ -1,5 +1,6 @@
 DDSR1 ;SFISC/MKO-PAINT ;08:09 AM  20 May 1994
- ;;22.0;VA FileMan;;Mar 30, 1999
+ ;;21.0;VA FileMan;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 CAP ;Write captions in "X" nodes

@@ -1,5 +1,5 @@
-ABMDECHK ; IHS/ASDST/DMJ - Looping Utility to Check Parms ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDECHK ; IHS/SD/SDR - Looping Utility to Check Parms ;
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;
  ; IHS/SD/SDR - v2.5 p10 - IM13359
  ;    Added check for range of patients
@@ -21,7 +21,8 @@ CLM ;EP for checking Claim file data parameters
  I $D(ABMY("INS")),ABMY("INS")'=ABM("I") Q
  I $G(ABMY("PTYP"))=2,$P($G(^AUPNPAT(ABM("P"),11)),U,12)'="I" Q
  I $G(ABMY("PTYP"))=1,$P($G(^AUPNPAT(ABM("P"),11)),U,12)="I" Q
- I $D(ABMY("TYP")) Q:ABM("I")=""  S:ABMY("TYP")="P" ABMY("TYP")="PFHM" Q:ABMY("TYP")'[$P($G(^AUTNINS(+ABM("I"),2)),U)
+ ;I $D(ABMY("TYP")) Q:ABM("I")=""  S:ABMY("TYP")="P" ABMY("TYP")="PFHM" Q:ABMY("TYP")'[$P($G(^AUTNINS(+ABM("I"),2)),U)  ;abm*2.6*10 HEAT73780
+ I $D(ABMY("TYP")) Q:ABM("I")=""  S:ABMY("TYP")="P" ABMY("TYP")="PFHM" Q:ABMY("TYP")'[($$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+ABM("I"),".211","I"),1,"I"))  ;abm*2.6*10 HEAT73780
  I $D(ABMY("DT")),ABM("D")<ABMY("DT",1)!(ABM("D")>ABMY("DT",2)) Q
  K ABMQFLG
  I $D(ABMY("RNG")) D  ;range of patients--are you in...or out?

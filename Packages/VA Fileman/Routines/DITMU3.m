@@ -1,5 +1,6 @@
-DITMU3(FILE,FIELD,ROOT) ;SFISC/EDE(OHPRD)-GET XREFS FOR ONE FIELD IN ONE FILE/SUBFILE ;
- ;;22.0;VA FileMan;;Mar 30, 1999
+DITMU3(FILE,FIELD,ROOT) ;SFISC/EDE(OHPRD)-GET XREFS FOR ONE FIELD IN ONE FILE/SUBFILE ; [ 09/10/1998  10:52 AM ]
+ ;;21.0;VA FileMan;**1007**;Sep 08, 1998
+ ;;21.0;VA FileMan;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ; Given a file/subfile number, a field number, and a variable

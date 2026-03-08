@@ -1,5 +1,5 @@
 LRAPQAMR ;AVAMC/REG/CYM - MALIGNANCY REVIEW ;10/3/96  08:56 [ 04/28/2003  12:12 PM ]
- ;;5.2T9;LR;**1002,1008,1018**;Nov 17, 2004
+ ;;5.2;LR;**1002,1008,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**72,134,242,252**;Sep 27, 1994
  D A^LRAPD G:'$D(Y) END
  W !!?31,"Malignancy review",!,"This report may take a while and should be queued to print at non-peak hours.",!,"OK to continue " S %=2 D YN^LRU G:%'=1 END

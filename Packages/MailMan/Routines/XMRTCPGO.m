@@ -1,5 +1,6 @@
 XMRTCPGO ;(WASH ISC)/THM/CAP-Start XMRTCP ;02/19/98  14:32
- ;;8.0;MailMan;;Jun 28, 2002
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**8,55**;Jun 02, 1994
 JOB ;Job itself out for TCPQUE.COM to use for polling TCPFLAG'd sites
  ;
  ;XMRTCP must have VMS context

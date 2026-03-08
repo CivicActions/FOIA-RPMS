@@ -1,5 +1,5 @@
 LR7OGC ;SLC/STAFF- Interim report rpc chart ;8/1/97  12:12
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**187**;Sep 27, 1994
  ;
 CHART(ROOT,DFN,SDATE,EDATE,ONLYSPEC,TESTNUM) ; from ORWLRR

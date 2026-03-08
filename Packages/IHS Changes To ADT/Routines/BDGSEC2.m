@@ -1,5 +1,5 @@
 BDGSEC2 ; IHS/ANMC/LJF - SENSITIVE PAT DISPLAY ; [ 01/16/2004  3:41 PM ]
- ;;5.3;PIMS;**1007,1008**;APR 26, 2002
+ ;;5.3;PIMS;**1007,1008,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw 9/7/2007 mods for PATCH 1007 in PRINT
  ;
@@ -14,8 +14,11 @@ EN ; -- main entry point for BDG SECURITY DISPLAY
  ;
 HDR ; -- header code
  S VALMHDR(1)="Sensitive Patient Access for "_DGRNG1_" to "_DGRNG2
- S VALMHDR(2)=$$PAD("Patient Name: "_DGNAM,40)_"  #"_$G(HRCN)
- S VALMHDR(2)=$$PAD(VALMHDR(2),50)_"Date of Birth : "_$$FMTE^XLFDT(DOB)
+ ;20230621 97824 p1022 maw fit PPN here
+ ;S VALMHDR(2)=$$PAD("Patient Name: "_DGNAM,40)_"  #"_$G(HRCN)
+ ;S VALMHDR(2)=$$PAD(VALMHDR(2),50)_"Date of Birth : "_$$FMTE^XLFDT(DOB)
+ S VALMHDR(2)=$$PAD("Patient Name: "_DGNAM,65)_"  #"_$G(HRCN)
+ S VALMHDR(3)=$$PAD("Date of Birth : "_$$FMTE^XLFDT(DOB),30)
  Q
  ;
 INIT ; -- init variables and list array

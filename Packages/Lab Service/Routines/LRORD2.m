@@ -1,6 +1,8 @@
-LRORD2 ;VA/SLC/CJS - MORE OF LAZY ACCESSION LOGGING ;8/11/97 [ 04/09/2003  8:55 AM ]
- ;;5.2;LR;**1010,1018,1030**;NOV 01, 1997
- ;;5.2;LAB SERVICE;**121,153**;Sep 27, 1994
+LRORD2 ;VA/SLC/CJS - MORE OF LAZY ACCESSION LOGGING ; 26-Apr-2023 09:43 ; MKK
+ ;;5.2;LAB SERVICE;**1010,121,153,1018,1030,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
 MORE ;get more tests, from LRORD1
 LRM ; F LRSSX=LRM:1 D Q15,^DIC  Q:Y<1  S LRWPC=LRWPC+1,LRTSTS=+Y,LRTX(LRTSTS)="",LRURGG=$P(Y(0),U,18) D ENQ K DIC("S") D GS^LRORD3 I LRSAMP>0&(LRSPEC>0) D Q20 S:'LREND LRM=LRM+1 I LREND K LRSAME Q
  ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1030 -- S:Y<1 %=1 corrects an issue at Q14^LRORD1
@@ -10,6 +12,7 @@ LRM ; F LRSSX=LRM:1 D Q15,^DIC  Q:Y<1  S LRWPC=LRWPC+1,LRTSTS=+Y,LRTX(LRTSTS)=""
 ENQ Q:$D(LRLABKY)  S DIC="^LAB(60,",DA=LRTSTS,DR=6 D EN^DIQ Q
 Q15 ;from LRORD
  S DIC("S")="I $P(^(0),U,4)'="""""_$S('$D(LRLABKY):",""NO""'[$P(^(0),U,3)",'$P(LRLABKY,U,3):",""N""'[$P(^(0),U,3)",1:"") S:LRORDR="LC"!(LRORDR="I") DIC("S")=DIC("S")_",$P(^(0),U,9)"
+ S DIC("S")=DIC("S")_",+$G(^(.3))=0"  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  S:$G(LRORDRR)="R" DIC("S")=DIC("S")_",$G(^LAB(60,Y,64))"
  S DIC="^LAB(60,",DIC(0)="AEMOQZ"
  Q
@@ -62,7 +65,9 @@ ZQ S X=$S(LRCCOM="??":"??",1:"?"),(DIE,DIC)="^LAB(62.5,",DIC(0)="Q",DIC("S")="I 
 GCOM ;from LRORD1, LRPHITEM, LRTSTJAN, LRWU1
  S LREXP=0 D RCOM S LRGCOM=LRCCOM Q
 DUP ;from LRORDD
- ;I '$G(BLRGUI),LRTSTS=+LROT(LRSAMP,LRSPEC,Z) W !,"Since this test, collection sample, and site/specimen has already",!,"been requested on this order, it will NOT be duplicated.",$C(7),!,"If you really need a duplicate, place a separate order." S LREND=1
+ ; The following line split into 2 lines because XINDEX does **NOT** ignore commented out lines.  And the "complete" line is 255 characters wide.
+ ;I '$G(BLRGUI),LRTSTS=+LROT(LRSAMP,LRSPEC,Z) W !,"Since this test, collection sample, and site/specimen has already",!,"been 
+ ; requested on this order, it will NOT be duplicated.",$C(7),!,"If you really need a duplicate, place a separate order." S LREND=1
  I '$G(BLRGUI),LRTSTS=+LROT(LRSAMP,LRSPEC,Z) D
  . W !,"Since this test, collection sample, and site/specimen has already",!
  . W "been requested on this order, it will NOT be duplicated.",$C(7),!

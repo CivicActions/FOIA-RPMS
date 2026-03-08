@@ -1,13 +1,60 @@
-BDMFTAX3 ; cmi/anch/maw - DMS TAXONOMY MANAGEMENT UTILITY ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;;AUG 11, 2006
+BDMFTAX3 ;IHS/CIM/THL - DMS TAXONOMY MANAGEMENT UTILITY;  [ 03/07/05  11:44 AM ]
+ ;;1.0;DIABETES MANAGEMENT SYSTEM;**4,6**;OCT 01, 2000
  ;UTILITY PROGRAM TO MANAGE TAXONOMY CREATION AND EDITING
  ;
+ ;THIS ROUTINE WAS DISTRIBUTED WITH PATCH #4 BUT NOT
+ ;MARKED AS PATCH #4
  ;IT IS NOW INCLUDED WITH PATCH #5 THOUGH DOES NOT APPEAR
  ;TO BE CALLED FROM ANY OTHER ROUTINE OR DICTIONARY OR
  ;MENU OPTION
  ;
 TAX ;CREATE TAXONOMIES
- ;REMOVED CODE IN 2.0 DISTRIBUTION
+ ;K ^TMP("TAXONOMIES")
+ ;S BDMJ=0
+ ;S Y="S BDMJ=BDMJ+1 S ^TMP(""TAXONOMIES"",BDMJ)=XX W ""."""
+ ; F A="DM AUDIT","SURVEILLANCE" D
+ ;.S AA=A
+ ;.F  S A=$O(^ATXAX("B",A)) Q:A'[AA  D
+ ;..S B=0
+ ;..F  S B=$O(^ATXAX("B",A,B)) Q:'B  D
+ ;...S XX=" ;;0;;AX;;"_^ATXAX(B,0)
+ ;...X Y
+ ;...S C=0
+ ;...F  S C=$O(^ATXAX(B,11,C)) Q:'C  D
+ ;....S XX=" ;;11;;AX;;"_C_";;"_^ATXAX(B,11,C,0)
+ ;....X Y
+ ;...S C=0
+ ;...;F  S C=$O(^ATXAX(B,21,C)) Q:'C  D
+ ;....S (YY,YYY)=+$P(^ATXAX(B,0),U,15)
+ ;....S XX=" ;;21;;AX;;"_C_";;"_^ATXAX(B,21,C,0),ZZ=$P(^(0),U)
+ ;....I YY,"^9999999.31^80^80.1^"'[(U_YY_U) D
+ ;.....S YY=$G(^DIC(YY,0,"GL"))
+ ;.....Q:YY=""
+ ;.....S YY=$P($G(@(YY_+ZZ_",0)")),U)
+ ;.....S:YY]"" XX=XX_";;"_YY
+ ;....I YYY=50,$P($G(^PSDRUG(ZZ,2)),U,4)["-" S $P(XX,";;",10)=$P(^(2),U,4)
+ ;....X Y
+ ;S (A,AA)="DM AUDIT"
+ ;F  S A=$O(^ATXLAB("B",A)) Q:A'[AA  D
+ ;.S B=0
+ ;.F  S B=$O(^ATXLAB("B",A,B)) Q:'B  D
+ ;..S XX=" ;;0;;LAB;;"_^ATXLAB(B,0)
+ ;..X Y
+ ;..S C=0
+ ;..F  S C=$O(^ATXLAB(B,11,C)) Q:'C  D
+ ;...S XX=" ;;11;;LAB;;"_C_";;"_^ATXLAB(B,11,C,0)
+ ;...X Y
+ ;..S C=0
+ ;..;F  S C=$O(^ATXLAB(B,21,C)) Q:'C  D
+ ;...S XX=" ;;21;;LAB;;"_C_";;"_^ATXLAB(B,21,C,0),ZZ=$P(^(0),U)
+ ;...S YY=$P($G(^LAB(60,+ZZ,0)),U)
+ ;...S XX=XX_";;"_$P($G(^LAB(60,+ZZ,0)),U)_";;"_$P($G(^(0)),U,12)
+ ;...X Y
+ ;...S D=0
+ ;...F  S D=$O(^ATXLAB(B,21,C,11,D)) Q:'D  D
+ ;....S YY=$P(^ATXLAB(B,0),U,9)
+ ;....S XX=" ;;21;;LAB;;"_C_";;"_D_";;SOURCE;;"_^ATXLAB(B,21,C,11,D,0)
+ ;....X Y
  Q
 ZIS W !!,"This process will update Taxonomies required by the"
  W !,"DIABETES MANAGEMENT SYSTEM."
@@ -28,9 +75,27 @@ TAXSET ;EP;TO UPDATE DIABETES SYSTEM STANDARD TAXONOMIES
  D T1
  K ^TMP("TAXONOMIES")
  Q
-T1 K BDMDA,BDMQUIT
- ;Removed Code from 2.0 Dist
- Q
+T1 K BDMDA,BDMQUIT ;IHS/CIM/TMJ Patch #5 missing nested do
+ ;F J=1:1 S Z=$T(EN+J^BDMFTAX4) Q:Z=""  D
+ ;.S BDMJ=0
+ ;.F  S BDMJ=$O(^TMP("TAXONOMIES",BDMJ)) Q:'BDMJ  S Z=^TMP("TAXONOMIES",BDMJ) D
+ ;.I $P(Z,";;",2)=0 D  Q
+ ;..S X=$P($P(Z,";;",4),U)
+ ;..S BDMFILE=$P($P(Z,";;",4),U,$S($P(Z,";;",3)="AX":15,1:9))
+ ;..S (BDMDIC,DIC)=$S($P(Z,";;",3)="AX":"^ATXAX(",1:"^ATXLAB(")
+ ;..I $D(@(DIC_"""B"","""_X_""")")) S BDMDA=$O(^(X,0)) Q
+ ;..I '$D(ZTQUEUED) U IO W !,"FILE NEW TAXONOMY: ",X
+ ;..S DIC(0)="L"
+ ;..D FILE^BDMFDIC
+ ;..S BDMDA=+Y
+ ;..S @(BDMDIC_BDMDA_",0)")=$P(Z,";;",4,99),$P(^(0),U,5)=DUZ
+ ;..S DA=BDMDA
+ ;..S DIK=BDMDIC
+ ;..D IX1^BDMFDIC
+ ;.Q:'$G(BDMDA)
+ ;.I $P(Z,";;",3)'="LAB" D DX
+ ;.I $P(Z,";;",3)="LAB" D LAB
+ ;Q
 DX I $P(Z,";;",2)=11 D
  .I '$D(^ATXAX(BDMDA,11,$P(Z,";;",4),0)) D
  ..S ^ATXAX(BDMDA,11,$P(Z,";;",4),0)=$P(Z,";;",5)

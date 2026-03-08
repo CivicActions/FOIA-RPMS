@@ -1,0 +1,218 @@
+AZZZEOB3 ; IHS/ADC/GTH - PROCESS EOBRS (4/6) - UPDATE DOCUMENT(1/2) ; [ 08/26/1999  6:02 PM ]
+ ;;3.0;CONTRACT HEALTH MGMT SYSTEM;**10**;SEP 17, 1997
+ ;
+ S ACHSDERR="",$P(ACHSDERR,"0",40)="",ACHSERRA=0
+ ;
+ ; Lookup LOCATION using ASUFAC.
+ I $D(ACHSISAO) S DIC="^AUTTLOC(",DIC(0)="",D="C",X=ACHSEOBR("A",14) D IX^DIC S:Y>0 DUZ(2)=+Y I Y<1 S ACHSERRE=21,ACHSEDAT=Y D ^AZZZEOBG Q
+ ;
+ ; Get financial data for LOCATION.
+ D ^ACHSUF
+ I $G(ACHSERR) S ACHSERRE=22,ACHSEDAT=$P($G(^DIC(4,DUZ(2),0)),U) D ^AZZZEOBG Q
+ ;
+ ; Attempt to match the Financial Code of the Document to one of the facilities on this machine.
+ I $P(ACHSEOBR("A",12),"-",2)'=ACHSFC D  I $G(ACHSERRE) D ^AZZZEOBG Q
+ . S ACHSERRE=7,ACHSEDAT=ACHSEOBR("A",12)
+ . S DUZ(2)=0 ; Original value maintained in calling routine, ACHSEOBB.
+ . F  S DUZ(2)=$O(^ACHSF("B",DUZ(2))) Q:'DUZ(2)  D ^ACHSUF I '$G(ACHSERR),$P(ACHSEOBR("A",12),"-",2)=ACHSFC KILL ACHSERRE,ACHSEDAT Q
+ .Q
+ ;
+ ; Check x-ref for P.O. number.
+ S ACHSX="1"_$E(ACHSEOBR("A",12),2)_$E(ACHSEOBR("A",12),8,12),DA=$O(^ACHSF(DUZ(2),"D","B",ACHSX,0))
+ I 'DA S ACHSERRE=1,ACHSEDAT=ACHSEOBR("A",12) D ^AZZZEOBG Q
+ ;
+ ; Check existance of global node.
+ I '$D(^ACHSF(DUZ(2),"D",DA,0)) S ACHSERRE=2,ACHSEDAT=DA D ^AZZZEOBG Q
+ S ACHSDOCR=^ACHSF(DUZ(2),"D",DA,0),ACHSDCR=$P(ACHSDOCR,U,19)
+ ;
+ ; Check for same P.O. number.
+ I $E(ACHSEOBR("A",12),8,12)'=$P(ACHSDOCR,U) S ACHSERRE=3,ACHSEDAT=ACHSEOBR("A",12) D ^AZZZEOBG Q
+ ;
+ ; Check for P.O. Authorization date.
+ S %=+ACHSEOBR("B",10)-17000000
+ I '$D(^ACHSF(DUZ(2),"D",DA,3)) S ACHSERRE=35,ACHSEDAT=$$FMTE^XLFDT(%) D ^AZZZEOBG Q
+ ;
+ ; Check for P.O. Authorization date match.
+ I (%'>($P($G(^ACHSF(DUZ(2),"D",DA,3)),U)-1)&%'<($P($G(^(3)),U,2)+1)) S ACHSERRE=4,ACHSEDAT=$$FMTE^XLFDT(%) D ^AZZZEOBG
+ ;
+ ; Check for Blanket Indicator match.
+ I (ACHSEOBR("C",11)="Y"&($P(ACHSDOCR,U,3)'=1))!(ACHSEOBR("C",11)="N"&($P(ACHSDOCR,U,3)=1)) S ACHSERRE=5,ACHSEDAT=ACHSEOBR("C",11) D ^AZZZEOBG Q
+ ;
+ ; Check for P.O. type match.
+ S X=+ACHSEOBR("A",15),X=$S(X=43:1,X=57:2,X=64:3,1:0)
+ I X'=$P(ACHSDOCR,U,4) S ACHSERRE=6,ACHSEDAT=ACHSEOBR("A",15) D ^AZZZEOBG Q
+ ;
+ ; Check for HRN match.
+ I +ACHSEOBR("B",9)'=+$P(ACHSDOCR,U,21) S ACHSERRE=30,ACHSEDAT=ACHSEOBR("B",9) D ^AZZZEOBG
+ ;
+ S ACHSPSQN=+ACHSEOBR("A",8)
+ ;S ACHSPIND=ACHSEOBR("C",13),X=ACHSEOBR("A",11),ACHSPDAT=$S(+$E(X,1,2)>50:2,1:3)_$E(X,1,6) ;ACHS*3*10
+ S ACHSPIND=ACHSEOBR("C",13),ACHSPDAT=ACHSEOBR("A",11)-17000000 ;ACHS*3*10
+ ;
+ ; Quit if duplicate transaction.
+ I $D(^ACHSF(DUZ(2),"D",DA,"EB1",ACHSPDAT,ACHSPSQN)) S ACHSERRE=8,ACHSEDAT=$$FMTE^XLFDT(ACHSPDAT) D ^AZZZEOBG Q
+ ;
+ ; If document Canceled, quit.
+ I +$P(ACHSDOCR,U,12)=4 S ACHSERRE=9,ACHSEDAT=$P(ACHSDOCR,U,12) D ^AZZZEOBG Q
+ ;
+ ; Object Class match.
+ I ACHSEOBR("C",9)'=$P(^ACHS(3,DUZ(2),1,$P(ACHSDOCR,U,7),0),U) S ACHSERRE=10,ACHSEDAT=ACHSEOBR("C",9) D ^AZZZEOBG
+ ;
+ ; CAN match.
+ I $E(ACHSEOBR("C",8),1,7)'=$P($G(^ACHS(2,$P(ACHSDOCR,U,6),0)),U) S ACHSERRE=11,ACHSEDAT=ACHSEOBR("C",8) D ^AZZZEOBG
+ ;
+ ;
+ S DFN=$P(ACHSDOCR,U,22),ACHSIPA=+$E(ACHSEOBR("E",8),1,7)_"."_$E(ACHSEOBR("E",8),8,9),ACHSFULP=$S(+ACHSEOBR("D",11):"P",1:"F")
+ S ACHS3RDP=$S(+ACHSEOBR("D",11):+$E(ACHSEOBR("D",11),1,7)_"."_$E(ACHSEOBR("D",11),8,9),1:""),ACHS3RDS="",ACHSOB=ACHSEOBR("E",9)
+ ;
+ ;
+ ; Check for Interim Denial.
+ I +ACHSIPA=0,ACHSPIND="I" S ACHSERRE=31,ACHSEDAT=ACHSPIND D ^AZZZEOBG Q
+ ;
+ ; Is final pay a 0 amount.
+ I +ACHSIPA=0,+ACHS3RDP=0,ACHSPIND'="F" S ACHSERRE=12,ACHSEDAT=ACHSPIND D ^AZZZEOBG Q
+ ;
+ S ACHSWKLD=+ACHSEOBR("B",11)
+ S:'ACHSWKLD ACHSWKLD=1
+ ;BEGIN Y2K BLOCK
+ ;S (ACHS,ACHSWKLD(1),ACHSWKLD(2))=0,ACHSSVDT="999999"
+ S (ACHS,ACHSWKLD(1),ACHSWKLD(2))=0,ACHSSVDT="99999999" ;ACHS*3*9
+ KILL %DT
+ D AINFO
+P1 ;
+ S ACHS=$O(^TMP("ACHSEOB",$J,"F",ACHS)) G P2:'ACHS S ACHSX=^(ACHS)
+ K ACHSTEMP D REC2^AZZZEOBB(ACHSX,.ACHSTEMP) ;ACHS*3*9
+ ;I +$E(ACHSX,23,28)<+ACHSSVDT S ACHSSVDT=$E(ACHSX,23,28)
+ I ACHSTEMP("F",8)<+ACHSSVDT S ACHSSVDT=ACHSTEMP("F",8) ;ACHS*3*9
+ ;S X=$E(ACHSX,25,28)_$E(ACHSX,23,24)
+ S X=$E(ACHSTEMP("F",8),5,8)_$E(ACHSTEMP("F",8),1,4) ;ACHS*3*9
+ D ^%DT
+ ;S ACHS("FM")=Y,X=$E(ACHSX,31,34)_$E(ACHSX,29,30)
+ S ACHS("FM")=Y,X=$E(ACHSTEMP("F",9),5,8)_$E(ACHSTEMP("F",9),1,4) ;ACHS*3*9
+ D ^%DT
+ S ACHS("TO")=Y
+ F ACHS("X2")=0:1 S X1=ACHS("FM"),X2=ACHS("X2") D C^%DTC I X=ACHS("TO") S ACHSWKLD(1)=ACHSWKLD(1)+ACHS("X2")+1 Q
+ ;S ACHSWKLD(2)=ACHSWKLD(2)+$E(ACHSX,40,42)
+ S ACHSWKLD(2)=ACHSWKLD(2)+ACHSTEMP("F",11) ;ACHS*3*9
+ G P1
+ ;
+P2 ;
+ ;S X=ACHSSVDT,ACHSSVDT=$S(X=999999:"",1:X+$S($E(X,1,2)>50:2000000,1:3000000))
+ S X=ACHSSVDT,ACHSSVDT=$S(X=99999999:"",1:X-17000000) ;ACHS*3*9
+ S:ACHSWKLD(1)>ACHSWKLD ACHSWKLD=ACHSWKLD(1)
+ S:ACHSWKLD(2)>ACHSWKLD ACHSWKLD=ACHSWKLD(2)
+ S ACHSDIEN=DA
+ ;END Y2K BLOCK
+ ;
+ ; If there is a 3P pay amount, and the patient has no insurance on
+ ; the local machine in Patient Registration, send a bulletin.
+ I ACHS3RDP,ACHSSVDT,'$$INSURED^ACHS(DFN,ACHSSVDT) D SENDMSG
+ ;
+ ; Vendor missing or no-match.
+ D VNDR
+ I 'ACHSPROV S ACHSERRE=15,ACHSEDAT=ACHSEOBR("C",16) D ^AZZZEOBG Q
+ I ACHSPROV'=$P(ACHSDOCR,U,8) S ACHSERRE=36,ACHSEDAT=ACHSEOBR("C",16) D ^AZZZEOBG
+ ;
+ KILL ACHSBLKF
+ I ACHSEOBR("C",11)="Y",ACHSEOBR("C",13)="I" S ACHSBLKF=""
+ S ACHSTYP=+ACHSEOBR("A",15),ACHSTYP=$S(ACHSTYP=43:1,ACHSTYP=57:2,ACHSTYP=64:3,1:0),ACHSDRG=""
+ ;
+ ; DRG exist on local machine.
+ I +ACHSEOBR("B",12) S ACHSDRG=+ACHSEOBR("B",12) I '$D(^ICD(ACHSDRG)) S ACHSDRG="" S ACHSERRE=20,ACHSEDAT=ACHSEOBR("B",12) D ^AZZZEOBG
+ ;
+PROCESS ; Process the adjustment or payment.
+ KILL ACHSERRE,ACHSEDAT
+ S (ACHSADDT,ACHSDIDT,ACHSDITY)=""
+ I $D(^ACHSF(DUZ(2),"D",ACHSDIEN,"PA")) D  Q:ACHSERRA>0  G INTEREST
+ . ;
+ . ; If there is an Adjustment amount, do the Adjustment first.
+ . D A4A^ACHSAJ Q:ACHSERRA>0  D AINFO S ACHSOB=ACHSEOBR("E",9)
+ . ;
+ . ; If any interest amount, treat as an adjustment.
+ . I '$G(ACHSEOBR("I",12)),'$G(ACHSEOBR("I",13)) Q
+ . S ACHSIPA=ACHSEOBR("I",12)+ACHSEOBR("I",13)
+ . S ACHSIPA=$E(ACHSIPA,1,$L(ACHSIPA)-2)_"."_$E(ACHSIPA,$L(ACHSIPA)-1,$L(ACHSIPA))
+ . D A4A^ACHSAJ
+ .Q
+ I +ACHSEOBR("E",8)=0,+ACHS3RDP=0,ACHSPIND="F" S X=0,X1=0 D TRAN D A3^ACHSPA:X1'=ACHSPDAT S ACHSERRE=32,ACHSEDAT=ACHSEOBR("E",8)_"  "_ACHSPIND D ^AZZZEOBG G INTEREST
+ D A3^ACHSPA
+ Q:ACHSERRA>0
+ ;
+ ;      Process Interest as Adjustment if any interest amounts were
+ ;      included with a final pay.
+V I $G(ACHSEOBR("I",12))!$G(ACHSEOBR("I",13)) D  Q:ACHSERRA>0
+ . S ACHSIPA=ACHSEOBR("I",12)+ACHSEOBR("I",13)
+ . S ACHSIPA=$E(ACHSIPA,1,$L(ACHSIPA)-2)_"."_$E(ACHSIPA,$L(ACHSIPA)-1,$L(ACHSIPA))
+ . D A4A^ACHSAJ
+ .Q
+ ;
+INTEREST ; Post Interest data.
+ I $D(ACHSEOBR("I")) D AUTO^ACHSPAI
+ ;
+ ; Check/post ICD/CPT/Revenue codes(s), Procedure codes
+ D ICD^AZZZEOB4,CPTREV^AZZZEOB4,PROC^AZZZEOB4
+ ;
+ ; If Referral, post.
+ I $$DOC^ACHS(2,7) D DX^ACHSBMC,PX^ACHSBMC
+ ;
+ I $D(^ACHSF(DUZ(2),"D",ACHSDIEN,8)),'$P(^ACHSF(DUZ(2),"D",ACHSDIEN,8),U) S ACHS("DX")=9,ACHS("PX")=10 D CDRG^ACHSPAM
+ ;
+ ; Post CHS data to PCC
+ S ACHSDOCR=^ACHSF(DUZ(2),"D",ACHSDIEN,0)
+ I $$PARM^ACHS(2,22)="Y",$$LINK^ACHSPAP1 U IO(0) D ^ACHSPAP U IO
+ Q
+ ;
+ ;
+VNDR ;EP - Attempt to match Vendor
+ S ACHSPROV=$E(ACHSEOBR("C",16),1,10)_$E(ACHSEOBR("C",16),12,13),ACHSPROV=$P(ACHSPROV," ")
+ I $O(^AUTTVNDR("E",ACHSPROV,0)) S ACHSPROV=$O(^(0)) Q
+ S ACHSPROV=$E(ACHSPROV,1,10)
+ I $O(^AUTTVNDR("C",ACHSPROV,0)) S ACHSPROV=$O(^(0)) Q
+ S ACHSPROV=ACHSEOBR("D",8)
+ F  Q:$E(ACHSPROV,$L(ACHSPROV))'=" "  S ACHSPROV=$E(ACHSPROV,1,$L(ACHSPROV)-1)
+ I $O(^AUTTVNDR("B",ACHSPROV,0)) S ACHSPROV=$O(^(0)) Q
+ S ACHSPROV=0
+ Q
+ ;
+TRAN ;
+ S X=$O(^ACHSF(DUZ(2),"D",ACHSDIEN,"T",X))
+ Q:X=""
+ G TRAN:X=0
+ S X1=$S($P(^ACHSF(DUZ(2),"D",ACHSDIEN,"T",X,0),U,13):$P(^(0),U,13),1:0)
+ G TRAN
+ ;
+ ;
+AINFO ; Set basic info from A record.
+ S ACHSCTL=ACHSEOBR("A",13)_ACHSEOBR("A",5),ACHSCHK=ACHSEOBR("A",9),ACHSREM=ACHSEOBR("A",10),ACHSSV=ACHSEOBR("C",10)
+ Q
+ ;
+SENDMSG ;
+ NEW X,Y,Z
+ KILL ^TMP("ACHSEOB3")
+ F X=1:1 S Y=$P($T(TXT+X),";;",2) Q:Y="###"  S Z="" X:$L($P(Y,";",2)) $P(Y,";",2) S ^TMP("ACHSEOB3",$J,X)=$P(Y,";",1)_Z
+ KILL X,Y,Z
+ NEW XMSUB,XMDUZ,XMTEXT,XMY
+ S XMB="ACHS EOBR PROCESSING"
+ S XMDUZ="CHS EOBR Automatic Processing",XMSUB="3P Pay on EOBR, no Insurance in Reg."
+ S XMTEXT="^TMP(""ACHSEOB3"",$J,"
+ S XMY(1)=""
+ D ^XMB,KILL^XM
+ KILL ^TMP("ACHSEOB3")
+ Q
+ ;
+TXT ;
+ ;;During automatic processing of CHS EOBRs, an EOBR was found
+ ;;to have a payment from a Third Party Source, and no insurance
+ ;;for the patient was effective for the patient on the DOS, in
+ ;;your local Patient Registration files.  Specific info:
+ ;;       EOBR Control Number :  ;S Z=ACHSEOBR("A",13)_"-"_ACHSEOBR("A",5)
+ ;;     Purchase Order Number :  ;S Z=ACHSEOBR("A",12)
+ ;;              Patient Name :  ;S Z=ACHSEOBR("B",8)
+ ;;                       HRN :  ;S Z=ACHSEOBR("B",9)
+ ;;Amount Paid by Third Party :  $;S Z=$FN($E(ACHSEOBR("D",11),1,7)_"."_$E(ACHSEOBR("D",11),8,9),",",2)
+ ;; 
+ ;;The current EOBR data does not include the Third Party source.
+ ;;If you want that information, contact the Fiscal Intemediary.
+ ;;Your area CHS Officer can provide you with contacts at the FI.
+ ;;###
+ ;

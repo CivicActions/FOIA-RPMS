@@ -1,0 +1,24 @@
+ABMP2640 ; IHS/SD/SDR - 3P BILLING 2.6 Patch 40 PRE,POST INIT ;  
+ ;;2.6;IHS Third Party Billing;**40**;NOV 12, 2009;Build 785
+ ;
+ Q
+POST ;
+QUES46 ;FID111599
+ K DIC,X,DINUM,DR,DLAYGO
+ S DIC="^ABMQUES("
+ S DIC(0)="LM"
+ S DLAYGO=9002274
+ S DINUM=46,X="VA Contract Number"
+ S DIC("DR")=".02////W46;.03////ABMDE301;.04////46;1////ABMDE3D"
+ K DD,DO
+ D ^DIC
+ ;
+ ;Add question#46 to export modes
+ F ABMI=28,31,32,33,35,36,37 D
+ .S ABMQUES=$P($G(^ABMDEXP(ABMI,0)),U,8)
+ .S ABMQUES=ABMQUES_",46"
+ .S DIE="^ABMDEXP("
+ .S DA=ABMI
+ .S DR=".08////"_ABMQUES
+ .D ^DIE
+ Q

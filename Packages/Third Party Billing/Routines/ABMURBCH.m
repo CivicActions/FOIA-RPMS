@@ -1,9 +1,9 @@
-ABMURBCH ; IHS/SD/SDR - 3PB/UFMS Resend Batch option   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMURBCH ; IHS/SD/SDR - 3PB/UFMS Resend Batch option   [ 05/24/2007  11:50 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**12,13**;MAY 24, 2007
  ;
  ; New routine - v2.5 p12 SDD item 4.9.2.6
  ;
- Q
+ Q  ;abm*2.5*13
 START ;START HERE   
  W !
  S ABMLOC=$$FINDLOC^ABMUCUTL

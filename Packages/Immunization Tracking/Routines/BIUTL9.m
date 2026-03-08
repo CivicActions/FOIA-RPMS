@@ -1,9 +1,10 @@
 BIUTL9 ;IHS/CMI/MWR - UTIL: OVERFLOW CODE FROM OTHER BIUTL RTNS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**12**;MAY 01,2016
+ ;;8.5;IMMUNIZATION;**12,26,28**;OCT 24,2011;Build 31
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  OVERFLOW CODE FROM OTHER BIUTL RTNS.
  ;;  PATCH 9: All EP's below are moved from BIUTL7 for space (<15000k).  REASCHK+0
  ;;  PATCH 12: Same as above. LOTDAT+0, HISTORY+0
+ ;;  PATCH 26: 88884 Add sub to allow site to remove external dates from V IMMUNIZATION
  ;
  ;
  ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
@@ -53,7 +54,7 @@ CREASCHK ;EP
  Q
  ;**********
  ;
- ;********** PATCH 12, v8.5, MAY 01,2016, IHS/CMI/MWR
+ ;********** PATCH 12, v8.5, OCT 24,2011, IHS/CMI/MWR
  ;---> LOTDAT and VSHORT below are moved from BIUTL7 for space (<15000k).
  ;
  ;----------
@@ -83,7 +84,7 @@ VSHORT(X) ;EP
  ;**********
  ;
  ;
- ;********** PATCH 12, v8.5, MAY 01,2016, IHS/CMI/MWR
+ ;********** PATCH 12, v8.5, OCT 24,2011, IHS/CMI/MWR
  ;---> HISTORY below are moved from BIUTL4 for space (<15000k).
  ;
  ;----------
@@ -99,7 +100,7 @@ HISTORY(X) ;EP
  .;---> Remove (default) provider.
  .D PUT^DDSVALF(9,,,) S BI("R")=""
  .;
- .;********** PATCH 12, v8.5, MAY 01,2016, IHS/CMI/MWR
+ .;********** PATCH 12, v8.5, OCT 24,2011, IHS/CMI/MWR
  .;---> Set Injection Site AND Volume fields not required.
  .D REQ^DDSUTL(4,"","",0),REQ^DDSUTL(5,"","",0)
  ;
@@ -107,3 +108,111 @@ HISTORY(X) ;EP
  I (X="A")!(X="I") D REQ^DDSUTL(4,"","",1),REQ^DDSUTL(5,"","",1)
  Q
  ;**********
+VIMM ;-- 88884 remove external dates from V IMM 1201
+ W !,"Removing External Dates from V Immunization"
+ N VDA,VDAT
+ S VDA=0 F  S VDA=$O(^AUPNVIMM(VDA)) Q:'VDA  D
+ . S VDAT=$P($G(^AUPNVIMM(VDA,12)),U)
+ . I VDAT["/" D
+ .. W "."
+ .. S $P(^AUPNVIMM(VDA,12),U)=""
+ Q
+ ;
+SDV(IVIEN) ;PEP;V8.0 PATCH 28 - FID-106077 Allow split dose vaccine to be added
+ ;RETUNS:
+ ;   0 = vaccine is not a split dose vaccine
+ ;   1 = vaccine is a split dose vaccine
+ ;
+ ;Split dose vaccine can be added as 2 different V IMMUNIZATION entries
+ ;for the same day
+ ;
+ Q $D(^BISDV(+$G(IVIEN),0))
+ ;=====
+ ;
+SDVEDIT ;EP;TO ADD EDIT SPLIT DOES VACCINE
+ K BIQUIT
+ S BIQUIT=0
+ F  D SDV1 Q:BIQUIT
+ K BIQUIT
+ Q
+ ;=====
+ ;
+SDV1 ;SDV ADD/EDIT
+ D SDVDISP
+ K DIR
+ S DIR(0)="SO^1:ADD additional SDV;2:REMOVE existing SDV"
+ S DIR("A")="Add or Remove SDV"
+ W !
+ D ^DIR
+ K DIR
+ I X=""!($G(DIRUT)[U) S BIQUIT=1 Q
+ I Y=1 D SDVADD Q
+ I Y=2 D SDVREM
+ Q
+ ;=====
+ ;
+SDVDISP ;DISPLAY CURRENT SDV'S
+ W @IOF
+ W !?10,"Current SPLIT DOSE vaccines for which duplicate entry allowed:"
+ W !!,"IEN",?5,"CVX",?10,"Short name"
+ W !,"---",?5,"---",?10,"--------------------"
+ N X,Y,Z
+ S X=0
+ F  S X=$O(^BISDV(X)) Q:'X  D
+ .S Y=$G(^AUTTIMM(X,0))
+ .Q:Y=""
+ .W !,X,?5,$P(Y,U,3),?10,$P(Y,U,2)
+ Q
+ ;=====
+ ;
+SDVADD ;ADD ADDITIONAL SDV
+ K Y,DIC,DA,DR
+ S DIC="^AUTTIMM("
+ S DIC(0)="AEMQZ"
+ S DIC("A")="Add new SDV immunization: "
+ S DIC("S")="I '$D(^BISDV(+Y,0))"
+ W !
+ D ^DIC
+ Q:Y<1
+ S (X,DINUM)=+Y
+ S DIC="^BISDV("
+ S DIC(0)="L"
+ D FILE^DICN
+ Q
+ ;=====
+ ;
+SDVREM ;REMOVE EXISTING SDV
+ N X,Y,Z
+ K DIC,DA,DR
+ S DIC="^BISDV("
+ S DIC(0)="AEMQZ"
+ S DIC("A")="Remove SDV immunization: "
+ S DIC("S")="I +$G(^BISDV(+Y,0))"
+ W !
+ D ^DIC
+ Q:Y<1
+ S DA=+Y
+ S X=$G(^AUTTIMM(DA,0))
+ K DIR
+ S DIR(0)="YO"
+ S DIR("A")="Remove "_$P(X,U,2)_" (CVX "_$P(X,U,3)_") from the Split Dose list"
+ S DIR("B")="NO"
+ W !
+ D ^DIR
+ Q:'Y
+ S DIK="^BISDV("
+ D ^DIK
+ Q
+ ;=====
+ ;
+D343(DFN,VIEN,VDT) ;EP;TO COUNT NUMBER OF DUPS FOR DOS
+ ;DFN  = PATIENT DFN
+ ;VIEN = IEN FROM AUTTIM
+ ;VDT  = REVERSE VISIT DATE
+ N X,Y,Z,V
+ S DUP=0
+ S VIMM=0
+ F  S VIMM=$O(^AUPNVIMM("AA",DFN,VIEN,VDT,VIMM)) Q:'VIMM  S DUP=DUP+1
+ Q DUP
+ ;=====
+ ;

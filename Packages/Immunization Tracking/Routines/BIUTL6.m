@@ -1,5 +1,5 @@
 BIUTL6 ;IHS/CMI/MWR - UTIL: TEXT FOR POINTERS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**9**;OCT 01,2014
+ ;;8.5;IMMUNIZATION;**9,25**;OCT 24, 2011;Build 22
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: TEXT FOR PROVIDER, HOSP LOC, INSTIT, OTHER LOC,
  ;;           TRANSLATIONS, REACTION, CONTRA, SITE HDR, CUR COM TXT.
@@ -8,7 +8,7 @@ BIUTL6 ;IHS/CMI/MWR - UTIL: TEXT FOR POINTERS; MAY 10, 2010
  ;
  ;
  ;----------
-USERPOP(BIDFN,BIEDATE) ;EP - Return 1 if Patient is in User Population as of BIEDATE.
+USERPOP(BIDFN,BIEDATE) ;EP - Return 1 if Patient is in UP as of BIEDATE.
  ;---> Code from Lori Butcher, CMI, Feb 2010.
  ;---> Return 1 if Patient is in User Population; otherwise return 0.
  ;---> Parameters:
@@ -31,9 +31,9 @@ USERPOP(BIDFN,BIEDATE) ;EP - Return 1 if Patient is in User Population as of BIE
  .Q:'$D(^AUPNVSIT(V,0))
  .Q:'$P(^AUPNVSIT(V,0),U,9)
  .Q:$P(^AUPNVSIT(V,0),U,11)
- .Q:'$D(^AUPNVPRV("AD",V))          ;MUST BE A COMPLETE VISIT
+ .Q:'$D(^AUPNVPRV("AD",V))          ;
  .Q:"SAHO"'[$P(^AUPNVSIT(V,0),U,7)  ;must be ambulatory, hosp, day surgery or obervation
- .Q:"V"[$P(^AUPNVSIT(V,0),U,3)      ;can't be a VA type visit
+ .Q:"V"[$P(^AUPNVSIT(V,0),U,3)      ;
  .Q:$P(^AUPNVSIT(V,0),U,6)=""
  .S UP=1                            ;has at least one visit so in user pop
  Q UP
@@ -71,7 +71,7 @@ ACTCLIN(BIDFN,BIEDATE) ;EP - Return 1 if Patient is Active Clinical User as of B
  .Q:$P(^AUPNVSIT(V,0),U,11)
  .Q:'$D(^AUPNVPRV("AD",V))          ;MUST BE A COMPLETE VISIT
  .Q:"SAHO"'[$P(^AUPNVSIT(V,0),U,7)  ;must be ambulatory, hosp, day surgery or obervation
- .Q:"V"[$P(^AUPNVSIT(V,0),U,3)      ;can't be a VA type visit
+ .Q:"V"[$P(^AUPNVSIT(V,0),U,3)      ;
  .Q:$P(^AUPNVSIT(V,0),U,6)=""
  .S B=$$CLINIC^APCLV(V,"C")         ;get clinic for active clinical check
  .Q:B=""
@@ -132,7 +132,7 @@ REACTXT(X) ;EP
  ;
  ;----------
 CONTXT(X) ;EP
- ;---> Return text of a Contraindication Reason.
+ ;---> Return text of a Contra Reason.
  ;---> Parameters:
  ;     1 - X  (req) =IEN in BI TABLE CONTRA REASON File #9002084.81.
  ;
@@ -168,7 +168,7 @@ SKRESLT(X) ;EP
  ;
  ;----------
 HOSPLC() ;EP
- ;---> RETURN TEXT OF HOSPITAL LOCATION NAME.
+ ;---> RETURN TEXT OF HOSP LOC NAME.
  ;---> REQUIRED VARIABLE: X=IEN IN HOSPITAL LOCATION FILE #44.
  Q:'$D(X) ""
  Q:'X "UNKNOWN"
@@ -212,7 +212,7 @@ LOCABBR(FACILITY) ;EP
  ;
  ;----------
 INSTTX1(BIVPTR,BIMX,BIIHS) ;EP
- ;---> Return text of Other Location if it exists (for this Visit);
+ ;---> Return text of Other Location if it exists;
  ;---> otherwise, return text of IHS Location.
  ;---> Parameters:
  ;     1 - BIVPTR  (req) IEN of Visit in VISIT File.
@@ -296,7 +296,7 @@ REPHDR(BISITE) ;EP
  ;
  ;----------
 CCTX(X) ;EP
- ;---> Return text of Current Community Name.
+ ;---> Return text of Community Name.
  ;---> Parameters:
  ;     1 - X  (req) IEN in COMMUNITY File #9999999.05.
  ;
@@ -316,7 +316,6 @@ BENTX(X) ;EP
  Q $P(^AUTTBEN(X,0),U)
  ;
  ;
- ;********** PATCH 3, v8.5, SEP 10,2012, IHS/CMI/MWR
  ;---> New line accounting for Event Date and Time.
  ;----------
 IMMDTT(BIVPTR,BI012,BIFORM) ;EP
@@ -326,12 +325,12 @@ IMMDTT(BIVPTR,BI012,BIFORM) ;EP
  ;     1 - BIVPTR  (req) IEN in VISIT File.
  ;     2 - BI012   (opt) 12-node of V IMM File entry.
  ;     3 - BIFORM  (opt) Date Format: null default=MM/DD/YY, 1=(DD-Mmm-YYYY
- ;                                    2=YYYMMDD
+ ;                                    2=YYYMMDD 3=YYYYMMDD
  ;
  N BIY D
  .I $P($G(BI012),U) S BIY=$P(BI012,U) Q
  .;--->
- .;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
+ .;
  .;---> Allow return of 1201 Event or NULL, by not passing BIVPTR.
  .I '$G(BIVPTR) S BIY="" Q
  .;
@@ -340,6 +339,8 @@ IMMDTT(BIVPTR,BI012,BIFORM) ;EP
  ;**********
  Q:($G(BIFORM)=2) BIY
  Q:($G(BIFORM)=1) $$TXDT1^BIUTL5(BIY,1)
+ ;IHS/CMI/LAB - added TCH format patch 25
+ Q:($G(BIFORM)=3) $$FMTCHDT^BIUTL5(BIY)
  Q $$SLDT2^BIUTL5(BIY,1)
  ;---> Old line stored in ^BIEXPDD(29,0)=S Y=$P($G(~AUPNVSIT(+BIVPTR,0)),U),Y=$$TXDT1~BIUTL5(Y,1)
  ;**********

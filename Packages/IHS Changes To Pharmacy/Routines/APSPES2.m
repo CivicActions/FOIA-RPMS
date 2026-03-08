@@ -1,9 +1,10 @@
-APSPES2 ;IHS/MSC/PLS - SureScripts HL7 interface - con't;23-Mar-2015 09:06;DU
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1008,1011,1016,1018**;Sep 23, 2004;Build 21
+APSPES2 ;IHS/MSC/PLS - SureScripts HL7 interface - con't;03-Nov-2022 10:07;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1008,1011,1016,1018,1023,1024,1026,1027,1028,1032**;Sep 23, 2004;Build 26
  ; Return array of message data
  ; Input: MIEN - IEN to HLO MESSAGES and HLO MESSAGE BODY files
  ; Output: DATA
  ;         HLMSTATE
+ ; Modified  12/21/2017 IHS/MSC/MGH Patch 1023 ADDRR+26,ADDRR+58,ADDRR+86,RXIEN+8,REFRES+11
 PARSE(DATA,MIEN,HLMSTATE) ;EP
  N SEG,CNT
  Q:'$$STARTMSG^HLOPRS(.HLMSTATE,MIEN)
@@ -15,58 +16,12 @@ PARSE(DATA,MIEN,HLMSTATE) ;EP
  Q
  ; Process incoming RDS message
 DISP ;EP
- N DATA,ARY,SEGORC,SEGIEN,SEGRXD,ERR,RET
- N DRG,DCODE,DCODEQ,PVDIEN,DSPNUM,RXIEN
- Q:'$G(HLMSGIEN)
- D PARSE(.DATA,HLMSGIEN,.HLMSTATE)
- S SEGIEN=$$FSEGIEN^APSPES1(.DATA,"ORC")
- Q:'SEGIEN 0
- M SEGORC=DATA(SEGIEN)
- Q:$$GET^HLOPRS(.SEGORC,1,1)'="OK"
- S PVDIEN=$$GET^HLOPRS(.SEGORC,10,1)
- S RXIEN=$$GET^HLOPRS(.SEGORC,2,1)
- Q:'RXIEN
- S SEGIEN=$$FSEGIEN^APSPES1(.DATA,"RXD")
- Q:'SEGIEN
- M SEGRXD=DATA(SEGIEN)
- S DSPNUM=$$GET^HLOPRS(.SEGRXD,1)
- Q:'DSPNUM
- S DSPNUM=DSPNUM-1  ;Adjust fill offset - original = 0
- S DCODE=$$GET^HLOPRS(.SEGRXD,2,1)
- S DRG=$$GET^HLOPRS(.SEGRXD,2,2)
- S DCODEQ=$$GET^HLOPRS(.SEGRXD,2,3)
- S ARY("REASON")="X"
- S ARY("TYPE")="U"
- S ARY("RX REF")=$S(DSPNUM>5:DSPNUM+1,1:DSPNUM) ; adjust for 6=partial
- S ARY("COM")="DDrg:"_DRG_$S($L(DCODE):" ("_DCODEQ_":"_DCODE_")",1:"")
- S ARY("USER")=PVDIEN
- D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
- I DATA("HDR","APP ACK TYPE")="AL" D
- .; Generate APP Ack
- .N PARMS,ACK,ERR
- .S PARMS("ACK CODE")="AA"
- .I '$$ACK^HLOAPI2(.HLMSTATE,.PARMS,.ACK,.ERR) W !,ERR Q
- .I '$$SENDACK^HLOAPI2(.ACK,.ERR) W !,ERR Q
- Q
-DSP ;
- N HLMSGIEN,HLMSTATE,PARMS
- S HLMSGIEN=200000000001
- D PARSE(.DATA,HLMSGIEN,.HLMSTATE)
- S PARMS("ACK CODE")="AA"
- I '$$ACK^HLOAPI2(.HLMSTATE,.PARMS,.ACK,.ERR) W !,ERR Q
- I '$$SENDACK^HLOAPI2(.ACK,.ERR) W !,ERR Q
- Q
- ; Send bulletin
-BULL(XMSUB,XMDUZ,WHO,MSG) ;EP
- N XMY,XMTEXT
- M XMY=WHO
- S XMTEXT="MSG("
- D ^XMD
+ D DISP^APSPES5
  Q
  ; Return Ordering Provider for HL7 Message
 OPRV(MSGIEN) ; EP
- N RXIEN,VAL
- S VAL=0
+ N RXIEN,VAL,RELATE
+ S VAL=0,RELATE=""
  S RXIEN=+$$RXIEN(MSGIEN)
  Q:'RXIEN ""
  Q +$P($G(^PSRX(RXIEN,0)),U,16)
@@ -74,252 +29,302 @@ OPRV(MSGIEN) ; EP
  ; Input: MSGIEN - HLO Message IEN
  ;           TGL - default to 0, 1=return numeric value in HL7 message
 RXIEN(MSGIEN,TGL) ; EP
- N RET,RXN
+ N RET,RXN,RXNP,RELATE
  S TGL=$G(TGL,0)
  D PARSE(.DATA,MSGIEN,.HLMSTATE)
  S SEGIEN=$$FSEGIEN^APSPES1(.DATA,"ORC")
  Q:'SEGIEN ""
  M SEGORC=DATA(SEGIEN)
- S RXN=$$GET^HLOPRS(.SEGORC,2,1)
- S RET=$S(TGL:RXN,$D(^PSRX(+RXN,0)):+RXN,1:0)
+ S (RXN,RXNP)=$$GET^HLOPRS(.SEGORC,2,1)
+ ;IHS/GDIT/MSC/MGH patch 1023
+ S RELATE=$P($$GET^HLOPRS(.SEGORC,4,1),":",1)
+ S RXN=$S(RXN?1N.N:RXN,RXN="":RXN,1:"invalid") ;P1026
+ I RXN="invalid" S INVAL=RXNP
+ I RELATE'[":" S RELATE=RXN      ;P1027
+ ;We have a PON
+ I +RXN=0 D
+ .I +RELATE&(+RXN'=+RELATE) S RET=0  ;Items are both numbers but don't match
+ .I '+RELATE S RELATE=RXN  ;Use PON as relate if its there
+ I '+RXN D  ;Don't have a PON or its  not a number
+ .I +RELATE S RXN=RELATE  ;Use relate if its there
+ S RET=$S(TGL:RXNP,$D(^PSRX(+RXN,0)):RXN,'$D(^PSRX(+RXN,0)):RXN,1:0)
  Q RET
  ; Return Pharmacy Info for Activity Log
  ; Input - RXIEN - Prescription IEN
-PHMINFO(RXIEN) ; EP -
- N PHM
- S PHM=$$GPHM^APSPES1(RXIEN)
- Q:'PHM "UNKNOWN"
- Q $$GET1^DIQ(9009033.9,PHM,.01)_"  "_$$HLPHONE^HLFNC($$GET1^DIQ(9009033.9,PHM,2.1))
- ;
 REFRES ; EP - Refill request callback
  ;Build response to Refill Request
- N DATA,PARMS,SEG,ACK,ARY,ERR,ORID,SEGRX0,REFILL,RR,ORITM,PRV,DFN
- N RXIEN,FN,DEA,MATCHK
- S MATCHK=""
+ N DATA,PARMS,SEG,ACK,ARY,ERR,ORID,SEGRX0,SEGORC,REFILL,RR,ORITM,PRV,DFN
+ N RXIEN,FN,DEA,MATCHK,CSMED,RELATE,DEA,INTYP,MSGID,RXTEXT,INVAL
+ S MATCHK="",RELATE="",CSMED=0,INVAL=""
  D PARSE^APSPES2(.DATA,$G(HLMSGIEN),.HLMSTATE)
- ; Create entry in APSP REFILL REQUEST file
- ; If possible, generate order
+ ; Create entry in APSP SURESCRIPTS REQUEST file
  S FN=9009033.91
- S RR=$$ADDRR(+$G(HLMSGIEN))
- Q:$$GET1^DIQ(9009033.91,RR,.03,"I")=8  ;Do not process duplicate record
+ S RR=$$ADDRR(+$G(HLMSGIEN),"R","")
+ I $$GET1^DIQ(9009033.91,RR,.03,"I")=8 D STOREID^APSPES11(RR,$G(PRV),$G(DFN)) Q  ;Do not process duplicate record
+ I $$GET1^DIQ(9009033.91,RR,.03,"I")=3 D STOREID^APSPES11(RR,$G(PRV),$G(DFN)) Q   ;IHS/GDIT/MSC/MGH P1023 Message was already denied
+ I $$GET1^DIQ(9009033.91,RR,.1)="" D ERR900^APSPES4(RR,,"No SS Number-Invalid request") Q   ;Do not process items with no surescripts number
  S RXIEN=+$$GET1^DIQ(9009033.91,RR,.06,"I")
- S DEA=$$DEA($P($G(^PSRX(RXIEN,0)),U,6))
- I RR,RXIEN D   ;,'$$DEACLS(DEA,2) D
- .I '$D(^PSRX(RXIEN,0)) D  Q
- ..S MATCHK=MATCHK_"Z"
- .;Only allow automap if patient and provider match and there is an order
- .I MATCHK["P"&(MATCHK["D") D
- ..S ORID=$$GENRENEW^APSPES4(HLMSGIEN,RXIEN,$$GET1^DIQ(52,RXIEN,16,"I"),$$GETVAL(HLMSGIEN,"RXO",13,1),RR)
- ..I ORID D
- ...S FDA(FN,RR_",",.02)=+ORID
- ...S ORITM=$$VALUE^ORCSAVE2(+ORID,"ORDERABLE")
- ...S:ORITM FDA(FN,RR_",",1.1)=ORITM
- ...S FDA(FN,RR_",",.03)=1
- ...S FDA(FN,RR_",",1.3)=PRV
- ...S FDA(FN,RR_",",1.2)=DFN  ; Patient IEN
- ...S FDA(FN,RR_",",.11)=MATCHK
- ...D FILE^DIE("K","FDA")
- ...;MERGE DATA FROM ORDER RESPONSE LIST TO REFILL REQUEST RESPONSE LIST
- ...K ^APSPRREQ(RR,4.5)
- ...M ^APSPRREQ(RR,4.5)=^OR(100,ORID,4.5)
- ...S $P(^APSPRREQ(RR,4.5,0),U,2)="9009033.913A"
- ..E  D
- ...N DATA
- ...S MATCHK=MATCHK_"Z"
- ...S FDA(FN,RR_",",.03)=0  ;9   ;PLS
- ...S FDA(FN,RR_",",.11)=MATCHK  ;PLS
- ...D FILE^DIE("K","FDA")
- ...D UPTRRACT^APSPES3(RR,$P(ORID,U,2))
- .E  D
- ..;Store the data but send it to the queue
- ..S:ORITM FDA(FN,RR_",",1.1)=ORITM
+ S DEA=""
+ S DEA=$$DEA^APSPES2A($P($G(^PSRX(RXIEN,0)),U,6))
+ S MSGID=$$GETVAL^APSPES2(HLMSGIEN,"ORC",4,1)
+ I RR,RXIEN D
+ .;Allow automap if patient and provider match and there is an order
+ .I MATCHK["P"&(MATCHK["D")&(MATCHK["M") D
+ ..;Item is ready for provider - necessary items were mapped
+ ..S:ORITM FDA(FN,RR_",",1.1)=+ORITM
  ..I +PRV S FDA(FN,RR_",",1.3)=PRV
- ..I +DFN S FDA(FN,RR_",",1.2)=DFN  ; Patient IEN
+ ..I +DFN S FDA(FN,RR_",",1.2)=DFN  ;Patient IEN
+ ..;S FDA(FN,RR_",",1.6)=$G(LOC) ;Patient location
  ..S FDA(FN,RR_",",.11)=MATCHK
- ..S FDA(FN,RR_",",.03)=0
+ ..S FDA(FN,RR_",",.03)=6  ;Set to mapping complete
+ ..I MATCHK["Z" S FDA(FN,RR_",",.03)=5
+ ..I MSGID="" S FDA(FN,RR_",",10)=RXIEN
+ ..E  S FDA(FN,RR_",",10)=MSGID
  ..D FILE^DIE("K","FDA")
+ ..D UPTRRACT^APSPES3(RR,"Request filed")
+ ..D:PRV GSSNOTIF^APSPESM(+PRV)  ;P1026
+ .E  D  ;Items could not be mapped so it needs to go to the queue
+ ..S:ORITM FDA(FN,RR_",",1.1)=+ORITM
+ ..I +PRV S FDA(FN,RR_",",1.3)=PRV
+ ..I +DFN S FDA(FN,RR_",",1.2)=DFN  ;Patient IEN
+ ..;S FDA(FN,RR_",",1.6)=$G(LOC) ;Patient location
+ ..S FDA(FN,RR_",",.11)=MATCHK
+ ..S FDA(FN,RR_",",.03)=5  ;Set to ready to be mapped
+ ..I MSGID="" S FDA(FN,RR_",",10)=RXIEN
+ ..E  S FDA(FN,RR_",",10)=MSGID
+ ..D FILE^DIE("K","FDA")
+ ..D UPTRRACT^APSPES3(RR,"Request filed")
  E  D
  .N HL7PON,ERRFLG
- .S HL7PON=$$RXIEN(HLMSGIEN,1)  ;Get PON sent in HL7 request
+ .S HL7PON=$$RXIEN(HLMSGIEN,1) ;Get PON sent in HL7 request
  .I HL7PON?1.N,'(MATCHK["O") S ERRFLG=1
- .S:$G(ORITM) FDA(FN,RR_",",1.1)=ORITM
- .I +$G(DFN) S FDA(FN,RR_",",1.2)=DFN   ; Patient IEN
- .I +$G(PRV) S FDA(FN,RR_",",1.3)=PRV   ; Provider IEN
- .S FDA(FN,RR_",",.03)=$S($G(ERRFLG):9,1:0)
+ .S:$G(ORITM) FDA(FN,RR_",",1.1)=+ORITM
+ .I +$G(DFN) S FDA(FN,RR_",",1.2)=DFN  ;Patient IEN
+ .I +$G(PRV) S FDA(FN,RR_",",1.3)=PRV  ;Provider IEN
+ .I MATCHK["P"&(MATCHK["D")&(MATCHK["M") S FDA(FN,RR_",",.03)=6
+ .E  S FDA(FN,RR_",",.03)=5
+ .I MATCHK["Z" S FDA(FN,RR_",",.03)=5
+ .I $G(ERRFLG) S FDA(FN,RR_",",.03)=9
  .S FDA(FN,RR_",",.11)=MATCHK
+ .S FDA(FN,RR_",",10)=MSGID
  .D FILE^DIE("K","FDA")
+ .D UPTRRACT^APSPES3(RR,"Request filed")
  .I $G(ERRFLG) D
  ..D UPTRRACT^APSPES3(RR,"PON does not match our records")
- ..D ERR900^APSPES4(RR,"PON does not match our records")
+ ..D NOTIF^APSPES4("","PON does not match our records","PON:"_HL7PON,$G(DFN),$G(PRV))
+ D:$G(PRV) GSSNOTIF^APSPESM(+PRV)  ;P1032 Ensure notification API is called
  Q
 SET(ARY,V,F,C,S,R) ;EP
  D SET^HLOAPI(.ARY,.V,.F,.C,.S,.R)
  Q
  ; Add entry to REFILL REQUEST file
-ADDRR(MSGIEN) ; EP -
- N FDA,FN,I,MSGID,ERR,IENS,SPI,RXIEN,DAYS,ACTSPI,NOTES
- N FILLS,HMSG,PHARM,SSNUM,DXCODE,DX,FIEN,DAW
+ADDRR(MSGIEN,INTYP,CTYPE) ; EP -
+ N FDA,FN,I,ERR,IENS,SPI,RXIEN,DAYS,ACTSPI,NOTES,DRGCHK,ORIFN,CTYP,RXTEXT
+ N FILLS,HMSG,PHARM,SSNUM,DXCODE,DX,FIEN,DAW,NEW,DEA,FQUAL,REQCHG,VITLCHK
+ S DEA=""
  S FN=9009033.91,I="+1,",DFN=0,FIEN=0
- S FDA(FN,I,.01)=$$GET1^DIQ(778,MSGIEN,.01)  ; Message ID
- S FDA(FN,I,.04)=$$GET1^DIQ(778,MSGIEN,.16,"I")  ; Message D/T
- S FDA(FN,I,.05)=MSGIEN  ; HLO Message IEN
- S FDA(FN,I,.07)=$$NOW^XLFDT()  ; Last Update D/T
+ S FDA(FN,I,.01)=$$GET1^DIQ(778,MSGIEN,.01) ;Message ID
+ S FDA(FN,I,.04)=+$$GET1^DIQ(778,MSGIEN,.16,"I")  ;Message D/T ;p26 added '+'
+ S FDA(FN,I,.05)=MSGIEN  ;HLO Message IEN
+ S FDA(FN,I,.07)=$$NOW^XLFDT() ;Last Update D/T
+ S FDA(FN,I,.12)=INTYP
  ;Check for PON
  S RXIEN=$$RXIEN^APSPES2(MSGIEN)
- S:RXIEN MATCHK=MATCHK_"O"
+ S RXTEXT=RXIEN
+ S RXIEN=+RXIEN
+ ;MSC/MGH Moved Z check to before O check 1028
+ I +RXIEN D
+ .I '$D(^PSRX(RXTEXT,0)) S MATCHK=MATCHK_"Z"
+ .E  S MATCHK=MATCHK_"O"
+ .S RELATE=+RXIEN
+ E  D
+ .I RXTEXT'="" D
+ ..I RXTEXT="invalid" S MATCHK=MATCHK_"Z"
+ ..E  I '$D(^PSRX(RXTEXT,0)) S MATCHK=MATCHK_"Z"
  ;Patient check for matching pts
  S:'DFN DFN=$$HRCNF^APSPFUNC($$GETVAL(MSGIEN,"PID",3,1))
- I DFN=-1 D
- .I 'RXIEN S DFN=$$CHKNME^APSPES4(MSGIEN)   ;See if pt in PID segment is in file 2
- .E  D
- ..;check the pt in the order against the pt in the PID segment
- ..S DFN=$$GET1^DIQ(52,RXIEN,2,"I")
- ..S DFN=$$CHKOPT^APSPES4(DFN)
- I +DFN S MATCHK=MATCHK_"P"        ;Patients match
- ;Medication check
- I RXIEN D
- .S ORITM=$$CHKDRG^APSPES4(MSGIEN,RXIEN)   ;Check the drug in the message
+ I 'RXIEN!(RXIEN'=RXTEXT) D
+ .I DFN=-1 S DFN=$$CHKNME^APSPES4(MSGIEN)
+ .E  S DFN=$$CHKOPT^APSPES4(DFN,MSGIEN)
  E  D
- .S ORITM=$$FNDORD^APSPES4(MSGIEN)     ;Try and find the pharmacy orderable item for mapping in the queue
- I +ORITM S MATCHK=MATCHK_"M"          ;Drugs match
+ .;check the pt in the order against the pt in the PID segment
+ .S DFN=$$GET1^DIQ(52,RXIEN,2,"I")
+ .S DFN=$$CHKOPT^APSPES4(DFN,MSGIEN,RXIEN)
+ I +DFN D
+ .S MATCHK=MATCHK_"P"  ;Patients match
+ ;
+ I INTYP="C"&(MATCHK["O") S ORITM=$$GETORD^APSPESC3(RXIEN)  ;MSC/MGH 1028
+ E  S ORITM=$$FNDORD^APSPES4(MSGIEN,INTYP)
+ I +ORITM D
+ .S MATCHK=MATCHK_"M"  ;Drugs match
+ .S FDA(FN,I,1.1)=$P(ORITM,U,1) ;Orderable item
+ .S FDA(FN,I,1.8)=$P(ORITM,U,2) ;Drug IHS/MSC/MGH Patch 1023
+ .I $P(ORITM,U,2) S DEA=$$DEA^APSPES2A($P(ORITM,U,2))
  ;Provider check
  S SPI=$$GETVAL(MSGIEN,"ORC",12,1)
  S PRV=$$FIND1^DIC(200,,"O",SPI,"ASPI")
  S ACTSPI=1
- I +PRV S ACTSPI=$$EFF(PRV)
+ I +PRV D
+ .S ACTSPI=$$EFF^APSPES2A(PRV)
+ .;IHS/MSC/MGH EPCS check for controlled substance and mark item if not allowed to eRx
+ .I +ORITM D
+ ..S REQCHG=$$CHKMED^APSPES5(+PRV,ORITM,MSGIEN,"",RXIEN)
+ ..I REQCHG>2 S FDA(FN,I,1.11)=REQCHG
+ ;END EPCS
  I 'RXIEN&(+PRV)&(+ACTSPI) S MATCHK=MATCHK_"D"
  I +RXIEN&(+PRV)&(+ACTSPI)&(PRV=$$GET1^DIQ(52,RXIEN,4,"I")) S MATCHK=MATCHK_"D"
  S SSNUM=$$GETVAL(MSGIEN,"ORC",3,1)
- S FILLS=$$GETVAL(MSGIEN,"RXO",13,1)  ;Number of fills requested
- I FILLS=""!(FILLS=0) S FILLS=1
- S:RXIEN FDA(FN,I,.06)=RXIEN  ; Original Prescription
- S PHARM=$$GETVAL(MSGIEN,"RXE",40,1)
- S:PHARM PHARM=$$FIND1^DIC(9009033.9,,"O",PHARM,"C")
+ S FILLS=$S(INTYP="R":$$GETVAL(MSGIEN,"RXD",8,1),1:$$GETVAL(MSGIEN,"RXE",12,1))  ;Number of fills requested
+ S FQUAL=$S(INTYP="R":$$GETVAL(MSGIEN,"RXD",8,2),1:"")  ;Refill qualifier
+ I CTYPE="R" D
+ .I FILLS=""!(FILLS=0) S FILLS=1
+ I DEA=2 S FILLS=1  ;No refills for C2
+ I (DEA=3!(DEA=4))&(FILLS>5) S FILLS=6  ;Only 5 refills for C3&4
+ ;IHS/MSC/MGH If fills is listed as PRN remove the drug matching item
+ I (DEA>2)&(FQUAL="PRN") D
+ .S FILLS=""  ;Don't allow match if PRN sent for fills
+ .I MATCHK["M" S MATCHK=$TR(MATCHK,"M","")
+ S:RXIEN FDA(FN,I,.06)=RXIEN  ;Original Prescription
+ S PHARM=$$GETPHM^APSPES2A()
  S:PHARM FDA(FN,I,1.7)=PHARM
- S DAYS=$$GETVAL(MSGIEN,"ORC",7,3)   ; Days Supply
- I +DAYS=0 S DAYS=$E(DAYS,2,$L(DAYS))
- S DAW=$$GETVAL(MSGIEN,"RXO",9,1)    ; DAW
+ S DAYS=$S(INTYP="R":$$GETVAL(MSGIEN,"RXD",22,1),1:$$GETVAL(MSGIEN,"ORC",7,3))   ; Days Supply
+ S DAW=$S(INTYP="R":$$GETVAL(MSGIEN,"RXD",11,1),1:$$GETVAL(MSGIEN,"RXE",9,1))    ; DAW
  S DAW=$S(DAW="G":0,DAW="T":0,1:1)
- S FDA(FN,I,1.5)=+DAYS
- S FDA(FN,I,1.4)=$$GETVAL(MSGIEN,"RXO",11,1)  ; Quantity
- S FDA(FN,I,1.9)=FILLS                        ; Number of fills
- S FDA(FN,I,.1)=SSNUM                         ; Surescripts number
+ I +DAYS S FDA(FN,I,1.5)=DAYS
+ S FDA(FN,I,1.4)=$S(INTYP="R":$$GETVAL(MSGIEN,"RXD",4,1),1:$$GETVAL(MSGIEN,"RXE",10,1))  ; Quantity
+ S FDA(FN,I,1.9)=FILLS  ;Number of fills
+ S FDA(FN,I,.1)=SSNUM   ;Surescripts number
  S FDA(FN,I,1.12)=DAW
+ S FDA(FN,I,7.6)=$$GET1^DIQ(52,RXIEN,9999999.02,"I")  ;Add Chronic Med indicator Patch 1027
  ;Add Diagnosis
- S DXCODE=$$GETVAL(MSGIEN,"DG1",3,1)
- S DX=$$GETVAL(MSGIEN,"DG1",3,2)
- I DX=""&(DXCODE'="") D
- .I $$AICD^BGOUTL2 S DX=$P($$ICDDX^ICDEX(DXCODE,DT),U,4)
- .E  S DX=$P($$ICDDX^ICDCODE(DXCODE,DT),U,4)
- S FDA(FN,I,7.1)=DX
- S FDA(FN,I,7.2)=DXCODE
+ D DIAG^APSPES2A(MSGIEN,RXIEN)
  ;Add Notes to Pharmacist
- S NOTES=$$GETVAL(MSGIEN,"RXO",6,2)
- S FDA(FN,I,4.1)=NOTES
- S FIEN=$$CHKSSNUM^APSPES4(SSNUM)
- S FDA(FN,I,.03)=$S(FIEN:8,1:0)  ; Status
+ S NOTES=$$GETVAL(MSGIEN,"RXE",21,1)
+ S FDA(FN,I,4.2)=NOTES
+ S FIEN=$$CHKSSNUM^APSPES4(SSNUM,MSGIEN,CTYPE)
+ ;S FDA(FN,I,.03)=$S(FIEN:8,1:0) ;Status
+ S FDA(FN,I,.03)=0
+ I +RXIEN,$P($G(^PSRX(RXIEN,0)),U,5) S FDA(FN,I,1.6)=$P($G(^PSRX(RXIEN,0)),U,5)
+ E  D  ;P1026 - Added default
+ .N XLOC
+ .S XLOC=+$$GET^XPAR("ALL","APSP SS REQ HOSP LOC DEF")
+ .S:XLOC FDA(FN,I,1.6)=XLOC
  D UPDATE^DIE(,"FDA","IENS","ERR")
- ;TODO - PROCESS ERR
- ;TODO - POPULATE OTHER FIELDS
  K ERR
  S I=+IENS(1)_","
  D GETHMSG(MSGIEN,.HMSG)
- S FDA(FN,I,5)=HMSG  ; HL7 Message
+ S FDA(FN,I,5)=HMSG  ;HL7 Message
  D FILE^DIE("K","FDA","ERR")
- D SIG(+IENS(1))
- D DOSES(+IENS(1))  ;Add medication instructions multiple
+ D SIG^APSPES2A(+IENS(1),INTYP)
+ D DOSES(+IENS(1))
+ ;I RXTEXT'="" D
+ ;.I '$D(^PSRX(RXTEXT,0)) D
+ ;..D UPTRRACT^APSPES3(+IENS(1),"PON does not match our records")
+ ;..I RXTEXT="invalid" S RXTEXT=INVAL
+ ;..D NOTIF^APSPES4("","PON does not match our records","PON:"_INVAL,$G(DFN),$G(PRV))
+ ;..S DATA2="",DUPDENY=1
+ ;..S MSGTXT="ZZ-PON is invalid in our system"
+ ;..D DENYRPC^APSPES3(.DATA2,+IENS(1),MSGTXT)
  I FIEN D
- .D SETDUP^APSPES4(FIEN,+IENS(1))
- .N S
- .S S=$$GET1^DIQ(9009033.91,FIEN,.03,"I")  ;Status
- .I S=2!(S=3)!(S=5) D
- ..D NOTIF^APSPES4(,"Duplicate SS Request received","DUP:"_+IENS(1),$$GET1^DIQ(9009033.91,FIEN,1.2,"I"),$$GET1^DIQ(9009033.91,FIEN,1.3,"I"))
+ .S NEW=+IENS(1)
+ .Q:'NEW
+ .N S,DATA2,CHECK,DUPDENY,CNT,OLDIEN
+ .S OLDIEN=0,CNT=0
+ .;IHS/MSC/MGH 7/12/2019 changed to find latest request, not first for an order
+ .F  S OLDIEN=$O(^APSPRREQ("G",SSNUM,OLDIEN)) Q:'OLDIEN!(OLDIEN=NEW)  D
+ ..S S=$$GET1^DIQ(9009033.91,OLDIEN,.03,"I")  ;Status
+ ..;IHS/MSC/MGH changes to send denies after parent has been processed
+ ..I S=2!(S=3) D
+ ...;If duplicate already processed, order for same pt
+ ...S CHECK=$$CHKDATA^APSPES11(OLDIEN,DFN,ORITM,MSGIEN,SSNUM,CTYPE)  ;Is it a match?
+ ...I CHECK=1 D  ;Yes, its a duplicate
+ ....S FDA(9009033.91,NEW_",",.03)=8
+ ....S FDA(9009033.91,NEW_",",.08)=4
+ ....D FILE^DIE("","FDA","ERR")
+ ....D SETDUP^APSPES4(FIEN,NEW,CTYPE,MSGIEN)
+ ....D NOTIF^APSPES4("","Duplicate SS Request received","DUP:"_+IENS(1),$$GET1^DIQ(9009033.91,OLDIEN,1.2,"I"),$$GET1^DIQ(9009033.91,OLDIEN,1.3,"I"),OLDIEN,0)
+ ....S MSGTXT="AF-Duplicate Request Already Processed"
+ ..E  D
+ ...Q:S=8
+ ...D SETDUP^APSPES7(SSNUM,OLDIEN,NEW,CTYPE,MSGIEN)
+ ...D SETDUP^APSPES4(FIEN,NEW,CTYPE,MSGIEN)
  Q +$G(IENS(1))
  ; Extract data from segment
  ; Input: MSG - Message ien
  ;        SEG - Segment name
  ;        FLD - Field #
  ;        OFF - Offset in field (default to 1)
-GETVAL(MSG,SEG,FLD,OFF) ;EP -
+ ;        SUB
+ ;        REP
+GETVAL(MSG,SEG,FLD,OFF,SUB,REP) ;EP -
  N DATA,HLMSTATE,ARY,SEGIEN,SEGARY
  S OFF=$G(OFF,1)
+ S SUB=$G(SUB,1)
+ S REP=$G(REP,1)
  D PARSE(.DATA,MSG,.HLMSTATE)
  Q:'$D(DATA) ""
  S SEGIEN=$$FSEGIEN^APSPES1(.DATA,SEG)
  Q:'SEGIEN ""
  M SEGARY=DATA(SEGIEN)
- Q $$GET^HLOPRS(.SEGARY,FLD,OFF)
+ Q $$GET^HLOPRS(.SEGARY,FLD,OFF,SUB,REP)
 DOSES(IEN) ;Get dosage fields
- N HLMSG,HLDATA,APSPORC,SEG,CNT,I,FDA,AIEN,ERR,FN,MUL,N,D,RTE,ROUTE,TYPE,FORM,FORMT,CONJ,DUR
+ N HLMSG,HLDATA,APSPORC,SEG,CNT,I,FDA,AIEN,ERR,FN,MUL,N,D,RTE,ROUTE,TYPE,FORM,QQFMT,CONJ,DUR,SCHED
+ N SUBSCH
  S HLMSG=$$GHLDAT^APSPESG(IEN)
- S APSPORC=$$GETSEG^APSPESG(.HLDATA,"ORC")
- S SEG=$P(APSPORC,"|",8)
- S CNT=$L(SEG,"~")
+ S SEG=$S(INTYP="R":$$GETSEG^APSPESG(.HLDATA,"RXD"),1:"")
+ ;S SEG=$P(APSPORC,"|",8)
+ ;S CNT=$L(SEG,"~")
  S FN=9009033.912
- F I=2:1:CNT D
- .S MUL=$P(SEG,"~",I)
- .S AIEN="+"_I_","_IEN_","
- .S FDA(FN,AIEN,1.3)=$P(MUL,"^",1)
- .S DUR=$P(MUL,"^",3)
- .I DUR="INDEF" S DUR=""
- .S N=$E(DUR,1,1)
- .S D=$E(DUR,2,$L(DUR))
- .S DUR=D_N
- .S FDA(FN,AIEN,1.5)=DUR
- .S FDA(FN,AIEN,1.1)=$P(MUL,"^",8)
- .S FDA(FN,AIEN,1.8)=$P(MUL,"^",2)
- .I CNT>2 D
- ..S CONJ=$P(MUL,"^",9)
- ..S FDA(FN,AIEN,1.6)=$S(CONJ="S":"T",1:"A")
- .;Get the dose type
- .S TYPE=$$GETVAL(MSGIEN,"RXO",12,1)
- .S FORMT=""
- .I TYPE'="" D
- ..S FORM=$O(^APSPNCP(9009033.7,"D",TYPE,""))
- ..I FORM'="" S FORMT=$P($G(^APSPNCP(9009033.7,FORM,0)),U,2)
- .S FDA(FN,AIEN,.01)=$P(MUL,"^",8)_"&"_$P(MUL,"^",1)_"&&"_FORMT_"&"_$P(MUL,"^",8)_$P(MUL,"^",1)
- .;Lookup the route
- .S RTE=""
- .S ROUTE=$$GETVAL(MSGIEN,"RXR",1,1)
- .I ROUTE'="" S RTE=$O(^PS(51.2,"B",ROUTE,""))
- .S FDA(FN,AIEN,1.7)=RTE
- .D UPDATE^DIE(,"FDA","AIEN","ERR")
- .K FDA,ERR
+ ;F I=2:1:CNT D
+ ;.S MUL=$P(SEG,"~",I)
+ ;.S MUL2=$P(MUL,U)
+ S AIEN="+1,"_IEN_","
+ ;IHS/MSC/MGH changes for patch 1024
+ S MUL=$P(SEG,"|",18)
+ I MUL="" S MUL="See Sig"
+ S FDA(FN,AIEN,1.1)=$P(SEG,"|",17)
+ ;changes
+ S SCHED=$P(SEG,"|",10,1)
+ I SCHED="" S SCHED="AS WRITTEN"
+ S FDA(FN,AIEN,1.8)=SCHED
+ ;I CNT>2 D
+ ;.S CONJ=$P(MUL,"^",9)
+ ;.S FDA(FN,AIEN,1.6)=$S(CONJ="S":"T",1:"A")
+ ;Get the quantity qualifier
+ S TYPE=$$GETVAL(MSGIEN,"RXD",5,1)
+ S QQFMT=""
+ I TYPE'="" D
+ .S FORM=$O(^APSPNCP(9009033.7,"D",TYPE,""))
+ .I FORM'="" S QQFMT=$P($G(^APSPNCP(9009033.7,FORM,0)),U,2)
+ .S FDA(FN,AIEN,1.3)=$$UPPER^APSPES5(QQFMT)
+ S FDA(FN,AIEN,.01)=$P(SEG,"|",17)_"&"_MUL_"&&"_QQFMT_"&"_$P(SEG,"|",17)_MUL
+ ;S FDA(FN,AIEN,.01)=MUL_"&&&"_QQFMT_"&"_$P(ORITM,U,2)_"&"_MUL
+ ;Lookup the route
+ S RTE=""
+ S ROUTE=$$GETVAL(MSGIEN,"RXD",15,2)
+ I ROUTE'="" S RTE=$O(^PS(51.2,"B",ROUTE,""))
+ I RTE="" D
+ .S RTE=$O(^PS(51.2,"B","SEE SIG",""))
+ S FDA(FN,AIEN,1.7)=RTE
+ D UPDATE^DIE(,"FDA","AIEN","ERR")
+ K FDA,ERR
  Q
 SIG(IEN) ;Store sig
- N FN,FDA,AIEN,ERR,X,X1,X2
- S X2=""
- S FN=9009033.913
- S AIEN="+1,"_IEN_","
- S X=$$GETVAL(MSGIEN,"RXO",7,2)  ; SIG
- I $L(X)>200 S X1=$E(X,1,200),X2=$E(X,201,$L(X))
- E  S X1=X
- S FDA(FN,AIEN,.01)=X1
- D UPDATE^DIE(,"FDA","AIEN","ERR")
- I X2'="" D
- .S FDA(FN,AIEN,.01)=X2
- .D UPDATE^DIE(,"FDA","AIEN","ERR")
- K ERR
+ D SIG^APSPES2A(IEN)
  Q
-DEA(DRUG) ; Return DEA value
- N DEA
- S DEA=+$$GET1^DIQ(50,DRUG,3)
- Q DEA
-DEACLS(DEA,CLS) ; Return boolean value for comparison
- Q CLS[DEA
  ;
-PREPPTXT(RET,RRIEN) ; Return prepared text from Pharmacy
+PREPPTXT(RET,RRIEN) ;Return prepared text from Pharmacy
  N M,C
  S RRIEN=$G(RRIEN,0)
  S M=$P(^APSPRREQ(RRIEN,0),U,5)
  S @RET@(1)="Pharmacy: "_$$GETVAL(M,"RXE",40,2)_" ("_$$FMTPHN($$GETVAL(M,"RXE",45))_")"
- S @RET@(2)="Drug description: "_$$GETVAL(M,"RXO",1,2)
- S @RET@(3)="Quantity: "_$$GETVAL(M,"RXO",11)_" "_$$GET1^DIQ(9009033.7,$$FIND1^DIC(9009033.7,,,$$GETVAL(M,"RXO",12)),1)
+ S @RET@(2)="Drug description: "_$$GETVAL(M,"RXE",2,2)
+ S @RET@(3)="Quantity: "_$$GETVAL(M,"RXE",10)_" "_$$GET1^DIQ(9009033.7,$$FIND1^DIC(9009033.7,,,$$GETVAL(M,"RXE",6)),1)
  S @RET@(4)="Days Supply: "_$$GETVAL(M,"ORC",7,3)
- S @RET@(5)="Sig-Directions: "_$$GETVAL(M,"RXO",7,2)
- S @RET@(6)="Note: "_$$GETVAL(M,"RXO",6,2)
- S @RET@(7)="Refills: "_+$$GETVAL(M,"RXO",13,1)
- S @RET@(8)="Substitution allowed: "_$$ESUBST($$GETVAL(M,"RXO",9))
+ S @RET@(5)="Sig-Directions: "_$$GETVAL(M,"RXE",7,2)
+ S @RET@(6)="Note: "_$$GETVAL(M,"RXE",21,1)
+ S @RET@(7)="Refills: "_+$$GETVAL(M,"RXE",12,1)
+ S @RET@(8)="Substitution allowed: "_$$ESUBST($$GETVAL(M,"RXE",9))
  S @RET@(9)="Last fill date: "_$$FMTE^XLFDT($$FMDATE^HLFNC($$GETVAL(M,"ORC",27,1)),"5DZ0")
  S @RET@(10)=" "
  S @RET@(11)="Diagnosis: "_$$GETVAL(M,"DG1",3,2)
@@ -342,16 +347,6 @@ ESUBST(VAL) ;
 I() ;EP -
  S CNT=CNT+1
  Q CNT
- ; Return external text for diagnosis
-GETDIAG(MSG) ; EP -
- N TXT,DATA,ARY,SEG,HLMSTATE,HDR,SEGIEN,SEGDG1
- S TXT=""
- I '$$STARTMSG^HLOPRS(.HLMSTATE,MSG,.HDR) Q
- F  Q:'$$NEXTSEG^HLOPRS(.HLMSTATE,.SEG)  D
- .I $$GET^HLOPRS(.SEG,0)="DG1" D
- ..S TXT=$$GET^HLOPRS(.SEG,3,1)_" ("_$$GET^HLOPRS(.SEG,3,3)_")"
- ..I $L(TXT) S C=C+1,@RET@(C)=TXT
- Q DX
  ; Add data to array
 ADD(SEG) ; EP -
  N I
@@ -394,20 +389,9 @@ FMTPHN(X) ;EP
  I X?3N1"-"4N Q X
  I X?3N1"-"4N.1" ".6UN Q X
  Q X
- ; Check status of APSP REFIIL REQUEST entry
- ; Input: IEN - IEN
- ;        STA - Status to check (if not passed, set to -1 and return status value)
 RREQSTAT(DATA,IEN,STA) ; EP -
- S RES=$P($G(^APSPRREQ(IEN,0)),U,3)
- S:'$L($G(STA)) STA=-1
- S DATA=$S(STA=-1:RES,1:RES=STA)
+ D RREQSTAT^APSPES2A(.DATA,.IEN,.STA)
  Q
-EFF(PRV) ;See if SPI is ACTIVE
- N EFF,IN
- S IN=1
- S EFF=9999999 F  S EFF=$O(^VA(200,PRV,"SPISTATUS",EFF),-1) Q:'+EFF  D
- .S IN=$P($G(^VA(200,PRV,"SPISTATUS",EFF,0)),U,2)
- Q IN
 ACK(HLMSGIEN,MSGTXT) ; Generate APP Ack
  N PARMS,ACK,ERR,OCC,DNYC
  S PARMS("ACK CODE")="AE"

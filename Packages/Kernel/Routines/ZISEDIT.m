@@ -1,63 +1,24 @@
-ZISEDIT ;ISF/AC - DEVICE EDIT ;10/26/2011
- ;;8.0;KERNEL;**440,585**;Jul 10, 1995;Build 23
+ZISEDIT ;SFISC/AC - DEVICE EDIT ;11/9/92  17:00 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;;Jul 10, 1995
  ;
-TRM ;TRM or VTRM
- D EDIT("TRM",,"Select Terminal/Printer Device: ")
+MT S ZISTYPE="MT",DIC("A")="Select Magtape Device: " D EDIT K ZISTYPE
  Q
  ;
-LPD ;LPD fields of a TRM device
- D EDIT("LPD","TRM","Select LPD (Terminal/Printer) Device: ")
+SDP S ZISTYPE="SDP",DIC("A")="Select SDP Device: " D EDIT K ZISTYPE
  Q
  ;
-MT ;Mag Tape
- D EDIT("MT",,"Select Magtape Device: ")
+SPL S ZISTYPE="SPL",DIC("A")="Select Spool Device: " D EDIT K ZISTYPE
  Q
  ;
-SDP ;
- D EDIT("SDP",,"Select SDP Device: ")
+HFS S ZISTYPE="HFS",DIC("A")="Select Host File Device: " D EDIT K ZISTYPE
  Q
  ;
-SPL ;Spool
- D EDIT("SPL",,"Select Spool Device: ")
+CHAN S ZISTYPE="CHAN",DIC("A")="Select Network Channel: " D EDIT K ZISTYPE
  Q
- ;
-HFS ;Host file
- D EDIT("HFS",,"Select Host File Device: ")
- Q
- ;**P 585 START CJM
-PQ ;Print Queue
- D EDIT("PQ","PQ","Select Print Queue Device: ")
- Q
- ;**P 585 END CJM
- ;
-CHAN ;Network
- D EDIT("CHAN",,"Select Network Channel: ")
- Q
- ;
-RES ;Resource
- D EDIT("RES",,"Select Resource Device: ")
- Q
- ;
-EDIT(ZISTYPE,ZISSCR,DICA) ;
- N Y,DA,DIC,DIE,DR,DDSFILE
-ED2 S DIC("A")=DICA,ZISSCR=$G(ZISSCR,ZISTYPE)
- S DIC=3.5,DIC(0)="AEMQZL",DIC("S")="I $G(^(""TYPE""))["_""""_ZISSCR_"""" D ^DIC
- Q:Y'>0
- S DA=+Y
- I $P(Y,"^",3) D
- . N DIE,DR
- . S DIE=DIC,DR="2///"_ZISTYPE_$S(ZISTYPE["TRM":"",1:";1.95///N")
- . D ^DIE
- . Q
+ ;;7.1P0;Kernel;;
+EDIT S DIC=3.5,DIC(0)="AEMQZL",DIC("S")="I $G(^(""TYPE""))="_""""_ZISTYPE_"""" D ^DIC
+ I Y'>0 K DIC Q
+ S DA=+Y I $P(Y,"^",3) S DIE=DIC,DR="2///"_ZISTYPE D ^DIE K DIE,DR
  S DR="[XUDEVICE "_ZISTYPE_"]",DDSFILE=3.5 D ^DDS
- G ED2
- Q
- ;
- ;
- ;
- ;
- ;
- ;
- ;
- ;
- ;
+ K DA,DR,DDSFILE Q

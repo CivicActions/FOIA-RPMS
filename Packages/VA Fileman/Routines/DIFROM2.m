@@ -1,5 +1,6 @@
-DIFROM2 ;SFISC/XAK-CREATES RTN ENDING IN 'INIT1' ;9:50 AM  28 Sep 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROM2 ;SFISC/XAK-CREATES RTN ENDING IN 'INIT1' ;02:38 PM  28 Nov 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S ^UTILITY($J,2.5,0)=" Q:'$D(DIFQ)  S %=2 W !!,""ARE YOU SURE EVERYTHING'S OK"" D YN^DICN I %-1 K DIFQ Q"
  I $D(^DIC(9.4,DPK,"INI")),$P(^("INI"),U)]"" S ^UTILITY($J,2.6,0)=" D ^"_$P(^("INI"),U)_" D NOW^%DTC S DIFROM(""INI"")=%"
@@ -32,7 +33,6 @@ TEXT ;
  ;;DIE ;INPUT TEMPLATE
  ;;DIB ;SORT TEMPLATE
  ;;DIS ;FORM
- ;;REM ;REMOTE PROCEDURE
  ;; ;
  ;;SBF ;FILE AND SUB FILE NUMBERS
  ;;IX W "." S DIK="A" F %=0:0 S DIK=$O(^DD(D,DIK)) Q:DIK=""  K ^(DIK)

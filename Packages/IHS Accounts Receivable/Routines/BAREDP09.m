@@ -1,5 +1,5 @@
 BAREDP09 ; IHS/SD/LSL - FIND ERA CHECKS AND MATCH TO RPMS ;07/08/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,4,5,6,20,21,22,23,24**;OCT 26,2005;Build 69
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,4,5,6,20,21,22,23,24,29**;OCT 26,2005;Build 66
  ;IHS/SD/POT HEAT#82698 NOV 2012 LEADING ZEROES IN CHKECK # (POS)- BAR*1.8*.23
  ;IHS/SD/POT            MAR 2013 EXCLUDED COL BATCHES OLDER THAN 365 DAYS- BAR*1.8*.23
  ;IHS/SD/POT HEAT152930 02/12/2014 CONVERTED BATCHEIN AND BATCHDATE TO EXTERNALS - BAR*1.8*.24
@@ -64,7 +64,7 @@ EXIST ;
  Q
 BATCHECK ;
  ;Now loop to find occurrence of ERA chks in A/R Coll. Batch
- N BARBATCH,BATITEM,BARCHECK,BARXCHK,BARTODAY,%H
+ N BARBATCH,BATITEM,BARCHECK,BARXCHK,BARTODAY,%H,Y
  S X=DT D H^%DTC ;GET $H-FORMAT ;- BAR*1.8*.23
  S BARTODAY=%H
  S BARCHECK="" F  S BARCHECK=$O(BARCHK(BARCHECK)) Q:BARCHECK=""  D
@@ -85,12 +85,17 @@ BATCHECK ;
  . . . S X=$$GET1^DIQ(90051.01,BARBATCH_",",4,"I")
  . . . D H^%DTC ;GET $H-FORMAT
  . . . S BARCBDT=%H
- . . . IF BARTODAY-BARCBDT>365 D  Q  ;- BAR*1.8*.23
+ . . . S BARBTCHDT=$S($$IHS^BARUFUT(DUZ(2)):180,1:365)  ;BAR*1.8*29 CR5993
+ . . . ;IF BARTODAY-BARCBDT>365 D  Q  ; BAR*1.8*.23
+ . . . IF BARTODAY-BARCBDT>BARBTCHDT D  Q  ;BAR*1.8*29 CR5993
  . . . . S $P(BARCHK(BARCHECK),U,2)=0,BARTMP=0
- . . . . W !!,"A/R Collection batch found is older than 365 days. Checks will NOT be"
- . . . . W !,"matched in the ERA file AND will not be posted to the Collection Batch"
+ . . . . ;W !!,"A/R Collection batch found is older than 365 days. Checks will NOT be"
+ . . . . W !!,"An A/R Collection batch was found that is older than "_BARBTCHDT_" days."  ;BAR*1.8*29 CR5993
+ . . . . W !,"Checks will NOT be matched to this batch in the ERA file AND will not"  ;BAR*1.8*29 CR5993
+ . . . . W !,"be posted to this Collection Batch.  If a newer batch is not found,"  ;BAR*1.8*29 CR5993
+ . . . . W !,"this check will be moved to the ERA Check Not Batched report.",!   ;BAR*1.8*29 CR5993
  . . . . ;old code W !," CHK:",BARXCHK," BATCH: ",BARBATCH," BATCH DATE: ",BARCBDT
- . . . . W !," CHK:",BARXCHK," BATCH: ",$$GET1^DIQ(90051.01,BARBATCH,.01)," BATCH DATE: ",$P($$GET1^DIQ(90051.01,BARBATCH_",",4,"I"),"@",1) ;HEAT152930 - BAR*1.8*.24
+ . . . . W !," CHK:",BARXCHK," BATCH: ",$$GET1^DIQ(90051.01,BARBATCH,.01)," BATCH DATE: ",$P($$GET1^DIQ(90051.01,BARBATCH_",",4,"E"),"@",1) ;HEAT152930 - BAR*1.8*.24
  . . . . D EOP^BARUTL(1)
  . . . S BARITEM=0  ;Item#
  . . . F  S BARITEM=$O(^BARCOL(DUZ(2),"D",BARXCHK,BARBATCH,BARITEM)) Q:'+BARITEM  D
@@ -112,7 +117,7 @@ BTCHDATA ;
  Q
 MATCH ;
  ; Loop chks & tell user matched status
- N BARCHECK,BAREITM,BAREBTCH,BARBATCH,BARITEM
+ N BARCHECK,BAREITM,BAREBTCH,BARBATCH,BARITEM,Y
  S BARCHECK=""
  F  S BARCHECK=$O(BARCHK(BARCHECK)) Q:BARCHECK=""  D
  . S IENS=BARCHECK_","_IMPDA_","
@@ -302,4 +307,3 @@ BARXCHK(X) ;
  I $D(^BARCOL(DUZ(2),"D",X)) Q X  ;CHECK # AS SEND IN ERA FILE
  I $D(^BARCOL(DUZ(2),"D",+X)) Q +X  ;;CHECK # W/O LEADING ZEROES
  Q X  ;NOT FOUND - DON'T CHANGE
- ;-----EOR----- 

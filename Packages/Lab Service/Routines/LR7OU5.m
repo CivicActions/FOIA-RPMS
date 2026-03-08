@@ -1,6 +1,8 @@
-LR7OU5 ;DALOI/DCM/FHS-NLT LINKING UTILITY SEMI-MANUAL ; 2/23/07 6:53am
- ;;5.2;LAB SERVICE;**1028**;NOV 01, 1997;Build 53
- ;;5.2;LAB SERVICE;**127,201,272,334**;Sep 27, 1994;Build 45
+LR7OU5 ;DALOI/DCM/FHS-NLT LINKING UTILITY SEMI-MANUAL ; 26-Apr-2023 11:05 ; MKK
+ ;;5.2;LAB SERVICE;**127,201,272,334,1028,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
  ; Reference to ^%ZIS supported by IA #10086
  ; Reference to ^%ZISC supported by IA #10089
  ; Reference to ^%ZTLOAD supported by IA #10063
@@ -64,7 +66,8 @@ END ;
 SEL ;
  S AUTO=0
  K DIC,DIR S DIC("A")="You may select any test in LABORATORY TEST FILE: "
- S DIC="^LAB(60,",DIC(0)="AEQZMN" D ^DIC G:Y<1 END
+ ; S DIC="^LAB(60,",DIC(0)="AEQZMN" D ^DIC G:Y<1 END
+ S DIC="^LAB(60,",DIC(0)="AEQZMN",DIC("S")="I +$G(^(.3))=0" D ^DIC G:Y<1 END  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  S LRDATA=$P(Y(0),U),(LRIEN,X60)=+Y
  I $G(^LAB(60,X60,64)),$D(^LAM(+^(64),0)) S Y64=^(0) D
  . W !!?5,"Currently linked to [ ",$P(Y64,U)_" ]   "_$P(Y64,U,2),!!

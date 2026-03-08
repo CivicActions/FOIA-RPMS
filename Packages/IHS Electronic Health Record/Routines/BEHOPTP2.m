@@ -1,5 +1,5 @@
-BEHOPTP2 ;MSC/IND/DKM - Patient List Management ;20-Mar-2007 13:48;DKM
- ;;1.1;BEH COMPONENTS;**004002**;Mar 20, 2007
+BEHOPTP2 ;MSC/IND/DKM - Patient List Management ;09-Mar-2023 12:03;PLS
+ ;;1.1;BEH COMPONENTS;**004002,004014**;Mar 20, 2007
  ;=================================================================
  ; Retrieve a given list for a given user
 PLSTPTS(DATA,NAME) ;EP
@@ -9,7 +9,8 @@ PLSTPTS(DATA,NAME) ;EP
  F  S LP=$O(TMP(LP)) Q:'LP  D
  .S DFN=+TMP(LP,0)
  .I DFN D
- ..S PTNM=$$GET1^DIQ(2,DFN_",",".01")
+ ..;S PTNM=$$GET1^DIQ(2,DFN_",",".01")
+ ..S PTNM=$P($$GET^AUPNSOGI(DFN,,,,,1),U,1) ;P004014
  ..S:$L(PTNM) CNT=CNT+1,DATA(CNT)=DFN_U_PTNM
  Q
  ; Retrieve a list of personal lists for a user

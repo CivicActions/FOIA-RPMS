@@ -1,15 +1,18 @@
 ABMDEMLA ; IHS/ASDST/DMJ - Edit Utility - FOR MULTIPLES PART 2 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**4,9,11,14,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**4,9,11,14,21,34,37**;NOV 12, 2009;Build 739
  ;
  ; IHS/ASDS/LSL - 04/26/01 - V2.4 Patch 9 - NOIS BXX-0401-150085
  ;     Allow resequencing of DX when list contains more than 30 characters.
  ;
- ;IHS/SD/SDR - 2.6*14 - ICD10 002F - Added code to populate new .06 field, ICD Indicator
- ;IHS/SD/SDR - 2.6*14 - HEAT163742 - Fixed issue with sequencing when 'garbage' is entered
- ;IHS/SD/SDR - 2.6*21 - HEAT197150 - If there were 10+ DXs on a claim it wouldn't sequence them.  It was expecting
+ ;IHS/SD/SDR 2.6*14 ICD10 002F Added code to populate new .06 field, ICD Indicator
+ ;IHS/SD/SDR 2.6*14 HEAT163742 Fixed issue with sequencing when 'garbage' is entered
+ ;IHS/SD/SDR 2.6*21 HEAT197150 If there were 10+ DXs on a claim it wouldn't sequence them.  It was expecting
  ;  there to only be 1-digit sequence numbers in the validation check of the data entered.
- ;IHS/SD/SDR - 2.6*21 - HEAT220530 - Made change to longer list of billing sequence can be entered; changed from 40 to 55
+ ;IHS/SD/SDR 2.6*21 HEAT220530 Made change to longer list of billing sequence can be entered; changed from 40 to 55
  ;  chars in DIR call.
+ ;IHS/SD/SDR 2.6*34 ADO60694 CR7384 Added message about removing DRG if primary DX is changed and the DRG is different
+ ;  from what was entered in PCC.
+ ;IHS/SD/SDR 2.6*37 ADO75953 Updated Sequencing so it will keep External Cause 2 and External Cause 3 with original code
  ;
  ; *********************************************************************
  ;
@@ -21,14 +24,27 @@ S1 ; Sequence Multiple
  S DIR("A")="Enter the desired billing sequence"
  S DIR("?")="Enter the billing sequence, separated by commas"
  S DIR("A",1)=" "
- S DIR("A",2)="          If you need to change the current billing order then"
- S DIR("A",3)="          enter the sequence numbers above in the desired order"
- S DIR("A",4)="          separated by commas."
- S DIR("A",5)=" "
- S DIR("A",6)="          NOTE: If the billing sequence is different from that noted"
- ;S DIR("A",7)="                in the file then a Physcian's Attestation is required!"  ;abm*2.6*4 NOHEAT
- S DIR("A",7)="                in the file then a Physician's Attestation is required!"  ;abm*2.6*4 NOHEAT
- S DIR("A",8)=" "
+ ;start old abm*2.6*34 IHS/SD/SDR ADO60694
+ ;S DIR("A",2)="          If you need to change the current billing order then"
+ ;S DIR("A",3)="          enter the sequence numbers above in the desired order"
+ ;S DIR("A",4)="          separated by commas."
+ ;S DIR("A",5)=" "
+ ;S DIR("A",6)="          NOTE: If the billing sequence is different from that noted"
+ ;;S DIR("A",7)="                in the file then a Physcian's Attestation is required!"  ;abm*2.6*4 NOHEAT
+ ;S DIR("A",7)="                in the file then a Physician's Attestation is required!"  ;abm*2.6*4 NOHEAT
+ ;S DIR("A",8)=" "
+ ;end old start new abm*2.6*34 IHS/SD/SDR ADO60694
+ S DIR("A",2)="        If you need to change the current billing order then enter the"
+ S DIR("A",3)="        sequence numbers above in the desired order separated by commas."
+ S DIR("A",4)=" "
+ S DIR("A",5)="  NOTE: If the billing sequence is different from that noted in"
+ S DIR("A",6)="        the file then a Physician's Attestation is required!"
+ S DIR("A",7)=" "
+ I +$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),5)),U,13)'=0 D
+ .S DIR("A",8)="  NOTE: If the primary DX is changed the DRG will be removed and"
+ .S DIR("A",9)="        will need to be re-entered on page 7."
+ .S DIR("A",10)=" "
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60694
  D ^DIR K DIR
  Q:$D(DIRUT)!$D(DIROUT)
 S2 ;
@@ -47,6 +63,16 @@ S2 ;
  I (ABMZ("NUM")+1)'=ABMX W *7,!!,"ERROR: Invalid input, to re-sequence all sequence numbers must be specified",!,"       and separated with commas.",! Q
  ;S DA(1)=ABMP("CDFN"),DIC="^ABMDCLM(DUZ(2),"_DA(1)_","_ABMZ("SUB")_",",DIC(0)="LE"  ;abm*2.6*14 ICD10 002F
  ;K ^ABMDCLM(DUZ(2),DA(1),ABMZ("SUB")) S ^ABMDCLM(DUZ(2),DA(1),ABMZ("SUB"),0)="^9002274.30"_ABMZ("SUB")_"P^^"  ;abm*2.6*14 ICD10 002F
+ ;
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60694
+ ;if the primary DX is changed, remove the DRG
+ I +$P(Y,",")'=1 D
+ .S DIE="^ABMDCLM(DUZ(2),"
+ .S DA=ABMP("CDFN")
+ .S DR=".513////@"
+ .D ^DIE
+ ;end new abm*2.6*34 IHS/SD/SDR ADMO60694
+ ;
  ;start new code abm*2.6*14 ICD10 002F
  S ABMTMP=0
  F  S ABMTMP=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),"C",ABMTMP)) Q:'ABMTMP  D
@@ -60,7 +86,7 @@ S2 ;
  D ^XBFMK
  ;end new code ICD10 002F
  ;F ABMX=1:1:ABMZ("NUM") S X=$P(ABMZ(ABMX),U,3),DIC("DR")=".02////"_ABMX(ABMX)_";.05////"_$P($G(ABMZ(ABMX)),U,5) S:ABMZ("X")="DINUM" DINUM=X D DR  ;abm*2.6*9 HEAT63840
- ;F ABMX=1:1:ABMZ("NUM") S X=$P(ABMZ(ABMX),U,3),DIC("DR")=".02////"_ABMX(ABMX)_";.03////"_$P($G(ABMZ(ABMX)),U,3)_";.04////"_$P($G(ABMZ(ABMX)),U,5)_";.05////"_$P($G(ABMZ(ABMX)),U,6) S:ABMZ("X")="DINUM" DINUM=X D DR  ;abm*2.6*9 HEAT63840  ;abm*2.6*14 ICD10 002F
+ ;F ABMX=1:1:ABMZ("NUM") S X=$P(ABMZ(ABMX),U,3),DIC("DR")=".02////"_ABMX(ABMX)_";.03////"_$P($G(ABMZ(ABMX)),U,3)_";.04////"_$P($G(ABMZ(ABMX)),U,5)_";.05////"_$P($G(ABMZ(ABMX)),U,6) S:ABMZ("X")="DINUM" DINUM=X D DR  ;abm*2.6*14 ICD10 002F
  ;start new code abm*2.6*14 ICD10 002F
  S DA(1)=ABMP("CDFN")
  S DIC="^ABMDCLM(DUZ(2),"_DA(1)_","_ABMZ("SUB")_","
@@ -69,6 +95,7 @@ S2 ;
  .S X=$P(ABMZ(ABMX),U,3)
  .S DIC("DR")=".02////"_ABMX(ABMX)
  .S DIC("DR")=DIC("DR")_";.03////"_$P($G(ABMZ(ABMX)),U,3)_";.04////"_$P($G(ABMZ(ABMX)),U,5)_";.05////"_$P($G(ABMZ(ABMX)),U,6)_";.06////"_$P($G(ABMZ(ABMX)),U,7)
+ .S DIC("DR")=DIC("DR")_";.07////"_$P($G(ABMZ(ABMX)),U,8)_";.08////"_$P($G(ABMZ(ABMX)),U,9)  ;abm*2.6*37 IHS/SD/SDR ADO75953
  .S:ABMZ("X")="DINUM" DINUM=X
  .D DR
  ;end new code ICD10 002F

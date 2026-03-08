@@ -1,5 +1,5 @@
-APCLD217 ; IHS/CMI/LAB - 2001 DIABETES AUDIT ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLD217 ;IHS/CMI/LAB - 2001 DIABETES AUDIT;    [ 07/14/03  5:44 PM ]
+ ;;3.0;IHS PCC REPORTS;**10,11,12,14,20**;FEB 05, 1997
  ;
  ;cmi/anch/maw 9/10/2007 code set versioning in PLDMDXS
  ;
@@ -169,7 +169,7 @@ HTNDX(P,EDATE) ;EP - is HTN on problem list
  K APCL
  S X=P_"^LAST 3 DX [SURVEILLANCE HYPERTENSION;DURING "_$$FMTE^XLFDT($$DOB^AUPNPAT(P))_"-"_EDATE S E=$$START1^APCLDF(X,"APCL(") I $D(APCL(3)) Q "Yes"
  Q "No"
-LASTHT(P,EDATE,F) ;EP - return last ht and date
+LASTHT(P,EDATE,F) ;PEP - return last ht and date
  I 'P Q ""
  I $G(F)="" S F="E"
  I '$D(^AUPNVSIT("AC",P)) Q ""
@@ -179,7 +179,7 @@ LASTHT(P,EDATE,F) ;EP - return last ht and date
  S H=$J(H,4,1)
  I F="I" Q H
  Q H_" inches "_$$FMTE^XLFDT($P(APCLARRY(1),U))
-LASTWT(P,EDATE,F) ;EP - return last wt
+LASTWT(P,EDATE,F) ;PEP - return last wt
  I 'P Q ""
  I $G(F)="" S F="E"
  NEW %,APCLARRY,E,APCLW,X,APCLN,APCL,APCLD,APCLZ,APCLX

@@ -1,5 +1,5 @@
-RAO7PC3 ;HISC/SWM&CRT-Procedure Call utilities. ;8/15/08  16:45
- ;;5.0;Radiology/Nuclear Medicine;**16,26,27,56,95**;Mar 16, 1998;Build 7
+RAO7PC3 ;HISC/SWM&CRT IHS/OIT/NST -Procedure Call utilities. ;08 Oct 2024  16:45
+ ;;5.0;Radiology/Nuclear Medicine;**16,26,27,56,95,1012**;Mar 16, 1998;Build 7
  ;Supported IA #2056 GET1^DIQ
  ;Supported IA 10104 UP^XLFSTR
  ;; api to return entire report (same as auto e-mail's)
@@ -117,7 +117,16 @@ CASE(Y) ;
  ; Step 4: If No Report then get Clin History from file #70.
  ; ** WITH PATCH 27 - NO LONGER NEED TO DO STEP 4 **
  ;
-STEP1 S ^TMP($J,"RAE3",RADFN,RACIEN,RAPROC,1)=$P(^TMP($J,"RA AUTOE",1),"Case: ")
+STEP1 ;
+ ; RA*5.0*1012 ISI/OIT/NST - Add site that performed the study
+ N BRADIV
+ S BRADIV=+$P(^RADPT(RADFN,"DT",RAINVXDT,0),"^",3)
+ S ^TMP($J,"RAE3",RADFN,RACIEN,RAPROC,1.2)=$$GET1^DIQ(4,BRADIV,.01)_"  "_$$GET1^DIQ(4,BRADIV,1.01)_", "_$$GET1^DIQ(4,BRADIV,1.02)_", "_$$GET1^DIQ(4,BRADIV,1.03)_" "_$$GET1^DIQ(4,BRADIV,1.04)
+ S ^TMP($J,"RAE3",RADFN,RACIEN,RAPROC,1.2)=^TMP($J,"RAE3",RADFN,RACIEN,RAPROC,1.2)_"  P: "_$$GET1^DIQ(4.03,"1,"_BRADIV_",",.03)
+ S ^TMP($J,"RAE3",RADFN,RACIEN,RAPROC,1.202)=""
+ ; RA*5.0*1012 ISI/OIT/NST - end
+ ;
+ S ^TMP($J,"RAE3",RADFN,RACIEN,RAPROC,1)=$P(^TMP($J,"RA AUTOE",1),"Case: ")
  S ^TMP($J,"RAE3",RADFN,RACIEN,RAPROC,1.5)="Exm Date: "_$$GET1^DIQ(70.02,RAINVXDT_","_RADFN_",",.01,"E")
  ;
 STEP2 K SKIP S N=1 F  S N=$O(^TMP($J,"RA AUTOE",N)) Q:N=""  D

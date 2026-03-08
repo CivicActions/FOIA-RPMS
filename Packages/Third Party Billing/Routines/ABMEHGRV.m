@@ -1,5 +1,5 @@
-ABMEHGRV ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**6,7,11,13,21,22,23,27**;NOV 12, 2009;Build 486
+ABMEHGRV ; IHS/SD/SDR - GET ANCILLARY SVCS REVENUE CODE INFO ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,7,11,13,21,22,23,27,32,35,37**;NOV 12, 2009;Build 739
  ;Original;DMJ;01/26/96 4:02 PM
  ; IHS/ASDS/DMJ - 09/06/00 - V2.4 Patch 3 (no NOIS)
  ;
@@ -16,9 +16,13 @@ ABMEHGRV ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;
  ;  printing with the flat rate or the flat rate printing on the first line item.
  ;IHS/SD/SDR 2.6*23 HEAT247169 Added code to check subfile 43 if visit type is 997.
  ;IHS/SD/SDR 2.6*27 CR10326 Correction so coordinating dx will print when billing flat rate; moved line down and made it a single dot
+ ;IHS/SD/SDR 2.6*32 CR10210 Remove ALL INCLUSIVE PRINT NDC prompt
+ ;IHS/SD/SDR 2.6*35 ADO60703 Don't include duplicate ambulance modifier when it's already on line item
+ ;IHS/SD/SDR 2.6*37 ADO89299 reset ABMRVCSB array that tracks controlled substances
  ;
 START ;START HERE
  K ABM,ABMRV
+ K ABMRVCSB  ;abm*2.6*37 IHS/SD/SDR ADO89299
  D P1
  ;D FLP
  Q
@@ -39,7 +43,8 @@ P1 ;EP - SET UP ABMRV ARRAY
  ; if not flat rate .....
  D FRATE^ABMDF11
  ;I '$D(ABMP("FLAT")) D  ;abm*2.6*22 IHS/SD/SDR HEAT335246
- I '$D(ABMP("FLAT"))!(($D(ABMP("FLAT")))&($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")) D  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;I '$D(ABMP("FLAT"))!(($D(ABMP("FLAT")))&($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")) D  ;abm*2.6*22 IHS/SD/SDR HEAT335246  ;abm*2.6*32 IHS/SD/SDR CR10210
+ I '$D(ABMP("FLAT")) D  ;abm*2.6*32 IHS/SD/SDR CR10210
  .N I
  .F I=21,23,25,27,33,35,37,39,43,45,47 D
  ..; dont get pharmacy if RX bill status is unbillable
@@ -92,12 +97,18 @@ P1 ;EP - SET UP ABMRV ARRAY
  ...S K=0
  ...F  S K=$O(ABMRV(I,J,K)) Q:K=""  D
  ....I $G(ABMQLFLG)=1,($P(ABMRV(I,J,K),U,3)'="QL") S $P(ABMRV(I,J,K),U,3)=""
- ....I $G(ABMQLFLG)'=1 S $P(ABMRV(I,J,K),U,3)=$S($P($G(ABMRV(I,J,K)),U,3)="":ABMODMOD,1:$P(ABMRV(I,J,K),U,3)_":"_ABMODMOD)
+ ....;I $G(ABMQLFLG)'=1 S $P(ABMRV(I,J,K),U,3)=$S($P($G(ABMRV(I,J,K)),U,3)="":ABMODMOD,1:$P(ABMRV(I,J,K),U,3)_":"_ABMODMOD)  ;abm*2.6*35 IHS/SD/SDR ADO60703
+ ....;start new abm*2.6*35 IHS/SD/SDR ADO60703
+ ....I $G(ABMQLFLG)'=1 D
+ .....S ABMREC=ABMRV(I,J,K)
+ .....I (($P(ABMREC,U,3)=ABMODMOD)!($P(ABMREC,U,4)=ABMODMOD)!($P(ABMREC,U,12)=ABMODMOD)) Q  ;don't add page3A modifier cuz it's already there
+ .....S $P(ABMRV(I,J,K),U,3)=$S($P($G(ABMRV(I,J,K)),U,3)="":ABMODMOD,1:$P(ABMRV(I,J,K),U,3)_":"_ABMODMOD)
+ ....;end new abm*2.6*35 IHS/SD/SDR ADO60703
  K ABMQLFLG
  ;
  ; if flat rate ....
  I $D(ABMP("FLAT")) D
- .I (($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")&(+$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,16)=0)) Q  ;print the NDC and there's no default CPT  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ .;I (($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")&(+$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,16)=0)) Q  ;print the NDC and there's no default CPT  ;abm*2.6*22 IHS/SD/SDR HEAT335246  ;abm*2.6*32 IHS/SD/SDR CR10210
  .N I
  .F I=1:1:3 S ABM(I)=$P(ABMP("FLAT"),"^",I)
  .S ABMRV(1,1,1)=+ABM(2)_"^^^^"_ABM(3)_"^"_(ABM(1)*ABM(3))_"^^"_ABM(1)
@@ -111,8 +122,9 @@ P1 ;EP - SET UP ABMRV ARRAY
  ..Q:$G(ABMP("EXP"))'=11
  ..S $P(ABMRV(+ABM(2),"TOT"),U,2)=ABMCPT
  .S $P(ABMRV(1,1,1),U,11)=1  ;coor dx - default to 1  ;abm*2.6*27 IHS/SD/SDR CR10326 - moved down from above to make a single dot
- .S ABM(4)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6)
+ .S ABM(4)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6)  ;non-covered days
  .I ABM(4),ABMP("VTYP")=111 S $P(ABMRV(1,1,1),U,7)=(ABM(4)*ABM(1))
+ .I +$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3)>1 S $P(ABMRV(1,1,1),U,5)=(+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3))  ;abm*2.6*37 IHS/SD/SDR ADO76009
  .;start old code abm*2.6*11 HEAT105003
  .;I ABMP("VTYP")=831 D
  .;.K ABMRV(+ABM(2),0),ABM("831SET")

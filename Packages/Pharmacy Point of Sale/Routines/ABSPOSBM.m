@@ -1,5 +1,5 @@
 ABSPOSBM ; IHS/FCS/DRS - POS billing, part 3 ;      
- ;;1.0;PHARMACY POINT OF SALE;**48**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**48,54**;JUN 01, 2001;Build 131
  ; *****
  ; *****  Interface to ABSB, the ILC A/R package
  ; *****  This code is reached _ONLY_ by sites using ILC A/R,
@@ -141,7 +141,8 @@ AM6 . I '$$NULLOPEN D  G AM6:$$IMPOSS^ABSPOSUE("DEV","IRT","$$NULLOPEN",,"AM6",$
  N PAT D
  . N N D FIRSTN
  . S PAT=$P(^ABSPTL(N,0),U,6)
- . S PAT=$P(^DPT(PAT,0),U)
+ . ;S PAT=$P(^DPT(PAT,0),U)
+ . S PAT=$P(^DPT(PAT,0),U)_$$PPN1^ABSPUTL(PAT)   ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  N X S X=PAT_"  VCN "_VCN_"  PCN "_PCN
  S X=X_"  $"_$J(BAL,0,2)
  S X=X_" posted"

@@ -1,5 +1,5 @@
 PSSUTLAZ ;BIR/RTR-PSS report utility routine ;08/21/00
- ;;1.0;PHARMACY DATA MANAGEMENT;**40,49**;9/30/97
+ ;;1.0;PHARMACY DATA MANAGEMENT;**40**;9/30/97
  ;
 EN3(PSSBINTR,PSSBLGTH) ;
  ;Pass in to EN3 the internal number from 50.7, and the length of the
@@ -27,13 +27,13 @@ ADD ;
  Q
  ;
 DEA(PSSDIENM) ;Return DEA Special Handling for CPRS Dose Call
- ;1 Requires wet sig, DEA contains 1, or a 2
- ;2 = Controlled Sub, no wet sig required, DEA contains 3, 4, or 5
+ ;1 Requires wet sig, DEA contains 1, or a 3, or both the 3 and A
+ ;2 = Controlled Sub, no wet sig required, DEA contains 4, 5, or 3 (no A)
  ;0 = others
  Q:'$G(PSSDIENM)
  N PSSDEAX,PSSDEAXV
  S PSSDEAX=$P($G(^PSDRUG(PSSDIENM,0)),"^",3)
- I PSSDEAX[1!(PSSDEAX[2) S PSSDEAXV=1 G DSET
+ I PSSDEAX[1!(PSSDEAX[2)!((PSSDEAX[3)&(PSSDEAX["A")) S PSSDEAXV=1 G DSET
  I PSSDEAX[3!(PSSDEAX[4)!(PSSDEAX[5) S PSSDEAXV=2 G DSET
  S PSSDEAXV=0
 DSET ;

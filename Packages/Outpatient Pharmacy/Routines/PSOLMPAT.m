@@ -1,9 +1,10 @@
-PSOLMPAT ;BHAM ISC/SAB - update pharmacy patient data using listman ;17-Jun-2013 14:18;DU
- ;;7.0;OUTPATIENT PHARMACY;**15,117,1007,1011,149,233,268,1015**;DEC 1997;Build 62
+PSOLMPAT ;BHAM ISC/SAB - update pharmacy patient data using listman ;18-Sep-2023 10:37;DU
+ ;;7.0;OUTPATIENT PHARMACY;**15,117,1007,1011,149,233,268,1015,1034**;DEC 1997;Build 37
  ;External reference ^PS(55 supported by DBIA 2228
  ; Modified - IHS/MSC/PLS - 07/11/08 - Line EX+1
  ;            IHS/MSC/PLS - 03/28/11 - Line P55+2
  ;            IHS/MSC/MGH - 06/12/13 - Line EN+3
+ ;            IHS/MSC/PLS - 09/18/23 - Line OTHPHN
 EN I '$D(PSOPAR) D ^PSOLSET I '$D(PSOPAR) S VALMSG="Site Parameters must be Defined!" G EX
  D HLDHDR^PSOLMUTL S DA=DFN,PI=""
  ;IHS/MSC/MGH Commented out section to us old address method
@@ -28,3 +29,10 @@ EX L -^PS(55,DA),-^DPT(DA) D ^PSOORUT2 S VALMBCK="R"
  K DIC,X,Y,DIE,D0,DA,DFN,PI,DR,%,%Y,%X,C,DI,DIPGM,DQ
  Q
 MSG S VALMSG="Patient Data is Being Edited by Another User!" Q
+ ;
+OTHPHN ;-
+ S DA=APSPDA
+ S DIE=9000001
+ S DR="1801"
+ D ^DIE
+ Q

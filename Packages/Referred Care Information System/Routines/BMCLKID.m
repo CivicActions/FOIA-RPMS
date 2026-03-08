@@ -1,8 +1,10 @@
 BMCLKID ; IHS/PHXAO/TMJ - IDENTIFIERS FOR REFERRAL LOOKUP 2 ;     
- ;;4.0;REFERRED CARE INFO SYSTEM;;JAN 09, 2006
+ ;;4.0;REFERRED CARE INFO SYSTEM;**15,16**;JAN 09, 2006;Build 168
  ;IHS/ITSC/FCJ ADDED DISPLAY OF SEC VEND INFO; FX PAT DISPLAY
  ;    Secondary provider exist then will display Date created, 
  ;    apt date, purpose and vendor
+ ;4.0*15 4.20.2023 IHS.OIT.FCJ ADD PREFERRED NAME FOR SCREEN DISPLAYS
+ ;4.0*16 12.5.2023 IHS.OIT.FCJ ADD "C1" SUFFIX FOR CALLIN REF
  ;
  ;This Routine Displays Lookup for BMCREF Global
  ;The DD(90001,0,"ID","IHS0") Runs this Routine
@@ -17,28 +19,37 @@ BMCLKID ; IHS/PHXAO/TMJ - IDENTIFIERS FOR REFERRAL LOOKUP 2 ;
 START ; EXTERNAL ENTRY POINT - 
  ; VALUE OF THE NAKED INDICATOR TO BE PROVIDED BY CALLING ROUTINE
  W:$X>50 !
- W ?5,$P(^(0),U,2),$P($G(^(1)),U)
+ S BMCPTDFN=$P(^(0),U,3) S BMCPAT=$E($$GETPREF^AUPNSOGI(BMCPTDFN,"E",1),1,37)        ;BMC*4.0*15
+ ;W:$E($P(BMCPAT,"-",2),1,20)'="" "-",$E($P(BMCPAT,"-",2),1,20)_"  "  ;BMC*4.0*15
+ W:($G(DINDEX(1,"FIELD"))=.03)&($E($P(BMCPAT,"-",2),1,20)'="") "-",$E($P(BMCPAT,"-",2),1,20)_"  "  ;BMC*4.0*15
+ W @("$E("_DIC_"Y,0),0)") ; reset the naked    ;BMC*4.0*15
+ W $$REFDTI^BMCRLU(Y,"S"),"  "
+ W @("$E("_DIC_"Y,0),0)") ; reset the naked    ;BMC*4.0*15 
+ ;W ?5,$P(^(0),U,2),$P($G(^(1)),U)   ;BMC*4.0*15
+ W ?5,$P(^(0),U,2),$P($G(^(1)),U) I $P($G(^(1)),U)="",$P($G(^(1)),U,3)'="" W "C1"   ;BMC*4.0*16
+ W @("$E("_DIC_"Y,0),0)") ; reset the naked    ;BMC*4.0*16
  W " "
  ;FILEMAN VERSION LOOKUP
- S BMCPTDFN=$P(^(0),U,3) S BMCPAT=$P(^DPT(BMCPTDFN,0),U)
+ ;S BMCPTDFN=$P(^(0),U,3) S BMCPAT=$P(^DPT(BMCPTDFN,0),U)  ;BMC*4.0*15
  I $G(^DD("VERSION"))>21 D
- . I $G(DZ)["?"!($G(X)=" ")!($G(DINDEX)="B")!($G(DINDEX)="BS1") W $E(BMCPAT,1,15)," "  ;4.0 FCJ ADDED BS1
+ .I $G(DZ)["?"!($G(X)=" ")!($G(DINDEX)="B")!($G(DINDEX)="BS1") W BMCPAT  ;4.0*15 CHG NAME LENGTH 15 TO 37
  . E  W " "
  I $G(^DD("VERSION"))<22 D
  . W $E(BMCPAT,1,15)," "
  ;W @("$E("_DIC_"Y,0),0)") ; reset the naked
- S BMCRFAC=$$FACREF^BMCRLU(Y) W ?55,$E($S(BMCRFAC'="":BMCRFAC,1:"UNKNOWN"),1,25)
+ S BMCRFAC=$$FACREF^BMCRLU(Y) W !,?9,$E($S(BMCRFAC'="":BMCRFAC,1:"UNKNOWN"),1,25) ;4.0*15 CHG TAB 55 TO 9
  S BMCVST=$P($G(^BMCREF(Y,11)),U,11) S BMCVSTP=$S(BMCVST'="":BMCVST,1:"I")
  W @("$E("_DIC_"Y,0),0)") ; reset the naked
  ;Returns either Estimated or Actual Beg Service Date
- S BMCSVDT=$$AVDOS^BMCRLU(Y,"C") S BMCSVDTP=$S(BMCSVDT'="":BMCSVDT,1:"UNKNOWN SERVICE DATE") W !,?30,BMCSVDTP_" - "_BMCVSTP
+ S BMCSVDT=$$AVDOS^BMCRLU(Y,"C") S BMCSVDTP=$S(BMCSVDT'="":BMCSVDT,1:"UNKNOWN SERVICE DATE") W ?35,BMCSVDTP_" - "_BMCVSTP ;4.0*15 CHG !,50 TO !,35
  W @("$E("_DIC_"Y,0),0)") ; reset the naked
  ;
- S BMCPURP=$P($G(^BMCREF(Y,12)),U) S BMCPURPP=$S(BMCPURP'="":BMCPURP,1:"Purpose - NONE RECORDED") W ?55,$E(BMCPURPP,1,25)
+ S BMCPURP=$P($G(^BMCREF(Y,12)),U) S BMCPURPP=$S(BMCPURP'="":BMCPURP,1:"Purpose - NONE RECORDED") W ?60,$E(BMCPURPP,1,25)  ;4.0*15 CHG !,55 TO !,60
  W @("$E("_DIC_"Y,0),0)") ; reset the naked
  W !
  S BMCRNUMB=$P(^BMCREF(Y,0),U,2)
  I $P($G(^BMCREF(Y,1)),U)="" D SEC
+ I $P($G(^BMCREF(Y,1)),U,3)'="" D CALLIN   ;BMC*4.0*15
  ;W @("$E("_DIC_"Y,0),0)") ; reset the naked
 XIT ;Kill off Variables no longer needed
  K BMCPAT,BMCPTDFN,BMCPURP,BMCPURPP,BMCRFAC,BMCSVDT,BMCSVDTP
@@ -59,4 +70,8 @@ SEC ;ENTRY POINT FR BMCLKID1; DISPLAY THE SECONDARY PROVIDER INFORMATION
  ...W ?10,"SEC ",BMCSCDT,"  ",BMCSRDT,"  ",$E(BMCSPUR,1,15),"  ",$E(BMCSVND,1,25)
  ...W !
  K BMCSUF,BMCSRIEN,BMCSCDT,BMCSRDT,BMCSPUR,BMCSVND
+ Q
+CALLIN ;BMC*4.0*15;NEW SECTION TO DISPLAY CALLIN
+ Q:BMCRNUMB=""
+ I $D(^BMCREF("S",BMCRNUMB)) S BMCSUF=0
  Q

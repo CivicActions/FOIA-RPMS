@@ -1,0 +1,158 @@
+BLRPST49 ; IHS/MSC/MKK - RPMS LOINC UPDATE Lab Patch LR*5.2*1049 Post Install ; 19-Jan-2021 07:20 ; MKK
+ ;;5.2;IHS LABORATORY;**1049**;NOV 01, 1997;Build 4
+ ;
+ Q
+ ;
+ ;
+POST ; EP - Post-Install
+ NEW BLRVERN,BLRVERN2,CP,CPSTR,LINE1,PATCHNUM,TODAY,WOTCNT,WOTRTN
+ NEW HEADSTR,LINE,LINESTR,LINETAG,RTN,STR,TAB
+ NEW LOINC,CHKDIGIT,SHRTNAME,COMPNENT,PROPERTY,TIMEASPT,SYSTEM,SCALETYP
+ NEW METHTYPE,CLASS,CLASSTYP,LONGNAME,COPYRITE,STATUS,FIRSTREL,LASTCHNG
+ NEW FDA,ERRS,IEN,TAB,TAB2,TAB3,XUMF
+ ;
+ K ^XTMP("BLRPRELO")
+ S ^XTMP("BLRPRELO",0)=$$HTFM^XLFDT(+$H+90)_U_$$DT^XLFDT_U_"LR*5.2*1049 Install Error Tracking"
+ ;
+ S TAB=$J("",5),TAB2=$J("",10),TAB3=$J("",15)
+ ;
+ I $D(^LAB(64.061,8343))<1 D LABECADD   ; Add to LAB ELECTRONIC CODES (#64.061)
+ ;
+ D WKLDSADD^BLRP49P2    ; Add to WKLD SUFFIX CODES (#64.2) file
+ ;
+ D LABLCOMP^BLRP49P2    ; Add to LAB LOINC COMPONENT (#95.31) file
+ ;
+ D BMES^XPDUTL(TAB_"Adding Entries to the LAB LOINC (#95.3) file begins.")
+ ;
+ S LINETAG="COVID19"
+ S RTN="BLRP49P3"
+ S STR=LINETAG_"+1^"_RTN
+ S HEADSTR=$T(@STR)
+ F LINE=2:1  S STR=LINETAG_"+"_LINE_U_RTN  S LINESTR=$T(@STR)  Q:LINESTR["$$END"  D
+ . D LOINCADD(LINESTR)
+ . ;
+ ;
+ D MES^XPDUTL(TAB_"Adding Entries to the LAB LOINC (#95.3) file ends.")
+ D MES^XPDUTL("")
+ ;
+ D POSTMAIL^BLRPRE49("BLRPST49","LR*5.2*1049")
+ Q
+ ;
+ ; Note that the IEN was retrieved from the VA LOINC patch LR*5.2*539 KIDS file
+LABECADD ; EP - LAB ELECTRONIC CODES (#64.061) ADD MICRO LOINC CLASS & Respiratory.upper
+ NEW ERRS,FDA,IEN
+ ;
+ ; If already added to dictionary, skip
+ I $$LECMDICT("MICRO"),$$LECMDICT("Respiratory.upper") Q
+ ;
+ D BMES^XPDUTL(TAB_"Addition of MICRO LOINC CLASS to the LAB ELECTRONIC CODES (#64.061) file begins.")
+ ;
+ S IEN(1)=8343
+ S FDA(64.061,"+1,",.01)="MICRO"
+ S FDA(64.061,"+1,",1)="MICRO"
+ S FDA(64.061,"+1,",7)="CL"
+ S FDA(64.061,"+1,",8)="LOINC Class"
+ S FDA(64.061,"+1,",9)=20
+ ;
+ D UPDATE^DIE("S","FDA","IEN","ERRS")
+ ;
+ I $D(ERRS)<1 D MES^XPDUTL(TAB2_"'MICRO LOINC CLASS' successfully added to file 64.061.")
+ I $D(ERRS) D
+ . D MES^XPDUTL(TAB2_"Error adding 'MICRO LOINC CLASS' to file 64.061.")
+ . D MES^XPDUTL(TAB3_"Error:"_$G(ERRS("DIERR",1,"TEXT",1)))
+ . M ^XTMP("BLRPRELO","64.061 Add Error","MICRO LOINC CLASS","FDA")=FDA
+ ;
+ D MES^XPDUTL(TAB_"Addition of MICRO LOINC CLASS to the LAB ELECTRONIC CODES (#64.061) file ends.")
+ ;
+ D BMES^XPDUTL(TAB_"Addition of 'Respiratory.upper' to the LAB ELECTRONIC CODES (#64.061) file begins.")
+ ;
+ K ERRS,FDA,IEN
+ S IEN(1)=13028
+ S FDA(64.061,"+1,",.01)="Respiratory.upper"
+ S FDA(64.061,"+1,",7)="S"
+ D UPDATE^DIE("S","FDA","IEN","ERRS")
+ ;
+ I $D(ERRS)<1 D MES^XPDUTL(TAB2_"'Respiratory.upper' successfully added to file 64.061.")
+ I $D(ERRS) D
+ . D MES^XPDUTL(TAB2_"Error adding 'Respiratory.upper' to file 64.061.")
+ . D MES^XPDUTL(TAB3_"Error:"_$G(ERRS("DIERR",1,"TEXT",1)))
+ . M ^XTMP("BLRPRELO","64.061 Add Error","Respiratory.upper","FDA")=FDA
+ ;
+ D MES^XPDUTL(TAB_"Addition of 'Respiratory.upper' to the LAB ELECTRONIC CODES (#64.061) file ends.")
+ D MES^XPDUTL("")
+ Q
+ ;
+ ;
+LOINCADD(LINESTR) ; EP - Add the LOINC code to the dictionary
+ K ERRS,FDA,IEN
+ ;
+ S CODE=$P($P(LINESTR,";",3),"-")
+ ;
+ I $D(^LAB(95.3,CODE)) D  Q
+ . D MES^XPDUTL(TAB2_"LOINC "_$P(LINESTR,";",3)_" already in 95.3")
+ ;
+ S LOINC=$P(LINESTR,";",3)
+ S CHKDIGIT=$P($P(LINESTR,";",3),"-",2)
+ S SHRTNAME=$P(LINESTR,";",4)
+ S COMPNENT=$P(LINESTR,";",5)
+ S PROPERTY=$P(LINESTR,";",6)
+ S TIMEASPT=$P(LINESTR,";",7)
+ S SYSTEM=$P(LINESTR,";",8)
+ S:SYSTEM="XXX" SYSTEM=""   ; If SYSTEM = "XXX", then reset it.
+ S SYSTIEN=$$LECMDICT(SYSTEM)
+ S SCALETYP=$P(LINESTR,";",9)
+ S METHTYPE=$P(LINESTR,";",10)
+ S MTHTYIEN=$$FIND1^DIC(64.2,,"O",METHTYPE)
+ S CLASS=$P(LINESTR,";",11)
+ S CLASSTYP=$P(LINESTR,";",12)
+ S LONGNAME=$P(LINESTR,";",13)
+ S SHRTNAME=$P(LINESTR,";",14)
+ S COPYRITE=$P(LINESTR,";",15)
+ S STATUS=$P(LINESTR,";",16)
+ S FIRSTREL=$P(LINESTR,";",17)
+ S LASTCHNG=$P(LINESTR,";",18)
+ ;
+ S FDA(95.3,"+1,",.01)=CODE
+ S FDA(95.3,"+1,",15)=CHKDIGIT
+ S:$$FIND1^DIC(95.31,,"O",COMPNENT) FDA(95.3,"+1,",1)=COMPNENT
+ S:$L(TIMEASPT) FDA(95.3,"+1,",3)=TIMEASPT
+ S:SYSTIEN FDA(95.3,"+1,",4)="`"_SYSTIEN
+ S:$$LECMDICT(SCALETYP) FDA(95.3,"+1,",5)=SCALETYP
+ S:MTHTYIEN FDA(95.3,"+1,",6)="`"_MTHTYIEN
+ S FDA(95.3,"+1,",80)=LONGNAME
+ S FDA(95.3,"+1,",81)=SHRTNAME
+ S IEN(1)=CODE
+ ;
+ S XUMF=1
+ D UPDATE^DIE("ES","FDA","IEN","ERRS")
+ ;
+ I $D(ERRS)<1,PROPERTY'="-" D
+ . K FDA,ERRS
+ . S FDA(95.3,IEN(1)_",",2)=PROPERTY
+ . D UPDATE^DIE("S","FDA",,"ERRS")
+ ;
+ I $D(ERRS)<1 D  Q
+ . D BMES^XPDUTL(TAB2_"Entry "_LOINC_" added to 95.3")
+ ;
+ ; If here, there was an error.  Show it.
+ D BMES^XPDUTL(TAB2_"Error adding "_LOINC_" to file 95.3")
+ D MES^XPDUTL(TAB3_"Error:"_$G(ERRS("DIERR",1,"TEXT",1)))
+ M ^XTMP("BLRPRELO","95.3 Add Error",CODE,"FDA")=FDA
+ Q
+ ;
+ ;
+LECMDICT(VALUE) ; EP - Search multiple indexes in the LAB ELECTRONIC CODES (#64.061) file for value
+ NEW FOUNDIT
+ ;
+ I $L($G(VALUE))<1 Q 0    ; If VALUE="", return zero.
+ ;
+ S FOUNDIT=+$$FIND1^DIC(64.061,,"O",VALUE)
+ I FOUNDIT Q FOUNDIT
+ ;
+ S FOUNDIT=+$$FIND1^DIC(64.061,,"O",VALUE,"D")     ; HL7 ABBRV X-Ref
+ I FOUNDIT Q FOUNDIT
+ ;
+ S FOUNDIT=$$FIND1^DIC(64.061,,"O",VALUE,"E")     ; LOINC ABBRV X-Ref
+ Q $S(FOUNDIT:FOUNDIT,1:"")
+ ;
+ ;

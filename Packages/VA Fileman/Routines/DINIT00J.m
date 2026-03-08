@@ -1,243 +1,156 @@
-DINIT00J ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ; 3/30/99  10:41:48
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINIT00J ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS  [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
- ;;^UTILITY(U,$J,.84,8044,1,0)
- ;;=^^1^1^2940314^^
- ;;^UTILITY(U,$J,.84,8044,1,1,0)
- ;;=Used for time input to the reader.
- ;;^UTILITY(U,$J,.84,8044,2,0)
- ;;=^^1^1^2940314^^
- ;;^UTILITY(U,$J,.84,8044,2,1,0)
- ;;= and optional time
- ;;^UTILITY(U,$J,.84,8045,0)
- ;;=8045^2^y^5
- ;;^UTILITY(U,$J,.84,8045,1,0)
- ;;=^^3^3^2940310^^^^
- ;;^UTILITY(U,$J,.84,8045,1,1,0)
- ;;=This prompt is used by the reader when he is building prompts for
- ;;^UTILITY(U,$J,.84,8045,1,2,0)
- ;;=Set-of-codes type data.
- ;;^UTILITY(U,$J,.84,8045,1,3,0)
- ;;=Note: Dialog will be used with $$EZBLD^DIALOG call, only one text line!!
- ;;^UTILITY(U,$J,.84,8045,2,0)
- ;;=^^1^1^2940310^^^
- ;;^UTILITY(U,$J,.84,8045,2,1,0)
- ;;=Enter |1|: 
- ;;^UTILITY(U,$J,.84,8045,3,0)
- ;;=^.845^1^1
- ;;^UTILITY(U,$J,.84,8045,3,1,0)
- ;;=1^Default Prompt from DIR("A")
- ;;^UTILITY(U,$J,.84,8046,0)
- ;;=8046^2^^5
- ;;^UTILITY(U,$J,.84,8046,1,0)
- ;;=^^1^1^2960124^^
- ;;^UTILITY(U,$J,.84,8046,1,1,0)
- ;;=Reader prompt for choices from a list
- ;;^UTILITY(U,$J,.84,8046,2,0)
- ;;=^^1^1^2960124^^^
- ;;^UTILITY(U,$J,.84,8046,2,1,0)
- ;;=Select one of the following:
- ;;^UTILITY(U,$J,.84,8047,0)
- ;;=8047^2^^5
- ;;^UTILITY(U,$J,.84,8047,1,0)
- ;;=^^1^1^2940315^^^^
- ;;^UTILITY(U,$J,.84,8047,1,1,0)
- ;;=Part one of the Replace with prompt (including spaces).
- ;;^UTILITY(U,$J,.84,8047,2,0)
- ;;=^^1^1^2940315^^^^
- ;;^UTILITY(U,$J,.84,8047,2,1,0)
- ;;=  Replace 
- ;;^UTILITY(U,$J,.84,8048,0)
- ;;=8048^2^^5
- ;;^UTILITY(U,$J,.84,8048,1,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8048,1,1,0)
- ;;=Part two of the Replace With editor (including spaces).
- ;;^UTILITY(U,$J,.84,8048,2,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8048,2,1,0)
- ;;= With 
- ;;^UTILITY(U,$J,.84,8050,0)
- ;;=8050^2^^5
- ;;^UTILITY(U,$J,.84,8050,1,0)
- ;;=^^2^2^2971125^
- ;;^UTILITY(U,$J,.84,8050,1,1,0)
- ;;=Print the word 'Another' when prompting user to select another entry in
- ;;^UTILITY(U,$J,.84,8050,1,2,0)
- ;;=Inquire mode.
- ;;^UTILITY(U,$J,.84,8050,2,0)
- ;;=^^1^1^2971125^
- ;;^UTILITY(U,$J,.84,8050,2,1,0)
- ;;=Another 
- ;;^UTILITY(U,$J,.84,8050,5,0)
+ ;;^UTILITY(U,$J,.84,8019,5,1,0)
+ ;;=DIU0^6
+ ;;^UTILITY(U,$J,.84,8020,0)
+ ;;=8020^2^^11
+ ;;^UTILITY(U,$J,.84,8020,1,0)
+ ;;=^^2^2^2931110^^^^
+ ;;^UTILITY(U,$J,.84,8020,1,1,0)
+ ;;=This prompt asks the user whether they are ready to compile, when
+ ;;^UTILITY(U,$J,.84,8020,1,2,0)
+ ;;=compiling TEMPLATES or CROSS-REFERENCES.
+ ;;^UTILITY(U,$J,.84,8020,2,0)
+ ;;=^^1^1^2931110^^
+ ;;^UTILITY(U,$J,.84,8020,2,1,0)
+ ;;=Should the compilation run now
+ ;;^UTILITY(U,$J,.84,8020,5,0)
+ ;;=^.841^4^4
+ ;;^UTILITY(U,$J,.84,8020,5,1,0)
+ ;;=DIU0^6
+ ;;^UTILITY(U,$J,.84,8020,5,2,0)
+ ;;=DIPZ^ 
+ ;;^UTILITY(U,$J,.84,8020,5,3,0)
+ ;;=DIKZ^ 
+ ;;^UTILITY(U,$J,.84,8020,5,4,0)
+ ;;=DIEZ^ 
+ ;;^UTILITY(U,$J,.84,8021,0)
+ ;;=8021^2^^11
+ ;;^UTILITY(U,$J,.84,8021,1,0)
+ ;;=^^3^3^2931109^
+ ;;^UTILITY(U,$J,.84,8021,1,1,0)
+ ;;=Message from editing the CROSS-REFERENCE ROUTINE.  If this field is
+ ;;^UTILITY(U,$J,.84,8021,1,2,0)
+ ;;=deleted, the message notifies the user that the compiled routines will no
+ ;;^UTILITY(U,$J,.84,8021,1,3,0)
+ ;;=longer be used for re-indexing.
+ ;;^UTILITY(U,$J,.84,8021,2,0)
+ ;;=^^1^1^2931109^
+ ;;^UTILITY(U,$J,.84,8021,2,1,0)
+ ;;=The compiled routines will no longer be used for re-indexing.
+ ;;^UTILITY(U,$J,.84,8021,5,0)
  ;;=^.841^1^1
- ;;^UTILITY(U,$J,.84,8050,5,1,0)
- ;;=DIC11^GETPRMT
- ;;^UTILITY(U,$J,.84,8051,0)
- ;;=8051^2^^5
- ;;^UTILITY(U,$J,.84,8051,1,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8051,1,1,0)
- ;;=Reader prompt
- ;;^UTILITY(U,$J,.84,8051,2,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8051,2,1,0)
- ;;=Enter response: 
- ;;^UTILITY(U,$J,.84,8052,0)
- ;;=8052^2^^5
- ;;^UTILITY(U,$J,.84,8052,1,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8052,1,1,0)
- ;;=Prompt for the reader
- ;;^UTILITY(U,$J,.84,8052,2,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8052,2,1,0)
- ;;=Enter Yes or No: 
- ;;^UTILITY(U,$J,.84,8053,0)
- ;;=8053^2^^5
- ;;^UTILITY(U,$J,.84,8053,1,0)
- ;;=^^1^1^2940316^^
- ;;^UTILITY(U,$J,.84,8053,1,1,0)
- ;;=Prompt for the reader: End of page
- ;;^UTILITY(U,$J,.84,8053,2,0)
- ;;=^^1^1^2940316^^
- ;;^UTILITY(U,$J,.84,8053,2,1,0)
- ;;=Enter RETURN to continue or '^' to exit: 
- ;;^UTILITY(U,$J,.84,8054,0)
- ;;=8054^2^^5
- ;;^UTILITY(U,$J,.84,8054,1,0)
- ;;=^^1^1^2940310^^
- ;;^UTILITY(U,$J,.84,8054,1,1,0)
- ;;=Prompt for the reader: numbers
- ;;^UTILITY(U,$J,.84,8054,2,0)
- ;;=^^1^1^2940310^^
- ;;^UTILITY(U,$J,.84,8054,2,1,0)
- ;;=Enter a number
- ;;^UTILITY(U,$J,.84,8055,0)
- ;;=8055^2^^5
- ;;^UTILITY(U,$J,.84,8055,1,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8055,1,1,0)
- ;;=Prompt for the reader: date
- ;;^UTILITY(U,$J,.84,8055,2,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8055,2,1,0)
- ;;=Enter a date
- ;;^UTILITY(U,$J,.84,8056,0)
- ;;=8056^2^^5
- ;;^UTILITY(U,$J,.84,8056,1,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8056,1,1,0)
- ;;=Prompt for the reader: List
- ;;^UTILITY(U,$J,.84,8056,2,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8056,2,1,0)
- ;;=Enter a list or range of numbers
- ;;^UTILITY(U,$J,.84,8057,0)
- ;;=8057^2^^5
- ;;^UTILITY(U,$J,.84,8057,1,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8057,1,1,0)
- ;;=Prompt for the Reader: Pointers
- ;;^UTILITY(U,$J,.84,8057,2,0)
- ;;=^^1^1^2940310^
- ;;^UTILITY(U,$J,.84,8057,2,1,0)
- ;;=Select: 
- ;;^UTILITY(U,$J,.84,8058,0)
- ;;=8058^2^y^5
- ;;^UTILITY(U,$J,.84,8058,1,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8058,1,1,0)
- ;;=Part II of the 'Are you adding a new...' question
- ;;^UTILITY(U,$J,.84,8058,2,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8058,2,1,0)
- ;;= (the |1|
- ;;^UTILITY(U,$J,.84,8058,3,0)
+ ;;^UTILITY(U,$J,.84,8021,5,1,0)
+ ;;=DIU0^6
+ ;;^UTILITY(U,$J,.84,8022,0)
+ ;;=8022^2^^11
+ ;;^UTILITY(U,$J,.84,8022,1,0)
+ ;;=^^2^2^2931110^^^
+ ;;^UTILITY(U,$J,.84,8022,1,1,0)
+ ;;=Used when compiling PRINT templates, this is the prompt for the margin
+ ;;^UTILITY(U,$J,.84,8022,1,2,0)
+ ;;=width to be used for the printed report.
+ ;;^UTILITY(U,$J,.84,8022,2,0)
+ ;;=^^1^1^2931112^
+ ;;^UTILITY(U,$J,.84,8022,2,1,0)
+ ;;=Margin Width for output
+ ;;^UTILITY(U,$J,.84,8022,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,8022,5,1,0)
+ ;;=DIPZ^ 
+ ;;^UTILITY(U,$J,.84,8023,0)
+ ;;=8023^2^^11
+ ;;^UTILITY(U,$J,.84,8023,1,0)
+ ;;=^^2^2^2931110^^^^
+ ;;^UTILITY(U,$J,.84,8023,1,1,0)
+ ;;=This is the help prompt for MARGIN WIDTH FOR OUTPUT, used when compiling
+ ;;^UTILITY(U,$J,.84,8023,1,2,0)
+ ;;=PRINT templates.
+ ;;^UTILITY(U,$J,.84,8023,2,0)
+ ;;=^^2^2^2931110^^^^
+ ;;^UTILITY(U,$J,.84,8023,2,1,0)
+ ;;=Type a number from 19 to 255.  This is the number of columns
+ ;;^UTILITY(U,$J,.84,8023,2,2,0)
+ ;;=on the report
+ ;;^UTILITY(U,$J,.84,8023,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,8023,5,1,0)
+ ;;=DIPZ^ 
+ ;;^UTILITY(U,$J,.84,8024,0)
+ ;;=8024^2^y^11^
+ ;;^UTILITY(U,$J,.84,8024,1,0)
+ ;;=^^1^1^2931110^^^^
+ ;;^UTILITY(U,$J,.84,8024,1,1,0)
+ ;;=This is the text that tells the user they are now compiling routines.
+ ;;^UTILITY(U,$J,.84,8024,2,0)
+ ;;=^^1^1^2931110^^^^
+ ;;^UTILITY(U,$J,.84,8024,2,1,0)
+ ;;=Compiling |1| |2| of File |3|.
+ ;;^UTILITY(U,$J,.84,8024,3,0)
+ ;;=^.845^3^3
+ ;;^UTILITY(U,$J,.84,8024,3,1,0)
+ ;;=1^Name of template, if compiling templates.
+ ;;^UTILITY(U,$J,.84,8024,3,2,0)
+ ;;=2^The words "print template", "cross-references", etc. (i.e., what is being compiled).
+ ;;^UTILITY(U,$J,.84,8024,3,3,0)
+ ;;=3^File name
+ ;;^UTILITY(U,$J,.84,8024,5,0)
+ ;;=^.841^6^6
+ ;;^UTILITY(U,$J,.84,8024,5,1,0)
+ ;;=DIPZ^ 
+ ;;^UTILITY(U,$J,.84,8024,5,2,0)
+ ;;=DIPZ^EN
+ ;;^UTILITY(U,$J,.84,8024,5,3,0)
+ ;;=DIEZ^ 
+ ;;^UTILITY(U,$J,.84,8024,5,4,0)
+ ;;=DIEZ^EN
+ ;;^UTILITY(U,$J,.84,8024,5,5,0)
+ ;;=DIKZ^ 
+ ;;^UTILITY(U,$J,.84,8024,5,6,0)
+ ;;=DIKZ^EN
+ ;;^UTILITY(U,$J,.84,8025,0)
+ ;;=8025^2^y^11^
+ ;;^UTILITY(U,$J,.84,8025,1,0)
+ ;;=^^2^2^2931110^^
+ ;;^UTILITY(U,$J,.84,8025,1,1,0)
+ ;;=Notify user that a routine has been filed.  Used during compilation of
+ ;;^UTILITY(U,$J,.84,8025,1,2,0)
+ ;;=TEMPLATES and CROSS-REFERENCES.
+ ;;^UTILITY(U,$J,.84,8025,2,0)
+ ;;=^^1^1^2931110^^^
+ ;;^UTILITY(U,$J,.84,8025,2,1,0)
+ ;;='|1|' ROUTINE FILED.
+ ;;^UTILITY(U,$J,.84,8025,3,0)
  ;;=^.845^1^1
- ;;^UTILITY(U,$J,.84,8058,3,1,0)
- ;;=1^Ordinal number of new entry
- ;;^UTILITY(U,$J,.84,8059,0)
- ;;=8059^2^y^5
- ;;^UTILITY(U,$J,.84,8059,1,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8059,1,1,0)
- ;;=Part III of the 'Are you adding a new...' question
- ;;^UTILITY(U,$J,.84,8059,2,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8059,2,1,0)
- ;;= for this |1|
- ;;^UTILITY(U,$J,.84,8059,3,0)
- ;;=^.845^1^1
- ;;^UTILITY(U,$J,.84,8059,3,1,0)
- ;;=1^Filename
- ;;^UTILITY(U,$J,.84,8060,0)
- ;;=8060^2^^5
- ;;^UTILITY(U,$J,.84,8060,1,0)
- ;;=^^1^1^2940314^^
- ;;^UTILITY(U,$J,.84,8060,1,1,0)
- ;;=Part Ia of the 'Are you adding...' message
- ;;^UTILITY(U,$J,.84,8060,2,0)
- ;;=^^1^1^2940314^^
- ;;^UTILITY(U,$J,.84,8060,2,1,0)
- ;;=  Are you adding 
- ;;^UTILITY(U,$J,.84,8061,0)
- ;;=8061^2^y^5
- ;;^UTILITY(U,$J,.84,8061,1,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8061,1,1,0)
- ;;=Part Ib of the 'Are you adding...' question
- ;;^UTILITY(U,$J,.84,8061,2,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8061,2,1,0)
- ;;='|1|' as 
- ;;^UTILITY(U,$J,.84,8061,3,0)
- ;;=^.845^1^1
- ;;^UTILITY(U,$J,.84,8061,3,1,0)
- ;;=1^Input value for .01 field
- ;;^UTILITY(U,$J,.84,8062,0)
- ;;=8062^2^y^5
- ;;^UTILITY(U,$J,.84,8062,1,0)
- ;;=^^1^1^2940314^^^
- ;;^UTILITY(U,$J,.84,8062,1,1,0)
- ;;=Part Ic of the "Are you adding..." message
- ;;^UTILITY(U,$J,.84,8062,2,0)
- ;;=^^1^1^2940314^^^^
- ;;^UTILITY(U,$J,.84,8062,2,1,0)
- ;;=a new |1|
- ;;^UTILITY(U,$J,.84,8062,3,0)
- ;;=^.845^1^1
- ;;^UTILITY(U,$J,.84,8062,3,1,0)
- ;;=1^Filename
- ;;^UTILITY(U,$J,.84,8063,0)
- ;;=8063^2^y^5
- ;;^UTILITY(U,$J,.84,8063,1,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8063,1,1,0)
- ;;=Lookup Part I
- ;;^UTILITY(U,$J,.84,8063,2,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8063,2,1,0)
- ;;= Answer with |1|
- ;;^UTILITY(U,$J,.84,8063,3,0)
- ;;=^.845^1^1
- ;;^UTILITY(U,$J,.84,8063,3,1,0)
- ;;=1^Filename
- ;;^UTILITY(U,$J,.84,8064,0)
- ;;=8064^2^^5
- ;;^UTILITY(U,$J,.84,8064,1,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8064,1,1,0)
- ;;=Lookup Part II
- ;;^UTILITY(U,$J,.84,8064,2,0)
- ;;=^^1^1^2940314^
- ;;^UTILITY(U,$J,.84,8064,2,1,0)
- ;;= Do you want the entire 
- ;;^UTILITY(U,$J,.84,8065,0)
- ;;=8065^2^y^5
- ;;^UTILITY(U,$J,.84,8065,1,0)
- ;;=^^1^1^2940314^^
- ;;^UTILITY(U,$J,.84,8065,1,1,0)
- ;;=Lookup Part III
+ ;;^UTILITY(U,$J,.84,8025,3,1,0)
+ ;;=1^Routine name
+ ;;^UTILITY(U,$J,.84,8025,5,0)
+ ;;=^.841^8^7
+ ;;^UTILITY(U,$J,.84,8025,5,1,0)
+ ;;=DIKZ^ 
+ ;;^UTILITY(U,$J,.84,8025,5,2,0)
+ ;;=DIKZ^EN
+ ;;^UTILITY(U,$J,.84,8025,5,3,0)
+ ;;=DIOZ^ENCU
+ ;;^UTILITY(U,$J,.84,8025,5,5,0)
+ ;;=DIPZ^ 
+ ;;^UTILITY(U,$J,.84,8025,5,6,0)
+ ;;=DIPZ^EN
+ ;;^UTILITY(U,$J,.84,8025,5,7,0)
+ ;;=DIEZ^ 
+ ;;^UTILITY(U,$J,.84,8025,5,8,0)
+ ;;=DIEZ^EN
+ ;;^UTILITY(U,$J,.84,8026,0)
+ ;;=8026^2^y^11^
+ ;;^UTILITY(U,$J,.84,8026,1,0)
+ ;;=^^2^2^2931110^^^
+ ;;^UTILITY(U,$J,.84,8026,1,1,0)
+ ;;=Used to notify the user that templates or cross-references have been
+ ;;^UTILITY(U,$J,.84,8026,1,2,0)
+ ;;=UNCOMPILED.
+ ;;^UTILITY(U,$J,.84,8026,2,0)
+ ;;=^^1^1^2931110^

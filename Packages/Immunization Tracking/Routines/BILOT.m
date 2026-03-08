@@ -1,9 +1,9 @@
 BILOT ;IHS/CMI/MWR - EDIT LOT NUMBERS.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**9**;OCT 01,2014
+ ;;8.5;IMMUNIZATION;**17**;MAR 01,2019;Build 3
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT LOT NUMBER FIELDS.
  ;   PATCH 2: Redisplay Message area (with # of Lots) in List Template. HELP1+5
- ;   PATCH 9: Removed until perhaps Patch 10.  Update help text.  HELP+5
+ ;   PATCH 17: Update Lot Number Add/Edit Help text.  HELP+4
  ;
  ;
  ;
@@ -115,41 +115,30 @@ DEQUEUE ;EP
  Q
  ;
  ;
+ ;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ ;---> Update Help Text.
  ;----------
 HELP ;EP
  ;---> Help code.
  N BIX S BIX=X
  D FULL^VALM1
- W !!?5,"Enter ""A"" to add or edit a Lot Number, enter ""S"" to Select a Lot"
- W !?5,"Number from the left column, enter ""C"" to change the order of the list,"
- W !?5,"""S"" to Search for a particular Lot Number, ""D"" to include Inactive Lot"
- W !?5,"enter ""I"" to Inactivate expired Lot Numbers, and enter ""H"" to view"
- W !?5,"the full help text for the lot number list and its parameters."
- D DIRZ^BIUTL3("","     Press ENTER/RETURN to continue")
- D:BIX'="??" RE^VALM4
- Q
+ ;W !!?5,"Enter ""A"" to add or edit a Lot Number, enter ""S"" to Select a Lot"
+ ;W !?5,"Number from the left column, enter ""C"" to change the order of the list,"
+ ;W !?5,"""S"" to Search for a particular Lot Number, ""D"" to include Inactive Lot"
+ ;W !?5,"enter ""I"" to Inactivate expired Lot Numbers, and enter ""H"" to view"
+ ;W !?5,"the full help text for the lot number list and its parameters."
  ;
- ;
- ;----------
-HELPNEXT ;EP
- ;
- ;********** PATCH 10?, v8.5, OCT 01,2014, IHS/CMI/MWR
- ;---> Requested removed from Patch 9 by Michelle Ruslavage. Possibly include
- ;---> in next patch.
- ;---> Update help text below to include new actions from patch.
- ;---> Help code.
- N BIX S BIX=X
- D FULL^VALM1
  W !!?5,"Enter ""A"" to add or edit a Lot Number, enter ""E"" to select and Edit a Lot"
  W !?5,"Number from the left column, enter ""C"" to change the order of the list,"
  W !?5,"""S"" to Search for a particular Lot Number, ""D"" to include Inactive Lot"
  W !?5,"Numbers in the display (will appear after all Active Lot Numbers),"
  W !?5,"enter ""I"" to Inactivate expired Lot Numbers, and enter ""H"" to view"
  W !?5,"the full help text for the lot number list and its parameters."
+ ;**********
+ ;
  D DIRZ^BIUTL3("","     Press ENTER/RETURN to continue")
  D:BIX'="??" RE^VALM4
  Q
- ;**********
  ;
  ;
  ;----------

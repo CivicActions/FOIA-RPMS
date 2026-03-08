@@ -1,5 +1,7 @@
 BMCRR7P2 ; IHS/PHXAO/TMJ - DETAILED OLOG REPORT ;  
- ;;4.0;REFERRED CARE INFO SYSTEM;;JAN 09, 2006
+ ;;4.0;REFERRED CARE INFO SYSTEM;**15**;JAN 09, 2006;Build 168
+ ;BMC*4.0*15 5.23.2023 IHS.OIT.FCJ CHG BO/CHS COM TO REFERRAL NOTES
+ ;
  S BMC80E="==============================================================================="
  S BMC80D="-------------------------------------------------------------------------------"
  S BMCPG=0 I '$D(^XTMP("BMCRR7",BMCJOB,BMCBT)) D @("HEAD"_(2-($E(IOST,1,2)="C-"))) W !,"No referrals to report",! G XIT
@@ -50,7 +52,8 @@ DRG ;
  D VFILES
 2 ;
  G:'$D(^BMCREF(BMCREF,2)) 3
- S BMCSTR="Business Office Notes: " D SET Q:$D(BMCQUIT)
+ ;S BMCSTR="Business Office Notes: " D SET Q:$D(BMCQUIT)  ;BMC*4.0*15
+ S BMCSTR="Referral Notes: " D SET Q:$D(BMCQUIT)  ;BMC*4.0*15
  K BMCG S BMCFILE=90001,BMCREF=BMCREF,BMCNODE=2 D WP
  S BMCSTR="" D SET Q:$D(BMCQUIT)
 3 ;

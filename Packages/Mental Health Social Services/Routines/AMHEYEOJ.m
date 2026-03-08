@@ -1,5 +1,5 @@
-AMHEYEOJ ; IHS/CMI/LAB - Clean up and EOJ AUGUST 14, 1992 ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHEYEOJ ; IHS/CMI/LAB - Clean up and EOJ AUGUST 14, 1992 ;  [ 11/15/2004   8:13 AM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4**;JAN 27, 2003
  L -^BHSXDATA
  I $D(AMH("ERROR COUNT")),AMH("ERROR COUNT") W:'$D(ZTQUEUED) !!,"One or more errors were encountered during this run!",!
  D EN^XBVK("AMH")

@@ -1,5 +1,5 @@
 ABMDLCK ; IHS/ASDST/DMJ - Eligibility Checker ;    
- ;;2.6;IHS 3P BILLING SYSTEM;**13,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**13,21,42**;NOV 12, 2009;Build 789
  ;Original;TMD;
  ;
  ;This rtn expects that ABMVDFN, the visit file ien be defined
@@ -30,17 +30,14 @@ ABMDLCK ; IHS/ASDST/DMJ - Eligibility Checker ;
  ;Output
  ;ABML array.  It must be passed by reference
  ;
- ; *********************************************************************
- ; IHS/SD/SDR - 12/7/2004 - V2.5 P7 - Made change so if inpatient and
- ;     the clinic is pharmacy it will change the clinic to general.  This
- ;     is a new issue with Pharmacy 7.
+ ;*********************************************************************
+ ;IHS/SD/SDR 2.5*7 12/7/2004 Made change so if inpatient and clinic is pharmacy it will change
+ ;  the clinic to general. This is a new issue with Pharmacy 7.
+ ;IHS/SD/SDR 2.5*9 IM19399 Added code to look at new worker's comp file for eligibility
  ;
- ; IHS/SD/SDR - v2.5 p9 - IM19399
- ;    Added code to look at new worker's comp file for eligibility
- ;
- ;IHS/SD/SDR - 2.6*21 - HEAT234095 - Fix for <UNDEF>AA+11^ABMDLCK.
- ;IHS/SD/SDR - 2.6*21 - VMBP - Added code for new VAMB Eligible File; will be last insurer,
- ;    with non-ben as final
+ ;IHS/SD/SDR 2.6*21 HEAT234095 Fix for <UNDEF>AA+11^ABMDLCK.
+ ;IHS/SD/SDR 2.6*21 VMBP Added code for new VAMB Eligible File; will be last insurer, with non-ben as final
+ ;IHS/SD/SDR 2.6*42 ADO88241 Made unbillable reasons stick around for Medicare; was killing list too soon
  ; *********************************************************************
  ;
 ELG(ABMVDFN,ABML,DFN,ABMVDT) ;EP Entry point - Eligibility checker
@@ -126,7 +123,8 @@ ELG(ABMVDFN,ABML,DFN,ABMVDT) ;EP Entry point - Eligibility checker
  ...S $P(ABML(99,ABM("INS")),U,3)="M"
  ..S $P(ABML(99,ABM("INS")),U,6)=34
  E  I $D(ABML(ABM("PRI"),ABM("INS"))),ABM("PRI")<97 D
- .K ABML(99,ABM("INS")) I $G(ABM("XIT")) D UNCHK^ABMDLCK2 Q
+ .;K ABML(99,ABM("INS")) I $G(ABM("XIT")) D UNCHK^ABMDLCK2 Q  ;abm*2.6*42 IHS/SD/SDR ADO88241
+ .I $G(ABM("XIT")) D UNCHK^ABMDLCK2 Q  ;abm*2.6*42 IHS/SD/SDR ADO88241
  I $G(ABM("XIT"))="A" K ABML(ABM("PRI"),ABM("INS"),"COV",ABM("CV"))
  Q
  ;

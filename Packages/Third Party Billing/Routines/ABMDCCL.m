@@ -1,5 +1,5 @@
 ABMDCCL ; IHS/SD/SDR - Canceled Claims Listing ; JUN 29, 2005
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**8**;AUG 31, 2005
  ;Original;DMJ;
  ;
  K ABM,ABMY

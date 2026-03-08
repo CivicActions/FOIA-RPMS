@@ -1,5 +1,5 @@
-PSSGIU ;BIR/CML3-GENERIC "APPLICATION PACKAGES' USE" SET ;01-Mar-2013 12:23;PLS
- ;;1.0;PHARMACY DATA MANAGEMENT;**1015**;9/30/97;Build 62
+PSSGIU ;BIR/CML3-GENERIC "APPLICATION PACKAGES' USE" SET ;27-May-2022 12:23;PLS
+ ;;1.0;PHARMACY DATA MANAGEMENT;**1015,1031**;9/30/97;Build 15
  ;
  ; Modified - IHS/MSC/WPB - 03/20/2012 - EP COMPND, ADD, QUIT, LIST
  ;      - IHS/MSC/PB  - 08/10/2012 - FIXED PROBLEM WITH ACTIVE DRUG CHECK, ADDED LINE TAG EXIT
@@ -7,6 +7,7 @@ PSSGIU ;BIR/CML3-GENERIC "APPLICATION PACKAGES' USE" SET ;01-Mar-2013 12:23;PLS
  ;      - IHS/MSC/PB  - 10/03/2012 - ADDED CODE TO TEST INGREDIENT QTY TO BE GREATER THAN ZERO
  ;                    - 10/03/2012 - ADDED LINE TAG GQTY
  ;      - MSC/IHS/PB  - 03/01/2013 - Added lines ADD1=3-4 and EDING 9-11 to ask if user wants to see a list of ingredients at the end of editing
+ ;      - MSC/IHS/MIR - 05/27/2022 - Added line COMPND+1 and changed COMPND+2 and COMPND+4
  ;
 EN ;
  Q:$S('$D(PSIUDA):1,'$D(PSIUX):1,PSIUX'?1E1"^"1.E:1,1:'$D(^PSDRUG(PSIUDA,0)))  S PSIUO=$P($G(^(2)),"^",3) S PSIUT=$P(PSIUX,"^",2),PSIUT=$S($E(PSIUT,1,4)="UNIT":"",1:$E("N","AEIOU"[$E(PSIUT)))_" "_PSIUT,(%,PSIUQ)=PSIUO'[$E(PSIUX)+1
@@ -38,9 +39,10 @@ END ;
  S:PSIUY]"" ^PSDRUG("IU",PSIUY,PSIUDA)="" I PSIU]"" K ^PSDRUG("AIU"_PSIUT,PSIU,PSIUDA)
  G DONE
 COMPND ;IHS/MSC/WPB line tag COMPND added to mark drug as compounded and to add the ingredients 3/8/2012
- N DIC,DR,DIE,DA
+ ;IHS/MSC/MIR Feature 75998 to remove a Compounding flag if needed 5/27/2022
+ N DIC,DR,DIE,DA,VAL S VAL=$S($G(PSIUA)="N":"@",1:1)
  D QUIT
- S DA=PSIUDA,DIE="^PSDRUG(",DR="9999999.35////1" D ^DIE K DIE,DR,DA,Y,X
+ S DA=PSIUDA,DIE="^PSDRUG(",DR="9999999.35////"_VAL D ^DIE K DIE,DR,DA,Y,X I 'VAL Q
  ;IHS/MSC/PB - modified next line so that it will not bomb if there aren't any ingredients to list 9/4/12
  ;I $P($G(^PSDRUG(PSIUDA,999999936,0)),"^",4) S DIR(0)="Y",DIR("B")="YES",DIR("A")="Do you want to see a list of ingredients for this drug? "
  I $P($G(^PSDRUG(PSIUDA,999999936,0)),"^",4)>0 S DIR(0)="Y",DIR("B")="YES",DIR("A")="Do you want to see a list of ingredients for this drug? "

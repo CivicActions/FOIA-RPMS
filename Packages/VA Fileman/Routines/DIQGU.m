@@ -1,6 +1,7 @@
-DIQGU ;SFISC/DCL-DATA RETRIEVAL INTERNAL FUNCTIONS ;16JAN2010
- ;;22.0;VA FileMan;**163**;Mar 30, 1999;Build 30
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIQGU ;SFISC/DCL-DATA RETRIEVAL INTERNAL FUNCTIONS;MAR 29, 1995@14:19 ;11/4/97  14:56 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**8,44**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 DT(H) Q $$HTFM^DILIBF(H,1)
  ;
 ROOT(DIC,DA,CP,ERR) ;
@@ -36,11 +37,11 @@ UP(Y,A) N D
 CREF(X) ;
 ENCREF N L,X1,X2,X3 S X1=$P(X,"("),X2=$P(X,"(",2,99),L=$L(X2),X3=$TR($E(X2,L),",)"),X2=$E(X2,1,(L-1))_X3 Q X1_$S(X2]"":"("_X2_")",1:"")
 OREF(X) ;
-ENOREF N X1,X2 S X1=$P(X,"(")_"(",X2=$$OR2($P(X,"(",2,999)) Q:X2="" X1 Q X1_X2_","
+ENOREF N X1,X2 S X1=$P(X,"(")_"(",X2=$$OR2($P(X,"(",2)) Q:X2="" X1 Q X1_X2_","
 OR2(%) Q:%=")"!(%=",") "" Q:$L(%)=1 %  S:"),"[$E(%,$L(%)) %=$E(%,1,$L(%)-1) Q %
 RCP(%DIQGRCP) Q $$CREF($$R^DIQGU0(%DIQGRCP))
 Q(%Z) S %Z(%Z)="",%Z=$Q(%Z("")) Q $E(%Z,4,$L(%Z)-1)
-DY(Y) X ^DD("DD") Q Y ;*CCO/NI   DATE FORMAT
+DY(Y) S %=$E(Y,4,5)*3 Q $E("JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC",%-2,%)_" "_$S($E(Y,6,7):$J(+$E(Y,6,7),2)_", ",1:"")_($E(Y,1,3)+1700)_$S(Y[".":"@"_$E(Y_0,9,10)_":"_$E(Y_"000",11,12)_$S($E(Y,13,14):":"_$E(Y_0,13,14),1:""),1:"")
 DAIEN(IEN,DA) ;
  K DA
  S DA=$P(IEN,",")

@@ -1,5 +1,5 @@
-XMXUTIL1 ;ISC-SF/GMB-Date & String Utilities ;04/17/2002  14:14
- ;;8.0;MailMan;;Jun 28, 2002
+XMXUTIL1 ;ISC-SF/GMB- Date & String Utilities ;04/09/99  15:06
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; All entry points covered by DBIA 2735.
 ENCODEUP(XMSUBJ) ; Change ^ to ~U~
  F  Q:XMSUBJ'[U  S XMSUBJ=$P(XMSUBJ,U)_"~U~"_$P(XMSUBJ,U,2,999)
@@ -43,11 +43,10 @@ TSTAMP() ; Timestamp
  N X
  S X=$H
  Q X*86400+$P(X,",",2)
-MMDT(XMDT) ; (MailMan Date/Time) Given FM date/time, return external.
+MMDT(XMDT) ; (MailMan Date/Time) Given FM date/time, return dd mmm yy hh:mm
  ; time is optional
  Q:XMDT'=+XMDT XMDT
- Q $$FMTE^XLFDT($E(XMDT,1,12),"2Z")  ; return mm/dd/yy@hh:mm
- N MMDT ; return dd mmm yy hh:mm
+ N MMDT
  I $E(XMDT,4,5)="00" S $E(XMDT,4,5)="01"
  I $E(XMDT,6,7)="00" S $E(XMDT,6,7)="01"
  S MMDT=$E(XMDT,6,7)_" "_$P("Jan^Feb^Mar^Apr^May^Jun^Jul^Aug^Sep^Oct^Nov^Dec",U,$E(XMDT,4,5))_" "_$E(XMDT,2,3)
@@ -95,12 +94,9 @@ CONVERT(X,XMTIME) ; Function to convert Internet dates to FM (returns -1 if erro
  Q Y
 TIMETOO(XMD,XMT) ; For internal MailMan use only.  Combine date and time, adjusting for difference from GMT.
  N XMHH,XMMM,X,Y
- I $L(XMT," ")>1 D  Q:XMMM=-1 -1
- . N XMYT           ; 17:30:45 -0800 (PST)
- . S XMYT=$TR($P(XMT," ",2),"()")
- . D ZONEDIFF(XMYT,.XMHH,.XMMM)
- E  D
- . S (XMHH,XMMM)=0  ; 17:30:45
+ Q:$L(XMT," ")'>1 -1  ; 17:30:45 -0800 (PST)
+ S XMYT=$P(XMT," ",2)
+ D ZONEDIFF(XMYT,.XMHH,.XMMM) Q:XMMM=-1 -1
  S XMT=$P(XMT," ",1)
  S:$L($P(XMT,":"))=1 XMT="0"_XMT
  S XMT=$E(XMT,1,5)  ; FM will only handle hh:mm, not :ss
@@ -152,22 +148,3 @@ TIMEDIFF(XMDIFF) ; Given time difference, returns standard internet time differe
  E  S XMSIGN="+"
  S XMDIFF=XMDIFF\1*100+(XMDIFF#1*60\1)
  Q XMSIGN_$$RJ^XLFSTR(XMDIFF,4,"0")
-CONFIRM(XMDUZ,XMZ,XMIM) ; For internal MailMan use only.  Send confirmation message to sender.
- N XMPARM,XMTO
- S XMPARM(1)=XMIM("SUBJ")
- S XMPARM(2)=XMV("NAME") S:XMDUZ'=DUZ XMPARM(2)=XMPARM(2)_$$EZBLD^DIALOG(38008,XMV("DUZ NAME")) ; (Surrogate: |1|)
- ;S XMPARM(3)=$S($D(^XMB(3.9,XMZ,5)):$P(^(5),U),1:XMZ)
- S XMTO=XMIM("FROM")
- S XMTO=$S(+XMTO=XMTO:XMTO,1:$$RCPTTO(XMZ))
- D TASKBULL^XMXBULL(XMDUZ,"XMRDACK",.XMPARM,"",XMTO)
- Q
-RCPTTO(XMZ) ; For internal MailMan use only.  Return-receipt-to a remote address.
- N XMI,XMREC,XMHDR,XMTO
- S XMI=0,XMHDR=""
- F  S XMI=$O(^XMB(3.9,XMZ,2,XMI)) Q:XMI'<1!'XMI  S XMREC=^(XMI,0) D  Q:$D(XMTO)
- . Q:XMREC=""
- . S XMHDR=$P(XMREC,":") Q:XMHDR=""
- . S XMHDR=$$UP^XLFSTR(XMHDR)
- . I XMHDR="RETURN-RECEIPT-TO" S XMTO=$$SCRUB($P(XMREC,":",2,99)) Q
- S:'$D(XMTO) XMTO=$P(^XMB(3.9,XMZ,0),U,2)
- Q $$REMADDR^XMXADDR3(XMTO)

@@ -1,5 +1,5 @@
 BAR50P03 ; IHS/SD/LSL - EDI CLAIM & POSTING ELEMENTS ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,20,21,23**;OCT 26,2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,20,21,23,29**;OCT 26,2005;Build 66
  ;
  ; IHS/SD/LSL - 09/16/03 - V1.7 Patch 4 - HIPAA
  ; p.ottis beta p23 11/27/2013 compare num values, not strings
@@ -9,7 +9,8 @@ EN(TRDA,IMPDA) ; EP
  ; Process segments into claims with postable data
  D SETVAR
  W !,"Processing Record Values into Postable Claims",!
- S COUNT=1
+ ;S COUNT=1
+ S COUNT=0 ;BAR*1.8*29
  K ^TMP($J,"REC"),IMGDA,CLMDA
  ;clear 'processing image' & 'claims'
  K ^BAREDI("I",DUZ(2),IMPDA,30)
@@ -30,7 +31,8 @@ EN(TRDA,IMPDA) ; EP
  . I '$D(^BAREDI("1T",TRDA,10,SEGDA,10,"C")) Q
  . D PULLVARS
  ;
- W " ",COUNT,!
+ ;W " ",COUNT,!
+ W !," ",COUNT," CLAIMS.",!    ;BAR*1.8*29 IHS/DIT/CPC z10 testing.
  ; set claims' status to B 'Built'
  K DIE,DIC,DR,DA
  S DIE=$$DIC^XBDIQ1(90056.0205)
@@ -107,8 +109,8 @@ PULLVARS  ;EP
  . ; variable has a routine to perform entered into the tables
  . ; otherwise function point processing
  . I $D(VAR(VARNM)) D
- ..; W !,XREC(.03)
- ..; W !,VAR(VARNM)
+ .. ;W !,XREC(.03)   ;;BAR*1.8*28 IHS/DIT/CPC DEBUG
+ .. ;W !,VAR(VARNM)
  .. D @VAR(VARNM)
  Q
  ; *********************************************************************

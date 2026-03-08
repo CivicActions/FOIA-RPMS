@@ -1,5 +1,5 @@
-APCLV06 ; IHS/CMI/LAB - provider functions ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLV06 ; IHS/OHPRD/TMJ - provider functions ; [ 08/20/01  3:32 PM ]
+ ;;3.0;IHS PCC REPORTS;**1,7,10**;FEB 05, 1997
  ;
  ;IHS/TUCSON/LAB - add parameter to pass back event date&time on provider entry 05/19/97 patch 1
 PRIMPROV ;EP - primary provider in many different formats

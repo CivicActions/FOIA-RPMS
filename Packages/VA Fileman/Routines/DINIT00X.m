@@ -1,232 +1,126 @@
-DINIT00X ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ;5/24/00  13:34 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**41**;Mar 30, 1999
+DINIT00X ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS  [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
- ;;^UTILITY(U,$J,.84,9258,2,8,0)
- ;;=prompt.
- ;;^UTILITY(U,$J,.84,9258,2,9,0)
+ ;;^UTILITY(U,$J,.84,9201,2,171,0)
+ ;;=     and screen information.  The "Col>" indicates the column number the
+ ;;^UTILITY(U,$J,.84,9201,2,172,0)
+ ;;=     left edge of the browse window is over in the document.  The "Line>"
+ ;;^UTILITY(U,$J,.84,9201,2,173,0)
+ ;;=     shows the current line at the bottom of the scroll region and the
+ ;;^UTILITY(U,$J,.84,9201,2,174,0)
+ ;;=     total number of lines in the document.  The "Screen>" shows the
+ ;;^UTILITY(U,$J,.84,9201,2,175,0)
+ ;;=     current screen and the total number of screens in the document.
+ ;;^UTILITY(U,$J,.84,9201,2,176,0)
+ ;;=     
+ ;;^UTILITY(U,$J,.84,9201,2,177,0)
+ ;;=     The SCROLLING REGION, between the TITLE BAR and the STATUS BAR, is
+ ;;^UTILITY(U,$J,.84,9201,2,178,0)
+ ;;=     where the Browser displays the text being viewed.
+ ;;^UTILITY(U,$J,.84,9201,2,179,0)
+ ;;=     
+ ;;^UTILITY(U,$J,.84,9201,2,180,0)
+ ;;=     <<<Press 'R' or <PF1>'E' to exit this help document>>>
+ ;;^UTILITY(U,$J,.84,9201,5,0)
+ ;;=^.841^^0
+ ;;^UTILITY(U,$J,.84,9211,0)
+ ;;=9211^3^^11
+ ;;^UTILITY(U,$J,.84,9211,1,0)
+ ;;=^^1^1^2940624^^^^
+ ;;^UTILITY(U,$J,.84,9211,1,1,0)
+ ;;=Screen 1 of Screen Editor help.
+ ;;^UTILITY(U,$J,.84,9211,2,0)
+ ;;=^^17^17^2940830^
+ ;;^UTILITY(U,$J,.84,9211,2,1,0)
+ ;;=                                                           \BHelp Screen 1 of 4\n
+ ;;^UTILITY(U,$J,.84,9211,2,2,0)
  ;;= 
- ;;^UTILITY(U,$J,.84,9258,2,10,0)
- ;;=You cannot use the Form Editor to delete entire forms or blocks.  A separate
- ;;^UTILITY(U,$J,.84,9258,2,11,0)
- ;;=utility provides that functionality.
- ;;^UTILITY(U,$J,.84,9259,0)
- ;;=9259^3^^5
- ;;^UTILITY(U,$J,.84,9259,1,0)
- ;;=^^1^1^2940707^^
- ;;^UTILITY(U,$J,.84,9259,1,1,0)
- ;;=Help Screen 9 of Form Editor.
- ;;^UTILITY(U,$J,.84,9259,2,0)
- ;;=^^16^16^2940707^
- ;;^UTILITY(U,$J,.84,9259,2,1,0)
- ;;=                                                          \BHelp Screen 9 of 9\n
- ;;^UTILITY(U,$J,.84,9259,2,2,0)
- ;;=\BREORDERING FIELDS ON A BLOCK\n
- ;;^UTILITY(U,$J,.84,9259,2,3,0)
+ ;;^UTILITY(U,$J,.84,9211,2,3,0)
+ ;;=\BSUMMARY OF KEY SEQUENCES\n
+ ;;^UTILITY(U,$J,.84,9211,2,4,0)
  ;;= 
- ;;^UTILITY(U,$J,.84,9259,2,4,0)
- ;;=After creating and arranging all the elements on a block, you can quickly
- ;;^UTILITY(U,$J,.84,9259,2,5,0)
- ;;=make the field orders of all the elements equivalent to the tab order
- ;;^UTILITY(U,$J,.84,9259,2,6,0)
- ;;=by doing the following:
- ;;^UTILITY(U,$J,.84,9259,2,7,0)
+ ;;^UTILITY(U,$J,.84,9211,2,5,0)
  ;;= 
- ;;^UTILITY(U,$J,.84,9259,2,8,0)
- ;;=     1.  Go to the Block Viewer page (<PF1>V)
- ;;^UTILITY(U,$J,.84,9259,2,9,0)
- ;;=     2.  Select the block (<SpaceBar> over the block name)
- ;;^UTILITY(U,$J,.84,9259,2,10,0)
- ;;=     3.  Press <PF1>O
- ;;^UTILITY(U,$J,.84,9259,2,11,0)
+ ;;^UTILITY(U,$J,.84,9211,2,6,0)
+ ;;=\BNavigation\n
+ ;;^UTILITY(U,$J,.84,9211,2,7,0)
  ;;= 
- ;;^UTILITY(U,$J,.84,9259,2,12,0)
- ;;=The field order is the order in which the elements on the block are
- ;;^UTILITY(U,$J,.84,9259,2,13,0)
- ;;=traversed when the user presses the <Enter> key.  The <PF1>O key
- ;;^UTILITY(U,$J,.84,9259,2,14,0)
- ;;=sequence reassigns field order numbers to all the elements on the
- ;;^UTILITY(U,$J,.84,9259,2,15,0)
- ;;=block, so that the <Enter> key takes the user from element to element
- ;;^UTILITY(U,$J,.84,9259,2,16,0)
- ;;=in the same order as the <Tab> key (left to right, top to bottom).
- ;;^UTILITY(U,$J,.84,9501,0)
- ;;=9501^1^^5
- ;;^UTILITY(U,$J,.84,9501,1,0)
- ;;=^^1^1^2940909^^^^
- ;;^UTILITY(U,$J,.84,9501,1,1,0)
- ;;=DIFROM Server, FIA array does not exist or invalid.
- ;;^UTILITY(U,$J,.84,9501,2,0)
- ;;=^^1^1^2940909^^^^
- ;;^UTILITY(U,$J,.84,9501,2,1,0)
- ;;=FIA array does not exist or invalid.
- ;;^UTILITY(U,$J,.84,9502,0)
- ;;=9502^1^^5
- ;;^UTILITY(U,$J,.84,9502,1,0)
- ;;=^^1^1^2940908^
- ;;^UTILITY(U,$J,.84,9502,1,1,0)
- ;;=FIA file number invalid.
- ;;^UTILITY(U,$J,.84,9502,2,0)
- ;;=^^1^1^2940908^
- ;;^UTILITY(U,$J,.84,9502,2,1,0)
- ;;=FIA file number invalid.
- ;;^UTILITY(U,$J,.84,9503,0)
- ;;=9503^1^^5
- ;;^UTILITY(U,$J,.84,9503,1,0)
- ;;=^^1^1^2940908^^^^
- ;;^UTILITY(U,$J,.84,9503,1,1,0)
- ;;=DIFROM Server; FIA node is set to "NO DD UPDATE"
- ;;^UTILITY(U,$J,.84,9503,2,0)
- ;;=^^1^1^2940908^^^^
- ;;^UTILITY(U,$J,.84,9503,2,1,0)
- ;;=Data Dictionary not installed; FIA node is set to "No DD Update"
- ;;^UTILITY(U,$J,.84,9504,0)
- ;;=9504^1^^5
- ;;^UTILITY(U,$J,.84,9504,1,0)
- ;;=^^1^1^2940908^^
- ;;^UTILITY(U,$J,.84,9504,1,1,0)
- ;;=DIFROM Server; Installing DD only if file is new on target system.
- ;;^UTILITY(U,$J,.84,9504,2,0)
- ;;=^^1^1^2940908^^
- ;;^UTILITY(U,$J,.84,9504,2,1,0)
- ;;=Data Dictionary not installed; DD already exist on target system.
- ;;^UTILITY(U,$J,.84,9505,0)
- ;;=9505^1^^5
- ;;^UTILITY(U,$J,.84,9505,1,0)
- ;;=^^1^1^2940915^^^
- ;;^UTILITY(U,$J,.84,9505,1,1,0)
- ;;=DIFROM Server; Did not pass DD screen.
- ;;^UTILITY(U,$J,.84,9505,2,0)
- ;;=^^1^1^2940915^^^
- ;;^UTILITY(U,$J,.84,9505,2,1,0)
- ;;=Data Dictionary not updated; Did not pass DD Screen.
- ;;^UTILITY(U,$J,.84,9506,0)
- ;;=9506^1^^5
- ;;^UTILITY(U,$J,.84,9506,1,0)
- ;;=^^1^1^2940909^^^^
- ;;^UTILITY(U,$J,.84,9506,1,1,0)
- ;;=DIFROM Server;  Transport structure does not exist or invalid.
- ;;^UTILITY(U,$J,.84,9506,2,0)
- ;;=^^1^1^2940909^^^^
- ;;^UTILITY(U,$J,.84,9506,2,1,0)
- ;;=Transport array does not exist or invalid.
- ;;^UTILITY(U,$J,.84,9507,0)
- ;;=9507^1^^5
- ;;^UTILITY(U,$J,.84,9507,1,0)
- ;;=^^1^1^2940908^^
- ;;^UTILITY(U,$J,.84,9507,1,1,0)
- ;;=DIFROM Server;  FIA file number invalid.
- ;;^UTILITY(U,$J,.84,9507,2,0)
- ;;=^^1^1^2940908^^
- ;;^UTILITY(U,$J,.84,9507,2,1,0)
- ;;=Data Dictionary not installed; FIA file number invalid.
- ;;^UTILITY(U,$J,.84,9508,0)
- ;;=9508^1^^5
- ;;^UTILITY(U,$J,.84,9508,1,0)
- ;;=^^1^1^2940908^^^
- ;;^UTILITY(U,$J,.84,9508,1,1,0)
- ;;=DIFROM Server;  File does not exist on target system (Partial DD).
- ;;^UTILITY(U,$J,.84,9508,2,0)
- ;;=^^1^1^2940908^^^
- ;;^UTILITY(U,$J,.84,9508,2,1,0)
- ;;=Data Dictionary not installed; Partial DD/File does not exist.
- ;;^UTILITY(U,$J,.84,9509,0)
- ;;=9509^1^^5
- ;;^UTILITY(U,$J,.84,9509,1,0)
- ;;=^^1^1^2940908^^^
- ;;^UTILITY(U,$J,.84,9509,1,1,0)
- ;;=DIFROMS Server;  FIA node is set to send "No Data"
- ;;^UTILITY(U,$J,.84,9509,2,0)
- ;;=^^1^1^2940908^^^
- ;;^UTILITY(U,$J,.84,9509,2,1,0)
- ;;=FIA array is set to "No data"
- ;;^UTILITY(U,$J,.84,9510,0)
- ;;=9510^1^^5
- ;;^UTILITY(U,$J,.84,9510,1,0)
- ;;=^^1^1^2940908^
- ;;^UTILITY(U,$J,.84,9510,1,1,0)
- ;;=DIFROM Server;  Records to transport do not exist.
- ;;^UTILITY(U,$J,.84,9510,2,0)
- ;;=^^1^1^2940908^
- ;;^UTILITY(U,$J,.84,9510,2,1,0)
- ;;=Records do not exist.
- ;;^UTILITY(U,$J,.84,9511,0)
- ;;=9511^1^^5
- ;;^UTILITY(U,$J,.84,9511,1,0)
- ;;=^^1^1^2940908^
- ;;^UTILITY(U,$J,.84,9511,1,1,0)
- ;;=DIFROM Server; DD not installed because FIA array does not exist.
- ;;^UTILITY(U,$J,.84,9511,2,0)
- ;;=^^1^1^2940908^
- ;;^UTILITY(U,$J,.84,9511,2,1,0)
- ;;=Data Dictionary not installed; FIA array does not exist.
- ;;^UTILITY(U,$J,.84,9512,0)
- ;;=9512^1^y^5
- ;;^UTILITY(U,$J,.84,9512,1,0)
- ;;=^^1^1^2940909^^^^
- ;;^UTILITY(U,$J,.84,9512,1,1,0)
- ;;=Parent DD missing on Partial DD.
- ;;^UTILITY(U,$J,.84,9512,2,0)
- ;;=^^1^1^2940909^^^^
- ;;^UTILITY(U,$J,.84,9512,2,1,0)
- ;;=DD: |1| not installed, parent DD(s) missing.
- ;;^UTILITY(U,$J,.84,9513,0)
- ;;=9513^1^y^5
- ;;^UTILITY(U,$J,.84,9513,1,0)
- ;;=^^1^1^2940909^^^
- ;;^UTILITY(U,$J,.84,9513,1,1,0)
- ;;=Invalid record in file.
- ;;^UTILITY(U,$J,.84,9513,2,0)
- ;;=^^1^1^2940909^^^
- ;;^UTILITY(U,$J,.84,9513,2,1,0)
- ;;=IEN: |1| in file |2| is invalid.
- ;;^UTILITY(U,$J,.84,9513.1,0)
- ;;=9513.1^1^y^5
- ;;^UTILITY(U,$J,.84,9513.1,1,0)
- ;;=^^4^4^3000524^
- ;;^UTILITY(U,$J,.84,9513.1,1,1,0)
- ;;=Incoming data record has a .001 field or is DINUMed. There is already a
- ;;^UTILITY(U,$J,.84,9513.1,1,2,0)
- ;;=record at that IEN on the target site. The .01 field, required
- ;;^UTILITY(U,$J,.84,9513.1,1,3,0)
- ;;=Identifiers or Primary KEY don't match incoming record. Therefore record is
- ;;^UTILITY(U,$J,.84,9513.1,1,4,0)
- ;;=not added at target site.
- ;;^UTILITY(U,$J,.84,9513.1,2,0)
- ;;=^^2^2^3000524^
- ;;^UTILITY(U,$J,.84,9513.1,2,1,0)
- ;;=Record with .01 value |.01| and internal entry #|IEN|
- ;;^UTILITY(U,$J,.84,9513.1,2,2,0)
- ;;=could not be added to file |FILE|.
- ;;^UTILITY(U,$J,.84,9513.1,3,0)
- ;;=^.845^3^3
- ;;^UTILITY(U,$J,.84,9513.1,3,1,0)
- ;;=.01^.01 value from incoming record
- ;;^UTILITY(U,$J,.84,9513.1,3,2,0)
- ;;=IEN^IEN of incoming record
- ;;^UTILITY(U,$J,.84,9513.1,3,3,0)
- ;;=FILE^File Number
- ;;^UTILITY(U,$J,.84,9513.1,5,0)
- ;;=^.841^1^1
- ;;^UTILITY(U,$J,.84,9513.1,5,1,0)
- ;;=DITR^I
- ;;^UTILITY(U,$J,.84,9514,0)
- ;;=9514^1^y^5
- ;;^UTILITY(U,$J,.84,9514,1,0)
- ;;=^^1^1^2940909^
- ;;^UTILITY(U,$J,.84,9514,1,1,0)
- ;;=Dangling pointer.  File, IEN and field.
- ;;^UTILITY(U,$J,.84,9514,2,0)
- ;;=^^1^1^2940909^
- ;;^UTILITY(U,$J,.84,9514,2,1,0)
- ;;=Dangling pointer.  FILE: |1|, IEN: |2| FIELD: |3|
- ;;^UTILITY(U,$J,.84,9515,0)
- ;;=9515^1^y^5
- ;;^UTILITY(U,$J,.84,9515,1,0)
- ;;=^^1^1^2940909^
- ;;^UTILITY(U,$J,.84,9515,1,1,0)
- ;;=No sending data on partial DDs.
- ;;^UTILITY(U,$J,.84,9515,2,0)
- ;;=^^1^1^2940909^
+ ;;^UTILITY(U,$J,.84,9211,2,8,0)
+ ;;=   Incremental movement            Arrow keys
+ ;;^UTILITY(U,$J,.84,9211,2,9,0)
+ ;;=   One word left and right         <Ctrl-J> and <Ctrl-L>
+ ;;^UTILITY(U,$J,.84,9211,2,10,0)
+ ;;=   Next tab stop to the right      <Tab>
+ ;;^UTILITY(U,$J,.84,9211,2,11,0)
+ ;;=   Jump left and right             <PF1><Left> and <PF1><Right>
+ ;;^UTILITY(U,$J,.84,9211,2,12,0)
+ ;;=   Beginning and end of line       <PF1><PF1><Left> and <PF1><PF1><Right>
+ ;;^UTILITY(U,$J,.84,9211,2,13,0)
+ ;;=   Screen up or down               <PF1><Up> and <PF1><Down>
+ ;;^UTILITY(U,$J,.84,9211,2,14,0)
+ ;;=                                      or:  <PrevScr> and <NextScr>
+ ;;^UTILITY(U,$J,.84,9211,2,15,0)
+ ;;=                                      or:  <PageUp>  and <PageDown>
+ ;;^UTILITY(U,$J,.84,9211,2,16,0)
+ ;;=   Top or bottom of document       <PF1>T and <PF1>B
+ ;;^UTILITY(U,$J,.84,9211,2,17,0)
+ ;;=   Go to a specific location       <PF1>G
+ ;;^UTILITY(U,$J,.84,9212,0)
+ ;;=9212^3^^11
+ ;;^UTILITY(U,$J,.84,9212,1,0)
+ ;;=^^1^1^2940624^^^^
+ ;;^UTILITY(U,$J,.84,9212,1,1,0)
+ ;;=Screen 2 of Screen Editor help.
+ ;;^UTILITY(U,$J,.84,9212,2,0)
+ ;;=^^17^17^2940830^
+ ;;^UTILITY(U,$J,.84,9212,2,1,0)
+ ;;=                                                           \BHelp Screen 2 of 4\n
+ ;;^UTILITY(U,$J,.84,9212,2,2,0)
+ ;;= 
+ ;;^UTILITY(U,$J,.84,9212,2,3,0)
+ ;;=\BExiting/Saving\n
+ ;;^UTILITY(U,$J,.84,9212,2,4,0)
+ ;;= 
+ ;;^UTILITY(U,$J,.84,9212,2,5,0)
+ ;;=   Exit and save text              <PF1>E
+ ;;^UTILITY(U,$J,.84,9212,2,6,0)
+ ;;=   Quit without saving             <PF1>Q
+ ;;^UTILITY(U,$J,.84,9212,2,7,0)
+ ;;=   Exit, save, and switch editors  <PF1>A
+ ;;^UTILITY(U,$J,.84,9212,2,8,0)
+ ;;=   Save without exiting            <PF1>S
+ ;;^UTILITY(U,$J,.84,9212,2,9,0)
+ ;;= 
+ ;;^UTILITY(U,$J,.84,9212,2,10,0)
+ ;;= 
+ ;;^UTILITY(U,$J,.84,9212,2,11,0)
+ ;;=\BDeleting\n
+ ;;^UTILITY(U,$J,.84,9212,2,12,0)
+ ;;= 
+ ;;^UTILITY(U,$J,.84,9212,2,13,0)
+ ;;=   Character before cursor         <Backspace>
+ ;;^UTILITY(U,$J,.84,9212,2,14,0)
+ ;;=   Character at cursor             <PF4>  or  <Remove>  or  <Delete>
+ ;;^UTILITY(U,$J,.84,9212,2,15,0)
+ ;;=   From cursor to end of word      <Ctrl-W>
+ ;;^UTILITY(U,$J,.84,9212,2,16,0)
+ ;;=   From cursor to end of line      <PF1><PF2>
+ ;;^UTILITY(U,$J,.84,9212,2,17,0)
+ ;;=   Entire line                     <PF1>D
+ ;;^UTILITY(U,$J,.84,9213,0)
+ ;;=9213^3^^11
+ ;;^UTILITY(U,$J,.84,9213,1,0)
+ ;;=^^1^1^2940624^^^^
+ ;;^UTILITY(U,$J,.84,9213,1,1,0)
+ ;;=Screen 3 of Screen Editor help.
+ ;;^UTILITY(U,$J,.84,9213,2,0)
+ ;;=^^15^15^2940830^
+ ;;^UTILITY(U,$J,.84,9213,2,1,0)
+ ;;=                                                           \BHelp Screen 3 of 4\n
+ ;;^UTILITY(U,$J,.84,9213,2,2,0)
+ ;;=\BSettings/Modes\n
+ ;;^UTILITY(U,$J,.84,9213,2,3,0)
+ ;;= 

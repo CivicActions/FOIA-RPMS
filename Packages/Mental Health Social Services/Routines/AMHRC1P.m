@@ -1,5 +1,5 @@
 AMHRC1P ; IHS/CMI/LAB - print active client list (using case open/close) ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;3.0;IHS BEHAVIORAL HEALTH;**7**;JAN 27, 2003
  ;
  ;
 PRINT ;

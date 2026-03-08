@@ -1,5 +1,5 @@
 BDGSVS ; IHS/ANMC/LJF - SCHED VISIT SUMMARY ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
  ; Assumes BDGN set to ien in Scheduled Visit file
  I $$BROWSE^BDGF="B" D EN Q
@@ -16,10 +16,15 @@ EN ; -- main entry point for BDG SCHED VISIT SUMMARY
 HDR ; -- header code
  NEW X
  S VALMHDR(1)=$$SP(15)_$$CONF^BDGF
- S X=$E($$GET1^DIQ(9009016.7,BDGN,.01),1,25)               ;pat name
- S X=$$PAD(X,30)_"#"_$$GET1^DIQ(9009016.7,BDGN,.011)       ;chart #
- S X=$$PAD(X,40)_"Age: "_$$GET1^DIQ(9009016.7,BDGN,.012)   ;age
- S X=$$PAD(X,50)_"Comm: "_$$GET1^DIQ(9009016.7,BDGN,.013)  ;community
+ ;202307 77894 maw p1022 PPN
+ N PRF,PRFI
+ S PRFI=$$GET1^DIQ(9009016.7,BDGN,.01,"I")
+ S PRF=$$GETPREF^AUPNSOGI(PRFI,"E",1)
+ S X=$G(PRF)               ;pat name
+ ;S X=$E($$GET1^DIQ(9009016.7,BDGN,.01),1,25)               ;pat name
+ S X=$$PAD(X,40)_"#"_$$GET1^DIQ(9009016.7,BDGN,.011)       ;chart #
+ S X=$$PAD(X,50)_"Age: "_$$GET1^DIQ(9009016.7,BDGN,.012)   ;age
+ S X=$$PAD(X,60)_"Comm: "_$$GET1^DIQ(9009016.7,BDGN,.013)  ;community
  S VALMHDR(2)=X
  Q
  ;

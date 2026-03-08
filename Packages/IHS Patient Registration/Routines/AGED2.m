@@ -1,5 +1,5 @@
 AGED2 ; IHS/ASDS/EFG - EDIT PG 2 - RELIGION/TRIBAL DATA/EMPLOYMENT DATA ; MAR 19, 2010
- ;;7.1;PATIENT REGISTRATION;**2,3,7,8,10**;AUG 25, 2005;Build 7
+ ;;7.1;PATIENT REGISTRATION;**2,3,7,8,10,15**;AUG 25, 2005;Build 1
  ;
  ;AG*7.1*7 - Sections of this routine were re-written to accomplish the following:
  ;           1) Modified code to allow for the new page 10
@@ -10,6 +10,10 @@ AGED2 ; IHS/ASDS/EFG - EDIT PG 2 - RELIGION/TRIBAL DATA/EMPLOYMENT DATA ; MAR 19
  ;           1) Added Father/Mother Email/Cell/Alt Phone fields and prompts
  ;           2) Modified code better handle display - line #, tabs, label display/length, field call handling
  ;AG*7.1*10- Put in validity check on user field selection prompt
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC
+ ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
+ ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ ;
  N CLLST
  I "YC"[AGOPT(14) S AG("SVELIG")=""
  I $D(^AUPNPAT(DFN,11)) S AG("SVELIG")=$P($G(^AUPNPAT(DFN,11)),U,12)
@@ -107,44 +111,50 @@ DRAW ;EP
  . I AG=7 D OTHER W !,AGLINE("-")
  . I AG=15 W !,AGLINE("-")  ;AG*7.1*8 - Changed AG value to 15
  ;
- W !,AGLINE("-")
+ ;W !,AGLINE("-") ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ W !,AGLINE("EQ")
  K MYERRS,MYVARS
  D FETCHERR^AGEDERR(AG("PG"),.MYERRS)
  S MYVARS("DFN")=DFN,MYVARS("FINDCALL")="",MYVARS("SELECTION")=$G(AGSELECT),MYVARS("SITE")=DUZ(2)
  D EDITCHEK^AGEDERR(.MYERRS,.MYVARS,1)
+ W !,AGLINE("-")  ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
+ D VERIF^AGUTILS  ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
  Q
 READ ;EP
- K DFOUT,DTOUT,DUOUT,DQOUT,DLOUT,AG("ED"),AG("ERR"),DIROUT
- S DIR("?")="Enter free text"
- S DIR("?",1)="You may enter the item number of the field you wish to edit,"
- S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
- S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
- S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
- S DIR(0)="FO"
- D ^DIR
- Q:$D(DTOUT)
- S:Y="/.,"!(Y="^^") DFOUT=""
- S:Y="" DLOUT=""
- S:Y="^" (DUOUT,Y)=""
- S:Y?1"?".E!(Y["^") (DQOUT,Y)=""
- Q:Y="P"
- I $E(Y,1)="p" S $E(Y,1)="P"
- I $E(Y,1)="P"&($P($G(^AUPNPAT(DFN,11)),U,12)'="") D
- . S AG("ED")=+$P($E(Y,2,99),".")
- . I AG("ED")<1!(AG("ED")>10) D  ;AG*7.1*7
- .. W *7,!!,"Use only pages 1 through 10."  ;AG*7.1*7
- .. H 2
- .. K AG("ED")
- .. S AG("ERR")=""
- . I $D(AG("ED"))  D
- .. I AG("ED")>0&(AG("ED")<11)  D  ;AG*7.1*7
- ... I AG("ED")=4 S AG("ED")="4A"
- ... I AG("ED")=5 S AG("ED")="BEA"
- ... I AG("ED")=6 S AG("ED")=13
- ... I AG("ED")=8 S AG("ED")=11
- ... I AG("ED")=7 S AG("ED")=8
- ... I AG("ED")=9 S AG("ED")="11A"
- ... I AG("ED")=10 S AG("ED")="10A"  ;AG*7.1*7
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC - START OLD CODE
+ ;K DFOUT,DTOUT,DUOUT,DQOUT,DLOUT,AG("ED"),AG("ERR"),DIROUT
+ ;S DIR("?")="Enter free text"
+ ;S DIR("?",1)="You may enter the item number of the field you wish to edit,"
+ ;S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
+ ;S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
+ ;S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
+ ;S DIR(0)="FO"
+ ;D ^DIR
+ ;Q:$D(DTOUT)
+ ;S:Y="/.,"!(Y="^^") DFOUT=""
+ ;S:Y="" DLOUT=""
+ ;S:Y="^" (DUOUT,Y)=""
+ ;S:Y?1"?".E!(Y["^") (DQOUT,Y)=""
+ ;Q:Y="P"
+ ;I $E(Y,1)="p" S $E(Y,1)="P"
+ ;I $E(Y,1)="P"&($P($G(^AUPNPAT(DFN,11)),U,12)'="") D
+ ;. S AG("ED")=+$P($E(Y,2,99),".")
+ ;. I AG("ED")<1!(AG("ED")>10) D  ;AG*7.1*7
+ ;.. W *7,!!,"Use only pages 1 through 10."  ;AG*7.1*7
+ ;.. H 2
+ ;.. K AG("ED")
+ ;.. S AG("ERR")=""
+ ;. I $D(AG("ED"))  D
+ ;.. I AG("ED")>0&(AG("ED")<11)  D  ;AG*7.1*7
+ ;... I AG("ED")=4 S AG("ED")="4A"
+ ;... I AG("ED")=5 S AG("ED")="BEA"
+ ;... I AG("ED")=6 S AG("ED")=13
+ ;... I AG("ED")=8 S AG("ED")=11
+ ;... I AG("ED")=7 S AG("ED")=8
+ ;... I AG("ED")=9 S AG("ED")="11A"
+ ;... I AG("ED")=10 S AG("ED")="10A"  ;AG*7.1*7
+ ;IHS/OIT/NKD AG*7.1*15 - END OLD CODE
+ D EDREAD^AGUTL2  ;IHS/OIT/NKD AG*7.1*15
  Q
 TRBCHK ;
  I $P($G(^AUTTTRI($O(^AUTTTRI("B",$E(Y,1,30),0)),0)),U,4)="Y" D  Q

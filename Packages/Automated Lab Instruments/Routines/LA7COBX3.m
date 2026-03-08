@@ -1,5 +1,5 @@
 LA7COBX3 ;VA/DALOI/JMC - LAB OBX Segment message builder (MI subscripts) cont'd ; 22-Oct-2013 09:22 ; MAW
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,1018,64,1027,68,1033**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,1018,64,1027,68,1033,1047**;NOV 01, 1997;Build 21
  ;
  ; Reference to ^DD supported by DBIA #999
  ;

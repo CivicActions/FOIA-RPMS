@@ -1,7 +1,9 @@
 LRWU4 ;VA/DALOI/RWF - READ ACCESSION ; 13-Aug-2013 09:14 ; MKK
- ;;5.2;LAB SERVICE;**1006,1013,128,153,201,271,1018,402,1033**;NOV 01, 1997
+ ;;5.2;LAB SERVICE;**1006,1013,128,153,201,271,1018,402,1033,1054**;NOV 01, 1997;Build 20
  ;
  ; Reference to ^DISV("LRACC") global supported by DBIA #510
+ ;
+ ; ADO 79349 - LR*5.2*1054 - Accession Lookup not to Fail with hyphenated Accession Area abbreviation.
  ;
  ; Variable LRVBY set/used by routine LRVER to determine if user
  ; verifying by accession or UID.
@@ -35,7 +37,8 @@ AA ;
  ; Parse and process user input.
  S (X1,X2,X3)="",X1=$P(LRX," ",1),X2=$P(LRX," ",2),X3=$P(LRX," ",3)
  S:X3=""&(+X2=X2) X3=X2,X2=""
- I X1'?1A.AN D QUES Q
+ ; I X1'?1A.AN D QUES Q
+ I X1'?1AP.ANP D QUES Q  ; IHS/MSC/MKK - LR*5.2*1054
  S LRAA=$O(^LRO(68,"B",X1,0))
  I LRAA<1 D WLQUES Q:LRAA<1
  S %=$P(^LRO(68,LRAA,0),U,14)

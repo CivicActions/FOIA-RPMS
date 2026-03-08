@@ -1,19 +1,11 @@
-ZTMDCL ;SFISC/RWF - Run Taskman with a DCL context. ;09/11/2006
- ;;8.0;KERNEL;**24,355**;Jul 10, 1995;Build 9
+ZTMDCL ;SFISC/RWF - Run Taskman with a DCL context. ;05/17/96  07:47 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**24**;JUL 03, 1995
  ;This assumes that TM was started with a DCL context.
- N FILE,QUEUE,ENV,%SPAWN,%
- S FILE=$S(%ZTOS["OpenM":"ZTMS2WDCL.COM",%ZTOS["DSM":"ZTMSWDCL.COM",1:"")
- S QUEUE=$S($L(ZTNODE):ZTNODE,1:%ZTNODE)
- S ENV=%ZTPFLG("DCL")
- I %ZTOS["OpenM" D
- . S ENV=$S($L(ZTNODE):ZTNODE,1:$P(%ZTPAIR,":",2))
- . S QUEUE=$G(%ZTPFLG("Q",ENV))
- I ENV="" D ^%ZTER Q  ;Something is wrong
+ N QUEUE S QUEUE=$S(ZTNODE]"":ZTNODE,1:%ZTNODE)
  ;Use the next line if you want/need log files
- ;S %SPAWN="SUBMIT/NOPRINT/KEEP/QUEUE=TM$"_QUEUE_" DHCP$TASKMAN:"_FILE_"/PARAM=("_ENV_","_ZTUCI_","_ZTDVOL_")"
+ ;S %SPAWN="SUBMIT/NOPRINT/NOKEEP/QUEUE=TM$"_QUEUE_" ZTMSWDCL.COM/PARAM=("_%ZTPFLG("DCL")_","_ZTUCI_","_ZTDVOL_")"
  ;Use the next line if you don't need log files.
- S %SPAWN="SUBMIT/NOPRINT/NOLOG/QUEUE=TM$"_QUEUE_" DHCP$TASKMAN:"_FILE_"/PARAM=("_ENV_","_ZTUCI_","_ZTDVOL_")"
- I %ZTOS["VAX DSM" S %=$ZC(%SPAWN,%SPAWN) I 1
- I %ZTOS["OpenM" S %=$ZF(-1,%SPAWN) I 1
+ S %SPAWN="SUBMIT/NOPRINT/NOLOG/QUEUE=TM$"_QUEUE_" ZTMSWDCL.COM/PARAM=("_%ZTPFLG("DCL")_","_ZTUCI_","_ZTDVOL_")"
+ S %=$ZC(%SPAWN,%SPAWN) I 1
  Q
- ;

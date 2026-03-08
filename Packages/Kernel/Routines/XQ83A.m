@@ -1,9 +1,8 @@
-XQ83A ;ISC-SF..SEA/JLI,LUKE - MICROSURGERY ON MENU TREES TO ADD A NEW ITEM TO A MENU ;10/27/2009
- ;;8.0;KERNEL;**157,494,537**;Jul 10, 1995;Build 6
- ;;"Per VHA Directive 2004-038, this routine should not be modified".
+XQ83A ;ISC-SF..SEA/JLI,LUKE - MICROSURGERY ON MENU TREES TO ADD A NEW ITEM TO A MENU ;06/26/2000  09:14 [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**157**;Jul 10, 1995
 ENTRY ;
  D TABLE
- I XQC'="P" S A="P" F XQJ=0:0 S A=$O(^DIC(19,"AXP",A)) Q:$E(A)'="P"  I $D(^(A,U,XQOPM)) L +^DIC(19,"AXP",A):10 Q:'$T  K ^(A,0) D ADD S ^DIC(19,"AXP",A,0)=%XQT1 L -^DIC(19,"AXP",A)
+ I XQC'="P" S A="P" F XQJ=0:0 S A=$O(^DIC(19,"AXP",A)) Q:$E(A)'="P"  I $D(^(A,U,XQOPM)) L +^DIC(19,"AXP",A) K ^(A,0) D ADD S ^DIC(19,"AXP",A,0)=%XQT1 L -^DIC(19,"AXP",A)
  K L,M,N,P,R,S,T,XQJ,XQLAST,XQLM,XQLM1,XQNAM,XQNAME,XQNEW,XQOLD,XQP1,XQP2,XQPATH,XQSYN
  Q
 TABLE ;
@@ -16,18 +15,11 @@ TABLE ;
  Q
  ;
 XPAND ; eXPAND option into subtree, if it is a menu
- F L=0:0 S L=$O(^DIC(19,XQNEW,10,L)) Q:L'>0  S T=+$G(^(L,0)),S1=$P(^(0),U,2),S2=$G(^DIC(19,T,0)) S:$P(S2,U,3)'="" $P(S2,U,6)=" OOO " I XQC2'[(","_T_",")&(XQOLD'[(","_T_",")) D X1
+ F L=0:0 S L=$O(^DIC(19,XQNEW,10,L)) Q:L'>0  S T=+^(L,0),S1=$P(^(0),U,2),S2=^DIC(19,T,0) S:$P(S2,U,3)'="" $P(S2,U,6)=" OOO " I XQC2'[(","_T_",")&(XQOLD'[(","_T_",")) D X1
  K S1,S2
  Q
- ;
-CLEAN(XQNEW,L) ;clean broken pointers if found on the sub menu with IEN=XQNEW - P ;494
- N DA,DIK
- S DA(1)=XQNEW,DA=L,DIK="^DIC(19,"_DA(1)_","_10_","
- D ^DIK
- Q
- ;
 X1 ;
- S ^TMP($J,"NEW",N,S)=XQOLD_T_"," S:$G(S1)'="" ^(S,"S")=S1 S S=S+1 Q:$D(^TMP($J,"S2",T))  S ^(T)=S2 S:$D(^DIC(19,T,"U")) ^TMP($J,"S2",T,"U")=^("U")
+ S ^TMP($J,"NEW",N,S)=XQOLD_T_"," S:S1'="" ^(S,"S")=S1 S S=S+1 Q:$D(^TMP($J,"S2",T))  S ^(T)=S2 S:$D(^DIC(19,T,"U")) ^TMP($J,"S2",T,"U")=^("U")
  S XQP="" I $D(^DIC(19,T,3.91)) F IJ=0:0 S IJ=$O(^DIC(19,T,3.91,IJ)) Q:IJ'>0  I ($D(^(IJ,0))#2),$P(^(0),U,1)'="" S XQP=$S(XQP="":"",1:XQP_",")_$P(^(0),U,1)_$P(^(0),U,2)
  I XQP'="" S $P(^TMP($J,"S2",T),U,9)=XQP
  Q

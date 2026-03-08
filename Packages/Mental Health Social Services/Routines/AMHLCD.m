@@ -1,5 +1,5 @@
 AMHLCD ; IHS/CMI/LAB - NO DESCRIPTION PROVIDED 16-JAN-1997 ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;4.0;IHS BEHAVIORAL HEALTH;**11**;JUN 02, 2010;Build 27
  ;; ;
  ;
 EP1(DFN) ;EP - CALLED FROM PROTOCOL
@@ -29,7 +29,7 @@ EN ; -- main entry point for AMH UPDATE PATIENT CASE DATA
  ;
 HDR ; -- header code
  S VALMHDR(1)=$TR($J(" ",80)," ","-")
- S VALMHDR(2)="Patient Name: "_$E($P(^DPT(DFN,0),U),1,24)_"   DOB: "_$$DATE($P(^DPT(DFN,0),U,3))_"   Sex: "_$P(^DPT(DFN,0),U,2)_"   HRN: "_$S($D(^AUPNPAT(DFN,41,DUZ(2),0)):$P(^AUPNPAT(DFN,41,DUZ(2),0),U,2),1:"??????")
+ S VALMHDR(2)="Name: "_$$GETPREF^AUPNSOGI(DFN,"E",1)_"  DOB: "_$$DATE($P(^DPT(DFN,0),U,3))_"  Sex: "_$P(^DPT(DFN,0),U,2)_"  HRN: "_$S($D(^AUPNPAT(DFN,41,DUZ(2),0)):$P(^AUPNPAT(DFN,41,DUZ(2),0),U,2),1:"??????")
  S VALMHDR(3)=$TR($J(" ",80)," ","-")
  S VALMHDR(4)=""
  S VALMHDR(5)="#   PROGRAM  OPEN      ADMIT     CLOSED   DISPOSITION           PROVIDER"
@@ -91,7 +91,7 @@ GETDATE ;
 OPEN ;EP called from protocol to open a new case
  D FULL^VALM1
  W:$D(IOF) @IOF
- W !!!!,"Opening a Case for ",$P(^DPT(DFN,0),U),!!
+ W !!!!,"Opening a Case for ",$$GETPREF^AUPNSOGI(DFN,"E",1),!!
  D GETDATE
  Q:AMHCDATE=""
  W !,"Creating new case..." K DD,D0,DO,DINUM,DIC,DA,DR S DIC(0)="EL",DIC="^AMHPCASE(",DLAYGO=9002011.58,DIADD=1,X=AMHCDATE,DIC("DR")=".02////"_DFN_";.11///^S X=DT"

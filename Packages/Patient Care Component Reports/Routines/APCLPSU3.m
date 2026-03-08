@@ -1,5 +1,5 @@
-APCLPSU3 ; IHS/CMI/LAB - Suicide Form data element tally ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLPSU3 ; IHS/CMI/LAB - Suicide Form data element tally ; [ 05/16/03  11:55 AM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**1,4**;JAN 27, 2003
  ;
  ;
 START ;
@@ -20,9 +20,6 @@ ED ;
  S APCLED=Y
  S X1=APCLBD,X2=-1 D C^%DTC S APCLSD=X
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G GETDATES
  S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
  I $D(DIRUT) G EOJ
  I $G(Y)="B" D BROWSE,EOJ Q
@@ -56,7 +53,6 @@ V ; Run by visit date
  ;
 V1 ;
  S APCLVDFN="" F  S APCLVDFN=$O(^AMHPSUIC("AD",APCLSD,APCLVDFN)) Q:APCLVDFN'=+APCLVDFN  D
- .Q:$$DEMO^APCLUTL($P(^AMHPSUIC(APCLVDFN,0),U,4))
  .S APCLREC="" F APCLX=1:1:21 S APCLT=$T(@APCLX) D
  ..S APCLP=$P(APCLT,";;",1),APCLV=$P(APCLT,";;",3)
  ..X APCLV

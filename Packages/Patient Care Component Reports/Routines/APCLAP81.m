@@ -1,5 +1,5 @@
-APCLAP81 ; IHS/CMI/LAB - APC Visit Counts All Svc Cat Process Routine ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLAP81 ; IHS/OHPRD/TMJ - APC Visit Counts All Svc Cat Process Routine ;  [ 12/16/2003  1:05 PM ]
+ ;;3.0;IHS PCC REPORTS;**7,16**;FEB 05, 1997
  ;Report to tally average number of visits per day of week by clinic
  ;
 START ;
@@ -20,7 +20,6 @@ V1 ;
  Q
 PROC ;
  K APCLSKIP
- Q:$$DEMO^APCLUTL($P(APCLVREC,U,5),$G(APCLDEMO))
  Q:$D(^APCLCNTL(4,11,"B",$P(APCLVREC,U,3)))
  I $$CHKLOC^APCLOCCK(APCLLOC,$P(APCLVREC,U,6))=0 Q
  S APCLVLOC=$P(APCLVREC,U,6)

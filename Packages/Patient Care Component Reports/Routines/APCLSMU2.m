@@ -1,5 +1,5 @@
 APCLSMU2 ;cmi/flag/maw - APCL MU2 MESSAGE GENERATOR 5/12/2010 9:26:17 AM
- ;;3.0;IHS PCC REPORTS;**29,30**;FEB 05, 1997;Build 27
+ ;;3.0;IHS PCC REPORTS;**29,30,32**;FEB 05, 1997;Build 9
  ;
 OPT ;EP - option to export via date range or patient
  N TYPE
@@ -25,6 +25,8 @@ PATEXP ;-- ask the patient and visit date
  Q
  ;
 HL7 ;-- generate the HL7 file
+ N APCLBUSA,APCLBCNT
+ S APCLBCNT=0
  D BATCH(.HLPARM)
  S APCLDA=0 F  S APCLDA=$O(^XTMP("APCLMUSS",$J,APCLDA)) Q:'APCLDA  D
  . N APCLRST,APCLINP
@@ -34,18 +36,20 @@ HL7 ;-- generate the HL7 file
  . S APCLSEVN=$S(APCLRST="A":"A04",APCLRST="D":"A11",1:"A08")
  . S APCLPAT=$P($G(^AUPNVSIT(APCLDA,0)),U,5)
  . Q:'APCLPAT
- . D MSG(.HLMSTATE,.HLPARM,APCLSEVN,APCLDA,APCLPAT)
+ . S APCLBCNT=APCLBCNT+1
+ . S APCLBUSA(APCLBCNT)=APCLPAT
+ . D MSG(.HLMSTATE,.HLPARM,APCLSEVN,APCLDA,APCLPAT)  ;mu2
  . N ER
  . S ER=$O(^AMERVSIT("AD",APCLDA,0))
- . I '$G(ER) S ER=$O(^AUPNVER("AD",APCLDA,0))
- . I $G(ER) D MSG(.HLMSTATE,.HLPARM,"A03",APCLDA,APCLPAT)
+ . I $G(ER) D MSG(.HLMSTATE,.HLPARM,"A03",APCLDA,APCLPAT)  ;mu2
  . ;N IVDT,EVDT,HVST
  . ;S IVDT=(9999999-$P($P(^AUPNVSIT(APCLDA,0),U),"."))
  . ;S IVDT=IVDT_"."_$P($P(^AUPNVSIT(APCLDA,0),U),".",2)
  . ;S EVDT=IVDT+2
  . ;S HVST=$$FNDH(IVDT,EVDT,APCLPAT)
- . I $G(APCLINP) D MSG(.HLMSTATE,.HLPARM,"A01",APCLDA,APCLPAT)
+ . I $G(APCLINP) D MSG(.HLMSTATE,.HLPARM,"A01",APCLDA,APCLPAT)  ;mu2
  . D LOG^APCLSMUN(APCLLOG,APCLDA,APCLRST)
+ D BUSA^APCLSMUA("APCLBUSA")  ;maw p32 for auditing
  I $G(HLMSTATE("IEN")) D GL2(HLMSTATE("IEN"))
  Q
  ;
@@ -109,14 +113,16 @@ MSG(HLST,HLPM,EVN,VST,PAT) ;EP - create the message based on the event type and 
  ;D MSH("ADT",EVN)
  D EVN(EVN)
  D PID(PAT)
- D PV1(EVN,VST,PAT)
- I EVN="A01" D PV2(VST,PAT)
+ D PV1^APCLSM2A(EVN,VST,PAT)
+ ;I EVN="A01" D PV2(VST,PAT)  ;mu2
+ D PV2^APCLSM2A(VST,PAT)  ;2015 chit
  I (EVN="A03") D
  . S DGCNT=DGCNT+1
  . D DG1S(EVN,VST)
- . D ECOD(VST)
  S OBXCNT=OBXCNT+1
- D OBXLOC(VST,OBXCNT)
+ D OBXFV^APCLSM2A(VST,OBXCNT)
+ I EVN="A01" D OBXLOC^APCLSM2A(VST)  ;2015 chit
+ I EVN="A03",$P($G(^AUPNVSIT(VST,0)),U,7)="H" D OBXLOC^APCLSM2A(VST)  ;2015 chit
  S UNITFLG=0
  I $$GET1^DIQ(40.7,$P($G(^AUPNVSIT(VST,0)),U,8),1)=30,EVN="A04" D  ;this may not work but we will see if they accept another OBX
  . ;Q:'$$GET1^DIQ(9000010,VST,1601)
@@ -124,12 +130,19 @@ MSG(HLST,HLPM,EVN,VST,PAT) ;EP - create the message based on the event type and 
  . ;Q:$P($G(^DPT(PAT,0)),U,2)'="U"  ;ihs/cmi/maw lets use this if they have an UNKNOWN sex
  . S OBXCNT=OBXCNT+1
  . S UNITFLG=1
- . D OBXUNIT(PAT,VST,OBXCNT)
+ . D OBXUNIT^APCLSM2A(PAT,VST,OBXCNT)
  I '$G(UNITFLG) D
  . S OBXCNT=OBXCNT+1
- . D OBXAGE(PAT,VST,OBXCNT)
+ . D OBXAGE^APCLSM2A(PAT,VST,OBXCNT)
  S OBXCNT=OBXCNT+1
- D OBXCC(VST,OBXCNT)
+ D OBXCC^APCLSM2A(VST,OBXCNT)
+ ;maw 2015chit added lines
+ D OBXHT^APCLSM2A(PAT,VST,OBXCNT)
+ S OBXCNT=OBXCNT+1
+ D OBXWT^APCLSM2A(PAT,VST,OBXCNT)
+ S OBXCNT=OBXCNT+1
+ D OBXTOB^APCLSM2A(PAT,VST,OBXCNT)
+ ;maw 2015chit added lines
  I EVN'="A03" D
  . ;D DG1P(EVN,VST,0)
  . Q:EVN="A01"
@@ -149,6 +162,75 @@ MSG(HLST,HLPM,EVN,VST,PAT) ;EP - create the message based on the event type and 
  . S ERR=$G(ERR)
  ;D GL(HLST("IEN"),EVN,PAT,VDATE)
  K OBXCNT
+ Q
+ ;
+ ; Create PID segment
+PID(P) ;EP
+ S HLQ=HL1("Q")
+ N REC,SEX,RACEI,RACE,ZIP,CNTY,EDA,ETH,ETHI,NTYP,DOD,ADD,CITY,STI,STATE,ADD2,DOB,RACEE,ETHE,AUTH,NPI,CNTRY,RCNT
+ S NTYP=$S($P($G(^DPT(P,0)),U)["UNK":"U",1:"S")  ;this needs to be determined
+ S NPI=$G(^DIC(4,DUZ(2),"NPI"))
+ S AUTH=$P($G(^DIC(4,DUZ(2),0)),U)
+ S REC=$$HRN^AUPNPAT(P,DUZ(2))
+ S SEX=$P($G(^DPT(P,0)),U,2)
+ S DOB=$$FMTHL7^XLFDT($$GET1^DIQ(2,P,.03,"I"))
+ I DOB=2000101 S DOB=""  ;2015 chit use this date if DOB is unknown because we require it on reg
+ ;2015 chit start
+ S RCNT=0
+ S RDA=0 F  S RDA=$O(^DPT(P,.02,RDA)) Q:'RDA  D
+ . S RCNT=RCNT+1
+ . S RACEI=$P($G(^DPT(P,.02,RDA,0)),U)
+ . S RACEE=$$GET1^DIQ(10,RACEI,.01)
+ . S RACE=$$GET1^DIQ(10,RACEI,4)
+ . D SET(.ARY,RACE,10,1,,RCNT)
+ . D SET(.ARY,RACEE,10,2,,RCNT)
+ . D SET(.ARY,"CDCREC",10,3,,RCNT)
+ S ADD=$$GET1^DIQ(2,P,.111)
+ S ADD2=$$GET1^DIQ(2,P,.112)
+ S CITY=$$GET1^DIQ(2,P,.114)
+ S STI=$$GET1^DIQ(2,P,.115,"I")
+ S STATE=$S(STI]"":$P($G(^DIC(5,STI,0)),U,3),1:"")
+ S ZIP=$$GET1^DIQ(2,P,.116)
+ S CNTY=$$GET1^DIQ(2,P,.117)
+ I CNTY="" D
+ . N COR,CTY
+ . S COR=$$GET1^DIQ(9000001,P,1117,"I")
+ . S CTY=$S(COR:$$GET1^DIQ(9999999.05,COR,.02,"I"),1:"")
+ . ;I CTY S CNTY=$$GET1^DIQ(9999999.23,CTY,.04)   mu2
+ . I CTY S CNTY=$P($G(^AUTTCTY(CTY,0)),U,3)_$P($G(^AUTTCTY(CTY,0)),U,7)  ;2015 chit
+ S CNTRY="USA"  ;2015 chit need to make dynamic
+ S EDA=$O(^DPT(P,.06,"B",0))
+ I EDA S ETHI=$P($G(^DPT(P,.06,EDA,0)),U)
+ I $G(ETHI) S ETH=$$GET1^DIQ(10.2,ETHI,4),ETHE=$$GET1^DIQ(10.2,ETHI,.01)
+ S DOD=$$GET1^DIQ(2,P,.351,"I")
+ I DOD]"" S DOD=$$FMTHL7^XLFDT(DOD)
+ D SET(.ARY,"PID",0)
+ D SET(.ARY,1,1)
+ D SET(.ARY,REC,3,1)
+ D SET(.ARY,$E(AUTH,1,20),3,4,1)  ;2015 chit
+ D SET(.ARY,NPI,3,4,2)  ;2015 chit
+ D SET(.ARY,"NPI",3,4,3)  ;2015 chit
+ D SET(.ARY,"MR",3,5)  ; Patient HRN
+ D SET(.ARY,$S(NTYP]"":NTYP,1:"S"),5,7,,2)  ;this needs to be determined
+ ;D SET(.ARY,DOB,7)
+ D SET(.ARY,SEX,8)
+ ;D SET(.ARY,RACE,10,1)
+ ;D SET(.ARY,RACEE,10,2)
+ ;I $G(RACE)]"" D SET(.ARY,"CDCREC",10,3)
+ D SET(.ARY,ADD,11,1)
+ D SET(.ARY,ADD2,11,2)
+ D SET(.ARY,CITY,11,3)
+ D SET(.ARY,STATE,11,4)
+ D SET(.ARY,ZIP,11,5)
+ D SET(.ARY,CNTRY,11,6)
+ D SET(.ARY,CNTY,11,9)
+ D SET(.ARY,$G(ETH),22,1)
+ D SET(.ARY,$G(ETHE),22,2)
+ I $G(ETH)]"" D SET(.ARY,"CDCREC",22,3)
+ I EVN="A03" D
+ . D SET(.ARY,DOD,29)
+ . I DOD]"" D SET(.ARY,"Y",30)
+ S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
  Q
  ;
 SETHL(MTYPE,EVNTTYPE) ;-- setup HLO variables
@@ -205,236 +287,17 @@ EVN(EVNTTYPE) ;Create the EVN segment
  D SET(.ARY,"NPI",7,3)
  S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
  Q
- ; Create PID segment
-PID(P) ;EP
- S HLQ=HL1("Q")
- N REC,SEX,RACEI,RACE,ZIP,CNTY,EDA,ETH,ETHI,NTYP,DOD,ADD,CITY,STI,STATE,ADD2,DOB,UID
- S NTYP=$S($P($G(^DPT(P,0)),U)["UNKNOWN":"U",1:"S")  ;this needs to be determined
- S REC=$$HRN^AUPNPAT(P,DUZ(2))
- S UID=$$GET1^DIQ(9999999.06,$P(^AUTTSITE(1,0),U),.32)_$E("0000000000",1,10-$L(P))_P
- S SEX=$P($G(^DPT(P,0)),U,2)
- S DOB=$$FMTHL7^XLFDT($$GET1^DIQ(2,P,.03,"I"))
- S RACEI=$P($G(^DPT(P,0)),U,6)
- I '$G(RACEI) S RACEI=$O(^DPT(P,.02,0))
- S RACE=$$GET1^DIQ(10,RACEI,4)
- S ADD=$$GET1^DIQ(2,P,.111)
- S ADD2=$$GET1^DIQ(2,P,.112)
- S CITY=$$GET1^DIQ(2,P,.114)
- S STI=$$GET1^DIQ(2,P,.115,"I")
- S STATE=$S(STI]"":$P($G(^DIC(5,STI,0)),U,3),1:"")
- S ZIP=$$GET1^DIQ(2,P,.116)
- S CNTY=$$GET1^DIQ(2,P,.117)
- I CNTY="" D
- . N COR,CTY
- . S COR=$$GET1^DIQ(9000001,P,1117,"I")
- . S CTY=$S(COR:$$GET1^DIQ(9999999.05,COR,.02,"I"),1:"")
- . I CTY S CNTY=$$GET1^DIQ(9999999.23,CTY,.04)
- S EDA=$O(^DPT(P,.06,"B",0))
- I EDA S ETHI=$P($G(^DPT(P,.06,EDA,0)),U)
- I $G(ETHI) S ETH=$$GET1^DIQ(10.2,ETHI,4)
- S DOD=$$GET1^DIQ(2,P,.351,"I")
- I DOD]"" S DOD=$$FMTHL7^XLFDT(DOD)
- D SET(.ARY,"PID",0)
- D SET(.ARY,1,1)
- D SET(.ARY,UID,3,1)
- D SET(.ARY,"MR",3,5)  ; Patient HRN
- D SET(.ARY,$S(NTYP]"":NTYP,1:"S"),5,7,,2)  ;this needs to be determined
- ;D SET(.ARY,DOB,7)
- D SET(.ARY,SEX,8)
- D SET(.ARY,RACE,10,1)
- I $G(RACE)]"" D SET(.ARY,"CDCREC",10,3)
- D SET(.ARY,ADD,11,1)
- D SET(.ARY,ADD2,11,2)
- D SET(.ARY,CITY,11,3)
- D SET(.ARY,STATE,11,4)
- D SET(.ARY,ZIP,11,5)
- D SET(.ARY,CNTY,11,9)
- D SET(.ARY,$G(ETH),22,1)
- I $G(ETH)]"" D SET(.ARY,"CDCREC",22,3)
- ;ihs/cmi/maw 04/8/2015 p30 do for all events
- ;I EVN="A03" D
- D SET(.ARY,DOD,29)
- I DOD]"" D SET(.ARY,"Y",30)
- S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- Q
- ;
-PV1(EV,V,P) ;-- setup the JVN PV1 segment
- N PRV,NPI,LOC,UVID
- S PRV=$$PRIMPROV^APCLV(V,"I")
- S NPI=$$GET1^DIQ(200,PRV,41.99)
- S LOC=$$GET1^DIQ(9999999.06,$P(^AUTTSITE(1,0),U),.32)
- S UVID=LOC_$$LZERO(V,10)
- D SET(.ARY,"PV1",0)
- D SET(.ARY,1,1)
- D SET(.ARY,$S(EV="A01":"I",1:"O"),2,1)
- D SET(.ARY,APCLDBID,3,1)
- D SET(.ARY,NPI,7,1)
- D SET(.ARY,"NPI",7,3) 
- D SET(.ARY,UVID,19,1)
- D SET(.ARY,"VN",19,5)
- I EV="A03" D
- . N DDSP,VER,DED
- . S DDSP="01"
- . I $$GET1^DIQ(2,P,.351,"I") S DDSP="20"
- . S VER=$O(^AMERVSIT("AD",V,0))
- . I VER D
- .. S DED=$E($$GET1^DIQ(9009080,VER,6.1),1)
- .. S DDSP=$S(DED="A":"09",DED="D":20,DED="E":20,1:"01")
- . I '$G(VER) D
- .. S VER=$O(^AUPNVER("AD",V,0))
- .. I VER D
- ... S DED=$E($$GET1^DIQ(9000010.29,VER,.11),1)
- ... S DDSP=$S(DED="A":"09",DED="D":20,DED="E":20,1:"01")
- . D SET(.ARY,DDSP,36)
- D SET(.ARY,$$FMTHL7^XLFDT($$GET1^DIQ(9000010,V,.01,"I")),44)
- S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- Q
- ;
-PV2(V,PT) ;-- setup the PV2 segment
- ;this may need to be changed to look at the admitting dx in ADT
- Q:'$G(V)
- ;N HVST,VINP,DXI,DX,DXE,IVDT,ADMT,EVDT
- ;find H visit here
- ;S IVDT=(9999999-$P($P(^AUPNVSIT(APCLDA,0),U),"."))
- ;S IVDT=IVDT_"."_$P($P(^AUPNVSIT(APCLDA,0),U),".",2)
- ;S EVDT=IVDT+2
- ;S HVST=$$FNDH(IVDT,EVDT,APCLPAT)
- ;Q:'HVST
- ;find the admit here and get admitting dx
- N HVST
- S HVST=$G(APCLINP)
- Q:'$G(HVST)
- S ADMT=$O(^DGPM("AVST",PT,HVST,0))
- Q:'ADMT
- S VINP=$O(^AUPNVINP("AD",HVST,0))
- I $G(VINP) D
- . S DXI=$$GET1^DIQ(9000010.02,VINP,.12,"I")
- . S DX=$$GET1^DIQ(9000010.02,VINP,.12)
- I '$G(DXI) S DXI=$O(^ICD9("AB",$P($G(^DGPM(ADMT,0)),U,10)_" ",0))
- I $G(DX)="" S DX=$$GET1^DIQ(405,ADMT,.1,"I")
- N ICDT,ICDATA
- S ICDATA=$$ICDDX^APCLSILU(DX,VDATE)
- S DX=$P(ICDATA,U,2)
- S DXE=$P(ICDATA,U,4)
- S ICDT=$P(ICDATA,U,20)  ;get the icd type based on the code
- I $P(DX,".",2)="" S DX=$TR(DX,".")
- D SET(.ARY,"PV2",0)
- D SET(.ARY,DX,3,1)
- D SET(.ARY,$G(DXE),3,2)
- ;D SET(.ARY,"I9CDX",3,3)
- D SET(.ARY,$S(ICDT="30":"I10",1:"I9CDX"),3,3)  ;p30
- S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- Q
- ;
-FNDH(VDT,EDT,P) ;-- find the next H visit within 48 hours
- N VDA,VIN
- S VDA=VDT F  S VDA=$O(^AUPNVSIT("AAH",P,VDA)) Q:'VDA  D
- . S VIEN=0 F  S VIEN=$O(^AUPNVSIT("AAH",P,VDA,VIEN)) Q:'VIEN  D
- .. I VDA<EDT S VIN=VIEN Q
- Q $G(VIN)
- ;
-OBXLOC(V,CNT) ;-- setup the location OBX
- N CL,CLC,CD,DSC
- S CL=$P($G(^AUPNVSIT(V,0)),U,8)
- S CLC=$$GET1^DIQ(40.7,CL,1)
- S CD=""
- ;we will need to do a more dynamic clinic map here
- I CLC=80 S CD="261QU0200X"  ;urgent care
- I CLC=30 S CD="261QE0002X"  ;er
- Q:CD=""
- S DSC=$$LOOKTABM("","NUCC",CD,HLECH)
- D SET(.ARY,"OBX",0)
- D SET(.ARY,CNT,1)
- D SET(.ARY,"CWE",2)
- D SET(.ARY,"SS003",3,1)  ;this may need to change as well
- D SET(.ARY,"PHINQUESTION",3,3)
- D SET(.ARY,CD,5,1)
- D SET(.ARY,$P(DSC,HLECH,2),5,2)
- D SET(.ARY,"NUCC",5,3)
- D SET(.ARY,"F",11)
- S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- Q
- ;
-OBXUNIT(P,V,CNT) ;-- setup units
- Q:$P($G(^DPT(P,0)),U)'["UNKNOWN"  ;this will need to change once we identify what an unknown patient is
- ;Q:$$GET1^DIQ(40.7,$P($G(^AUPNVSIT(V,0)),U,8),1)=80
- D SET(.ARY,"OBX",0)
- D SET(.ARY,CNT,1)
- D SET(.ARY,"NM",2)
- D SET(.ARY,"21612-7",3,1)
- D SET(.ARY,"LN",3,3)
- D SET(.ARY,"UNK",6,1)
- D SET(.ARY,"NULLFL",6,3)
- D SET(.ARY,"F",11)
- S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- Q
- ;
-OBXAGE(P,V,CNT) ;-- setup the visit OBX
- ;Q:$$GET1^DIQ(40.7,$P($G(^AUPNVSIT(V,0)),U,8),1)=30
- N AGE,UNIT
- S AGE=$$AGE^AUPNPAT(P,DT,"D")
- S UNIT=$S($P(AGE," ",2)="YRS":"Year",$P(AGE," ",2)="MOS":"Month",1:"Day")
- D SET(.ARY,"OBX",0)
- D SET(.ARY,CNT,1)
- D SET(.ARY,"NM",2)
- D SET(.ARY,"21612-7",3,1)
- D SET(.ARY,"LN",3,3)
- D SET(.ARY,$P(AGE," "),5)
- D SET(.ARY,"a",6,1)
- D SET(.ARY,UNIT,6,2)
- D SET(.ARY,"UCUM",6,3)
- D SET(.ARY,"F",11)
- S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- Q
- ;
-OBXCC(V,CNT) ;-- setup the chief complaint OBX
- N LN,CCI,CC,EC,ECE,ECI,VPOVI,CCE
- ;look here in V NARRATIVE TEXT first
- ;S VPOVI=$O(^AUPNVPOV("AD",V,0))
- ;S CCI=$$GET1^DIQ(9000010,V,1107,"I")
- ;S CC=$$GET1^DIQ(80,$$GET1^DIQ(9000010.07,VPOVI,.01,"I"),3)
- ;S LN=$$GET1^DIQ(9000010,V,1401)
- N CDA,TDA,CCE,ICDT,ICDATA
- S CCE=""
- S CDA=0 F  S CDA=$O(^AUPNVNT("AD",V,CDA)) Q:'CDA  D
- . Q:$$GET1^DIQ(9000010.34,CDA,.01)'="CHIEF COMPLAINT"
- . S TDA=0 F  S TDA=$O(^AUPNVNT(CDA,11,TDA)) Q:'TDA  D
- .. S CCE=CCE_$G(^AUPNVNT(CDA,11,TDA,0))_" "
- I CCE="" S CCE=$$GET1^DIQ(9000010,V,1401)
- I CCE="" S CCE=$$GET1^DIQ(9000010,V,1107)
- Q:$G(CCE)=""
- I $G(CCE)]"" S CCI=$O(^ICD9("AB",CCE_" ",0))
- I $G(CCI) S CC=$$GET1^DIQ(80,CCI,3)
- ;S ECI=$$GET1^DIQ(9000010.07,VPOVI,.09,"I")
- I $G(CCI) D
- . S ICDATA=$$ICDDX^APCLSILU($$GET1^DIQ(80,CCI,.01),VDATE)
- . S ICDT=$P(ICDATA,U,20)  ;get the icd type based on the code
- . S EC=$P(ICDATA,U,2)
- . S ECE=$P(ICDATA,U,4)
- D SET(.ARY,"OBX",0)
- D SET(.ARY,CNT,1)
- D SET(.ARY,"CWE",2)
- D SET(.ARY,"8661-1",3,1)  ;this is the chief complaint loinc code
- I $G(CCI) D
- . D SET(.ARY,EC,5,1)
- . D SET(.ARY,ECE,5,2)
- . D SET(.ARY,$S(ICDT="30":"I10",1:"I9CDX"),5,3)
- D SET(.ARY,"LN",3,3)
- D SET(.ARY,$G(CCE),5,9)
- D SET(.ARY,"F",11)
- S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- Q
  ;
 DG1P(EV,V,FL) ;-- set the repeating DG1
  I 'FL Q:EV="A03"
- Q:EV="A01"  ;IN pv2
+ ;Q:EV="A01"  ;IN pv2 2015 chit now in both
  ;Q:EV'="A04"!EV'="A08"
- N DX,DXE,DXT,DIEN,ECOD1,ECOD2,ECOD3
+ N DX,DXE,DXT
  S DXT=$S($G(FL):"F",1:"W")
+ I EV="A01" S DXT="W"  ;2015 chit
  I EV="A08" S DXT="W"
  I EV="A04" S DXT="W"
  ;S DX=$TR($$PRIMPOV^APCLV(V,"C"),".")
- S DIEN=$$PRIMPOV^APCLV(V,5)
  S DX=$$PRIMPOV^APCLV(V,"C")
  N ICDT,ICDATA
  S ICDATA=$$ICDDX^APCLSILU(DX,VDATE)
@@ -443,43 +306,32 @@ DG1P(EV,V,FL) ;-- set the repeating DG1
  ;S LEN=$L(DX)
  ;I $E(DX,LEN,LEN)="0" S DX=$E(DX,1,(LEN-1))
  Q:$G(DX)=""
+ Q:DX="ZZZ.999"  ;2015 chit dont do dg1 for uncoded dx
  I $P(DX,".",2)="" S DX=$TR(DX,".")
  S DXE=$S(ICDT=30:$P(ICDATA,U,4),1:$P($$PRIMPOV^APCLV(V,"E"),"|"))
  D SET(.ARY,"DG1",0)
  D SET(.ARY,1,1)
  D SET(.ARY,DX,3,1)
  D SET(.ARY,DXE,3,2)
- D SET(.ARY,$S(ICDT="30":"I10",1:"I9CDX"),3,3)  ;p30
+ ;D SET(.ARY,$S(ICDT="30":"I10",1:"I9CDX"),3,3)  ;p30
+ D SET(.ARY,$S(ICDT="30":"I10C",1:"I9CDX"),3,3)  ;2015 chit
  D SET(.ARY,DXT,6)
  S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- Q:'$G(DIEN)
- S ECOD1=$$GET1^DIQ(9000010.07,DIEN,.09,"I")
- S ECOD2=$$GET1^DIQ(9000010.07,DIEN,.18,"I")
- S ECOD3=$$GET1^DIQ(9000010.07,DIEN,.19,"I")
- I $G(ECOD1) D ECOD(ECOD1,DXT)
- I $G(ECOD2) D ECOD(ECOD2,DXT)
- I $G(ECOD3) D ECOD(ECOD3,DXT)
  Q
  ;
-FNDPPOV(VS) ;--find ien of primary pov
- N PDA,PV
- S PV=""
- S PDA=0 F  S PDA=$O(^AUPNVPOV("AD",VS,PDA)) Q:'PDA  D
- . I $P($G(^AUPNVPOV(PDA,0)),U,12)="P" S PV=PDA
- Q PV
- ;
 DG1S(EV,V) ;-- set the secondary DXs
- N DX,DXE,DXT,DXDA,DXI,DXCNT,LEN,CNTR,ECOD1,ECOD2,ECOD3
+ N DX,DXE,DXT,DXDA,DXI,DXCNT,LEN,CNTR
  S DXCNT=0,CNTR=0
  S CNTR=$$POVS(V)
  I CNTR=1 D DG1P(EV,V,1) Q
  S DXDA=0 F  S DXDA=$O(^AUPNVPOV("AD",V,DXDA)) Q:'DXDA  D
  . ;Q:$P($G(^AUPNVPOV(DXDA,0)),U,12)="P"
- . S DXCNT=DXCNT+1
  . ;Q:DXCNT=1
  . S DXI=$P($G(^AUPNVPOV(DXDA,0)),U)
  . ;S DX=$TR($$GET1^DIQ(80,DXI,.01),".")
  . S DX=$$GET1^DIQ(80,DXI,.01)
+ . Q:DX="ZZZ.999"  ;2015 chit dont do dg1 for uncoded dx
+ . S DXCNT=DXCNT+1
  . N ICDT,ICDATA
  . S ICDATA=$$ICDDX^APCLSILU(DX,VDATE)
  . S ICDT=$P(ICDATA,U,20)  ;get the icd type based on the code
@@ -490,21 +342,14 @@ DG1S(EV,V) ;-- set the secondary DXs
  . S DXT="F"  ;change this once i know the formula
  . I EV="A08" S DXT="W"
  . I EV="A04" S DXT="W"
- . Q:$G(DX)=""
  . D SET(.ARY,"DG1",0)
  . D SET(.ARY,DXCNT,1)
  . ;D SET(.ARY,(DXCNT-1),1)
  . D SET(.ARY,DX,3,1)
  . D SET(.ARY,DXE,3,2)
- . D SET(.ARY,$S(ICDT="30":"I10",1:"I9CDX"),3,3)
+ . D SET(.ARY,$S(ICDT="30":"I10C",1:"I9CDX"),3,3)
  . D SET(.ARY,DXT,6)
  . S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- . S ECOD1=$$GET1^DIQ(9000010.07,DXDA,.09,"I")
- . S ECOD2=$$GET1^DIQ(9000010.07,DXDA,.18,"I")
- . S ECOD3=$$GET1^DIQ(9000010.07,DXDA,.19,"I")
- . I $G(ECOD1) D ECOD(ECOD1,DXT)
- . I $G(ECOD2) D ECOD(ECOD2,DXT)
- . I $G(ECOD3) D ECOD(ECOD3,DXT)
  Q
  ;
 ECOD(EDXI,EDXT) ;-- populate the DG1 segment with Ecodes
@@ -534,15 +379,6 @@ POVS(V) ;-- count the POVs
  . S CN=CN+1
  Q $G(CN)
  ;
-LOOKTABM(TYPE,TAB,VAL,ECH) ;-- find the value and description in the HL7 tables
- N DESC,IENI,GBL
- S GBL="^APCLMUT"
- I TYPE="" S GBL="^APCLMUT"
- S IENI=$O(@GBL@("AVAL",TAB,VAL,0))
- Q:'IENI
- S DESC=$P($G(@GBL@(IENI,0)),U,3)
- Q VAL_ECH_DESC_ECH_TYPE_TAB
-         ;
 LOOKTAB(TYPE,TAB,VAL,ECH) ;-- find the value and description in the HL7 tables
  N DESC,IENI,GBL
  S GBL="^BHLTBL"
@@ -551,12 +387,7 @@ LOOKTAB(TYPE,TAB,VAL,ECH) ;-- find the value and description in the HL7 tables
  Q:'IENI
  S DESC=$P($G(@GBL@(IENI,0)),U,3)
  Q VAL_ECH_DESC_ECH_TYPE_TAB
- ;
-LZERO(V,L) ;EP - left zero fill
- NEW %,I
- S %=$L(V),Z=L-% F I=1:1:Z S V="0"_V
- Q V
- ;
+         ;
 LOOKDSC(TYPE,TAB,DSC,ECH) ;-- find a reverse value based on description
  N VAL,IENI,GBL
  S GBL="^BHLOTBL"
@@ -611,7 +442,7 @@ REST2(M,MP) ;-- write out the remainder of the segments to the global
  S MDA=0 F  S MDA=$O(^HLA(M,2,MP,1,MDA)) Q:'MDA  D
  . S DATA=$G(^HLA(M,2,MP,1,MDA,0))
  . Q:DATA=""
- . D SETGL(DATA)
+ . D SETGL2(DATA)
  Q
  ;
 SETGL2(D) ;-- set the temp global
@@ -625,11 +456,14 @@ WRITE2 ; use XBGSAVE to save the temp global (APCLDATA) to a delimited
  S TST=0
  I $P($G(^APCLILIC(1,0)),U,5)="T" S TST=1
  S XBGL="APCLTMP",XBMED="F",XBQ="N",XBFLT=1,XBF=$J,XBE=$J
- S XBNAR="MU2 SURVEILLANCE HL7 EXPORT"
+ ;S XBNAR="MU2 SURVEILLANCE HL7 EXPORT"
+ S XBNAR="CHIT SURVEILLANCE HL7 EXPORT"
  S APCLASU=$P($G(^AUTTLOC($P(^AUTTSITE(1,0),U),0)),U,10)
  ;is this a test system?
- S (XBFN,APCLDFN)=$S($G(TST):"MU2Z",1:"MU2")_"_"_APCLASU_"_"_$$DATE(DT)_"_P30.txt"
- S XBS1="MU2 SURVEILLANCE SEND"
+ ;S (XBFN,APCLDFN)=$S($G(TST):"MU2Z",1:"MU2")_"_"_APCLASU_"_"_$$DATE(DT)_"_P30.txt"
+ S (XBFN,APCLDFN)=$S($G(TST):"CHITZ",1:"CHIT")_"_"_APCLASU_"_"_$$DATE(DT)_"_P32.txt"
+ ;S XBS1="MU2 SURVEILLANCE SEND"
+ S XBS1="CHIT SURVEILLANCE SEND"
  ;
  D ^XBGSAVE
  ;
@@ -638,57 +472,11 @@ WRITE2 ; use XBGSAVE to save the temp global (APCLDATA) to a delimited
  . I XBFLG(1)]"" W:'$D(ZTQUEUED) !!," HL7 file NOT successfully created",!!
  . W:'$D(ZTQUEUED) !,"File was NOT successfully transferred to IHS/CDC",!,"you will need to manually ftp it.",!
  . W:'$D(ZTQUEUED) !,XBFLG(1),!!
- K ^APCLTMP($J),APCLCNT
+ ;K ^APCLTMP($J),APCLCNT
  Q
  ;
-GL(IN,EV,PT,VDD) ;-- write out the batch to a global for saving in APCLSLAB
- K ^APCLTMP($J)
- N BDA,BDO,HLODAT,MSH,MSGP,MSG,BT,BT1,BT2,BT3
- S APCLCNT=0
- S MSG=$P($G(^HLB(IN,0)),U,2)
- D REST(MSG)
- D WRITE(EV,PT,VDD)
- Q
- ;
-REST(M) ;-- write out the remainder of the segments to the global
- N MDA,DATA,MCNT
- S MCNT=0
- S MDA=0 F  S MDA=$O(^HLA(M,1,MDA)) Q:'MDA  D
- . S DATA=$G(^HLA(M,1,MDA,0))
- . Q:DATA=""
- . I $E(DATA,1,3)="NSH" D
- .. S $E(DATA,1,4)="MSH"
- .. S $P(DATA,HLFS,2)="^~\&"
- . D SETGL(DATA)
- Q
- ;
-SETGL(D) ;-- set the temp global
- S APCLCNT=APCLCNT+1
- S ^APCLTMP($J,APCLCNT)=D
- Q
- ;
-WRITE(E,P,VD) ; use XBGSAVE to save the temp global (APCLDATA) to a delimited
- ; file that is exported to the IE system
- N XBGL,XBQ,XBQTO,XBNAR,XBMED,XBFLT,XBUF,XBFN,APCLFN
- S XBGL="APCLTMP",XBMED="F",XBQ="N",XBFLT=1,XBF=$J,XBE=$J
- S XBNAR="MU2 HL7 EXPORT"
- S APCLASU=$P($G(^AUTTLOC($P(^AUTTSITE(1,0),U),0)),U,10)  ;asufac for file name
- S (XBFN,APCLDFN)="MU2_"_E_"_"_$$HRN^AUPNPAT(P,DUZ(2))_"_"_$$DATET(VD)_".txt"
- S XBS1="SURVEILLANCE MU2 SEND"
- ;
- D ^XBGSAVE
- ;
- I XBFLG'=0 D
- . I XBFLG(1)="" W:'$D(ZTQUEUED) !!,"MU2 HL7 file successfully created",!!
- . I XBFLG(1)]"" W:'$D(ZTQUEUED) !!,"MU2 HL7 file NOT successfully created",!!
- K ^APCLTMP($J),APCLCNT
- K ^APCLDATA($J)
- Q
 DATE(D) ;EP
  Q (1700+$E(D,1,3))_$E(D,4,5)_$E(D,6,7)
- ;
-DATET(D) ;EP
- Q (1700+$E(D,1,3))_$E(D,4,5)_$E(D,6,7)_$E(D,8,11)
  ;
 EOJ ; EP - EOJ HOUSE KEEPING - this ep called by the BVP package (View patient record)
  K AUPNLK("INAC")

@@ -1,16 +1,15 @@
-VENPCCMC ; IHS/OIT/GIS - PCC+ INSTALLATION CHECKER ;
- ;;2.6;PCC+;;NOV 12, 2007
+VENPCCMC ; IHS/ITSC/GIS - PCC+ INSTALLATION CHECKER ;
+ ;;2.5;PCC+;**1**;OCT 25, 2005
  ;
  ;
  ; 
 INTRO ; WELCOME
  N %,X,%Y,BACK,BYP,CDFN,CFG,CFIGIEN,CFLG,CIEN,CMED,DA,DEM,DP,GP,VER,EXRX,ART,AUTO,SM
- N I,IP,MON,MV,OS,PATH,PHS,POP,PULL,SOCK,STG,TIEN,TOT,TYPE,UNI,X,Y,SUB,IPFLG,CNT
+ N I,IP,MON,MV,OS,PATH,PHS,POP,PULL,SOCK,STG,TIEN,TOT,TYPE,UNI,X,Y,SUB,IPFLG
  D ^XBCLS W !,?20,"*****  PCC+ INSTALLATION CHECKER  *****",!!
  W "NOTE: This utility does NOT update the PCC+ configuration files.",!," It simply reports on the status of the current installation."
  W !!,"When you see the '<>' symbol, press the <ENTER> key to continue scrolling..."
 ENV ; CHECK THE OPERATING ENVIRONMENT
-CSC26 I +$P($T(VENPCCMC+1),";",3)=2.6 W !!,"Now let's check connectivity and the Windows components of PCC+",! D CSC^VENPCCQX(.CNT) D PAUSE^VENPCCU G CPC ; CSC FOR VER 2.6
  W !!!!!,"First, let's check the operating environment..."
  I $$OS^VENPCCME W !,"Unable to proceed because the operating system is not defined for PCC+!" Q
 CMP ; CHECK FOR REQUIRED COMPONENTS
@@ -39,7 +38,6 @@ CCPS ; CHECK CONNECTION TO THE PRINT SERVERS
  . W !,"Then run this utility again."
  . D PAUSE^VENPCCU
  . Q
- I 'IPFLG W !,"Connectivity is OK",!
  W ! I '$$WAIT^VENPCCU Q
 CEF ; CHECK ENCOUNTER FORMS
  D ^XBCLS
@@ -80,7 +78,7 @@ CHF ; CHECK HEADER FILES
  D PAUSE^VENPCCU
  Q
  ; 
-IP(IPFLG) ; EP - CHECK IP AND SOCKET
+IP(IPFLG) ; CHECK IP AND SOCKET
  N POP,X,I,ACK
  I $G(SOCK)'=5143 W !?5,"CURRENT TCP SOCKET IS INVALID.  IT SHOULD BE '5143'" S IPFLG=1 Q
  F I=1,2 S X=IP(I) D  Q:IP(1)=IP(2)  I IPFLG Q
@@ -106,7 +104,7 @@ EF(CFLG) ; EP-ENCOUTER FORMS
  . I '(TOT#10) W ! I $$WAIT^VENPCCU
  Q
  ;
-ECK(TIEN) ; EP - CK TEMPLATE
+ECK(TIEN) ; CK TEMPLATE
  ; BAR CODE CHARACTER CHECK NO LONGER REQUIRED IN 2.2
  N STG,HDR,TMN,BAR,X,Y,NAME
  S NAME=$P($G(^VEN(7.41,TIEN,0)),U) W !?5,NAME
@@ -118,7 +116,7 @@ ECK(TIEN) ; EP - CK TEMPLATE
  I 'CFLG W "  <= OK"
  Q
  ; 
-HF(CFLG) ; EP - HEADER FILES
+HF(CFLG) ; HEADER FILES
  N CFIGIEN,PATH,HF,IPI,IPX,HSTG,X
  S CFIGIEN=$$CFG^VENPCCU
  S PATH=$G(^VEN(7.5,CFIGIEN,2))

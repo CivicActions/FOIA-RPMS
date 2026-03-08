@@ -1,5 +1,5 @@
-BTIULO ; IHS/ITSC/LJF - CODE FOR IHS OBJECTS ;16-Sep-2013 15:45;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1001,1004,1006,1012**;NOV 04, 2004;Build 45
+BTIULO ; IHS/ITSC/LJF - CODE FOR IHS OBJECTS ;05-Feb-2019 16:07;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1001,1004,1006,1012,1021**;NOV 04, 2004;Build 11
  ;Added EHR 1.1 call for finding a visit
  ;Added error message if visit not found
  ;
@@ -241,6 +241,7 @@ DETAIL(DFN,TARGET) ;
  . I $D(GMRAL),GMRAL=0 S @TARGET@(CNT,0)="Patient has answered NKA"
  . E  S @TARGET@(CNT,0)="No Allergy Assessment" ;
  S ADR=0 F  S ADR=$O(GMRAL(ADR)) Q:ADR=""  D
+ .K RXN
  .D EN1^GMRAOR2(ADR,"RXN")
  .S UNI=$$UNI^BEHOARCV(ADR)   ;Get the UNI code for this agent if its GMR type
  .I $L(UNI) S CAUSE=$P(RXN,U)_"; UNII: "_UNI

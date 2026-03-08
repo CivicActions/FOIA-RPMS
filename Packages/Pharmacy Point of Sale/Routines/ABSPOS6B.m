@@ -1,5 +1,5 @@
 ABSPOS6B ; IHS/FCS/DRS - user display screen, cont ;  
- ;;1.0;PHARMACY POINT OF SALE;*29,31*;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;*29,31,52*;JUN 21, 2001;Build 131
  Q
 INFO(PAT,RXI)         ;EP - from ABSPOS6H
  ; IF '$G(RXI), then this is a patient summary line:
@@ -35,6 +35,8 @@ INFO1 IF $G(RXI) D  Q
  .; in ABSPOSQ1 and then again for real in billing
  .N IEN52 S IEN52=$P(^ABSPT(RXI,1),U,11)
  .N X
+ .N DELETED S DELETED="" I IEN52 S DELETED=$D(^PSRX(IEN52,"D"))#2 ; /IHS/OIT/RAM/ ; Let's see if the prescription is marked for deletion.
+ .N RTS S RTS="" I IEN52 S RTS=$P($G(^PSRX(IEN52,2)),"^",15) ; /IHS/OIT/RAM/ ; Let's see if the prescription is Returned to Stock.
  .I IEN52 D
  . . N RX0 S RX0=$G(^PSRX(IEN52,0)),X=$P(RX0,U,6)
  . . I X]"" S X=$P($G(^PSDRUG(X,0)),U)
@@ -65,15 +67,19 @@ INFO1 IF $G(RXI) D  Q
  . . N X S X=INFO("STAT")_" "
  . . S X=X_$S(STAT>99:"by",STAT>69:"from",STAT>49:"to",1:"for")
  . . S INFO("STAT")=X_" "_INSURER
- .I STAT=100 D
+ . ;
+ . I STAT=100 D
  . . N X S X=$$RESULT(RXI)
  . . S INFO("RES")=$S(X]"":X,1:"(Missing result?)")
  . E  S INFO("RES")=INFO("STAT")
- .S INFO("RES")=INFO("RES")_" ("_$S(RXI[".":RXI,1:"Prescription `"_RXI)_")"
- .S INFO("PATIEN")=$P(^ABSPT(RXI,0),U,6)
- .I 'INFO("PATIEN") S INFO("PATIEN")=$P($G(^PSRX(IEN52,0)),U,2)
- .I INFO("DUR")]"" S INFO("RES")=INFO("RES")_" DUR:"_INFO("DUR")
- .I REVERSAL S INFO("RES")="*REVERSAL* "_INFO("RES")
+ . I DELETED S INFO("RES")=INFO("RES")_" Rx Deleted; Ret'd To Stock." ; /IHS/OIT/RAM ; P52 ; IF RX MARKED FOR DELETION, ALSO DISPLAY RTS.
+ . E  I RTS S INFO("RES")=INFO("RES")_" Returned to Stock."
+ . S INFO("RES")=INFO("RES")_" ("_$S(RXI[".":RXI,1:"Prescription `"_RXI)_")"
+ . S INFO("PATIEN")=$P(^ABSPT(RXI,0),U,6)
+ . I 'INFO("PATIEN") S INFO("PATIEN")=$P($G(^PSRX(IEN52,0)),U,2)
+ . I INFO("DUR")]"" S INFO("RES")=INFO("RES")_" DUR:"_INFO("DUR")
+ . I REVERSAL S INFO("RES")="*REVERSAL* "_INFO("RES")
+ .; I REVERSAL&DELETED S INFO("RES")="*REVERSAL* Rx Deleted. "_INFO("RES")
  .I ONEPAT S INFO("RES")=$$ONEPAT^ABSPOS6C_" "_INFO("RES")
  .I STAT<99,$G(^ABSPT(RXI,3)) D
  ..S INFO("RES")="*CANCELLATION REQUESTED* "_INFO("RES")

@@ -1,6 +1,10 @@
 ABME5L8 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS 3P BILLING SYSTEM;**6,8,9,10,11**;NOV 12, 2009;Build 133
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8,9,10,11,31,37**;NOV 12, 2009;Build 739
  ;Header Segments
+ ;
+ ;IHS/SD/AML 2.6*31 CR10374 Added code to write ABM*EAF segment for Remaining Patient Liability; Also added code so any adjustments that are CO will write
+ ;IHS/SD/SDR 2.6*37 ADO76009 Updated EAF check to include the PI multiple 
+ ;
 START ;START HERE
  D PAYED^ABMUTLP
  N ABMI
@@ -18,20 +22,32 @@ START ;START HERE
  .;abm*2.6*8 end new code
  .D EP^ABME5SBR(ABMI)
  .D WR^ABMUTL8("SBR")
- .F ABML="OA","PR" D
- ..Q:'$D(ABMP(+ABMLINE,ABML))  ;quit if no data for insurer in ABMP adj array
+ .S ABMM=$S(+$P($G(ABMP("INS",ABMI)),U,8)'=0:$P(ABMP("INS",ABMI),U,8),1:1)  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .;F ABML="OA","PR" D  ;abm*2.6*31 IHS/SD/SDR CR10374
+ .F ABML="OA","PR","CO" D  ;abm*2.6*31 IHS/SD/SDR CR10374
+ ..;Q:'$D(ABMP(+ABMLINE,ABML))  ;quit if no data for insurer in ABMP adj array  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ..Q:'$D(ABMP(+ABMLINE,ABMM,ABML))  ;quit if no data for insurer in ABMP adj array  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ..D EP^ABME5CAS
  ..D WR^ABMUTL8("CAS")
  .;I $G(ABMP("PAYED",+ABMLINE)) D  ;abm*2.6*9 tribal self-insured
- .I $G(ABMP("PAYED",+ABMLINE))!($P($G(^ABMNINS(ABMP("LDFN"),+ABMLINE,0)),U,11)="Y") D  ;abm*2.6*9 tribal self-insured
+ .;I ($G(ABMP("PAYED",+ABMLINE))!($P($G(^ABMNINS(ABMP("LDFN"),+ABMLINE,0)),U,11)="Y")) D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .I ($G(ABMP("PAYED",+ABMLINE,ABMM))!($P($G(^ABMNINS(ABMP("LDFN"),+ABMLINE,0)),U,11)="Y")) D  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ..D EP^ABME5AMT("D")
  ..D WR^ABMUTL8("AMT")
  .;start new code abm*2.6*10 COB billing
  .;I ABMPSQ'=1,$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+ABMP("INS"),".211","I"),1,"I")="R" D
- ..S ABMAMT=0
- ..D EP^ABME5AMT("B6")
+ .;.S ABMAMT=0
+ .;.D EP^ABME5AMT("B6")
+ .;.D WR^ABMUTL8("AMT")
+ .;.;end new code abm*2.6*10 COB billing
+ .;
+ .;start new abm*2.6*31 IHS/SD/AML CR10374
+ .;I $G(ABMP(+ABMLINE,"EAF"))'="" D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .I +$G(ABMP(+ABMLINE,ABMM,"EAF"))'=0 D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ..D EP^ABME5AMT("EAF")
  ..D WR^ABMUTL8("AMT")
- ..;end new code abm*2.6*10 COB billing
+ .;end new abm*2.6*31 IHS/SD/AML CR10374
+ .;
  .D ^ABME5OI
  .D WR^ABMUTL8("OI")
  .; Loop 2330A - Other Subscriber Name

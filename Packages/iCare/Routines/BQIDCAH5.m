@@ -1,5 +1,5 @@
 BQIDCAH5 ;GDIT/HS/ALA-Ad Hoc Logic Continued ; 18 Jan 2013  6:42 AM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**1,2,4,7**;Mar 01, 2021;Build 14
  ;
 DOB(FGLOB,TGLOB,DBFROM,DBTHRU) ;EP - Date of Birth search
  I $G(TGLOB)="" Q
@@ -17,6 +17,23 @@ DOB(FGLOB,TGLOB,DBFROM,DBTHRU) ;EP - Date of Birth search
  . NEW FDT,TDT
  . S FDT=DBFROM-.001,TDT=DBTHRU F  S FDT=$O(^DPT("ADOB",FDT)) Q:FDT=""!(FDT>TDT)  D
  .. S IEN="" F  S IEN=$O(^DPT("ADOB",FDT,IEN)) Q:'IEN  S @TGLOB@(IEN)=""
+ Q
+ ;
+DMON(FGLOB,TGLOB,DMON,MPARMS) ;EP - Birth Month search
+ I $G(TGLOB)="" Q
+ I $G(DMON)="" Q
+ NEW IEN,PDOB
+ S IEN=0
+ I $G(FGLOB)'="" D
+ . F  S IEN=$O(@FGLOB@(IEN)) Q:'IEN  D
+ .. S PDOB=$P($G(^DPT(IEN,0)),U,3) I PDOB="" Q
+ .. I DMON'=$E(PDOB,4,5) Q
+ .. S @TGLOB@(IEN)=""
+ ;
+ I $G(FGLOB)="" D
+ . S PDOB="" F  S PDOB=$O(^DPT("ADOB",PDOB)) Q:PDOB=""  D
+ .. I DMON'=$E(PDOB,4,5) Q
+ .. S IEN="" F  S IEN=$O(^DPT("ADOB",PDOB,IEN)) Q:IEN=""  S @TGLOB@(IEN)=""
  Q
  ;
 GEN(FGLOB,TGLOB,GEN) ;EP - Gender search
@@ -202,4 +219,136 @@ EDDT ;EP
  . I EDUOP="!",EDP=EDUC,EDUNOT S @NGLOB@(IEN)="" Q
  . I EDUOP="!",EDP=EDUC,'EDUNOT S @TGLOB@(IEN)="",@CRIT@("EDUC",IEN,MIEN)="" Q
  . I EDUOP="&",EDP=EDUC S EDPT(IEN,EDUC)=MIEN
+ Q
+ ;
+HRCOND(FGLOB,TGLOB,HRISK,HRNUM,MPARMS) ;EP - High Risk Conditions
+ NEW NGLOB
+ I $G(TGLOB)="" Q
+ S NGLOB=$NA(^TMP("BQIDCHCOND",$J)) K @NGLOB
+ ;
+ ; Looking for number of high risk conditions
+ I $G(HRNUM)'=""!($D(MPARMS("HRNUM"))) D
+ . I $G(HRNUM)'="" S CRIT1=HRNUM,CRIT2=""
+ . I $D(MPARMS("HRNUM")) D
+ .. S CRIT1=$G(CRIT1,""),CRIT2=$G(CRIT2,"")
+ .. S N="",N=$O(MPARMS("HRNUM",N)),CRIT1=N
+ .. S N=$O(MPARMS("HRNUM",N)) I N'="" S CRIT2=N
+ . D NHRC
+ ;
+ I $G(HRISK)'=""!($D(MPARMS("HRISK")))!($G(HRIMUNO)'="")!($D(MPARMS("HRIMUNO"))) D
+ . I $G(FGLOB)="" D
+ .. I $G(HRISK)'="" D STFC(HRISK) Q
+ .. I $G(HRIMUNO)'="" D STIM(HRIMUNO) Q
+ .. S HRIMUNO="" F  S HRIMUNO=$O(MPARMS("HRIMUNO",HRIMUNO)) Q:HRIMUNO=""  D STIM(HRIMUNO)
+ .. S HRISK="" F  S HRISK=$O(MPARMS("HRISK",HRISK)) Q:HRISK=""  D STFC(HRISK)
+ . I $G(FGLOB)'="" D
+ .. I $G(HRISK)'="" D FNFC(HRISK) Q
+ .. I $G(HRIMUNO)'="" D FNIM(HRIMUNO) Q
+ .. S HRIMUNO="" F  S HRIMUNO=$O(MPARMS("HRIMUNO",HRIMUNO)) Q:HRIMUNO=""  D FNIM(HRIMUNO)
+ .. S HRISK="" F  S HRISK=$O(MPARMS("HRISK",HRISK)) Q:HRISK=""  D FNFC(HRISK)
+ . I HROP="&" D
+ .. S HCNT=0,HRISK="" F  S HRISK=$O(MPARMS("HRISK",HRISK)) Q:HRISK=""  S HCNT=HCNT+1
+ .. S HDFN="" F  S HDFN=$O(@NGLOB@(HDFN)) Q:HDFN=""  D
+ ... S HCT=0,HVAL="" F  S HVAL=$O(@NGLOB@(HDFN,HVAL)) Q:HVAL=""  S HCT=HCT+1
+ ... I HCT'=HCNT K @NGLOB@(HDFN),@CRIT@("HRISK",HDFN) Q
+ ... I HCT=HCNT S @TGLOB@(HDFN)=""
+ K @NGLOB,HCT,HCNT,HDFN,HVAL,HRISK,HRNUM,CRIT1,CRIT2,N,AVAL1,AVAL2
+ Q
+ ;
+NHRC ; EP - Number of High Risk Conditions
+ NEW OP1,OP2,HN
+ S OP1=$E(CRIT1,1,1),OP2=$E(CRIT2,1,1)
+ I $E(OP1,1,1)="'" S OP1=$E(CRIT1,1,2),AVAL1=$E(CRIT1,3,$L(CRIT1))
+ E  S OP1=$E(CRIT1,1,1),AVAL1=$E(CRIT1,2,$L(CRIT1))
+ I $E(OP2,1,1)="'" S OP2=$E(CRIT2,1,2),AVAL2=$E(CRIT2,3,$L(CRIT2))
+ E  S OP2=$E(CRIT2,1,1),AVAL2=$E(CRIT2,2,$L(CRIT2))
+ ;
+ I $G(FGLOB)="" D
+ . I $G(OP1)="=" D STFN(AVAL1) Q
+ . I $G(OP1)="<" D  Q
+ .. F  S AVAL1=$O(^BQIPAT("AI",AVAL1),-1) Q:AVAL1=""  D STFN(AVAL1)
+ . I $G(OP1)=">" D  Q
+ .. F  S AVAL1=$O(^BQIPAT("AI",AVAL1)) Q:AVAL1=""  D STFN(AVAL1)
+ . ;
+ . I $G(OP1)="'<",$G(OP2)="" D  Q
+ .. S AVAL1=$O(^BQIPAT("AI",AVAL1),-1)
+ .. F  S AVAL1=$O(^BQIPAT("AI",AVAL1)) Q:AVAL1=""  D STFN(AVAL1)
+ . I $G(OP1)="'>",$G(OP2)="" D  Q
+ .. S AVAL1=AVAL1+1
+ .. F  S AVAL1=$O(^BQIPAT("AI",AVAL1),-1) Q:AVAL1=""  D STFN(AVAL1)
+ . ;
+ . ; In range
+ . I $G(OP1)="'<",$G(OP2)="'>" D  Q
+ .. S AVAL1=AVAL1-1 F  S AVAL1=$O(^BQIPAT("AI",AVAL1)) Q:AVAL1>AVAL2!(AVAL1="")  D STFN(AVAL1)
+ . ; Out of range
+ . I $G(OP1)="<",$G(OP2)=">" D  Q
+ .. S AVAL1=AVAL1+1 F  S AVAL1=$O(^BQIPAT("AI",AVAL1),-1) Q:AVAL1=""  D STFN(AVAL1)
+ .. S AVAL2=AVAL2-1 F  S AVAL2=$O(^BQIPAT("AI",AVAL2)) Q:AVAL2=""  D STFN(AVAL2)
+ ;
+ I $G(FGLOB)'="" D
+ . I $G(OP1)="=" D FNFN(AVAL1)
+ . I $G(OP1)="<" D  Q
+ .. F  S AVAL1=$O(^BQIPAT("AI",AVAL1),-1) Q:AVAL1=""  D FNFN(AVAL1)
+ . I $G(OP1)=">" D  Q
+ .. F  S AVAL1=$O(^BQIPAT("AI",AVAL1)) Q:AVAL1=""  D FNFN(AVAL1)
+ . ;
+ . I $G(OP1)="'<",$G(OP2)="" D  Q
+ .. S AVAL1=AVAL1+1 F  S AVAL1=$O(^BQIPAT("AI",AVAL1),-1) Q:AVAL1=""  D FNFN(AVAL1)
+ . I $G(OP1)="'>",$G(OP2)="" D  Q
+ .. S AVAL1=AVAL1-1 F  S AVAL1=$O(^BQIPAT("AI",AVAL1)) Q:AVAL1=""  D FNFN(AVAL1)
+ . ;
+ . ; In range
+ . I $G(OP1)="'<",$G(OP2)="'>" D  Q
+ .. S AVAL1=AVAL1-1 F  S AVAL1=$O(^BQIPAT("AI",AVAL1)) Q:AVAL1>AVAL2  D FNFN(AVAL1)
+ . ; Out of range
+ . I $G(OP1)="<",$G(OP2)=">" D  Q
+ .. S AVAL1=AVAL1+1 F  S AVAL1=$O(^BQIPAT("AI",AVAL1),-1) Q:AVAL1=""  D FNFN(AVAL1)
+ .. S AVAL2=AVAL2-1 F  S AVAL2=$O(^BQIPAT("AI",AVAL2)) Q:AVAL2=""  D FNFN(AVAL2)
+ Q
+ ;
+STFN(VAL) ;EP - Store value if meet high risk number
+ NEW HN
+ S HN="" F  S HN=$O(^BQIPAT("AI",VAL,HN)) Q:HN=""  S @TGLOB@(HN)="" D
+ . S HC="" F  S HC=$O(^BQIPAT(HN,5,"C",HC)) Q:HC=""  S HNN=$O(^BQIPAT(HN,5,"C",HC,"")),@CRIT@("HRCD",HN,HNN)=""
+ Q
+ ;
+FNFN(VAL) ;EP - Find and store value if meet high risk number
+ NEW HIEN
+ S HIEN="" F  S HIEN=$O(^BQIPAT("AI",VAL,HIEN)) Q:HIEN=""  I $D(@FGLOB@(HIEN)) D
+ . S @TGLOB@(HIEN)=""
+ . S HC="" F  S HC=$O(^BQIPAT(HIEN,5,"C",HC)) Q:HC=""  S HNN=$O(^BQIPAT(HIEN,5,"C",HC,"")),@CRIT@("HRCD",HIEN,HNN)=""
+ Q
+ ;
+STFC(VAL) ;EP - find and store if meet high risk condition
+ NEW HN,HNN
+ S HN="" F  S HN=$O(^BQIPAT("AH",VAL,HN)) Q:HN=""  D
+ . I HROP="!" S @TGLOB@(HN)=""
+ . I HROP="&" S @NGLOB@(HN,VAL)=""
+ . S HNN="" F  S HNN=$O(^BQIPAT("AH",VAL,HN,HNN)) Q:HNN=""  D
+ .. S @CRIT@("HRCD",HN,HNN)=""
+ Q
+ ;
+STIM(VAL) ; EP - find and store if meet immunocompromised condition
+ NEW IM,IMN
+ S IM="" F  S IM=$O(^BQIPAT("AJ",VAL,IM)) Q:IM=""  D
+ . S IMN="" F  S IMN=$O(^BQIPAT("AJ",VAL,IM,IMN)) Q:IMN=""  D
+ .. S @TGLOB@(IM)="",@CRIT@("HRIMNO",IM,IMN)=""
+ Q
+ ;
+FNFC(VAL) ;EP - find and store if meet high risk condition
+ NEW HIEN,HNN
+ S HIEN="" F  S HIEN=$O(^BQIPAT("AH",VAL,HIEN)) Q:HIEN=""  D
+ . I $D(@FGLOB@(HIEN)) D
+ .. I HROP="!" S @TGLOB@(HIEN)=""
+ .. I HROP="&" S @NGLOB@(HIEN,VAL)=""
+ .. S HNN="" F  S HNN=$O(^BQIPAT("AH",VAL,HIEN,HNN)) Q:HNN=""  D
+ ... S @CRIT@("HRCD",HIEN,HNN)=""
+ Q
+ ;
+FNIM(VAL) ;EP - find and store if meet immunocompromised condition
+ NEW IDFN,IMN
+ S IDFN="" F  S IDFN=$O(^BQIPAT("AJ",VAL,IDFN)) Q:IDFN=""  D
+ . I $D(@FGLOB@(IDFN)) D
+ .. S IMN="" F  S IMN=$O(^BQIPAT("AJ",VAL,IDFN,IMN)) Q:IMN=""  D
+ ... S @TGLOB@(IDFN)="",@CRIT@("HRIMNO",IDFN,IMN)=""
  Q

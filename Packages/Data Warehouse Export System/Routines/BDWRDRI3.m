@@ -1,9 +1,9 @@
 BDWRDRI3 ; IHS/CMI/LAB - INIT CONT DW ;
- ;;1.0;IHS DATA WAREHOUSE;;JAN 23, 2006
+ ;;1.0;IHS DATA WAREHOUSE;**9**;JAN 24, 2006;Build 103
 INFORM ;EP - INFORM OPERATOR WHAT IS GOING TO HAPPEN
  Q:$D(ZTQUEUED)
  W !!,"This routine will generate IHS Data Warehouse records"
- W !,"for visits posted between a specified range of dates.  You may ""^"" out at any",!,"prompt and will be ask to confirm your entries prior to generating transactions."
+ W !,"for visits posted between a specified range of dates.  You may ""^"" out at any",!,"prompt and will be asked to confirm your entries prior to generating transactions."
  Q
  ;
 CURRUN ;EP - COMPUTE DATES FOR CURRENT RUN

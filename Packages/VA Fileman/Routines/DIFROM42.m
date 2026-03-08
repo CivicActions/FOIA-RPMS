@@ -1,5 +1,6 @@
-DIFROM42 ;SFISC/XAK-CREATES 'INIT4' ;10/9/95  05:59
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROM42 ;SFISC/XAK-CREATES 'INIT4' ;10:55 AM  11 Feb 1993 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S DNAME=E_4,DL=0,(DH,Q)=" ;"
  K ^UTILITY($J) F DD=1:1 S X=$T(TXT+DD) Q:X=""  S ^UTILITY($J,DD,0)=$E(X,4,999)
@@ -22,5 +23,5 @@ TXT ;
  ;;OR1 N X F  S R=$O(^ORD(100.99,1,5,DA,1,N,1,R)) Q:'R  S X=$P(^(R,0),U) I X]"" S %=$O(^ORD(101,"B",X,0)) D:'% ADDP S:% ^ORD(100.99,1,5,DA,1,N,1,R,0)=% S Y=R,J=J+1
  ;; S:J $P(^ORD(100.99,1,5,DA,1,N,1,0),U,3,4)=Y_U_J
  ;; Q
- ;;ADDP N I,J,N,R,DA,DLAYGO,DO S %=""
+ ;;ADDP N I,J,N,R,DA,DLAYGO S %=""
  ;; S DIC="^ORD(101,",DIC(0)="LX",DLAYGO=101 D FILE^DICN K DIC Q:Y=-1  S %=+Y Q

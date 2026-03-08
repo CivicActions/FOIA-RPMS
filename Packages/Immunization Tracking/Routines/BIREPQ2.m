@@ -1,5 +1,5 @@
 BIREPQ2 ;IHS/CMI/MWR - REPORT, QUARTERLY IMM; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW QUARTERLY IMMUNIZATION REPORT, GATHER DATA.
  ;
@@ -30,23 +30,23 @@ HEAD(BIQDT,BICC,BIHCF,BICM,BIBEN,BIUP) ;EP
  ;---> If Header array is NOT being for Listmananger include version.  vvv83
  S:'$D(VALM("BM")) X=$$LMVER^BILOGO()
  ;
- D WH^BIW(.BILINE,X)
- S X=$$REPHDR^BIUTL6(DUZ(2)) D CENTERT^BIUTL5(.X)
+ I BISPD'="CSV" D WH^BIW(.BILINE,X)
+ S X=$$REPHDR^BIUTL6(DUZ(2)) I BISPD'="CSV" D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
- S X="*  3-27 Month Immunization Report  *" D CENTERT^BIUTL5(.X)
+ S X="*  3-27 Month Immunization Report  *" I BISPD'="CSV" D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;S X="For Children 3-27 Months of Age" D CENTERT^BIUTL5(.X)  vvv83
  ;D WH^BIW(.BILINE,X)
  ;
- S X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT)
- D WH^BIW(.BILINE,X)
+ S:BISPD'="CSV" X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT) S:BISPD="CSV" X="Report Date: "_$$SLDT1^BIUTL5(DT)
+ D WH^BIW(.BILINE,X,$S(BISPD="CSV":"",1:1))
  ;
- S X=$$SP^BIUTL5(30)_"End Date: "_$$SLDT1^BIUTL5(BIQDT)
- D WH^BIW(.BILINE,X,1)
+ S:BISPD'="CSV" X=$$SP^BIUTL5(30)_"End Date: "_$$SLDT1^BIUTL5(BIQDT) S:BISPD="CSV" X="End Date: "_$$SLDT1^BIUTL5(BIQDT)
+ D WH^BIW(.BILINE,X,$S(BISPD="CSV":"",1:1))
  ;
  S X=" "_$$BIUPTX^BIUTL6(BIUP) D WH^BIW(.BILINE,X)
- D WH^BIW(.BILINE,$$SP^BIUTL5(79,"-"))
+ I BISPD'="CSV" D WH^BIW(.BILINE,$$SP^BIUTL5(79,"-"))
  ;
  D
  .;---> If specific Communities were selected (not ALL), then print
@@ -66,6 +66,9 @@ HEAD(BIQDT,BICC,BIHCF,BICM,BIBEN,BIUP) ;EP
  .D SUBH^BIOUTPT5("BIBEN","Beneficiary Type",,"^AUTTBEN(",.BILINE,.BIERR,,12)
  .I $G(BIERR) D ERRCD^BIUTL2(BIERR,.X) D WH^BIW(.BILINE,X) Q
  .;
+ .I BISPD="CSV" D  Q
+ ..S X="Age in Months,3-4 mths,5-6 mths,7-15 mths,16-18 mths,19-23 mths,24-27 mths,Totals"
+ ..D WH^BIW(.BILINE,X)
  .S X=$$SP^BIUTL5(10)_"|"_$$SP^BIUTL5(21)_"Age in Months"
  .S X=X_$$SP^BIUTL5(24)_"|"
  .D WH^BIW(.BILINE,X)
@@ -129,8 +132,9 @@ START(BIQDT,BICC,BIHCF,BICM,BIBEN,BIHPV,BIUP) ;EP
  ;
  ;---> Now write total patients considered who had refusals.
  N M,N S (M,N)=0 F  S M=$O(BITMP("REFUSALS",M)) Q:'M  S N=N+1
- S X="  Total Patients included who had Refusals on record"_$J(N,25)
- D WRITE^BIREPQ3(.BILINE,X),WRITE^BIREPQ3(.BILINE,$$SP^BIUTL5(79,"-"))
+ I BISPD'="CSV" S X="  Total Patients included who had Refusals on record"_$J(N,25)
+ I BISPD="CSV" S X=" " D WRITE^BIREPQ3(.BILINE,X) S X="Total Patients included who had Refusals on record"_","_+N
+ D WRITE^BIREPQ3(.BILINE,X) I BISPD'="CSV" D WRITE^BIREPQ3(.BILINE,$$SP^BIUTL5(79,"-"))
  ;
  S VALMCNT=BILINE
  Q

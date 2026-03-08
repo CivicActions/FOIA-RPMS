@@ -1,7 +1,5 @@
-RAMAGU04 ;HCIOFO/SG - ORDERS/EXAMS API (EXAM UTILITIES) ; 01 Jun 2012  10:58 AM
- ;;5.0;Radiology/Nuclear Medicine;**90,1004**;Mar 16, 1998;Build 20
- ;
- ;This patch was modified by Stuart Frank in May 2012
+RAMAGU04 ;HCIOFO/SG - ORDERS/EXAMS API (EXAM UTILITIES) ; 8/18/08 10:16am
+ ;;5.0;Radiology/Nuclear Medicine;**90**;Mar 16, 1998;Build 20
  ;
  Q
  ;

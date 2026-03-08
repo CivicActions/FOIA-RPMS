@@ -193,8 +193,8 @@ TRANSMIT ;-- format TMPARRY data, put into e-mail and send to cm.
  ; send packman message.
  S XMTEXT="^TMP(""KMPR UPLOAD"","_$J_","
  S XMSUB="RUM DATA - "_$P(SITE,U,2)_" ("_$P(SITE,U,3)_") - "_$$FMTE^XLFDT(START)
- S XMY("S.KMP2-RUM-SERVER@DOMAIN.NAME")=""
- S XMY("CAPACITY,MANAGEMENT@DOMAIN.NAME")=""
+ S XMY("S.KMP2-RUM-SERVER@ISC-ALBANY.VA.GOV")=""
+ S XMY("CAPACITY,MANAGEMENT@ISC-ALBANY.VA.GOV")=""
  D ^XMD
  W:'$D(ZTQUEUED) !,"Message #",$G(XMZ)," sent..."
  K @UPLDARRY

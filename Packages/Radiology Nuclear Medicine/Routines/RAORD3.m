@@ -1,5 +1,5 @@
 RAORD3 ;HISC/CAH - AISC/RMO-Detailed Request Display Cont. ; 06 Oct 2013  11:04 AM
- ;;5.0;Radiology/Nuclear Medicine;**5,15,21,27,45,41,75,99,1005**;Mar 16, 1998;Build 13
+ ;;5.0;Radiology/Nuclear Medicine;**5,15,21,27,45,41,75,99,1005,1009**;Mar 16, 1998;Build 21
  ;Supported IA #2056 reference to ^DIQ
  ;Supported IA #10103 reference to ^XLFDT
  ;
@@ -13,6 +13,11 @@ RAORD3 ;HISC/CAH - AISC/RMO-Detailed Request Display Cont. ; 06 Oct 2013  11:04 
  .S RA700380=$$GET1^DIQ(70.03,$G(RACNI)_","_$G(RADTI)_","_$G(RADFN),80)
  .I RA700332'="" W !,"Pregnancy Screen: ",RA700332
  .I RA700380'="" W !,"Pregnancy Screen Comment: ",RA700380
+ .;IHS/CMI/LAB - PATCH 1009 CR#8954 AND CR#8979 - ADD ADDITIONAL REPRODUCTIVE QUESTIONS
+ .;BEGIN MODS
+ .I $$GET1^DIQ(70.02,$G(RADTI)_","_$G(RADFN),498)]"" W !,"LMP: ",?22,$$GET1^DIQ(70.02,$G(RADTI)_","_$G(RADFN),498)
+ .I $$GET1^DIQ(70.02,$G(RADTI)_","_$G(RADFN),499)]"" W !,"Primary Means of Birth Control: ",$$GET1^DIQ(70.02,$G(RADTI)_","_$G(RADFN),499)
+ .I $$GET1^DIQ(70.02,$G(RADTI)_","_$G(RADFN),500)]"" W !,"Last HCG Test: ",?22,$$GET1^DIQ(70.02,$G(RADTI)_","_$G(RADFN),500)
  W:$P(RAORD0,"^",24)="y" !?12,"*** Universal Isolation Precautions ***" W:$D(RA("VDT")) !?8,$C(7),"** Note:  Request Associated with Visit on ",RA("VDT")," **"
  W:$D(RA("RDT"))&($D(RAPKG)) !,"Desired Date:",?22,RA("RDT") W:$D(RA("PDT")) !,"Pre-op Scheduled:",?22,RA("PDT") S RAOSTS=$P(RAORD0,"^",5) I RAOSTS=8,$D(RA("SDT")) W !,"Exam Scheduled:",?22,RA("SDT")
  I RAOSTS=1 D USERCAN

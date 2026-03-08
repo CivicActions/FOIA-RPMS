@@ -1,6 +1,8 @@
-RADEM ;HISC/CAH AISC/MJK,RMO,DMK-Display Patient Demographics ;1/22/97  11:10
- ;;5.0;Radiology/Nuclear Medicine;**31**;Mar 16, 1998
-PAT G Q:'$D(^DPT(RADFN,0)) S Y=^(0),RANME=$P(Y,"^"),RASEX=$S($P(Y,"^",2)="M":"MALE",$P(Y,"^",2)="F":"FEMALE",1:"Unknown"),RASSN=$$SSN^RAUTL,RADOB=$P(Y,"^",3),X1=DT,X2=RADOB D ^%DTC S RAGE=X\365.25
+RADEM ;HISC/CAH AISC/MJK,RMO,DMK IHS/OIT/BT - Display Patient Demographics ; 11/09/2022 ;
+ ;;5.0;Radiology/Nuclear Medicine;**31,1010**;Mar 16, 1998
+PAT G Q:'$D(^DPT(RADFN,0)) S Y=^(0)
+ S RASEX=$S($P(Y,"^",2)="M":"MALE",$P(Y,"^",2)="F":"FEMALE",1:"Unknown"),RASSN=$$SSN^RAUTL,RADOB=$P(Y,"^",3),X1=DT,X2=RADOB D ^%DTC S RAGE=X\365.25
+ S RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1)
  S:$E(DT,4,7)=$E(RADOB,4,7) RAGE=RAGE+1 ;today is birthday
  S Y=RADOB D D^RAUTL S RADOB=Y
  ; obtain patient address data
@@ -21,15 +23,15 @@ PAT G Q:'$D(^DPT(RADFN,0)) S Y=^(0),RANME=$P(Y,"^"),RASEX=$S($P(Y,"^",2)="M":"MA
  . Q
  I $D(^DPT(RADFN,.1)),^(.1)]"" D ^RASERV
 DIS D HOME^%ZIS W @IOF,"               ***********    Patient Demographics   ***********",!
- W !?2,"Name         : ",$E(RANME,1,20),?40,"Address: ",?50,$G(RAPA(1))
- W !?2,"Pt ID        : ",RASSN,?38,$S($G(RAPA(9))]"":"(temporary)",1:""),?50,$G(RAPA(2))
- W !?2,"Date of Birth: ",RADOB,?50,$G(RAPA(3))
- W !?2,"Age          : ",RAGE,?50,$G(RATWN)
- W !?2,"Veteran      : ",RAVET W:$D(RAWARD) ?40,"Currently is an inpatient."
- W !?2,"Eligibility  : ",RAELIG W:$D(RAWARD) ?42,"Ward       : ",RAWARD
- W !?2,"Exam Category: ",RAUSAL W:$D(RASER) ?42,"Service    : ",RASER
- W !?2,"Sex          : ",RASEX W:$D(RABED) ?42,"Bedsection : ",RABED
- W !?2,"Phone Number : ",$G(RAPA(8))
+ W !?2,"Name         : ",RANME
+ W !?2,"Pt ID        : ",RASSN,?40,"Address: ",?50,$G(RAPA(1))
+ W !?2,"Date of Birth: ",RADOB,?38,$S($G(RAPA(9))]"":"(temporary)",1:""),?50,$G(RAPA(2))
+ W !?2,"Age          : ",RAGE,?50,$G(RAPA(3))
+ W !?2,"Veteran      : ",RAVET,?50,$G(RATWN)
+ W !?2,"Eligibility  : ",RAELIG W:$D(RAWARD) ?40,"Currently is an inpatient."
+ W !?2,"Exam Category: ",RAUSAL W:$D(RAWARD) ?42,"Ward       : ",RAWARD
+ W !?2,"Sex          : ",RASEX W:$D(RASER) ?42,"Service    : ",RASER
+ W !?2,"Phone Number : ",$G(RAPA(8)) W:$D(RABED) ?42,"Bedsection : ",RABED
  I $D(^RADPT(RADFN,1)) W !?2,"Narrative    : ",^(1)
  W !!?2,"Contrast Medium Reaction: ",RAMED
  W !,?2,"Other Allergies:",!?7,"'V' denotes verified allergy   'N' denotes non-verified allergy",!

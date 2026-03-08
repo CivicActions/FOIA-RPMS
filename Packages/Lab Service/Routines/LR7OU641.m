@@ -1,6 +1,8 @@
-LR7OU641 ;SLC/DCM/DALOI/FHS - RESULT NLT LINKING UTILITY SEMI-MANUAL ; 12/3/1997
- ;;5.2T9;LR;**1018**;Nov 17, 2004
- ;;5.2;LAB SERVICE;**153,201,278,280**;Sep 27, 1994
+LR7OU641 ;SLC/DCM/DALOI/FHS - RESULT NLT LINKING UTILITY SEMI-MANUAL ; 26-Apr-2023 11:10 ; MKK
+ ;;5.2;LAB SERVICE;**153,201,278,280,1018,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
  ;
 EN ;
 64 ;User assigns links between 60 (64.1) and 64 (NLT)
@@ -49,7 +51,8 @@ SEL ;
  I $G(LREND),LRAUTO=1 G END
  W @IOF
  K DIC,DIR,DR,DA,DIE S DIC("A")="You may select any ATOMIC test in LABORATORY TEST FILE: "
- S DIC="^LAB(60,",DIC(0)="AEQZMN",DIC("S")="I $P(^(0),"";"",2)" D ^DIC K DIC G:Y<1 END
+ ; S DIC="^LAB(60,",DIC(0)="AEQZMN",DIC("S")="I $P(^(0),"";"",2)" D ^DIC K DIC G:Y<1 END
+ S DIC="^LAB(60,",DIC(0)="AEQZMN",DIC("S")="I $P(^(0),"";"",2),+$G(^(.3))=0" D ^DIC K DIC G:Y<1 END  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  S LRDATA=$P(Y(0),U),(LRIEN,X60)=+Y
 SELX L +^LAB(60,LRIEN):2
  I '$T W !?4,"Locked by another user" Q:'LRAUTO  G:LRAUTO SEL

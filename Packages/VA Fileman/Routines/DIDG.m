@@ -1,5 +1,6 @@
-DIDG ;SFISC/RWF-GLOBAL MAP ;1:24 PM  1 Mar 2002 [ 12/09/2003  4:48 PM ]
- ;;22.0;VA FileMan;**105,1002**;Mar 30, 1999
+DIDG ;SFISC/RWF-GLOBAL MAP ;08:03 AM  11 Dec 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  K W S DJ(Z)=D0,F=0,W=F(Z),M=1,DP=0
  W !
@@ -16,7 +17,7 @@ B S DP=$O(^DD(F(Z),"GL",DN(Z),DP)) G PUSH:DP=0,A:DP=""
  S N=^DD(F(Z),DF,0),DP(0)=DP
  S X=$P(N,U,2) I +X S Z=Z+1,F(Z)=+X D L G B
  S W="(#"_DF_") "_$P(N,U,1)_" ["_DP
- F Y="F","S","D","N","P","W","V","K" I X[Y S W=W_Y S:Y="P" W=W_":"_+$P(X,"P",2)
+ F Y="F","S","D","N","P","W","V","K" I X[Y S W=W_Y
  S W=W_"] ^ " D WL Q:M=U  G B
  ;
 PUSH S N=$O(^DD(F(Z),"GL",DN(Z),DP,0)) S:N="" N=-1 S Y=^DD(F(Z),N,0),DID(Z)=DID(Z)_","

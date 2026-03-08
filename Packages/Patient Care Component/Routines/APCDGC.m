@@ -1,5 +1,5 @@
-APCDGC ; IHS/CMI/LAB - DATA ENTRY ENTER MODE ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDGC ; IHS/CMI/TUCSON - DATA ENTRY ENTER MODE ;
+ ;;2.0;IHS RPMS/PCC Data Entry;**9**;MAR 09, 1999
  ;;
  ;;PLEASE NOTE:  This routine was given to me by Cameron Schlehuber (VA).
  ;;I copied it into APCDGC so I could distribute it with the APCD package.

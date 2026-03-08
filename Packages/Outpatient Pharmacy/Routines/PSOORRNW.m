@@ -1,5 +1,5 @@
-PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;29-May-2012 15:01;PLS
- ;;7.0;OUTPATIENT PHARMACY;**11,27,51,46,71,94,130,131,146,1003,1006,1008,1009,206,225,1015**;DEC 1997;Build 62
+PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;24-Sep-2019 16:40;DU
+ ;;7.0;OUTPATIENT PHARMACY;**11,27,51,46,71,94,130,131,146,1003,1006,1008,1009,206,225,1015,1023,1024**;DEC 1997;Build 68
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(50.607 supported by DBIA 2221
  ;External reference to ^PS(51.2 supported by DBIA 2226
@@ -8,6 +8,7 @@ PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;29-May-2012 15:01;PLS
  ;            IHS/MSC/PLS - 09/17/07 - Added clinical indicator support
  ;                          06/30/10 - Added Last fill date information
  ;                          09/27/10 - Added pause prompt to +18
+ ;            IHS/MSC/MGH - 07/08/19 - Adding check for hardcopy
  S PSORENXX=$P($G(OR0),"^",21),PSOFROM="NEW" K PRC,PHI
  I $G(PSORENXX) D PSOL^PSSLOCK(PSORENXX) I '$G(PSOMSG) D  K DIR,PSOMSG W ! S DIR("A")="Press Return to continue",DIR(0)="E" D ^DIR K DIR W ! Q
  .I $P($G(PSOMSG),"^",2)'="" W $C(7),!!,$P(PSOMSG,"^",2) Q
@@ -30,6 +31,23 @@ PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;29-May-2012 15:01;PLS
  .W !!,"Cannot Renew Rx # "_$P(^PSRX($P(OR0,"^",21),0),"^"),!," Drug: "_$P($G(^PSDRUG($P(^PSRX($P(OR0,"^",21),0),"^",6),0)),"^")_"."
  .W !,"This Rx has already been RENEWED ("_$P(^PSRX($P(^PSRX($P(OR0,"^",21),"OR1"),"^",4),0),"^")_").",!
  .S ACOM="Duplicate Renewal Request. Order rejected by Pharmacy.",PSONOOR="D" D DE^PSOORFI2 K ACOM,POERR("COMM"),POERR("PLACER"),POERR("STAT")
+ ;IHS/MSC/MGH  EPCS FOR hardcopy
+ N DEA,DIG,ANS,OIEN,CLIN
+ S DEA=$P($G(^PSDRUG($P($G(^PS(52.41,ORD,0)),"^",9),0)),U,3)
+ S DIG=$P($G(^PS(52.41,ORD,0)),"^",24)
+ ;IHS/MSC/MGH 9/24/2019 remove clinic orders from needing hardcopy
+ S CLIN=""
+ I $P(OR0,"^",17)="C" S CLIN=1
+ ;IHS/MSC/MGH add the e-sig if the renewal order is from a non-EPCS user
+ I +DEA>1&(+DEA<6)&(+DIG=0)&(+CLIN=0) D  Q:'+APSPVER!('+ANS)
+ .S ANS=0,APSPVER=0
+ .S OIEN=$P(ORD,U,1)
+ .S ANS=$$DIR^APSPUTIL("Y","Order requires Hardcopy Printed Prescription. Do you want to Continue","Yes",,.APSPQ)
+ .I +ANS S APSPVER=$$ESIG^APSPFUNC
+ .I +APSPVER D EDIT^APSPCSA(OIEN,"HS")
+ .E  D EDIT^APSPCSA(OIEN,"HF")
+ .S PSORENW("HARDCPY")=APSPVER
+ ;end esig code
  I '$G(PSOTPBFG) D DSPL^PSOTPCAN(ORD)
  S (PSORX("PROVIDER NAME"),PSORENW("PROVIDER NAME"))=$P(^VA(200,$P(OR0,"^",5),0),"^"),PSORENW("NOO")=$P(OR0,"^",7)
  S PSORENW("PROVIDER")=$P(OR0,"^",5),PSORENW("MAIL/WINDOW")=$S($P(OR0,"^",17)="M":"M",1:"W")
@@ -62,6 +80,7 @@ PSOORRNW ;BIR/SAB-finish OP renew orders from OE/RR ;29-May-2012 15:01;PLS
  S PSORENW("CLININD2")=$S($L($$VALUE^ORCSAVE2(+OR0,"CLININD2")):$$VALUE^ORCSAVE2(+OR0,"CLININD2"),1:"")  ;IHS/MSC/PLS - 09/17/07 - Clinical indicator
  S PSORENW("POE")=$S($G(^PS(52.41,ORD,"POE"))=1:1,'$O(^PSRX($P(OR0,"^",21),6,0)):1,1:"")
  S PSORENW("PENDING ORDER")=ORD
+ I +$G(PSORENW("HARDCPY"))=1 S PSODRUG("HARDCPY")=1
  D EN^PSOORNE4(.PSORENW) K PSORENW,PSORX("FILL DATE")
  I '$G(PSOFXRN) D UL
  D KLIB^PSORENW1

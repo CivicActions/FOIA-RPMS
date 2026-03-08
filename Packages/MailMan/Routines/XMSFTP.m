@@ -1,5 +1,6 @@
-XMSFTP ;(WASH ISC)/CAP-TCP/IP-FTP Sender ;04/17/2002  11:29
- ;;8.0;MailMan;;Jun 28, 2002
+XMSFTP ;(WASH ISC)/CAP-TCP/IP-FTP SENDER ;4/21/93  13:50 ;
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;;Jun 02, 1994
  ;TCP/IP-FTP COMMUNICATIONS
  ;Send file via FTP / File located on another TCP/IP node
 FTP K TEST N XMIO S XMIO=$I

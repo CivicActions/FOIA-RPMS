@@ -1,5 +1,5 @@
 BIUTL5 ;IHS/CMI/MWR - UTIL: MENU TITLS, DATE FORMAT; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**8**;MAR 15,2014
+ ;;8.5;IMMUNIZATION;**18**;JUN 15,2020;Build 28
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: SETVARS, MENUT, TITLE, CENTERT, COPYLET,
  ;;           UPPERCASE XREFS, DATE FORMATS, PADS/SPACES.
@@ -112,6 +112,20 @@ KUPXREF(X,BIGBL) ;EP
  ;
  ;
  ;----------
+ICEDATE(DATE,YY) ;EP
+ ;---> Convert ICE/TCH Date (YYYYMMDD) to "slash" format: MM/DD/YYYY.
+ ;---> Parameters:
+ ;     1 - DATE (req) The date in ICE format.
+ ;     2 - YY   (opt) If YY=1, return 2-digit year: MM/DD/YY.
+ ;
+ ;---> DATE=DATE IN FILEMAN FORMAT.
+ Q:'$G(DATE) "NO DATE   "
+ Q:$L(DATE)'=8 DATE
+ Q:($G(YY)=1) $E(DATE,5,6)_"/"_$E(DATE,7,8)_"/"_$E(DATE,3,4)
+ Q $E(DATE,5,6)_"/"_$E(DATE,7,8)_"/"_$E(DATE,1,4)
+ ;
+ ;
+ ;----------
 SLDT2(DATE,YY) ;EP
  ;---> Convert Fileman Internal Date to "slash" format: MM/DD/YYYY.
  ;---> Parameters:
@@ -169,7 +183,7 @@ IMMSDT(DATE) ;EP
  ;
  ;----------
 TCHFMDT(DATE) ;EP
- ;---> Convert TCH Date (format YYYYMMDD) TO FILEMAN Internal format.
+ ;---> Convert TCH Date (YYYYMMDD) TO FILEMAN Internal format.
  Q:'$G(DATE) "NO DATE"
  Q ($E(DATE,1,4)-1700)_$E(DATE,5,6)_$E(DATE,7,8)
  ;

@@ -1,5 +1,5 @@
 BDGADD2 ; IHS/ANMC/LJF - A&D DETAILED-DAY SURGERY ;  
- ;;5.3;PIMS;**1007**;FEB 27, 2007
+ ;;5.3;PIMS;**1007,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw 2/22/2007 added day surgery release date/time PATCH 1007 item 1007.36
  ;
@@ -48,7 +48,13 @@ LINES ; loop thru patients found and list in alpha order
  ;
 LINE ; set up display line
  NEW LINE
- S LINE=$$SP(5)_$E($$GET1^DIQ(2,DFN,.01),1,20)                ;name
+ ;202307 77894 maw p1022 PPN
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S LINE=$$SP(5)_PRF
+ D SET^BDGADD(LINE,.VALMCNT)
+ S LINE=""
+ ;S LINE=$$SP(5)_$E($$GET1^DIQ(2,DFN,.01),1,20)                ;name
  S LINE=$$PAD(LINE,28)_$$HRCND^BDGF2($$HRCN^BDGF2(DFN,DUZ(2)))
  S LINE=$$PAD(LINE,38)_$E($P(DGDS(NAME,DFN),U),1,20)          ;surgeon
  S LINE=$$PAD(LINE,60)_$P(DGDS(NAME,DFN),U,2)                 ;age

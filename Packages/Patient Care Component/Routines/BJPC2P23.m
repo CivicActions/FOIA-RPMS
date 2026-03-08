@@ -1,0 +1,77 @@
+BJPC2P23 ; IHS/CMI/LAB - PCC Suite v2.0 
+ ;;2.0;IHS PCC SUITE;**23**;MAY 14, 2009;Build 17
+ ;
+ ;
+ ; The following line prevents the "Disable Options..." and "Move Routines..." questions from being asked during the install.
+ I $G(XPDENV)=1 S (XPDDIQ("XPZ1"),XPDDIQ("XPZ2"))=0
+ F X="XPO1","XPZ1","XPZ2","XPI1" S XPDDIQ(X)=0
+ ;KERNEL
+ I +$$VERSION^XPDUTL("XU")<8 D MES^XPDUTL($$CJ^XLFSTR("Version 8.0 of KERNEL is required.  Not installed",80)) D SORRY(2) I 1
+ E  D MES^XPDUTL($$CJ^XLFSTR("Requires Kernel Version 8.0....Present.",80))
+ ;FILEMAN
+ I +$$VERSION^XPDUTL("DI")<22 D MES^XPDUTL($$CJ^XLFSTR("Version 22.0 of FILEMAN is required.  Not installed.",80)) D SORRY(2) I 1
+ E  D MES^XPDUTL($$CJ^XLFSTR("Requires Fileman v22....Present.",80))
+ I '$$INSTALLD("BJPC*2.0*22") D MES^XPDUTL($$CJ^XLFSTR("Requires bjpc V2.0 patch 21.  Not installed.",80)) D SORRY(2)
+ ;I '$$INSTALLD("BCQM*1.0*4") D MES^XPDUTL($$CJ^XLFSTR("Requires BCQM V1.0 patch 4.  Not installed.",80)) D SORRY(2)
+ ;
+ Q
+ ;
+PRE ;
+ Q
+POST ;
+ D ^BJPC23
+ D ADATAX
+ ;ADD EXAM CODE FOR SUICIDE IF IT DOESN'T EXIST, CODE IS 44
+ D ADDEXAM
+ Q
+ADDEXAM ;
+ NEW C,N,DIC,DLAYGO
+ S C=44,N="ASQ - SUICIDE SCREENING"
+ I $D(^AUTTEXAM("C",C)) D MES^XPDUTL("EXAM CODE EXISTS => "_C_" "_N) Q
+ S DLAYGO=9999999.15,DIC="^AUTTEXAM(",X=N,DIC(0)="L"
+ S DIC("DR")=".02///"_C
+ D FILE^DICN
+ I Y=-1 D MES^XPDUTL("ADDING OF EXAM COD 44 FAILED") H 3 Q
+ Q
+ ;
+INSTALLD(BJPCSTAL) ;EP - Determine if patch BJPCSTAL was installed, where
+ ; APCLSTAL is the name of the INSTALL.  E.g "AG*6.0*11".
+ ;
+ NEW BJPCY,DIC,X,Y
+ S X=$P(BJPCSTAL,"*",1)
+ S DIC="^DIC(9.4,",DIC(0)="FM",D="C"
+ D IX^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",22,",X=$P(BJPCSTAL,"*",2)
+ D ^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",""PAH"",",X=$P(BJPCSTAL,"*",3)
+ D ^DIC
+ S BJPCY=Y
+ D IMES
+ Q $S(BJPCY<1:0,1:1)
+IMES ;
+ D MES^XPDUTL($$CJ^XLFSTR("Patch """_BJPCSTAL_""" is"_$S(Y<1:" *NOT*",1:"")_" installed.",IOM))
+ Q
+SORRY(X) ;
+ KILL DIFQ
+ I X=3 S XPDQUIT=2 Q
+ S XPDQUIT=X
+ W *7,!,$$CJ^XLFSTR("Sorry....FIX IT!",IOM)
+ Q
+ ;
+ADATAX ;
+ S ATXFLG=1
+ S BGPDA=0 S BGPDA=$O(^ATXAX("B","BJPC DENTAL EXAM ADA CODES",BGPDA))
+ I BGPDA S DIK="^ATXAX(",DA=BGPDA D ^DIK  ;get rid of existing one
+ W !,"Creating/Updating BJPC DENTAL EXAM ADA CODESTaxonomy..."
+ S X="BJPC DENTAL EXAM ADA CODES",DIC="^ATXAX(",DIC(0)="L",DIADD=1,DLAYGO=9002226 D ^DIC K DIC,DA,DIADD,DLAYGO,I
+ I Y=-1 W !!,"ERROR IN CREATING BJPC DENTAL EXAM ADA CODES" Q
+ S BGPTX=+Y,$P(^ATXAX(BGPTX,0),U,2)="BGP IPC BMI ADA CODES",$P(^(0),U,5)=DUZ,$P(^(0),U,8)=0,$P(^(0),U,9)=DT,$P(^(0),U,12)=174,$P(^(0),U,13)=0,$P(^(0),U,15)=9999999.31,^ATXAX(BGPTX,21,0)="^9002226.02101A^0^0"
+ S BGPX=0
+ F X="0120","0140","0145","0150","0160","0180","0191" S DIC="^AUTTADA(",DIC(0)="M" D ^DIC K DIC,DA,DR,DIADD,DLAYGO,DQ,DI,D1,D0 I $P(Y,U)>0 D
+ .S BGPX=BGPX+1
+ .S ^ATXAX(BGPTX,21,BGPX,0)=+Y,$P(^ATXAX(BGPTX,21,0),U,3)=BGPX,$P(^(0),U,4)=BGPX,^ATXAX(BGPTX,21,"AA",+Y,BGPX)=""
+ .Q
+ S DA=BGPTX,DIK="^ATXAX(" D IX1^DIK
+ Q

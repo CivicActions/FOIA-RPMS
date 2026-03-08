@@ -1,10 +1,11 @@
-XMCSIZE ;(WASH ISC)/AML-Message Stats Tool (shareware) ;04/17/2002  08:26
- ;;8.0;MailMan;;Jun 28, 2002
+XMCSIZE ;(WASH ISC)/AML-give stats of a message ;1/23/90  11:58 ;
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;;Jun 02, 1994
  R !,"Message number: ",XMZ:$S($D(DTIME):DTIME,1:300) Q:'$T  W !,"WORKING..." S Y=0
  S I=0 F X=0:0 S X=$O(^XMB(3.9,XMZ,2,X)) Q:X=""  S I=I+1,Y=Y+$L(^(X,0)) I I#100=0 W "." I $X>70 W !
  W !,I," Lines ","   ",Y,"  Bytes ",!
 TT R !,"Transmission time in seconds:  ",%:$S($D(DTIME):DTIME,1:300) Q:%=""!(%["^")!'$T
- I %'?1.N!'% W $C(7),!,"   Enter a non-zero number of seconds, please.",! G TT
+ I %'?1.N!'% W *7,!,"   Enter a non-zero number of seconds, please.",! G TT
  W !,$J(I-1/%,15,2)," Lines/sec  ",$J(Y/%,20,2),"  Bytes/sec",!
  Q
 COMP ;COMPARE TWO MESSAGES

@@ -1,6 +1,10 @@
 BAREITDN ; IHS/SD/SDR - EDIT COLLECTION BATCH/ITEMS JAN 15,1997 ;04/10/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**4,23**;OCT 26, 2005
- ; New routine in bar*1.8*4 for DD item 4.1.5.4
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**4,23,33**;OCT 26, 2005;Build 133
+ ;
+ ;New routine in bar*1.8*4 for DD item 4.1.5.4
+ ;IHS/SD/SDR 1.8*33 ADO60817 Updated display and included date/time/counter on list of transactions for clarity
+ ;   Also fixed TDN not displaying if it is alpha/numeric; before it only displayed numeric and was blank
+ ;   the rest of the time
  ;
  Q
  ;
@@ -16,42 +20,64 @@ PICK I $D(BARLIST) D CLEAR^VALM1
  I Y'>0 G EXIT
  S BARBLDA=+Y
  ; -------------------------------
-LIST W !!!,"#",?24,"TRANS"
- W !,"#",?4,"TRANSACTION DT/TM"
- W ?24,"TYPE",?32,"TDN"
- W ?45,"AMOUNT",?56,"BATCH/Item",!
- F B=1:1:80 W "-"
+LIST ;
+ D HDR  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ ;start old bar*1.8*33 IHS/SD/SDR ADO60817
+ ;W !!!,"#",?24,"TRANS"
+ ;W !,"#",?4,"TRANSACTION DT/TM"
+ ;W ?24,"TYPE",?32,"TDN"
+ ;W ?45,"AMOUNT",?56,"BATCH/Item",!
+ ;F B=1:1:80 W "-"
+ ;end old bar*1.8*33 IHS/SD/SDR ADO60817
  ;
  S BARTRDA=0,BARCNT=0
  K BARLIST
- F  S BARTRDA=$O(^BARTR(DUZ(2),"AC",BARBLDA,BARTRDA)) Q:'BARTRDA  D
+ F  S BARTRDA=$O(^BARTR(DUZ(2),"AC",BARBLDA,BARTRDA)) Q:'BARTRDA  D  Q:$D(DIROUT)!$D(DIRUT)!$D(DTOUT)!$D(DUOUT)
+ .I $Y>(IOSL-3) D EOP^BARUTL(0) Q:$D(DIROUT)!$D(DIRUT)!$D(DTOUT)!$D(DUOUT)  D HDR W !,"(cont.)"  ;bar*1.8*33 IHS/SD/SDR ADO60817
  .S BARTTYP=$$GET1^DIQ(90050.03,BARTRDA_",",101,"E")
  .Q:BARTTYP'="PAYMENT"  ;only allow edit of payments
- .S BARTDTTM=$$TDT^BARDUTL($P($G(^BARTR(DUZ(2),BARTRDA,0)),U))
+ .;S BARTDTTM=$$TDT^BARDUTL($P($G(^BARTR(DUZ(2),BARTRDA,0)),U))  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .S BARTDTTM=$$TRDT^BARDUTL($P($G(^BARTR(DUZ(2),BARTRDA,0)),U))  ;bar*1.8*33 IHS/SD/SDR ADO60817
  .S BARCRD=$$GET1^DIQ(90050.03,BARTRDA_",",2,"E")
  .S BARDEB=$$GET1^DIQ(90050.03,BARTRDA_",",3,"E")
  .S BARBATCH=$P($G(^BARTR(DUZ(2),BARTRDA,0)),U,14)
  .S BARITEM=$P($G(^BARTR(DUZ(2),BARTRDA,0)),U,15)
  .;
  .S BARTDN=""
- .I $P($G(^BARTR(DUZ(2),BARTRDA,1)),U,11) S BARTDN=$P(^(1),U,11)
+ .;I $P($G(^BARTR(DUZ(2),BARTRDA,1)),U,11) S BARTDN=$P(^(1),U,11)  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .I $P($G(^BARTR(DUZ(2),BARTRDA,1)),U,11)'="" S BARTDN=$P(^(1),U,11)  ;bar*1.8*33 IHS/SD/SDR ADO60817
  .;Transaction TDN
- .I BARTDN="",$P($G(^BARTR(DUZ(2),BARTRDA,0)),U,17) S BARTDN=$P(^(0),U,17)
+ .;I BARTDN="",$P($G(^BARTR(DUZ(2),BARTRDA,0)),U,17) S BARTDN=$P(^(0),U,17)  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .I BARTDN="",$P($G(^BARTR(DUZ(2),BARTRDA,0)),U,17)'="" S BARTDN=$P(^(0),U,17)  ;bar*1.8*33 IHS/SD/SDR ADO60817
  .;item TDN
- .I BARTDN="",$P($G(^BARCOL(DUZ(2),BARBATCH,1,BARITEM,0)),U,20) S BARTDN=$P(^(0),U,20)
+ .;I BARTDN="",$P($G(^BARCOL(DUZ(2),BARBATCH,1,BARITEM,0)),U,20) S BARTDN=$P(^(0),U,20)  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .I BARTDN="",$P($G(^BARCOL(DUZ(2),BARBATCH,1,BARITEM,0)),U,20)'="" S BARTDN=$P(^(0),U,20)  ;bar*1.8*33 IHS/SD/SDR ADO60817
  .;batch TDN
- .I BARTDN="",$P($G(^BARCOL(DUZ(2),BARBATCH,0)),U,28) S BARTDN=$P(^(0),U,28)
+ .;I BARTDN="",$P($G(^BARCOL(DUZ(2),BARBATCH,0)),U,28) S BARTDN=$P(^(0),U,28)  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .I BARTDN="",$P($G(^BARCOL(DUZ(2),BARBATCH,0)),U,28)'="" S BARTDN=$P(^(0),U,28)  ;bar*1.8*33 IHS/SD/SDR ADO60817
  .;
  .S BARCNT=+$G(BARCNT)+1
  .S BARLIST(BARCNT)=BARTRDA_"^"
  .;
  .W !,$J(BARCNT_".","3R"),?4,BARTDTTM
- .W ?24,BARTTYP
- .W ?32,BARTDN
- .W ?45,$J($FN($S($G(BARCRD):-BARCRD,1:$G(BARDEB)),",",2),"9R")
- .W:+BARBATCH'=0 ?56,$E($P($G(^BARCOL(DUZ(2),BARBATCH,0)),U)_"-"_BARITEM,1,23)
+ .;start old bar*1.8*33 IHS/SD/SDR ADO60817
+ .;W ?24,BARTTYP
+ .;W ?32,BARTDN
+ .;W ?45,$J($FN($S($G(BARCRD):-BARCRD,1:$G(BARDEB)),",",2),"9R")
+ .;W:+BARBATCH'=0 ?56,$E($P($G(^BARCOL(DUZ(2),BARBATCH,0)),U)_"-"_BARITEM,1,23)
+ .;end old start new bar*1.8*33 IHS/SD/SDR ADO60817
+ .W ?45,BARTTYP
+ .W ?65,$J($FN($S($G(BARCRD):-BARCRD,1:$G(BARDEB)),",",2),"9R")
+ .W !?7,BARTDN
+ .W:+BARBATCH'=0 ?29,$P($G(^BARCOL(DUZ(2),BARBATCH,0)),U)_" "_BARITEM
+ Q:$D(DIROUT)!$D(DIRUT)!$D(DTOUT)!$D(DUOUT)
+ ;end new bar*1.8*33 IHS/SD/SDR ADO60817
  ;
-SELECT W !!
+SELECT ;
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+ I BARCNT=0 W !!!,"No payments to choose from...exiting" H 2 Q
+ ;end new bar*1.8*33 IHS/SD/SDR ADO60817
+ W !!
  K DIR,DIC,DIE,DR,DA,X,Y
  S DIR(0)="LO^1:"_BARCNT
  S DIR("A")="Select A/R BILL TRANSACTION: "
@@ -61,6 +87,20 @@ SELECT W !!
  W !!
  D EDIT
  Q
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+HDR ;
+ W $$EN^BARVDF("IOF"),!  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ W ! D CENTER^BARPST6("Transaction TDN Edit") W !  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ W "Transactions for "_$P($G(^BARBL(DUZ(2),BARBLDA,0)),U),?40,"Pt: "_$P($G(^DPT($P($G(^BARBL(DUZ(2),BARBLDA,1)),U,1),0)),U)  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ W !?3," Service Date: "_$$SDT^BARDUTL($P($G(^BARBL(DUZ(2),BARBLDA,1)),U,2)),?40,"A/R Account: ",$$GET1^DIQ(90050.02,$P($G(^BARBL(DUZ(2),BARBLDA,0)),U,3),.01,"E")  ;bar*1.8*33 IHS/SD/SDR ADO60817
+SUBHDR ;
+ W !!,"#",?4,"TRANSACTION DT/TM/CNTR"
+ W ?45,"TRANSTYPE",?67,"AMOUNT"
+ W !,"#",?7,"TDN",?29,"BATCH/Item",!
+ F B=1:1:80 W "-"
+ W !
+ Q
+ ;end new bar*1.8*33 IHS/SD/SDR ADO60817
  ;
 EDIT ;
  S BARENTRY=$P(BARLIST(BARSEL),U)

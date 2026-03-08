@@ -1,5 +1,6 @@
-PSOUTLA2 ;BHAM ISC/GSN-Pharmacy utility program cont. ;6/6/05 12:19pm
- ;;7.0;OUTPATIENT PHARMACY;**210**;DEC 1997
+PSOUTLA2 ;BHAM ISC/GSN-Pharmacy utility program cont. ;26-Feb-2025 08:51;DU
+ ;;7.0;OUTPATIENT PHARMACY;**210,1029,1036**;DEC 1997;Build 17
+ ;Modified - IHS/MSC/PLS - 11/22/2024 - EXPDATE changes FID 114104
  Q
  ;
 WORDWRAP(STR,IEN,GL,LM) ;Wraps words at spaces normally and will breakup long
@@ -11,7 +12,7 @@ WORDWRAP(STR,IEN,GL,LM) ;Wraps words at spaces normally and will breakup long
  ; Output: Populated global  (usually in ^TMP)
  ;
  ; When a long word is encountered, i.e. text with no spaces, an
- ; attempt will be made to locate a delimiter & break the line there. 
+ ; attempt will be made to locate a delimiter & break the line there.
  ; If it can't find a valid delimiter without a restricted scenario,
  ; i.e. a number like 1,000 , then it will be forced to break at the
  ; End of Line (EOL).
@@ -100,3 +101,13 @@ ADDWORDS ;Add words to curr line and to a new line
  ;word2 will fit add it
  S @GL@(IEN,0)=@GL@(IEN,0)_WORD2,WORD2=""
  Q
+EXPDATE(CS,ISSUE) ;Calculate Expiration Days and Date; +6 Months for CS Rx, +12 Months for Non-CS Rx *530
+ ; Input parameters:   CS - controlled sub; 1=yes, 0=no - 2nd piece hold C2 flag (1,0)
+ ;                     ISSUE - Rx Date passed in usually the Issue date
+ ; Output string:
+ ;                     Number of Days till Expire Date ^ Expiration Date FM format
+ ;
+ N EXDT,EXDY,MM,PVAL
+ S PVAL=$$GET^XPAR("ALL","APSP CS II RX EXPIRE DAYS")  ;p1036
+ S ISSUE=ISSUE+.0001,MM=$S($P(CS,U,2)&PVAL:PVAL_"D",CS:"6M",1:"12M"),EXDT=$$SCH^XLFDT(MM,ISSUE)\1,EXDY=$$FMDIFF^XLFDT(EXDT,ISSUE)\1
+ Q EXDY_U_EXDT

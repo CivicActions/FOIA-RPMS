@@ -1,5 +1,6 @@
-DDGFPG ;SFISC/MKO-ADD A NEW PAGE ;2:26 PM  13 Sep 1995
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDGFPG ;SFISC/MKO-ADD A NEW PAGE ;01:48 PM  22 Nov 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ADD ;Invoke forms to add a new page
@@ -24,7 +25,7 @@ ADD ;Invoke forms to add a new page
  ;Add page to form
  S DIC="^DIST(.403,+DDGFFM,40,",DIC(0)="L",DA(1)=+DDGFFM
  S DIC("P")=$P(^DD(.403,40,0),U,2),X=DDGFPNUM
- K DD,DO D FILE^DICN K DIC,DA,X G:Y=-1 ADDQ
+ D FILE^DICN K DIC,DA,X G:Y=-1 ADDQ
  S DDGFPG=+Y
  ;
  ;Stuff in values for coordinates and name

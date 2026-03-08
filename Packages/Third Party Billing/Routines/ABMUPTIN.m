@@ -1,5 +1,5 @@
-ABMUPTIN ; IHS/SD/SDR - 3PB/UFMS Pseudo TIN report   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMUPTIN ; IHS/SD/SDR - 3PB/UFMS Pseudo TIN report   [ 05/24/2007  11:50 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**12**;MAY 24, 2007
  ;
  ; New routine - v2.5 p12 SDD item 4.9.3.1
  ;

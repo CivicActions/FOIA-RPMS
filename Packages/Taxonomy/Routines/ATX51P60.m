@@ -1,0 +1,118 @@
+ATX51P60 ; IHS/CMI/LAB - PCC Suite v5.1 patch 60 environment check ;
+ ;;5.1;TAXONOMY;**60**;FEB 04, 1997;Build 126
+ ;
+ ;
+ ; The following line prevents the "Disable Options..." and "Move
+ ; Routines..." questions from being asked during the install.
+ I $G(XPDENV)=1 S (XPDDIQ("XPZ1"),XPDDIQ("XPZ2"))=0
+ F X="XPO1","XPZ1","XPZ2","XPI1" S XPDDIQ(X)=0
+ I '$$INSTALLD("ATX*5.1*59") D SORRY(2)
+ I '$$INSTALLD("XU*8.0*1018") D SORRY(2)
+ I '$$INSTALLD("DI*22.0*1018") D SORRY(2)
+ ;
+ Q
+ ;
+PRE ;
+ Q
+POST ;
+ D ^ATXHF
+ D RXNORM
+ D BUILDAC
+ Q
+BUILDAC ;
+ D MES^XPDUTL("Re-Indexing AC on taxonomies..")
+ S ATXDA=0
+ F  S ATXDA=$O(^ATXAX(ATXDA)) Q:ATXDA'=+ATXDA  D
+ .Q:'$D(^ATXAX(ATXDA,0))
+ .K DA
+ .Q:'$$ICDTX^ATXXREF(ATXDA)  ;NOT AN ICD TAX
+ .S DA=ATXDA D BUILDAC^ATXXREF
+ .W "."
+ K DA,ATXDA
+ Q
+SETTAXRN ;EP
+ ;set read only and no delete for selected taxonomies
+ S ATXTFI="" F  S ATXTFI=$O(^ATXAX("B",ATXTFI)) Q:ATXTFI=""  D
+ .S ATXTDA=$O(^ATXAX("B",ATXTFI,0))
+ .Q:'ATXTDA  ;did not find taxonomy
+ .Q:'$$NS(ATXTFI)
+ .I $P(^ATXAX(ATXTDA,0),U,4)'="n" S $P(^ATXAX(ATXTDA,0),U,4)="n" D MES^XPDUTL(".") ;set no delete
+ .Q:$P(^ATXAX(ATXTDA,0),U,22)=1  ;ALREADY SET
+ .S F=$P(^ATXAX(ATXTDA,0),U,15)
+ .I $$RO(F,ATXTFI) S $P(^ATXAX(ATXTDA,0),U,22)=1 D MES^XPDUTL($P(^ATXAX(ATXTDA,0),U,1))  ;SET READ ONLY
+ .Q
+ Q
+RO(T,S) ;
+ I T=81 Q 1   ;CPT
+ I T=80 Q 1   ;ICD DX
+ I T=80.1 Q 1  ;ICD OP
+ I T=9999999.31 Q 1  ;
+ I T=9999999.64 Q 1  ;HEALTH FACTORS
+ I T=9999999.14 Q 1  ;cvx codes
+ I T=95.3 Q 1  ;LAB LOINC
+ I S[" NDC" Q 1  ;NDC taxonomies  -  not perfect logic by no tax had " NDC " but NDC taxonomies
+ Q 0
+NS(T,L) ;
+ ;I T["DIABETES REG" Q 0
+ I $E(T,1,4)="APCD" Q 1
+ I $E(T,1,3)="BGP" Q 1
+ ;I $E(T,1,7)="SURVEIL" Q 1
+ I $E(T,1,4)="APCH" Q 1
+ I $E(T,1,4)="APCL" Q 1
+ I $E(T,1,3)="ATX" Q 1
+ ;I $E(T,1,3)="BAT" Q 1
+ ;I $E(T,1,3)="BDR" Q 1
+ ;I $E(T,1,3)="BI " Q 1
+ I $E(T,1,4)="BJPC" Q 1
+ ;I $E(T,1,3)="BUD" Q 1
+ ;I $E(T,1,8)="DM AUDIT" Q 1
+ Q 0
+INSTALLD(ATXSTAL) ;EP - Determine if patch ATXSTAL was installed, where
+ ; ATXSTAL is the name of the INSTALL.  E.g "AG*6.0*11".
+ ;
+ NEW ATXY,DIC,X,Y
+ S X=$P(ATXSTAL,"*",1)
+ S DIC="^DIC(9.4,",DIC(0)="FM",D="C"
+ D IX^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",22,",X=$P(ATXSTAL,"*",2)
+ D ^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",""PAH"",",X=$P(ATXSTAL,"*",3)
+ D ^DIC
+ S ATXY=Y
+ D IMES
+ Q $S(ATXY<1:0,1:1)
+IMES ;
+ D MES^XPDUTL($$CJ^XLFSTR("Patch """_ATXSTAL_""" is"_$S(Y<1:" *NOT*",1:"")_" installed.",IOM))
+ Q
+SORRY(X) ;
+ KILL DIFQ
+ I X=3 S XPDQUIT=2 Q
+ S XPDQUIT=X
+ W *7,!,$$CJ^XLFSTR("Sorry....FIX IT!",IOM)
+ Q
+RXNORM ;
+ NEW BGPX,BGPRXN,BGPTX,BGPC
+ S ATXFLG=1
+ S BGPX="BI RZV IMMUNOSUPPRESS DRUGS",BGPRXN="BI RZV IMMUNOSUPPRESS RXNORM" D RXNORM1
+ Q
+RXNORM1 ;
+ W !,BGPRXN
+ W !,"Creating ",BGPX," Taxonomy..."
+ S BGPTX=$O(^ATXAX("B",BGPX,0))
+ I 'BGPTX D  Q:Y=-1
+ .S X=BGPX,DIC="^ATXAX(",DIC(0)="L",DIADD=1,DLAYGO=9002226 D ^DIC K DIC,DA,DIADD,DLAYGO,I
+ .I Y=-1 W !!,"ERROR IN CREATING ",BGPX," TAX" Q
+ .S BGPTX=+Y,$P(^ATXAX(BGPTX,0),U,2)=BGPX,$P(^(0),U,8)=0,$P(^(0),U,9)=DT,$P(^(0),U,12)=173,$P(^(0),U,13)=0,$P(^(0),U,15)=50,^ATXAX(BGPTX,21,0)="^9002226.02101A^0^0"
+ S DA=BGPTX,DIK="^ATXAX(" D IX1^DIK
+ I $G(BGPRXN)]"" D
+ .S A=0,B="" F  S A=$O(^ATXAX(BGPTX,21,A)) Q:A'=+A  S B=A
+ .S BGPC=B
+ .S ^ATXAX(BGPTX,21,0)="^9002226.02101A^"_B_U_B
+ .S Z=$O(^ATXAX("B",BGPRXN,0))
+ .S J=0 F  S J=$O(^PSDRUG(J)) Q:J'=+J  S C=$$VAL^XBDIQ1(50,J,9999999.27) I C]"",$D(^ATXAX(Z,21,"B",C)) D
+ ..Q:$D(^ATXAX(BGPTX,21,"B",J))
+ ..S BGPC=BGPC+1,^ATXAX(BGPTX,21,BGPC,0)=J_U_J
+ S DA=BGPTX,DIK="^ATXAX(" D IX1^DIK
+ Q

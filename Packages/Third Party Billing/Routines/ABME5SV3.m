@@ -1,8 +1,10 @@
-ABME5SV3 ; IHS/ASDST/DMJ - 837 SV3 Segment 
- ;;2.6;IHS Third Party Billing System;**6,9,16,19**;NOV 12, 2009;Build 300
+ABME5SV3 ; IHS/SD/SDR - 837 SV3 Segment 
+ ;;2.6;IHS Third Party Billing System;**6,9,16,19,28,37**;NOV 12, 2009;Build 739
  ;Transaction Set Header
- ;IHS/SD/SDR 2.6*16 - HEAT236242 - Updated to include coor. dx on line item
- ;IHS/SD/SDR - 2.6*19 - HEAT180453 - Made AREA OF ORAL CAVITY print in SV304
+ ;IHS/SD/SDR 2.6*16 HEAT236242 - Updated to include coor. dx on line item
+ ;IHS/SD/SDR 2.6*19 HEAT180453 - Made AREA OF ORAL CAVITY print in SV304
+ ;IHS/SD/SDR 2.6*28 CR8718 Made WA MEDICAID DENTAL print units all the time
+ ;IHS/SD/SDR 2.6*37 ADO76009 Added check for non-primary to use flat rate amount if populated
  ;
 EP ;EP
  K ABMREC("SV3"),ABMR("SV3")
@@ -33,6 +35,12 @@ LOOP ;LOOP HERE
  Q
 30 ;SV302 - Monetary Amount (Charges)
  S ABMR("SV3",30)=$P(ABMRV(ABMI,ABMJ,ABMK),U,6)
+ ;start new abm*2.6*37 IHS/SD/SDR ADO76009
+ I (+$P(ABMB2,U,8)'=0) D
+ .S ABMCDAYS=$S((+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3)'=0):$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3),1:1)
+ .S ABMNCDYS=$S((+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6)'=0):$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6),1:0)
+ .S ABMR("SV3",30)=$P(ABMB2,U,8)*(ABMCDAYS+ABMNCDYS)  ;flate rate amount
+ ;end new abm*2.6*37 IHS/SD/SDR ADO76009
  S ABMR("SV3",30)=$J(ABMR("SV3",30),0,2)
  Q
 40 ;SV303 - Place of service
@@ -49,7 +57,8 @@ LOOP ;LOOP HERE
  ;S ABMR("SV3",70)=$P(ABMRV(ABMI,ABMJ,ABMK),U,5)  ;abm*2.6*9 NOHEAT
  S ABMR("SV3",70)=""  ;abm*2.6*9 NOHEAT
  S:$P(ABMRV(ABMI,ABMJ,ABMK),U,5)>1 ABMR("SV3",70)=$P(ABMRV(ABMI,ABMJ,ABMK),U,5)  ;abm*2.6*9 NOHEAT
- I $P($G(^AUTNINS(ABMP("INS"),0)),U)["WASHINGTON MEDICAID" S ABMR("SV3",70)=$P(ABMRV(ABMI,ABMJ,ABMK),U,5)  ;IHS/SD/AML 12/27/12 HEAT95806
+ ;I $P($G(^AUTNINS(ABMP("INS"),0)),U)["WASHINGTON MEDICAID" S ABMR("SV3",70)=$P(ABMRV(ABMI,ABMJ,ABMK),U,5)  ;IHS/SD/AML 12/27/12 HEAT95806  ;abm*2.6*28 IHS/SD/SDR CR8718
+ I "^WASHINGTON MEDICAID^WA MEDICAID DENTAL^"[("^"_$P($G(^AUTNINS(ABMP("INS"),0)),U)_"^") S ABMR("SV3",70)=$P(ABMRV(ABMI,ABMJ,ABMK),U,5)  ;abm*2.6*28 IHS/SD/SDR CR8718
  Q
 80 ;SV307 - Description
  S ABMR("SV3",80)=""

@@ -1,11 +1,14 @@
 BARUTLST ; IHS/SD/SDR - BAR/UFMS Transactions not export report   
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,20,23**;OCT 26,2005
- ; IHS/SD/TMM 1.8*19 3/10/10
- ; IHS/SD/PKD HEAT   11/10/10
- ;MAR 2012 P.OTTIS HEAT# 62025 FIX $ZE= <SUBSCRIPT>GETDATA+14^BARUTLST
- ;JUN 2012 P.OTTIS ADDED FILTER OPTION: SKIP "INGORE"-TYPE OF TRANSACTION
- ;                  SHOW "I" IF INDIAN BENEFICIARY PATIENT
- ;MAY 2013 P.OTTIS CHANGED HDR: INDIAN BENEFICIARY FOR INDIAN PATIENT
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,20,23,33**;OCT 26,2005;Build 133
+ ;
+ ;IHS/SD/TMM 1.8*19 3/10/10
+ ;IHS/SD/PKD HEAT 11/10/10
+ ;IHS/SD/POT MAR 2012 HEAT# 62025 FIX $ZE= <SUBSCRIPT>GETDATA+14^BARUTLST
+ ;IHS/SD/POT JUN 2012 ADDED FILTER OPTION: SKIP "INGORE"-TYPE OF TRANSACTION; SHOW "I" IF INDIAN BENEFICIARY PATIENT
+ ;IHS/SD/POT MAY 2013 CHANGED HDR: INDIAN BENEFICIARY FOR INDIAN PATIENT
+ ;IHS/SD/SDR 1.8*33 ADO60817 Updated to use 'C' xref since 'B' is now date/time/counter with DINUM removed;
+ ;  Added DATE/TIME/CNTR to report since IEN is no longer date.time
+ ;
 DT ;
  ;
  W !!,"This report will look through all the A/R Transactions in the selected date"
@@ -35,8 +38,8 @@ FILTER ;P.OTT
  S DIR("A")="Enter filtering criteria:"
  S DIR("L",1)="Select one of the following:"
  S DIR("L",2)=""
- S DIR("L",3)="  1		NO FILTERING (SHOW ALL)"
- S DIR("L",4)="  2		Don't show transactions marked as 'IGNORE'"
+ S DIR("L",3)="  1      NO FILTERING (SHOW ALL)"
+ S DIR("L",4)="  2      Don't show transactions marked as 'IGNORE'"
  S DIR("B")=1
  D ^DIR
  G:$D(DTOUT)!$D(DIROUT)!$D(DUOUT)!(Y="") DT
@@ -78,31 +81,36 @@ GETDATA ;
  K ^TMP($J,"BARUTLST")
  S BARY("DT")=$G(BARY("DT",1))-.5
  S BARY("DT",2)=BARY("DT",2)_".999999"
- F  S BARY("DT")=$O(^BARTR(DUZ(2),"B",BARY("DT"))) Q:'BARY("DT")!(BARY("DT")>BARY("DT",2))  D
+ ;F  S BARY("DT")=$O(^BARTR(DUZ(2),"B",BARY("DT"))) Q:'BARY("DT")!(BARY("DT")>BARY("DT",2))  D  ;bar*2.8*33 IHS/SD/SDR ADO60817
+ ;.S BARP("TRANS")=0
+ ;.F  S BARP("TRANS")=$O(^BARTR(DUZ(2),"B",BARY("DT"),BARP("TRANS"))) Q:'BARP("TRANS")  D
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+ F  S BARY("DT")=$O(^BARTR(DUZ(2),"C",BARY("DT"))) Q:'BARY("DT")!(BARY("DT")>BARY("DT",2))  D
  .S BARP("TRANS")=0
- .F  S BARP("TRANS")=$O(^BARTR(DUZ(2),"B",BARY("DT"),BARP("TRANS"))) Q:'BARP("TRANS")  D
- .. ;Q:($G(^BARTR(DUZ(2),BARP("TRANS"),6))'="")  ;already transmitted
- .. ; IHS/SD/PKD 1.8*19 Check if UFMS FileName has been set to null OR TRX never X'mitted
+ .F  S BARP("TRANS")=$O(^BARTR(DUZ(2),"C",BARY("DT"),BARP("TRANS"))) Q:'BARP("TRANS")  D
+ ..;end new bar*1.8*33 IHS/SD/SDR ADO60817
+ ..;Q:($G(^BARTR(DUZ(2),BARP("TRANS"),6))'="")  ;already transmitted
+ ..; IHS/SD/PKD 1.8*19 Check if UFMS FileName has been set to null OR TRX never X'mitted
  ..Q:$P($G(^BARTR(DUZ(2),BARP("TRANS"),6)),U)'=""  ;already transmitted
  ..Q:($$GET1^DIQ(90050.03,BARP("TRANS"),3.5,"E")=0)  ;Credit-Debit
- .. ;--->IND PAT
- .. ;SET (BARTMP3,BARTMPIT,BARINDP)=""                                        ;JUST IN CASE WE WILL NOT FIND THEM
- .. ;SET BARTMP3=$P($G(^BARTR(DUZ(2),BARP("TRANS"),0)),U,4)                   ;PTR TO ACCNT FILE
- .. ;IF BARTMP3]"" S BARTMPIT=$$GET1^DIQ(90050.03,BARTMP3_",",6,"I")          ;'A/R ACCOUNT' PTR
- .. ;IF BARTMPIT]"",$$GET1^DIQ(9999999.18,BARTMPIT,.21,"I")="I" S BARINDP=1   ;INSURER TYPE 'INDIAN PATIENT' 
- .. ;
- .. S BARINDP=$$ISINDPAT(BARP("TRANS"))
- .. IF BARFLTR=1 IF $P($G(^BARTR(DUZ(2),BARP("TRANS"),1)),U,12)="I" QUIT        ;IGNORE THIS TX P.OTTIS
- .. ;
- .. ; MAR 2012 HEAT# 62025 FIX P.OTTIS  ----------------------->
- .. S BARTMP01=$G(^BARTR(DUZ(2),BARP("TRANS"),1))
- .. I (($P(BARTMP01,U)'=40)&($P(BARTMP01,U)'=43)&($P(BARTMP01,U)'=993)) Q  ;pymts/adjs/status change only
- .. ;;;OLD CODE I (($P($G(^BARTR(DUZ(2),BARP("TRANS"),1)),U)'=40)&($P($G(^BARTR(DUZ(2),BARP("TRANS"),1)),U)'=43)&($P($G(^BARTR(DUZ(2),BARP("TRANS"),1)),U)'=993)) Q  ;pymts/adjs/status change only
- .. ;;;OLD CODE S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U)=$P($G(^BARBL(DUZ(2),$P($G(^BARTR(DUZ(2),BARP("TRANS"),0)),U,4),0)),U)  ;bill#
- .. S BARTMP02=$G(^BARTR(DUZ(2),BARP("TRANS"),0))
- .. S BARTMP03=$P(BARTMP02,U,4) IF BARTMP03="" QUIT
- .. S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U)=$P($G(^BARBL(DUZ(2),BARTMP03,0)),U)  ;bill#
- .. ;------------------------------------------------------------<
+ ..;--->IND PAT
+ ..;SET (BARTMP3,BARTMPIT,BARINDP)=""                                        ;JUST IN CASE WE WILL NOT FIND THEM
+ ..;SET BARTMP3=$P($G(^BARTR(DUZ(2),BARP("TRANS"),0)),U,4)                   ;PTR TO ACCNT FILE
+ ..;IF BARTMP3]"" S BARTMPIT=$$GET1^DIQ(90050.03,BARTMP3_",",6,"I")          ;'A/R ACCOUNT' PTR
+ ..;IF BARTMPIT]"",$$GET1^DIQ(9999999.18,BARTMPIT,.21,"I")="I" S BARINDP=1   ;INSURER TYPE 'INDIAN PATIENT' 
+ ..;
+ ..S BARINDP=$$ISINDPAT(BARP("TRANS"))
+ ..IF BARFLTR=1 IF $P($G(^BARTR(DUZ(2),BARP("TRANS"),1)),U,12)="I" QUIT        ;IGNORE THIS TX P.OTTIS
+ ..;
+ ..; MAR 2012 HEAT# 62025 FIX P.OTTIS  ----------------------->
+ ..S BARTMP01=$G(^BARTR(DUZ(2),BARP("TRANS"),1))
+ ..I (($P(BARTMP01,U)'=40)&($P(BARTMP01,U)'=43)&($P(BARTMP01,U)'=993)) Q  ;pymts/adjs/status change only
+ ..;;;OLD CODE I (($P($G(^BARTR(DUZ(2),BARP("TRANS"),1)),U)'=40)&($P($G(^BARTR(DUZ(2),BARP("TRANS"),1)),U)'=43)&($P($G(^BARTR(DUZ(2),BARP("TRANS"),1)),U)'=993)) Q  ;pymts/adjs/status change only
+ ..;;;OLD CODE S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U)=$P($G(^BARBL(DUZ(2),$P($G(^BARTR(DUZ(2),BARP("TRANS"),0)),U,4),0)),U)  ;bill#
+ ..S BARTMP02=$G(^BARTR(DUZ(2),BARP("TRANS"),0))
+ ..S BARTMP03=$P(BARTMP02,U,4) IF BARTMP03="" QUIT
+ ..S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U)=$P($G(^BARBL(DUZ(2),BARTMP03,0)),U)  ;bill#
+ ..;------------------------------------------------------------<
  ..S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U,2)=$$GET1^DIQ(90050.02,$P($G(^BARTR(DUZ(2),BARP("TRANS"),0)),U,6),".01","E")  ;A/R acct
  ..S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U,3)=$$GET1^DIQ(90050.02,$P($G(^BARTR(DUZ(2),BARP("TRANS"),0)),U,6),"1.08","E")  ;ins type
  ..S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U,4)=$$GET1^DIQ(90050.03,BARP("TRANS"),3.6,"I")  ;payment
@@ -111,7 +119,7 @@ GETDATA ;
  ...S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U,5)=$P(^TMP($J,"BARUTLST",BARP("TRANS")),U,4)
  ...S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U,4)=""
  ..S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U,6)=$$GET1^DIQ(90050.03,BARP("TRANS"),3.5,"E")  ;credit-debit
- .. ;
+ ..;
  ..S BARTTYP=$$GET1^DIQ(90050.03,BARP("TRANS"),101,"I")  ;trans type
  ..;status change transactions - treat like adjs
  ..I BARTTYP=993 S $P(^TMP($J,"BARUTLST",BARP("TRANS")),U,5)=$$GET1^DIQ(90050.03,BARP("TRANS"),3.5,"E")
@@ -134,11 +142,13 @@ WRITE ;EP
  U IO
  S BARDUZ2=0
  W !,"Missing Transaction List for "_$P($G(^AUTTLOC(DUZ(2),0)),U,2)
- W !,"TRANS IEN^BILL#^A/R ACCT^INS TYPE^PYMT^ADJ^CR-DEB^TRANS TYPE^CBATCH^CITEM^TDN^3P APPRV DT^UFMS EXP FILE^VISIT TYPE^INDIAN PATIENT"
+ ;W !,"TRANS IEN^BILL#^A/R ACCT^INS TYPE^PYMT^ADJ^CR-DEB^TRANS TYPE^CBATCH^CITEM^TDN^3P APPRV DT^UFMS EXP FILE^VISIT TYPE^INDIAN PATIENT"  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ W !,"TRANS IEN^TRANS DATE/TIME/CNTR^BILL#^A/R ACCT^INS TYPE^PYMT^ADJ^CR-DEB^TRANS TYPE^CBATCH^CITEM^TDN^3P APPRV DT^UFMS EXP FILE^VISIT TYPE^INDIAN PATIENT"  ;bar*1.8*33 IHS/SD/SDR ADO60817
  S BARP("TRANS")=0
  F  S BARP("TRANS")=$O(^TMP($J,"BARUTLST",BARP("TRANS"))) Q:'BARP("TRANS")  D
  .S BARREC=$G(^TMP($J,"BARUTLST",BARP("TRANS")))
- .W !,BARP("TRANS")_U_BARREC
+ .;W !,BARP("TRANS")_U_BARREC  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .W !,BARP("TRANS")_U_$P($G(^BARTR(DUZ(2),BARP("TRANS"),0)),U)_U_BARREC  ;bar*1.8*33 IHS/SD/SDR ADO60817
  Q:$G(BARUFXMT)=1  ; Called from ^BARUFXMT which wants the ^TMP($J data ;IHS/SD/PKD 1.8*20
  K ^TMP($J,"BARUTLST")
  Q

@@ -1,10 +1,12 @@
 ABMDF35B ; IHS/SD/SDR - Set HCFA1500 (02/12) Print Array PART 2 ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**13,14,21**;NOV 12, 2009;Build 379
- ;IHS/SD/SDR - 2.6*14 - HEAT156735 - Populated box 19 with:
+ ;;2.6;IHS 3P BILLING SYSTEM;**13,14,21,31,40**;NOV 12, 2009;Build 785
+ ;IHS/SD/SDR 2.6*14 HEAT156735 - Populated box 19 with:
  ;  1. VA CONTRACT NUMBER (existing code)
  ;  2. claim attachments from page 9G (new code)
  ;  3. what it did before (existing code)
- ;IHS/SD/SDR - 2.6*21 - HEAT187159 - Added accident state in 10B
+ ;IHS/SD/SDR 2.6*21 HEAT187159 - Added accident state in 10B
+ ;IHS/SD/SDR 2.6*31 CR8881 Fixed to use original referring prov question (#12) on page 3
+ ;IHS/SD/SDR 2.6*40 ADO111599 Added code to print VA Contract#
  ;
  ; *********************************************************************
 BNODES S ABM("B5")=$G(^ABMDBILL(DUZ(2),ABMP("BDFN"),5)),ABM("B6")=$G(^(6)),ABM("B7")=$G(^(7)),ABM("B8")=$G(^(8)),ABM("B9")=$G(^(9)),ABM("B10")=$G(^(10))
@@ -63,8 +65,16 @@ SIML ;
  S $P(ABMF(25),U,2)=ABMBOX15
  ;end new box 15
 BLK17 ;
- S $P(ABMF(27),U)=$P(ABM("B8"),U,25)_$P(ABM("B8"),U,24)  ;ord/ref/sup phys qual and name
- S $P(ABMF(27),U,2)=$P(ABM("B8"),U,26)  ;ord/ref/sup NPI
+ ;start old abm*2.6*31 IHS/SD/SDR CR8881
+ ;S $P(ABMF(27),U)=$P(ABM("B8"),U,25)_$P(ABM("B8"),U,24)  ;ord/ref/sup phys qual and name
+ ;S $P(ABMF(27),U,2)=$P(ABM("B8"),U,26)  ;ord/ref/sup NPI
+ ;end old start new abm*2.6*31 IHS/SD/SDR CR8881
+ S $P(ABMF(27),U)=$P(ABM("B8"),U,8)  ;this is the correct field
+ I $P(ABMF(27),U)="" S $P(ABMF(27),U)=$P(ABM("B8"),U,24)  ;this is the old field
+ S $P(ABMF(27),U)=$S($P(ABM("B8"),U,25)'="":$P(ABM("B8"),U,25),$P(ABMF(27),U)'="":"DN",1:"")_" "_$P(ABMF(27),U)  ;use provider type or default to DN (it could be an 837 reprint)
+ S $P(ABMF(27),U,2)=$P(ABM("B8"),U,17)  ;ord/ref/sup NPI
+ I $P(ABMF(27),U,2)="" S $P(ABMF(27),U,2)=$P(ABM("B8"),U,26)  ;ord/ref/sup NPI - this is the old field
+ ;end new abm*2.6*31 IHS/SD/SDR CR8881
 BLK19 ;
  S ABMBLK19=$$SDT^ABMDUTL($P(ABM("B9"),U,11))  ;date last seen
  S ABMBLK19=ABMBLK19_" "_$P(ABM("B9"),U,24)  ;supervising prov UPIN
@@ -80,6 +90,7 @@ BLK19 ;
  .S ABMBLK19="PWK"_$$GET1^DIQ(9002274.03,$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),71,ABMI,0)),U),".01","E")_$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),71,ABMI,0)),U,2)_$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),71,ABMI,0)),U,3)
  .S $P(ABMF(29),U)=$E(ABMBLK19,1,48)
  ;end new code HEAT156735
+ I ($$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")="VA MEDICAL BENEFIT (VMBP)") S $P(ABMF(29),U)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),U,27)  ;abm*2.6*40 IHS/SD/SDR ADO111599
  I ((ABMP("ITYPE")="V")!($$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")["VMBP"))&($P($G(^ABMDPARM(ABMP("LDFN"),1,3)),U,13)'="") S $P(ABMF(29),U)=$P($G(^ABMDPARM(ABMP("LDFN"),1,3)),U,13)  ;abm*2.6*11 VMBP RQMT_108  ;abm*2.6*12 VMBP
  K ABMBLK19
 LAB I '$P(ABM("B8"),U) S $P(ABMF(29),U,3)="X"

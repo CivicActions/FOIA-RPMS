@@ -1,5 +1,5 @@
-BARPT172 ; IHS/SD/LSL - Post init for V1.7 Patch 2 ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+BARPT172 ; IHS/SD/LSL - Post init for V1.7 Patch 2;  [ 01/29/2003  2:23 PM ]
+ ;;1.7;IHS ACCOUNTS RECEIVABLE;**2**;May 02, 2003
  ;
  Q
  ; *********************************************************************
@@ -85,7 +85,7 @@ EISS ;
  . S DA=0
  . F  S DA=$O(^BAR(90052.06,DUZ(2),DA)) Q:'+DA  D
  . . K DR
- . . S DR="201///127.0.0.1"
+ . . S DR="201///161.223.90.5"
  . . S DR=DR_";202///bardata"
  . . S DR=DR_";203///1bardat/"
  . . D ^DIE

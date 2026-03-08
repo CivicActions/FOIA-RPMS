@@ -1,10 +1,11 @@
-PSJLIVMD ;BIR/MV-SETUP LM TEMPLATE FOR INPT MED. IV ;02-Apr-2013 22:51;PLS
- ;;5.0; INPATIENT MEDICATIONS ;**37,50,63,58,81,91,80,116,110,111,180,134,209,1015**;16 DEC 97;Build 62
+PSJLIVMD ;BIR/MV-SETUP LM TEMPLATE FOR INPT MED. IV ;05-Feb-2025 10:50;NIC
+ ;;5.0; INPATIENT MEDICATIONS ;**37,50,63,58,81,91,80,116,110,111,180,134,209,1015,1035**;16 DEC 97;Build 39
  ;
  ;Reference to ^PS(55 is supported by DBIA #2191.
  ;
  ;Modified - IHS/MSC/PB - 2/13/13 added line tag OFFSET to add the Beyond Use Datte to the edit screen
  ;                      - 3/25/13 added line OFFSET+3 to set the P("OFFSET") variable.
+ ;                      -2/5/2025 - Added conditional to START+5 - FID 105236
  ;
 EN ; Build LM template to display IV order.
  D GTOT^PSIVUTL(P(4))
@@ -41,7 +42,8 @@ START ;
  I $G(P("OT"))="I",$G(P(4))]"" D
  .Q:$G(ON)["V"  I $G(PSIVAC)="" N PSIVAC S PSIVAC="CF"
  .Q:$G(P(3))
- .D ENT^PSIVCAL,ENSTOP^PSIVCAL
+ .D:'$G(P(2)) ENT^PSIVCAL  ;p1035
+ .D ENSTOP^PSIVCAL
  D REQDT(ON)
  D FLDNO^PSJLIUTL("(4)",47)
  S PSJL=$$SETSTR^VALM1("Start:",PSJL,56,7)_$$STARTDT^PSJLIUTL

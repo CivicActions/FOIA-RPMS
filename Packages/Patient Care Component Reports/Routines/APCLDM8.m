@@ -1,5 +1,5 @@
-APCLDM8 ; IHS/CMI/LAB - PPD STUFF ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLDM8 ; IHS/OHPRD/TMJ - PPD STUFF ;  [ 06/02/97  3:45 PM ]
+ ;;3.0;IHS PCC REPORTS;**1**;FEB 05, 1997
  ;IHS/TUCSON/LAB - patch 1 - 05/27/97 fixed cumulative TB STATUS calculation modified subroutine TBTXST and PPDCODE
  ;
  ;

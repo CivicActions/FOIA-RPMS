@@ -1,6 +1,6 @@
-DIWE ;SFISC/GFT,XAK-START OF WP ;11:35 AM  25 Aug 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**8,18**;Mar 30, 1999
+DIWE ;SFISC/GFT,XAK-START OF WP ;2/21/96 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**33**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 EN K DTOUT,DUOUT,DIRUT ;G Q:'$D(@(DIC_"0)")) D A
  L @("+"_DIC_"0):1") E  W !,"FILE IS IN USE BY ANOTHER TERMINAL" G Q
@@ -19,11 +19,6 @@ DIEN ;
 W W !?DL+DL-2,DH_":" G OPT
  ;
 A S:$E(DIC,$L(DIC))'="," DIC=DIC_"," S:'$D(DWO) DWO="ABCDE IJLMPRSTU"_$E(" Y",$S($G(DUZ(0))="@":2,1:1))
- S:$G(DWDISABL)]"" DWO=$TR(DWO,DWDISABL,$J("",$L(DWDISABL)))
- I $D(^VA(200,0))#2,^(0)'["NEW PERSON",'$D(DDS) D
- . W !!?2,$C(7)_"WARNING: You appear to have a file #200 stored at ^VA(200),"
- . W !?11,"but it is not named 'NEW PERSON.' I will assume your"
- . W !?11,"preferred editor is the Line Editor.",!
  K DWL,DIWE S U="^",DIWPT=$S('$D(^VA(200,0)):"",^(0)'["NEW PERSON":"",'$D(^VA(200,+DUZ,1)):"",1:$P(^(1),U,4))
  S DIWE=$S('$D(^VA(200,0)):0,^(0)'["NEW PERSON":0,'$D(^VA(200,+DUZ,1)):0,1:+$P(^(1),U,5)),DIWE=$S($D(^DIST(1.2,DIWE,0)):DIWE,1:0) S:'DIWE DIWE=$S($D(DDS)#2:2,1:1)
  S @("J=$O("_DIC_"0))>0") I '$D(^(0))!'J S ^(0)=""
@@ -39,6 +34,5 @@ X Q:$D(DIWE(1))  I $D(DT)[0 D NOW^%DTC S DT=X K %I ;
  I @("$O("_DIC_"0))'>0") K @($E(DIC,1,$L(DIC)-1)_")") G Q
  I $D(@(DIC_"0)"))#2 G Q:$P(^(0),U,5)?7N.1P.6N ;Has already been updated.
  S ^(0)=$P(DWHD,U,1,2)_U_DWLC_U_DWLC_U_DT_U_$P(DWHD,U,6,9)
- D:$D(DDS) INIT^DDGLIB0()
 Q L @("-"_DIC_"0)") K DW2,DW3,DIWPT,DWO,DWLR,DWHD,DWL,DWPK,DWI,DWJ,DWLC
- K Y,Z,DWAFT,DWLW,DIW,D,DIWE,DIWETXT,DIWESUB,DDWLMAR,DDWRMAR,DDWFLAGS,DDWAUTO,DDWTAB,DWDISABL,DC Q
+ K Y,Z,DWAFT,DWLW,DIW,D,DIWE,DIWETXT,DIWESUB,DDWLMAR,DDWRMAR,DC Q

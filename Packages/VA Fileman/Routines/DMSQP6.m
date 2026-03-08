@@ -1,6 +1,6 @@
-DMSQP6 ;SFISC/EZ-DISPLAY TABLE GROUPINGS ;10/30/97  17:51
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQP6 ;SFISC/EZ-DISPLAY TABLE GROUPINGS ;10/30/97  17:51 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
 INIT ; initialize variables and clear tmp arrays
  D DT^DICRW
  S DMUCI="" I $D(^%ZOSF("UCI"))#2 X ^%ZOSF("UCI") S DMUCI=Y

@@ -1,0 +1,193 @@
+AMHRDU3P ; IHS/CMI/LAB - list refusals ;
+ ;;4.0;IHS BEHAVIORAL HEALTH;**12**;JUN 02, 2010;Build 46
+ ;
+ ;
+PRINT ;EP - called from xbdbque
+ ;eliminate anyone who doesn't have the correct result type
+ I AMHRREST=6 G SORT
+ S DFN=0 F  S DFN=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN)) Q:DFN'=+DFN  D
+ .K AMHPR
+ .S G=0
+ .S D=0 F  S D=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D)) Q:D=""  D
+ ..S T="" F  S T=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T)) Q:T=""  D
+ ...S R="" F  S R=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T,R)) Q:R=""  D
+ ....I AMHRREST=1,R="NEGATIVE" S G=1  ;K ^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T,R)
+ ....I AMHRREST=2,R="POSITIVE" S G=1  ;K ^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T,R)
+ ....I AMHRREST=3,R="PATIENT REFUSED SCREENING" S G=1 ;K ^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T,R)
+ ....I AMHRREST=4,R="UNABLE TO SCREEN" S G=1  ;K ^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T,R)
+ ....I AMHRREST=5,R="REFERRAL NEEDED" S G=1
+ .I 'G K ^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN)
+SORT ;
+ K ^TMP($J)
+ S DFN=0 F  S DFN=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN)) Q:DFN'=+DFN  D
+ .S D=0 F  S D=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D)) Q:D=""  D
+ ..S T="" F  S T=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T)) Q:T=""  D
+ ...S R="" F  S R=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T,R)) Q:R=""  D
+ ....S V="" F  S V=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T,R,V)) Q:V=""  D
+ .....S AMHRY=^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",DFN,D,T,R,V)
+ .....S AMHRSORV="" D H I AMHRSORV="" S AMHRSORV="UNKNOWN"
+ .....S ^TMP($J,AMHRSORV,DFN,D,T,R,V)=AMHRY
+ D PRINT1
+ D DONE
+ Q
+PRINT1 ;
+ S AMHRPG=0 K AMHRQUIT
+ K AMHRLSTP
+ I '$D(^XTMP("AMHRDU3",AMHRJ,AMHRH)) D HEADER W !!,"No data to report.",! G DONE
+ D COVPAGE
+ Q:$$END
+ ;D HEADER
+ D LIST
+ Q
+COM(X,X2,X3) ;
+ D COMMA^%DTC
+ Q $$STRIP^XLFSTR(X," ")
+END() ;
+ I $Y<(IOSL-4) Q 0
+ D HEADER
+ I $D(AMHRQUIT) Q 1
+ Q 0
+ENDL() ;
+ I $Y<(IOSL-8) Q 0
+ D HEADER
+ I $D(AMHRQUIT) Q 1
+ Q 0
+PTOT() ;
+ NEW C,X
+ S C=0
+ S X=0 F  S X=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"PATS",X)) Q:X'=+X  S C=C+1
+ Q C
+TOT() ;
+ NEW C,X
+ S C=0
+ S X=0 F  S X=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",X)) Q:X'=+X  S C=C+1
+ Q C
+HEADER ;EP
+ G:'AMHRPG HEADER1
+ K DIR I $E(IOST)="C",IO=IO(0) W ! S DIR(0)="EO" D ^DIR K DIR I Y=0!(Y="^")!($D(DTOUT)) S AMHRQUIT="" Q
+HEADER1 ;
+ W:$D(IOF) @IOF S AMHRPG=AMHRPG+1
+ W !?3,$P(^VA(200,DUZ,0),U,2),?35,$$FMTE^XLFDT(DT),?70,"Page ",AMHRPG,!
+ W !,$$CTR("***  DRUG USE SCREENING LISTING FOR SELECTED PATIENTS  ***",80),!
+ S X="Screening Dates: "_$$FMTE^XLFDT(AMHRBD)_" to "_$$FMTE^XLFDT(AMHRED) W $$CTR(X,80),!
+ W !,"PATIENT NAME",?32,"HRN",?42,"DATE OF BIRTH",?56,"COMMUNITY"
+ W !?2,"DATE",?11,"SCREENING",?42,"RESULT",?54,"AGE",?59,"SCREEN PROVIDER"
+ W !,$TR($J("",80)," ","-")
+ Q
+DONE ;
+ K ^TMP($J)
+ K ^XTMP("AMHRDU3",AMHRJ,AMHRH)
+ D EOP
+ Q
+CTR(X,Y) ;EP - Center X in a field Y wide.
+ Q $J("",$S($D(Y):Y,1:IOM)-$L(X)\2)_X
+ ;----------
+EOP ;EP - End of page.
+ Q:$E(IOST)'="C"
+ Q:IO'=IO(0)
+ Q:$D(ZTQUEUED)!'(IOT="TRM")!$D(IO("S"))
+ NEW DIR
+ K DIRUT,DFOUT,DLOUT,DTOUT,DUOUT
+ W !
+ S DIR("A")="End of Report.  Press Enter",DIR(0)="E" D ^DIR
+ Q
+ ;----------
+USR() ;EP - Return name of current user from ^VA(200.
+ Q $S($G(DUZ):$S($D(^VA(200,DUZ,0)):$P(^(0),U),1:"UNKNOWN"),1:"DUZ UNDEFINED OR 0")
+ ;----------
+LOC() ;EP - Return location name from file 4 based on DUZ(2).
+ Q $S($G(DUZ(2)):$S($D(^DIC(4,DUZ(2),0)):$P(^(0),U),1:"UNKNOWN"),1:"DUZ(2) UNDEFINED OR 0")
+RT(S,P,R) ;
+ NEW D,T,V,G
+ S G=0
+ S D="" F  S D=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",S,P,D)) Q:D=""!(G)  D
+ .S T="" F  S T=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",S,P,D,T)) Q:T=""!(G)  D
+ ..S V="" F  S V=$O(^XTMP("AMHRDU3",AMHRJ,AMHRH,"SCREENS",S,P,D,T,V)) Q:V=""!(G)  D
+ ...I V=R S G=1
+ Q G
+ ;----------
+LIST ;EP - called from xbdbque
+ S AMHRPG=0 K AMHRQUIT
+ S AMHRLSTP=1
+ D HEADER
+ S AMHRSORV="" F  S AMHRSORV=$O(^TMP($J,AMHRSORV)) Q:AMHRSORV=""!($D(AMHRQUIT))  D
+ .S DFN=0 F  S DFN=$O(^TMP($J,AMHRSORV,DFN)) Q:DFN'=+DFN!($D(AMHRQUIT))  D
+ ..Q:$$ENDL
+ ..W !!,$E($P(^DPT(DFN,0),U),1,30),?32,$$HRN^AUPNPAT(DFN,DUZ(2)),?42,$$FMTE^XLFDT($$DOB^AUPNPAT(DFN)),?56,$E($$COMMRES^AUPNPAT(DFN,"E"),1,10)
+ ..S AMHDATE="" F  S AMHDATE=$O(^TMP($J,AMHRSORV,DFN,AMHDATE)) Q:AMHDATE=""!($D(AMHRQUIT))  D
+ ...S AMHTYPE="" F  S AMHTYPE=$O(^TMP($J,AMHRSORV,DFN,AMHDATE,AMHTYPE)) Q:AMHTYPE=""!($D(AMHRQUIT))  D
+ ....S AMHRES="" F  S AMHRES=$O(^TMP($J,AMHRSORV,DFN,AMHDATE,AMHTYPE,AMHRES)) Q:AMHRES=""!($D(AMHRQUIT))  D
+ .....Q:$$ENDL
+ .....W !?2,$$DT(AMHDATE),?11,$E(AMHTYPE,1,29),?42,$E(AMHRES,1,10),?54,$$AGE^AUPNPAT(DFN,AMHDATE)
+ .....S T="" F  S T=$O(^TMP($J,AMHRSORV,DFN,AMHDATE,AMHTYPE,AMHRES,T)) Q:T=""  S P=^TMP($J,AMHRSORV,DFN,AMHDATE,AMHTYPE,AMHRES,T) D
+ ......W ?58,$E($P(P,U),1,15)
+ Q
+H ;
+ S AMHRSORV=$$HRN^AUPNPAT(DFN,DUZ(2))
+ Q
+N ;
+ S AMHRSORV=$P(^DPT(DFN,0),U)
+ Q
+P ;
+ S AMHRSORV=$P(AMHRY,U,1)
+ Q
+R ;
+ S AMHRSORV=R
+ Q
+D ;
+ S AMHRSORV=$P(AMHRY,U,3)
+ Q
+A S AMHRSORV=$P(AMHRY,U,4)
+ Q
+G ;
+ S AMHRSORV=$$VAL^XBDIQ1(2,DFN,.02)
+ Q
+C ;
+ S AMHRSORV=$P(AMHRY,U,2)
+ Q
+T ;
+ S %=$$HRN^AUPNPAT(DFN,DUZ(2))
+ S %=%+10000000,%=$E(%,7,8)_"-"_+$E(%,2,8)
+ S AMHRSORV=%
+ Q
+Q ;
+ S AMHRSORV=$$RACE^AMHUTIL2(DFN)
+ Q
+E ;
+ S AMHRSORV=$$ETHN^AMHUTIL2(DFN)
+ Q
+DT(D) ;EP
+ I D="" Q ""
+ Q $E(D,4,5)_"/"_$E(D,6,7)_"/"_$E(D,2,3)
+ ;
+COVPAGE ;EP
+ W:$D(IOF) @IOF
+ W !,$$CTR("********** DRUG USE SCREENING FOR SELECTED PATIENTS **********",80)
+ W !!,"REPORT REQUESTED BY: ",$P(^VA(200,DUZ,0),U)
+ W !!,"The following report contains an DRUG USE screening report based on the",!,"following criteria:"
+SHOW ;
+ W !!,"Patient must have had a screening between ",$$FMTE^XLFDT(AMHRBD)," and ",$$FMTE^XLFDT(AMHRED),!
+ ;W:AMHRTYPE="S" !!?6,"Search Template: ",$P(^DIBT(AMHRSEAT,0),U),!
+ W !,"Gender:  ",$S(AMHRSEX="F":"FEMALES ONLY",AMHRSEX="M":"MALES ONLY",AMHRSEX="MF":"Both MALES and FEMALES",1:"")
+ I $D(AMHRAGET) W !,"Age of Patients included: ",$P(AMHRAGET,"-")," to ",$P(AMHRAGET,"-",2)
+ I '$D(AMHRAGET) W !,"All Ages included"
+ W !,"Patients must have had a screening during the time period with one of ",!?6,"the following screening results:"
+ I AMHRREST=1 W !?3,"NEGATIVE"
+ I AMHRREST=2 W !?3,"POSITIVE"
+ I AMHRREST=3 W !?3,"PATIENT REFUSED SCREENING"
+ I AMHRREST=4 W !?3,"UNABLE TO SCREEN"
+ I AMHRREST=5 W !?3,"REFERRAL NEEDED"
+ I AMHRREST=6 W !?3,"NEGATIVE, POSITIVE, PATIENT REFUSED SCREENING, UNABLE TO SCREEN, REFERRAL NEEDED"
+ I $D(AMHRCLNT) W !,"Screenings done in the following clinics are included:" D
+ .S X=0 F  S X=$O(AMHRCLNT(X)) Q:X'=+X  W !?10,$P(^DIC(40.7,X,0),U)," ("_$P(^DIC(40.7,X,0),U,2)_")"
+ I '$D(AMHRCLNT),AMHREXPC W !,"Screenings done in ALL clinics included"
+ I 'AMHREXPC W !,"PCC Clinics excluded."
+ D PAUSE
+ Q
+PAUSE ; 
+ Q:$E(IOST)'="C"
+ Q:IO'=IO(0)
+ S DIR(0)="E",DIR("A")="Press return to continue or '^' to quit" D ^DIR K DIR,DA
+ S:$D(DIRUT) AMHRQUIT=1
+ W:$D(IOF) @IOF
+ Q

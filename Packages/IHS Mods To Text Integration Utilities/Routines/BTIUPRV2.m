@@ -1,5 +1,5 @@
-BTIUPRV2 ; IHS/MSC/JS - Problem/Visit Objects ;25-Mar-2014 17:10;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1012**;MAR 20, 2013;Build 45
+BTIUPRV2 ; IHS/MSC/JS - Problem/Visit Objects ;03-Mar-2020 17:12;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1012,1022**;MAR 20, 2013;Build 11
  ;Obects for visit-related problem entries from V Visit instructions
  ;V treatment/regimen and V referral files
  Q
@@ -22,6 +22,8 @@ VIDT(DFN,TARGET) ; Visit Instructions for current visit
  .S EDATE=$$FMTE^XLFDT(EDATE,5)
  .S SIGN=$$GET1^DIQ(9000010.58,IEN,.04,"E")
  .S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ .S NARR=$TR(NARR,"|","-")
+ .I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  .I SPRIEN'=PRIEN S SPRIEN=PRIEN D PDATA(IEN)
  .D TEXT
  I VCNT=0 S @TARGET@(1,0)="No visit instructions for this visit"
@@ -59,6 +61,8 @@ VTRDT(DFN,TARGET) ; Visit Treatment/Regimens for this visit
  .;S VCNT=VCNT+1
  .;S @TARGET@(VCNT,0)=EDATE
  .S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ .S NARR=$TR(NARR,"|","-")
+ .I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  .S VCNT=VCNT+1
  .S @TARGET@(VCNT,0)="Problem: "_NARR
  .N IN,OUT,ARR,X
@@ -85,6 +89,8 @@ REFPR(DFN,TARGET) ; V referrals for this visit
  .S EDATE=$$GET1^DIQ(9000010.59,IEN,1201,"I")
  .S EDATE=$$FMTE^XLFDT(EDATE,5)
  .S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ .S NARR=$TR(NARR,"|","-")
+ .I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  .S VCNT=VCNT+1
  .S @TARGET@(VCNT,0)="  "_NARR
  .S SNO=$P($G(^AUPNVREF(IEN,0)),U,1)
@@ -133,6 +139,8 @@ FINDCP(PRIEN) ;Find a care plan
  ..S SIGN=$$GET1^DIQ(9000092,CPIEN,.08)
  ..Q:SIGN=""&(PRV'=DUZ)
  ..S NARR=$$GET1^DIQ(9000011,PRIEN,.05)
+ ..S NARR=$TR(NARR,"|","-")
+ ..I $P(NARR,"-",2)=""!($P(NARR,"-",2)=" ") S NARR=$P(NARR,"-",1)
  ..S VCNT=VCNT+1
  ..S @TARGET@(VCNT,0)="Problem: "_NARR
  ..S VCNT=VCNT+1

@@ -1,9 +1,9 @@
-GMRAUTL1 ;HIRMFO/WAA-ALLERGY UTILITIES ;12/04/92
- ;;4.0;Adverse Reaction Tracking;**33**;Mar 29, 1996;Build 5
+GMRAUTL1 ;HIRMFO/WAA-ALLERGY UTILITIES ;18-Nov-2021 05:37;du
+ ;;4.0;Adverse Reaction Tracking;**33,1010**;Mar 29, 1996;Build 17
  ;
  ; Reference to $$PROD^XUPROD supported by DBIA 4440
  ; Reference to $$TESTPAT^VADPT supported by DBIA 3744
- ; 
+ ;
  Q
 STPCK() ; This is to check to see if the user wanted to stop the print
  S ZTSTOP=0
@@ -55,7 +55,7 @@ PRDTST(GMRADFN) ; GMRA*4*33 - Remove Test Patients from Live Reports
  I '$$PROD^XUPROD() Q 1  ;Not a production or legacy environment.  Print all patients on report.
  I $$TESTPAT^VADPT(GMRADFN) Q 0  ;Production or legacy environment.  Test patient.  Do not print on report.
  Q 1  ;Production or legacy environment.  Not a test patient.  Print on report.
- ; 
+ ;
 VAD(DFN,DAT,LOC,NAM,SEX,SSN,RB,PRO,PID) ; Call to VADPT
  ; This call is a generic call to 1^VADPT
  ; Input:
@@ -66,7 +66,7 @@ VAD(DFN,DAT,LOC,NAM,SEX,SSN,RB,PRO,PID) ; Call to VADPT
  ; 3     LOC = Hospital Location
  ; 4     NAM = Full Patient name
  ; 5     SEX = Patient SEX
- ; 6     SSN = Patient SSN
+ ; 6     SSN = Patient HRCN
  ; 7     RB  = Patient Room Bed
  ; 8     PRO = Patient Provider
  ; 9     PID = Patient ID
@@ -75,7 +75,9 @@ VAD(DFN,DAT,LOC,NAM,SEX,SSN,RB,PRO,PID) ; Call to VADPT
  S VAINDT=$G(DAT) I VAINDT="" K VAINDT
  D 1^VADPT
  S LOC=$P(VAIN(4),U),NAM=VADM(1),SEX=VADM(5)
- S SSN=$P(VADM(2),U,2),RB=VAIN(5),PID=VA("PID")
+ ;IHS/MSC/MGH replace SSN with HRCN
+ ;S SSN=$P(VADM(2),U,2),RB=VAIN(5),PID=VA("PID")
+ S SSN=VA("PID"),RB=VAIN(5),PID=VA("PID")
  S PRO=$P(VAIN(2),U,2)
  D KVAR^VADPT K VA,VAROOT
  Q

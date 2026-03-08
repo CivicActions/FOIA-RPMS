@@ -1,8 +1,8 @@
 AMQQDFN ;IHS/CMI/THL - CHECK TO SEE IF ANY ^AUTT FILE DFNS HAVE CHANGED ;
- ;;2.0;IHS PCC SUITE;**2**;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**2,28**;MAY 14, 2009;Build 72
  ;-----
 EN ; ENTRY POINT
- N %,A,B,C,I,X,Y,Z,DFN,%Z
+ N %,A,B,C,I,X,Y,Z,DFN,%Z,N,G
  S U="^"
  ;PATCH XXX
  D IMM^AMQQMGR9
@@ -11,6 +11,23 @@ EN ; ENTRY POINT
  I '$D(AMQQXX) W !,"Qman is now waking up "
  F X=0:0 S X=$O(^AMQQ(5,X)) Q:'X  S Y=^(X,0),Z=$P(Y,U,12) I Z'="" W:'$D(AMQQXX) "." D G1
  D IEN^AMQQMGR9
+FPCV ;UPDATE FLU, PNEUMOVAX, COVID AND VAR vaccines ALL
+ F Y="PATIENT;INFLUENZA VACCINE;ALL^FLU","PATIENT;PNEUMOVAX;ALL^PNEUMO","PATIENT;VARICELLA VACCINE;ALL^VAR","PATIENT;COVID VACCINE;ALL^COVID" D
+ .S N=$P(Y,"^"),G=$P(Y,"^",2)
+ .S DA=$O(^AMQQ(1,"B",N,0))
+ .I 'DA Q  ;NO LINK?
+ .;gather up all vaccines in vaccine group G and set iens separated by colons into Z
+ .S Z=""
+ .S A=0 F  S A=$O(^AUTTIMM(A)) Q:A'=+A  I $$VAL^XBDIQ1(9999999.14,A,.09)=G S:Z]"" Z=Z_":" S Z=Z_A
+ .;SET FIELDS IN LINK
+ .;DSO RESULTS TYPE
+ .S $P(^AMQQ(1,DA,0),U,11)=Z
+ .;TURBO PREFIX
+ .S $P(^AMQQ(1,DA,0),U,15)=Z
+ .;FILTER CODE
+ .S $P(^AMQQ(1,DA,2),";",2)=Z
+ .;STARTUP CODE
+ .S $P(^AMQQ(1,DA,1),";",2)=Z
  Q
  ;
 G1 S (%,B)=$P(Y,U,5)

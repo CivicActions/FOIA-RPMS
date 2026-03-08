@@ -1,5 +1,5 @@
-APCDVMRG ; IHS/CMI/LAB - VISIT MERGE ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDVMRG ; IHS/CMI/TUCSON - VISIT MERGE ; [ 06/17/02  10:30 AM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**3,5**;MAR 09, 1999
  ;
  ;merge 2 visits during data entry process.
  D GETPAT
@@ -26,8 +26,6 @@ RDR ;EP
  D ^APCDVM2
  I $D(APCDVMQF) W !!,"*** ERROR encountered.  QFLG=",APCDVMQF D EOJ Q
  S $P(^AUPNVSIT(APCDVMF,0),U,37)=APCDVMT ;direct set as visit is being deleted.  set for billing
- S $P(^AUPNVSIT(APCDVMF,22),U)="MERGED TO VISIT IEN "_APCDVMT  ;direct set as visit is being deleted
- D UPDLOG^APCDVDEL(APCDVMF,APCDVMT)
  S AUPNVSIT=APCDVMF D DEL^AUPNVSIT
  W !!,"*** MERGED VISIT ***"
  D ZTSK

@@ -1,8 +1,8 @@
 BMCRPC1 ; IHS/CAS/AU - GUI REFERRED CARE INFO SYSTEM (1/4);     
- ;;4.0;REFERRED CARE INFO SYSTEM;**7,8,12**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**7,8,12,31**;JAN 09, 2006;Build 168
  ;
  ;GDIT/HS/BEE 10/19/17 - p12 CR#7796:Filter out inactive vendors
- ;GDIT/HS/BEE 10/19/17 - p12 - Address XINDEX/SAC issues
+ ;GDIT/HS/FS 2/6/24 - p16 - Address XINDEX/SAC issues & P16 Requirements
  ;
  ; RPC code for RCIS GUI Application
  ; Routines contains code for Reading data from RCIS files
@@ -27,10 +27,11 @@ SRCHREF(RSLT,PATIENT,REFPRVDR,STRTDATE,ENDDATE,RECNMBR,STATUS) ; search referral
  . I $G(STATUS)="Approved" S STATUS="A1"
  . I $G(STATUS)="Closed-Completed" S STATUS="C1"
  . I $G(STATUS)="Closed-Not Completed" S STATUS="X"
+ . I $G(STATUS)="All" S STATUS=""
  K ^TMP($J,"PRNRCTMP")
  I +RECNMBR'>0 S RECNMBR="*"
  I ($D(PATIENT)&(PATIENT'="")) S SCR=SCR_" & (($P($G("_"^"_"(0)),""^"",3))="_PATIENT_")" ;D EN^DDIOL($G(OUT1("DILIST",1,0)))
- I ($D(REFPRVDR)&(REFPRVDR'="")) S SCR=SCR_" & (($P($G("_"^"_"(0)),""^"",6))="_REFPRVDR_")"
+ I ($D(REFPRVDR)&(REFPRVDR'="")&(REFPRVDR'="-1")) S SCR=SCR_" & (($P($G("_"^"_"(0)),""^"",6))="_REFPRVDR_")"
  I ($D(STATUS)&($G(STATUS)'="")) D
  . I $G(STATUS)'="Active/Approved" D
  . . S SCR=SCR_" & (($P($G("_"^"_"(0)),""^"",15))="""_$G(STATUS)_""")"
@@ -38,41 +39,30 @@ SRCHREF(RSLT,PATIENT,REFPRVDR,STRTDATE,ENDDATE,RECNMBR,STATUS) ; search referral
  . . S SCR=SCR_" & ((($P($G("_"^"_"(0)),""^"",15))=""A"") ! (($P($G("_"^"_"(0)),""^"",15))=""A1""))"
  I ($D(STRTDATE)&(STRTDATE'="")) D DT^DILF("TS",STRTDATE,.STRTDATE,,"") S SCR=SCR_" & (($P($G("_"^"_"(0)),""^"",1))>="_STRTDATE_")"
  I ($D(ENDDATE)&(ENDDATE'="")) D DT^DILF("TS",ENDDATE,.ENDDATE,,"") S SCR=SCR_" & (($P($G("_"^"_"(0)),""^"",1))<="_ENDDATE_")"
- I ($D(PATIENT)&(PATIENT'="")) D LIST^DIC(90001,"","@;.01;.02;101;.03IE;.05I;.06;.0999;1105;1112;1201;1114;1301;.15;1306;1307;1308","BQ",RECNMBR,,PATIENT,"D",SCR,"","^TMP($J,""PRNRCTMP"")") D CRTMSG^BMCRPC4(.RSLT,0) Q RSLT
- I ($D(REFPRVDR)&(REFPRVDR'="")) D LIST^DIC(90001,"","@;.01;.02;101;.03IE;.05I;.06;.0999;1105;1112;1201;1114;1301;.15;1306;1307;1308","BQ",RECNMBR,,REFPRVDR,"E",SCR,"","^TMP($J,""PRNRCTMP"")") D CRTMSG^BMCRPC4(.RSLT,0) Q RSLT
+ I ($D(PATIENT)&(PATIENT'="")) D LIST^DIC(90001,"","@;.01;.02;101;.03IE;.05I;.06;.0999;1106;1112;1201;1114;1301;.15;1306;1307;1308","BQ",RECNMBR,,PATIENT,"D",SCR,"","^TMP($J,""PRNRCTMP"")") D CRTMSG^BMCRPC4(.RSLT,0) Q RSLT
+ I ($D(REFPRVDR)&(REFPRVDR'="")&(REFPRVDR'="-1")) D LIST^DIC(90001,"","@;.01;.02;101;.03IE;.05I;.06;.0999;1106;1112;1201;1114;1301;.15;1306;1307;1308","BQ",RECNMBR,,REFPRVDR,"E",SCR,"","^TMP($J,""PRNRCTMP"")") D CRTMSG^BMCRPC4(.RSLT,0) Q RSLT
  I ($D(STRTDATE)&(STRTDATE'="")) D
- .I ($D(ENDDATE)&(ENDDATE'="")) D LIST^DIC(90001,"","@;.01;.02;101;.03IE;.05I;.06;.0999;1105;1112;1201;1114;1301;.15;1306;1307;1308","",RECNMBR,,,"B",SCR,"","^TMP($J,""PRNRCTMP"")") D CRTMSG^BMCRPC4(.RSLT,0) Q
+ .I ($D(ENDDATE)&(ENDDATE'="")) D LIST^DIC(90001,"","@;.01;.02;101;.03IE;.05I;.06;.0999;1106;1112;1201;1114;1301;.15;1306;1307;1308","",100,STRTDATE-1,,"B",SCR,"","^TMP($J,""PRNRCTMP"")") D CRTMSG^BMCRPC4(.RSLT,0) Q
  Q RSLT
 GTRFBYID(RSLT,REFIEN) ;; get referral
  ;; D GTRFBYID^BMCRPC1(.R,"113251") ZW @R
  ;; RSLT = result set returned as golbal array
  ;; REFIEN = referral ien of RCIS REFERRAL file
  ;; D GTRFBYID^BMCRPC1(.R,"113252") ZW @R
- N SCR,REFNUM,CMNTSX,CMNTSB,PRIMREF,FIELDS,CMNTSBB,CMNTSXX
+ N SCR,REFNUM,CMNTSX,CMNTSB,PRIMREF,FIELDS,CMNTSBB,CMNTSXX,CASEN,CASENOTE
  I '$D(REFIEN) Q
  I REFIEN="" Q
  I $$GET1^DIQ(90001,REFIEN_",",.01,"")="" S RSLT="Not a valid Referral Ien" Q RSLT
- LOCK +^BMCREF(REFIEN):0.2 ;;check if record is being locked else where
+ LOCK +^BMCREF(REFIEN):0.2
  ELSE  S RSLT="The referral record cannot be opened becuase it is locked. Please try again later." Q RSLT
  S SCR="I Y="_REFIEN
  K ^TMP($J,"PRNRCTMP"),^TMP($J,"PRNRC")
- S REFNUM=$$GET1^DIQ(90001,REFIEN_",",.02,"") ;;get Ref Number... to use index in search... fast fetch
+ S REFNUM=$$GET1^DIQ(90001,REFIEN_",",.02,"")
  S PRIMREF=$$GET1^DIQ(90001,REFIEN_",",102,"") ;;get primary referral  - if exsits; fetch Med Hx for primary ref too
- S FIELDS="@;.01;.02;.06;.0999;.15;101;1105;1111;1112;1201;1114;1301;1302;401;402;403;404;405;406;407;408;409;410;411;412;.03IE;.04I;.05I;.12I;.13I;.14I;.07I;.08I;.09I;.23I;.32;1306;1307;1308"
+ S FIELDS="@;.01;.02;.06;.0999;.15;101;1106;1111;1112;1201;1114;1301;1302;401;402;403;404;405;406;407;408;409;410;411;412;.03IE;.04I;.05I;.12I;.13I;.14I;.07I;.08I;.09I;.23I;.32I;1306;1307;1308"
  D LIST^DIC(90001,"",FIELDS,"Q","1",,REFNUM,"C",SCR,"","^TMP($J,""PRNRCTMP"")")
  LOCK -^BMCREF(REFIEN) ;; unlock the record
- D CRTMSG^BMCRPC4(.RSLT,1) ;;package data to be returned
- ;; fetch MED HX comments for the Referral
- ;S CMNTSX=$$GETMEDHX("",REFIEN,"M")
- ;S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSX,1,$L(CMNTSX)-4)
- ;; fetch Business Office/CHS comments for the Referral
- ;S CMNTSB=$$GETMEDHX("",REFIEN,"B")
- ;S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSB,1,$L(CMNTSB)-4)
- ;; fetch MED HX comments for the Primary referral too, if this is a secondary referral
- ;I PRIMREF>0 S CMNTSX=$$GETMEDHX("",PRIMREF,"M") S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSX,1,$L(CMNTSX)-4)
-  ;; fetch Business Office/CHS comments for the Primary referral too, if this is a secondary referral
- ;I PRIMREF>0 S CMNTSB=$$GETMEDHX("",PRIMREF,"B") S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSB,1,$L(CMNTSB)-4)
-  ;; fetch MED HX comments for the Primary referral too, if this is a secondary referral
+ D CRTMSG^BMCRPC4(.RSLT,1) ;;package data to be returned 
  I PRIMREF>0 D
  . S CMNTSX=$$GETMEDHX("",PRIMREF,"M")
  . I $G(CMNTSX)="~`M'~M" S CMNTSX=""
@@ -87,27 +77,57 @@ GTRFBYID(RSLT,REFIEN) ;; get referral
  . S CMNTSXX=$$GETMEDHX("",REFIEN,"M")
  . I $G(CMNTSXX)="~`M'~M" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$G(CMNTSXX)
  . I $G(CMNTSXX)'="~`M'~M" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSXX,1,$L(CMNTSXX)-4)
- I PRIMREF>0 D
+ ;; fetch Business Office/CHS comments for the Referral
+ I PRIMREF>0,$$GET1^DIQ(90001,REFIEN_",",101,"")="" D
  . S CMNTSB=$$GETMEDHX("",PRIMREF,"B")
  . I $G(CMNTSB)="~`B'~B" S CMNTSB=""
  . I $G(CMNTSB)'="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSB,1,$L(CMNTSB)-4)
  ;; fetch Business Office/CHS comments for the Referral
- I $G(CMNTSB)'="" D
+ I $G(CMNTSB)'="",$$GET1^DIQ(90001,REFIEN_",",101,"")="" D
  . S CMNTSBB=$$GETMEDHX("",REFIEN,"B")
  . I $G(CMNTSBB)="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)
  . I $G(CMNTSBB)'="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSBB,3,$L(CMNTSBB)-4)
- I $G(CMNTSB)="" D
+ I $G(CMNTSB)="",$$GET1^DIQ(90001,REFIEN_",",101,"")="" D
  . S CMNTSBB=$$GETMEDHX("",REFIEN,"B")
  . I $G(CMNTSBB)="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$G(CMNTSBB)
  . I $G(CMNTSBB)'="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSBB,1,$L(CMNTSBB)-4)
+ ;; fetch Secondary Referral Notes comments for the Referral
+ I PRIMREF>0,$$GET1^DIQ(90001,REFIEN_",",101,"")'="" D
+ . S CMNTSB=$$GETMEDHX("",PRIMREF,"S")
+ . I $G(CMNTSB)="~`B'~B" S CMNTSB=""
+ . I $G(CMNTSB)'="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSB,1,$L(CMNTSB)-4)
+ ;; fetch Secondary Referral Notes comments for the Referral
+ I $G(CMNTSB)'="",$$GET1^DIQ(90001,REFIEN_",",101,"")'="" D
+ . S CMNTSBB=$$GETMEDHX("",REFIEN,"S")
+ . I $G(CMNTSBB)="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)
+ . I $G(CMNTSBB)'="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSBB,3,$L(CMNTSBB)-4)
+ I $G(CMNTSB)="",$$GET1^DIQ(90001,REFIEN_",",101,"")'="" D
+ . S CMNTSBB=$$GETMEDHX("",REFIEN,"S")
+ . I $G(CMNTSBB)="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$G(CMNTSBB)
+ . I $G(CMNTSBB)'="~`B'~B" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CMNTSBB,1,$L(CMNTSBB)-4)
+ ;; fetch Case Notes for the Referral
+ I PRIMREF>0 D
+ . S CASEN=$$GETMEDHX("",PRIMREF,"C")
+ . I $G(CASEN)="~`C'~C" S CASEN=""
+ . I $G(CASEN)'="~`C'~C" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CASEN,1,$L(CASEN)-4)
+ I $G(CASEN)'="" D
+ . S CASENOTE=$$GETMEDHX("",REFIEN,"C")
+ . I $G(CASENOTE)="~`C'~C" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)
+ . I $G(CASENOTE)'="~`C'~C" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CASENOTE,3,$L(CASENOTE)-4)
+ I $G(CASEN)="" D
+ . S CASENOTE=$$GETMEDHX("",REFIEN,"C")
+ . I $G(CASENOTE)="~`C'~C" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$G(CASENOTE)
+ . I $G(CASENOTE)'="~`C'~C" S ^TMP($J,"PRNRC",1)=^TMP($J,"PRNRC",1)_$E(CASENOTE,1,$L(CASENOTE)-4)
  ;
  S RSLT=$NA(^TMP($J,"PRNRC"))
  Q RSLT
 GETMEDHX(RSLT,REFIEN,TYPE) ;; Get Medical History or Business Office/CHS notes for a referral
  ; D GETMEDHX^BMCRPC1(.R,"113251","M") W R
- N CMNTS,IND,ERR,INDEX,CMDATE,RFCMTIEN,REVIEWER,OUT,SCR,CMNTSX
- S RFCMTIEN="",REVIEWER="",CMDATE="",IND="",INDEX="",CMNTS="",CMNTSX="~`"_TYPE_"'~"_TYPE,ERR=""
- S SCR="I ((($P($G("_"^"_"(0)),""^"",5))="""_TYPE_""") & (($P($G(^(0)),""^"",3))="_REFIEN_"))" ;;fetch only MED HX comments, for the Primary Referral
+ N CMNTS,IND,ERR,INDEX,CMDATE,RFCMTIEN,REVIEWER,OUT,SCR,CMNTSX,TYP
+ S TYP=TYPE
+ I TYP="S" S TYP="B"
+ S RFCMTIEN="",REVIEWER="",CMDATE="",IND="",INDEX="",CMNTS="",CMNTSX="~`"_TYP_"'~"_TYP,ERR=""
+ S SCR="I ((($P($G("_"^"_"(0)),""^"",5))="""_TYPE_""") & (($P($G(^(0)),""^"",3))="_REFIEN_"))"
  D LIST^DIC(90001.03,"","@;.01;.04","BQ","*",,REFIEN,"AD",SCR,"","OUT")
  ;S RFCMTIEN=$$FIND1^DIC(90001.03,"","BQX",REFIEN,"AD")
  S INDEX=$O(OUT("DILIST","ID",0))
@@ -121,49 +141,14 @@ GETMEDHX(RSLT,REFIEN,TYPE) ;; Get Medical History or Business Office/CHS notes f
  .I +IND>0 F  D  Q:(+IND'>0)
  ..S CMNTS=CMNTS_WP(IND)_"~"
  ..S IND=$O(WP(IND))
- .I CMNTS'="" S CMNTSX=CMNTSX_RFCMTIEN_"^"_CMDATE_"^"_REVIEWER_"^"_$E(CMNTS,1,$L(CMNTS)-1)_TYPE_"'~"_TYPE
+ .I CMNTS'="" S CMNTSX=CMNTSX_RFCMTIEN_"^"_CMDATE_"^"_REVIEWER_"^"_$E(CMNTS,1,$L(CMNTS)-1)_TYP_"'~"_TYP
  .S INDEX=$O(OUT("DILIST","ID",INDEX)),CMNTS=""
  S RSLT=CMNTSX
  Q RSLT
  ;
 GETREFDT(RSLT) ;; get Reference data for Refferal i-e ICD/CPT Categories
  ; D GETREFDT^BMCRPC1(.R) ZW R
- K ^TMP($J)
- N OUT,OUT1,OUT2,OUT3,ICDIEN,ICDCAT,ICDACTDT,ICDINADT,CPTIEN,CPTCAT,PRPIEN,PRPTXT,I,PIECE,RSCODE,RSDESC
- S ^TMP($J,"PRNRCRF",1)="~`" ;; RCIS ICD DIAGNOSTIC CATEGORY
- S ^TMP($J,"PRNRCRF",2)="~`" ;; RCIS CPT PROCEDURE CATEGORY
- S ^TMP($J,"PRNRCRF",3)="~`" ;; RCIS PURPOSE TEXT LIST
- S ^TMP($J,"PRNRCRF",4)="~`" ;; RCIS STATUS OF REFERRAL LIST
- D LIST^DIC(90001.51,"","@;.01","","*",,,"",,"","OUT")
- S INDEX=$O(OUT("DILIST","ID",0))
- I +INDEX>0 F  D  Q:(+INDEX'>0)
- .S ICDIEN=$G(OUT("DILIST",2,INDEX))
- .S ICDCAT=$G(OUT("DILIST","ID",INDEX,".01"))
- .S ICDACTDT=$$GET1^DIQ(90001.51,$G(ICDIEN)_",",.02,"")
- .S ICDINADT=$$GET1^DIQ(90001.51,$G(ICDIEN)_",",.03,"")
- .S ^TMP($J,"PRNRCRF",1)=$G(^TMP($J,"PRNRCRF",1))_ICDIEN_"^"_ICDCAT_"^"_ICDACTDT_"^"_ICDINADT_"~"
- .S INDEX=$O(OUT("DILIST","ID",INDEX))
- D LIST^DIC(90001.52,"","@;.01","","*",,,"",,"","OUT1")
- S INDEX=$O(OUT1("DILIST","ID",0))
- I +INDEX>0 F  D  Q:(+INDEX'>0)
- .S CPTIEN=$G(OUT1("DILIST",2,INDEX))
- .S CPTCAT=$G(OUT1("DILIST","ID",INDEX,".01"))
- .S ^TMP($J,"PRNRCRF",2)=$G(^TMP($J,"PRNRCRF",2))_CPTIEN_"^"_CPTCAT_"~"
- .S INDEX=$O(OUT1("DILIST","ID",INDEX))
- D LIST^DIC(90001.58,"","@;.01","","*",,,"",,"","OUT2")
- S INDEX=$O(OUT2("DILIST","ID",0))
- I +INDEX>0 F  D  Q:(+INDEX'>0)
- .S PRPIEN=$G(OUT2("DILIST",2,INDEX))
- .S PRPTXT=$G(OUT2("DILIST","ID",INDEX,".01"))
- .S ^TMP($J,"PRNRCRF",3)=$G(^TMP($J,"PRNRCRF",3))_PRPIEN_"^"_PRPTXT_"~"
- .S INDEX=$O(OUT2("DILIST","ID",INDEX))
- S OUT3=$P($G(^DD(90001,.15,0)),"^",3)
- S PIECE=$P($G(OUT3),";"),I=1
- I PIECE'="" F  D  Q:(PIECE="")
- .S RSCODE=$P($G(PIECE),":",1)
- .S RSDESC=$P($G(PIECE),":",2)
- .S ^TMP($J,"PRNRCRF",4)=$G(^TMP($J,"PRNRCRF",4))_RSCODE_"^"_RSDESC_"~"
- .S I=I+1,PIECE=$P($G(OUT3),";",I)
+ D GTREFDT^BMCRPC5
  S RSLT=$NA(^TMP($J,"PRNRCRF"))
  Q RSLT
 SRRFRDTO(RSLT,SRHSTRNG,REFTYPE) ;; Search Vendor ; Specific Provider ; Clinic Stop ; Location
@@ -176,9 +161,9 @@ SRRFRDTO(RSLT,SRHSTRNG,REFTYPE) ;; Search Vendor ; Specific Provider ; Clinic St
  I REFTYPE="N" D SRCLNCST(.RSLT,SRHSTRNG) Q RSLT ;IN-HOUSE
  Q
 SRVNDR(RSLT,VNRSTRNG) ;; search vendor from VENDOR file for type 'CHS' referrel
- N OUT,SCR,INDEX,VNDRIEN,VNDRNM,VNDRDUN,VNDREIN,EINSFX,MAILTO,REMITTO
+ N OUT,SCR,INDEX,VNDRIEN,VNDRNM,VNDRUEI,VNDREIN,EINSFX,MAILTO,REMITTO
  S SCR="I (($P($G("_"^"_"(0)),""^"",5)="""") ! ($P($G("_"^"_"(0)),""^"",5)>"_DT_"))"
- D LIST^DIC(9999999.11,"","@;.01;.05;.07;1101;1102;1301;1302;1401;1402;1403","","*",,VNRSTRNG,"B",SCR,"","OUT")
+ D LIST^DIC(9999999.11,"","@;.01;.05;.1;1101;1102;1301;1302;1401;1402;1403","","*",,VNRSTRNG,"B",SCR,"","OUT")
   S INDEX=$O(OUT("DILIST","ID",0))
  I +INDEX>0 F  D  Q:(+INDEX'>0)
  .;GDIT/HS/BEE 10/19/17 - p12 CR#7796 - added next two lines
@@ -187,12 +172,12 @@ SRVNDR(RSLT,VNRSTRNG) ;; search vendor from VENDOR file for type 'CHS' referrel
  .;End of CR#7796 changes
  .S VNDRIEN=$G(OUT("DILIST",2,INDEX))
  .S VNDRNM=$G(OUT("DILIST","ID",INDEX,".01"))
- .S VNDRDUN=$G(OUT("DILIST","ID",INDEX,".07"))
+ .S VNDRUEI=$G(OUT("DILIST","ID",INDEX,".1"))
  .S VNDREIN=$G(OUT("DILIST","ID",INDEX,"1101"))
  .S EINSFX=$G(OUT("DILIST","ID",INDEX,"1102"))
  .S MAILTO=$G(OUT("DILIST","ID",INDEX,"1301"))_","_$G(OUT("DILIST","ID",INDEX,"1302"))
  .S REMITTO=$G(OUT("DILIST","ID",INDEX,"1401"))_","_$G(OUT("DILIST","ID",INDEX,"1402"))_","_$G(OUT("DILIST","ID",INDEX,"1403"))
- .S ^TMP($J,"PRNRCRVND",INDEX)="~`"_VNDRIEN_"^"_VNDRNM_"^"_VNDRDUN_"^"_VNDREIN_"^"_EINSFX_"^"_MAILTO_"^"_REMITTO
+ .S ^TMP($J,"PRNRCRVND",INDEX)="~`"_VNDRIEN_"^"_VNDRNM_"^"_VNDRUEI_"^"_VNDREIN_"^"_EINSFX_"^"_MAILTO_"^"_REMITTO
  .S INDEX=$O(OUT("DILIST","ID",INDEX))
  S RSLT=$NA(^TMP($J,"PRNRCRVND"))
  Q RSLT

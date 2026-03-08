@@ -1,5 +1,5 @@
 AMHLEFPP ; IHS/CMI/LAB - MENTAL HLTH ROUTINE ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**5**;JUN 02, 2010;Build 18
+ ;;4.0;IHS BEHAVIORAL HEALTH;**5,11**;JUN 02, 2010;Build 27
  ;
  ;CMI/TUCSON/LAB - added setting of % variable 9/22/97
  ;
@@ -119,6 +119,6 @@ FF ;EP
  I $E(IOST)="C",IO=IO(0) W ! S DIR(0)="EO" D ^DIR K DIR I Y=0!(Y="^")!($D(DTOUT)) S AMHQUIT=1 Q
  I $E(IOST)'="C" Q:'$P(AMHR0,U,8)  W !!,$TR($J(" ",79)," ","*"),!,$P(^DPT($P(AMHR0,U,8),0),U),?32,"HRN: " D
  .S AMHHRN=$P($G(^AUPNPAT($P(AMHR0,U,8),41,DUZ(2),0)),U,2)
- .W AMHHRN,?46,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(AMHR0,U,8),0),U,3),"2D"),?59,"SSN: ",$$SSN^AMHUTIL($P(AMHR0,U,8)),!
+ .W AMHHRN,?46,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(AMHR0,U,8),0),U,3),"2D"),!  ;,?59,"SSN: ",$$SSN^AMHUTIL($P(AMHR0,U,8)),!  IHS/CMI/LAB REMOVED SSN
  W:$D(IOF) @IOF
  Q

@@ -1,5 +1,5 @@
 BQITASK3 ;GDIT/HS/ALA-Weekly Update Tasks ; 03 Aug 2007  1:45 PM
- ;;2.7;ICARE MANAGEMENT SYSTEM;**1**;Dec 19, 2017;Build 12
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5**;Mar 01, 2021;Build 20
  ;
 EN ;EP - Entry point
  NEW UID,TTASK
@@ -56,10 +56,11 @@ CMGT ; EP - BQI UPDATE CARE MGMT
  D FILE^DIE("","BQIUPD")
  K BQIUPD
  ;
- NEW SRIEN,SRC,RIEN,STAT,DFN,SRCIEN
- S DFN=0
- F  S DFN=$O(^BQIPAT(DFN)) Q:'DFN  D
- . K ^BQIPAT(DFN,60)
+ NEW SRIEN,SRC,RIEN,STAT,CDFN,SRCIEN
+ S CDFN=0
+ F  S CDFN=$O(^BQIPAT(CDFN)) Q:'CDFN  D
+ . I $D(^XTMP("BQINIGHT",CDFN)) Q
+ . K ^BQIPAT(CDFN,60)
  . ; If flag is set for nightly/weekly
  . S SRIEN=""
  . F  S SRIEN=$O(^BQI(90506.5,"AD",1,SRIEN)) Q:SRIEN=""  D
@@ -68,13 +69,14 @@ CMGT ; EP - BQI UPDATE CARE MGMT
  .. S SOURCE=$P($G(^BQI(90506.5,SRIEN,0)),"^",1)
  .. S SRC=$P($G(^BQI(90506.5,SRIEN,0)),U,2)
  .. ; If patient is deceased, don't calculate
- .. I $P($G(^DPT(DFN,.35)),U,1)'="" Q
+ .. I $P($G(^DPT(CDFN,.35)),U,1)'="" Q
  .. ; If patient has no active HRNs, quit
- .. I '$$HRN^BQIUL1(DFN) Q
+ .. I '$$HRN^BQIUL1(CDFN) Q
  .. ; If patient has no visit in past 3 years
- .. I '$$VTHR^BQIUL1(DFN) Q
- .. I SOURCE="Pediatric",$$AGE^BQIAGE(DFN,"")>21 Q
- .. D PAT^BQIRGASP(DFN,SRC)
+ .. I '$$VTHR^BQIUL1(CDFN) Q
+ .. I SOURCE="Pediatric",$$AGE^BQIAGE(CDFN,"")>21 Q
+ .. I SOURCE="Childhood Immun",$$AGE^BQIAGE(CDFN,"")'>17 D IRPT^BQIIMINT(CDFN) Q
+ .. D PAT^BQIRGASP(CDFN,SRC)
  K BDMDMRG,BDMJOB,BDMBTH,CYR,CIEN,PGTHR,PGRF,BDMRBD,BDMADAT,BDMTYPE,BDMRED,BMDBDAT,BDMPD
  ;
  ; Set the date/time stopped

@@ -1,5 +1,5 @@
 ABSPDR ; IHS/OIT/CASSEVER/RAN - Parse Claim D.0 Response ;    [ 03/04/2011  12:56 PM ]
- ;;1.0;PHARMACY POINT OF SALE;**42**;JUN 21, 2001 Copied from ABSPOSH4 for 5.1 claims and modified;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**42**;JUN 21, 2001 ;Build 131;Build 41
  ;----------------------------------------------------------------------
  ;----------------------------------------------------------------------
  ;Parse ASCII Response Claim Record and Sup FDATA() Array
@@ -142,7 +142,7 @@ PARSETN ; This subroutine will parse the transaction level segments. For
  ;  23 = Response Pricing Segment
  ;  24 = Response DUR/PPS Segment
  ;  26 = Repsonse Prior Authorization Segment
- ;  28 = Response COB			   (New to D.0)
+ ;  28 = Response COB              (New to D.0)
  ;  29 = Response Patient Segment  (New to D.0)
  ;
  N FIELD,PC,FLDNUM,RPTFLD,RCNT,REPEAT

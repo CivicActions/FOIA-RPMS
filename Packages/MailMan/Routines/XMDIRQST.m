@@ -1,5 +1,5 @@
-XMDIRQST ;(WASH ISC)/CWU-Request Email Directory ;04/18/2002  07:31
- ;;8.0;MailMan;;Jun 28, 2002
+XMDIRQST ;(WASH ISC)/CWU - REQUEST EMAIL ADDRESS DIRECTORY;3/18/93 ;02/23/98  11:58
+ ;;7.1;MailMan;**9,50**;Sep 12, 1994
  ; Entry points used by MailMan options (not covered by DBIA):
  ; ALL      XMMGR-DIRECTORY-ALL
  ; EDIT     XMMGR-DIRECTORY-EDITGRP
@@ -16,20 +16,20 @@ ALL N DIR,Y,A,DTOUT,DUOUT,NETADDR,XMSUB,XMY,ZTDTH,ZTSAVE
  S I=0 F  S I=$O(^DIC(4.2,I)) Q:I'=+I  D S(I)
  Q
 SINGLE ;Send a request to one Domain
- W !!,"Choose Domains to request Email Directories for."
- N DIC,X,Y
+ W !,"Choose Domains to request Email Directories for.",!
+ K DIC
  S DIC("A")="Select DOMAIN Name: ",DIC="^DIC(4.2,",DIC(0)="AEQZ"
- D ^DIC Q:Y<0
+ D ^DIC
+ Q:$S(Y<1:1,$D(DTOUT):1,$D(DUOUT):1,1:0)
  D S(+Y)
  Q
 S(I) ;Schedule Task to Send Request to Domain
  N %,X,R ; I=IEN
  ;Do not send if No Domain Information, etc.
- S %=$G(^DIC(4.2,+I,0)) I %="" W $C(7),"  ???  No entry in Domain File (4.2) for domain '",I,"'.  [S(I)+2^XMDIRQST]" Q
- S X=$P(%,U),R=$P(%,U,3) I R W $C(7),"  ??? The directory request for ",X," (`",I,") is NOT permitted since it is accessed via relay domain '",$P($G(^DIC(4.2,+R,0)),U)," (`",R,").  [S(I)+3^XMDIRQST]  " Q
- I X["FOC-AUSTIN" W $C(7),"  ???  The request for a directory from ",X," (`",I,") is NOT permitted as it is through FOC-AUSTIN.  [S(I)+4^XMDIRQST]" Q
- I $E(X,1,2)="Q-" W $C(7),"  ???  The request for a directory from ",X," (`",I,") is NOT permitted since it is a relay domain (Q-...).  [S(I)+5^XMDIRQST]" Q
- I X=^XMB("NETNAME") W $C(7),"  ???  You may not request a directory from your own site." Q
+ S %=$G(^DIC(4.2,+I,0)) I %="" W *7,"  ???  No entry in Domain File (4.2) for domain '",I,"'.  [S(I)+2^XMDIRQST]" Q
+ S X=$P(%,U),R=$P(%,U,3) I R W *7,"  ??? The directory request for ",X," (`",I,") is NOT permitted since it is accessed via relay domain '",$P($G(^DIC(4.2,+R,0)),U)," (`",R,").  [S(I)+3^XMDIRQST]  " Q
+ I X["FOC-AUSTIN.VA.GOV" W *7,"  ???  The request for a directory from ",X," (`",I,") is NOT permitted as it is through FOC-AUSTIN.  [S(I)+4^XMDIRQST]" Q
+ I $E(X,1,2)="Q-" W *7,"  ???  The request for a directory from ",X," (`",I,") is NOT permitted since it is a relay domain (Q-...).  [S(I)+5^XMDIRQST]" Q
 TASK ; Set up Task
  N XMTASK,NETADDR
  S XMTASK=$G(ZTSK) N ZTSK
@@ -37,7 +37,7 @@ TASK ; Set up Task
  S ZTRTN="ONE^XMDIRQST",ZTDTH=+$H_",64800"
  S ZTIO="",ZTDESC="Email Directory Request to - "_X
  D ^%ZTLOAD
- I 'XMTASK W !!,$C(7),"TASK #"_ZTSK_" scheduled for "_NETADDR
+ I 'XMTASK W !!,*7,"TASK #"_ZTSK_" scheduled for "_NETADDR
  Q
 ONE ;
  N XMTEXT,XMINSTR
@@ -66,7 +66,7 @@ GROUP ;
  S I=0 F  S I=$O(^DIC(4.2,"AE",XMGROUP,I)) Q:I=""  D S(I)
  Q
 EDIT ;
- W !!,"Enter the Domain name whose Directory Requests Flag you wish to edit."
+ W !,"Enter the Domain name that you wish to edit its Directory Request Flags? ",!
  K DIC S DIC="^DIC(4.2,",DIC(0)="AEQZ" D ^DIC
  Q:$D(DTOUT)!$D(DUOUT)!(Y<1)
  S DIE="^DIC(4.2,",DA=+Y,DR=50 D ^DIE

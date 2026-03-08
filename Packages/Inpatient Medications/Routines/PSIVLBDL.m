@@ -1,5 +1,7 @@
-PSIVLBDL ;BIR/PR,CML3-DELETE LBLS FROM SUSPENSE ;02 FEB 94 / 1:54 PM
- ;;5.0; INPATIENT MEDICATIONS ;;16 DEC 97
+PSIVLBDL ;BIR/PR,CML3-DELETE LBLS FROM SUSPENSE ;02-Feb-2024 16:25;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**1035**;16 DEC 97;Build 39
+ ;
+ ; Modified - IHS/MSC/PLS - 02/02/2024 - Added reference to GETHLOC - FID 99318
  ;
  D ^PSIVXU I $D(XQUIT) K XQUIT Q
  S PSIVAC="PRO" D ENGETP^PSIV G:DFN<0 DONE W !?3,"...one moment, please..." D EXPCHK
@@ -18,7 +20,9 @@ DELINE ;
  I X?1."?" S HELP="LBSUSD" D ^PSIVHLP1 R !,"Press return to continue ",Y:DTIME W:'$T $C(7) S:Y="^"!'$T X="^" Q
  D:X'="ALL" ONC W:'$D(X) $C(7),"  ??" G:'$D(X) DELINE D KILL W !,"Deleted." Q
 HDR ;
- W:$Y @IOF W !!,"Patient Name ",VADM(1)," (",$S(VAIN(4):$P(VAIN(4),U,2),1:"Outpatient IV"),")",!,"Order Number",?30,"Order",?IOM-11,"Suspended",! F X=1:1:IOM-1 W "-"
+ ;IHS/MSC/PLS - 02/02/2024 - p1035
+ ;W:$Y @IOF W !!,"Patient Name ",VADM(1)," (",$S(VAIN(4):$P(VAIN(4),U,2),1:"Outpatient IV"),")",!,"Order Number",?30,"Order",?IOM-11,"Suspended",! F X=1:1:IOM-1 W "-"
+ W:$Y @IOF W !!,"Patient Name ",VADM(1)," (",$S(VAIN(4):$P(VAIN(4),U,2),1:$$GETHLOC^PSIVWL(.P)),")",!,"Order Number",?30,"Order",?IOM-11,"Suspended",! F X=1:1:IOM-1 W "-"
  Q
 LP S Y=^PS(55,DFN,"IV",ON,0) F X=1:1:23 S P(X)=$P(Y,"^",X)
  F PSIVDT=0:0 S PSIVDT=$O(^PS(55,"PSIVSUS",PSIVSN,DFN,ON,PSIVDT)) Q:'PSIVDT  D PRNT

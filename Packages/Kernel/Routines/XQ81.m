@@ -1,7 +1,5 @@
-XQ81 ;SEA/AMF/LUKE,SF/RWF,ISD/HGW - Build menu trees ;03/19/13  09:21
- ;;8.0;KERNEL;**81,116,157,253,478,614**;Jul 10, 1995;Build 12
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;
+XQ81 ;SEA/AMF/LUKE,SF/RWF - Build menu trees ;03/03/2003  10:00 [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**81,116,157,253**;Jul 10, 1995
 BUILD ;
  ;
 RD2 N XQSTAT S XQSTAT=$$STATUS()
@@ -11,10 +9,10 @@ RD2 N XQSTAT S XQSTAT=$$STATUS()
  ;
  S XQSTART=$$HTE^XLFDT($H)
  K XQFG W !!,"This option will build menu trees for each primary and secondary menu.",!,"You may build all the trees, or build them selectively, using 'verify'.",!,"Note that the 'compiled menus' will only be built into ^XUTL on this CPU.",!
- S DIR(0)="Y",DIR("A")="Do you wish to verify each primary menu",DIR("B")="NO",DIR("??")="XQBUILDTREE-VER" D ^DIR K DIR G:$D(DIRUT) BLDEND1 S XQVE=(Y=1)
- S DIR(0)="Y",DIR("A")="Would you like to build secondary menu trees too",DIR("B")="YES",DIR("??")="XQBUILDTREE-SEC" D ^DIR G:$D(DIRUT) BLDEND1 S XQBSEC=(Y=1)
+ S DIR(0)="Y",DIR("A")="Do you wish to verify each primary menu",DIR("B")="NO",DIR("??")="XQBUILDTREE-VER" D ^DIR K DIR G:$D(DIRUT) BLDEND S XQVE=(Y=1)
+ S DIR(0)="Y",DIR("A")="Would you like to build secondary menu trees too",DIR("B")="YES",DIR("??")="XQBUILDTREE-SEC" D ^DIR G:$D(DIRUT) BLDEND S XQBSEC=(Y=1)
  ;
- I 'XQVE S DIR(0)="Y",DIR("A")="Would you like to queue this job",DIR("B")="YES" D ^DIR K DIR G:$D(DIRUT) BLDEND1 I Y=1 D
+ I 'XQVE S DIR(0)="Y",DIR("A")="Would you like to queue this job",DIR("B")="YES" D ^DIR K DIR G:$D(DIRUT) BLDEND I Y=1 D
  .S ZTRTN="QUE^XQ81",ZTIO=""
  .S ZTSAVE("XQVE")="",ZTSAVE("XQBSEC")="",ZTSAVE("XQSTART")=""
  .S ZTDESC="Build menu trees in ^DIC(19,""AXQ"")"
@@ -23,14 +21,14 @@ RD2 N XQSTAT S XQSTAT=$$STATUS()
  .Q
  ;
  I $D(ZTSK) K ^DIC(19,"AXQ","P0") S XQALLDON="" G BLDEND
- E  S ^DIC(19,"AXQ","P0")=$H L +^DIC(19,"AXQ","P0"):DILOCKTM
+ E  S ^DIC(19,"AXQ","P0")=$H L +^DIC(19,"AXQ","P0")
  ;
- I 'XQVE S DIR(0)="Y",DIR("A")="Do you really wish to run this DIRECTLY (it may take some time)",DIR("B")="NO" D ^DIR K DIR G:$D(DIRUT) BLDEND1 G:Y'=1 RD2
+ I 'XQVE S DIR(0)="Y",DIR("A")="Do you really wish to run this DIRECTLY (it may take some time)",DIR("B")="NO" D ^DIR K DIR G:$D(DIRUT) BLDEND G:Y'=1 RD2
  ;
 KIDS ;Entry from KIDS
  I '$D(XQSTAT),$D(^DIC(19,"AXQ","P0")) S XQSTAT=$$STATUS I 'XQSTAT W !!,"  Some one else is building menus.  Sorry." K XQSTAT Q
  I '$D(^DIC(19,"AXQ","P0","STOP")) D MICRO
- I '$D(^DIC(19,"AXQ","P0")) S ^DIC(19,"AXQ","P0")=$H L +^DIC(19,"AXQ","P0"):DILOCKTM
+ I '$D(^DIC(19,"AXQ","P0")) S ^DIC(19,"AXQ","P0")=$H L +^DIC(19,"AXQ","P0")
  I '$D(XQVE) S XQFG=0,XQBSEC=1,XQVE=0
  N XQNTREE,XQNDONE S (XQNTREE,XQNDONE)=0
  ;
@@ -140,9 +138,9 @@ BLDEND ;File a report, cleanup, and quit.
  K ^TMP($J),^TMP("XQO",$J)
  ;
  ;Clear the flags and locks.
- K ^XUTL("XQO","XQMERGED") ;Menus merged since last rebuild REACT^XQ84
+ K ^XUTL("XQMERGED") ;Menues merged since last rebuild REACT^XQ84
  K ^DIC(19,"AT") ;Micro message nodes
- S ^XUTL("XQO","MICRO")=0 ;Number of Micro instances since last build
+ S ^XUTL("XQ","MICRO")=0 ;Number of Micro instances since last build
  K ^DIC(19,"AXQ","P0","STOP") ;Allow Micro surgery to start up
  K ^DIC(19,"AXQ","P0") ;Clear the rebuild flag (redundant, I know)
  L -^DIC(19,"AXQ","P0") ;Unlock the rebuild flag, everybody's good to go
@@ -251,8 +249,4 @@ ERR ;Come here on error
  D ^%ZTER
  D EXIT^XPDID()
  G UNWIND^%ZTER
- Q
- ;
-BLDEND1 ;Quit and clean
- K %,%H,%TG,C,D,DIC,DIR,I,J,K,L,V,XQBSEC,X,Y,Z,XQL,XQN,XQRE,XQK,XQI,XQII,UU,XQH,XQPX,XQSAV,XQXUF,XQ81T,XQDATE,XQSEC,XQVE,XQBLD,XQP,XQR,XQJ
  Q

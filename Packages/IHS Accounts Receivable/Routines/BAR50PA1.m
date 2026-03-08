@@ -1,5 +1,5 @@
 BAR50PA1 ; IHS/SD/LSL - VARIABLE PROCESSING ROUTINE ; 12/12/2007
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,4,5,6,20,21,23,26**;OCT 26,2005;Build 17
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,4,5,6,20,21,23,26,29**;OCT 26,2005;Build 66
  ;IHS/ASDS/LSL - 06/19/2001 - V1.5 Patch 1 - NOIS HQW-0201-100027 - FM 22 issue.  Modified to include E in DIC(0)
  ;IHS/SD/LSL - 08/22/2002 - V1.7 Patch 4 - HIPAA - Added REFID line tag to set VVERNUM and VPATHRN
  ;IHS/SD/LSL - 11/17/03 - V1.7 Patch 4 - HIPAA - Allow POS bills to look at DOS at the Service Level.  POS
@@ -16,6 +16,8 @@ BAR50PA1 ; IHS/SD/LSL - VARIABLE PROCESSING ROUTINE ; 12/12/2007
  ;IHS/SD/SDR - 1.8*26 - HEAT195751 - When getting the date from the service line, changed it to check for 472 or 150.  Can also
  ;   be 151 but that's the service to date.  Going to wait for someone to report it before trying to deal with a date range at
  ;   this level.
+ ;IHS/SD/CPC - 1.8*29 - CR 6985 & CR9022 - Field screen on coverage expiration and claim received in A/R EDI TRANSPORT - 90056.01 requires
+ ;   internal Fileman dates.  Added code to parsing code to convert CCYYMMDD dates in HIPAA ERA's to internal dates for these fields.  
  ; ********************************************************************
 SEP(IMPDA) ; EP
  ; find seperators according to standards for transport
@@ -50,8 +52,9 @@ STRIP ;
  ;
 BILNUM ;EP -
  ; process a new bill
- W:'(COUNT#10) "."
- W:'(COUNT#100) "  ",COUNT,!
+ I COUNT>0 D  ;BAR*1.8*29 IHS/DIT/CPC Z11 Testing
+ .W:'(COUNT#10) "."
+ .W:'(COUNT#100) "  ",COUNT,!
  S COUNT=COUNT+1
  K DIC,DR,DA
  S DIC=$$DIC^XBDIQ1(90056.0205)
@@ -334,13 +337,15 @@ CLMDATE ; EP
  ..D ^DIE
  ..;BEGIN IHS/SD/TPF BAR*1.8*21 NEW DTM SEGMENTS PAGE 11 SPACES
  .I $P(XREC(1.01),E,2)="036" D
- ..S VCLMEXP=VCLMDT
+ ..;S VCLMEXP=VCLMDT ; SCREEN ON FIELD REQUIRES INTERNAL DATE - IHS/SD/CPC - CR6985 & CR9022
+ ..S VCLMEXP=$S(VCLMDT>17000000:VCLMDT-17000000,1:VCLMDT)
  ..S IMGDA=$G(IMGDA)+1
  ..S ^BAREDI("I",DUZ(2),IMPDA,40,IMGDA,0)="VCLMEXP     "_VCLMEXP
  ..S DR="901///^S X=VCLMEXP"
  ..D ^DIE
  .I $P(XREC(1.01),E,2)="050" D
- ..S VCLMREC=VCLMDT
+ ..;S VCLMREC=VCLMDT  ; SCREEN ON FIELD REQUIRES INTERNAL DATE - IHS/SD/CPC - CR6985 & CR9022
+ ..S VCLMREC=$S(VCLMDT>17000000:VCLMDT-17000000,1:VCLMDT)
  ..S IMGDA=$G(IMGDA)+1
  ..S ^BAREDI("I",DUZ(2),IMPDA,40,IMGDA,0)="VCLMREC     "_VCLMREC
  ..S DR="902///^S X=VCLMREC"

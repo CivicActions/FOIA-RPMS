@@ -1,8 +1,9 @@
 BIPATVW ;IHS/CMI/MWR - VIEW PATIENT IMM DATA; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**19**;SEP 01,2020;Build 13
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW PATIENT'S IMMUNIZATION DATA AND ALLOW EDITS
  ;;  THROUGH LISTMANAGER.
+ ;;  PATCH 19: Call BYIM to View State Imm DB record for a patient. PRINTX+5
  ;
  ;
  ;----------
@@ -16,6 +17,10 @@ START ;EP
  .Q:$G(BIPOP)  Q:$G(BIDFN)<1
  .D DATE(.BIFDT,.BIPOP)
  .Q:BIPOP
+ .;* * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ .;---> Temporarily select Forecaster:
+ .;D DIE^BIFMAN(9002084.02,.34,DUZ(2),.BIPOP) Q:BIPOP
+ .;* * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  .D EN(BIDFN,$$MAYEDIT^BIUTL11,BIFDT,DUZ(2))
  .D UNLOCK($G(BIDFN))
  D EXIT
@@ -275,4 +280,13 @@ PRINTX(BILINL,BITAB) ;EP
  Q:$G(BILINL)=""
  N I,T,X S T="" S:'$D(BITAB) BITAB=5 F I=1:1:BITAB S T=T_" "
  F I=1:1 S X=$T(@BILINL+I) Q:X'[";;"  W !,T,$P(X,";;",2)
+ Q
+ ;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ ;---> Call to BYIM State record from BI PATIENT menu.
+ ;
+STATE ;EP
+ ;---> Call BYIM to View State Imm DB record for a patient.
+ ;---> If the correct BYIM routine and ^DD exists, run it.
+ I $L($T(RT^BYIMRT)),$D(^DD(90480,.11,0)) D RT^BYIMRT Q
+ D ERRCD^BIUTL2(220,,1)
  Q

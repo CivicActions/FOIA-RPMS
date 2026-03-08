@@ -1,5 +1,6 @@
 ADEMNG3 ; IHS/HQT/MJL  - DENTAL FOLLOWUP MGT PT 3 ;  [ 03/24/1999   9:04 AM ]
- ;;6.0;ADE;;APRIL 1999
+ ;;6.0;ADE;**38**;MAR 25, 1999;Build 158
+ ;;IHS/OIT/GAB 11.2022 File 3,6,16 Removal - ADE Patch 38
 CTRL ;------->GET PRIORITY
 1 S Y=1 D PRIO G:'Y END
  ;------->GET ADD DATE & COMPUTE ACTION DATE ADEMACT
@@ -29,7 +30,9 @@ ADAT Q:X[U
  I Y<1 S Y=0 Q
  S ADEMDAT=Y
  Q
-PROV K DIC,Y S DIC=6,DIC(0)="QMEZ",DIC("S")="I $P(^DIC(6,Y,0),U,4)]"""" S ADEDICS=+^DIC(7,$P(^DIC(6,Y,0),U,4),9999999) X $S((ADEDICS=52)!(ADEDICS=46):""I 1"",1:""I 0"")"
+PROV ;K DIC,Y S DIC=6,DIC(0)="QMEZ",DIC("S")="I $P(^DIC(6,Y,0),U,4)]"""" S ADEDICS=+^DIC(7,$P(^DIC(6,Y,0),U,4),9999999) X $S((ADEDICS=52)!(ADEDICS=46):""I 1"",1:""I 0"")"
+ ;/IHS/OIT/GAB PATCH 38 - Commented above line and added below line for File200 update, ck Provider Class
+ K DIC,Y S DIC=200,DIC(0)="QMEZ",DIC("S")="I $P($G(^VA(200,Y,""PS"")),U,5)]"""" S ADEDICS=+$G(^DIC(7,$P($G(^VA(200,Y,""PS"")),U,5),9999999)) X $S((ADEDICS=52)!(ADEDICS=46):""I 1"",1:""I 0"")"
  W !,"Select PROVIDER: ",$S($D(ADEMPRO):ADEMPRO_"// ",1:"") R X:DTIME
  I '$T S X="",Y=0 Q
  I X["^" S Y=0 Q

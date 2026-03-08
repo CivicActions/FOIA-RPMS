@@ -1,5 +1,5 @@
 BSTSDTS2 ;GDIT/HS/BEE-Standard Terminology DTS Calls/Processing ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;**1**;Dec 01, 2016;Build 36
+ ;;2.0;IHS STANDARD TERMINOLOGY;**1,7,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
@@ -167,7 +167,7 @@ ICDMAP(CONCDA,GL) ;EP - Save ICD Mapping information
  .. NEW MRND,MR,MRRIN,MRROUT
  .. NEW MTND,MT,MTRIN,MTROUT
  .. NEW MTNND,MTN,MTNRIN,MTNROUT
- .. NEW MPND,MP,MPRIN,MPROUT,VR
+ .. NEW MPND,MP,MPRIN,MPROUT,VR,MTGN
  .. ;
  .. ;Get new entry
  .. S DA=$$NEWM(CONCDA) I 'DA Q
@@ -199,10 +199,13 @@ ICDMAP(CONCDA,GL) ;EP - Save ICD Mapping information
  .. S MT=$P(MTND,U)
  .. S MTRIN=$P(MTND,U,2)
  .. S MTROUT=$P(MTND,U,3)
+ .. S MTGN=$P(MTND,U,4)
  .. I MTND]"" D
  ... S BSTSICD(9002318.42,IENS,.08)=MT
  ... S BSTSICD(9002318.42,IENS,.09)=$$EP2FMDT^BSTSUTIL(MTRIN)
  ... S BSTSICD(9002318.42,IENS,.1)=$$EP2FMDT^BSTSUTIL(MTROUT)
+ ... ;GDIT/HS/BEE;FEATURE#126820;TargetName
+ ... S BSTSICD(9002318.42,IENS,.11)=MTGN
  .. ;
  .. ;Map Target Name
  .. S MTN="" I $P(MTND,U)]"" D
@@ -374,7 +377,15 @@ DSCSRCH(OUT,BSTSWS) ;EP - DTS4 Search Call - Description Id Lookup
  ;
 SUBSET(OUT,BSTSWS) ;EP - DTS4 Get subset list
  ;
- NEW PRESULT,STS,II,SLIST
+ NEW PRESULT,STS,II,SLIST,NMID
+ ;
+ ;GDIT/HS/BEE;FEATURE#112749;New subset retrieval method
+ ;
+ ;Get namespace
+ S NMID=$G(BSTSWS("NAMESPACEID")) S:NMID="" NMID=36
+ ;
+ ;Mark current entries as out of date
+ D OOD^BSTSDTS6(NMID)
  ;
  ;Set up scratch global
  S SLIST=$NA(^TMP("BSTSCMCL",$J)) K @SLIST
@@ -382,7 +393,10 @@ SUBSET(OUT,BSTSWS) ;EP - DTS4 Get subset list
  ;Call DTS
  S STS=$$SUBSET^BSTSCMCL(.BSTSWS,.PRESULT)
  ;
- S II="" F  S II=$O(@SLIST@(II)) Q:II=""  S @OUT@(II)=@SLIST@(II)
+ ;Update entries in BSTS CODESETS
+ D UPD^BSTSDTS6(NMID,SLIST)
+ ;
+ S II="" F  S II=$O(@SLIST@(II)) Q:II=""  S @OUT@(II)=$P(@SLIST@(II),U)
  K @SLIST
  ;
  Q STS

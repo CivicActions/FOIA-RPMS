@@ -1,5 +1,5 @@
 ABSPOSCG ; IHS/SD/RLT - Set up ABSP() - CONT;      [ 05/22/2006  9:00 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**17,20,21,22,42,50**;MAY 22, 2006;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**17,20,21,22,42,50**;MAY 22, 2006;Build 131
  ;---
  ;IHS/SD/RLT - 05/22/06 - Patch 17
  ;    Created new routine ABSPOSCC getting too large.
@@ -78,16 +78,18 @@ GETRRD() ;EP    ^ABSPOSCC
  ;Q RRDIEN
  Q ""
  ;
-OLDGETMDPOL() ;EP    ^ABSPOSCC
- ;Updated policy number lookup for Medicare D elig.
- N POL,MDPOL
- S POL=$P($G(^AUPNMCR(PINSDA,0)),U,3)       ;original
- S MDPOL=""
- ;S:MDIEN'="" MDPOL=$P($G(^AUPNMCR(PINSDA,11,MDIEN,0)),U,6)
- S:MDFLG&(MDIEN) MDPOL=$P($G(^AUPNMCR(PINSDA,11,MDIEN,0)),U,6)
- S:MDPOL'="" POL=MDPOL                      ;MPD
- Q POL
- ;
+ /*
+ OLDGETMDPOL() ;EP    ^ABSPOSCC
+  ;Updated policy number lookup for Medicare D elig.
+  N POL,MDPOL
+  S POL=$P($G(^AUPNMCR(PINSDA,0)),U,3)       ;original
+  S MDPOL=""
+  ;S:MDIEN'="" MDPOL=$P($G(^AUPNMCR(PINSDA,11,MDIEN,0)),U,6)
+  S:MDFLG&(MDIEN) MDPOL=$P($G(^AUPNMCR(PINSDA,11,MDIEN,0)),U,6)
+  S:MDPOL'="" POL=MDPOL                      ;MPD
+  Q POL
+  ;
+ */
 GETMDPOL() ;EP  Called from ^ABSPOSCC
  ; /IHS/OIT/RAM ; 15 DEC 2017 ; Total rewrite to account for Medicare Bendficiary Identifier, or MBI.
  ; /IHS/OIT/RAM ; 21 MAR 18 ; update to # logic - scan for Medicare Part D first, return that from the original area if it exists.

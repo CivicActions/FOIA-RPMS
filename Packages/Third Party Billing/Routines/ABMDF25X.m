@@ -1,5 +1,5 @@
-ABMDF25X ; IHS/ASDST/DMJ - ADA-99 FORM ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF25X ; IHS/ASDST/DMJ - ADA-99 FORM ;   [ 05/10/2004  7:48 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**6,10**;APR 05, 2002
  ;Original;TMD;09/12/95 8:49 AM
  ;
  ; IHS/SD/SDR - v2.5 p10 - IM19963
@@ -24,7 +24,7 @@ LOOP ;
  ;Set to correct format line
  S ABM("FL")=ABM("LN")
  I ABM("LN")>27,ABM("LN")<37 S ABM("FL")=27 ;Lines 27 thru 36 are same
- I ABM("LN")>40,ABM("LN")<44 S ABM("FL")=41 ;Lines 41 thru 43 are same
+ I ABM("LN")>40,ABM("LN")<44 S ABM("FL")=41 ;Lines 41 thru 43 are same  ;abm*2.5*10 IM20337
  ;
  ;Set tab & format variables
  S ABM("TABS")=$P($T(@ABM("FL")),";;",2)
@@ -107,6 +107,7 @@ TEXT ;;TABS;;FIELD LENGTH
 9 ;;2;;30
 10 ;;2;;30
 11 ;;41^56^59^65;;10D^1^1^15
+ ;;41^56^59^65;;10D^1^1^10  ;original 11 abm*2.5*10 IM21498
 13 ;;16^26^41^57;;1^1^12^20
 15 ;;2;;30
 16 ;;42^47^53^62^70^75;;1^1^1^1^1^1
@@ -117,9 +118,13 @@ TEXT ;;TABS;;FIELD LENGTH
 21 ;;2;;30
 22 ;;2;;30
 23 ;;1^41^56^59^63;;30^10D^1^1^16
+ ;;1^41^56^59^64;;30^10D^1^1^15  ;original line IHS/SD/SDR 9/15/06
 27 ;;2^10^14^18^30^36^43^71;;10D^2^2^8^6^5^29^8$
+ ;;2^10^13^18^30^37^43^71;;10D^2^2^8^6^5^29^9$  ;original 27 abm*2.5*10 IM20078 and IM21043
 38 ;;71;;9$
+ ;;71;;10$  ;original 38 abm*2.5*10 IM20078
 39 ;;71;;9$
+ ;;71;;10$  ;original 39 abm*2.5*10 IM20078
 41 ;;2;;79
 44 ;;42^50^55^58^68^73^78;;1^1^1^1^1^1^1
 46 ;;2^28^42^51^67;;24^10D^1^1^10D

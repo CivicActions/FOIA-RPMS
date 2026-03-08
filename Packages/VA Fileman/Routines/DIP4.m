@@ -1,12 +1,12 @@
-DIP4 ;SFISC/XAK-QUEUE & DEQUEUE ;12:34 PM  13 Apr 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**34**;Mar 30, 1999
+DIP4 ;SFISC/XAK-QUEUE & DEQUEUE ;6/13/95  09:36 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**9**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S:('$D(DQTIME)#2)&($D(ZTQUEUED)) DQTIME="NOW"
  S:($G(DDXP)=4)&($D(IO("Q"))) DDXPQ=1 K IO("Q") S %DT="TEX",X="" I $D(DQTIME)#2 S X=DQTIME,%DT="XT"
-W I '$D(DQTIME) S %DT("A")="Requested Time To Print: ",%DT("B")="NOW"
- S:$D(DQTIME) X=DQTIME
- S %DT="FRX" S:'$D(DQTIME) %DT=%DT_"AE" S %DT(0)="NOW" D ^%DT K %DT G:Y<1 X^DIP3:$D(DQTIME),X^DIP3:X[U,X^DIP3:$D(DTOUT),W S X=+Y D H^%DTC S Y=%H_","_%T
+W R:'$D(DQTIME) !,"REQUESTED TIME TO PRINT: NOW// ",X:DTIME
+ G X^DIP3:X[U!'$T S Y=$H
+ I $P("NOW",X)]"" S:X'["@" X="T@"_X S %DT(0)="NOW" D ^%DT K %DT(0) G:Y<1 X^DIP3:$D(DQTIME),W S X=+Y D H^%DTC S Y=%H_","_%T
  W:'$D(ZTQUEUED) ! S ZTDTH=Y X ^%ZOSF("UCI") S ZTUCI=Y,ZTRTN="ZTSK^DIP4",ZTDESC=DHD
  S ZTSAVE("^UTILITY(""DIP2"",$J,")=""
  I $P($G(DPP(0,"IX")),U,2)["$J" S ZTSAVE("^"_$P(DPP(0,"IX"),U,2))=""
@@ -20,7 +20,7 @@ ZTM S ZTSAVE("*")="" D ^%ZTLOAD
  ;
 ZTSK ;
  K DISYS D CLEAN^DIEFU
- I $G(DPP(1))]"",'$D(DPP(1,"GET")) Q:$G(DK)=""  D
+ I $G(DPP(1))]"",'$D(DPP(1,"GET")) Q:$G(DK)=""  D 
  . S DIPCRIT=+$G(DIPCRIT),DISUPNO=$S($D(DISUPNO)#2:DISUPNO,1:1)
  . N S,Q S DIFM=+$G(L),S=+$P($G(@(DK_"0)")),U,2),Q="""" N DIBTRPT,DICNVDPP,DITYP,DJ,DU,DV
  . S DICNVDPP=1 D CNVCM^DIP11,T1^DIP11

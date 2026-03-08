@@ -1,5 +1,5 @@
 APCDEGP3 ; IHS/CMI/LAB - NO DESCRIPTION PROVIDED ;
- ;;2.0;IHS PCC SUITE;**11**;MAY 14, 2009;Build 58
+ ;;2.0;IHS PCC SUITE;**11,28**;MAY 14, 2009;Build 72
  ;
 POV ;EP
  I $Y>(IOSL-5) D FF Q:APCDQUIT
@@ -47,7 +47,7 @@ DEMO ;demographics
  S APCDHRN=$P($G(^AUPNPAT(DFN,41,DUZ(2),0)),U,2)
  S:APCDHRN="" APCDHRN="<?????>"
  W !,$TR($J("",80)," ","_")
- W !?3,"HR#:  ",APCDHRN,?30,"SSN:  ",$P(^DPT(DFN,0),U,9)
+ W !?3,"HR#:  ",APCDHRN
  W !,?3,"NAME:",?9,$P(^DPT(DFN,0),U)
  W !?3,"SEX: ",?9,$$EXTSET^XBFUNC(2,.02,$P(^DPT(DFN,0),U,2)),?30,"TRIBE: " I $P(^AUPNPAT(DFN,11),U,8)]"" W $P(^AUTTTRI($P(^AUPNPAT(DFN,11),U,8),0),U)
  W !?3,"DOB:  " S Y=$P(^DPT(DFN,0),U,3) I Y]"" D DD^%DT W ?9,Y

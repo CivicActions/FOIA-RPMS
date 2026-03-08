@@ -1,5 +1,5 @@
 PSSDOSCR ;BIR/RTR-Dosage creation routine ;03/09/00
- ;;1.0;PHARMACY DATA MANAGEMENT;**34,38**;9/30/97
+ ;;1.0;PHARMACY DATA MANAGEMENT;**34**;9/30/97
  ;Reference to ^PS(50.607 supported by DBIA 2221
  ;
  S PSSTRAC=+$O(^PS(59.7,0))
@@ -7,13 +7,24 @@ PSSDOSCR ;BIR/RTR-Dosage creation routine ;03/09/00
  S PSSTRACK=$P($G(^PS(59.7,PSSTRAC,80)),"^",3)
  I PSSTRACK=1 S Y=$P($G(^PS(59.7,PSSTRAC,80)),"^",4) D:Y DD^%DT W !!!,$C(7),"Dosage conversion has already been queued for "_$G(Y),! K PSSTRAC,PSSTRACK,Y Q
  I PSSTRACK=2 W !!!,$C(7),"Dosage conversion is currently running, cannot run at this time.",! K PSSTRAC,PSSTRACK Q
- W !!,"This option will queue the conversion that populates the Possible Dosages",!,"and Local Possible Dosages in the Drug file. New dosages will be added to",!,"dosages that are already in the file.",!
+ W !!,"This option will queue the conversion that populates the Possible Dosages",!,"and Local Possible Dosages in the Drug file.",!
  I PSSTRACK=3 K PSSOUT D  I $G(PSSOUT) W !!,"Nothing queued.",! G ENDX
  .K PSSSTART,PSSSTOP,PSSWHO S Y=$P($G(^PS(59.7,PSSTRAC,80)),"^",4) D DD^%DT S PSSSTART=Y S Y=$P($G(^PS(59.7,PSSTRAC,80)),"^",5) D DD^%DT S PSSSTOP=Y I $P($G(^PS(59.7,PSSTRAC,80)),"^",6) D WHO
  .W !,"The dosage conversion was last run by "_$G(PSSWHO),!,"It started on "_$G(PSSSTART)_" and ended on "_$G(PSSSTOP),!
  .K DIR S DIR(0)="Y",DIR("B")="N",DIR("A")="Are you sure you want to run the Dosage conversion again",DIR("?")=" "
- .S DIR("?",1)="If you run the Dosage conversion again, any new Dosages that can be created",DIR("?",2)="will be merged with the Dosages that you have already built in your DRUG file."
+ .S DIR("?",1)="If you run the Dosage conversion again, you will be given the choice to either",DIR("?",2)="keep the Dosages you have already created in your DRUG file (#50) and merge"
+ .S DIR("?",3)="any new Dosages found, or you can delete all of the Dosages that you have",DIR("?",4)="already created, and start over."
  .W $C(7) D ^DIR K DIR I Y'=1 S PSSOUT=1 Q
+ .W ! S DIR(0)="Y",DIR("B")="N",DIR("A")="Do you want to delete the Dosages you already created and start over"
+ .S DIR("?")=" ",DIR("?",1)="If you answer 'Yes', all Possible Dosages and Local Possible Dosages that you",DIR("?",2)="have created in your DRUG file (#50) will be deleted, and new Dosages will be"
+ .S DIR("?",3)="created. If you answer 'No', the Possible Dosages and Local Possible Dosages",DIR("?",4)="that you have created in your DRUG file (#50) will remain, and new Dosages that"
+ .S DIR("?",5)="are found will be added to the Dosages that you already have."
+ .D ^DIR K DIR I Y["^"!($D(DTOUT))!($D(DUOUT)) S PSSOUT=1 Q
+ .I Y'=1 Q
+ .W ! K DIR S DIR(0)="Y",DIR("B")="N",DIR("A")="Are you sure you want to delete all DRUG file dosages and start over",DIR("?")=" ",DIR("?",1)="Answering 'Yes' will delete all Possible Dosages and Local Possible Dosages"
+ .S DIR("?",2)="from your DRUG file (#50), and the process of building Possible Dosages and",DIR("?",3)="Local Possible Dosages will start over."
+ .D ^DIR K DIR I Y["^"!($D(DTOUT))!($D(DUOUT)) S PSSOUT=1 Q
+ .S:Y=1 PSSCLEAN=1 Q
  S:$G(PSSTRACK)="" PSSTRACK=0
  W ! S PSSDUZ=+$G(DUZ) K ZTDTH S ZTRTN="EN^PSSDOSCR",ZTDESC="DOSAGE CONVERSION",ZTIO="",ZTSAVE("PSSDUZ")="",ZTSAVE("PSSTRAC")="",ZTSAVE("PSSTRACK")="",ZTSAVE("PSSCLEAN")="" D ^%ZTLOAD I $D(ZTSK)[0 W !!,"Nothing queued.",! G ENDX
  K %,X I $G(ZTSK("D"))'="" S %H=ZTSK("D") D YX^%DTC K %H

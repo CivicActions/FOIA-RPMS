@@ -1,13 +1,13 @@
-DDSZ2 ;SFISC/MKO-LOAD SCR, NAV, AND ORDER INFO ;11:40 AM  26 Aug 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**8**;Mar 30, 1999
+DDSZ2 ;SFISC/MKO-LOAD SCR, NAV, AND ORDER INFO ;11:01 AM  29 Jul 1994
+ ;;21.0;VA FileMan;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 EN(SC,N,O,RNAV) ;
  ;Input:
  ;  DDSPG
  ;  DDSREFS
  ;
- D SCR(.SC),NAV(.N,.RNAV),ORD(.O)
+ D SCR(.SC),NAV(.N),ORD(.O)
  D:$D(RNAV) RNAV(.RNAV,.O)
  Q
  ;
@@ -24,48 +24,38 @@ SCR(SC) ;Move image from SC to global
  .. S:S]"" @DDSREFS@("X",DDSPG,R-1,C-1,"A")=S
  Q
  ;
-NAV(N,RNAV) ;
+NAV(N) ;
  N B,D1,D2,F,LN
  S N(9999,1)="0,0"
  ;
  S D1="" F  S D1=$O(N(D1)) Q:D1=""  D
  . S D2="" F  S D2=$O(N(D1,D2)) Q:D2=""  D
  .. S F=$P(N(D1,D2),","),B=$P(N(D1,D2),",",2),LN=""
- .. D NAV1(.N,.RNAV,D1,D2,.LN)
+ .. D NAV1(.N,D1,D2,.LN)
  .. S @DDSREFS@(DDSPG,B,F,"N")=LN
  .. S:$D(DDSMUL(B,F)) $P(@DDSREFS@(DDSPG,B,F,"N"),U,11)=1
  Q
  ;
-NAV1(N,RNAV,D1,D2,LN) ;Setup "N" for navigation
+NAV1(N,D1,D2,LN) ;Setup "N" for navigation
  N E1,E2,I
  ;
  S E1=$S($O(N(D1),-1)]"":$O(N(D1),-1),1:$O(N(""),-1))
  S E2=D2
  I $D(N(E1,E2))[0 S E2=$S($O(N(E1,E2),-1)]"":$O(N(E1,E2),-1),1:$O(N(E1,E2)))
- I E1]"",E2]"" D
- . N RBO
- . S RBO=$P(N(E1,E2),",",3)
- . I RBO,$D(RNAV(RBO,E1))#2 D  Q:E2=""
- .. S E2="" F  S E2=$O(RNAV(RBO,E1,E2)) Q:E2=""  Q:RNAV(RBO,E1,E2)'[","
- . S $P(LN,U)=$P(N(E1,E2),",",1,2)
+ I E1]"",E2]"" S $P(LN,U)=N(E1,E2)
  ;
  S E1=$S($O(N(D1))]"":$O(N(D1)),1:$O(N("")))
  S E2=D2
  I $D(N(E1,E2))[0 S E2=$S($O(N(E1,E2),-1)]"":$O(N(E1,E2),-1),1:$O(N(E1,E2)))
- I E1]"",E2]"" D
- . N RBO
- . S RBO=$P(N(E1,E2),",",3)
- . I RBO,$D(RNAV(RBO,E1))#2 D  Q:E2=""
- .. S E2="" F  S E2=$O(RNAV(RBO,E1,E2)) Q:E2=""  Q:RNAV(RBO,E1,E2)'[","
- . S $P(LN,U,2)=$P(N(E1,E2),",",1,2)
+ I E1]"",E2]"" S $P(LN,U,2)=N(E1,E2)
  ;
  S E1=D1,E2=$O(N(D1,D2))
  I E2="" S E1=$S($O(N(E1))]"":$O(N(E1)),1:$O(N(""))),E2=$O(N(E1,""))
- I E1]"",E2]"" S $P(LN,U,3)=$P(N(E1,E2),",",1,2)
+ I E1]"",E2]"" S $P(LN,U,3)=N(E1,E2)
  ;
  S E1=D1,E2=$S($O(N(E1,D2),-1)]"":$O(N(E1,D2),-1),1:"")
  I E2="" S E1=$S($O(N(E1),-1)]"":$O(N(E1),-1),1:$O(N(""),-1)),E2=$S($O(N(E1,""),-1)]"":$O(N(E1,""),-1),1:"")
- I E1]"",E2]"" S $P(LN,U,4)=$P(N(E1,E2),",",1,2)
+ I E1]"",E2]"" S $P(LN,U,4)=N(E1,E2)
  ;
  F I=1:1:4 S:$P($P(LN,U,I),",",2)=B!'$P($P(LN,U,I),",",2) $P(LN,U,I)=+$P(LN,U,I)
  Q
@@ -98,8 +88,8 @@ RNAV(DDSRNAV,DDSO) ;Setup nav and fo info for rep blocks
  . S D1="" F  S D1=$O(DDSN(D1)) Q:D1=""  D:$D(DDSN(D1))#2
  .. S B=DDSN(D1)
  .. S D2="" F  S D2=$O(DDSN(D1,D2)) Q:D2=""  D
- ... S F=DDSN(D1,D2),LN="" Q:F[","
- ... D NAV1(.DDSN,.DDSRNAV,D1,D2,.LN)
+ ... S F=$P(DDSN(D1,D2),","),LN=""
+ ... D NAV1(.DDSN,D1,D2,.LN)
  ... S $P(@DDSREFS@(DDSPG,B,F,"N"),U,6,9)=LN
  . ;
  . S B=+$G(DDSO(+DDSBO)) Q:'B

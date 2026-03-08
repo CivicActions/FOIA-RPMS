@@ -1,5 +1,6 @@
-DDS3 ;SFISC/MLH-COMMAND UTILS ;9:02 AM  6 Feb 1996
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDS3 ;SFISC/MLH-COMMAND UTILS ;02:46 PM  22 Feb 1995 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**4**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  I Y(0)]"","ECNRS"[$E(Y(0)) D @$E(Y(0))
  Q
@@ -27,33 +28,30 @@ E ;
  I Y="" S DDACT="N" Q
  I Y=1 D EX
  Q
- ;
-C ;Close
- S DDACT="Q"
- Q
- ;
-N ;Next page
+N ;
  S:DDSNP]"" DDSPG=DDSNP,DDACT="NP"
+ Q
+C ;
+ S DDACT="Q"
  Q
  ;
 QT ;Exit, don't save
+ G:DDSSC>1!$G(DDSSEL)!$P(DDSSC(DDSSC),U,4) ERR1
  I $G(DDSDN)=1,DDO G ERR3
- S DDACT="Q"
- I DDSSC>1!$G(DDSSEL)!$P(DDSSC(DDSSC),U,4) D MSG1 Q
- Q:'DDSCHG
+ S DDACT="Q" Q:'DDSCHG
  D DEL^DDS6
  S DX=0,DY=IOSL-1 X IOXY
  W $P(DDGLCLR,DDGLDEL),$S($D(DTOUT):$$EZBLD^DIALOG(8076),1:"")_$$EZBLD^DIALOG(8077) H 1
  Q
  ;
 EX ;Exit, save
+ G:DDSSC>1!$G(DDSSEL)!$P(DDSSC(DDSSC),U,4) ERR1
  I $G(DDSDN)=1,DDO G ERR3
  S DDACT="Q"
- I DDSSC>1!$G(DDSSEL)!$P(DDSSC(DDSSC),U,4) D MSG1 Q
  D ^DDS4 I 'Y S DDACT="N" D R D:$D(DDSBR)#2 BR^DDS2
  Q
- ;
 CL ;Close
+ I DDSSC'>1,'$G(DDSSEL),'$P(DDSSC(DDSSC),U,4) G ERR2
  I $G(DDSDN)=1,DDO G ERR3
  G E
  ;
@@ -63,9 +61,14 @@ TO ;Time-out
  E  D E
  Q
  ;
-MSG1 ;Print closing page message
- S DX=0,DY=IOSL-1 X IOXY
- W $P(DDGLCLR,DDGLDEL)_"Closing page..." H 1
+ERR1 ;Print error message
+ D MSG^DDSMSG("You must press <PF1>C to close this page.",1)
+ S DDACT="N"
+ Q
+ ;
+ERR2 ;
+ D MSG^DDSMSG("You must press <PF1>Q or <PF1>E to leave the form.",1)
+ S DDACT="N"
  Q
  ;
 ERR3 ;

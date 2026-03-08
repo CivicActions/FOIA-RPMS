@@ -1,5 +1,5 @@
 LR7OSBR ;slc/dcm - Silent BB report ;8/11/97
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**121,230**;Sep 27, 1994
 EN ;
  I '$D(^LR(LRDFN,"BB"))&($O(^LR(LRDFN,.99))>3!($O(^LR(LRDFN,.99))<1)) Q

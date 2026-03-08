@@ -1,7 +1,8 @@
-DIDH ;SFISC/XAK-HDR FOR DD LISTS ;05:35 PM  24 Apr 2002 [ 12/09/2003  4:35 PM ]
- ;;22.0;VA FileMan;**76,1002**;Mar 30, 1999
+DIDH ;SFISC/XAK-HDR FOR DD LISTS ;2/18/93  16:21 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
- D ^DIDH1 I $G(M)=U S DN=0
+ D ^DIDH1
 Q K DDV,%F,M1 Q
  ;
 XR S X=2,J=0,DG=F(Z) W:$Y !
@@ -38,9 +39,3 @@ H I $D(IOSL),$Y+4>IOSL S DC=DC+1 D ^DIDH1 G Q:M=U
  Q
 W F K=0:1 W:$D(DDF) !?25 S %Y=$E(W,IOM-$X,999) W $E(W,1,IOM-$X-1) Q:%Y=""  S W=%Y,DDF=1
  K DDF Q
-PTR(X) ;finds pointers to file being deleted
- N Y,Z S (Y,Z)=0
- I $O(^DD(X,0,"PT",Y))="" Q Z
- D  Q Z
- . F  S Y=$O(^DD(X,0,"PT",Y)) Q:Y=""  I $$FNO^DILIBF(Y)'=X S Z=1 Q
- . Q

@@ -1,6 +1,8 @@
-LRVRA ;DALOI/JMC-Lab Routine Data Verification by UID ;2/12/97  11:06
- ;;5.2T9;LR;**1018**;Nov 17, 2004
- ;;5.2;LAB SERVICE;**153,221,263**;Sep 27, 1994
+LRVRA ;VA/DALOI/JMC-Lab Routine Data Verification by UID ; 03/30/2022 ; MKK
+ ;;5.2;LR;**153,221,263,1018,1051**;NOV 01, 1997;Build 19
+ ;
+ ; MSC/MKK - LR*5.2*1051 - 30-Mar-2022 - Item 83955 - SSN print issue
+ ;
  N LRANYAA,LRUID,LRNOP
  S LRANYAA=+$P($G(^LRO(68.2,LRLL,10,LRPROF,0)),"^",3)
  S LRUID="" D NEXT
@@ -34,7 +36,8 @@ WLN ; Select next accession (UID) to work with.
  S LRDFN=+^LRO(68,LRAA,1,LRAD,1,LRAN,0),LRCEN=$S($D(^(.1)):^(.1),1:0),LRODT=$S($P(^(0),U,4):$P(^(0),U,4),1:$P(^(0),U,3)),LRSN=$P(^(0),U,5)
  S LRORU3=$G(^LRO(68,LRAA,1,LRAD,1,LRAN,.3))
  S LRDPF=$P(^LR(LRDFN,0),U,2),DFN=$P(^(0),U,3)
- D PT^LRX W !,PNM,?30,SSN
+ ; D PT^LRX W !,PNM,?30,SSN
+ D PT^LRX W !,PNM,?30,SSN(1)   ; IHS/MSC/MKK - LR*5.2*1051 - 30-Mar-2022 - Item 83955
  W:LRCEN !,"ORDER #: ",LRCEN
  I '$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,3)),"^",3) D
  . N LRAA,LRAD,LRAN

@@ -1,0 +1,124 @@
+APSQI00D ; ; 23-OCT-1998
+ ;;1;APSQ;;OCT 23, 1998
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,999) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ",2,251,16,"D")
+ ;;=14^14^1^50
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ",2,251,16,"N")
+ ;;=14^0^17^15^17^^^^^^1
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ",2,251,17,"D")
+ ;;=14^54^1^60
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ",2,251,17,"N")
+ ;;=14^0^0^16^0^^^^^^1
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ",2,251,18,"D")
+ ;;=5^14^45^3.1
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ",2,"FIRST")
+ ;;=14,251
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","CAP","AVAILABILITY OF MED","1^2",1,250,1)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","CAP","COST OF SMILIAR DRUG","1^2",1,250,4)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","CAP","DELETE THE PHARMACY INFO AND YOUR SIGNAT","1^2",1,250,10)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","CAP","DRUG COST","1^2",1,250,3)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","CAP","EDIT DRUG NAME","1^2",1,250,11)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","CAP","PAGE 2 (PROVIDER INFO-VIEW ONLY)","1^2",1,253,1)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","CAP","PHARMACY/SIG","1^2",1,250,9)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","CAP","RECOGNIZED BY USP,NF,ETC","1^2",1,250,2)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","CAP","RPH REMARKS (WP)","1^2",1,250,6)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F0","1,253","L",1,253,1)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F0","10,250","L",1,250,10)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",.01,"L",1,249,4)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",.01,"L",2,251,1)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",1,"L",1,249,1)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",1,"L",2,251,2)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",2,"L",1,249,2)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",2,"L",2,251,5)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",3,"L",1,249,3)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",3,"L",1,250,11)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",3,"L",2,251,6)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",3.1,"L",2,251,18)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",3.2,"L",2,251,9)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",3.3,"L",2,251,10)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",3.4,"L",2,251,11)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",3.5,"L",2,251,12)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",3.7,"L",2,251,13)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",4,"L",2,251,3)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",5,"L",2,251,4)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",6,"L",1,250,9)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",9,"L",2,251,7)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",10,"L",1,250,1)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",11,"L",1,250,2)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",12,"L",1,250,3)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",13,"L",1,250,4)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",30,"L",2,251,14)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",40,"L",2,251,15)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",50,"L",2,251,16)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",60,"L",2,251,17)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","F9009035.1",70,"L",1,250,6)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,0,0)
+ ;;=CONTROL#:                        PROVIDER REQUEST DATE:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,0,0,"A")
+ ;;=1;8;U^34;54;U
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,3,42)
+ ;;=PHARMACY/SIG:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,5,19)
+ ;;=PAGE 2 (PROVIDER INFO-VIEW ONLY)
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,7,0)
+ ;;=AVAILABILITY OF MED:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,9,0)
+ ;;=RECOGNIZED BY USP,NF,ETC:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,11,0)
+ ;;=DRUG COST:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,13,0)
+ ;;=COST OF SMILIAR DRUG:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,15,0)
+ ;;=RPH REMARKS (WP):            EDIT DRUG NAME:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,15,0,"A")
+ ;;=30;43;U
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",1,16,29)
+ ;;=DELETE THE PHARMACY INFO AND YOUR SIGNATURE?:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,0,0)
+ ;;=#                                       REQUESTING DATE:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,0,0,"A")
+ ;;=1;1;U^41;55;U
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,1,0)
+ ;;=REQUEST PROVIDER                       APPROVAL PROVIDER
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,3,0)
+ ;;=CLINIC:

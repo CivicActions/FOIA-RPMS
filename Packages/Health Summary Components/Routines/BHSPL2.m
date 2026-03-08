@@ -1,7 +1,8 @@
-BHSPL2 ;IHS/MSC/MGH  - Health Summary for Items associated with Problem list ;09-Mar-2016 09:58;du
- ;;1.0;HEALTH SUMMARY COMPONENTS;**8,13**;Mar 17,2006;Build 6
+BHSPL2 ;IHS/MSC/MGH  - Health Summary for Items associated with Problem list ;06-Mar-2025 09:58
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**8,13,22**;Mar 17,2006;Build 47
  ;Patch 13 added normal/abnormal data
- ;===================================================================
+ ;IHS/MSC/MIR 03/06/2025 Patch 22 (Feature 116663) DETAIL+1 DETAIL+22:26
+ ;======================================================================
 POVP ;DISPLAY PROBLEMS USED BY LAST VISIT IN HEALTH SUMMARY
  N TARGET,X,LINE,INVDT,QUIT
  ;For Visit instructions and treatments, the default is the latest visit
@@ -51,7 +52,7 @@ PROB(VIEN) ;Find problems used in this visit
  ..K TARGET
  Q
 DETAIL(RET,IEN,DFN) ;Get a detail report on one problem
- N ZERO,CNT,PROB,CLASS,STATUS,ACLASS,PIP,ONSET,SNOMED,DESC,IN,OUT,CHK
+ N ZERO,CNT,PROB,CLASS,STATUS,ACLASS,PIP,ONSET,SNOMED,DESC,IN,OUT,CHK,DIAGDT,RESDT
  S VIEN=$G(VIEN)
  S CNT=0
  S ZERO=$G(^AUPNPROB(IEN,0))
@@ -68,6 +69,10 @@ DETAIL(RET,IEN,DFN) ;Get a detail report on one problem
  I $$GET1^DIQ(9000011,IEN,.13)="" S ONSET="UNKNOWN"
  E  S ONSET=$$GET1^DIQ(9000011,IEN,.13)
  D ADD1(ONSET," * Date of Onset:")
+ S DIAGDT=$$FMTE^XLFDT($$GET1^DIQ(9000011,IEN,.24,"I"),"2D")  ; Diagnosis date
+ D ADD1($S(DIAGDT["/":DIAGDT,1:"Unknown")," * Diagnosis Date:")
+ S RESDT=$$FMTE^XLFDT($$GET1^DIQ(9000011,IEN,1.07,"I"),"2D")  ; Resolution date
+ I RESDT D ADD1(RESDT," * Resolution Date:")
  D ADD1($$GET1^DIQ(9000011,IEN,.08)," * Date Entered:")
  D ADD1($$GET1^DIQ(9000011,IEN,1.04)," * Recorded By:")
  D ADD1($$GET1^DIQ(9000011,IEN,.03)," * Last Modified:")

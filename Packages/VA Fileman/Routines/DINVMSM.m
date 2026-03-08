@@ -1,5 +1,6 @@
-%ZOSV ;SFISC/AC - $View commands for MSM-PC/PLUS ;2:24 PM  1 Oct 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+%ZOSV ;SFISC/AC-$View commands for MSM-UNIX ;11/17/97  10:28 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**44**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 ACTJ() ;
@@ -7,11 +8,9 @@ ACTJ() ;
 AVJ() ;
  Q $S($$V3:$V($V(44)+94,-3,2)+1-$V($V(44)+168,-3,2),1:$V($V(3,-5),-3,0)-$V(168,-4,2))
 T0 ; start RT clock
- I $$OSTYPE()'=1 S XRT0=$H Q
- S XRT0=$P($H,",")_","_($V(#46C,-3,4)*5.4925\1/100) Q
+ S XRT0=$H Q
 T1 ; store RT datum
- I $$OSTYPE()'=1 S ^%ZRTL(3,XRTL,+$H,$P($H,",",2))=XRT0 K XRT0 Q
- S ^%ZRTL(3,XRTL,+$H,XRTN,$V(#46C,-3,4)*5.4925\1/100)=XRT0 K XRT0 Q
+ S ^%ZRTL(3,XRTL,+$H,XRTN,$P($H,",",2))=XRT0 K XRT0 Q
 JOBPAR ;
  S Y=$V(2,X,2) Q:'Y
  S Y=$ZU(Y#32,Y\32) Q
@@ -19,17 +18,16 @@ PROGMODE() ;
  Q $V(0,$J,2)#2
 PRGMODE ;
  W ! S ZTPAC=$S('$D(^VA(200,+DUZ,.1)):"",1:$P(^(.1),U,5)),XUVOL=^%ZOSF("VOL")
+ ;I ZTPAC="" W *7,"YOU HAVE NO PROGRAMMER ACCESS CODE!",! Q
  I ZTPAC]"" X ^%ZOSF("EOFF") R !,"PAC: ",X:60 X ^%ZOSF("EON") I X'=ZTPAC W "??",*7 Q
- K XMB,XMTEXT,XMY S XMB="XUPROGMODE",XMB(1)=DUZ,XMB(2)=$I D ^XMB:$L($T(^XMB)) D BYE^XUSCLEAN K ZTPAC,X,XMB
- X ^%ZOSF("UCI") S XUCI=Y,XQZ="PRGM^ZUA[MGR]",XUSLNT=1 D DO^%XUCI
- V 0:$J:$ZB($V(0,$J,2),1,7):2 S $ZE="PRGMODEX^%ZOSV" ABORT
-PRGMODEX W !,"YOU ARE NOW IN PROGRAMMING MODE!",! S $ECODE=",<<PROG>>,"
- Q
+ S XMB="XUPROGMODE",XMB(1)=DUZ,XMB(2)=$I D ^XMB:$D(^XMB(3.7,0)) K ^XMB(3.7,+DUZ,100,$I),^XUSEC(0,"CUR",DUZ,+^XUTL("XQ",$J,0)),ZTPAC,X,XMB
+ S ZOSVER='$ZB($V(140,$J,2),512,1) ; 1 if V 2.1+ err trapping in effect
+ X ^%ZOSF("UCI") S XUCI=Y,XQZ="PRGM^ZUA[MGR]",XUSLNT=1 D DO^%XUCI B:ZOSVER 2 V 0:$J:$ZB($V(0,$J,2),1,7):2 S $ZE="PRGMODEX^%ZOSV" ABORT
+PRGMODEX W !,"YOU ARE NOW IN PROGRAMMING MODE!",! S $ZE="" B:ZOSVER -2 K ZOSVER Q
  ;
 SIGNOFF ;
  I 0
  ;I $V($V(44)+4,-3,2)\32768#2 Q
- Q
 UCI ;
  S Y=$ZU(0) Q  ;X ^%ZOSF("UCI") Q
  ;
@@ -62,7 +60,7 @@ ORDER ;SAVE PART OF SYMBOL TABLE IN LOCATION SPECIFIED BY X
  K %,X,Y,Y1 Q
  ;
 PRIORITY ;
- Q:X>5  N %D,%P S %P=(X>5) D INT^%HL Q
+ N %D,%P S %P=(X>5) D INT^%HL Q
  ;
 PRIINQ() ;
  Q $S($V(20,$J,2):10,1:1)
@@ -87,8 +85,6 @@ DEVOK ;
  I X=2 S Y=0 Q
  I X'?1.N!(X'>0!(X'<1024)) S Y=-1 Q
  N %
- I $$VERSION(1)["NT" D DVOPN Q
- ;
  I $$V3 S %=$V($V(44)+8,-3,2)+$V(44),%=$V($V($V(44)+10,-3,2)*5+%),Y=$V(%+X+X,-3,2),Y=$S(Y=0:0,Y#4=0:Y/4,1:-1)
  E  S %=$V(5,-5,0),Y=$V(%+X+X,-3,2),Y=$S(Y=0:0,Y#4=0:Y/4+$V(272,-4),1:-1)
  I 'Y D DVOPN Q
@@ -99,8 +95,7 @@ DVOPN S $ZT="DVERR",Y=0 Q:$D(%ZTIO)
  L:$D(%ZISLOCK) -@%ZISLOCK
  S Y=0 I '$D(%ZISCHK)!$S($D(%ZIS)#2:(%ZIS["T"),1:0) C X Q
  S:X]"" IO(1,X)="" Q
-DVERR I $ZE["OPENERR" S Y=-1 L:$D(%ZISLOCK) -@%ZISLOCK Q
- I $ZE["<NODEV>" S Y=-1 L:$D(%ZISLOCK) -@%ZISLOCK Q
+DVERR I $ZE["OPENERR" S Y=-1 Q
  ZQ
 RES S Y=0,%ZISD0=$O(^%ZISL(3.54,"B",X,0))
  I '%ZISD0 S Y=-1,%ZISD0=%O(^%ZIS(1,"C",X)) Q:'%ZISD0  Q:'$D(^%ZIS(1,+%ZISD0,0))  Q:$P(^(0),"^")'=X  Q:'$D(^("TYPE"))  Q:^("TYPE")'="RES"  S Y=0 Q
@@ -110,7 +105,6 @@ RES S Y=0,%ZISD0=$O(^%ZISL(3.54,"B",X,0))
  K %ZISD0,%ZISD1
  Q
 V2CL1 F %=0:0 Q:$ZA<0  R %X:5 Q:%X']""  F %1=0:0 S %1=$L(%Y),%Y=%Y_$E(%X,1,255-%1),%X=$E(%X,256-%1,$L(%X)),%1=$F(%Y,%ZCR) Q:%1'>0  S %2=$E(%Y,$A(%Y)=10+1,%1-2),%Y=$E(%Y,%1,$L(%Y)) D V2CL2
- I %Y]"" S %2=$E(%Y,$A(%Y)=10+1,$L(%Y)) D V2CL2
  C 2:256 K IO(1,2) D CLOSE^ZISPL1 K %Y,%X,%1,ZOSFV
  Q
 V2CL2 S %1=$F(%2,$C(12)) I %1>0 S %=%+1 D LIMIT:%Z1<% Q:%Z1<%  S ^XMBS(3.519,XS,2,%,0)="|TOP|",%2=$E(%2,1,%1-2)_$E(%2,%1,$L(%2))
@@ -122,27 +116,13 @@ SET ;SET SPECIAL VARIABLES
  S DT=$$HTFM^DILIBF($H,1)
  Q
 GETENV ;Get enviroment  (UCI^VOL^NODE)
- S Y=$P($ZU(0),",",1)_"^"_$P($ZU(0),",",2)_"^^"_$P($ZU(0),",",2)
- Q
-VERSION(X) ;return OS version, X=1 - return OS
- Q $S($G(X):$P($ZV,"Version "),1:$P($ZV,"Version ",2))
-V3() ;returns 1=version 3, 0=version 4
- Q $P($ZV,"Version ",2)<4
-OSTYPE() ;Return 1 = PC/PLUS, 2 = NT, 3 = UNIX
- N % S %=$$VERSION(1)
- Q $S(%["MSM-PC/PLUS":1,%["Windows NT":2,1:3)
- ;
-SETNM(X) ;Set name, Fall into SETENV
+ S Y=$P($ZU(0),",",1)_"^"_$P($ZU(0),",",2)_"^^"_$P($ZU(0),",",2) Q
 SETENV ;Set enviroment
  Q
-ZHDIF ;Display dif of two $$ZH^%MSMOPS's
- S U="^" W !?2,"CPU=",$J($P(%ZH1,U)-$P(%ZH0,U),6,2),?14,"ET=",$J($P(%ZH1,U,7)-$P(%ZH0,U,7),6,2),?25,"PRD=",$J($P(%ZH1,U,3)-$P(%ZH0,U,3),4),?35,"LRD=",$J($P(%ZH1,U,2)-$P(%ZH0,U,2),6),?47,"LWT=",$J($P(%ZH1,U,4)-$P(%ZH0,U,4),5)
- W ?58,"TI=",$J($P(%ZH1,U,5)-$P(%ZH0,U,5),4),?67,"TO=",$J($P(%ZH1,U,6)-$P(%ZH0,U,6),5)
- Q
 LOGRSRC(OPT) ;record resource usage in ^XUCP
- Q:$$OSTYPE'=1
- D RO^%ZOSVKR(OPT)
  Q
+V3() ;returns 1=version 3, 0=version 4
+ Q $P($ZV,"Version ",2)<4
 SETTRM(X) ;Set specified terminators.
  U $I:(::::::::X)
  Q 1

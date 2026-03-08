@@ -1,7 +1,9 @@
 ABME5REF ; IHS/ASDST/DMJ - 837 REF Segment 
- ;;2.6;IHS Third Party Billing;**6,8,9,10,11,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing;**6,8,9,10,11,21,33,37**;NOV 12, 2009;Build 739
  ;other payer provider info
- ;IHS/SD/SDR - 2.6*21 - HEAT119570 - Made change so either Property/Casualty Claim number or Case number will print in file
+ ;IHS/SD/SDR 2.6*21 HEAT119570 Made change so either Property/Casualty Claim number or Case number will print in file
+ ;IHS/SD/SDR 2.6*33 ADO60186 Added code to write REF*G2 for ordering provider if med is a controlled substance
+ ;IHS/SD/SDR 2.6*37 ADO89299 fixed code for REF*G2 for controlled substance
  ;
 EP(X,Y,Z) ;EP
  ;x=entity identifier code from nm1
@@ -104,12 +106,14 @@ LOOP ;LOOP HERE
  ...S ABMR("REF",30)=$P($G(^AUTNINS(ABMP("INS"),15,ABMIEN,0)),U,2)
  ..E  S ABMR("REF",30)=$$PI^ABMUTLF(ABMIEN)
  .I ABMFILE=200 D
+ ..I ABMLOOP="2420E" S ABMR("REF",30)=$P($G(^VA(200,ABMIEN,"PS")),U,2) Q  ;abm*2.6*33 IHS/SD/SDR ADO60186
  ..I ABMRCID="FHC&AFFILIATES"&(ABMEIC="LU") D
  ...S ABMR("REF",30)=$P($G(^AUTNINS(ABMP("INS"),15,ABMIEN,0)),U,2)
  ..I ($P($G(^AUTNINS(ABMP("INS"),0)),U)="NORTH DAKOTA MEDICAID") D  ;abm*2.6*11 IHS/SD/AML HEAT78969
  ...S ABMR("REF",30)=$$MCD^ABMEEPRV(ABMIEN,+$G(ABMPAYER))  ;abm*2.6*11 IHS/SD/AML HEAT78969
  ..E  S ABMR("REF",30)=$$PI^ABMUTLF(ABMP("LDFN"))
  .I ABMFILE=0,ABMEIC="LU" S ABMR("REF",30)=$$GET1^DIQ(5,$P(ABMB8,U,16),1,"E")  ;abm*2.6*8 5010
+ .I ABMFILE=0,ABMEIC="G2" S ABMR("REF",30)=Z  ;abm*2.6*37 IHS/SD/SDR ADO89299
  I ABMEIC="F8" D
  .S ABMR("REF",30)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),4)),U,9)
  I +ABMIEN=0,$D(ABMP("PRV","F")),($G(Z)'="") S ABMR("REF",30)=$P($G(ABMP("PRV","F",Z)),"^")

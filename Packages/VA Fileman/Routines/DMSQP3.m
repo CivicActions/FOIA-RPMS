@@ -1,6 +1,6 @@
-DMSQP3 ;SFISC/EZ-DISPLAY POINTER COUNTS ;10/30/97  17:42
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQP3 ;SFISC/EZ-DISPLAY POINTER COUNTS ;10/30/97  17:42 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
 EN ; show individual table counts of links
  S DMQ="" D OK I DMQ K DMQ Q
  D PREASK I $D(DIRUT)!(DMQ) K DMQ Q

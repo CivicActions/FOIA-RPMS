@@ -1,6 +1,6 @@
-DICD ;SFISC/XAK-DISP,SELECT,DELETE,EDIT XREF ;11:26 AM  18 Aug 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**58**;Mar 30, 1999
+DICD ;SFISC/XAK-DISP,SELECT,DELETE,EDIT XREF ;3/30/95  15:29 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**5**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  K DICD S (DA,DL)=+Y D CHIX I 'DQ D ^DICE G Q
  D RD G:$D(DIRUT) Q I Y["C" D ^DICE G Q
@@ -8,12 +8,12 @@ DICD ;SFISC/XAK-DISP,SELECT,DELETE,EDIT XREF ;11:26 AM  18 Aug 2000 [ 04/02/2003
  D DEL G Q
  ;
 DEL I DH(DQ,4) D R Q:'$D(DICD)  S DQ=DICD
- I $D(DH(DQ,3)) W !?5,$C(7),"This cross-reference cannot be deleted.",! Q
+ I $D(DH(DQ,3)) W !?5,*7,"This cross-reference cannot be deleted.",! Q
 ASK S %=2 W !,"Are you sure that you want to delete the CROSS-REFERENCE " D YN^DICN Q:(%<0)!(%=2)
  I %=0 W !?7,"Answer YES if you want to delete the Cross-Reference." G ASK
  W !,"  ...OK",! K:I["SOUNDEX" ^DD(DI,0,"LOOK"),^("QUES")
  S ^DD(J(N),DL,1,0)="^.1",X=^(DQ,2),Y=$P(I,U,2) I Y?1A.E,+I=J(0),I'["MNEM",I'["MUM" K @(I(0)_"Y)") G DDD
- G DDD:X="Q"!$F(I,"BUL") I $P(I,U,3)]"",I'["MUM",I'["TRIG" D DD G DDD
+ G DDD:X="Q"!$F(I,"BUL") I I'["MUM",I'["TRIG" D DD G DDD
  S %=1 W "DO YOU WANT THE INDIVIDUAL CROSS-REFERENCE VALUES DELETED" D YN^DICN Q:%<1
  D DD:%=1
 DDD I $D(DDA) S DDA="D" D XA^DICATTA

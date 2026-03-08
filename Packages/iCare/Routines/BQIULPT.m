@@ -1,5 +1,5 @@
 BQIULPT ;VNGT/HS/ALA-Patient Data Utilities ; 17 Oct 2005  3:17 PM
- ;;2.7;ICARE MANAGEMENT SYSTEM;**1**;Dec 19, 2017;Build 12
+ ;;2.7;ICARE MANAGEMENT SYSTEM;**1,2**;Dec 19, 2017;Build 10
  ;
  ; This is a utility program containing special function calls
  ; needed for patient demographic data.
@@ -8,7 +8,7 @@ BQIULPT ;VNGT/HS/ALA-Patient Data Utilities ; 17 Oct 2005  3:17 PM
 HRN(DFN) ;EP -- Current Location Patient Health Record Number
  ;
  ;Description
- ;  Returns the patient's health record number
+ ;  Returns a patient's single health record number
  ;Input
  ;  DFN - Patient internal entry number
  ;  DUZ(2) - Assumes DUZ(2) exists since it's defined by
@@ -22,9 +22,9 @@ HRN(DFN) ;EP -- Current Location Patient Health Record Number
  I $G(DFN)="" Q ""
  ;
  NEW HRN
- S HRN=$P($G(^AUPNPAT(DFN,41,DUZ(2),0)),U,2)
- I $P($G(^AUPNPAT(DFN,41,DUZ(2),0)),U,3)'="" S HRN="*"_HRN
- Q HRN
+ ;S HRN=$P($G(^AUPNPAT(DFN,41,DUZ(2),0)),U,2)
+ ;I $P($G(^AUPNPAT(DFN,41,DUZ(2),0)),U,3)'="" S HRN="*"_HRN
+ Q $$HLK(DUZ(2))
  ;
 HRNL(DFN) ;EP -- List of HRNs for a patient
  NEW HRN,LOC,HDATA,ABR,VAL,ULOC,DVAL
@@ -118,7 +118,7 @@ LVD(DFN) ;EP -- Get patient's last visit
  . F  S VIEN=$O(^AUPNVSIT("AA",DFN,LVSDT,VIEN)) Q:VIEN=""  D  Q:QFL
  .. I $$GET1^DIQ(9000010,VIEN,.11,"I")=1 Q
  .. I $G(^AUPNVSIT(VIEN,0))="" Q
- .. Q:"DXCTI"[$P(^AUPNVSIT(VIEN,0),U,7)
+ .. ;Q:"DXCTI"[$P(^AUPNVSIT(VIEN,0),U,7)
  .. S LVISIT=VIEN,QFL=1
  Q LVISIT
  ;
@@ -139,7 +139,7 @@ LVC(DFN) ;EP -- Get patient's last visit clinic
  I VIEN="" Q ""
  S CST=$$GET1^DIQ(9000010,VIEN_",",.08,"I")
  I CST="" Q ""
- Q $$GET1^DIQ(9000010,VIEN_",",.08,"E")_" "_$$GET1^DIQ(40.7,CST_",",1,"E")
+ Q $$GET1^DIQ(9000010,VIEN_",",.22,"E")_" ("_$$GET1^DIQ(9000010,VIEN_",",.08,"E")_" "_$$GET1^DIQ(40.7,CST_",",1,"E")_")"
  ;
 LVLC(DFN) ;EP -- Get patient's last visit location
  ;Input
@@ -189,7 +189,7 @@ NAD(DFN) ;EP -- Get patient's next appt date
  ;Input
  ;  DFN - Patient internal entry number
  NEW NAPTM
- S NAPTM=$$NOW^XLFDT()
+ S NAPTM=$$DT^XLFDT()
  S NAPTM=$O(^DPT(DFN,"S",NAPTM)) I NAPTM="" Q ""
  I $P(^DPT(DFN,"S",NAPTM,0),"^",2)'="" Q ""
  Q $$FMTE^BQIUL1(NAPTM)
@@ -198,7 +198,7 @@ NAPT(DFN) ;EP -- Get patient's next appt
  ;Input
  ;  DFN - Patient internal entry number
  NEW NAPTM
- S NAPTM=$$NOW^XLFDT()
+ S NAPTM=$$DT^XLFDT()
  Q $O(^DPT(DFN,"S",NAPTM))
  ;
 NAC(DFN) ;EP -- Get patient's next appt date's clinic

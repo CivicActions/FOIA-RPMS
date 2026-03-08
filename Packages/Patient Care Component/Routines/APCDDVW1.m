@@ -1,5 +1,5 @@
-APCDDVW1 ; IHS/CMI/LAB - Print Hosp. review report ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDDVW1 ; IHS/CMI/TUCSON - Print Hosp. review report ; [ 02/23/04  2:35 PM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**7,8**;MAR 09, 1999
  ;
 ZERO ;EP;Write zero dependent report
  D HEAD^APCDDVW

@@ -1,5 +1,5 @@
-APSPFNC5 ;IHS/MSC/PLS - Prescription Creation Support ;25-Feb-2014 16:15;DU
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1011,1016,1018**;Sep 23, 2004;Build 21
+APSPFNC5 ;IHS/MSC/PLS - Prescription Creation Support ;30-Aug-2019 10:19;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1011,1016,1018,1024**;Sep 23, 2004;Build 68
  ;=================================================================
  ;IHS/MSC/MGH Added seach by type of pharmacy
  ;Return list of pharmacies
@@ -68,7 +68,8 @@ PHMLSTSC(DATA,SFLG,ZIP,RAD,NAME,NFLG,CITY,STATE,PTYPE,ONEOF) ;
  .F  S LP=$O(^APSPOPHM(LP)) Q:'LP  D
  ..S $P(@PLST@(LP),U)=1
  ;IHS/MSC/PLS - 10/01/2013
- I (SFLG="Z"!(SFLG="C"))&($$GET^XPAR("ALL","APSP SS PHARMACY MAILORDER")) D
+ ;IHS/MSC/MGH - 08/01/2019 - changed to contains
+ I (SFLG["Z"!(SFLG["C"))&($$GET^XPAR("ALL","APSP SS PHARMACY MAILORDER")) D
  .S PTYPE=1
  .S LP=0
  .F  S LP=$O(^APSPOPHM(LP)) Q:'LP  D
@@ -78,21 +79,28 @@ PHMLSTSC(DATA,SFLG,ZIP,RAD,NAME,NFLG,CITY,STATE,PTYPE,ONEOF) ;
  .D:@PLST@(LP) ADDPHM^APSPFNC2(LP,$P(@PLST@(LP),U,2))
  Q
 SPECID(LP,VAL,ONEOF) ;EP-
- N I,J,X,Y,Z,DONE,LIST,VALUE
+ N I,J,X,Y,Z,DONE,LIST,VALUE,BV
  S I=0,X=0,DONE=0,VALUE=0
  S J=$L(VAL,":")
- F I=1:1:J S LIST($P(VAL,":",I))="" S VALUE=VALUE+$P(VAL,":",I)
+ F I=1:1:J S LIST($P(VAL,":",I))="" S VALUE=VALUE+$P(VAL,":",I)  ;Sums bit values
  S I=0
  F  S I=$O(^APSPOPHM(LP,8,I)) Q:'+I!(DONE>0)  D
- .S Z=$G(^APSPOPHM(LP,8,I,0))
+ .S Z=$G(^APSPOPHM(LP,8,I,0)),BV=$P($G(^APSPNCP(9009033.76,Z,0)),U,2)
  .I ONEOF D
- ..I $D(LIST(Z)) S DONE=1
+ ..I $D(LIST(BV)) S DONE=1
  .E  D
- ..S X=X+$G(^APSPOPHM(LP,8,I,0))
+ ..S X=X+BV  ;$G(^APSPOPHM(LP,8,I,0))
  S VAL=$S(ONEOF:DONE,1:$$AND^XUMF5AU(VALUE,X)=VALUE)
  Q VAL
  ;Q VAL=$S(ONEOF:$$OR^XUMF5AU(VAL,X),1:$$AND^XUMF5AU(VAL,X))
- ;.;S X=$S(ID=1:"MAIL ORDER",ID=2:"FAX",ID=8:"RETAIL",ID=16:"SPECIALTY",ID=32:"LONG-TERM CARE",ID=64:"24 THOUR",1:"")
+ ; Return captioned content of Pharmacy entry
+PHMDET(DATA,DA) ;-
+ N DIC,DIQ
+ S DIQ(0)="R"
+ S DIC="^APSPOPHM("
+ D EXEC^APSPESM1("D EN^DIQ","")
+ Q
+ ;
  ;Return list of states
 GSTATES(DATA) ;EP
  N LP,ST

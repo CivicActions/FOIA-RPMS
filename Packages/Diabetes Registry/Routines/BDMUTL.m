@@ -1,5 +1,5 @@
 BDMUTL ; IHS/CMI/LAB - Area Database Utility Routine ; 14 Sep 2015  12:41 PM
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**5,8,9,10,11,12**;JUN 14, 2007;Build 51
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**5,8,9,10,11,12,17**;JUN 14, 2007;Build 138
  ;
 SNOMED(YR,LIST,SMC) ;EP - is snomed code smc on the list for the year
  I 'YR S YR=2019
@@ -239,3 +239,73 @@ CHK .;
  .S I=1_U_"Problem List: "_$$VAL^XBDIQ1(9000011,X,.01)_U_$S(O="":M,1:O)_U_X
  .Q
   Q I
+LASTDXI(P,T,BDATE,EDATE,SC) ;EP
+ I '$G(P) Q ""
+ S SC=$G(SC)
+ ;RETURN BDMDX4=1 or 0^dx code^date found^IEN OF ICD CODE^IEN OF V POV
+ NEW BDMDX1,BDMDX2,BDMDX3,BDMDX5,BDMTX5,BDMDX4,BDMDXV,BDMDXBD,BDMDXED
+ S (BDMDX1,BDMDX2,BDMDX3,BDMDX4,BDMTX5)=""
+ I $G(BDATE)="" S BDATE=$P(^DPT(P,0),U,3)  ;if no date then set to DOB
+ I $G(EDATE)="" S EDATE=DT  ;if no end date then set to today
+ ;S BDMTX5=$O(^ICD9("AB",T,0))  ;get taxonomy ien
+ S BDMTX5=+$$CODEN(T,80)
+ I BDMTX5'>0 Q ""  ;not a valid code
+ S BDMDX4=""  ;return value
+ S BDMDXBD=9999999-BDATE,BDMDXED=9999999-EDATE  ;get inverse date and begin at edate-1 and end when greater than begin date
+ S BDMDX1=BDMDXED-1 F  S BDMDX1=$O(^AUPNVPOV("AA",P,BDMDX1)) Q:BDMDX1=""!(BDMDX1>BDMDXBD)!(BDMDX4]"")  D
+ .S BDMDX2=0 F  S BDMDX2=$O(^AUPNVPOV("AA",P,BDMDX1,BDMDX2)) Q:BDMDX2'=+BDMDX2!(BDMDX4]"")  D
+ ..S BDMDX3=$P($G(^AUPNVPOV(BDMDX2,0)),U)
+ ..Q:BDMDX3=""  ;bad xref
+ ..Q:BDMDX3'=BDMTX5
+ ..S BDMDXV=$P(^AUPNVPOV(BDMDX2,0),U,3)
+ ..I '$D(^AUPNVSIT(BDMDXV,0)) Q  ;no visit entry
+ ..I SC]"",SC'[$P(^AUPNVSIT(BDMDXV,0),U,7)
+ ..S BDMDX4=1_"^"_$P($$ICDDX^ICDEX(BDMDX3),U,2)_"^"_(9999999-BDMDX1)_"^"_BDMDX3_"^"_BDMDX2
+ ..Q
+ .Q
+ Q BDMDX4
+CPTI(P,BDATE,EDATE,CPTI,SCEX,SCLN,SMOD) ;EP - did patient have this cpt (ien) in date range
+ I '$G(P) Q ""
+ I $G(CPTI)="" Q ""
+ I $G(BDATE)="" Q ""
+ I $G(EDATE)="" Q ""
+ S SCEX=$G(SCEX)
+ S SCLN=$G(SCLN)
+ S SMOD=$G(SMOD)
+ I '$D(^ICPT(CPTI)) Q ""  ;not a valid cpt ien
+ I '$D(^AUPNVCPT("AA",P)) Q ""  ;no cpts for this patient
+ NEW D,BD,ED,X,Y,D,G,V,I,M,M1,Z,J,K,Q
+ S ED=9999999-EDATE-1,BD=9999999-BDATE,G=""
+ F  S ED=$O(^AUPNVCPT("AA",P,CPTI,ED)) Q:ED=""!($P(ED,".")>BD)!(G)  D
+ .S I=0 F  S I=$O(^AUPNVCPT("AA",P,CPTI,ED,I)) Q:I'=+I!(G)  D
+ ..S V=$P($G(^AUPNVCPT(I,0)),U,3)
+ ..I SCEX]"",SCEX[$P(^AUPNVSIT(V,0),U,7) Q
+ ..I SCLN]"",$$CLINIC^APCLV(V,"C")=SCLN Q
+ ..S M=$$VAL^XBDIQ1(9000010.18,I,.08)
+ ..S M1=$$VAL^XBDIQ1(9000010.18,I,.09)
+ ..S Q=0
+ ..I SMOD]"" F J=1:1 S K=$P(SMOD,";",J) Q:K=""  I K=M S Q=1
+ ..Q:Q
+ ..I SMOD]"" F J=1:1 S K=$P(SMOD,";",J) Q:K=""  I K=M1 S Q=1
+ ..Q:Q
+ ..S G="1"_"^"_(9999999-ED)_"^"_$$VALI^XBDIQ1(9000010.18,I,.03)
+ Q G
+ ;
+TRANI(P,BDATE,EDATE,CPTI) ;EP
+ I '$G(P) Q ""
+ I $G(TRANI)="" Q ""
+ I $G(BDATE)="" Q ""
+ I $G(EDATE)="" Q ""
+ I '$D(^ICPT(CPTI)) Q ""
+ I '$D(^AUPNVTC("AC",P)) Q ""  ;no cpts for this patient
+ NEW X,V,C,G
+ S G=""
+ S X=0 F  S X=$O(^AUPNVTC("AC",P,X)) Q:X'=+X  D
+ .S C=$P($G(^AUPNVTC(X,0)),U,7)
+ .Q:C'=CPTI
+ .S V=$P(^AUPNVTC(X,0),U,3)
+ .S V=$P($P($G(^AUPNVSIT(V,0)),U),".")
+ .Q:V<BDATE
+ .Q:V>EDATE
+ .S G="1"_"^"_V_"^"_$$VALI^XBDIQ1(9000010.33,X,.03)
+ Q G

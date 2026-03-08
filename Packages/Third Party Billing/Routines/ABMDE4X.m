@@ -1,44 +1,37 @@
 ABMDE4X ; IHS/SD/SDR - Edit Page 4 - Providers DATA CK ; 11 Sep 2012  9:33 AM
- ;;2.6;IHS Third Party Billing;**1,3,8,9,10,11**;NOV 12, 2009;Build 133
+ ;;2.6;IHS Third Party Billing;**1,3,8,9,10,11,30**;NOV 12, 2009;Build 585
  ;
- ; IHS/DSD/LSL - 05/20/98 - NOIS HQW-0598-100109
- ;               Modified to check file 200, payer assigned provider
- ;               number, first on dental form
- ; IHS/ASDS/LSL - 10/21/01 - V2.4 Patch 9
- ;     Display Medicare part B pin number on page 4 if professional
- ;     component, medicare insurer type and mode of export contain
- ;     HCFA-1500.  If the above are true and no pin number, set errror
- ;     189.
+ ;IHS/DSD/LSL 05/20/98 NOIS HQW-0598-100109 Modified to check file 200, payer assigned provider
+ ;    number, first on dental form
+ ;IHS/ASDS/LSL 10/21/01 2.4*9 Display Medicare part B pin number on page 4 if professional
+ ;    component, medicare insurer type and mode of export contain HCFA-1500.  If the above are true and no pin number,
+ ;    set error 189.
  ;
- ; IHS/SD/SDR - v2.5 p5 - 5/17/2004 - IM12881 - Made change to display
- ;     provider number correctly
- ; IHS/SD/SDR - v2.5 p8 - IM14693/IM16105
- ;    Added code to check error 190 for export mode 25
- ; IHS/SD/SDR - v2.5 p9 - IM19302
- ;   Correction to error 170
- ; IHS/SD/SDR - v2.5 p9 - IM16942
- ;   For OK Medicaid - if VT 999 - print payer assigned provider#
- ;                     if not VT 999-PIN# from Insurer file
- ; IHS/SD/SDR - v2.5 p10 - IM20310
- ;   Update 170 error check to check Payer Assigned Provider Number
- ;   for Medicare
- ; IHS/SD/SDR - v2.5 p10 - IM20776
- ;   Made change to 190 error to check for Rendering provider
- ; IHS/SD/SDR - v2.5 p11 - NPI
- ; IHS/SD/SDR - abm*2.6*1 - NO HEAT - remove error 189 if NPI ONLY
- ; IHS/SD/SDR - abm*2.6*3 - HEAT12442 - made error 92 display for all 837s
+ ;IHS/SD/SDR 2.5*5 5/17/2004 IM12881 Made change to display provider number correctly
+ ;IHS/SD/SDR 2.5*8 IM14693/IM16105 Added code to check error 190 for export mode 25
+ ;IHS/SD/SDR 2.5*9 IM19302 Correction to error 170
+ ;IHS/SD/SDR 2.5*9 IM16942 For OK Medicaid if VT 999 print payer assigned provider#; If not VT 999-PIN# from Insurer file
+ ;IHS/SD/SDR 2.5*10 IM20310 Update 170 error check to check Payer Assigned Provider Number for Medicare
+ ;IHS/SD/SDR 2.5*10 IM20776 Made change to 190 error to check for Rendering provider
+ ;IHS/SD/SDR 2.5*11 NPI
+ ;
+ ;IHS/SD/SDR 2.6*1 NO HEAT remove error 189 if NPI ONLY
+ ;IHS/SD/SDR 2.6*3 HEAT12442 made error 92 display for all 837s
+ ;IHS/SD/SDR 2.6*30 CR8939 Added new error 256 if attending and rendering are both missing on the same claim
  ; 
  ; *********************************************************************
  ;
 PROV ; Provider Info
 ERR S ABME("TITL")="PAGE 4 - PROVIDER INFORMATION"
  K ABM("A"),ABM("O")
+ K ABM("R")  ;abm*2.6*30 IHS/SD/SDR CR8939
  I +$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),41,"B",0))=0 S ABME(244)=""  ;abm*2.6*11 HEAT81017
  S ABM=""
  F ABM("I")=1:1 S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),41,"C",ABM)) Q:ABM=""  D
  .S ABM("X")=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),41,"C",ABM,0))
  .S ABM("NUM")=ABM("I")
  .D SEL
+ I (('$D(ABM("A")))&('$D(ABM("R")))) S ABME(256)=""  ;no attending and no rendering  ;abm*2.6*30 IHS/SD/SDR CR8939
  I '$D(ABM("A")) D
  .;Q:ABMP("EXP")=22  ;abm*2.6*3 HEAT12442  ;abm*2.6*9 HEAT57734
  .Q:ABMP("EXP")=22!(ABMP("EXP")=32)  ;abm*2.6*3 HEAT12442  ;abm*2.6*9 HEAT57734

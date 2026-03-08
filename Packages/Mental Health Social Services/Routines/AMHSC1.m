@@ -1,5 +1,5 @@
-AMHSC1 ; IHS/CMI/LAB - SPECIAL X-REF ROUTINES - ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHSC1 ; IHS/OIT/MJL - SPECIAL X-REF ROUTINES - ;
+ ;;3.0;IHS BEHAVIORAL HEALTH;**6**;JAN 27, 2003
  ;
  ; BGUBEGIN contains the Patient IEN
  ; BGUEND contains the following separated by "`"

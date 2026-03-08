@@ -1,5 +1,5 @@
-APCLCARP ; IHS/CMI/LAB - california gpra print ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCARP ; IHS/CMI/LAB - california gpra print ;  [ 01/10/05  7:57 PM ]
+ ;;3.0;IHS PCC REPORTS;**12,14,16,18,21**;FEB 05, 1997
  ;
  ;
 PRINT ;
@@ -173,7 +173,7 @@ HEADER ;EP
 HEADER1 ;
  W:$D(IOF) @IOF S APCLPG=APCLPG+1
  W !?3,$P(^VA(200,DUZ,0),U,2),?35,$$FMTE^XLFDT(DT),?70,"Page ",APCLPG,!
- W !,$$CTR("***  CALIFORNIA ANNUAL UTILIZATION REPORT OF PRIMARY CARE CLINICS, 2008  ***",80),!
+ W !,$$CTR("***  CALIFORNIA ANNUAL UTILIZATION REPORT OF PRIMARY CARE CLINICS, 2007  ***",80),!
  ;W $$CTR($P(^DIC(4,DUZ(2),0),U)),!
  I '$D(APCLLOCT) S X="ALL LOCATIONS OF ENCOUNTER SELECTED" W $$CTR(X,80),!
  I $D(APCLLOCT) D
@@ -200,7 +200,7 @@ LOC() ;EP - Return location name from file 4 based on DUZ(2).
 63 ;;Certified Nurse Midwives
 64 ;;Visiting Nurses
 65 ;;Dentists
-66 ;;Registered Dental Hygenists (Alternative Practice)
+66 ;;
 67 ;;Psychiatrist
 68 ;;Clincial Psychologist
 69 ;;Licensed Clinical Social Worker (LCSW)
@@ -230,15 +230,15 @@ LOC() ;EP - Return location name from file 4 based on DUZ(2).
 8 ;;Respiratory System Diseases;;460-519
 9 ;;Digestive System Diseases;;530-579
 10 ;;Geniourinary System Diseases;;580-629
-11 ;;Pregnancy, Childbirth & the Puerperium;;630-679
+11 ;;Pregnancy, Childbirth & the Puerperium;;630-677
 12 ;;Skin and Subcutaneous Tissue Diseases;;680-709
 13 ;;Musculoskeletal and Connective Tissue Dis;;710-739
 14 ;;Congenital Anomalies;;740-759
 15 ;;Certain Conditions Originating/Perinatal;;760-779
 16 ;;Symptoms, Signs, and Ill-defined Cond;;780-799
 17 ;;Injury and Poisoning;;800-999
-18 ;;Factors Influencing Health Status;;V01-V89
-19 ;;Dental Diagnoses;;Clinic=56
+18 ;;Factors Influencing Health Status;;V01-V84
+19 ;;Dental Diagnoses
 20 ;;Family Planning S-codes
 21 ;;Other
  ;;

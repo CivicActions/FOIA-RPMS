@@ -1,0 +1,86 @@
+BEHOENIM ;IHS/MSC/MGH - PCC Data Management;04-Aug-2021 09:57;DU
+ ;;1.1;BEH COMPONENTS;**005014**;Mar 20, 2007;Build 5
+ ; Stores reminder immunization data
+ ; Add/Edit immunization data- Used to call the BI routines to store
+ ; immunizations done from reminders
+EN(DFN,VDAT,VCAT,VLOC,VOLOC,VIEN,INP) ;Call BI routine to set data
+ N V,CPT,ICD,VFIEN,VOL,OVRD,TYPE,LOT,RXN,PRV,VISD,CNSL,ADMIN
+ N EVNTDT,LOCIEN,OUTLOC,HIST,CAT,INJS,IMMNM,FNUM,VFNEW,ARG,OFF,VFC,VFCIEN,ELIG
+ S RET="",FNUM=$$FNUM,V="|"
+ S:'$G(VIEN) VIEN=$$FNDVIS^BEHOENCX(DFN,VDAT,VCAT,VLOC,1,,.VOLOC)
+ I VIEN'>0 G STXIT^BEHOENPC
+ S TYPE=+$P(INP,U,2)
+ S VFIEN=""
+ S VFNEW='VFIEN
+ S NEW=VFNEW
+ S PRV=$P(INP,U,6)
+ S LOCIEN=VLOC
+ S OUTLOC=VOLOC
+ I DAT="" S EVNTDT=VDAT
+ E  S EVNTDT=DAT
+ S LOT=$P(INP,U,11)
+ S VISD=$P(INP,U,14)   ;VIS date
+ S INJS=$P(INP,U,12)  ; Immun Site
+ S VOL=$P(INP,U,13)
+ S ELIG=$P(INP,U,15)
+ S ADMIN=$P(INP,U,16)
+ I 'VFIEN D  Q:RET
+ .S IMMNM=$$GET1^DIQ(9999999.14,TYPE,.01)
+ S ARG=$$BIARG("I",VIEN,VFIEN,TYPE,PRV)
+ S:LOT $P(ARG,V,5)=LOT
+ S $P(ARG,V,16)=$G(VFCIEN)
+ S $P(ARG,V,17)=VISD
+ S $P(ARG,V,20)=INJS
+ S $P(ARG,V,21)=VOL
+ S $P(ARG,V,27)=ADMIN
+ S $P(ARG,V,16)=ELIG
+ D BISET(.RET,ARG,FNUM,TYPE,VIEN,VFIEN,EVNTDT)
+ Q
+ ; Set data using BI add/edit call
+BISET(RET,ARG,FNUM,TYPE,VIEN,VFIEN,EVNTDT) ;EP
+ N VFNEW,FDA,ERR
+ S VFNEW='VFIEN
+ D ADDEDIT^BIRPC3(.ERR,ARG)
+ S RET=$$IMMERR(.ERR)
+ Q:RET
+ K ERR
+ D VFFND^BGOUTL2(.VFIEN,FNUM,TYPE,VIEN)
+ S FDA=$NA(FDA(FNUM,VFIEN_","))
+ I VFNEW D
+ .S @FDA@(1216)="N"
+ .S @FDA@(1217)="`"_DUZ
+ S @FDA@(1204)="`"_DUZ
+ S @FDA@(1201)=$S(EVNTDT:EVNTDT,1:"")
+ S @FDA@(1218)="N"
+ S @FDA@(1219)="`"_DUZ
+ S @FDA@(1214)="`"_DUZ
+ I $D(COM) S @FDA@(81101)=$P(COM,U,3,999)
+ I $$UPDATE^BGOUTL(.FDA,"E@")
+ D VFEVT^BGOUTL2(FNUM,VFIEN,'VFNEW)
+ S RET=VFIEN
+ Q
+ ; Format argument for BI add/edit call
+BIARG(REC,VIEN,VFIEN,ITM,PRV) ;EP
+ N X,V,X0,X21
+ S V="|",X=REC,X0=$G(^AUPNVSIT(VIEN,0)),X21=$G(^(21))
+ S $P(X,V,2)=$P(X0,U,5)
+ S $P(X,V,3)=ITM
+ S $P(X,V,6)=$P(X0,U)
+ S $P(X,V,7)=$P(X0,U,6)
+ S $P(X,V,8)=$P(X21,U)
+ S $P(X,V,9)=$P(X0,U,7)
+ S $P(X,V,10)=VIEN
+ S:VFIEN $P(X,V,11)=VFIEN
+ S:PRV $P(X,V,18)=PRV
+ S $P(X,V,23)=DUZ(2)
+ Q X
+ ; Format error message from immunization package
+IMMERR(MSG) ;EP
+ N X
+ S X=$P($G(MSG),$C(31),3)
+ Q $S($L(X):$$ERR^BGOUTL(1082,X),1:"")
+ ; Add record to output
+ADD(X) S CNT=CNT+1,@RET@(CNT)=$TR(X,"|",U)
+ Q
+ ; Return V File #
+FNUM() Q 9000010.11

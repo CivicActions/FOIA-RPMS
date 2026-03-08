@@ -1,5 +1,5 @@
-BILETVW2 ;IHS/CMI/MWR - VIEW/EDIT FORM LETTERS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**9**;OCT 01,2014
+BILETVW2 ;IHS/CMI/MWR - VIEW/EDIT FORM LETTERS;
+ ;;8.5;IMMUNIZATION;**9,27**;OCT 24,2011;Build 16
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT SECTIONS OF FORM LETTERS.
  ;;  PATCH 9: New feature to allow copying of existing Form Letter. ADDNEW+11
@@ -52,6 +52,11 @@ HISTORY ;EP
  ;
  D FULL^VALM1
  D TITLE^BIUTL5("INCLUDE IMM HISTORY IN LETTER")
+ ;V8.5 PATCH 27 - FID-
+ I $P(^BILET(BIIEN,0),U,7),"13"[$P(^(0),U,7) D  Q
+ .W !!,"Immunization History is not included for DUE letters."
+ .D RESET^BILETVW
+ .H 3
  N DIR,DIRUT
  W !!!,"   Include patient's Immunization History in this Form Letter?"
  W ! D HELP1
@@ -223,7 +228,8 @@ ADDNEW(BIIEN) ;EP
  I '$G(BIIEN) D ERRCD^BIUTL2(609,,1) Q
  ;
  D TITLE^BIUTL5("ADD A NEW FORM LETTER"),TEXT1
- N BIACT,BISIEN,DIR
+ ;V8.5 PATCH 27 - FID-
+ N BIACT,DIR
  ;
  ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
  ;---> New feature to allow copying of existing Form Letter.
@@ -252,6 +258,7 @@ ADDNEW(BIIEN) ;EP
  ..S ^BILET(BIIEN,I,N,0)=^BILETS(BISIEN,I,N,0)
  ;
  F I=2,3,4,6 S $P(^BILET(BIIEN,0),U,I)=$P(^BILETS(BISIEN,0),U,I)
+ S $P(^BILET(BIIEN,0),U,7)=BISIEN
  Q
  ;
  ;

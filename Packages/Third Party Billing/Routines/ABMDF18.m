@@ -1,22 +1,24 @@
 ABMDF18 ; IHS/ASDST/DMJ - ADA-99 Dental Export Routine ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**8,9,10,14**;APR 05, 2002
  ;Original;TMD;09/12/95 8:48 AM
  ;
  ; IHS/ASDS/LSL - 06/24/00 - V2.4 Patch 3 - NOIS DXX-0600-140080
  ;     Routine created (Required by Wisconsin Medicaid)
+ ;
  ; IHS/ASDS/LSL - 09/21/00 - V2.4 Patch 3 - NOIS HQW-0900-100053
  ;     Some payers require a prefix of S, D, or 0 to ADA code
  ;
  ; IHS/SD/SDR - v2.5 p8 - IM15551
  ;    line items not printing correctly
+ ;
  ; IHS/SD/EFG - V2.5 P8 - IM16385
  ;    Check for dental and misc services
+ ;
  ; IHS/SD/SDR - v2.5 p9 - IM19595
  ;    Corrected so charges*units, not charges+units
+ ;
  ; IHS/SD/SDR - v2.5 p10 - IM20395
  ;   Split out lines bundled by rev code
- ;
- ; IHS/SD/DSR - v.6 CSV
  ;
  K ABM
  S U="^"
@@ -43,7 +45,8 @@ XIT ;
 ENT ;EP for getting data and printing form
  K ABMF
  Q:'$D(^ABMDBILL(DUZ(2),ABMP("BDFN"),0))     ; Quit if no bill data
- Q:'$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,0))&('$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,0)))  ; Quit if no dental data
+ ;Q:'$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,0))  ; Quit if no dental data  ;IHS/SD/EFG V2.5 P8 IM16385
+ Q:'$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,0))&('$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,0)))  ; Quit if no dental data  ;IHS/SD/EFG V2.5 P8 IM16385
  D ENT^ABMDF18A,BODY
  Q
  ;
@@ -71,17 +74,23 @@ BODY ;
  .S:ABMDENP="" ABMDENP=$P($G(^ABMDPARM(ABMP("LDFN"),1,3)),U,11)
  .S:ABMDENP="" ABMDENP=$P($G(^ABMDPARM(DUZ(2),1,3)),U,11)
  .S:ABMDENP]"" $P(ABMF(ABM("F")),U,7)=ABMDENP_$P(ABMF(ABM("F")),U,7)
- .S ABM("CHRG")=+$P(ABM(0),U,8)*($S($P(ABM(0),U,9)'=0:$P(ABM(0),U,9),1:1))
- .S $P(ABMF(ABM("F")),U,10)=$S(+$G(ABMP("FLAT")):"",1:ABM("CHRG")*$S($P(ABM(0),U,9):$P(ABM(0),U,9),1:1))
- .S ABM("TCHRG")=ABM("TCHRG")+(ABM("CHRG")*($S($P(ABM(0),U,9):$P(ABM(0),U,9),1:1)))  ;Total fee (33)
+ .;S ABM("CHRG")=+$P(ABM(0),U,8)  ;IHS/SD/EFG V2.5 P8 IM16385
+ .;S ABM("CHRG")=+$P(ABM(0),U,8)+($P(ABM(0),U,9))  ;IHS/SD/EFG V2.5 P8 IM16385  ;abm*2.5*9 IM19595
+ .S ABM("CHRG")=+$P(ABM(0),U,8)*($S($P(ABM(0),U,9)'=0:$P(ABM(0),U,9),1:1))  ;IHS/SD/EFG V2.5 P8 IM16385  ;abm*2.5*9 IM19595
+ .;S $P(ABMF(ABM("F")),U,10)=$S(+$G(ABMP("FLAT")):"",1:ABM("CHRG"))  ;IM15551
+ .S $P(ABMF(ABM("F")),U,10)=$S(+$G(ABMP("FLAT")):"",1:ABM("CHRG")*$S($P(ABM(0),U,9):$P(ABM(0),U,9),1:1))  ;IM15551
+ .;S ABM("TCHRG")=ABM("TCHRG")+ABM("CHRG")                 ; Proc fee  ;IM15551
+ .S ABM("TCHRG")=ABM("TCHRG")+(ABM("CHRG")*($S($P(ABM(0),U,9):$P(ABM(0),U,9),1:1)))  ;Toal fee (33)  ;IM15551
  .;
  .S ABM("I")=ABM("I")+1         ; Increment line counter
- .I ABM("I")=8 D
+ .;I ABM("I")=10 D  ;IHS/SD/AML abm*2.5*14 IM26566
+ .I ABM("I")=8 D  ;IHS/SD/AML abm*2.5*14 IM26566
  ..Q:'$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),33,ABM))
  ..S ABM("MORE")=1
  ..D ^ABMDF18X                 ; Print form
  ..S ABM("I")=0
  ;
+ ;start new code IHS/SD/EFG V2.5 P8 IM16385
  ;put misc services on dental form
  N ABMRV
  D 43^ABMERGR2  ;Obtain misc services data in ABMRV array
@@ -89,11 +98,33 @@ BODY ;
  F  S ABMRCD=$O(ABMRV(ABMRCD)) Q:ABMRCD=""  D
  .S ABMED=""
  .F  S ABMED=$O(ABMRV(ABMRCD,ABMED)) Q:ABMED=""  D  Q:$D(DUOUT)
+ ..;start old code abm*2.5*10 IM20395
+ ..;D RESET:ABM("I")=0
+ ..;S ABM("F")=ABM("F")+1
+ ..;S ABMMS=$P(^ICPT($O(ICPT("B",ABMED,"")),0),U,2)  ;CPT name
+ ..;S ABMMSDT=$P(ABMRV(ABMRCD,ABMED),U,10)  ;date
+ ..;S ABMMSQTY=$P(ABMRV(ABMRCD,ABMED),U,5)  ;quantity
+ ..;S ABMMSCHG=$P(ABMRV(ABMRCD,ABMED),U,6)  ;charge
+ ..;S $P(ABMF(ABM("F")),U,9)=ABMMS
+ ..;I ABMMSDT]"" D
+ ..;.S $P(ABMF(ABM("F")),U)=$E(ABMMSDT,4,5)
+ ..;.S $P(ABMF(ABM("F")),U,2)=$E(ABMMSDT,6,7)
+ ..;.S $P(ABMF(ABM("F")),U,3)=$E(ABMMSDT,1,3)+1700
+ ..;S $P(ABMF(ABM("F")),U,7)=$P(ABMRV(ABMRCD,ABMED),U,2)
+ ..;S $P(ABMF(ABM("F")),U,10)=ABMMSCHG
+ ..;S ABM("TCHRG")=ABM("TCHRG")+ABMMSCHG
+ ..;S ABM("I")=ABM("I")+1
+ ..;I ABM("I")=10 D
+ ..;.Q:($O(ABMRV(ABMRC,ABMED))=""&($O(ABMRV(ABMRCD))=""))
+ ..;.S ABM("MORE")=1
+ ..;.D ^ABMDF18X  ;print form
+ ..;end new code IHS/SD/EFG V2.5 P8 IM16385
+ ..;end old code start new code IM20395
  ..S ABMCNTR=0
  ..F  S ABMCNTR=$O(ABMRV(ABMRCD,ABMED,ABMCNTR)) Q:ABMCNTR=""  D
  ...D RESET:ABM("I")=0
  ...S ABM("F")=ABM("F")+1
- ...S ABMMS=$P($$CPT^ABMCVAPI($O(^ICPT("B",ABMED,"")),ABMP("VDT")),U,3)  ;CPT name  ;CSV-c
+ ...S ABMMS=$P(^ICPT($O(^ICPT("B",ABMED,"")),0),U,2)  ;CPT name
  ...S ABMMSDT=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,10)  ;date
  ...S ABMMSQTY=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,5)  ;quantity
  ...S ABMMSCHG=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,6)  ;charge
@@ -110,6 +141,7 @@ BODY ;
  ....Q:($O(ABMRV(ABMRC,ABMED))=""&($O(ABMRV(ABMRCD))=""))
  ....S ABM("MORE")=1
  ....D ^ABMDF18X  ;print form
+ ;end new code IM20395
  ;
  ; Put RX data on dental form
  N ABMRV
@@ -118,6 +150,30 @@ BODY ;
  F  S ABMRCD=$O(ABMRV(ABMRCD)) Q:ABMRCD=""  D
  .S ABMED=0
  .F  S ABMED=$O(ABMRV(ABMRCD,ABMED)) Q:'+ABMED  D  Q:$D(DUOUT)
+ ..;start old code abm*2.5*10 IM20395
+ ..;D RESET:ABM("I")=0
+ ..;S ABM("F")=ABM("F")+1
+ ..;S ABMRX=$P(ABMRV(ABMRCD,ABMED),U,9)     ; NDC# name
+ ..;S ABMRXDT=$P(ABMRV(ABMRCD,ABMED),U,10)  ; date/time
+ ..;S ABMRXQTY=$P(ABMRV(ABMRCD,ABMED),U,5)  ; Quantity
+ ..;S ABMRXCHG=$P(ABMRV(ABMRCD,ABMED),U,6)  ; Charge
+ ..;S $P(ABMF(ABM("F")),U,4)=$E(ABMRX,1,3)
+ ..;S $P(ABMF(ABM("F")),U,5)=$E(ABMRX,4,8)
+ ..;S $P(ABMF(ABM("F")),U,9)=$E(ABMRX,9,99)
+ ..;I ABMRXDT]"" D
+ ..;.S $P(ABMF(ABM("F")),U)=$E(ABMRXDT,4,5)
+ ..;.S $P(ABMF(ABM("F")),U,2)=$E(ABMRXDT,6,7)
+ ..;.S $P(ABMF(ABM("F")),U,3)=$E(ABMRXDT,1,3)+1700
+ ..;S $P(ABMF(ABM("F")),U,8)=ABMRXQTY
+ ..;S $P(ABMF(ABM("F")),U,10)=ABMRXCHG
+ ..;S ABM("TCHRG")=ABM("TCHRG")+ABMRXCHG
+ ..;S ABM("I")=ABM("I")+1
+ ..;I ABM("I")=10 D
+ ..;.Q:($O(ABMRV(ABMRCD,ABMED))=""&($O(ABMRV(ABMRCD))=""))
+ ..;.S ABM("MORE")=1
+ ..;.D ^ABMDF18X                         ; Print form
+ ..;.S ABM("I")=0
+ ..;end old code start new code IM20395
  ..S ABMCNTR=0
  ..F  S ABMCNTR=$O(ABMRV(ABMRCD,ABMED,ABMCNTR)) Q:ABMCNTR=""  D
  ...D RESET:ABM("I")=0
@@ -142,6 +198,7 @@ BODY ;
  ....S ABM("MORE")=1
  ....D ^ABMDF18X                         ; Print form
  ....S ABM("I")=0
+ ;end new code IM20395
  D TAIL:ABM("I")
  Q
  ;

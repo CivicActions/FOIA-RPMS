@@ -1,5 +1,5 @@
-XMJBM ;ISC-SF/GMB-Manage Mail in Mailbox ;05/23/2002  11:35
- ;;8.0;MailMan;;Jun 28, 2002
+XMJBM ;ISC-SF/GMB-Manage Mail in Mailbox ;06/29/99  15:14
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces ^XMA0,^XMA01 (ISC-WASH/CAP/THM)
  ; Entry points used by MailMan options (not covered by DBIA):
  ; MANAGE   XMREAD
@@ -15,49 +15,40 @@ MANAGE ; Manage existing mail in your Mailbox
  . I '$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",0)) D NOMSGS^XMJBM1(XMDUZ,XMK,XMKN)
  Q
 CLASSIC(XMDUZ,XMK,XMKN,XMABORT) ; Read Message
- N XMFIRST,XMLAST,XMZ,XMNEXT,XMKZ,XMORDER,XMPARM
+ N XMFIRST,XMLAST,XMZ,XMNEXT,XMKZ,XMORDER
  I XMDUZ=.5,XMK>999 S XMORDER=XMV("ORDER"),XMV("ORDER")=1
  S XMKZ=""
  F  D  Q:XMABORT
  . F  S XMKZ=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",XMKZ),XMV("ORDER")) Q:'XMKZ  Q:XMDUZ=DUZ  Q:'$$SURRCONF^XMXSEC(XMDUZ,$O(^(XMKZ,"")))
  . I XMKZ="" D  Q:XMABORT
  . . F  S XMKZ=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",XMKZ),XMV("ORDER")) Q:'XMKZ  Q:XMDUZ=DUZ  Q:'$$SURRCONF^XMXSEC(XMDUZ,$O(^(XMKZ,"")))
- . . I XMKZ D AGAIN^XMJMLR(.XMABORT) Q
- . . S XMABORT=1
- . . Q:'$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",0))
- . . N XMTEXT
- . . W !
- . . D BLD^DIALOG(34030.9,"","","XMTEXT","F")
- . . ;All of the messages in this basket are confidential.
- . . ;Surrogates may not read confidential messages.
- . . ;Use one of the full screen readers to see a list of the messages.
- . . D MSG^DIALOG("WM","","","","XMTEXT")
+ . . I XMKZ="" S XMABORT=1 Q
+ . . D AGAIN^XMJMLR(.XMABORT)
  . S XMFIRST=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",""))
  . S XMLAST=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",""),-1)
  . ; have the user pick from first to last, or any xmz
- . N XMY,XMOPT,XMOX,XMPREVU
- . D SETCMD(XMDUZ,XMK,.XMOPT,.XMOX)
+ . N XMY,XMOPTION,XMPREVU
+ . D SETCMD(XMDUZ,XMK,.XMOPTION)
  . S:XMV("PREVU") XMPREVU=$$PREVU(XMDUZ,XMK,XMKN,XMKZ)
  . S XMNEXT=0
  . F  D  Q:XMNEXT!XMABORT
  . . W ! W:XMV("PREVU") !,XMPREVU
- . . S XMPARM(1)=XMKN,XMPARM(2)=XMKZ
- . . W !,$$EZBLD^DIALOG(34030,.XMPARM) ; XMKN," Basket Message: ",XMKZ,"// "
+ . . W !,XMKN," Basket Message: ",XMKZ,"// "
  . . R XMY:DTIME I '$T S XMABORT=1 Q
  . . I XMY[U S XMABORT=1 Q
  . . I XMY="" S XMY=XMKZ D NUMBER Q
  . . I XMY?.N D NUMBER Q
  . . I $E(XMY)="?" D QUESTION Q
- . . S XMY=$$COMMAND^XMJDIR(.XMOPT,.XMOX,XMY)
+ . . S XMY=$$COMMAND^XMJDIR(.XMOPTION,XMY)
  . . I XMY=-1 D HELPSCR Q
- . . I $D(XMOPT(XMY,"?")) D SHOWERR^XMJDIR(.XMOPT,.XMY) Q
+ . . I $D(XMOPTION(XMY,"?")) D SHOWERR^XMJDIR(.XMOPTION,.XMY) Q
  . . D @XMY
  . . S:'$D(^XMB(3.7,XMDUZ,2,XMK,1,"C",+XMKZ)) XMNEXT=1
  I $D(XMORDER) S XMV("ORDER")=XMORDER
  Q
 PREVU(XMDUZ,XMK,XMKN,XMKZ) ;
  Q:XMKZ="" ""
- N XMZ,XMZREC,XMSUBJ,XMFROM,XMLEN,XMSL,XMFL,XMPARM
+ N XMZ,XMZREC,XMSUBJ,XMFROM,XMLEN,XMSL,XMFL
  S XMZ=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",XMKZ,""))
  I '$D(^XMB(3.7,XMDUZ,2,XMK,1,XMZ,0)) D ADDITC^XMUT4A(XMDUZ,XMK,XMZ,XMKZ)
  S XMZREC=$G(^XMB(3.9,XMZ,0))
@@ -72,19 +63,19 @@ PREVU(XMDUZ,XMK,XMKN,XMKZ) ;
  . S XMSL=XMSL-(XMSL+XMFL-XMLEN\2)
  . S XMSUBJ=$E(XMSUBJ,1,XMSL)
  . S XMFROM=$E(XMFROM,1,XMLEN-XMSL)
- S XMPARM(1)=XMSUBJ,XMPARM(2)=XMFROM
- Q $$EZBLD^DIALOG(34031,.XMPARM) ; "Subj: "_XMSUBJ_"   From: "_XMFROM
-SETCMD(XMDUZ,XMK,XMOPT,XMOX) ;
- D OPTGRP^XMXSEC1(XMDUZ,XMK,.XMOPT,.XMOX,1)
+ Q "Subj: "_XMSUBJ_"   From: "_XMFROM
+SETCMD(XMDUZ,XMK,XMOPTION) ;
+ D OPTGRP^XMXSEC1(XMDUZ,XMK,.XMOPTION)
  I XMDUZ=.5,XMK>999 Q
- D SET^XMXSEC1("I",37241,.XMOPT,.XMOX) ; Ignore this message
+ S XMOPTION("I")="Ignore this message"
  Q
 NUMBER ;
- I $L(XMY)>25 W $C(7),"?" Q
+ ; See ENTM^XMA03 to see how MM7.1 handles this
+ I $L(XMY)>25 W *7,"?" Q
  I XMY<XMFIRST D  Q
- . S XMKZ=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",""))
+ . S (XMKZ,DIR("B"))=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",""))
  . S:XMV("PREVU") XMPREVU=$$PREVU(XMDUZ,XMK,XMKN,XMKZ)
- . W $C(7),"?"
+ . W *7,"?"
  I $D(^XMB(3.7,XMDUZ,2,XMK,1,"C",XMY)) D  Q
  . S XMKZ=XMY
  . S XMZ=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",XMKZ,""))
@@ -92,15 +83,15 @@ NUMBER ;
  . D READMSG(XMDUZ,XMK,XMKN,XMZ)
  . S XMNEXT=1
  I XMFIRST'>XMY,XMY'>XMLAST D  Q
- . S XMKZ=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",XMY),XMV("ORDER"))
+ . S (XMKZ,DIR("B"))=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",XMY),XMV("ORDER"))
  . S:XMV("PREVU") XMPREVU=$$PREVU(XMDUZ,XMK,XMKN,XMKZ)
- . W $C(7),"?"
+ . W *7,"?"
  I $D(^XMB(3.9,XMY,0)) D NUMBERZ Q
  I XMY>XMLAST D  Q
- . S XMKZ=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",""),-1)
+ . S (XMKZ,DIR("B"))=$O(^XMB(3.7,XMDUZ,2,XMK,1,"C",""),-1)
  . S:XMV("PREVU") XMPREVU=$$PREVU(XMDUZ,XMK,XMKN,XMKZ)
- . W $C(7),"?"
- W $C(7),"?"
+ . W *7,"?"
+ W *7,"?"
  Q
 NUMBERZ ;
  I $D(^XMB(3.7,"M",XMY,XMDUZ)) D  Q
@@ -113,13 +104,13 @@ NUMBERZ ;
  . I 'XMKZ D ADDITM^XMUT4A(XMDUZ,XMK,XMZ,.XMKZ)
  . D READMSG(XMDUZ,XMK,XMKN,XMZ)
  . S XMNEXT=1
+ . ; *** MM7.1 checks to see if XMK=.5 (WASTE).  If so, it moves it to the IN basket.  I disagree.
  I $D(^XMB(3.9,XMY,0)) D  Q
- . N XMOK,XMZREC
- . S XMZ=XMY,XMZREC=^XMB(3.9,XMZ,0)
+ . S XMZ=XMY
  . I $D(XMERR) K XMERR,^TMP("XMERR",$J)
- . I '$$ACCESS^XMXSEC(XMDUZ,XMZ,XMZREC) D  Q:'XMOK
+ . I '$$ACCESS^XMXSEC(XMDUZ,XMZ,^XMB(3.9,XMZ,0)) D  Q
  . . W "?"
- . . D FWD^XMJMLR1(XMDUZ,XMZ,XMZREC,0,.XMOK)
+ . . D SHOW^XMJERR
  . D PUTMSG^XMXMSGS2(XMDUZ,XMK,XMKN,XMZ) ; User is a recipient, so save to user's basket
  . D READMSG(XMDUZ,XMK,XMKN,XMZ)
  . S XMNEXT=1
@@ -146,26 +137,26 @@ QUESTION ;
  . D FIND1^XMJMFB(XMDUZ,.XMF)
  Q
 HELPSCR ;
- N XMTEXT,XMLINES,XMPARM
- W !
- S XMPARM(1)=XMKZ,XMPARM(2)=XMFIRST,XMPARM(3)=XMLAST
- D BLD^DIALOG(34032,.XMPARM,"","XMTEXT","F")
- ; Press ENTER to read message _XMKZ_.  Enter message number (_XMFIRST_-_XMLAST_) to read
- ; a message in this basket.  Enter internal message number to read any
- ; message still on the system, which you ever sent or received.  Enter:
- ; ? or ??        Display a summary or detailed list of messages in this basket
- ; ???? or ?HELP  Display detailed help
- ; ?string        Search for messages in this basket whose subject
- ;                contains the specified string
- ; ??string       Search for messages you once sent or received
- ;                whose subject begins with the specified string
- S XMLINES=IOSL-DIHELP-3
- D MSG^DIALOG("WH","",$G(IOM),"","XMTEXT")
- D HELPCMD^XMJDIR(.XMOPT,.XMOX,XMLINES)
+ N DIR
+ I XMDUZ=.5,XMK>999
+ E  D
+ . W !!,"Press RETURN to read message "_XMKZ_".  Enter message number ("_XMFIRST_"-"_XMLAST_") to read"
+ . W !,"a message in this basket.  Enter internal message number to read any"
+ . W !,"message still on the system, which you ever sent or received.  Enter:"
+ W !,"  ? or ??         Display a summary or detailed list of messages in this basket"
+ W !,"  ???? or ?HELP   Display detailed help"
+ W !,"  ?string         Search for messages in this basket whose subject"
+ W !,"                  contains the specified string"
+ W !,"  ??string        Search for messages you once sent or received"
+ W !,"                  whose subject begins with the specified string"
+ S XMCMD=""
+ F  S XMCMD=$O(XMOPTION(XMCMD)) Q:XMCMD=""  D
+ . Q:$D(XMOPTION(XMCMD,"?"))
+ . W !,"  "_XMCMD_"              "_$S($L(XMCMD)=1:" ",1:"")_XMOPTION(XMCMD)
  Q
 READMSG(XMDUZ,XMK,XMKN,XMZ) ;
  I '$D(^XMB(3.9,XMZ,0)) D ZAPIT(XMDUZ,XMK,XMZ) Q
- I XMDUZ'=DUZ,'$$SURRACC^XMXSEC(XMDUZ,"",XMZ,$G(^XMB(3.9,XMZ,0))) D  Q  ; "read"
+ I XMDUZ'=DUZ,'$$SURRACC^XMXSEC(XMDUZ,"read",XMZ,$G(^XMB(3.9,XMZ,0))) D  Q
  . D SHOW^XMJERR
  . I $G(XMRDR)'="C" D WAIT^XMXUTIL
  N XMSECURE,XMPAKMAN,XMSECBAD ; Important 'new' - part of scramble and packman handling
@@ -173,7 +164,7 @@ READMSG(XMDUZ,XMK,XMKN,XMZ) ;
  D READMSG^XMJMOI(0,XMDUZ,XMK,XMKN,XMZ)
  Q
 ZAPIT(XMDUZ,XMK,XMZ) ;
- W !,$C(7),$$EZBLD^DIALOG(34034) ; This references a message which doesn't exist - deleting it.
+ W !,*7,"This references a message which doesn't exist - deleting it."
  D ZAPIT^XMXMSGS2(XMDUZ,XMK,XMZ)
  Q
 C ; Change the name of the basket
@@ -189,7 +180,7 @@ FI ; Filter
  D FILTER^XMJMOR(XMDUZ,XMK)
  Q
 H ; Headerless Print
- D PRINT^XMJMOR(XMDUZ,XMK,0)
+ D PRINT^XMJMOR(XMDUZ,XMK,XMKN,0)
  Q
 I ; Ignore this message
  S XMNEXT=1
@@ -210,18 +201,15 @@ LP ; List Priority Messages
 N ; List New Messages (can't read)
  D LISTNEW^XMJML(XMDUZ,XMK,XMKN)
  Q
-NT ; New Toggle messages
- D NEWTOGL^XMJMOR(XMDUZ,XMK)
- Q
 P ; Print
- D PRINT^XMJMOR(XMDUZ,XMK)
+ D PRINT^XMJMOR(XMDUZ,XMK,XMKN)
  Q
 Q ; Query by subject, sender, and/or date
  D FINDBSKT^XMJMF(XMDUZ,XMK,XMKN)
  Q
 R ; Resequence
  N XMMSG
- W !,$$EZBLD^DIALOG(34035) ; Resequencing ...
+ W !,"Resequencing ..."
  D RSEQBSKT^XMXBSKT(XMDUZ,XMK,.XMMSG)
  W !,XMMSG
  S XMKZ=""
@@ -231,9 +219,6 @@ S ; Save
  Q
 T ; Terminate
  D TERM^XMJMOR(XMDUZ,XMK)
- Q
-V ; Vaporize
- D VAPOR^XMJMOR(XMDUZ,XMK)
  Q
 X ; Xmit Priority toggle (for Postmaster only)
  D XMTPRI^XMJMOR(XMDUZ,XMK)

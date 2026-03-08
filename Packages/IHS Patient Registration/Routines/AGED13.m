@@ -1,5 +1,7 @@
 AGED13 ; IHS/ASDS/EFG - EDIT PAGE 6 - VETERAN'S INFO ;   
- ;;7.1;PATIENT REGISTRATION;;AUG 25,2005
+ ;;7.1;PATIENT REGISTRATION;**15**;AUG 25,2005;Build 1
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC
+ ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
  ;
 VAR ;
  S AG("PG")=6
@@ -18,18 +20,23 @@ VAR ;
  . W !,AG,".",?(40-$L($P($G(^DD(DIC,DR,0)),U))),$P($G(^DD(DIC,DR,0)),U)," : "
  . S AGVETFLD=$$GET1^DIQ(DIC,DFN,DR)
  . I $G(^AUPNPAT(DFN,35))'="" W AGVETFLD,?50,"Obtained on " S Y=$P($G(^AUPNPAT(DFN,35)),U) X ^DD("DD") W Y
- W !,$G(AGLINE("-"))
+ ;W !,$G(AGLINE("-")) ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ W !,AGLINE("EQ")
  D VERIF^AGUTILS  ;ADDED
- W !!,AGLINE("EQ")
+ ;W !!,AGLINE("EQ")  ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ W !,AGLINE("EQ")
  Q:$D(AGSEENLY)
  K DIR
  S DIR("A")="CHANGE which item? (1-"_AG("N")_") NONE// "
- S DIR("?")="Enter your choice now."
- S DIR("?",1)="You may enter the item number of the field you wish to edit,"
- S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
- S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
- S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
- D READ^AGED1
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC - START OLD CODE
+ ;S DIR("?")="Enter your choice now."
+ ;S DIR("?",1)="You may enter the item number of the field you wish to edit,"
+ ;S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
+ ;S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
+ ;S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
+ ;D READ^AGED1
+ ;IHS/OIT/NKD AG*7.1*15 - END OLD CODE
+ D EDREAD^AGUTL2  ;IHS/OIT/NKD AG*7.1*15
  G END:$D(DTOUT)!$D(DFOUT)!$D(DLOUT)!$D(DUOUT)!$D(DIROUT)
  G:$D(AG("ED"))&'$D(AGXTERN) @("^AGED"_AG("ED")) I $D(DQOUT)!(+Y<1)!(+Y>AG("N")) W !!,"You must enter a number from 1 to ",AG("N") H 2 G VAR
  S AGY=Y
@@ -39,10 +46,12 @@ VAR ;
 NONE ;
 READ D DRAW
  Q:$D(AGSEENLY)
- W !!,AGLINE("EQ")
+ ;W !!,AGLINE("EQ")  ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ W !,AGLINE("EQ")
  K DIR
  S DIR("A")="CHANGE which item? (1-"_AG("N")_") NONE// "
- D READ^AGED1
+ ;D READ^AGED1  ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC
+ D EDREAD^AGUTL2  ;IHS/OIT/NKD AG*7.1*15
  G END:$D(DTOUT)!$D(DFOUT)!$D(DLOUT)!$D(DUOUT)!$D(DIROUT)
  G:$D(AG("ED"))&'$D(AGXTERN) @("^AGED"_AG("ED")) I $D(DQOUT)!(+Y<1)!(+Y>AG("N")) W !!,"You must enter a number from 1 to ",AG("N") H 2 G READ
  I +Y>1,'$D(^DPT(DFN,"VET")) W *7,"  Must be VETERAN.  Edit #1 first." H 2 G READ
@@ -86,7 +95,8 @@ DRAW ;EP
  .. W ?48,"TOLD HOW TO OBTAIN VA CARD? "
  .. I $P($G(^AUPNPAT(DFN,32)),U,3)["N" W "NO"
  .. I $P($G(^AUPNPAT(DFN,32)),U,3)["Y" W "YES"
- W !,$G(AGLINE("-"))
+ ;W !,$G(AGLINE("-")) ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ W !,AGLINE("EQ")
  D VERIF^AGUTILS
  Q
 VET ;VETERAN FIELD

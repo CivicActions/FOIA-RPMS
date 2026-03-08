@@ -1,5 +1,5 @@
 ABSPOSH6  ;IHS/SD/lwj - NCPDP 5.1 Post 5.1 response [ 09/04/2002  12:57 PM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,9,39,42,43**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,9,39,42,43,54**;JUN 01, 2001;Build 131
  ;-------------------------------------------------------------
  ; Originally, the entire response was processed in the 
  ; ABSPOSH5 routine - but it exceed SAC limitations on 
@@ -190,20 +190,69 @@ REPADM ; This subroutine will process the repeating additional message info
  ; that is a part of the status segment.
  ; Field 526 - Additional Message Information
  ;
- N CNTR,COUNT,RLCNT,MSG
+ ;BEGIN NEW CODE - IHS/GDIT/AEF - ABSP*1.0*54 - FID85126
+ ;This subroutine is rewritten to prevent <SUBSCRIPT> error when the 
+ ;MSG variable is too long.  The MSG variable is stripped of blanks,
+ ;then broken down into 240 character pieces and added to the 
+ ;Additional Message multiple field.
  ;
- S RLCNT=0
- S COUNT=$O(FDATA("M",MEDN,526,""),-1)    ;Additional message count
+ ;These variables are required by this subroutine and are set 
+ ;elsewhere:
+ ;  FDATA ARRAY  = Array of additional message lines
+ ;  RESPIEN      = IEN of entry in ABSP Responses file
+ ;  INDEX        = IEN of RESPONSES multiple (.01 Medication Order)
+ ;  MEDN         = IEN of entry in FDATA erray
+ ;
+ N COUNT,MSG
+ ;
+ ;Get additional message count:
+ S COUNT=$O(FDATA("M",MEDN,526,""),-1)
  Q:COUNT'>0
  ;
+ ;Loop to process additional messages
  F CNTR=1:1:COUNT  D
- . S MSG=$G(FDATA("M",MEDN,526,CNTR))   ;Additional message
+ . S MSG=$G(FDATA("M",MEDN,526,CNTR))
  . I $L(MSG) D
- .. S $P(^ABSPR(RESPIEN,1000,INDEX,526,CNTR,0),U)=MSG
- .. S ^ABSPR(RESPIEN,1000,INDEX,526,"B",MSG,CNTR)=""
- .. S RLCNT=RLCNT+1
- ;
- I RLCNT>0 D
- . S ^ABSPR(RESPIEN,1000,INDEX,526,0)="^9002313.301526A^"_RLCNT_"^"_RLCNT
+ . . S MSG=$$FMTMSG(MSG)
+ . . D SETMSG(MSG)
  ;
  Q
+FMTMSG(X) ;
+ ;Format the message by removing extra blanks
+ ;Set up check to see if there are strings of spaces in MSG. Pattern 
+ ;Match can't accept variables, so needs to be Xecuted; this way we 
+ ;have a single variable to change for allowable blank string length.
+ ;
+ N GOFIND,I,K,MAXSPACE,TOOMANY
+ ;
+ S MAXSPACE=20 ; /IHS/OIT/RAM ; MAXIMUM NUMBER OF BLANK SPACES TO SCAN FOR
+ S GOFIND="S TOOMANY=MSG?.E"_MAXSPACE_""" "".E"
+ ;
+ X GOFIND ; /IHS/OIT/RAM ; EXECUTES PATTERN MATCH 
+ I TOOMANY D
+ . F I=$L(X):-1:1 D
+ . . S:$A($E(X,I))'=32 K=0
+ . . S:$A($E(X,I))=32 K=$G(K)+1
+ . . I K>MAXSPACE S X=$E(X,1,I-1)_$E(X,I+1,$L(X))
+ Q X
+SETMSG(MSG) ;
+ ;Break long message into 240 character lines (FM max allowed is 250)
+ ;Truncate MSG to 30 chars in "B" xref to prevent <SUBSCRIPT> error
+ ;
+ N F,L,RLCNT,X
+ ;
+ ;Set message data into global:
+ S F=1,L=240
+ F  D  Q:X']""  Q:F>$L(MSG)
+ . S X=$E(MSG,F,L)
+ . Q:X']""
+ . L +ABSPR(RESPIEN,1000,INDEX,526,0):1   ;ABSP*1.0*54
+ . S RLCNT=+$P($G(^ABSPR(RESPIEN,1000,INDEX,526,0)),U,3)
+ . S RLCNT=RLCNT+1
+ . S $P(^ABSPR(RESPIEN,1000,INDEX,526,RLCNT,0),U)=X
+ . S ^ABSPR(RESPIEN,1000,INDEX,526,"B",$E(X,1,30),RLCNT)=""
+ . S ^ABSPR(RESPIEN,1000,INDEX,526,0)="^9002313.301526A^"_RLCNT_"^"_RLCNT
+ . L -^ABSPR(RESPIEN,1000,INDEX,526,0)
+ . S F=F+240,L=L+240
+ Q
+ ;END NEW CODE - IHS/GDIT/AEF - ABSP*1.0*54 - FID85126

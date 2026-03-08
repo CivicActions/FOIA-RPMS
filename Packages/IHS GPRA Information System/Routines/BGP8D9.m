@@ -1,5 +1,5 @@
 BGP8D9 ; IHS/CMI/LAB - measure J ;
- ;;18.1;IHS CLINICAL REPORTING;;MAY 25, 2018;Build 66
+ ;;18.0;IHS CLINICAL REPORTING;**1**;NOV 21, 2017;Build 62
  ;
  ;
 I0303 ;EP
@@ -65,7 +65,7 @@ MTM(P,BDATE,EDATE) ;
  NEW %
  S %=""
  S %=$$CPT^BGP8DU(P,BDATE,EDATE,$O(^ATXAX("B","BGP CPT MTM",0)),5)
- I %]"" Q 1_U_$$DATE^BGP8UTL($P(%,U,1))_" CPT "_$P(%,U,2)
+ I %]"" Q 1_U_$$DATE^BGP1UTL($P(%,U,1))_" CPT "_$P(%,U,2)
  ;now check clinic visits
  NEW G,B,C,D,V,E
  S G=""

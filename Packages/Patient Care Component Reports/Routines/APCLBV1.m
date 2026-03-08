@@ -1,5 +1,5 @@
 APCLBV1 ; IHS/CMI/LAB - PRNT BILL VSTS ;
- ;;2.0;IHS PCC SUITE;**11**;MAY 14, 2009;Build 58
+ ;;2.0;IHS PCC SUITE;**11,28**;MAY 14, 2009;Build 72
  ;
  ;cmi/anch/maw 9/10/2007 code set versioning in WPOV
  ;
@@ -74,8 +74,7 @@ WPOV ;
  I $Y>(IOSL-6),APCL2>1 D HEAD Q:$D(APCLQUIT)
  Q:$P(APCLX,U)=""
  Q:$P(APCLX,U,4)=""
- ;W:APCL2>1 ! W ?41,$P(^ICD9($P(APCLX,U),0),U),?49,$E($P(^AUTNPOV($P(APCLX,U,4),0),U),1,20)  ;cmi/anch/maw 9/10/2007 orig line
- W:APCL2>1 ! W ?41,$P($$ICDDX^ICDEX($P(APCLX,U)),U,2),?51,$E($$VAL^XBDIQ1(9000010.07,APCL1,.04),1,20)  ;cmi/anch/maw 9/10/2007 code set versioning
+ W:APCL2>1 ! W ?41,$P($$ICDDX^ICDEX($P(APCLX,U)),U,2),?51,$E($$VAL^XBDIQ1(9000010.07,APCL1,.04),1,20)
  Q
 CHKDISC ;
  I $P(^DD(9000010.06,.01,0),U,2)[6 G CHKDISC6
@@ -91,8 +90,7 @@ CHKDISC6 ;
 HD ;ENTRY POINT
  S (DOB,Y)=$P(^DPT(DFN,0),U,3) I DOB]"" D DD^%DT S DOB=Y
  S APCLHRN=$P(^AUPNPAT(DFN,41,APCLSU,0),U,2)
- S SSN=$P(^DPT(DFN,0),U,9)
- W !!,APCLHRN,?8,APCLPN,?40,DOB,?60,SSN
+ W !!,APCLHRN,?8,APCLPN,?40,DOB
  Q
 1 ;Commissioned Officers/Dependents
  D 1^APCLBV11
@@ -124,6 +122,6 @@ HEAD1 ;
  S APCLLENG=$L(APCLSCP)+28 W ?((80-APCLLENG)/2),"SERVICE CATEGORY OF VISIT:  ",APCLSCP
  ;
  I APCLCLN W ! S APCLLENG=$L($P(^DIC(40.7,APCLCLN,0),U))+0 W ?((80-APCLLENG)/2),"CLINIC:  ",$P(^DIC(40.7,APCLCLN,0),U)
- W !!?2,"HRCN",?8,"Patient Name",?40,"Date of Birth",?60,"   SSN"
+ W !!?2,"HRCN",?8,"Patient Name",?40,"Date of Birth"
  W !,APCL80D
  Q

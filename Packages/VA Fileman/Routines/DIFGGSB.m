@@ -1,7 +1,8 @@
-DIFGGSB ;SFISC/XAK,EDE(OHPRD)-FILEGRAM SPECIAL BLOCK ;
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFGGSB ;SFISC/XAK,EDE(OHPRD)-FILEGRAM SPECIAL BLOCK ; [ 09/10/1998  11:04 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
- ;EDE/OHPRD/IHS changed BEGEN/END line to match BNF
+ ;EDE/OHPRD/IHS changed BEGIN/END line to match BNF
  ;
 START ; (CALLED RECURSIVELY)
  K DIFGSB(DILL)

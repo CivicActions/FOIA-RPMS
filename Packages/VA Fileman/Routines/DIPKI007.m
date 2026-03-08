@@ -1,225 +1,146 @@
-DIPKI007 ; ; 30-MAR-1999
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIPKI007 ; ; 22-DEC-1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q:'DIFQ(9.4)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
 Q Q
- ;;^DD(9.455,.02,21,6,0)
- ;;=available, then the variable would not be displayed along with other
- ;;^DD(9.455,.02,21,7,0)
- ;;=annotated key variables.
- ;;^DD(9.455,.02,21,8,0)
- ;;= 
- ;;^DD(9.455,.02,"DT")
- ;;=2920928
- ;;^DD(9.455,1,0)
- ;;=DESCRIPTION^9.456^^1;0
- ;;^DD(9.455,1,21,0)
- ;;=^^2^2^2851008^^
- ;;^DD(9.455,1,21,1,0)
- ;;=This lists information about the MUMPS variable required by this
- ;;^DD(9.455,1,21,2,0)
- ;;=Package.
- ;;^DD(9.456,0)
- ;;=DESCRIPTION SUB-FIELD^NL^.01^1
- ;;^DD(9.456,0,"NM","DESCRIPTION")
- ;;=
- ;;^DD(9.456,0,"UP")
- ;;=9.455
- ;;^DD(9.456,.01,0)
- ;;=DESCRIPTION^W^^0;1^Q
- ;;^DD(9.456,.01,21,0)
- ;;=^^2^2^2851008^^
- ;;^DD(9.456,.01,21,1,0)
- ;;=This describes the MUMPS variable which this Package would like
- ;;^DD(9.456,.01,21,2,0)
- ;;=defined prior to entry into the routines.
- ;;^DD(9.456,.01,"DT")
+ ;;^DD(9.431,.01,"DT")
  ;;=2850228
- ;;^DD(9.46,0)
- ;;=*PRINT TEMPLATE SUB-FIELD^NL^2^2
- ;;^DD(9.46,0,"NM","*PRINT TEMPLATE")
+ ;;^DD(9.432,0)
+ ;;=*EXCLUDED NAME SPACE SUB-FIELD^NL^.01^1
+ ;;^DD(9.432,0,"NM","*EXCLUDED NAME SPACE")
  ;;=
- ;;^DD(9.46,0,"UP")
+ ;;^DD(9.432,0,"UP")
  ;;=9.4
- ;;^DD(9.46,.01,0)
- ;;=PRINT TEMPLATE^MF^^0;1^K:$L(X)>50!($L(X)<2) X
- ;;^DD(9.46,.01,1,0)
- ;;=^.1^^0
- ;;^DD(9.46,.01,3)
- ;;=Please enter the name of a Print Template (2-50 characters).
- ;;^DD(9.46,.01,21,0)
- ;;=^^5^5^2921202^
- ;;^DD(9.46,.01,21,1,0)
- ;;=The name of a Print Template being sent with this Package.
- ;;^DD(9.46,.01,21,2,0)
- ;;=This multiple is used to send non-namespaced templates in an INIT.
- ;;^DD(9.46,.01,21,3,0)
- ;;=Namespaced templates are sent automatically and need not be listed
- ;;^DD(9.46,.01,21,4,0)
- ;;=separately.  Selected Fields for Export and Export templates cannot be
- ;;^DD(9.46,.01,21,5,0)
- ;;=sent; entering their names here will have no effect.
- ;;^DD(9.46,.01,"DT")
- ;;=2821117
- ;;^DD(9.46,2,0)
- ;;=FILE^RP1'^DIC(^0;2^Q
- ;;^DD(9.46,2,21,0)
- ;;=^^1^1^2920513^^
- ;;^DD(9.46,2,21,1,0)
- ;;=The FileMan file for this Print Template.
- ;;^DD(9.46,2,"DT")
- ;;=2821126
- ;;^DD(9.47,0)
- ;;=*INPUT TEMPLATE SUB-FIELD^NL^2^2
- ;;^DD(9.47,0,"ID",2)
- ;;=W "   FILE #"_$P(^(0),U,2)
- ;;^DD(9.47,0,"NM","*INPUT TEMPLATE")
+ ;;^DD(9.432,.01,0)
+ ;;=EXCLUDED NAME SPACE^MFX^^0;1^K:$L(X)>7!($L(X)<2)!'(X?1U1UN.UN) X
+ ;;^DD(9.432,.01,3)
+ ;;=Please enter the prefix of the excluded name space (2-7 characters).
+ ;;^DD(9.432,.01,4)
+ ;;=W !,?5,"When DIFROM builds '",$P(^DIC(9.4,D0,0),"^",2),"INIT',",!?5,"OPTIONS, FUNCTIONS, SECURITY KEYS, and BULLETINS beginning with",!?5,"these characters WON'T be included.",!
+ ;;^DD(9.432,.01,21,0)
+ ;;=^^2^2^2851008^
+ ;;^DD(9.432,.01,21,1,0)
+ ;;=This specifies a sub-set of the Package's namespace which is not to
+ ;;^DD(9.432,.01,21,2,0)
+ ;;=be exported by the DIFROM routines.
+ ;;^DD(9.432,.01,"DT")
+ ;;=2841128
+ ;;^DD(9.44,0)
+ ;;=*FILE SUB-FIELD^NL^223^9
+ ;;^DD(9.44,0,"DT")
+ ;;=2890928
+ ;;^DD(9.44,0,"IX","B",9.44,.01)
  ;;=
- ;;^DD(9.47,0,"UP")
+ ;;^DD(9.44,0,"NM","*FILE")
+ ;;=
+ ;;^DD(9.44,0,"UP")
  ;;=9.4
- ;;^DD(9.47,.01,0)
- ;;=INPUT TEMPLATE^MF^^0;1^K:$L(X)>50!($L(X)<2) X
- ;;^DD(9.47,.01,1,0)
- ;;=^.1^^0
- ;;^DD(9.47,.01,3)
- ;;=Please enter the name of an Input Template (2-50 characters).
- ;;^DD(9.47,.01,21,0)
- ;;=^^4^4^2920513^^^
- ;;^DD(9.47,.01,21,1,0)
- ;;=The name of an Input Template being sent with this Package.
- ;;^DD(9.47,.01,21,2,0)
- ;;=This multiple is used to send non-namespaced templates in an INIT.
- ;;^DD(9.47,.01,21,3,0)
- ;;=Namespaced templates are sent automatically and need not be listed
- ;;^DD(9.47,.01,21,4,0)
- ;;=separately.
- ;;^DD(9.47,.01,"DT")
- ;;=2821117
- ;;^DD(9.47,2,0)
- ;;=FILE^RP1'^DIC(^0;2^Q
- ;;^DD(9.47,2,21,0)
- ;;=^^1^1^2920513^^
- ;;^DD(9.47,2,21,1,0)
- ;;=The name of the FileMan file for this Input Template.
- ;;^DD(9.47,2,"DT")
- ;;=2821126
- ;;^DD(9.48,0)
- ;;=*SORT TEMPLATE SUB-FIELD^NL^2^2
- ;;^DD(9.48,0,"NM","*SORT TEMPLATE")
- ;;=
- ;;^DD(9.48,0,"UP")
- ;;=9.4
- ;;^DD(9.48,.01,0)
- ;;=SORT TEMPLATE^MF^^0;1^K:$L(X)>50!($L(X)<2) X
- ;;^DD(9.48,.01,1,0)
- ;;=^.1^^0
- ;;^DD(9.48,.01,3)
- ;;=Please enter the name of a Sort Template (2-50 characters).
- ;;^DD(9.48,.01,21,0)
- ;;=^^4^4^2920513^^^
- ;;^DD(9.48,.01,21,1,0)
- ;;=The name of a Sort Template being sent with this Package.
- ;;^DD(9.48,.01,21,2,0)
- ;;=This multiple is used to send non-namespaced templates in an INIT.
- ;;^DD(9.48,.01,21,3,0)
- ;;=Namespaced templates are sent automatically and need not be listed
- ;;^DD(9.48,.01,21,4,0)
- ;;=separately.
- ;;^DD(9.48,.01,"DT")
- ;;=2821117
- ;;^DD(9.48,2,0)
- ;;=FILE^RP1'^DIC(^0;2^Q
- ;;^DD(9.48,2,21,0)
- ;;=^^1^1^2920513^^
- ;;^DD(9.48,2,21,1,0)
- ;;=The FileMan file for this Sort Template.
- ;;^DD(9.485,0)
- ;;=*SCREEN TEMPLATE (FORM) SUB-FIELD^^2^2
- ;;^DD(9.485,0,"DT")
- ;;=2910320
- ;;^DD(9.485,0,"NM","*SCREEN TEMPLATE (FORM)")
- ;;=
- ;;^DD(9.485,0,"UP")
- ;;=9.4
- ;;^DD(9.485,.01,0)
- ;;=SCREEN TEMPLATE (FORM)^MF^^0;1^K:$L(X)>50!($L(X)<2) X
- ;;^DD(9.485,.01,1,0)
- ;;=^.1^^0
- ;;^DD(9.485,.01,3)
- ;;=Please enter the name of a Screen Template (Form), (2-50 characters).
- ;;^DD(9.485,.01,21,0)
- ;;=^^2^2^2920513^^^^
- ;;^DD(9.485,.01,21,1,0)
- ;;=The name of a Screen Template (from the FORM file) associated with
- ;;^DD(9.485,.01,21,2,0)
- ;;=this Package.
- ;;^DD(9.485,.01,23,0)
- ;;=^^3^3^2910320^^^^
- ;;^DD(9.485,.01,23,1,0)
- ;;=This list is originally created by the user for building an INIT, and allows
- ;;^DD(9.485,.01,23,2,0)
- ;;=the user to send FORMS on an INIT that are outside the Package namespace.
- ;;^DD(9.485,.01,23,3,0)
- ;;=All BLOCKS associated with the FORMS are also sent automatically.
- ;;^DD(9.485,.01,"DT")
- ;;=2910320
- ;;^DD(9.485,2,0)
- ;;=FILE^RP1'^DIC(^0;2^Q
- ;;^DD(9.485,2,21,0)
- ;;=^^1^1^2920513^^
- ;;^DD(9.485,2,21,1,0)
- ;;=The name of the FileMan file for this Screen Template (FORM).
- ;;^DD(9.485,2,23,0)
- ;;=^^1^1^2910320^
- ;;^DD(9.485,2,23,1,0)
- ;;=This field must match the PRIMARY FILE field on the FORM file.
- ;;^DD(9.485,2,"DT")
- ;;=2910320
- ;;^DD(9.49,0)
- ;;=VERSION SUB-FIELD^NL^1105^10
- ;;^DD(9.49,0,"DT")
- ;;=2940607
- ;;^DD(9.49,0,"ID",1)
- ;;=W:$D(^("0")) "   ",$E($P(^("0"),U,2),4,5)_"-"_$E($P(^("0"),U,2),6,7)_"-"_$E($P(^("0"),U,2),2,3)
- ;;^DD(9.49,0,"IX","B",9.49,.01)
- ;;=
- ;;^DD(9.49,0,"NM","VERSION")
- ;;=
- ;;^DD(9.49,0,"UP")
- ;;=9.4
- ;;^DD(9.49,.01,0)
- ;;=VERSION^FX^^0;1^K:'(X?1.3N.1".".2N.1A.2N)!(X>999)!(X'>0) X
- ;;^DD(9.49,.01,1,0)
+ ;;^DD(9.44,.01,0)
+ ;;=FILE^M*P1'^DIC(^0;1^S DIC("S")="I Y>1.9999" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X
+ ;;^DD(9.44,.01,.1)
+ ;;=REQUIRED FILES FOR THIS PACKAGE
+ ;;^DD(9.44,.01,1,0)
  ;;=^.1
- ;;^DD(9.49,.01,1,1,0)
- ;;=9.49^B
- ;;^DD(9.49,.01,1,1,1)
- ;;=S ^DIC(9.4,DA(1),22,"B",$E(X,1,30),DA)=""
- ;;^DD(9.49,.01,1,1,2)
- ;;=K ^DIC(9.4,DA(1),22,"B",$E(X,1,30),DA)
- ;;^DD(9.49,.01,3)
- ;;=Please enter the Version Number of this release.  This can be either the old method (1.0, 16.04, etc.) or the new (17T1, 6.0V2, etc.).
- ;;^DD(9.49,.01,21,0)
- ;;=^^2^2^2930415^^^^
- ;;^DD(9.49,.01,21,1,0)
- ;;=The version number of this Package.  This number is updated automatically
- ;;^DD(9.49,.01,21,2,0)
- ;;=when an INIT is built for this package.
- ;;^DD(9.49,.01,"DT")
- ;;=2910322
- ;;^DD(9.49,1,0)
- ;;=DATE DISTRIBUTED^D^^0;2^S %DT="E" D ^%DT S X=Y K:Y<1 X
- ;;^DD(9.49,1,21,0)
- ;;=^^2^2^2911209^^^
- ;;^DD(9.49,1,21,1,0)
- ;;=The date this release was distributed.  This field is updated automatically
- ;;^DD(9.49,1,21,2,0)
- ;;=when an INIT is built for this package.
- ;;^DD(9.49,1,"DT")
- ;;=2840227
- ;;^DD(9.49,2,0)
- ;;=DATE INSTALLED AT THIS SITE^D^^0;3^S %DT="ET" D ^%DT S X=Y K:Y<1 X
- ;;^DD(9.49,2,21,0)
- ;;=^^2^2^2911209^^^
- ;;^DD(9.49,2,21,1,0)
- ;;=The date this release was installed at this site.  This field is updated
+ ;;^DD(9.44,.01,1,1,0)
+ ;;=9.44^B
+ ;;^DD(9.44,.01,1,1,1)
+ ;;=S ^DIC(9.4,DA(1),4,"B",X,DA)=""
+ ;;^DD(9.44,.01,1,1,2)
+ ;;=K ^DIC(9.4,DA(1),4,"B",X,DA)
+ ;;^DD(9.44,.01,1,2,0)
+ ;;=9.4^AR
+ ;;^DD(9.44,.01,1,2,1)
+ ;;=S ^DIC(9.4,"AR",$E(X,1,30),DA(1),DA)=""
+ ;;^DD(9.44,.01,1,2,2)
+ ;;=K ^DIC(9.4,"AR",$E(X,1,30),DA(1),DA)
+ ;;^DD(9.44,.01,3)
+ ;;=Please enter the name of a FILE that is known to VA FileMan.
+ ;;^DD(9.44,.01,12)
+ ;;=Select a file which is used by this package.
+ ;;^DD(9.44,.01,12.1)
+ ;;=S DIC("S")="I Y>1.9999"
+ ;;^DD(9.44,.01,21,0)
+ ;;=^^2^2^2920513^^^^
+ ;;^DD(9.44,.01,21,1,0)
+ ;;=The name of a VA FileMan file which you wish to transport with
+ ;;^DD(9.44,.01,21,2,0)
+ ;;=this package.  This may be any file whose number is 2 or greater.
+ ;;^DD(9.44,.01,"DT")
+ ;;=2890928
+ ;;^DD(9.44,2,0)
+ ;;=FIELD^9.45A^^1;0
+ ;;^DD(9.44,2,21,0)
+ ;;=^^3^3^2920513^^^
+ ;;^DD(9.44,2,21,1,0)
+ ;;=The names of the FileMan Fields required by this Package.  Enter data
+ ;;^DD(9.44,2,21,2,0)
+ ;;=here ONLY if you wish to send just selected fields from a Data Dictionary
+ ;;^DD(9.44,2,21,3,0)
+ ;;=instead of the entire DD (i.e., a partial DD).
+ ;;^DD(9.44,222.1,0)
+ ;;=UPDATE THE DATA DICTIONARY^S^y:YES;n:NO;^222;1^Q
+ ;;^DD(9.44,222.1,21,0)
+ ;;=^^8^8^2920513^^^^
+ ;;^DD(9.44,222.1,21,1,0)
+ ;;=YES means that the Data Dictionary for this file should be updated when
+ ;;^DD(9.44,222.1,21,2,0)
+ ;;=this version of the package is installed.
+ ;;^DD(9.44,222.1,21,3,0)
+ ;;= 
+ ;;^DD(9.44,222.1,21,4,0)
+ ;;=NO means that this Data Dictionary has not changed since the last version,
+ ;;^DD(9.44,222.1,21,5,0)
+ ;;=and therefore, need not be updated.
+ ;;^DD(9.44,222.1,21,6,0)
+ ;;= 
+ ;;^DD(9.44,222.1,21,7,0)
+ ;;=If the Data Dictionary does not exist on the recipient system, then this
+ ;;^DD(9.44,222.1,21,8,0)
+ ;;=field does not apply.  The DD will be put in place.
+ ;;^DD(9.44,222.1,"DT")
+ ;;=2890627
+ ;;^DD(9.44,222.2,0)
+ ;;=ASSIGN A VERSION NUMBER^S^y:YES;n:NO;^222;2^Q
+ ;;^DD(9.44,222.2,3)
+ ;;=
+ ;;^DD(9.44,222.2,21,0)
+ ;;=^^5^5^2920513^^^^
+ ;;^DD(9.44,222.2,21,1,0)
+ ;;=YES means that you want to set ^DD(file#,0,"VR") to the version
+ ;;^DD(9.44,222.2,21,2,0)
+ ;;=number of this package when the init is finished.
+ ;;^DD(9.44,222.2,21,3,0)
+ ;;= 
+ ;;^DD(9.44,222.2,21,4,0)
+ ;;=NO means that you intend for the version number to remain as it is.
+ ;;^DD(9.44,222.2,21,5,0)
+ ;;=This may mean that this DD has no version number at all.
+ ;;^DD(9.44,222.4,0)
+ ;;=MAY USER OVERRIDE DD UPDATE^S^y:YES;n:NO;^222;4^Q
+ ;;^DD(9.44,222.4,3)
+ ;;=
+ ;;^DD(9.44,222.4,21,0)
+ ;;=^^5^5^2920513^^^^
+ ;;^DD(9.44,222.4,21,1,0)
+ ;;=YES means that the user may decide at installation time whether or not
+ ;;^DD(9.44,222.4,21,2,0)
+ ;;=to update the data dictionary for this file.
+ ;;^DD(9.44,222.4,21,3,0)
+ ;;= 
+ ;;^DD(9.44,222.4,21,4,0)
+ ;;=NO means that the developer building the INIT is determining if the
+ ;;^DD(9.44,222.4,21,5,0)
+ ;;=data dictionary is to be updated.
+ ;;^DD(9.44,222.7,0)
+ ;;=DATA COMES WITH FILE^S^y:YES;n:NO;^222;7^Q
+ ;;^DD(9.44,222.7,21,0)
+ ;;=^^4^4^2920513^^^^
+ ;;^DD(9.44,222.7,21,1,0)
+ ;;=YES means that the data should be included in the initialization
+ ;;^DD(9.44,222.7,21,2,0)
+ ;;=routines.
+ ;;^DD(9.44,222.7,21,3,0)
+ ;;= 
+ ;;^DD(9.44,222.7,21,4,0)
+ ;;=NO means that the data should be left out.

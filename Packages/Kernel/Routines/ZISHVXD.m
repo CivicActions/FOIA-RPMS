@@ -1,5 +1,5 @@
-%ZISH ;ISF/AC,RWF - VAX DSM Host file Control ;05/12/2004  10:43
- ;;8.0;KERNEL;**24,36,65,84,104,191,306**;JUL 10, 1995
+%ZISH ;ISF/AC,RWF - VAX DSM Host file Control ;08/12/2002  09:01
+ ;;8.0;KERNEL;**24,36,65,84,104,191**;JUL 10, 1995
  ;
 OPEN(X1,X2,X3,X4,X5,X6) ;SR. Open file
  ;D OPEN^%ZISH([handlename],[directory],filename,[accessmode],[recsize])
@@ -32,24 +32,19 @@ CLOSE(X) ;SR. Close HFS device not opened by %ZIS.
  I $D(IO("HOME"))!$D(^XUTL("XQ",$J,"IOS")) D HOME^%ZIS
  Q
 DEL(%ZX1,%ZX2) ;ef,SR. Del fl(s)
- ;S Y=$$DEL^%ZISH("/dir/",namevalue)
- N %ZISH,%ZISHLGR,%ZX,X,%ZXDEL
- S %ZX1=$$DEFDIR($G(%ZX1)),%ZXDEL=1,%ZISH=""
- F  S %ZISH=$O(@%ZX2@(%ZISH)) Q:%ZISH=""  D
- . N $ETRAP,$ESTACK S $ETRAP="D DELERR^%ZISH"
- . I %ZISH["*" S %ZXDEL=0 Q  ; Wild card not allowed.
- . S %ZX=$ZSEARCH(%ZX1_%ZISH)
- . Q:%ZX']""           ; File doesn't exist - not an error, just quit.
- . O %ZX:READONLY:0
- . I '$T S %ZXDEL=0 Q  ; Can't open it.
- . C %ZX:DELETE
- . I $ZSEARCH(%ZX)]"" S %ZXDEL=0 ; Delete was not successful.
- Q %ZXDEL
+ ;S Y=$$DEL^ZISH("/dir/",namevalue)
+ N %ZISH,%ZISHLGR,%ZXIT,%ZX,X
+ N $ETRAP,$ESTACK S $ETRAP="D DELERR^%ZISH"
+ S %ZX1=$$DEFDIR($G(%ZX1))
+ ;Get fls to act on
+ ;No '*' allowed
+ S %ZISH="" F  S %ZISH=$O(@%ZX2@(%ZISH)) Q:'%ZISH  I %ZISH["*" S %ZXIT=1 Q
+ Q:$D(%ZXIT) 0
+ S %ZISH="" F  S %ZISH=$O(@%ZX2@(%ZISH)) Q:%ZISH=""  S %ZX=%ZX1_%ZISH D
+ . S %ZX=$ZSEARCH(%ZX) I %ZX]"" O %ZX:READONLY:0 I $T C %ZX:DELETE
+ Q 1
 DELERR ;Trap any $ETRAP error, unwind and return.
- S $ETRAP="D UNWIND^%ZTER"
- S %ZXDEL=0
- D UNWIND^%ZTER
- Q
+ Q:$ESTACK>1  S $ECODE="" Q:'$QUIT  Q 0
  ;
 LIST(%ZX1,%ZX2,%ZX3) ;ef,SR. Set local array holding fl names
  ;S Y=$$LIST^ZISH("/dir/","list_root","return_root")
@@ -175,7 +170,7 @@ FTG(%ZX1,%ZX2,%ZX3,%ZX4,%ZX5) ;ef,SR. Unload contents of host file into global
  D MAKEREF(%ZX3,%ZX4,"%ZISHOF")
  D OPEN^%ZISH(,%ZX1,%ZX2,"R")
  I POP Q 0
- N $ETRAP S $ETRAP="S $EC="""" D CLOSE^%ZISH Q:$Q 0 Q"
+ N $ETRAP S $ETRAP="",X="ERREOF^%ZISH",@^%ZOSF("TRAP")
  U IO F  K %XX D READNXT(.%XX) Q:$$EOF(%ZA)  D
  . S @%ZISHF=%XX
  . I $D(%XX)>2 F %OVFCNT=1:1 Q:'$D(%XX(%OVFCNT))  S @%ZISHO=%XX(%OVFCNT)
@@ -221,7 +216,8 @@ MGTF(%ZX1,%ZX2,%ZX3,%ZX4,%ZX5) ;
  D MAKEREF(%ZX1,%ZX2)
  D OPEN^%ZISH(,%ZX3,%ZX4,%ZX5) ;Default dir set in open
  I POP Q 0
- N $ETRAP S $ETRAP="S $EC="""" D CLOSE^%ZISH() Q 0"
+ N X
+ N $ETRAP S $ETRAP="",X="ERREOF^%ZISH",@^%ZOSF("TRAP")
  F  Q:'($D(@%ZISHF)#2)  S %ZX=@%ZISHF,%ZISHI=%ZISHI+1 U IO W %ZX,!
  D CLOSE() ;Normal Exit
  Q 1

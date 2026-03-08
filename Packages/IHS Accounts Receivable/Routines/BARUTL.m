@@ -1,5 +1,5 @@
-BARUTL ; IHS/SD/LSL - UTILITY PROGRAM FOR FAC A/R ; 07/25/2010
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**13,19,21,23**;OCT 26, 2005
+BARUTL ; IHS/SD/LSL - UTILITY PROGRAM FOR FAC A/R ; 09/30/2020
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**13,19,21,23,30**;OCT 26, 2005;Build 55
  ;;
  ; IHS/SD/LSL - 04/04/02 - V1.6 Patch 2 - NOIS XJG-0302-160095
  ;     Added FIND3PB function to find bill in 3P Bill file if given
@@ -27,6 +27,7 @@ BARUTL ; IHS/SD/LSL - UTILITY PROGRAM FOR FAC A/R ; 07/25/2010
  ; P.OTT 08/12/2013 FIXED $$SBR: QUIT WITH VALUE
  ;       Fixed BARPOLN (Policy Number reference to 702)
  ;       HEAT#131103 8/28/2013 FIXED <UNDEF> IF DUZ(2) IS NOT REGIONALLY SETUP
+ ; IHS/SD/CPC 9/30/2020 BAR*1.8*30 For some reason UPC was not returning a single underscore character.
  ; *********************************************************************
  ;
  ;VARIOUS ENTRY POINTS
@@ -235,7 +236,7 @@ EOP(X) ;EP
  Q:$D(ZTQUEUED)
  F  W ! Q:$Y+4>IOSL
  Q:X=2
- K DIR
+ N DIR  ;IHS/SD/CPC - BAR*1.8*30
  S DIR(0)="E"
  S:X=1 DIR("A")="Enter RETURN to continue"
  D ^DIR
@@ -245,13 +246,13 @@ EOP(X) ;EP
  ;
 UPC(X) ;EP - convert x to upper case
  N Y
- S Y=$TR($G(X),"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+ S Y=$TR($G(X),"-abcdefghijklmnopqrstuvwxyz_","-ABCDEFGHIJKLMNOPQRSTUVWXYZ_")  ;IHS/SD/CPC - BAR*1.8*30 add - and _ as a single "_" was not returning properly
  Q Y
  ; *********************************************************************
  ;
 LWC(X) ;EP - convert x to lower case
  N Y
- S Y=$TR($G(X),"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz")
+ S Y=$TR($G(X),"-ABCDEFGHIJKLMNOPQRSTUVWXYZ_","-abcdefghijklmnopqrstuvwxyz_")  ;IHS/SD/CPC - BAR*1.8*30 add - and _ as a single "_" was not returning properly
  Q Y
  ; *********************************************************************
  ;
@@ -377,7 +378,7 @@ GROUPLAN(BARBL) ;  Return Group Plan (from Employer Group Insurance file)
  . S BARGPIEN=$$GET1^DIQ(9000003.1,BARPHIEN_",",.06,"I")    ;group IEN
  I 'BARFIND Q 0_U_"BARFIND"_U_BARBL
  ;---Employer Insurance Group data for this A/R bill
- I 'BARFIND D  Q 0_U_"BARFIND^"_BARBL
+ ;I 'BARFIND D  Q 0_U_"BARFIND^"_BARBL
  I BARGPIEN="" Q 0_U_"BARGPIEN"_U_BARBL
  S BARGPNAM=$$GET1^DIQ(9999999.77,BARGPIEN_",",.01,"E")  ;group plan name
  S BARGPNUM=$$GET1^DIQ(9999999.77,BARGPIEN_",",.02,"E")  ;group plan number

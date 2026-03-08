@@ -1,0 +1,3 @@
+AZZZEOBL ; IHS/ADC/GTH - CHECK FOR EOBR POSTING JOB RUNNING ; [ 09/17/97   9:12 AM ]
+ ;;3.0;CONTRACT HEALTH MGMT SYSTEM;**10**;SEP 17, 1997
+ I $D(^ACHSUSE("EOBR")) U IO(0) W !!,*7,?10,"EOBR Posting in Progress -- Request Cancelled",!?15,"Enter <RETURN> to Continue " D RTRN^ACHS D ^XQ

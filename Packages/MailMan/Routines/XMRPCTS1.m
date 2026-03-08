@@ -1,8 +1,8 @@
 XMRPCTS1 ;(KC-VAMC)/XXX-Simple PCTS front end to MailMan ;02/06/99  10:32
- ;;8.0;MailMan;;Jun 28, 2002
+ ;;7.1;MailMan;**6,50**;Jun 02, 1994
  N XMUS,XMFM,XMSTR,XMRI,XMTO,XMABORT
  ;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- ;All should be sent to XXX@DOMAIN.NAME the local PCTS Domain
+ ;All should be sent to XXX@VHA.DMIA the local PCTS Domain
  ;Edit these for your site.
  S XMUS="XXXX" ;Local routing indicator
  S XMFM="YYYY" ;from line
@@ -15,7 +15,7 @@ XMRPCTS1 ;(KC-VAMC)/XXX-Simple PCTS front end to MailMan ;02/06/99  10:32
  D PROCESS(XMDUZ,XMSTR,XMFM,XMRI,XMTO,.XMZ,.XMABORT)
  D EDITOFF^XMJMS(XMDUZ)
  Q:'XMABORT
- W !!,"TWIX Send aborted !",$C(7)
+ W !!,"TWIX Send aborted !",*7
  H 2
  D KILLMSG^XMXUTIL(XMZ)
  Q
@@ -95,7 +95,7 @@ NCHECK(XMZ) ; If "NNNN" found in text, issue error
  S (NCNT,I)=0
  F  S I=$O(^XMB(3.9,XMZ,2,I)) Q:'I  I ^XMB(3.9,XMZ,2,I,0)["NNNN" S NCNT=NCNT+1
  Q:NCNT'>1 1
- W !!,"<< 4 CONSECUTIVE N's ARE NOT ALLOWED IN THE MSG TEXT !!! >>",!!,$C(7)
+ W !!,"<< 4 CONSECUTIVE N's ARE NOT ALLOWED IN THE MSG TEXT !!! >>",!!,*7
  H 5
  Q 0
 T ; Transmit
@@ -115,8 +115,8 @@ READY(XMDUZ,XMINSTR,XMRESTR,XMABORT) ;
  S DIR("?")="'NO' will place the message only in your IN basket."
  D ^DIR I $D(DIRUT) S XMABORT=1 Q
  Q:'Y
- W !,"Send to:  XXX@DOMAIN.NAME"
- D ADDR^XMXADDR(XMDUZ,"XXX@DOMAIN.NAME",.XMINSTR,.XMRESTR)
+ W !,"Send to:  XXX@VHA.DMIA"
+ D ADDR^XMXADDR(XMDUZ,"XXX@VHA.DMIA",.XMINSTR,.XMRESTR)
  Q
 EXIT ;
  K I,XMTO,XMFM,XMSTR,XMUS,XMTM,XMRI,DIC,XCNP,XMXUSEC,ZTPAR,XMSEQ,XMOUT,DTOUT

@@ -1,5 +1,5 @@
 BQITD03 ;PRXM/HC/ALA-CVD Known Definition ; 19 Jun 2006  5:01 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;1.1;ICARE MANAGEMENT SYSTEM;**3**;Jun 17, 2008
  ;
  Q
  ;
@@ -25,8 +25,13 @@ POP(BQARY,TGLOB) ; EP
  ;  TMREF - Temporary global reference; global stores the individual
  ;          record from the visit or problem file.
  ;
- NEW DTDIF,ENDT,EXDT,PLFLG,PROB,TMFRAME,VTYP,DXOK,DXNN,TDFN,RGIEN
+ NEW DTDIF,ENDT,EXDT,PLFLG,PROB,TMFRAME,VTYP,DXOK,DXNN,TDFN
  NEW PRIM,SERV,VSERV,OPRM
+ ; Clean up records on weekly update
+ S DXNN=$$GDXN^BQITUTL("CVD Known"),TDFN=""
+ F  S TDFN=$O(^BQIPAT("AB",DXNN,TDFN)) Q:TDFN=""  D
+ . S DA(1)=TDFN,DA=DXNN,DIK="^BQIPAT("_DA(1)_",20,"
+ . D ^DIK
  ;
  S DXOK=0
  ; BQARY contains a list of taxonomies that can be checked by the generic
@@ -51,8 +56,7 @@ POP(BQARY,TGLOB) ; EP
  . F  S IEN=$O(@GREF@("B",TIEN,IEN),-1) Q:IEN=""  D
  .. S TDFN=$$GET1^DIQ(FREF,IEN,.02,"I") I TDFN="" Q
  .. ;
- .. ; if the patient has already matched one of the general taxonomies, don't
- .. ; continue
+ .. ; stop if the patient has already matched one of the general taxonomies
  .. I $D(@TGLOB@(TDFN)) Q
  .. ;
  .. ; Get the visit pointer and check if it has been deleted
@@ -64,7 +68,7 @@ POP(BQARY,TGLOB) ; EP
  .. ; Get the visit date/time and if a timeframe, check for validity
  .. S VSDTM=$$GET1^DIQ(9000010,VISIT,.01,"I")\1 I VSDTM=0 Q
  .. I $G(TMFRAME)'="",VSDTM<ENDT Q
- .. ; if service categories, check the visit for the service category
+ .. ;  if service categories, check the visit for the service category
  .. S VSERV=$$GET1^DIQ(9000010,VISIT,.07,"I")
  .. I $G(SERV)'="",SERV'[VSERV Q
  .. ; Check if there is one value on the same day
@@ -99,8 +103,7 @@ POP(BQARY,TGLOB) ; EP
  . F  S IEN=$O(@GREF@("B",TIEN,IEN),-1) Q:IEN=""  D
  .. S TDFN=$$GET1^DIQ(FREF,IEN,.02,"I") I TDFN="" Q
  .. ;
- .. ; if the patient has already matched one of the general taxonomies, don't
- .. ; continue
+ .. ; stop if the patient has already matched one of the general taxonomies
  .. I $D(@TGLOB@(TDFN)) Q
  .. ;
  .. ; Get the visit pointer and check if it has been deleted
@@ -261,7 +264,6 @@ PAT(DEF,BTGLOB,BDFN) ; EP -- By patient
  S IEN=""
  F  S IEN=$O(@GREF@("AC",BDFN,IEN),-1) Q:IEN=""  D
  . S TIEN=$$GET1^DIQ(FREF,IEN,.01,"I") I TIEN="" Q
- . ;
  . Q:'$D(@TREF@(TIEN))
  . ;
  . S VISIT=$$GET1^DIQ(FREF,IEN,.03,"I") I VISIT="" Q
@@ -279,7 +281,7 @@ PAT(DEF,BTGLOB,BDFN) ; EP -- By patient
  . S @TMREF@(BDFN,VSDTM,TIEN)="V"_U_VISIT_U_EXDT_U_IEN_U_FREF_U_TAX_U_OPRM
  . S @TMREF@(BDFN)=$G(@TMREF@(BDFN))+1
  ;
- ;  If 3 different diagnoses on the same date with at least one a primary
+ ;  If 3 different diagnoses on same date with at least one a primary
  I $D(@TMREF@(BDFN)) D IHDSM^BQITD031(BDFN,BTGLOB,TMREF,.DXOK)
  K @TMREF,@TREF
  I DXOK Q DXOK
@@ -358,7 +360,8 @@ PRB(PVIEN,TPGLOB) ;  EP - Check Problem File for instance of taxonomy
  ;  Input
  ;     PVIEN - Taxonomy entry
  ;     TPGLOB - Problem file temporary global reference
- ;     Call BQITD031 due to routine size considerations
+ ;   Call BQITD031 due to routine size considerations
+ ;
  D PRB^BQITD031
  Q
  ;
@@ -366,7 +369,8 @@ PPRB(DFN,TPGLOB) ;EP - Check Problem File for instance of a patient
  ; Input Parameters
  ;   DFN - Patient record
  ;   TPGLOB - Temporary global
- ;     Call BQITD031 due to routine size considerations
+ ;   Call BQITD031 due to routine size considerations
+ ;
  D PPRB^BQITD031
  Q
  ;

@@ -1,5 +1,5 @@
 DGPFRPA1 ;ALB/RBS - PRF PATIENT ASSIGNMENTS REPORT CONT. ; 5/21/04 12:53pm
- ;;5.3;Registration;**554,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**554,1015,1022**;MAY 28, 2004;Build 18
  ;
  ;This routine will be used to display or print all the record flag
  ;assignments of a patient.
@@ -170,7 +170,11 @@ HEAD ;Print/Display page header
  W !,"Report Selected: "_$S(DGSTAT=1:"ACTIVE",DGSTAT=2:"INACTIVE",1:"Both (ACTIVE & INACTIVE)")
  W ?50,"Printed: ",DGDT
  W !,DGLINE
- W !!,"Patient: ",$P(DGSORT("DGDFN"),U,2),"  ",$P(DGSORT("DGDFN"),U,3)
+ ;202307 97197 maw p1022 PPN
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI($P($G(DGSORT("DGDFN")),U),"E",1)
+ W !!,"Patient: ",$G(PRF),"  ",$TR($P(DGSORT("DGDFN"),U,3),"-","")
+ ;W !!,"Patient: ",$P(DGSORT("DGDFN"),U,2),"  ",$P(DGSORT("DGDFN"),U,3)
  W !!?3,"FLAG NAME",?15,"CATEGORY",?25,"APPROVED BY",?38,"ENTERED",?48,"REVIEW DT",?59,"STATUS",?69,"OWNING SITE"
  W !,"------------------",?20,"---",?25,"-----------",?38,"--------",?48,"---------",?59,"--------",?69,"-----------"
  Q

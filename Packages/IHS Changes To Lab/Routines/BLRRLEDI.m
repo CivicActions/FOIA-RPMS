@@ -1,9 +1,14 @@
-BLRRLEDI ;cmi/flag/maw - BLR REFERENCE LAB LEDI UTILITIES ; 02-Nov-2015 13:43 ; MAW
- ;;5.2;IHS LABORATORY;**1027,1031,1033,1034,1035,1037**;NOV 01, 1997;Build 4
+BLRRLEDI ;cmi/flag/maw - BLR REFERENCE LAB LEDI UTILITIES ; 13-Apr-2022 13:43 ; MAW
+ ;;5.2;IHS LABORATORY;**1027,1031,1033,1034,1035,1037,1051**;NOV 01, 1997;Build 19
  ;
+ ; IHS/CMI/MAW 20220309 p1051 cr  ORD+1-5 - LR*5.2*1051 - 13-Apr-2022 - Item 775773 - Fix Patient Name & Chart Number
  ;
 ORD(OR,PAT) ;-- lets create the order stub here
- I $O(^BLRRLO("B",OR,0)) Q $O(^BLRRLO("B",OR,0))
+ N OIEN
+ S OIEN=$O(^BLRRLO("B",OR,0))
+ I OIEN,$P($G(^BLRRLO(OIEN,0)),U,4)=PAT Q OR
+ I OIEN,$P($G(^BLRRLO(OIEN,0)),U,4)'=PAT D  ;p1051 remove entry if order doesn't match patient and rebuild - IHS/CMI/MAW - LR*5.2*1051 - 13-Apr-2022 - Item 775773
+ . S DIK="^BLRRLO(",DA=OIEN D ^DIK
  N FDA,FIENS,FERR
  S FIENS=""
  S FDA(9009026.3,"+1,",.01)=OR

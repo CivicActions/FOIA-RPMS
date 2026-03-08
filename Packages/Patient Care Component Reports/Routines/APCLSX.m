@@ -1,0 +1,10 @@
+APCLSX ;IHS/CMI/LAB-CREATED BY ^ATXSTX ON OCT 26, 2020;
+ ;;3.0;IHS PCC REPORTS;**33**;FEB 05, 1997;Build 38
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^APCLSXA ;   SURVEILLANCE ILI
+ D ^APCLSXB ;   SURVEILLANCE CLI
+ D ^APCLSXC ;   SURVEILLANCE FLU CVX CODES
+ Q

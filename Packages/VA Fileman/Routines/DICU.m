@@ -1,8 +1,9 @@
-DICU ;SEA/TOAD-VA FileMan: Lookup Utilities ;5/15/97  08:31
- ;;22.0;VA FileMan;;Mar 30, 1999
+DICU ;SEA/TOAD-VA FileMan: Lookup Utilities ;5/8/96  16:41 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**8**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
- ;11961;3150917;2853;
- ;
+ ;12022;3150917;2921;
+ 
 REQIDS(DIFILE,DITARGET) ;
  ; return REQUIRED IDENTIFIERS file attribute
  ; DIFILE = file#, DITARGET = target array
@@ -12,7 +13,7 @@ REQIDS(DIFILE,DITARGET) ;
  S DIFIELD=0 F  S DIFIELD=$O(^DD(DIFILE,0,"ID",DIFIELD)) Q:'DIFIELD  D
  . I $D(^DD(DIFILE,"RQ",DIFIELD)) S @DITARGET@(DIATTRBT,DIFIELD)=""
  Q
- ;
+ 
 RID(DIFILE) ;
  ; return a string listing a file's required identifiers
  ; DIFILE = file#
@@ -20,41 +21,41 @@ RID(DIFILE) ;
  N DID S DID="" F  S DID=$O(^DD(DIFILE,0,"ID",DID)) Q:'DID  D
  . I $D(^DD(DIFILE,"RQ",DID)) S DILIST=DILIST_U_DID
  Q DILIST
- ;
-RECALL(DIFILE,DIEN,DIUSER) ;
-RECALLX ; input from DILFD
- ;
- ; ENTRY POINT--save a user's selection for use with space-bar recall
- ; procedure, all passed by value
- ;
+ 
+RECALL(DIFILE,DIEN,DIUSER) 
+RECALLX ;input from DILFD
+ 
+ ;ENTRY POINT--save a user's selection for use with space-bar recall
+ ;procedure, all passed by value
+ 
  I '$D(DIQUIET) N DIQUIET S DIQUIET=1
  I '$D(DIFM) N DIFM S DIFM=1 D INIZE^DIEFU
  N DICLERR S DICLERR=$G(DIERR) K DIERR
- ;
+ 
 30 S DIFILE=$G(DIFILE)
- I +DIFILE'=DIFILE!(DIFILE<0) D ERR(202,"","","","file") Q
+ I +DIFILE'=DIFILE!(DIFILE<0) D ERR(202,,,,"file") Q
  S DIEN=$G(DIEN) I DIEN="" S DIEN=","
- I '$$IEN^DIDU1(DIEN) D ERR(202,"","","","IEN string") Q
+ I '$$IEN^DIDU1(DIEN) D ERR(202,,,,"IEN string") Q
  S DIUSER=+$G(DIUSER)
- ;
+ 
 32 N DIOROOT,DIOUT S DIOUT=0 D  I DIOUT Q
  . I '$D(^DD(DIFILE)) D ERR(401,DIFILE) S DIOUT=1 Q
  . S DIOROOT=$$ROOT^DILFD(DIFILE,DIEN,"Q")
  . I DIOROOT'?1"^"1U.7UN1"(".ANP,DIOROOT'?1"^%".7UN1"(".ANP D  Q
- . . D ERR(402,DIFILE,"","","","","",DIOROOT) S DIOUT=1
+ . . D ERR(402,DIFILE,,,,,,DIOROOT) S DIOUT=1
  S ^DISV(DIUSER,$E(DIOROOT,1,28))=$E(DIOROOT,29,$L(DIOROOT))_+DIEN
  I DICLERR'=""!$G(DIERR) D
  . S DIERR=$G(DIERR)+DICLERR_U_($P($G(DIERR),U,2)+$P(DICLERR,U,2))
  Q
- ;
-FILE(DIFILE,DIDA,DIFLAGS,DIROOT) ;
+ 
+FILE(DIFILE,DIDA,DIFLAGS,DIROOT) 
  ; entry point -- given a root, calculate the file # and DA
  ; DO NOT USE UNTIL $QS & $QL AVAILABLE
  N DIGLOBAL I $G(DIFLAGS)'["O" S DIGLOBAL=DIROOT
  E  S DIGLOBAL=$$CREF^DIQGU(DIROOT),DIROOT=DIGLOBAL
  S DIFILE=+$P($G(@DIGLOBAL@(0)),U,2),DIDA=""
  N DA,DIENTRY S DA=1,DIENTRY=0
- ;
+ 
 LOOP N DICHAR,DIL,DILEAD,DIQL,DIQS,DIQSL F  D  Q:'DIQL
  .
 STRIP .
@@ -74,12 +75,12 @@ ENTRY . I DIENTRY D
  . . S DIDA(DA)=DIQS,DA=DA+1
  . S DIENTRY='DIENTRY
  Q
- ;
-ERR(DIERN,DIFILE,DIIENS,DIFIELD,DI1,DI2,DI3,DIROOT) ;
- ;
+ 
+ERR(DIERN,DIFILE,DIIENS,DIFIELD,DI1,DI2,DI3,DIROOT) 
+ 
  ; error logging procedure
  ; RECALL
- ;
+ 
  N DIPE,DI
  F DI="FILE","IENS","FIELD",1:1:3,"ROOT" S DIPE(DI)=$G(@("DI"_DI))
  D BLD^DIALOG(DIERN,.DIPE,.DIPE)

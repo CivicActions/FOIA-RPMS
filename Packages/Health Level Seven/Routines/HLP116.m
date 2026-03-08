@@ -1,0 +1,15 @@
+HLP116 ;ALB/CJM - Post-Install for patch 116 ;06/03/99
+ ;;1.6;HEALTH LEVEL SEVEN;**116**;Oct 13, 1995
+ ;
+POST ;
+ N LINK,PROTOCOL,MSG
+ S LINK=$O(^HLCS(870,"B","IIV EC",0))
+ Q:'LINK
+ S MSG=0
+ F  S MSG=$O(^HLMA("AC","O",LINK,MSG)) Q:'MSG  D
+ .N NAME,APP
+ .S APP=$P($G(^HLMA(MSG,0)),"^",12)
+ .Q:'APP
+ .S NAME=$P($G(^HL(771,APP,0)),"^")
+ .I NAME["HEC" K ^HLMA("AC","O",LINK,MSG)
+ Q

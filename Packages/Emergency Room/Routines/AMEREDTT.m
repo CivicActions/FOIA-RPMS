@@ -1,5 +1,5 @@
 AMEREDTT ; IHS/OIT/SCR - SUB-ROUTINE FOR ER VISIT EDIT of Triage Information
- ;;3.0;ER VISIT SYSTEM;**6**;MAR 03, 2009;Build 30
+ ;;3.0;ER VISIT SYSTEM;**6,11,13**;MAR 03, 2009;Build 36
  ; 
  ;VARIABLES: The following variables are passed to multiple editing routines
  ;  AMERDA  : the IEN of the ER VISIT that is selected for editing
@@ -13,55 +13,37 @@ AMEREDTT ; IHS/OIT/SCR - SUB-ROUTINE FOR ER VISIT EDIT of Triage Information
  ;      AMERSTRG : A ";" deliminated string of edit information for a field   
  ;       
 ADMTRIAG(AMERDA,AMERAIEN)  ; EP from AMEREDIT
- N AMEROLD,AMERNEW,AMEREDTS,AMERSTRG,DR,DIR,DIC,AMERSKIP
+ ;GDIT/HS/BEE 12/11/2018;CR#8013;Sync Prov
+ N AMEROLD,AMERNEW,AMEREDTS,AMERSTRG,DR,DIR,DIC,AMERSKIP,AUPNVSIT
+ N AMERV,AUPNVSIT,MOD
  S (AMEROLD,AMERNEW,AMEREDTS,AMERSTRG,DR)=""
+ ;
  Q:'$D(^XUSEC("AMERZ9999",DUZ)) $$ERSEDTT(AMERDA,AMERAIEN)  ; PROGRAMATICALLY locking fields that pass to PCC
  S AMERSKIP=0
- ; ED PROVIDER
- N DIC,DIR
- S DIC("A")="*ED Provider: "
- S AMEROLD=$P($G(^AMERVSIT(AMERDA,0)),U,6)
- ;screening so that only valid PCC providers identified
- S DIC("S")="I $D(^VA(200,""AK.PROVIDER"",$P($G(^VA(200,+Y,0)),U),+Y))"
- I AMEROLD'="" S DIC("B")=$P(^VA(200,AMEROLD,0),U)
- S DIC="^VA(200,",DIC(0)="AEQ"   ;
- D ^DIC
- I $D(DUOUT)!$D(DTOUT) K DUOUT,DTOUT Q 0
- I Y>0 S AMERNEW=+Y
- E  S AMERNEW=""
- I AMEROLD=AMERNEW D
- .I AMERNEW="" S AMERSKIP=1 Q
- .; If discharge provider is same as ED provider, don't let 'em delete it
- .I AMERNEW=$P($G(^AMERVSIT(AMERDA,6)),U,3) D  Q
- ..D EN^DDIOL("ED provider is same as DISCHARGE provider","","!!")
- ..D EN^DDIOL("cannot remove ED provider until DISCHARGE provider is updated","","!")
- ..D EN^DDIOL("","","!!")
- .S DIR("A")="Do you want to REMOVE this provider from the ER VISIT"
- .S DIR(0)="Y",DIR("B")="NO"
- .D ^DIR
- .I Y=1 D
- ..S DR=$S(DR'="":DR_";",1:""),DR=DR_".06////@;12.1////@"  ;delete any time as well
- ..S AMERNEW="",AMERSKIP=1
- ..S AMERSTRG=$$EDAUDIT^AMEREDAU(".06",AMEROLD,AMERNEW,"INITIAL ED PROVIDER")
- ..I AMERSTRG="^" Q
- ..S AMEREDTS=$S(AMEREDTS="":AMERSTRG,1:AMEREDTS_"^"_AMERSTRG)
- .Q
- I AMEROLD'=AMERNEW D
- .S DR=$S(DR'="":DR_";",1:""),DR=DR_".06////"_AMERNEW
- .S AMEROLD=$$EDDISPL^AMEREDAU(AMEROLD,"N") ;translates from new person ien to name
- .S AMERNEW=$$EDDISPL^AMEREDAU(AMERNEW,"N")
- .S AMERSTRG=$$EDAUDIT^AMEREDAU(".06",AMEROLD,AMERNEW,"INITIAL ED PROVIDER")
- .I AMERSTRG="^" S AMERQUIT=1,DR="" Q
- .S AMEREDTS=$S(AMEREDTS="":AMERSTRG,1:AMEREDTS_"^"_AMERSTRG)
- .Q
- K DIC,DIR
- ; DOC TIME
+ S AUPNVSIT=$$GET1^DIQ(9009080,AMERDA_",",.03,"I")
+ ;
+ ;Edit Triage Nurse and Time
+ S AMERV=$$NPRC^AMERMPRV(AMERPAT,AUPNVSIT,"TRIAGE NURSE","",AMERAIEN) Q:(AMERV="^")!(AMERV="^^") 0
+ ;
+ ;Edit Triage Provider and Time
+ S AMERV=$$NPRC^AMERMPRV(AMERPAT,AUPNVSIT,"TRIAGE PROVIDER","",AMERAIEN) Q:(AMERV="^")!(AMERV="^^") 0
+ ;
+ ;Edit Primary Nurse and Time
+ S AMERV=$$NPRC^AMERMPRV(AMERPAT,AUPNVSIT,"PRIMARY NURSE","",AMERAIEN) Q:(AMERV="^")!(AMERV="^^") 0
+ ;
+ ;Edit ED PROVIDER and Time
+ S AMERV=$$NPRC^AMERMPRV(AMERPAT,AUPNVSIT,"ED PROVIDER","",AMERAIEN) Q:(AMERV="^")!(AMERV="^^") 0
+ ;
+ W !
+ ;
+ ;Medical screening exam time
  N DIR
+ S DR=""
  S AMEROLD=$P($G(^AMERVSIT(AMERDA,12)),U,1)
  I AMEROLD'="" S Y=AMEROLD  X ^DD("DD") S DIR("B")=Y
- S DIR(0)="DO^::ER",DIR("A")="*What was the ED Provider Medical Screening Exam Time"
+ S DIR(0)="DO^::ER",DIR("A")="*Enter the Initial ED Provider Medical Screening Exam Time"
  S DIR("?")="Enter an exact date and time in Fileman format (e.g. T@1PM)"
- F  Q:Y="^"!(Y="")  D
+ S Y=0 F  Q:Y="^"!(Y="")  D
  .D ^DIR
  .I $D(DUOUT)!$D(DTOUT) Q
  .S AMERNEW=Y
@@ -91,84 +73,9 @@ ADMTRIAG(AMERDA,AMERAIEN)  ; EP from AMEREDIT
  .Q
  I $D(DUOUT)!$D(DTOUT) K DUOUT,DTOUT  Q 0
  D:AMEREDTS'="" MULTAUDT^AMEREDAU(AMEREDTS,AMERAIEN)
- I DR'="" D DIE^AMEREDIT(AMERDA,DR)
+ I $G(DR)'="" D DIE^AMEREDIT(AMERDA,DR)
  S (DR,AMEREDTS)=""
  K DIR
- ; TRIAGE NURSE
- N DIC,DIR
- S DR="",AMERSKIP=0
- S DIC("A")="*Triage nurse: " K DIC("B")
- S AMEROLD=$P($G(^AMERVSIT(AMERDA,0)),U,7)
- I AMEROLD'="" S DIC("B")=$P($G(^VA(200,AMEROLD,0)),U)
- S DIC="^VA(200,",DIC(0)="AEQM"
- ;screening so that only valid PCC providers identified
- S DIC("S")="I $D(^VA(200,""AK.PROVIDER"",$P($G(^VA(200,+Y,0)),U),+Y))"
- D ^DIC K DIC
- I $D(DUOUT)!$D(DTOUT) K DUOUT,DTOUT D:AMEREDTS'="" MULTAUDT^AMEREDAU(AMEREDTS,AMERAIEN) Q 0
- I Y>0 S AMERNEW=+Y
- E  S AMERNEW=""
- I AMEROLD=AMERNEW D
- .I AMERNEW="" S AMERSKIP=1 Q
- .; If discharge nurse is same as admitting nurse, don't let 'em delete it
- .I AMERNEW=$P($G(^AMERVSIT(AMERDA,6)),U,4) D  Q
- ..D EN^DDIOL("TRIAGE nurse is same as DISCHARGE nurse","","!!")
- ..D EN^DDIOL("cannot remove TRIAGE nurse until DISCHARGE nurse is updated","","!")
- ..D EN^DDIOL("","","!!")
- ..Q
- .S DIR("A")="Do you want to REMOVE this Triage nurse from this visit"
- .S DIR(0)="Y",DIR("B")="NO"
- .D ^DIR K DIR
- .I Y=1 D
- ..S AMERNEW="",AMERSKIP=1
- ..S DR=$S(DR'="":DR_";",1:""),DR=DR_".07////@;12.2////@"
- ..S AMEROLD=$$EDDISPL^AMEREDAU(AMEROLD,"N") ;translates from new person ien to name
- ..S AMERSTRG=$$EDAUDIT^AMEREDAU(".07",AMEROLD,AMERNEW,"TRIAGE NURSE")
- ..I AMERSTRG="^" Q
- ..S AMEREDTS=$S(AMEREDTS="":AMERSTRG,1:AMEREDTS_"^"_AMERSTRG)
- .Q
- I AMEROLD'=AMERNEW D
- .S AMEROLD=$$EDDISPL^AMEREDAU(AMEROLD,"N") ;translates from new person ien to name
- .S AMERNEW=$$EDDISPL^AMEREDAU(AMERNEW,"N")
- .S AMERSTRG=$$EDAUDIT^AMEREDAU(".07",AMEROLD,AMERNEW,"TRIAGE NURSE")
- .I AMERSTRG="^" Q
- .S AMEREDTS=$S(AMEREDTS="":AMERSTRG,1:AMEREDTS_"^"_AMERSTRG)
- .S DR=$S(DR'="":DR_";",1:""),DR=DR_".07////"_+Y
- .Q
- K DIR,DIC
- ; TRIAGE TIME
- N DIR
- S AMEROLD=$P($G(^AMERVSIT(AMERDA,12)),U,2)
- I AMEROLD'="" S Y=AMEROLD X ^DD("DD") S DIR("B")=Y
- S DIR(0)="D^::ER",DIR("A")="*What time did the patient see the triage nurse"
- S DIR("?")="Enter an exact date and time in Fileman format (e.g. T@1PM)"
- F  Q:Y="^"!(Y="")  D
- .D ^DIR K DIR
- .I $D(DUOUT)!$D(DTOUT) Q
- .S AMERNEW=Y
- .I AMERNEW,$$TVAL^AMER2A($P($G(^AMERVSIT(AMERDA,0)),U,1),AMERNEW,6) Q
- .I AMERNEW="" D
- ..I AMEROLD=AMERNEW  S Y="^" Q
- ..S DR=$S(DR'="":DR_";",1:""),DR=DR_"12.2////@"
- ..S AMEROLD=$$EDDISPL^AMEREDAU(AMEROLD,"D") ;tranforms fileman date into user friendly date
- ..S AMERSTRG=$$EDAUDIT^AMEREDAU("12.2",AMEROLD,AMERNEW)
- ..I AMERSTRG="^" Q
- ..S AMEREDTS=$S(AMEREDTS="":AMERSTRG,1:AMEREDTS_"^"_AMERSTRG)
- ..S Y="^"
- ..Q
- .Q:AMERNEW=""
- .D:'$$TCK^AMER2A($P($G(^AMERVSIT(AMERDA,0)),U,1),Y,1,"admission")
- ..I AMEROLD=AMERNEW  S Y="^" Q
- ..I AMEROLD'=AMERNEW D
- ...S DR=$S(DR'="":DR_";",1:""),DR=DR_"12.2////"_AMERNEW
- ...S AMERNEW=$$EDDISPL^AMEREDAU(AMERNEW,"D")  ;tranforms fileman date into user friendly date
- ...S AMEROLD=$$EDDISPL^AMEREDAU(AMEROLD,"D")
- ...S AMERSTRG=$$EDAUDIT^AMEREDAU("12.2",AMEROLD,AMERNEW,"TRIAGE TIME")
- ...I AMERSTRG="^" Q
- ...S AMEREDTS=$S(AMEREDTS="":AMERSTRG,1:AMEREDTS_"^"_AMERSTRG)
- ...S Y="^"
- ...Q
- ..Q
- .Q
  ;
  ;Edit the Decision to Admit Date
  D
@@ -194,6 +101,7 @@ ADMTRIAG(AMERDA,AMERAIEN)  ; EP from AMEREDIT
  . ;
  . ;Update ^AMERVSIT
  . S AUPNVSIT=AMERPCC
+ . NEW DR
  . D MOD^AUPNVSIT
  ;
  S DR=$G(DR),AMEREDTS=$G(AMEREDTS)
@@ -203,6 +111,10 @@ ADMTRIAG(AMERDA,AMERAIEN)  ; EP from AMEREDIT
  S (DR,AMEREDTS)=""
  K DIR
  K AMEROLD,AMERNEW,AMEREDTS,AMERSTRG,DR,DIR,AMERSKIP
+ ;
+ ;GDIT/HS/BEE 12/11/2018;CR#8013;Sync Prov
+ D SYNC^AMERPRV($G(AUPNVSIT))
+ ;
  D EN^DDIOL("ERS PCC Data Entry is complete for this option","","!!")
  S DIR("A")="Edit more TRIAGE data"
  S DIR(0)="Y",DIR("B")="NO"
@@ -215,7 +127,7 @@ ERSEDTT(AMERDA,AMERAIEN)  ;SUBROUTINE FOR EDIT OF ERS FIELDS THAT DO NOT PASS TO
  N DIR
  S AMEROLD=$P($G(^AMERVSIT(AMERDA,0)),U,24)
  I AMEROLD'="" S DIR("B")=AMEROLD
- S DIR(0)="N^1:5:0",DIR("A")="Enter initial triage assessment from RN"
+ S DIR(0)="N^1:5:0",DIR("A")="Enter the Emergency Severity Index assessment"
  S DIR("?")="Enter a number from 1 to 5"
  S DIR("?",1)="This is a site-specified value that indicates severity of visit"
  D ^DIR K DIR

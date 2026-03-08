@@ -1,8 +1,10 @@
-PSIVWL ;BIR/RGY,PR-COMPILE AND PRT WARD LIST ;13 MAR 97 / 10:18 AM
- ;;5.0; INPATIENT MEDICATIONS ;**41,54,74,84,93,110,111,141**;16 DEC 97
+PSIVWL ;BIR/RGY,PR-COMPILE AND PRT WARD LIST ;23-Jan-2025 15:26;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**41,54,74,84,93,110,111,141,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^PS(51.1 is supported by DBIA 2177
  ; Reference to ^PS(55 is supported by DBIA 2191
+ ;
+ ; Modified - IHS/MSC/PLS - 02/01/2024 - Added reference to GETHLOC  FID 99318
  ;
  K WRD W !!,"Run ward list for DATE: TODAY//" R X:DTIME S:'$T X="^" S:X="" X="T" G Q:X["^" K %DT S %DT="XE" D ^%DT G:Y<0 PSIVWL
  S PSIVDT=Y\1 I Y<DT D ENRSET^PSIVWL1 G PSIVWL
@@ -25,7 +27,8 @@ SETP S Y=^PS(55,DFN,"IV",ON,0) F X=1:1:23 S P(X)=$P(Y,"^",X)
  Q
 MAN1 F DFN=0:0 S DFN=$O(^PS(55,"AIV",PSIVDT1,DFN)) Q:'DFN  S PSIV("NME")=$P($G(^DPT(DFN,0)),U) D INP^VADPT F ON=0:0 S ON=$O(^PS(55,"AIV",PSIVDT1,DFN,ON)) Q:'ON  Q:NOFLG=1  D SETP I PSJOK D MAN3
  Q
-MAN2 S ^PS(55,"PSIVWL",PSIVSN,$S($P(VAIN(4),U,2)]"":$P(VAIN(4),U,2),1:"Outpatient IV"),P(4)_PSIVOD(P(4)),DFN,ON)=$S($P(P(8),"@",2)'=0:PSGCNT,1:0)_"^"_PSGSA_"^"_$P(^PS(55,DFN,"IV",ON,0),"^",16)
+MAN2 ;S ^PS(55,"PSIVWL",PSIVSN,$S($P(VAIN(4),U,2)]"":$P(VAIN(4),U,2),1:"Outpatient IV"),P(4)_PSIVOD(P(4)),DFN,ON)=$S($P(P(8),"@",2)'=0:PSGCNT,1:0)_"^"_PSGSA_"^"_$P(^PS(55,DFN,"IV",ON,0),"^",16)
+ S ^PS(55,"PSIVWL",PSIVSN,$S($P(VAIN(4),U,2)]"":$P(VAIN(4),U,2),1:$$GETHLOC(.P)),P(4)_PSIVOD(P(4)),DFN,ON)=$S($P(P(8),"@",2)'=0:PSGCNT,1:0)_"^"_PSGSA_"^"_$P(^PS(55,DFN,"IV",ON,0),"^",16)
  ;naked reference on line below refers to full global reference to right of = sign
  S $P(^(0),"^",16)=$P(^PS(55,DFN,"IV",ON,0),"^",16)+PSGCNT Q
  Q
@@ -74,3 +77,13 @@ ENT ;PSIVMIN=# of min. to add or sub, PSIVSD=date to add or sub from in FM forma
  S:MI<0 MI=MI+60,HR=HR-1 S HR=HR+HOUR S:HR>23 HR=HR-24,X2=X2+1 S:HR<0 HR=HR+24,X2=X2-1 S:HR+MI=0 X2=X2-1,HR=24,MI=0 S:HR<10 HR=0_HR S:MI<10 MI=0_MI S X=X1 D:X2 C^%DTC S X=$P(X,".") S Y=+(X_"."_HR_MI)
  ; install with version 17.3 of fm
  K HR,MI,X1,X2,HOUR,MIN,PSIVMIN,O,MI Q
+ ;
+ ;Return default or clinic location - p1035 - FID 99318
+GETHLOC(ARY) ;-
+ N RES,RET
+ S RET="Outpatient IV"  ;default
+ I ''$D(ARY) D
+ .I $G(ARY(22))=.5 D
+ ..I $G(ARY("CLIN")) S RES=$$GET1^DIQ(44,ARY("CLIN"),.01)
+ ..E  I +$G(ARY(21)) S RES=$$GET1^DIQ(100,+ARY(21),6)
+ Q $S($L($G(RES)):RES,1:RET)

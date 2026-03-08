@@ -1,10 +1,11 @@
-PSORXVW1 ;BIR/SAB-view prescription con't ;04-Apr-2013 22:42;PLS
- ;;7.0;OUTPATIENT PHARMACY;**35,47,46,71,99,117,156,193,210,148,258,260,240,281,1015**;DEC 1997;Build 62
+PSORXVW1 ;BIR/SAB-view prescription con't ;30-May-2025 09:07;DU
+ ;;7.0;OUTPATIENT PHARMACY;**35,47,46,71,99,117,156,193,210,148,258,260,240,281,1034,1036**;DEC 1997;Build 17
  ;External reference to ^DD(52 supported by DBIA 999
  ;External reference to ^VA(200 supported by DBIA 10060
  ;PSO*210 add call to WORDWRAP api
  ;
- ; Modified - IHS/MSC/PLS - 04/04/13 - Lines ACT+10 and ACT+12
+ ; Modified - IHS/MSC/PLS - 07/13/2023 - Pickup Activity p1034
+ ;                        - 05/29/2025 - Line HLDR+2 - FID 125028
  ;
  I $P($G(^PSRX(RXN,"OR1")),"^",6) D
  .K DIC,X,Y S DIC="^VA(200,",DIC(0)="N,Z",X=$P(^PSRX(RXN,"OR1"),"^",6) D ^DIC
@@ -21,10 +22,9 @@ PSORXVW1 ;BIR/SAB-view prescription con't ;04-Apr-2013 22:42;PLS
  I $P(RX2,"^",15) S DTT=$P(RX2,"^",15) D DAT S ^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_"(Returned to Stock "_DAT_")" K DAT,DTT
  S ^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_"      Routing: "_$S($P(RX0,"^",11)="W":"Window",1:"Mail")
  I $G(^PSRX(DA,"H"))]"",$P(^("STA"),"^")=3 D HLD
- D RF,PAR,ACT,COPAY^PSORXVW2,LBL,ECME^PSOORAL1,^PSORXVW2:$O(^PSRX(DA,4,0))
+ D RF,PAR,ACT,COPAY^PSORXVW2,LBL,ECME^PSOORAL1,^PSORXVW2:$O(^PSRX(DA,4,0)),PLOG^APSPPAL1  ;P1034
  Q
 ACT ;activity log
- ;IHS/MSC/PLS - 04/04/13 - Added support for Reissue at lines ACT+10 and ACT+12
  N CNT
  S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=" ",IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Activity Log:"
  S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="#   Date        Reason         Rx Ref         Initiator Of Activity",IEN=IEN+1,$P(^TMP("PSOAL",$J,IEN,0),"=",79)="="
@@ -33,9 +33,9 @@ ACT ;activity log
  F N=0:0 S N=$O(^PSRX(DA,"A",N)) Q:'N  S P1=^(N,0),DTT=P1\1 D DAT D
  .I $P(P1,"^",2)="M" Q
  .S IEN=IEN+1,CNT=CNT+1,^TMP("PSOAL",$J,IEN,0)=CNT_"   "_DAT_"    ",$P(RN," ",15)=" ",REA=$P(P1,"^",2)
- .S REA=$F("HUCELPRWSIVDABXGKNMZ",REA)-1
+ .S REA=$F("HUCELPRWSIVDABXGKNM",REA)-1
  .I REA D
- ..S STA=$P("HOLD^UNHOLD^DISCONTINUED^EDIT^RENEWED^PARTIAL^REINSTATE^REPRINT^SUSPENSE^RETURNED^INTERVENTION^DELETED^DRUG INTERACTION^PROCESSED^X-INTERFACE^PATIENT INSTR.^PKI/DEA^DISP COMPLETED^ECME^REISSUE^","^",REA)
+ ..S STA=$P("HOLD^UNHOLD^DISCONTINUED^EDIT^RENEWED^PARTIAL^REINSTATE^REPRINT^SUSPENSE^RETURNED^INTERVENTION^DELETED^DRUG INTERACTION^PROCESSED^X-INTERFACE^PATIENT INSTR.^PKI/DEA^DISP COMPLETED^ECME^","^",REA)
  ..S ^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_STA_$E(RN,$L(STA)+1,15)
  .E  S $P(STA," ",15)=" ",^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_STA
  .K STA,RN S $P(RN," ",15)=" ",RF=+$P(P1,"^",4)
@@ -96,7 +96,8 @@ PAR ;partial log
  .S:$P(P1,"^",3)]"" IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="  REMARKS: "_$P(P1,"^",3) K RTS
  Q
 HLD ;hold info
- S DTT=$P(^PSRX(DA,"H"),"^",3) D DAT S HLDR=$P(^DD(52,99,0),"^",3),HLDR=$S($P(^PSRX(DA,"H"),"^")'>8:$P(HLDR,";",$P(^PSRX(DA,"H"),"^")),1:$P(HLDR,";",9)),HLDR=$P(HLDR,":",2)
+ S DTT=$P(^PSRX(DA,"H"),"^",3) D DAT  ;S HLDR=$P(^DD(52,99,0),"^",3),HLDR=$S($P(^PSRX(DA,"H"),"^")'>8:$P(HLDR,";",$P(^PSRX(DA,"H"),"^")),1:$P(HLDR,";",9)),HLDR=$P(HLDR,":",2)
+ S HLDR=$$GET1^DIQ(52,DA,99) ; p1036 FID 125028
  S $P(RN," ",60)=" ",IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Hold Reason: "_HLDR_$E(RN,$L("Hold Reason: "_HLDR)+1,60)_"Hold Date: "_DAT S:$P(^PSRX(DA,"H"),"^",2)]"" IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="Hold Comments: "_$P(^PSRX(DA,"H"),"^",2)
  K RN,DAT,DTT,HLDR
  Q

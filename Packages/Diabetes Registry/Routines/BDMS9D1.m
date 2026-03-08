@@ -1,5 +1,5 @@
-BDMS9D1 ; IHS/CMI/LAB - DIABETIC CARE SUMMARY SUPPLEMENT ; 01 Feb 2011  8:49 AM
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**3,4,8,9**;JUN 14, 2007;Build 78
+BDMS9D1 ; IHS/CMI/LAB - DIABETIC CARE SUMMARY SUPPLEMENT ; 31 Oct 2022  2:02 PM
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**3,4,8,9,15,16,17,18,19**;JUN 14, 2007;Build 159
  ;
  ;
 EP ;EP - called from component
@@ -7,7 +7,7 @@ EP ;EP - called from component
  I $$PLTAX^BDMSMU(BDMSPAT,"SURVEILLANCE DIABETES") Q  ;has diabetes
  S X=$$LASTITEM^BDMSMU(BDMSPAT,"[SURVEILLANCE DIABETES","DX")
  I X>$$FMADD^XLFDT(DT,-366) Q  ;if date of last dm dx is w/in past year then quit
- I $E(IOST)="C",IO=IO(0) W !! S DIR("A")="PRE-DIABETES CARE SUMMARY WILL NOW BE DISPLAYED (^ TO EXIT, RETURN TO CONTINUE)",DIR(0)="E" D ^DIR I $D(DIRUT) S BDMSQIT=1 Q
+ I $E(IOST)="C",IO=IO(0) W !! S DIR("A")="PREDIABETES CARE SUMMARY WILL NOW BE DISPLAYED (^ TO EXIT, RETURN TO CONTINUE)",DIR(0)="E" D ^DIR I $D(DIRUT) S BDMSQIT=1 Q
  D EP2(BDMSPAT)
 W ;write out array
  W:$D(IOF) @IOF
@@ -29,7 +29,7 @@ HEADER ;
 HEAD1 ;
  W:$D(IOF) @IOF
  W !,BDMSHDR,!
- W !,"PreDiabetes Patient Care Summary - continued"
+ W !,"Prediabetes Patient Care Summary - continued"
  W !,"Patient: ",$P(^DPT(BDMSPAT,0),U),"  HRN: ",$$HRN^AUPNPAT(BDMSPAT,DUZ(2)),!
  Q
 EP2(BDMSDFN) ;PEP - PASS DFN get back array of patient care summary
@@ -47,55 +47,84 @@ EP21 ;
 SETARRAY ;set up array containing dm care summary
  ;CHECK TO SEE IF START1^APCLDF EXISTS
  S BDMJOB=$J,BDMBTH=$H
- ;D UNFOLDTX^BDMUTL(2016)
  I '$D(BDMSCVD) S BDMSCVD="S:Y]"""" Y=+Y,Y=$E(Y,4,5)_""/""_$S($E(Y,6,7):$E(Y,6,7)_""/"",1:"""")_$E(Y,2,3)"
  S X="APCLDF" X ^%ZOSF("TEST") I '$T Q
  S X="PREDIABETES PATIENT CARE SUMMARY                 Report Date:  "_$$FMTE^XLFDT(DT) D S(X)
- S X="Patient Name:  "_$P(^DPT(BDMSDFN,0),U)_"    HRN: "_$$HRN^AUPNPAT(BDMSDFN,DUZ(2)) D S(X)
- S X="Age:  "_$$AGE^AUPNPAT(BDMSDFN),$E(X,15)="Sex:  "_$$SEX^AUPNPAT(BDMSDFN)_"    DOB:  "_$$FMTE^XLFDT($$DOB^AUPNPAT(BDMSDFN)) D S(X)
- S X="Classification:" D S(X,1)
- S Y=$$IFG(BDMSDFN) S X="",$E(X,2)=$S($P(Y,U)=1:"Yes",1:"No"),$E(X,8)="Impaired Fasting Glucose" I $P(Y,U)=1 S X=X_":  "_$P(Y,U,3)_":  "_$$FMTE^XLFDT($P(Y,U,2))
- D S(X)
- S Y=$$IGT(BDMSDFN) S X="",$E(X,2)=$S($P(Y,U)=1:"Yes",1:"No"),$E(X,8)="Impaired Glucose Tolerance" I $P(Y,U)=1 S X=X_":  "_$P(Y,U,3)_":  "_$$FMTE^XLFDT($P(Y,U,2))
- D S(X)
- S Y=$$MS(BDMSDFN) S X="",$E(X,2)=$S($P(Y,U)=1:"Yes",1:"No"),$E(X,8)="Metabolic Syndrome" I $P(Y,U)=1 S X=X_":  "_$P(Y,U,3)_":  "_$$FMTE^XLFDT($P(Y,U,2))
- D S(X)
- S X=" " D S(X)
- S X="Case Manager:  "_$$CMSMAN(BDMSDFN) D S(X)  ;HOW TO FIND CASE MANAGER - LORI
- S X="Primary Care Provider: "_$$VAL^XBDIQ1(9000001,BDMSDFN,.14) D S(X)
- S X=" " D S(X)
- D GETHWB(BDMSDFN,DT)
- S X="  Last Height:  "_BDMX(1,"HT")_$S(BDMX(1,"HT")]"":" inches",1:""),$E(X,33)=BDMX(1,"HTD") D S(X)
- S X="Last 3 Weight:  "_$S(BDMX(1,"WT")]"":$J(BDMX(1,"WT"),3,0),1:"")_$S(BDMX(1,"WT")]"":" lbs",1:""),$E(X,33)=BDMX(1,"WTD"),$E(X,47)="BMI: "_BDMX(1,"BMI") D S(X)
- S X="",$E(X,17)=$S(BDMX(2,"WT")]"":$J(BDMX(2,"WT"),3,0),1:"")_$S(BDMX(2,"WT")]"":" lbs",1:""),$E(X,33)=BDMX(2,"WTD"),$E(X,47)="BMI: "_BDMX(2,"BMI") D S(X)
- S X="",$E(X,17)=$S(BDMX(3,"WT")]"":$J(BDMX(3,"WT"),3,0),1:"")_$S(BDMX(3,"WT")]"":" lbs",1:""),$E(X,33)=BDMX(3,"WTD"),$E(X,47)="BMI: "_BDMX(3,"BMI") D S(X)
- I BDMX(1,"WC")]"" S X="Last Waist Circumference: "_BDMX(1,"WC"),$E(X,33)=BDMX(1,"WCD") D S(X,1)
+ S X="Patient: "_$$GETPREF^AUPNSOGI(BDMSDFN,"E",1),$E(X,68)="HRN: "_$$HRN^AUPNPAT(BDMSDFN,DUZ(2)) D S(X,1)
+ I $$DOD^AUPNPAT(BDMSDFN)]"" S X="DATE OF DEATH: "_$$DATE^BDMS9B1($$DOD^AUPNPAT(BDMSDFN)) D S(X,1),S(" ")
+ S X="Age:  "_$$AGE^BDMAPIU(BDMSDFN,1,DT)_" (DOB "_$$DATE^BDMS9B1($$DOB^AUPNPAT(BDMSDFN))_")",$E(X,40)="Sex: "_$$VAL^XBDIQ1(2,BDMSDFN,.02) D S(X)
+ S X="CLASS/BEN: "_$$VAL^XBDIQ1(9000001,BDMSDFN,1111),$E(X,40)="Designated PCP: "_$E($$DPCP^BDMS9B1(BDMSDFN),1,25) D S(X)
+ S (BDMIGT,BDMIFG,BDMPREDM)=""
+ S X="Diagnosis" D S(X,1)
+ S X=" Problem List (Date of Diagnosis)" D S(X)
+ S X="" S (Y,BDMIFG)=$$IFG(BDMSDFN) I $P(Y,U)=1 S $E(X,3)="Impaired Fasting Glucose " S $E(X,30)=$S($P(Y,U,2):"("_$$FMTE^XLFDT($P(Y,U,2))_")",1:"(Date of Onset not recorded)") D S(X)
+ S X="" S (Y,BDMIGT)=$$IGT(BDMSDFN) I $P(Y,U)=1 S $E(X,3)="Impaired Glucose Tolerance " S:$P(Y,U)=1 $E(X,30)=$S($P(Y,U,2):"("_$$FMTE^XLFDT($P(Y,U,2))_")",1:"(Date of Onset not recorded)") D S(X)
+ S X="" S (Y,BDMPREDM)=$$PREDM(BDMSDFN) I $P(Y,U)=1 S $E(X,3)="Prediabetes " S:$P(Y,U)=1 $E(X,30)=$S($P(Y,U,2):"("_$$FMTE^XLFDT($P(Y,U,2))_")",1:"(Date of Onset not recorded)") D S(X)
+ S X=" Diagnosis first recorded in PCC (Used as POV):" D S(X,1)
+ S X="" I $P(BDMIFG,U,3) S X="  Impaired Fasting Glucose",$E(X,32)=$$FMTE^XLFDT($P(BDMIFG,U,3)) D S(X)
+ S X="" I $P(BDMIGT,U,3) S X="  Impaired Glucose Tolerance",$E(X,32)=$$FMTE^XLFDT($P(BDMIGT,U,3)) D S(X)
+ S X="" I $P(BDMPREDM,U,3) S X="  Prediabetes",$E(X,32)=$$FMTE^XLFDT($P(BDMPREDM,U,3)) D S(X)
+ ;patch 18 add if DM is a diagnosis
+ S BDMDMDX=""
+ S BDMDMDX=$$LASTITEM^BDMSMU(BDMSDFN,"[SURVEILLANCE DIABETES","DX")
+ I BDMDMDX S X="",X="PLEASE NOTE: Diabetes has been used as a diagnosis in PCC: "_$$FMTE^XLFDT(BDMDMDX) D S(X,1)
+ I $$PLTAX^BDMSMU(BDMSDFN,"SURVEILLANCE DIABETES",,,"I") S X="",X="PLEASE NOTE:  Diabetes is listed as an active problem on the problem list." D S(X)
+ D GETHWB^BDMS9B1(BDMSDFN)
+ S X="BMI: "_BDMX("BMI"),$E(X,12)="Last Height:  "_$$STRIP^XLFSTR($J(BDMX("HT"),5,2)," ")_$S(BDMX("HT")]"":" inches",1:""),$E(X,43)=BDMX("HTD") D S(X,1)
+ S X="",$E(X,12)="Last Weight:  "_$S(BDMX("WT")]"":BDMX("WT")\1,1:"")_$S(BDMX("WT")]"":" lbs",1:""),$E(X,43)=BDMX("WTD") D S(X)
+ ;tobacco
+ S BDMTOBC="",BDMTOBS=$$TOBACCO^BDMDL1S(BDMSDFN,$$DOB^AUPNPAT(BDMSDFN),DT)
+ D S("Tobacco Use:",1)
+ S X="   Last Screened: "_$$DATE^BDMS9B1($P(BDMTOBS,U,3)) D S(X)
+ S X="   Current Status: "_$P($P($G(BDMTOBS),U,2),"  ",2,99) D S(X)
+ ;COUNSELED?
+ S X="",$E(X,7)="Tobacco cessation counseling/education received in the past year: " D
+ .I $E(BDMTOBS),$E(BDMTOBS)'=1 S X=X_"N/A" D S(X) Q
+ .S Y=$$CESS^BDMDL11(BDMSDFN,$$FMADD^XLFDT(DT,-365),DT)
+ .I $E(Y)=1 D S(X) D S("         "_$P(Y,"  ",2,999)) Q
+ .I $E(Y)=2 S X=X_"No" D S(X) Q
+ ;HTN/BP
+ S X="HTN Diagnosed ever:  "_$P($$HTNDX^BDMDL13(BDMSDFN,DT),"  ",2) D S(X,1)
+ ;
  S B=$$BP(BDMSDFN)
- S X="Last 3 non-ER BP:  "_$P($G(BDMX(1)),U,2)_"     "_$$FMTE^XLFDT($P($G(BDMX(1)),U))
- D S(X,1)
- S X="" I $D(BDMX(2)) S X="",$E(X,20)=$P(BDMX(2),U,2)_"     "_$$FMTE^XLFDT($P(BDMX(2),U))
- D S(X)
- S X="" I $D(BDMX(3)) S X="",$E(X,20)=$P(BDMX(3),U,2)_"     "_$$FMTE^XLFDT($P(BDMX(3),U))
- D S(X)
- D TOBACCO^BDMS9B3
- S X="Tobacco Use:  "_$G(BDMTOB) D S(X,1)
- S X="Prediabetes Education Provided (in past yr):" D S(X,1)
- S X="   Last Dietitian Visit:   "_$$DIETV^BDMS9B3(BDMSDFN) D S(X)
- S BDMSBEG=$$FMADD^XLFDT(DT,-366)
- K BDMX D EDUC^BDMS9B2 I $D(BDMX) D
- .S %=0 F  S %=$O(BDMX(%)) Q:%'=+%  S X="   "_BDMX(%) D S(X)
+ S X="Last 3 BP:      "_$P($G(BDMX(1)),U,2),$E(X,26)=$$DATE^BDMS9B1($P($G(BDMX(1)),U)) D S(X)
+ S X="(non ER)" I $D(BDMX(2)) S $E(X,17)=$P(BDMX(2),U,2),$E(X,26)=$$DATE^BDMS9B1($P(BDMX(2),U)) D S(X)
+ S X="" I $D(BDMX(3)) S X="",$E(X,17)=$P(BDMX(3),U,2),$E(X,26)=$$DATE^BDMS9B1($P(BDMX(3),U)) D S(X)
+ ;
+ ;STATIN
+ S Y=$$STATIN^BDMDL16(BDMSDFN,$$FMADD^XLFDT(DT,-(6*31)),DT)
+ S X="Statin prescribed (in past 6 months):"
+ I $E(Y)=2 S $E(X,40)=$P(Y,"  ",2,99) D S(X,1)
+ I $E(Y)=1 D S(X) S X="   "_$P(Y,"  ",2,99) D S(X,1)
+ I $E(Y)=3 D S(X) S X="   Statin Note: "_$P(Y,"  ",2,99) D S(X,1)
+ ;LAB
+L ;
+ S X="Laboratory Results (most recent):",$E(X,55)="RPMS LAB TEST NAME" D S(X,1)
+ S X=" A1C:" S Y=$$HBA1C^BDMS9B2(BDMSDFN),$E(X,28)=$P(Y,"|||"),$E(X,44)=$$DATE^BDMS9B1($P(Y,"|||",2)),$E(X,55)=$P(Y,"|||",3) D S(X)
+ I $P(Y,"|||",4)]"" S X="   Note: "_$P(Y,"|||",4) D S(X)
+ S X=" Next most recent A1C:" S Y=$$NLHGB^BDMS9B2(BDMSDFN),$E(X,28)=$P(Y,"|||"),$E(X,44)=$$DATE^BDMS9B1($P(Y,"|||",2)),$E(X,55)=$P(Y,"|||",3) D S(X)
+ S X=" Last Fasting Glucose:" S Y=$$FGLUCOSE(BDMSDFN),$E(X,28)=$P(Y,"|||"),$E(X,44)=$$DATE^BDMS9B1($P(Y,"|||",2)),$E(X,55)=$P(Y,"|||",3) D S(X)
+ S X=" Last 75 GM 2 hour Glucose:" S Y=$$GM75(BDMSDFN),$E(X,28)=$P(Y,"|||"),$E(X,44)=$$DATE^BDMS9B1($P(Y,"|||",2)),$E(X,55)=$P(Y,"|||",3) D S(X)
+ S Y=$$ACRATIO^BDMS9B2(BDMSDFN)
+ S X=" Quantitative UACR:",$E(X,28)=$P(Y,"|||"),$E(X,44)=$$DATE^BDMS9B1($P(Y,"|||",2)),$E(X,55)=$P(Y,"|||",3) D S(X)
+ S X=" Total Cholesterol:" S Y=$$TCHOL^BDMS9B2(BDMSDFN),$E(X,28)=$P(Y,"|||"),$E(X,44)=$$DATE^BDMS9B1($P(Y,"|||",2)),$E(X,55)=$P(Y,"|||",3) D S(X,1)
+ S X=" LDL Cholesterol:" S Y=$$CHOL^BDMS9B2(BDMSDFN),$E(X,28)=$P(Y,"|||"),$E(X,44)=$$DATE^BDMS9B1($P(Y,"|||",2)),$E(X,55)=$P(Y,"|||",3) D S(X)
+ S X=" HDL Cholesterol:" S Y=$$HDL^BDMS9B2(BDMSDFN),$E(X,28)=$P(Y,"|||"),$E(X,44)=$$DATE^BDMS9B1($P(Y,"|||",2)),$E(X,55)=$P(Y,"|||",3) D S(X)
+ S X=" Triglycerides:" S Y=$$TRIG^BDMS9B2(BDMSDFN),$E(X,28)=$P(Y,"|||"),$E(X,44)=$$DATE^BDMS9B1($P(Y,"|||",2)),$E(X,55)=$P(Y,"|||",3) D S(X)
+ S Z=0
+EDUCD D S(" ")
+ S BDMSBEG=$$FMADD^XLFDT(DT,-365)
+ S X="Education Provided (in past yr): " D S(X)
+ S X="  Last Dietitian Visit (ever):  "_$$DIETV^BDMS9B3(BDMSDFN) D S(X)
+ S X=""
+ K BDMX
+ D EDUC^BDMS9B2
+ I $D(BDMX) D
+ .S %="" F  S %=$O(BDMX(%)) Q:%=""  D S("   "_BDMX(%))
  K BDMX,BDMY,%
- D EDUCREF^BDMS9B2 I $D(BDMX) S X="In the past year, the patient has refused the following Diabetes education:" D S(X,1) D
- .S %="" F  S %=$O(BDMX(%)) Q:%=""  S X="   "_%_"   "_BDMX(%) D S(X)
- K BDMX,BDMY,%
- S X="HTN Diagnosed:  "_$$HTN(BDMSDFN) D S(X,1)
- S BDMSBEG=$$FMADD^XLFDT(DT,-(6*30.5))
- S %=$$ACE^BDMS9B4(BDMSDFN,BDMSBEG) ;get date of last ACE in last year
- S X="",X="ON ACE Inhibitor/ARB in past 6 months: "_% D S(X)
- K BDMSX S BDMSBEG=$$FMADD^XLFDT(DT,-365) S X="Aspirin Use (in past yr):  "_$E($$ASPIRIN(BDMSDFN,BDMSBEG),1,32) D S(X)
- S X="",X=$$ASPREF^BDMS9B4(BDMSDFN) I X]"" S X="     "_X D S(X)
-M12 ;
- D MORE^BDMS9D2
+ D EDUCREF^BDMS9B2 I $D(BDMX) S X="In the past year, the patient has refused the following Diabetes education:" D S(X) D
+ .S %="" F  S %=$O(BDMX(%)) Q:%=""  S X="  "_%_"     "_BDMX(%) D S(X)
+ K BDMR,BDMY,%
  S X=$P(^DPT(BDMSDFN,0),U),$E(X,35)="DOB: "_$$DOB^AUPNPAT(BDMSDFN,"S"),$E(X,55)="Chart #"_$$HRN^AUPNPAT(BDMSDFN,DUZ(2),2) D S(X,1)
  Q
 S(Y,F,C,T) ;set up array
@@ -113,52 +142,102 @@ S1 ;
  S %=$P(^TMP("APCHS",$J,"DCS",0),U)+1,$P(^TMP("APCHS",$J,"DCS",0),U)=%
  S ^TMP("APCHS",$J,"DCS",%)=X
  Q
-CMSMAN(P,F) ;EP - return date/dx of dm in register
+CMSMAN(P,F) ;EP - return CASE MANAGER in register
  I $G(F)="" S F="E"
  I '$G(P) Q ""
- NEW R,N,D,D1,Y,X,G S R=0,N="",D="" F  S N=$O(^ACM(41.1,"B",N)) Q:N=""!(D]"")  S R=0 F  S R=$O(^ACM(41.1,"B",N,R)) Q:R'=+R!(D]"")  I N["DIAB" D
+ NEW R,N,D,D1,Y,X,G S R=0,N="",D="" F  S N=$O(^ACM(41.1,"B",N)) Q:N=""!(D]"")  S R=0 F  S R=$O(^ACM(41.1,"B",N,R)) Q:R'=+R!(D]"")  I N["PREDIAB" D
  .S (G,X)=0,(D,Y)="" F  S X=$O(^ACM(41,"C",P,X)) Q:X'=+X!(D]"")  I $P(^ACM(41,X,0),U,4)=R D
  ..S D=$P($G(^ACM(41,X,"DT")),U,6) I D]"" S D=$P(^VA(200,D,0),U)
  Q $G(D)
  ;
-MS(P) ;
- NEW X,Y,I,BDMY,%
- S X=$$PLTAX^BDMSMU(P,"DM AUDIT METABOLIC SYNDROME",,2) I X D  Q Y
- .S D=$P(^AUPNPROB(X,0),U,13) I D]"" S Y=1_U_D_U_"Date of Onset from Problem List" Q
- .S D=$P(^AUPNPROB(X,0),U,8) I D]"" S Y=1_U_D_U_"Date Added to Problem List" Q
- .S Y=1_U_D_U_"Problem List" Q
- K BDMY S %=P_"^FIRST DX [DM AUDIT METABOLIC SYNDROME",E=$$START1^APCLDF(%,"BDMY(")
- I $D(BDMY(1)) Q 1_U_$P(BDMY(1),U)_U_"Date of first DX in PCC"
- Q ""
-IGT(P) ;
- NEW X,Y,I,BDMY,%
- S X=$$PLTAX^BDMSMU(P,"DM AUDIT IGT DXS",,2) I X D  Q Y
- .S D=$P(^AUPNPROB(X,0),U,13) I D]"" S Y=1_U_D_U_"Date of Onset from Problem List" Q
- .S D=$P(^AUPNPROB(X,0),U,8) I D]"" S Y=1_U_D_U_"Date Added to Problem List" Q
- .S Y=1_U_D_U_"Problem List" Q
+IGT(P,EDATE) ;
+ ;return doo from problem list^first dx pcc
+ I '$G(EDATE) S EDATE=DT
+ NEW X,Y,I,BDMY,%,R,T,G
+ K R
+ S T=$O(^ATXAX("B","DM AUDIT IGT DXS",0))
+ S G=""
+ S X=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X  D
+ .Q:'$D(^AUPNPROB(X,0))  ;bad xref
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"  ;deleted
+ .S Y=$P(^AUPNPROB(X,0),U)
+ .Q:'$$ICD^ATXCHK(Y,T,9)  ;not a dx we want
+ .S D=$P(^AUPNPROB(X,0),U,13)
+ .I D Q:D>EDATE
+ .S R(9999999-D)=X
+ ;now get earliest or ""
+ I '$D(R) G IGTPCC
+ S G=1
+ S %=$O(R(0))
+ S %=9999999-%
+ S:'% %=""
+ S $P(G,U,2)=%
+ ;
+IGTPCC ;
  K BDMY S %=P_"^FIRST DX [DM AUDIT IGT DXS",E=$$START1^APCLDF(%,"BDMY(")
- I $D(BDMY(1)) Q 1_U_$P(BDMY(1),U)_U_"Date of first DX in PCC"
- Q ""
-IFG(P) ;
- NEW X,Y,I,BDMY,%
- S X=$$PLTAX^BDMSMU(P,"BGP IMPAIRED FASTING GLUCOSE",,2) I X D  Q Y
- .S D=$P(^AUPNPROB(X,0),U,13) I D]"" S Y=1_U_D_U_"Date of Onset from Problem List" Q
- .S D=$P(^AUPNPROB(X,0),U,8) I D]"" S Y=1_U_D_U_"Date Added to Problem List" Q
- .S Y=1_U_D_U_"Problem List" Q
+ I '$D(BDMY(1)) Q G
+ I $P(BDMY(1),U,1)>EDATE Q G
+ S $P(G,U,3)=$P(BDMY(1),U,1)
+ Q G
+PREDM(P,EDATE) ;
+ ;return doo from problem list^first dx pcc
+ I '$G(EDATE) S EDATE=DT
+ NEW X,Y,I,BDMY,%,R,T,G
+ K R
+ S T=$O(^ATXAX("B","DM AUDIT PREDIABETES DXS",0))
+ S G=""
+ S X=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X  D
+ .Q:'$D(^AUPNPROB(X,0))  ;bad xref
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"  ;deleted
+ .S Y=$P(^AUPNPROB(X,0),U)
+ .Q:'$$ICD^ATXCHK(Y,T,9)  ;not a dx we want
+ .S D=$P(^AUPNPROB(X,0),U,13)
+ .I D Q:D>EDATE
+ .S R(9999999-D)=X
+ ;now get earliest or ""
+ I '$D(R) G PREDMPCC
+ S G=1
+ S %=$O(R(0))
+ S %=9999999-%
+ S:'% %=""
+ S $P(G,U,2)=%
+ ;
+PREDMPCC ;
+ K BDMY S %=P_"^FIRST DX [DM AUDIT PREDIABETES DXS",E=$$START1^APCLDF(%,"BDMY(")
+ I '$D(BDMY(1)) Q G
+ I $P(BDMY(1),U,1)>EDATE Q G
+ S $P(G,U,3)=$P(BDMY(1),U,1)
+ Q G
+IFG(P,EDATE) ;
+ I '$G(EDATE) S EDATE=DT
+ ;return doo from problem list^first dx pcc
+ NEW X,Y,I,BDMY,%,R,T,G
+ K R
+ S T=$O(^ATXAX("B","BGP IMPAIRED FASTING GLUCOSE",0))
+ S G=""
+ S X=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X  D
+ .Q:'$D(^AUPNPROB(X,0))  ;bad xref
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"  ;deleted
+ .S Y=$P(^AUPNPROB(X,0),U)
+ .Q:'$$ICD^ATXCHK(Y,T,9)  ;not a dx we want
+ .S D=$P(^AUPNPROB(X,0),U,13)
+ .I D Q:D>EDATE
+ .S R(9999999-D)=X
+ ;now get earliest or ""
+ I '$D(R) G IFGPCC
+ S G=1
+ S %=$O(R(0))
+ S %=9999999-%
+ S:'% %=""
+ S $P(G,U,2)=%
+ ;
+IFGPCC ;
  K BDMY S %=P_"^FIRST DX [BGP IMPAIRED FASTING GLUCOSE",E=$$START1^APCLDF(%,"BDMY(")
- I $D(BDMY(1)) Q 1_U_$P(BDMY(1),U)_U_"Date of first DX in PCC"
- Q ""
-HTN(P) ;
- N T S T=$O(^ATXAX("B","SURVEILLANCE HYPERTENSION",0))
- I 'T Q ""
- N X,Y,I S (X,Y,I)=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(I)  I $D(^AUPNPROB(X,0)),$P(^AUPNPROB(X,0),U,12)'="D" S Y=$P(^AUPNPROB(X,0),U) I $$ICD^BDMUTL(Y,"SURVEILLANCE HYPERTENSION",9) S I=1
- I I Q "Yes"
- NEW BDMX
- S BDMX=""
- S X=P_"^LAST 3 DX [SURVEILLANCE HYPERTENSION" S E=$$START1^APCLDF(X,"BDMX(") G:E HTNX I $D(BDMX(3)) S BDMX="Yes"
- I $G(BDMX)="" S BDMX="No"
-HTNX ;
- Q BDMX
+ I '$D(BDMY(1)) Q G
+ I $P(BDMY(1),U,1)>EDATE Q G
+ S $P(G,U,3)=$P(BDMY(1),U,1)
+ Q G
+ ;
 BP(P) ;last 3 BPs - NON ER
  NEW BDMD,BDMC
  K BDMX
@@ -176,57 +255,11 @@ BP(P) ;last 3 BPs - NON ER
 BPX ;
  K BDMD,BDMC
  Q BDMX
-GETHWB(P,EDATE)  ;get last height, height date, weight, weight date and BMI for patient P, return in BDMX("HT"),BDMX("HTD"),BDMX("WT"),BDMX("WTD"),BDMX("BMI")
- K BDMX
- F X=1:1:3 S BDMX(X,"HT")="",BDMX(X,"HTD")="",BDMX(X,"WT")="",BDMX(X,"WTD")="",BDMX(X,"BMI")="",BDMX(X,"WC")="",BDMX(X,"WCD")="",BDMX(X,"WTI")=""
-LASTHT ;
- Q:'$D(^AUPNVSIT("AC",P))
- Q:'$D(^AUPNVMSR("AC",P))
- NEW BDMY
- S %=P_"^LAST 3 MEAS HT" NEW X S E=$$START1^APCLDF(%,"BDMY(")
- S BDMX(1,"HT")=$P($G(BDMY(1)),U,2),BDMX(1,"HTD")=$$FMTE^XLFDT($P($G(BDMY(1)),U))
- S BDMX(1,"HT")=$S(BDMX(1,"HT")]"":$J(BDMX(1,"HT"),2,0),1:"")
- S BDMX(2,"HT")=$P($G(BDMY(2)),U,2),BDMX(2,"HTD")=$$FMTE^XLFDT($P($G(BDMY(2)),U))
- S BDMX(2,"HT")=$S(BDMX(2,"HT")]"":$J(BDMX(2,"HT"),2,0),1:"")
- S BDMX(3,"HT")=$P($G(BDMY(3)),U,2),BDMX(3,"HTD")=$$FMTE^XLFDT($P($G(BDMY(3)),U))
- S BDMX(3,"HT")=$S(BDMX(3,"HT")]"":$J(BDMX(3,"HT"),2,0),1:"")
-LASTWT ;
- K BDMY S %=P_"^LAST 3 MEAS WT" NEW X S E=$$START1^APCLDF(%,"BDMY(")
- S BDMX(1,"WT")=$P($G(BDMY(1)),U,2),BDMX(1,"WTD")=$$FMTE^XLFDT($P($G(BDMY(1)),U)),BDMX(1,"WTI")=$P($G(BDMY(1)),U)
- S BDMX(2,"WT")=$P($G(BDMY(2)),U,2),BDMX(2,"WTD")=$$FMTE^XLFDT($P($G(BDMY(2)),U)),BDMX(2,"WTI")=$P($G(BDMY(2)),U)
- S BDMX(3,"WT")=$P($G(BDMY(3)),U,2),BDMX(3,"WTD")=$$FMTE^XLFDT($P($G(BDMY(3)),U)),BDMX(3,"WTI")=$P($G(BDMY(3)),U)
-LASTWC ;
- K BDMY S %=P_"^LAST 3 MEAS WC" NEW X S E=$$START1^APCLDF(%,"BDMY(")
- S BDMX(1,"WC")=$P($G(BDMY(1)),U,2),BDMX(1,"WCD")=$$FMTE^XLFDT($P($G(BDMY(1)),U))
- S BDMX(2,"WC")=$P($G(BDMY(2)),U,2),BDMX(2,"WCD")=$$FMTE^XLFDT($P($G(BDMY(2)),U))
- S BDMX(3,"WC")=$P($G(BDMY(3)),U,2),BDMX(3,"WCD")=$$FMTE^XLFDT($P($G(BDMY(3)),U))
-BMI ;
- F BDMY=1:1:3 D
- .I BDMX(BDMY,"WT")="" Q  ;no weight
- .S BDMHT=""
- .I $$AGE^AUPNPAT(P)<19 D  Q:BDMHT=""
- ..;Get weight on that date
- ..S Y=0 F  S Y=$O(BDMX(Y)) Q:Y'=+Y  I BDMX(Y,"HTD")=BDMX(BDMY,"WTD") S BDMHT=BDMX(Y,"HT")
- .I $$AGE^AUPNPAT(P)>18 D  Q:BDMHT=""
- ..S Y=0 F  S Y=$O(BDMX(Y)) Q:Y'=+Y  I BDMX(Y,"HTD")=BDMX(BDMY,"WTD") S BDMHT=BDMX(Y,"HT") Q
- ..S BDMHT=BDMX(1,"HT")
- .S %=""
- .S W=BDMX(BDMY,"WT")*.45359,H=(BDMHT*0.0254),H=(H*H),%=(W/H),%=$J(%,4,1)
- .S BDMX(BDMY,"BMI")=%
- Q
-ASPIRIN(P,D) ;
+FGLUCOSE(P) ;
  I '$G(P) Q ""
- I '$G(D) S D=0 ;if don't pass date look at all time
- NEW V,I,%
- S %=""
- NEW T,T1 S T=$O(^ATXAX("B","DM AUDIT ASPIRIN DRUGS",0))
- S T1=$O(^ATXAX("B","DM AUDIT ANTI-PLATELET DRUGS",0))
- I 'T Q ""
- S I=0 F  S I=$O(^AUPNVMED("AA",P,I)) Q:I'=+I!(%)!(I>(9999999-D))  D
- .S V=0 F  S V=$O(^AUPNVMED("AA",P,I,V)) Q:V'=+V!(%)  S G=$P(^AUPNVMED(V,0),U) D
- ..I $D(^ATXAX(T,21,"B",G)) S %=V Q
- ..I T1,$D(^ATXAX(T1,21,"B",G)) S %=V Q
- I %]"" D  Q %
- .I $P(^AUPNVMED(%,0),U,8)="" S %="Yes - "_$$FMTE^XLFDT($P($P(^AUPNVSIT($P(^AUPNVMED(%,0),U,3),0),U),"."))_" "_$$VAL^XBDIQ1(9000010.14,%,.01) Q
- .I $P(^AUPNVMED(%,0),U,8)]"" S %="Discontinued - "_$$FMTE^XLFDT($P($P(^AUPNVSIT($P(^AUPNVMED(%,0),U,3),0),U),"."))_" "_$$VAL^XBDIQ1(9000010.14,%,.01) Q
- Q "No"
+ NEW T S T=$O(^ATXLAB("B","DM AUDIT FASTING GLUCOSE TESTS",0)),LT="DM AUDIT FASTING GLUC LOINC" I 'T Q "<Taxonomy Missing>"
+ Q $$LAB^BDMS9B2(P,T,LT)
+GM75(P) ;
+ I '$G(P) Q ""
+ NEW T S T=$O(^ATXLAB("B","DM AUDIT 75GM 2HR GLUCOSE",0)),LT="DM AUDIT 75GM 2HR LOINC" I 'T Q "<Taxonomy Missing>"
+ Q $$LAB^BDMS9B2(P,T,LT)

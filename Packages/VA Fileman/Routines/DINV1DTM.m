@@ -1,14 +1,13 @@
-%ZOSV1 ;SFISC/AC,LL/DFH,sfisc/fyb - ;07/07/95  16:11
- ;;22.0;VA FileMan;;Mar 30, 1999
+%ZOSV1 ;SFISC/AC,LL/DFH,sfisc/fyb-View commands & special functions (continued) ;03:13 PM  21 Dec 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 DEVOPN ;X=$J,Y=List of devices separated by a comma
  N A,I,JA,JOB,DEV,CDEV,ODEV,PDEV
  S X=$J D JSTAT
  I 'ZVER S Y=$$jstat^%mjob(X),Y=$S($P(Y,"|",6)>0:$P(Y,"|",6)_",",1:"")_$P(Y,"|",9)_$E(",",$P(Y,"|",9)]"") Q
- ;S PDEV=$V(0,JA+18,-3),PDEV=$S(PDEV:$V(0,PDEV+2,-2),1:"-")
- ;S CDEV=$V(0,JA+22,-3),CDEV=$S(CDEV:$V(0,CDEV+2,-2),1:"-")
- S PDEV=$P($zjob(X),"|",5)
- S CDEV=$P($zjob(X),"|",6)
+ S PDEV=$V(0,JA+18,-3),PDEV=$S(PDEV:$V(0,PDEV+2,-2),1:"-")
+ S CDEV=$V(0,JA+22,-3),CDEV=$S(CDEV:$V(0,CDEV+2,-2),1:"-")
  S ODEV="",JOB=$V(0,JA+10,-4)
  ;S A=$V(1,62,-3) I A,$V(0,A+4,-2) D JDEV ; includes parents cur device
  S A=$V(1,38,-3)
@@ -18,8 +17,7 @@ DEVOPN ;X=$J,Y=List of devices separated by a comma
 JSTAT ; Get DTM data - X=Job Number
  S X=$S($D(X)[0:$J,X'?1N.N:$J,1:X)
  S ZVER=($P($ZVER,"/",2)'<4) ; ZVER=1 if Version 4
- ;S JA=$V(1,(X-1*2)+100,-2)*16
- S JA=0
+ S JA=$V(1,(X-1*2)+100,-2)*16
  Q
 JDEV ;
  S DEV=$V(0,A+2,-2) I DEV,DEV'=PDEV S ODEV=ODEV_","_DEV

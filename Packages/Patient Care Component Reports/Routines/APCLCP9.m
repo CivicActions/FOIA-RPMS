@@ -1,5 +1,5 @@
-APCLCP9 ; IHS/CMI/LAB - APC visits by primary provider ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCP9 ; IHS/OHPRD/TMJ - APC visits by primary provider ; [ 02/06/02  9:29 AM ]
+ ;;3.0;IHS PCC REPORTS;**11**;FEB 05, 1997
  ;
 START ; 
  I '$G(DUZ(2)) W $C(7),$C(7),!!,"SITE NOT SET IN DUZ(2) - NOTIFY SITE MANAGER!!",!! K APCLSITE Q
@@ -23,22 +23,10 @@ ED ;get ending date
  ;
 S S APCLDICB=$P(^AUTTLOC(DUZ(2),0),U,5),APCLDIC("B")=$P(^AUTTSU(APCLDICB,0),U),DIC("A")="Which Service Unit: "_APCLDIC("B")_"//"
  S DIC="^AUTTSU(",DIC(0)="AEMQZ" W ! D ^DIC K DIC
- I X="" S (APCLSU,APCLSUF)=APCLDICB G CLINIC
+ I X="" S (APCLSU,APCLSUF)=APCLDICB G ZIS
  G:Y=-1 XIT
  S (APCLSU,APCLSUF)=+Y
- ;
-CLINIC ;
- K APCLCLN
- S DIR(0)="S^O:One Clinic;T:Taxonomy of or Selected Set of Clinics;A:All Clinics"
- S DIR("A")="Include visits from which set of clinics",DIR("B")="A" KILL DA D ^DIR KILL DIR
- G:$D(DIRUT) S
- I Y="A" K APCLCLN G ZIS
- I Y="O" D OC^APCLCP1 G:$D(APCLQ) CLINIC
- I Y="T" D TC^APCLCP1 G:$D(APCLQ) CLINIC
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G CLINIC
  S XBRP="^APCLCP9P",XBRC="^APCLCP91",XBNS="APCL",XBRX="XIT^APCLCP9"
  D ^XBDBQUE
  Q
@@ -57,27 +45,3 @@ INFORM ;
  Q
  ;
  ;
-O ;EP one location
- K APCLQ
- S DIC="^AUTTLOC(",DIC(0)="AEMQ",DIC("A")="Which LOCATION: " D ^DIC K DIC
- I Y=-1 S APCLQ="" Q
- S APCLLOC(+Y)=""
- Q
-T ;EP taxonomy
- K APCLQ
- S DIC="^ATXAX(",DIC(0)="AEMQ",DIC("A")="Which TAXONOMY: ",DIC("S")="I $P(^(0),U,15)=9999999.06" D ^DIC K DIC
- I Y=-1 S APCLQ="" Q
- S X=0 F  S X=$O(^ATXAX(+Y,21,"B",X)) Q:X=""  S APCLLOC(X)=""
- Q
-OC ;EP one location
- K APCLQ
- S DIC="^DIC(40.7,",DIC(0)="AEMQ",DIC("A")="Which CLINIC: " D ^DIC K DIC
- I Y=-1 S APCLQ="" Q
- S APCLCLN(+Y)=""
- Q
-TC ;EP taxonomy
- K APCLQ
- S DIC="^ATXAX(",DIC(0)="AEMQ",DIC("A")="Which TAXONOMY: ",DIC("S")="I $P(^(0),U,15)=40.7" D ^DIC K DIC
- I Y=-1 S APCLQ="" Q
- S X=0 F  S X=$O(^ATXAX(+Y,21,"B",X)) Q:X=""  S APCLCLN(X)=""
- Q

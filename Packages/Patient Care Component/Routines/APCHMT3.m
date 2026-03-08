@@ -1,5 +1,5 @@
-APCHMT3 ; IHS/CMI/LAB -- health summary create/modify ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHMT3 ; IHS/CMI/LAB -- health summary create/modify ;   [ 04/10/2008  9:17 AM ]
+ ;;1.0;IHS PCC SUITE;**1**;MAR 14, 2008
  ;; ;
  ;routine to create/modify a health summary type
  ;
@@ -16,9 +16,9 @@ COMP(S,C) ;EP
  Q Y
 TP ;EP - called from protocol entry
  D FULL^VALM1
- I '$$COMP(APCHDA,$O(^APCHSCMP("B","BEST PRACTICE PROMPTS",0))) W !!,"WARNING:  Best Practice Prompts has not been added to the Health Summary",! D
- .W "structure.  Best Practice Prompts will not display until they are part of the",!,"summary structure."
- .S DIR(0)="E",DIR("A")="Press enter to continue" KILL DA D ^DIR KILL DIR
+ I '$$COMP(APCHDA,$O(^APCHSCMP("B","TREATMENT PROMPTS",0))) W !!,"WARNING:  Treatment Prompts has not been added to the Health Summary",! D
+ .W "structure.  Treatment Prompts will not display until they are part of the summary",!,"structure."
+ W !!,"Currently, only TREATMENT PROMPTS flagged as ACTIVE will display",!,"on the health summary.  If you want to activate a reminder ",!,"use the option 'AITP  Activate/Inactivate a Treatment Prompt'",!,"to do so.",!
  ;
  ;
 EN ; -- main entry point for E
@@ -28,13 +28,13 @@ EN ; -- main entry point for E
  ;
 ADD ;add individual reminders or remove
  D FULL^VALM1
- W !!,"Enter the sequence number to put this Best Practice Prompt and then enter",!,"the prompt by name.",!
+ W !!,"Enter the sequence number to put this treatment prompt and then enter",!,"reminder by name.",!
  K DIE S DA=APCHDA,DIE="^APCHSCTL(",DR=13 D ^DIE K DIE,DIV,DIW
  D BACK
  Q
 REM ;
  D FULL^VALM1
- S APCHSEQ=$$READ("N^0:999:","Enter the sequence number of the Best Practice Prompt to remove")
+ S APCHSEQ=$$READ("N^0:999:","Enter the sequence number of the treatment prompt to remove")
  I APCHSEQ="" Q
  I APCHSEQ="^" Q
  K DIRUT
@@ -45,17 +45,17 @@ REM ;
 ADDG ;add reminders by group
  D FULL^VALM1
  W !!
- S DIC="^APCHHMC(",DIC(0)="AEMQ",DIC("A")="Select the Category/Group of Best Practice Prompts to ADD: " D ^DIC K DIC
+ S DIC="^APCHHMC(",DIC(0)="AEMQ",DIC("A")="Select the Category/Group of Treatment Prompts to ADD: " D ^DIC K DIC
  I Y=-1 Q
  S APCHCAT=+Y
  ;add group
- S APCHSEQ=$$READ("N^0:999:","Enter the sequence number to place this group of Best Practice Prompts")
+ S APCHSEQ=$$READ("N^0:999:","Enter the sequence number to place this group of Treatment Prompts")
  I APCHSEQ="^" Q
  I APCHSEQ="" Q
  ;now gather up all reminder of this category and put them in
  ;if number already exists then move all numbers down
  D REMOVEG
- W !!,"Adding all Best Practice Prompts in the ",$P(^APCHHMC(APCHCAT,0),U)," group."
+ W !!,"Adding all treatment prompts in the ",$P(^APCHHMC(APCHCAT,0),U)," group."
  K APCHC S X=0 F  S X=$O(^APCHSCTL(APCHDA,13,X)) Q:X'=+X  S APCHC($P(^APCHSCTL(APCHDA,13,X,0),U))=$P(^APCHSCTL(APCHDA,13,X,0),U,2)
  K ^APCHSCTL(APCHDA,13) S ^APCHSCTL(APCHDA,13,0)="^9001015.06AI^0^0"
  S (B,C,X)=0 F  S X=$O(APCHC(X)) Q:X'=+X!(X>APCHSEQ)!(X=APCHSEQ)  S ^APCHSCTL(APCHDA,13,X,0)=X_U_APCHC(X),C=C+1,$P(^APCHSCTL(APCHDA,13,0),U,3)=X,$P(^APCHSCTL(APCHDA,13,0),U,4)=C,B=X K APCHC(X)
@@ -66,7 +66,7 @@ ADDG ;add reminders by group
  D BACK
  Q
 REMOVEG ;
- I $G(APCHTALK) W !!,"Removing all Best Practice Prompts in the ",$P(^APCHHMC(APCHCAT,0),U)," group."
+ I $G(APCHTALK) W !!,"Removing all treatment prompts in the ",$P(^APCHHMC(APCHCAT,0),U)," group."
  S X=0 F  S X=$O(^APCHSCTL(APCHDA,13,X)) Q:X'=+X  D
  .S Y=$P(^APCHSCTL(APCHDA,13,X,0),U,2)
  .I $P(^APCHSURV(Y,0),U,5)=APCHCAT K ^APCHSCTL(APCHDA,13,X,0)
@@ -75,7 +75,7 @@ REMOVEG ;
 REMG ;ep
  D FULL^VALM1
  W !!
- S DIC="^APCHHMC(",DIC(0)="AEMQ",DIC("A")="Select the Category of Best Practice Prompts to REMOVE: " D ^DIC K DIC
+ S DIC="^APCHHMC(",DIC(0)="AEMQ",DIC("A")="Select the Category of Treatment Prompts to REMOVE: " D ^DIC K DIC
  I Y=-1 Q
  S APCHCAT=+Y
  S APCHTALK=1 D REMOVEG K APCHTALK
@@ -88,12 +88,12 @@ HDR ; -- header code
  ;
 INIT ; -- init variables and list array
  K ^TMP($J,"APCHHMRT") S APCHC=0 K APCHT
- S X="Note: any Best Practice Prompt flagged as inactive will not display" D S(X)
- S X="      on the summary even though you selected it for display.  The " D S(X)
- S X="      Best Practice Prompt must be activated.  Any Best Practice Prompts" D S(X)
- S X="      with (DEL) should be removed as they are no longer used." D S(X)
- S X="Currently defined BEST PRACTICE PROMPTS on the "_$P(^APCHSCTL(APCHDA,0),U)_" summary type" D S(X,1)
- S X="",$E(X,5)="SEQ",$E(X,10)="Best Practice Prompts",$E(X,65)="Category/Group" D S(X,1)
+ S X="Note: any treatment prompt flagged as inactive will not display on the summary" D S(X)
+ S X="      even though you selected it for display.  The treatment prompt must be" D S(X)
+ S X="      activated.  Any treatment prompts with (DEL) should be removed as they" D S(X)
+ S X="      are no longer used." D S(X)
+ S X="Currently defined TREATMENT PROMPTS on the "_$P(^APCHSCTL(APCHDA,0),U)_" summary type" D S(X,1)
+ S X="",$E(X,5)="SEQ",$E(X,10)="Treatment Prompts",$E(X,65)="Category/Group" D S(X,1)
  S X="-------------------------------------------------------------------------------" D S(X)
  S Y=0,T=0 F  S Y=$O(^APCHSCTL(APCHDA,13,Y)) Q:Y'=+Y  D
  .S T=T+1 S O=$P(^APCHSCTL(APCHDA,13,Y,0),U),C=$P(^APCHSCTL(APCHDA,13,Y,0),U,2),N=$P($G(^APCHSURV(+C,0)),U,1)
@@ -101,8 +101,7 @@ INIT ; -- init variables and list array
  .S $E(X,65)=$$VAL^XBDIQ1(9001018,C,.05) D S(X)
  .S APCHT(C)=""
  ;now get all those that aren't yet used
- S X="Other BEST PRACTICE PROMPTS not yet selected that can be " D S(X,2)
- S X="added to this summary type:" D S(X)
+ S X="Other TREATMENT PROMPTS not yet selected that can be added to this summary type" D S(X,2)
  S T=0 F  S T=$O(^APCHSURV(T)) Q:T'=+T  D
  .Q:$D(APCHT(T))  ;already used
  .Q:$P(^APCHSURV(T,0),U,3)="D"

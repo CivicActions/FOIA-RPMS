@@ -1,5 +1,5 @@
-APCLOCCK ; IHS/CMI/LAB - Extrinsic Functions to check visit location ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLOCCK ;CIM/BJI/DAY - Extrinsic Functions to check visit location [ 01/16/05  1:13 PM ]
+ ;;3.0;IHS PCC REPORTS;**16,21**;FEB 15, 1997
  ;
  ;----->  The user is given a chance to select locations.  If they
  ;        select one of the three methods to select a location, but

@@ -1,5 +1,5 @@
-XMXUTIL2 ;ISC-SF/GMB-Message info ;04/19/2002  13:34
- ;;8.0;MailMan;;Jun 28, 2002
+XMXUTIL2 ;ISC-SF/GMB- Message info ;06/14/99  16:34
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; All entry points covered by DBIA 2736.
 QRESP(XMZ,XMZREC,XMWHICH) ; Function returns 0 if message XMZ is a message.
  ; If message XMZ is a response, returns XMZ of original message
@@ -7,16 +7,15 @@ QRESP(XMZ,XMZREC,XMWHICH) ; Function returns 0 if message XMZ is a message.
  ; in:
  ; XMZ     XMZ of the message to be checked
  ; XMZREC  (optional) 0-node of the message
- ; XMWHICH (optional) If the message is a response, should MailMan also
- ;         return the response number as the second piece?
- ;         (0=no (default); 1=yes)
+ ; XMWHICH (optional) If the message is a response,
+ ;         should MailMan also return the response number as the second piece? (0=no (default); 1=yes)
  N XMZO
  I $G(XMZREC)="" S XMZREC=$G(^XMB(3.9,XMZ,0))
  S XMZO=$S($P(XMZREC,U,8):$P(XMZREC,U,8),$P(XMZREC,U)?1"R"1.N:+$E(XMZREC,2,99),1:"")
  ; The following test (XMZO'=XMZ) is necessary,
  ; because some old messages point to themselves as responses.
- I XMZO,XMZO'=XMZ Q:'$G(XMWHICH) XMZO  D  Q XMZO_U_XMWHICH
- . S XMWHICH=0 ; This is a response to message XMZO.
+ I XMZO,XMZO'=XMZ Q:'$G(XMWHICH) XMZO  D  Q XMZO_U_XMWHICH  ; This is a response to message XMZO.
+ . S XMWHICH=0
  . F  S XMWHICH=$O(^XMB(3.9,XMZO,3,XMWHICH)) Q:'XMWHICH  Q:^(XMWHICH,0)=XMZ
  Q 0  ; This is a message.
 INMSG(XMDUZ,XMK,XMZ,XMZREC,XMFLAGS,XMIM,XMINSTR,XMIU) ;
@@ -33,7 +32,8 @@ INMSG(XMDUZ,XMK,XMZ,XMZREC,XMFLAGS,XMIM,XMINSTR,XMIU) ;
  I $P(XMKREC,U,5) S XMIU("KVAPOR")=$P(XMKREC,U,5)
  S XMIU("NEW")=$$NEW(XMDUZ,XMK,XMZ)
  Q
-INMSG1(XMDUZ,XMZ,XMZREC,XMFLAGS,XMIM,XMIU) ; (Should NOT be called for responses!)
+INMSG1(XMDUZ,XMZ,XMZREC,XMFLAGS,XMIM,XMIU) ;
+ ; Should NOT be called for responses!
  ; XMIM("RESPS")
  ; XMIU("IEN")
  ; XMIU("RESP")
@@ -156,11 +156,11 @@ INMSG2(XMDUZ,XMZ,XMZREC,XMIM,XMINSTR,XMIU) ;
  Q
 ZNODE(XMZ) ; Returns the zero node of the message.
  Q $G(^XMB(3.9,XMZ,0))
-ZDATE(XMZ,XMTIME) ; What is the message date? (Formatted by $$MMDT^XMXUTIL1)
+ZDATE(XMZ,XMTIME) ; What is the message date? (Returned in DD MMM YY HH:MM format)
  ; XMTIME =0 Date only
  ;        =1 Date and time (default)
  Q $$DATE($G(^XMB(3.9,XMZ,0)),.XMTIME)
-DATE(XMZREC,XMTIME) ; What is the message date? (Formatted by $$MMDT^XMXUTIL1)
+DATE(XMZREC,XMTIME) ; What is the message date? (Returned in DD MMM YY HH:MM format)
  ; XMTIME =0 Date only
  ;        =1 Date and time (default)
  N XMDATE
@@ -176,7 +176,7 @@ ZSUBJ(XMZ) ; What is the message subject?
 SUBJ(XMZREC) ; What is the message subject?
  N XMSUBJ
  S XMSUBJ=$P(XMZREC,U,1)
- I XMSUBJ="" Q $$EZBLD^DIALOG(34012) ;* No Subject *
+ I XMSUBJ="" Q $$EZBLD^DIALOG(34012)
  I XMSUBJ["~U~" Q $$DECODEUP^XMXUTIL1(XMSUBJ)
  Q XMSUBJ
 ZFROM(XMZ) ; Who sent the message?
@@ -197,8 +197,8 @@ ZREAD(XMDUZ,XMZ) ; How many responses has the user read?
  ; number = the user has read through this response
  N XMUPTR
  ;S XMUPTR=$O(^XMB(3.9,XMZ,1,"C",$S(XMDUZ=.6:DUZ,1:XMDUZ),0))
- S XMUPTR=+$O(^XMB(3.9,XMZ,1,"C",XMDUZ,0))
- ;Q:'XMUPTR ""
+ S XMUPTR=$O(^XMB(3.9,XMZ,1,"C",XMDUZ,0))
+ Q:'XMUPTR 0
  Q $$READ($G(^XMB(3.9,XMZ,1,XMUPTR,0)))
 READ(XMZUREC) ; How many responses has the user read?
  ; null   = the user has not read the message
@@ -219,7 +219,9 @@ BSKT(XMDUZ,XMZ,XMNAME) ; Which basket is the message in for this user?
  I '$G(XMNAME) Q XMK
  Q XMK_U_$P($G(^XMB(3.7,XMDUZ,2,XMK,0)),U,1)
 NEW(XMDUZ,XMK,XMZ) ; Is the message new for this user?
- ; 0 = no; 1 = yes; 2 = yes, and it's priority, too.
+ ; 0 = no
+ ; 1 = yes
+ ; 2 = yes, and it's priority, too.
  Q:$D(^XMB(3.7,XMDUZ,"N",XMK,XMZ)) 2
  Q:$D(^XMB(3.7,XMDUZ,"N0",XMK,XMZ)) 1
  Q 0
@@ -227,3 +229,5 @@ KSEQN(XMDUZ,XMK,XMZ) ; What's the seqence number for this message in this user's
  Q $$SEQN($G(^XMB(3.7,XMDUZ,2,XMK,1,XMZ,0)))
 SEQN(XMKZREC) ; What's the seqence number for this message in this user's basket?
  Q $P(XMKZREC,U,2)
+ ;
+ ;#34012 = * No Subject *

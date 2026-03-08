@@ -1,5 +1,5 @@
 AMHPHQO ; IHS/CMI/LAB - BROWSE VISITS ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**6**;JUN 02, 2010;Build 10
+ ;;4.0;IHS BEHAVIORAL HEALTH;**6,11**;JUN 02, 2010;Build 27
  ;
  ;
 START ;
@@ -143,7 +143,7 @@ GATHER ;
  K ^TMP("AMHPHQO",$J)
  NEW AMHX,AMHI,AMHJ,AMHY,AMHZ,AMHC,AMHD
  S AMHC=0
- S X="Patient Name: "_$P(^DPT(DFN,0),U),$E(X,45)="DOB: "_$$FMTE^XLFDT($P(^DPT(DFN,0),U,3)) D S(X)
+ S X="Patient Name: "_$$GETPREF^AUPNSOGI(DFN,"E",1)_"    DOB: "_$$FMTE^XLFDT($P(^DPT(DFN,0),U,3)) D S(X)
  S X="HRN: "_$$HRN^AUPNPAT(DFN,DUZ(2)) D S(X)
  S X=$TR($J("",80)," ","*") D S(X)
  S X="Date",$E(X,11)="PHQ2",$E(X,16)="PHQ9",$E(X,21)="PHQT",$E(X,26)="PROVIDER",$E(X,41)="CLINIC",$E(X,55)="Diagnosis/POV" D S(X)
@@ -223,7 +223,7 @@ FF ;EP
  I $E(IOST)="C",IO=IO(0) W ! S DIR(0)="EO" D ^DIR K DIR I Y=0!(Y="^")!($D(DTOUT)) S AMHQUIT=1 Q
  I $E(IOST)'="C" Q:'$P(AMHR0,U,8)  W !!,$TR($J(" ",79)," ","*"),!,$P(^DPT($P(AMHR0,U,8),0),U),?32,"HRN: " D
  .S H=$P($G(^AUPNPAT($P(AMHR0,U,8),41,DUZ(2),0)),U,2)
- .W H,?46,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(AMHR0,U,8),0),U,3),"2D"),?59,"SSN: ",$$SSN^AMHUTIL($P(AMHR0,U,8)),!
+ .W H,?46,"DOB: ",$$FMTE^XLFDT($P(^DPT($P(AMHR0,U,8),0),U,3),"2D"),! ;,?59,"SSN: ",$$SSN^AMHUTIL($P(AMHR0,U,8)),! IHS/CMI/LAB REMOVED SSN P11
  W:$D(IOF) @IOF
  Q
 HDR ; -- header code

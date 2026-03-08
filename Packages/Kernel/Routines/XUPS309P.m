@@ -1,0 +1,17 @@
+XUPS309P ;CS&ISS-RAM/DW - XU309 POST INIT
+ ;;8.0;KERNEL;**309**; Jul 10, 1995;
+ ;
+ Q
+ ;
+POST ; post init
+ ;
+ N Z,FDA
+ ;
+ S Z=$$FIND1^DIC(19,,"B","XUPS NPF CLEANUP MAIN MENU")
+ ;
+ S FDA(19,"?1,",.01)="XUKERNEL"
+ S FDA(19.01,"?+3,?1,",.01)=Z
+ D UPDATE^DIE("","FDA")
+ ;
+ Q
+ ;

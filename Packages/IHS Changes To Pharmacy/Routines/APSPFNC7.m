@@ -1,5 +1,5 @@
-APSPFNC7 ;IHS/MSC/PJJ/PLS - Number to Word Formatting ;25-Feb-2013 11:56;DKA
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1015**;Sep 23, 2004;Build 62
+APSPFNC7 ;IHS/MSC/PJJ/PLS - Number to Word Formatting ;20-Dec-2018 12:40;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1015,1024**;Sep 23, 2004;Build 68
  ;=================================================================
  ;Returns textual representation of a numeric value
 WRDFMT(INT) ;EP-
@@ -38,6 +38,37 @@ GRPTOWD(GROUP) ;EP-
  E  I TENMOD'=0 D
  .S RES=$$ADD(RES,$$LABEL($T(BASE+TENMOD+1)))
  Q RES
+ ; Check for renewed prescription
+ ; Input: RXIEN- IEN to File 52
+CHKRNW(RXIEN) ;
+ ;Check Placer ID of RXIEN
+ ; Check Replaced Order # field value
+ ;   Check Status of Replaced Order order
+ ;     If RENEWED then set:
+ ;       - Activity Log - RENEWED
+ Q:'$G(RXIEN)
+ N PLACER,ORGIEN,RENEWED,ORGPKGID,ORXNUM  ;,PSORENW,PSONEW
+ N REA,DA,MSG,PSCAN
+ S PLACER=$$GET1^DIQ(52,RXIEN,39.3)
+ Q:'PLACER
+ S ORGIEN=$$GET1^DIQ(100,PLACER,9,"I")
+ Q:'ORGIEN  ;No renewed order
+ S RENEWED=$$GET1^DIQ(100,ORGIEN,5,"I")=15
+ Q:'RENEWED
+ S ORGPKGID=+$$GET1^DIQ(100,ORGIEN,33,"I")
+ Q:'ORGPKGID
+ S ORXNUM=$$GET1^DIQ(52,ORGPKGID,.01)
+ S REA="C",DA=ORGPKGID
+ S MSG="Renewed/Updated from RPMS EHR"
+ S PSCAN(ORXNUM)=DA_"^C"
+ D CAN^PSOCAN
+ D:RNWORDER
+ .D SETDATA(RNWORDER,52,"39.5///"_"`"_RXIEN)
+ .D SETDATA(RXIEN,52,"39.4///"_"`"_RNWORDER)
+ Q
+SETDATA(DA,DIE,DR) ;
+ D ^DIE
+ Q
 BASE ;EP-
  ;;Zero
  ;;One

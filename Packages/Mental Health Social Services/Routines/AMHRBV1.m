@@ -1,5 +1,5 @@
 AMHRBV1 ; IHS/CMI/LAB - PRNT BILL VSTS ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**5**;JUN 02, 2010;Build 18
+ ;;4.0;IHS BEHAVIORAL HEALTH;**5,11**;JUN 02, 2010;Build 27
 START ;
  S AMH80E="==============================================================================="
  S AMH80D="-------------------------------------------------------------------------------"
@@ -72,13 +72,13 @@ CHKDISC ;
 PRVT1 ;
  Q:AMHCHMP=""
  S Y=$O(^AUPNPRVT("AB",AMHCHMP,DFN,0)) Q:Y=""
- S AMHX=^AUPNPRVT(DFN,11,Y,0) W ?40,"Sponsor: ",$P(AMHX,U,4),?65,"SSN: " S X=$P(AMHX,U,2) W $E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9)
+ S AMHX=^AUPNPRVT(DFN,11,Y,0) W ?40,"Sponsor: ",$P(AMHX,U,4) ;,?65,"SSN: " S X=$P(AMHX,U,2) W $E(X,1,3),"-",$E(X,4,5),"-",$E(X,6,9)  IHS/CMI/LAB REMOVED SSN P11
  Q
 HD ;ENTRY POINT
  S (DOB,Y)=$P(^DPT(DFN,0),U,3) I DOB]"" D DD^%DT S DOB=Y
  S AMHHRN=$P(^AUPNPAT(DFN,41,AMHSU,0),U,2)
- S ABHN=$P(^DPT(DFN,0),U,9)
- W !!,AMHHRN,?8,AMHPN,?40,DOB,?60,ABHN
+ ;S ABHN=$P(^DPT(DFN,0),U,9)
+ W !!,AMHHRN,?8,AMHPN,?40,DOB  ;,?60,ABHN  IHS/CMI/LAB REMOVED SSN P11
  Q
 2 ;
  I $Y>(IOSL-9) D HEAD Q:$D(AMHQUIT)
@@ -116,6 +116,6 @@ HEAD1 ;
  S AMHLENG=64+$L(AMHNAR)
  W ?((80-AMHLENG)/2),"POTENTIALLY BILLABLE BEHAVIORAL HEALTH VISITS FOR ",AMHNAR,!
  W ?19,"Visit Dates:  ",AMHSDY," and ",AMHEDY,!
- W !!?2,"HRCN",?8,"Patient Name",?40,"Date of Birth",?60,"      SSN"
+ W !!?2,"HRCN",?8,"Patient Name",?40,"Date of Birth" ;,?60,"      SSN"  IHS/CMI/LAB P11 REMOVED SSN
  W !,AMH80D
  Q

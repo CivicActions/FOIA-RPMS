@@ -1,0 +1,219 @@
+BQINIGH5 ;GDIT/HS/ALA-Nightly Job continued ; 14 Feb 2023  6:10 PM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5,6,7**;Mar 01, 2021;Build 14
+ ;
+WPROV ;EP - Waitlist Providers
+ NEW WN,RC,PRV
+ S WN=0
+ F  S WN=$O(^BSDWL(WN)) Q:'WN  D
+ . S RC=0 F  S RC=$O(^BSDWL(WN,1,RC)) Q:'RC  D
+ .. S PRV=$P(^BSDWL(WN,1,RC,0),"^",6) S:PRV="" PRV="~"
+ .. S ^XTMP("BQIWLPRV",PRV,WN)=""
+ .. S USRA=$P(^BSDWL(WN,1,RC,0),"^",4) S:USRA="" USRA="~"
+ .. S ^XTMP("BQIWLUSA",USRA,WN)=""
+ .. S USRR=$P(^BSDWL(WN,1,RC,0),"^",11) S:USRR="" USRR="~"
+ .. S ^XTMP("BQIWLUSR",USRR,WN)=""
+ ;
+ S ^XTMP("BQIWLPRV",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"WaitList Provider List"
+ S ^XTMP("BQIWLUSA",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"WaitList User who Added"
+ S ^XTMP("BQIWLUSR",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"WaitList user who Removed"
+ Q
+ ;
+VLENC ;EP - Visit file Location of Encounter
+ NEW VN,LOC,HLOC
+ S VN=+$P($G(^BQI(90508,1,"VISIT")),"^",1)
+VEF ;Find locations
+ F  S VN=$O(^AUPNVSIT(VN)) Q:'VN  D
+ . S $P(^BQI(90508,1,"VISIT"),"^",1)=VN
+ . S LOC=$P($G(^AUPNVSIT(VN,0)),"^",6) I LOC=0!(LOC="") Q
+ . S ^XTMP("BQIVLENC",LOC)=$G(^XTMP("BQIVLENC",LOC))+1
+ . S HLOC=$P($G(^AUPNVSIT(VN,0)),"^",22) I HLOC=0!(HLOC="") Q
+ . S ^XTMP("BQIVHLOC",HLOC)=$G(^XTMP("BQIVHLOC",HLOC))+1
+ S ^XTMP("BQIVLENC",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Location of Encounter List"
+ S ^XTMP("BQIVHLOC",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Visit Hosp Loc List"
+ Q
+ ;
+HEPC ;EP - Find Date of Onset for HEP C patients
+ NEW BDFN,BQN,BQQN,CID,DN,DOO,NMID,PRN,PVN,SNID,STAT,TAX,TREF,VISIT,VSDTM,DFN
+ K ^XTMP("BQIHEPC")
+ S ^XTMP("BQIHEPC",0)=$$FMADD^XLFDT(DT,7)_U_DT_U_"Hep C Diagnoses List"
+ I $G(UID)="" S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
+ S TAX="BKM HEP C DXS",TREF=$NA(^TMP("BQITAX",UID)) K @TREF
+ D BLD^BQITUTL(TAX,.TREF)
+ S DN="" F  S DN=$O(@TREF@(DN)) Q:DN=""  D ICD("D")
+ K @TREF
+ D SNOM^BQITUTL("PXRM BQI HEPATITIS C VIRUS INF",.TREF)
+ S SNID="" F  S SNID=$O(@TREF@(SNID)) Q:SNID=""  D SNO("D")
+ ;
+ K @TREF
+ S TAX="BQI PREGNANCY DXS" D BLD^BQITUTL(TAX,.TREF)
+ S DFN=0 F  S DFN=$O(^XTMP("BQIHEPC",DFN)) Q:DFN=""  D
+ . I $P($G(^DPT(DFN,0)),"^",2)'="F" Q
+ . S DN="" F  S DN=$O(@TREF@(DN)) Q:DN=""  D ICD("P")
+ K @TREF
+ D SNOM^BQITUTL("PXRM BGP IPC PREGNANCY",.TREF)
+ S DFN=0 F  S DFN=$O(^XTMP("BQIHEPC",DFN)) Q:DFN=""  D
+ . I $P($G(^DPT(DFN,0)),"^",2)'="F" Q
+ . S SNID="" F  S SNID=$O(@TREF@(SNID)) Q:SNID=""  D SNO("P")
+ Q
+ ;
+ICD(TYP) ;Problem/POV file for ICD codes
+ S PRN="" F  S PRN=$O(^AUPNPROB("B",DN,PRN)) Q:PRN=""  D
+ . S BDFN=$P($G(^AUPNPROB(PRN,0)),"^",2) I BDFN="" Q
+ . I $G(DFN)'="",BDFN'=DFN Q
+ . S STAT=$P(^AUPNPROB(PRN,0),"^",12) I STAT="D"!(STAT="") Q
+ . S DOO=$$PROB^BQIUL1(PRN)\1
+ . S ^XTMP("BQIHEPC",BDFN,TYP,DOO,PRN)="PROB"
+ S PVN="" F  S PVN=$O(^AUPNVPOV("B",DN,PVN)) Q:PVN=""  D
+ . S BDFN=$P($G(^AUPNVPOV(PVN,0)),"^",2) I BDFN="" Q
+ . I $G(DFN)'="",BDFN'=DFN Q
+ . S VISIT=$P($G(^AUPNVPOV(PVN,0)),"^",3) I VISIT="" Q
+ . S VSDTM=$P($G(^AUPNVSIT(VISIT,0)),"^",1)\1 I VSDTM=0 Q
+ . S ^XTMP("BQIHEPC",BDFN,TYP,VSDTM,PVN)="POV"
+ Q
+ ;
+SNO(TYP) ;Problem/POV file for SNOMED codes
+ S PRN="" F  S PRN=$O(^AUPNPROB("ASCT",SNID,PRN)) Q:PRN=""  D
+ . S BDFN=$P($G(^AUPNPROB(PRN,0)),"^",2) I BDFN="" Q
+ . I $G(DFN)'="",BDFN'=DFN Q
+ . S STAT=$P(^AUPNPROB(PRN,0),"^",12) I STAT="D"!(STAT="") Q
+ . S DOO=$$PROB^BQIUL1(PRN)\1
+ . S ^XTMP("BQIHEPC",BDFN,TYP,DOO,PRN)="PROBS"
+ S PVN="" F  S PVN=$O(^AUPNVPOV("ASCI",SNID,PVN)) Q:PVN=""  D
+ . S BDFN=$P($G(^AUPNVPOV(PVN,0)),"^",2) I BDFN="" Q
+ . I $G(DFN)'="",BDFN'=DFN Q
+ . S VISIT=$P($G(^AUPNVPOV(PVN,0)),"^",3) I VISIT="" Q
+ . S VSDTM=$P($G(^AUPNVSIT(VISIT,0)),"^",1)\1 I VSDTM=0 Q
+ . S ^XTMP("BQIHEPC",BDFN,TYP,VSDTM,PVN)="POVS"
+ Q
+ ;
+TRIB ;Tribe and Alternate Tribe
+ K ^XTMP("BQITRIB")
+ S ^XTMP("BQITRIB",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Patient Tribe List"
+ NEW DFN,TRIB,ATRB,CNT
+ S DFN=0
+ F  S DFN=$O(^AUPNPAT(DFN)) Q:'DFN  D
+ . S TRIB=$P($G(^AUPNPAT(DFN,11)),"^",8)
+ . I TRIB'="" S ^XTMP("BQITRIB",TRIB,DFN)="T"
+ . S ATRB="" F  S ATRB=$O(^AUPNPAT(DFN,43,"B",ATRB)) Q:ATRB=""  S ^XTMP("BQITRIB",ATRB,DFN)="AT"
+ ;
+ S TRIB=0 F  S TRIB=$O(^XTMP("BQITRIB",TRIB)) Q:TRIB=""  S CNT=0 D
+ . S DFN="" F  S DFN=$O(^XTMP("BQITRIB",TRIB,DFN)) Q:DFN=""  S CNT=CNT+1
+ . S ^XTMP("BQITRIB",TRIB)=CNT
+ Q
+ ;
+RPT ;Repoint taxonomies in 90507.8
+ NEW ALRT,TXN,TAX,ATXN,PTR
+ S ALRT=0
+ F  S ALRT=$O(^BQI(90507.8,ALRT)) Q:'ALRT  D
+ . S TXN=0
+ . F  S TXN=$O(^BQI(90507.8,ALRT,11,TXN)) Q:'TXN  D
+ .. S TAX=$P(^BQI(90507.8,ALRT,11,TXN,0),"^",1),PTR=$P(^(0),"^",2)
+ .. I PTR'="" D
+ ... S ATXN=$P(PTR,";",1) I $P($G(^ATXAX(ATXN,0)),"^",1)=TAX Q
+ ... S PTR=""
+ .. I PTR="" D
+ ... S ATXN=$O(^ATXAX("B",TAX,""))
+ ... I ATXN'="" S $P(^BQI(90507.8,ALRT,11,TXN,0),U,2)=ATXN_";ATXAX("
+ Q
+ ;
+HF ; Set up Last Health Factor columns from File 9999999.64
+ NEW HFN,CD,CODE,DIEN,INAC,CAT,CATN
+ S HFN=0 F  S HFN=$O(^AUTTHF(HFN)) Q:'HFN  D
+ . S CD=$P(^AUTTHF(HFN,0),"^",2),CODE="HF"_CD
+ . I $P(^AUTTHF(HFN,0),"^",10)="C" Q
+ . S DIEN=$O(^BQI(90506.1,"B",CODE,""))
+ . S INAC=$P(^AUTTHF(HFN,0),"^",13),TEXT=$P(^AUTTHF(HFN,0),"^",1),CATN=$P(^AUTTHF(HFN,0),"^",3)
+ . S CAT="" I CATN'="" S CAT=$P(^AUTTHF(CATN,0),"^",1)
+ . I DIEN'="",INAC D  Q
+ .. I $P(^BQI(90506.1,DIEN,0),"^",11)'="" Q
+ .. S $P(^BQI(90506.1,DIEN,0),"^",10)=1,$P(^BQI(90506.1,DIEN,0),"^",11)=DT
+ . I DIEN'="" D DUPD(DIEN,0) Q
+ . I DIEN="" D
+ .. NEW DA,X,DIC,DLAYGO,DSOR
+ .. S DIC="^BQI(90506.1,",DIC(0)="L",X=CODE
+ .. K DO,DD D FILE^DICN
+ .. S DA=+Y I DA=-1 S ERROR=1 Q
+ .. D DUPD(DA,1)
+ Q
+ ;
+DUPD(DA,NDA) ;EP
+ S BQIUPD(90506.1,DA_",",.03)=$$LOWER^VALM1("Last "_TEXT)
+ S BQIUPD(90506.1,DA_",",.15)=125
+ S BQIUPD(90506.1,DA_",",3.01)=1
+ S BQIUPD(90506.1,DA_",",3.02)=CAT
+ S BQIUPD(90506.1,DA_",",3.03)="Health Factor"
+ S BQIUPD(90506.1,DA_",",3.04)="O"
+ S BQIUPD(90506.1,DA_",",3.08)="D"
+ S BQIUPD(90506.1,DA_",",.08)="T00030"_CODE
+ S BQIUPD(90506.1,DA_",",1)="S VAL=$$HFAC^BQIUL4(DFN,"_""""_CD_""""_")"
+ I NDA=1 S DSOR=$O(^BQI(90506.1,"AD","HF",""),-1)+1,BQIUPD(90506.1,DA_",",3.05)=DSOR
+ D FILE^DIE("","BQIUPD","ERROR")
+ Q
+ ;
+EUPD(DA,NDA) ;EP
+ S BQIUPD(90506.1,DA_",",.03)=$$LOWER^VALM1("Last "_TEXT)
+ S BQIUPD(90506.1,DA_",",.15)=125
+ S BQIUPD(90506.1,DA_",",3.01)=1
+ S BQIUPD(90506.1,DA_",",3.02)=CAT
+ S BQIUPD(90506.1,DA_",",3.03)="Exam"
+ S BQIUPD(90506.1,DA_",",3.04)="O"
+ S BQIUPD(90506.1,DA_",",3.08)="D"
+ S BQIUPD(90506.1,DA_",",.08)="T00030"_CODE
+ S BQIUPD(90506.1,DA_",",1)="S VAL=$$EXM^BQIUL4(DFN,"_""""_CODE_""""_")"
+ I NDA=1 S DSOR=$O(^BQI(90506.1,"AD","EX",""),-1)+1,BQIUPD(90506.1,DA_",",3.05)=DSOR
+ D FILE^DIE("","BQIUPD","ERROR")
+ Q
+ ;
+PXREF(PBIEN) ; Additional ICD Problem xref
+ NEW PN
+ S PN=0 F  S PN=$O(^AUPNPROB(PBIEN,12,"B",PN)) Q:PN=""  D
+ . S ^XTMP("BQIPBICD",PN,PBIEN)=""
+ Q
+ ;
+EX ; Set up Last Exam columns from File 9999999.15
+ NEW EXN,CD,EIEN,INAC,CAT,CODE,TEXT
+ S EXN=0 F  S EXN=$O(^AUTTEXAM(EXN)) Q:'EXN  D
+ . S CD=$P(^AUTTEXAM(EXN,0),"^",2),CODE="EX"_CD
+ . S EIEN=$O(^BQI(90506.1,"B",CODE,""))
+ . S INAC=$P(^AUTTEXAM(EXN,0),"^",4),TEXT=$P(^AUTTEXAM(EXN,0),"^",1)
+ . I EIEN'="",INAC D  Q
+ .. I $P(^BQI(90506.1,EIEN,0),"^",11)'="" Q
+ .. S $P(^BQI(90506.1,EIEN,0),"^",10)=1,$P(^BQI(90506.1,EIEN,0),"^",11)=DT
+ . S CAT=""
+ . I EIEN'="" D EUPD(EIEN,0) Q
+ . I EIEN="" D
+ .. NEW DA,X,DIC,DLAYGO,DSOR
+ .. S DIC="^BQI(90506.1,",DIC(0)="L",X=CODE
+ .. K DO,DD D FILE^DICN
+ .. S DA=+Y I DA=-1 S ERROR=1 Q
+ .. D EUPD(DA,1)
+ Q
+ ;
+CONS ; Set up Consult cross-references
+ NEW CN,CNDATA,URG,SNOM,PLAC,STAT,OFAC,CNAT,ACNM,SFL
+ S CN=+$P($G(^BQI(90508,1,"VISIT")),"^",7)
+ F  S CN=$O(^GMR(123,CN)) Q:'CN  D
+ . S CNDATA=^GMR(123,CN,0)
+ . S URG=$P(CNDATA,"^",9),PLAC=$P(CNDATA,"^",10),STAT=$P(CNDATA,"^",12)
+ . S OFAC=$P(CNDATA,"^",21),CNAT=$P(CNDATA,"^",11)
+ . S SNOM=$P($G(^GMR(123,CN,30.1)),"^",1),SFL=0
+ . I SNOM'="" D
+ .. I $O(^BSTS(9002318.4,"C",36,SNOM,""))="" S X=$$CONC^BSTSAPI(SNOM) I $P(X,"^",1)="" S SFL=1
+ . S ACN=0 F  S ACN=$O(^GMR(123,CN,40,ACN)) Q:'ACN  D
+ .. S FOR=$P(^GMR(123,CN,40,ACN,0),"^",6)
+ .. I FOR'="" S ^XTMP("BQICNFOR",FOR)=""
+ . I URG'="" S ^XTMP("BQICNURG",URG)=""
+ . I PLAC'="" S ^XTMP("BQICNPLC",PLAC)=""
+ . I STAT'="" S ^XTMP("BQICNSTA",STAT)=""
+ . I SNOM'="",'SFL S ^XTMP("BQICNSNM",SNOM)=""
+ . I OFAC'="" S ^XTMP("BQICNOFAC",OFAC)=""
+ . I CNAT'="" S ^XTMP("BQICNATT",CNAT)=""
+ . S $P(^BQI(90508,1,"VISIT"),"^",7)=CN
+ S ^XTMP("BQICNURG",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Consult Urgency List"
+ S ^XTMP("BQICNPLC",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Consult Place List"
+ S ^XTMP("BQICNSTA",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Consult Status List"
+ S ^XTMP("BQICNSNM",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Consult SNOMED List"
+ S ^XTMP("BQICNOFAC",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Consult Ordering Facility List"
+ S ^XTMP("BQICNATT",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Consult Attention To List"
+ S ^XTMP("BQICNFOR",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Consult Forwarded To List"
+ Q

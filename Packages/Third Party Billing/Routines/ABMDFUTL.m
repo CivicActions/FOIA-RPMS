@@ -1,29 +1,34 @@
 ABMDFUTL ; IHS/SD/DMJ - Export Forms Utility ;     
- ;;2.6;IHS Third Party Billing System;**2,6,8,9,10,13,14,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing System;**2,6,8,9,10,13,14,21,32,33,35**;NOV 12, 2009;Build 659
  ;Original;TMD;
  ;
- ; IHS/ASDS/DMJ - 05/15/00 - V2.4 Patch 1 - NOIS HQW-0500-100032 - Modified to allow population of the PIN number for KIDSCARE
+ ;IHS/ASDS/DMJ - 05/15/00 - V2.4 Patch 1 - NOIS HQW-0500-100032 - Modified to allow population of the PIN number for KIDSCARE
  ;     as well as visit type 999.
- ; IHS/ASDS/SDH - 08/14/01 - V2.4 Patch 9 - NOIS NDA-1199-180065 - Modified routine to get grouper allowance, non-covered, and penalties.
- ; IHS/ASDS/SDH - 11/20/01 - V2.4. Patch 10 - NOIS QXX-1101-130059 - Modified to get billed amount even if there are no payments
+ ;IHS/ASDS/SDH - 08/14/01 - V2.4 Patch 9 - NOIS NDA-1199-180065 - Modified routine to get grouper allowance, non-covered, and penalties.
+ ;IHS/ASDS/SDH - 11/20/01 - V2.4. Patch 10 - NOIS QXX-1101-130059 - Modified to get billed amount even if there are no payments
  ;
- ; IHS/SD/SDR - 10/10/02 V2.5 P2 - NGA-0902-180106 - Modified to put provider number in 24k if Medicare/Railroad insurer
- ;IHS/SD/SDR - V2.5 P8 - IM10618/IM11164 - utility to return provider for line item
- ;IHS/SD/SDR - v2.5 p11 - NPI
- ;IHS/SD/SDR - v2.5 p12 - IM24799 - Made change for <UNDEF>K24N+9^ABMDFUTL
- ;IHS/SD/SDR - v2.5 p12 - IM25017 - Made changes for 1st line of block 24J
- ;IHS/SD/SDR - v2.5 p13 - IM26203 - Print loc NPI in block 33A
- ;IHS/SD/SDR - v2.5 p13 - IM26299 - Fix if insurer type is <UNDEF>
- ;IHS/SD/SDR - v2.5 p13 - NO IM - Change to use LDFN instead of DUZ(2)
+ ;IHS/SD/SDR 10/10/02 V2.5 P2 NGA-0902-180106 - Modified to put provider number in 24k if Medicare/Railroad insurer
+ ;IHS/SD/SDR 2.5*8 IM10618/IM11164 utility to return provider for line item
+ ;IHS/SD/SDR 2.5*11 NPI
+ ;IHS/SD/SDR 2.5*12 IM24799 Made change for <UNDEF>K24N+9^ABMDFUTL
+ ;IHS/SD/SDR 2.5*12 IM25017 Made changes for 1st line of block 24J
+ ;IHS/SD/SDR 2.5*13 IM26203 Print loc NPI in block 33A
+ ;IHS/SD/SDR 2.5*13 IM26299 Fix if insurer type is <UNDEF>
+ ;IHS/SD/SDR 2.5*13 NO IM Change to use LDFN instead of DUZ(2)
  ;
- ;IHS/SD/SDR - abm*2.6*2 - HEAT10900 - ck if Medicare and primary
- ;IHS/SD/SDR - 2.6*9 - HEAT46390 - fixed writeoff amount to include all bills
- ;IHS/SD/SDR - 2.6*13 - Added check for new export mode 35; Also added lookup for provider
- ;IHS/SD/SDR - 2.6*14 - HEAT163697 - changed message in provider lookup if provider is not in New Person file; Also updated lookup so it wouldn't allow special characters if name
+ ;IHS/SD/SDR 2.6*2 HEAT10900 ck if Medicare and primary
+ ;IHS/SD/SDR 2.6*9 HEAT46390 fixed writeoff amount to include all bills
+ ;IHS/SD/SDR 2.6*13 Added check for new export mode 35; Also added lookup for provider
+ ;IHS/SD/SDR 2.6*14 HEAT163697 changed message in provider lookup if provider is not in New Person file; Also updated lookup so it wouldn't allow special characters if name
  ;  is not in New Person file.
- ;IHS/SD/SDR - 2.6*14 - HEAT165324 - Fixed NPI for PRVLKUP so it will force NPI to be numeric; displays message and prompts again if not
- ;IHS/SD/SDR - 2.6*21 - HEAT196358 - For page 3 question Ord/Ref/Sup Phys (FL17), made change so no NPI can be entered but if none is
- ;   entered, the name that was entered won't be saved either. 
+ ;IHS/SD/SDR 2.6*14 HEAT165324 Fixed NPI for PRVLKUP so it will force NPI to be numeric; displays message and prompts again if not
+ ;IHS/SD/SDR 2.6*21 HEAT196358 For page 3 question Ord/Ref/Sup Phys (FL17), made change so no NPI can be entered but if none is
+ ;   entered, the name that was entered won't be saved either.
+ ;IHS/SD/SDR 2.6*32 CR11501 When creating paper batches, make them date/time stamped IENs, not just the date.
+ ;IHS/SD/SDR 2.6*33 ADO60189/CR9512 Fixed so Grouper Allowance will be captured in ABMP("GRP") variable; it was getting overwritten before
+ ;IHS/SD/SDR 2.6*33 ADO62035 Added quit to GETPRV if there's no provider on page4; this would happen on Pharmacy POS bills
+ ;IHS/SD/SDR 2.6*35 ADO60704 Updated TXST to populate insurer, insurer type more frequently; before it would only populate one or the other
+ ;  (either insurer or insurer type); added allowance category
  ;
  ; *********************************************************************
  ;
@@ -40,8 +45,39 @@ TXST ;EP for obtaining or adding 3P TX STATUS entry
  .I $D(ABMY("TYP")),$P(^ABMDTXST(DUZ(2),ABMX,0),U,3)=ABMY("TYP") S ABMP("XMIT")=ABMX
  .I $D(ABMY("INS")),$P(^ABMDTXST(DUZ(2),ABMX,0),U,4)=ABMY("INS") S ABMP("XMIT")=ABMX
  Q:ABMP("XMIT")
- S DIC="^ABMDTXST(DUZ(2),",DIC(0)="L",X=DT
- S DIC("DR")=".02////"_ABMP("EXP")_";.07////1;.08////1;"_$S($D(ABMY("TYP")):".03////"_$P(ABMY("TYP"),U),$D(ABMY("INS")):".04////"_ABMY("INS"),1:".03////A")_";.05////"_DUZ
+ ;S DIC="^ABMDTXST(DUZ(2),",DIC(0)="L",X=DT  ;abm*2.6*32 IHS/SD/SDR CR11501
+ D NOW^%DTC  ;abm*2.6*32 IHS/SD/SDR CR11501
+ S DIC="^ABMDTXST(DUZ(2),",DIC(0)="L",X=%  ;abm*2.6*32 IHS/SD/SDR CR11501
+ ;S DIC("DR")=".02////"_ABMP("EXP")_";.07////1;.08////1;"_$S($D(ABMY("TYP")):".03////"_$P(ABMY("TYP"),U),$D(ABMY("INS")):".04////"_ABMY("INS"),1:".03////A")_";.05////"_DUZ  ;abm*2.6*35 IHS/SD/SDR ADO60704
+ ;start new abm*2.6*35 IHS/SD/SDR ADO60704
+ S DIC("DR")=".02////"_ABMP("EXP")_";.07////1;.08////1"
+ ;
+ I $D(ABMY("INS")) D
+ .S DIC("DR")=DIC("DR")_";.04////"_ABMY("INS")
+ .S ABMY("TYP")="^"_$$IT^AUTINS(ABMY("INS"))_"^"  ;insurer type for insurer selected
+ S DIC("DR")=DIC("DR")_";.05////"_DUZ
+ ;
+ S ABMY("ITYPE")="A"  ;default for insurer type
+ I $G(ABMY("TYP"))[("^R^") S ABMY("ITYPE")="R"
+ I ((ABMY("ITYPE")="A")&($G(ABMY("TYP"))[("^W^"))) S ABMY("ITYPE")="W"
+ I ((ABMY("ITYPE")="A")&($G(ABMY("TYP"))[("^D^"))) S ABMY("ITYPE")="D"
+ I ((ABMY("ITYPE")="A")&($G(ABMY("TYP"))[("^P^"))) S ABMY("ITYPE")="P"
+ I ((ABMY("ITYPE")="A")&($G(ABMY("TYP"))[("^N^"))) S ABMY("ITYPE")="N"
+ I ((ABMY("ITYPE")="A")&($G(ABMY("TYP"))[("^C^"))) S ABMY("ITYPE")="C"
+ S DIC("DR")=DIC("DR")_";.03////"_ABMY("ITYPE")
+ ;
+ I $D(ABMY("TYP")) D
+ .S ABMY("ALLCAT")=""
+ .I "^R^MMC^MC^MD^MH^"[ABMY("TYP") S ABMY("ALLCAT")="MCR" Q
+ .I "^D^K^FPL^"[ABMY("TYP") S ABMY("ALLCAT")="MCD" Q
+ .I "^P^H^F^C^M^"[ABMY("TYP") S ABMY("ALLCAT")="PVT" Q
+ .I "^P^H^F^M^W^"[ABMY("TYP") S ABMY("ALLCAT")="OTH" Q
+ .I "^V^"[ABMY("TYP") S ABMY("ALLCAT")="VET" Q
+ .I "^W^C^N^I^T^G^SEP^TSI^"[ABMY("TYP") S ABMY("ALLCAT")="OTH" Q
+ I $G(ABMY("PAT"))'="" S ABMY("ALLCAT")="OTH"  ;make allowance category other if specific patient selected
+ I $G(ABMY("ALLCAT"))'="" S DIC("DR")=DIC("DR")_";.011////"_ABMY("ALLCAT")
+ ;
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60704
  K DD,DO,DINUM D FILE^DICN S:Y>0 ABMP("XMIT")=+Y
  Q
  ;
@@ -102,14 +138,17 @@ PREV ;EP for obtaining previous payment info
  ..F ABM("J")=0:0 S ABM("J")=$O(^ABMDBILL(DUZ(2),ABM,3,ABM("J"))) Q:'ABM("J")  D
  ...S ABMP("PD")=$P(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0),U,2)+ABMP("PD"),ABM("W")=ABM("W")+$P(^(0),U,6)
  ...;S ABMP("WO")=ABM("W")  ;abm*2.6*9 HEAT46390
- ...S ABMP("GRP")=$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,12)
+ ...;S ABMP("GRP")=$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,12)  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ ...S ABM("GRP")=$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,12)  ;abm*2.6*33 IHS/SD/SDR ADO60189
  ...;S ABMP("NONC")=$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,7)  ;abm*2.6*9 HEAT46390
  ...S ABMP("NONC")=ABMP("NONC")+$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,7)  ;abm*2.6*9 HEAT46390
  ...S ABMP("PENS")=$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,9)
  ...S ABMP("COI")=$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,4)
- ...S ABMP("DED")=$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,3)
+ ...;S ABMP("DED")=$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,3)  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ ...S ABMP("DED")=+$G(ABMP("DED"))+$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,3)  ;abm*2.6*33 IHS/SD/SDR ADO60189
  ...S ABMP("REF")=$P($G(^ABMDBILL(DUZ(2),ABM,3,ABM("J"),0)),U,13)
  ...;S ABMP("WO")=ABMP("WO")+ABM("W")+ABMP("GRP")+ABMP("NONC")+ABMP("PENS")  ;abm*2.6*9 HEAT46390
+ ...S ABMP("GRP")=ABMP("GRP")+ABM("GRP")  ;abm*2.6*33 IHS/SD/SDR ADO60189
  ..I $D(ABMP("BDFN")) S ABMP("BILL")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U)
  ..I $P($G(^ABMDBILL(DUZ(2),ABM,2)),U,4)=0 S ABMP("WO")=ABMP("WO")+ABM("W")
  Q
@@ -122,6 +161,7 @@ GETPRV() ;EP - get attending or rendering provider for line
  S ABMPRV=$O(@ABMPRVT)
  ;I ABMPRV="" S ABMPRVT=ABMP("GL")_"41,""C"",""R"","_"0)",ABMPRV=$O(@ABMPRVT)  ;abm*2.6*6 NOHEAT
  I ABMPRV="" S ABMPRVT=ABMP("GL")_"41,""C"",""R"",0)",ABMPRV=$O(@ABMPRVT)  ;abm*2.6*6 NOHEAT
+ I ABMPRV="" Q 0  ;abm*2.6*33 IHS/SD/SDR ADO62035
  S ABMPRVT=ABMP("GL")_"41,"_ABMPRV_",0)"
  S ABMPRVT=$P(@ABMPRVT,"^")
  Q ABMPRVT
@@ -169,6 +209,7 @@ PRVLKUP(ABMX,ABMY) ;EP
  N DIC,DIE,DIR,X,Y,DR,DA
  S DIR(0)="FAO^2:30^D NAME^AUPNPED"
  S DIR("A")="Enter Provider Name: "
+ S DIR("?")="Enter name in LASTNAME,FIRSTNAME format; it must contain the lastname, a comma, and at least the first initial; a look up into the New Person file will be attempted; if no match it will store what is typed"
  I ABMX'="" S DIR("B")=ABMX
  D ^DIR
  Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT) ""

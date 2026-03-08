@@ -1,5 +1,5 @@
 BDGLOC1 ; IHS/ANMC/LJF - LOCATOR CARD - print ;
- ;;5.3;PIMS;**1007**;FEB 27, 2007
+ ;;5.3;PIMS;**1007,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw 2/22/2007 added code to print attending provider PATCH 1007 item 1007.42
  ;
@@ -9,7 +9,10 @@ EN ;EP; entry point from queuing
  ;
  ; -- patient demographics
  U IO W !!!?8,"***Confidential Patient Data***",!
- W ?5,$E($$GET1^DIQ(2,DFN,.01),1,25)
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ W ?5,$E($G(PRF),1,24)
+ ;W ?5,$E($$GET1^DIQ(2,DFN,.01),1,25)
  W ?29,"Chart #: ",$$HRCN^BDGF2(DFN,DUZ(2))
  W !?5,"Age: ",$$GET1^DIQ(9000001,DFN,1102.98)
  W ?23,"Date of Birth: ",$$GET1^DIQ(2,DFN,.03)

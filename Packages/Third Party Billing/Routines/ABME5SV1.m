@@ -1,6 +1,8 @@
-ABME5SV1 ; IHS/ASDST/DMJ - 837 SV1 Segment 
- ;;2.6;IHS Third Party Billing System;**6,9**;NOV 12, 2009
+ABME5SV1 ; IHS/SD/SDR - 837 SV1 Segment 
+ ;;2.6;IHS Third Party Billing System;**6,9,10,29,37**;NOV 12, 2009;Build 739
  ;Transaction Set Header
+ ;IHS/SD/SDR 2.6*29 CR10404 ABMOUTLB (the variable for ref lab CLIA) was being set but never reset for the next service line.
+ ;IHS/SD/SDR 2.6*37 ADO76009 Made SV202 check FLAT RATE AMOUNT for secondary billing
  ;
 EP ;EP
  K ABMREC("SV1"),ABMR("SV1")
@@ -34,8 +36,10 @@ LOOP ;LOOP HERE
  .I ABM("NDC")?5N1"-"4N1"-"2N S ABMR("SV1",20)="N4"
  .S $P(ABMR("SV1",20),":",2)=ABM("NDC")
  N I
+ S ABMOUTLB=0  ;abm*2.6*29 IHS/SD/SDR CR10404
  ;F I=3,4,12,22 D  ;abm*2.6*9
  F I=3,4,12 D  ;abm*2.6*9
+ .I ($P($G(^AUTNINS(ABMP("INS"),0)),U)["NORTH CAROLINA MEDICAID"),$P(ABMRV(ABMI,ABMJ,ABMK),U,2)="T1015" S $P(ABMR("SV1",20),":",3)="SE"  ;abm*2.6*10 IHS/SD/AML HEAT73336
  .Q:$P(ABMRV(ABMI,ABMJ,ABMK),U,I)=""
  .S ABMR("SV1",20)=ABMR("SV1",20)_":"_$P(ABMRV(ABMI,ABMJ,ABMK),U,I)
  .I $P(ABMRV(ABMI,ABMJ,ABMK),U,I)=90 S ABMOUTLB=1
@@ -43,6 +47,20 @@ LOOP ;LOOP HERE
  Q
 30 ;SV102 - Monetary Amount (Charges)
  S ABMR("SV1",30)=$P(ABMRV(ABMI,ABMJ,ABMK),U,6)
+ ;start new code abm*2.6*10 COB billing
+ I ABMPSQ'=1,$D(ABMP("FLAT")) D
+ .;start old abm*2.6*37 IHS/SD/SDR ADO76009
+ .;I ABMPSQ'=1,(+$P(ABMB2,U,3)'=0) S ABMR("SV2",40)=$P(ABMB2,U,3)
+ .;I ABMPSQ'=1,(+$P(ABMB2,U,7)>+$P(ABMB2,U,3)) S ABMR("SV2",40)=+$P(ABMB2,U,7)
+ .;end old start new abm*2.6*37 IHS/SD/SDR ADO76009
+ .I ABMPSQ'=1,(+$P(ABMB2,U,3)'=0) S ABMR("SV1",30)=$P(ABMB2,U,3)  ;gross bill amount
+ .I ABMPSQ'=1,(+$P(ABMB2,U,7)>+$P(ABMB2,U,3)) S ABMR("SV1",30)=+$P(ABMB2,U,7)  ;original bill amount
+ I (+$P(ABMB2,U,8)'=0) D
+ .S ABMCDAYS=$S((+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3)'=0):$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3),1:1)
+ .S ABMNCDYS=$S((+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6)'=0):$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6),1:0)
+ .S ABMR("SV1",30)=$P(ABMB2,U,8)*(ABMCDAYS+ABMNCDYS)  ;flate rate amount  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ;end new abm*2.6*37 IHS/SD/SDR ADO76009
+ ;end new code COB billing
  ;S ABMR("SV1",30)=$$TRIM^ABMUTLP($J(ABMR("SV1",30),0,2),"L","0")  ;abm*2.6*9 HEAT64640
  S ABMR("SV1",30)=$S(ABMR("SV1",30)=0:ABMR("SV1",30),1:$$TRIM^ABMUTLP($J(ABMR("SV1",30),0,2),"L","0"))  ;abm*2.6*9 HEAT64640
  Q

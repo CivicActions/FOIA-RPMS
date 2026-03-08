@@ -1,6 +1,6 @@
-DDS02 ;SFISC/MKO-OVERFLOW FROM ^DDS01 ;1:50 PM  16 Jul 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**8,11**;Mar 30, 1999
+DDS02 ;SFISC/MKO-OVERFLOW FROM ^DDS01 ;11:07 AM  26 Jun 1996 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**20**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 UNED ;Change was made to uneditable field
  D MSG^DDSMSG("No editing allowed.",1)
@@ -31,16 +31,14 @@ EXT ;Process external form
  I $D(DDSO(14)) K DDSERROR X DDSO(14) I $D(DDSERROR)#2 D  Q
  . K DDSERROR,DDSY S DIR0("L")=DDSEXT,DDSCHKQ=1
  ;
- I DDSY="",DDSFLD'=.01 D  Q:'$D(DDSY)
- . N DDSREQ,DDSKEY
- . S DDSREQ=$P($G(DDSU("A")),U)
- . S:DDSREQ="" DDSREQ=$P($G(DDSO(4)),U)
- . S:DDSREQ="" DDSREQ=$P($G(DDSU("DD")),U,2)["R"
- . S DDSKEY=$D(^DD("KEY","F",DDP,DDSFLD))>0
- . I 'DDSREQ,'DDSKEY Q
- . K DDSY
- . S DDSCHKQ=1,DIR0("L")=DDSEXT
- . D MSG^DDSMSG("This is a required "_$S(DDSKEY:"key ",1:"")_"field.",1)
+ I DDSY="",DDSFLD'=.01 N DDSREQ D
+ . S DDSREQ=$P($G(DDSO(4)),U)
+ . S:$P($G(DDSU("A")),U)]"" DDSREQ=$P(DDSU("A"),U)
+ . I DDSREQ="",$P($G(DDSU("DD")),U,2)["R" S DDSREQ=1
+ I DDSY="",DDSFLD'=.01,DDSREQ D  K DDSY Q
+ . S DIR0("L")=DDSEXT
+ . D MSG^DDSMSG("This is a required field.",1)
+ . S DDSCHKQ=1
  ;
  S DY=$P(DIR0,U),DX=$P(DIR0,U,2)
  I DDSEXT'=DDSX D
@@ -50,24 +48,8 @@ EXT ;Process external form
  . E  S DDSX=$J("",$P(DIR0,U,3)-$L(DDSEXT))_DDSX
  . W $P(DDGLVID,DDGLDEL)_DDSX_$P(DDGLVID,DDGLDEL,10)
  ;
- I $G(DDSU("K")),DDSY]""!(DDSFLD'=.01) D  Q:'$D(DDSY)
- . N DDSFXR,DDSUI,DDSUNIQ,DDSVSV,DIIENS
- . D LOADXREF^DIKC1(DDP,"","",DDSU("K"),$NA(@DDSREFT@("F"))_"_","DDSFXR")
- . S:$D(@DDSREFT@("F"_DDP,DDSDA,DDSFLD,"D"))#2 DDSVSV=^("D") S ^("D")=DDSY
- . S DDSUNIQ=1,DDSUI=0
- . F  S DDSUI=$O(DDSFXR(DDP,DDSUI)) Q:'DDSUI  D  Q:'DDSUNIQ
- .. S DIIENS=DDSDA
- .. D SETXARR^DIKC(DDP,DDSUI,"DDSFXR","","D")
- .. S DDSUNIQ=$$UNIQUE^DIKK2(DDP,DDSUI,.X,.DA,"DDSFXR")
- . I 'DDSUNIQ D
- .. K DDSY
- .. S DDSCHKQ=1,DIR0("L")=DDSEXT
- .. D MSG^DDSMSG("Another entry already exists with this key value.",1)
- .. K @DDSREFT@("F"_DDP,DDSDA,DDSFLD,"D") S:$D(DDSVSV)#2 ^("D")=DDSVSV
- ;
- D:$G(DDSDA)!'$D(DDSREP)
- . S:$D(Y(0)) @DDSREFT@("F"_DDP,DDSDA,DDSFLD,"X")=DDSEXT
- . S @DDSREFT@("F"_DDP,DDSDA,DDSFLD,"D")=DDSY I DDSY="",$D(DDSU("X")) S ^("X")=""
+ S:$D(Y(0)) @DDSREFT@("F"_DDP,DDSDA,DDSFLD,"X")=DDSEXT
+ S @DDSREFT@("F"_DDP,DDSDA,DDSFLD,"D")=DDSY I DDSY="",$D(DDSU("X")) S ^("X")=""
  K DDSY
  Q
  ;

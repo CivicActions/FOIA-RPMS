@@ -1,7 +1,9 @@
 ACHSRPF1 ; IHS/OIT/FCJ - PRINT CHS FORM AND DATA 2 OF 3 - INIT VARS;  [ 01/21/2005  3:50 PM ] ; 30 Jun 2011  10:09 AM
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**18,19,20**;JUNE 11,2001
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**18,19,20,28**;JUNE 11,2001;Build 86
  ;3.1*18 NEW ROUTINE
  ;CALLED FROM ACHSRPF
+ ;ACHS
+ ;ACHS*3.1*28 03/09/2020 IHS.OIT.FCJ SET REF#
  ;
 ST ;
  ;IF NO DATA FOR DOCUMENT OR TRANSACTION QUIT
@@ -145,6 +147,9 @@ REF ; Set Referral Physician and Medical Priority into print vars.
  ..S ACHSREFP=$$UNDEF($P($G(^DIC(6,R(1),0)),U))
  ..S:+R(1)>0 R(1)=$$UNDEF($P($G(^DIC(16,ACHSREFP,0)),U))
  . I R(2),R(2)["I" S R(2)=$$UNDEF($P($T(@R(2)),";;",2))
+REFN ;REFERRAL NUMBER;ACHS*3.1*28
+ S X="",X=$P($G(^ACHSF(DUZ(2),"D",ACHSDIEN,2)),U,7)
+ I +X S R("N",1)="a. "_$P(^BMCREF(X,0),U,2)_$P($G(^BMCREF(X,1)),U)
  ;
 PROC1 ; Set Referral Procedure Narrative into print vars for Universal Form.
  G:'$D(^ACHSF(DUZ(2),"D",ACHSDIEN,7)) DIAG1 S ACHSPX=$G(^ACHSF(DUZ(2),"D",ACHSDIEN,7))

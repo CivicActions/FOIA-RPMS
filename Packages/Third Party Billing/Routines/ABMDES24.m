@@ -1,5 +1,5 @@
-ABMDES24 ; IHS/ASDST/DMJ - Display Summarized NCPDP charges ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDES24 ; IHS/ASDST/DMJ - Display Summarized NCPDP charges ;  [ 01/09/2003  3:32 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**3,10**;APR 05, 2002
  ;
  ; IHS/SD/SDR - v2.5 p10 - IM21581
  ;   Added active insurer print to summary
@@ -10,8 +10,8 @@ HCFA ;EP for displaying charge summary for HCFA-1500
  S ABMP("TOT")=0
  S ABMS=0 F  S ABMS=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),23,ABMS)) Q:'ABMS  D
  .S ABMRX0=^ABMDCLM(DUZ(2),ABMP("CDFN"),23,ABMS,0)
- .S ABMDRUG=$P(ABMRX0,U)
- .S ABMDESC=$P(^PSDRUG(ABMDRUG,0),U)
+ .S ABMDRUG=$P(ABMRX0,"^",1)
+ .S ABMDESC=$P(^PSDRUG(ABMDRUG,0),"^",1)
  .S ABMCDATE=$P(ABMRX0,"^",14)
  .S ABMITOT=$P(ABMRX0,"^",3)*$P(ABMRX0,"^",4)
  .S ABMDTOT=$P(ABMRX0,"^",5)
@@ -40,9 +40,9 @@ HCFA ;EP for displaying charge summary for HCFA-1500
 HD ;SCREEN HEADER
  W $$EN^ABMVDF("IOF")
  W !,?20,"***** "
- W $P(^ABMDEXP(ABMP("EXP"),0),U)
+ W $P(^ABMDEXP(ABMP("EXP"),0),"^",1)
  W " CHARGE SUMMARY *****"
- W !!,"Active Insurer: ",$P($G(^AUTNINS(ABMP("INS"),0)),U),!
+ W !!,"Active Insurer: ",$P($G(^AUTNINS(ABMP("INS"),0)),U),!  ;abm*2.5*10 IM21581
  W !,?47,"Disp",?60,"Unit"
  W !?1,"Charge Date  ",?19,"Description",?47,"Fee",?54,"Qty",?60,"Price",?71,"Total"
  S $P(ABMS("I"),"-",80)="" W !,ABMS("I")

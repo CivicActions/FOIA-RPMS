@@ -1,5 +1,5 @@
-APCDEFG ; IHS/CMI/LAB -VISIT EDIT DISPLAY ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDEFG ; IHS/CMI/TUCSON -VISIT EDIT DISPLAY ;
+ ;;2.0;IHS RPMS/PCC Data Entry;**8**;MAR 09, 1999
  ;IHS/AMNC/LJF
  ; -- this is a modified copy of APCDVD
  ; -- modified to select item from display to edit

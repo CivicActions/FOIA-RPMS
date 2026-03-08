@@ -1,5 +1,5 @@
-RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;8/15/05 10:07am
- ;;5.0;Radiology/Nuclear Medicine;**45,62,71,65**;Mar 16, 1998;Build 8
+RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;19 Apr 2019 2:40 PM
+ ;;5.0;Radiology/Nuclear Medicine;**45,62,71,65,127,138,158,1009**;Mar 16, 1998;Build 21
  ; 08/12/2005 bay/kam Remedy Call 104630 Patch 62
  ; 03/02/2006 BAY/KAM Remedy Call 131482 Patch RA*5*71
  ; 
@@ -10,14 +10,14 @@ RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;8/15/05 10:07am
 2 ;;Procedure Enter/Edit
  ; *** This subroutine once resided in RAMAIN i.e, '2^RAMAIN'. ***
  ; RA PROCEDURE option
- N RACTIVE,RAENALL,RAY,RAFILE,RASTAT,RAXIT
- S (RAENALL,RANEW71,RAXIT)=0
+ N RACTIVE,RAENALL,RAY,RAFILE,RASTAT,RAXIT,RAIEN,RANEW,RASEED,RANEWPRO K ^XTMP("RAMAIN4",$J)
+ S (RAENALL,RANEW71,RAXIT,RANEW)=0 K ^XTMP("RAMAIN4",$J)
  N RADIO,RAPTY,RAASK,RAROUTE ;used by the edit template
- F  D  Q:$G(RAXIT)
+ F  D  Q:$G(RAXIT)=0!($G(RAXIT)="")!($G(^XTMP("RAMAIN4",$J,"RAEND"))=1)  G:$G(^XTMP("RAMAIN4",$J,"RAEND"))=1 END
  . K DA,DD,DIC,DINUM,DLAYGO,DO,RACMDIFF,RATRKCMA,RATRKCMB
  . S DIC="^RAMIS(71,",DIC(0)="QEAMLZ",DLAYGO=71,DIC("DR")=6
  . W ! D ^DIC K D,DD,DIC,DINUM,DLAYGO,DO
- . S:+Y<0 RAXIT=1 I $G(RAXIT) K D,X,Y Q
+ . I $G(Y)<0!($G(Y)="") S ^XTMP("RAMAIN4",$J,"RAEND")=1 Q
  . S (DA,RADA)=+Y,RAY=Y,RAFILE=71
  . ;RA*5*71 changed next line for Remedy Call 131482
  . S RANEW71=$S($P(Y,U,3)=1:1,1:0) ;used in template, edit CPT Code if new rec.
@@ -26,12 +26,21 @@ RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;8/15/05 10:07am
  .. W !?5,"This record is currently being edited by another user."
  .. W !?5,"Try again later!",$C(7) S RAXIT=1
  .. Q
+ . Q
+21 ;ENTRY POINT FROM RANPRO, RA*5.0*127
+ S (RAENALL,RANEW71,RAXIT,RANEW)=0 S:$G(RACTIVE)="" RACTIVE="" K ^XTMP("RAMAIN4",$J)
+ ;I RACTIVE="" S RACTIVE=$P($G(^RAMIS(71,RADA,"I")),"^")  ihs/cmi/maw orig
+ I RACTIVE="",$G(RADA) S RACTIVE=$P($G(^RAMIS(71,RADA,"I")),"^")  ;ihs/cmi/maw 20210311 patch 1009
+ S RAFILE=71,RAY=RAYY S:$G(RASTAT)="" RASTAT=$S(RACTIVE="":1,RACTIVE>DT:1,1:0)
+ D  ;ENTER INTO STRUCTURE PROCESS
  . S RAPNM=$P($G(Y(0)),U) ;proc. name for display purposes in template
  . S RACTIVE=$P($G(^RAMIS(71,RADA,"I")),"^")
  . S RASTAT=$S(RACTIVE="":1,RACTIVE>DT:1,1:0)
  . D TRKCMB^RAMAINU(DA,.RATRKCMB) ;tracks existing
  . ; CM definition before editing. RATRKCMB ids the before CM values
+ . I $G(RANEW)=1 Q  ;RA*50*127 NEW PROCEDURE
  . S DIE="^RAMIS(71,",DR="[RA PROCEDURE EDIT]" D ^DIE
+ . S RACPT=$P(^RAMIS(71,RADA,0),U,9)
  . K RAPNM S RAPROC(0)=$G(^RAMIS(71,RADA,0))
  . ;
  . ;check for data consistency between the 'CONTRAST MEDIA USED' &
@@ -78,8 +87,15 @@ RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;8/15/05 10:07am
  .I $O(^RAMIS(71,"ADESC",+RAY,0)) D UPDATP^RAO7UTL(RAY)
  .;has been edited
  . Q
+ I $G(RANEW)=1 D EN^RANPRO(RAYY,RATYPE,RANEW)  ;RA*5.0*127 NEW PROCEDURE
  K DIR,RACMDIFF,RATRKCMA,RATRKCMB
- S DIR(0)="YA",DIR("B")="NO"
+ I $G(^XTMP("RAMAIN4",$J,"RAEND"))=1 G END
+ D EXIT G END
+ Q
+ ;W !,?3,"Running validity check on CPT and stop codes." H 1 D ^RAPERR G EXIT  ;RA*5*127
+22 ; RA*5*127
+ K DIR
+ S DIR(0)="YAO",DIR("B")="NO"
  S DIR("A")="Want to run a validity check on CPT and stop codes? "
  S DIR("?",1)="Answer 'YES' to print a list of Radiology/Nuclear Medicine Procedures"
  S DIR("?",2)="with missing or invalid CPT's and/or Credit Clinic Stop Code(s)."
@@ -93,16 +109,16 @@ RAMAIN2 ;HISC/GJC-Radiology Utility File Maintenance (Part Two) ;8/15/05 10:07am
 EXIT K RADA,RANEW71,X,Y
  Q
 13 ;;Rad/Nuc Med Common Procedure File Enter/Edit
- ; RA COMMON PROCEDURE option
+ ; RA COMMON PROCEDURE option RA5P158
  N RADA,RAENALL,RAY,RAFILE,RALOW,RAMIS713,RASTAT,RAIMGTYI S RAENALL=0
  W ! D EN1^RAUTL17 G:Y'>0 Q13 S RAIMGTYI=Y
 131 S DIC="^RAMIS(71.3,",DIC(0)="AELMQZ",DLAYGO=71.3
- S DIC("S")="N RA S RA=+$P(^(0),U) I RAIMGTYI=$P($G(^RAMIS(71,RA,0)),U,12)"
- S DIC("W")="N RA4 S RA4=$P($G(^(0)),""^"",4) W:RA4]"""" ""   (""_RA4_"")"" W:RA4']"""" ""   (no sequence number)"""
+ S DIC("S")="I $$SCRN713^RAMAIN2(+$P(^(0),U),RAIMGTYI)"
+ S DIC("W")="W $$DICW713^RAMAIN2($P($G(^(0)),U,4))"
  W ! D ^DIC K DIC,DLAYGO,D,X
  I Y<0 D Q13 G RESEQ
  ; If a sequence # exists, the Common Proc. is active
- S RADA=+Y,RAY=Y,RAFILE=71.3 L +^RAMIS(RAFILE,RADA):5
+ MERGE RAY=Y S RADA=+Y,RAFILE=71.3 L +^RAMIS(RAFILE,RADA):5
  I '$T D  G Q13
  . W !?5,"This record is currently being edited by another user."
  . W !?5,"Try again later!",$C(7)
@@ -189,4 +205,22 @@ DELRADE(RADA) ; Delete the Default Radiopharmaceuticals multiple
  . Q
  K %,%X,%Y,D,D0,DA,DI,DIC,DIE,DQ,DR,X,Y
  Q
+ ;
+END ;KILL LOGIC AND END ROUTINE
+ K RACODE,RACPT,RAGOLD,RAMATCH,RANEW71,RANM,RAPROIEN,RATYPE,RAYY
+ K DDC,DDH,DISYS,I,POP,RA713,DIK,DA
+ Q
+ ;
+SCRN713(Y,RAIMGTYI) ;screen common procedures by i-type
+ ;RAIMGTYI set above in 13^RAMAIN2
+ ;'Y' = the IEN of the common procedure as it exists in file 71
+ ;'RAIMGTYI' = IEN of the imaging type for the common procedure
+ QUIT:(RAIMGTYI=$P($G(^RAMIS(71,Y,0)),U,12)) 1
+ Q 0
+ ;
+DICW713(RAX) ;display the sequence number or a message is the sequence
+ ;number is missing. ^DD(71.3,3,0)="SEQUENCE NUMBER" 0;4
+ ;'RAX' the sequence number or null statement
+ N RASEQTXT S RASEQTXT="   "_$S(RAX>0:"("_RAX_")",1:"(no sequence number)")
+ Q RASEQTXT
  ;

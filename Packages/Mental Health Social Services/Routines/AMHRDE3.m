@@ -1,5 +1,5 @@
 AMHRDE3 ; IHS/CMI/LAB - list DEPRESSION screenings ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**6**;JUN 02, 2010;Build 10
+ ;;4.0;IHS BEHAVIORAL HEALTH;**6,11,12**;JUN 02, 2010;Build 46
  ;
  ;
 INFORM ;
@@ -14,17 +14,13 @@ INFORM ;
  W !?5,"- Diagnoses V79.0, 14.1"
  W !?5,"- Education Topics: DEP-SCR"
  W !?5,"- refusal of exam code 36"
- W !,"This report will tally the patients by age, gender, screening exam result,"
- W !,"provider (either exam provider, if available, or primary provider on the "
- W !,"visit), clinic, date of screening, designated PCP, MH Provider, SS Provider"
- W !,"and A/SA Provider."
  W !,"  Notes:  "
  W !?10,"- the last screening/refusal for each patient is used.  If a patient"
  W !?10,"  was screened more than once in the time period, only the latest"
  W !?10,"  is used in this report."
  W !?10,"- this report will optionally, look at both PCC and the Behavioral"
  W !?10,"   Health databases for evidence of screening/refusal"
- W !?10,"- this is a tally of Patients, not visits or screenings"
+ W !?10,"- this is a list of Patients, not visits or screenings"
  W !
  D PAUSE^AMHLEA
  W !!,"You will be able to choose the patients by age, gender, clinic, primary"
@@ -182,9 +178,16 @@ DEMO ;
  D DEMOCHK^AMHUTIL1(.AMHDEMO)
  I AMHDEMO=-1 G TEMP
 ZIS ;
- S XBRP="PRINT^AMHRDE3P",XBRC="PROC^AMHRDE31",XBRX="XIT^AMHRDE3",XBNS="AMHR"
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
+ I $D(DIRUT) G XIT
+ I $G(Y)="B" D BROWSE,XIT Q
+ S XBRP="PRINT^AMHRDE3P",XBRC="PROC^AMHRDE31",XBRX="XIT^AMHRDE3",XBNS="AMH"
  D ^XBDBQUE
  D XIT
+ Q
+BROWSE ;
+ S XBRP="VIEWR^XBLM(""^AMHRDE3P"")"
+ S XBNS="AMH",XBRC="PROC^AMHRDE31",XBRX="XIT^AMHRDE3",XBIOP=0 D ^XBDBQUE
  Q
 XIT ;
  D EN^XBVK("AMHR")

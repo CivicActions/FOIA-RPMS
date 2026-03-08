@@ -1,5 +1,5 @@
 BLRORBFX ;IHS/CIA/PLS - Fix Backdoor Lab orders in Order File;04-Nov-2004 18:51;PLS
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;1.1;VUECENTRIC RPMS SUPPORT;;Sep 14, 2004
  ;
 EP ;
@@ -52,6 +52,8 @@ PEP ; Private Entry Point for Main Menu
  NEW TMP           ; Temp Var
  NEW BLRVERN       ; BLR Ver #
  NEW X,Y
+ NEW FUZZY
+ NEW FUZCNT
  ;
  S PRGBEG=$$NOW^XLFDT()                ; Beg Date/Time
  ;
@@ -112,6 +114,7 @@ BLRORDRF(SIEN,EIEN,VIEW)     ;
  ;
  F  S OIEN=$O(^OR(100,OIEN)) Q:'OIEN!(OIEN>EIEN)  D
  .S CNT=CNT+1
+ .I CNTBAD<1 D FUZZYIT
  .I $$ISLAB(OIEN) D
  ..I $$NEEDFIX(OIEN) D
  ...S CNTBAD=CNTBAD+1
@@ -163,7 +166,7 @@ BLRORDRF(SIEN,EIEN,VIEW)     ;
  ;
  ; Ending message
  K BLRFMLA
- S BLRFMLA(1)=""
+ S BLRFMLA(1)=$J("",$L(CNT)+1)
  S BLRFMLA(2)="Number of orders analyzed = "_CNT
  S BLRFMLA(3)=""
  ;
@@ -382,3 +385,9 @@ NUMTIME(X) ;
  NEW Y
  S X=$E($P(X,".",2)_"0000",1,4),Y=X>1159 S:X>1259 X=X-1200 S X=$J(X\100,2)_":"_$E(X#100+100,2,3)_" "_$E("AP",Y+1)_"M"
  Q X
+ ;
+ ; Show user "Warm Fuzzy"
+FUZZYIT      ;
+ W CNT
+ F J=1:1:$L(CNT)+1 W $C(8)
+ Q

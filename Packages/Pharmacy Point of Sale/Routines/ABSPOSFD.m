@@ -1,5 +1,5 @@
 ABSPOSFD ; IHS/FCS/DRS - ABSP("RX",*) ;      [ 09/12/2002  10:09 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,10,40**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,10,40**;JUN 21, 2001;Build 131
  ;----------------------------------------------------------------------
  ; This is a copy of routine ABSPOSCD, made on 03/20/2001.
  ; It constructs the ABSP(*) array for printing NCPDP forms.
@@ -84,6 +84,9 @@ MEDINFO(VMEDINFO,MEDN,INSPINS) ;EP
  D:DRUGIEN'=""
  .S ABSP("RX",MEDN,"Drug IEN")=DRUGIEN
  .S ABSP("RX",MEDN,"Drug Name")=$P($G(^PSDRUG(DRUGIEN,0)),U,1)
+ . ; /IHS/OIT/RAM ; PATCH 51 ; NEED TO SET SEGMENTS 442 AND 460 ACCORDING TO THE DRUG SCHEDULE
+ . ;                NEED TO ADD A NEW FIELD WITH THE NUMERIC SCHEDULE VALUE.
+ . S ABSP("RX",MEDN,"Drug Schedule")=+$$GET1^DIQ(50,DRUGIEN_",",3,"I")
  .I ABSP("RX",MEDN,"NDC")="" D
  ..S ABSP("RX",MEDN,"NDC")=$P($G(^PSDRUG(DRUGIEN,2)),U,4)
  N PRICING S PRICING=^ABSPTL(IEN57,5)

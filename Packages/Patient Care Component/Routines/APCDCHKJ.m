@@ -1,5 +1,5 @@
-APCDCHKJ ; IHS/CMI/LAB - I-LINKER ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDCHKJ ; IHS/CMI/TUCSON - I-LINKER ; [ 08/23/01  9:23 AM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**4,8,9**;MAR 09, 1999
  ;IHS/CMI/LAB - patch 4 added check for MFI created visits
  ;
 EN ;PEP - can be called by Billing, etc.

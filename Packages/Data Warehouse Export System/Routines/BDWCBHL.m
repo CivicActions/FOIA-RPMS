@@ -1,0 +1,262 @@
+BDWCBHL ;ihs/cmi/maw - BDW COVID BHL DRIVER ; 08 Jan 2019  6:04 PM
+ ;;1.0;IHS DATA WAREHOUSE;**7**;JAN 23, 2006;Build 65
+ ;
+MAIN(RXARRY) ;EP - this is the main routine driver
+ S INQUE=1
+ Q
+ ;
+SETHL7(LOG,DATE,ZB,ZC,ZP,ZD,DLY,CUM) ;-- lets setup the INA array for GIS
+ N ASUFAC,BDWHDT,ZPT,ZAB
+ N ASU,CNT
+ ;S CNT=0,ZCNT=0
+ S DATE=$$FMTHL7^XLFDT(DATE)
+ S ASUFAC=$P($G(^AUTTLOC($P($G(^AUTTSITE(1,0)),U),0)),U,10)
+ S ASU=0 F  S ASU=$O(DLY(ASU)) Q:ASU=""  D
+ .K INDA,INA
+ .S CNT=0,ZCNT=0
+ .S INA("SF")=ASUFAC
+ .S INDA("ZHB",1)=""
+ .S INDA("ZIC",1)=""
+ .S INDA("ZCP",1)=""
+ .S INDA("ZPD",1)=""
+ .S INDA("ZPT",1)=""
+ .S INDA("ZAB",1)=""
+ .S INDA("ZCM",1)=""
+ .S INA("DW1COVIDZHB1",1)=DATE
+ .S INA("DW1COVIDZHB2",1)=ASU
+ .S INA("DW1COVIDZHB3",1)=$S(ASUFAC'=ASU:0,1:$P(ZB,U))
+ .S INA("DW1COVIDZHB4",1)=$S(ASUFAC'=ASU:0,1:$P(ZB,U,2))
+ .S INA("DW1COVIDZHB5",1)=$S(ASUFAC'=ASU:0,1:$P(ZB,U,3))
+ .S INA("DW1COVIDZIC1",1)=DATE
+ .S INA("DW1COVIDZIC2",1)=ASU
+ .S INA("DW1COVIDZIC3",1)=$S(ASUFAC'=ASU:0,1:$P(ZC,U))
+ .S INA("DW1COVIDZIC4",1)=$S(ASUFAC'=ASU:0,1:$P(ZC,U,2))
+ .S INA("DW1COVIDZIC5",1)=$S(ASUFAC'=ASU:0,1:$P(ZC,U,3))
+ .S INA("DW1COVIDZCP1",1)=DATE
+ .S INA("DW1COVIDZCP2",1)=ASU
+ .S INA("DW1COVIDZCP3",1)=$S(ASUFAC'=ASU:0,1:$P(ZP,U))
+ .S INA("DW1COVIDZCP4",1)=$S(ASUFAC'=ASU:0,1:$P(ZP,U,2))
+ .S INA("DW1COVIDZPD1",1)=DATE
+ .S INA("DW1COVIDZPD2",1)=ASU
+ .S INA("DW1COVIDZPD3",1)=$S(ASUFAC'=ASU:0,1:$P(ZD,U))
+ .S INA("DW1COVIDZPD4",1)=$S(ASUFAC'=ASU:0,1:$P(ZD,U,2))
+ .S INA("DW1COVIDZPD5",1)=$S(ASUFAC'=ASU:0,1:$P(ZD,U,3))
+ .S ZPT=$G(DLY(ASU))
+ .S CNT=CNT+1
+ .S INDA("ZPT",CNT)=""
+ .S INDA("ZAB",CNT)=""
+ .S INA("DW1COVIDZPT1",CNT)=DATE
+ .S INA("DW1COVIDZPT2",CNT)=ASU
+ .S INA("DW1COVIDZPT3",CNT)=+$P(ZPT,U)
+ .S INA("DW1COVIDZPT4",CNT)=+$P(ZPT,U,2)
+ .S INA("DW1COVIDZPT5",CNT)=+$P(ZPT,U,3)
+ .S INA("DW1COVIDZPT6",CNT)=+$P(ZPT,U,4)
+ .S INA("DW1COVIDZPT7",CNT)=+$P(ZPT,U,5)
+ .S INA("DW1COVIDZAB1",CNT)=DATE
+ .S INA("DW1COVIDZAB2",CNT)=ASU
+ .S INA("DW1COVIDZAB3",CNT)=+$P(ZPT,U,6)
+ .S INA("DW1COVIDZAB4",CNT)=+$P(ZPT,U,7)
+ .S INA("DW1COVIDZAB5",CNT)=+$P(ZPT,U,8)
+ .S ZCM=$G(CUM(ASU))
+ .S ZCNT=ZCNT+1
+ .S INDA("ZCM",ZCNT)=""
+ .S INA("DW1COVIDZCM1",ZCNT)=ASU
+ .S INA("DW1COVIDZCM2",ZCNT)=+$P(ZCM,U)
+ .S INA("DW1COVIDZCM3",ZCNT)=+$P(ZCM,U,2)
+ .S INA("DW1COVIDZCM4",ZCNT)=+$P(ZCM,U,3)
+ .S INA("DW1COVIDZCM5",ZCNT)=+$P(ZCM,U,6)
+ .S INA("DW1COVIDZCM6",ZCNT)=+$P(ZCM,U,7)
+ .S INA("DW1COVIDZCM7",ZCNT)=+$P(ZCM,U,8)
+ .S BDWMSGI=$$Z19(LOG,.INDA,.INA)
+ .S ^BDWCTMP(BDWIEDST,BDWMSGI)=""
+ Q
+ ;
+Z19(LOG,BDWINDA,BDWINA) ;-- lets make the HL7 call here to generate the message
+ S INDA=LOG
+ D ^INHF("HL IHS DW1COVID Z19 PARENT",.BDWINDA,.BDWINA)
+ Q $G(INHF)
+ ;
+HEAD(LOG) ;-- lets create a header record
+ S INDA=LOG
+ S INA("FILE")=90213.2
+ D ^INHF("HL IHS DW1COVID HDR OUT PARENT",.INDA,.INA)
+ Q $G(INHF)
+ ;
+TRAIL(LOG,COUNTS) ;-- lets create a trailer record
+ S INDA=LOG
+ S INA("FILE")=90213.2
+ D ^INHF("HL IHS DW1COVID TRL OUT PARENT",.INDA,.INA)
+ Q $G(INHF)
+ ;
+HDR ;-- generate the header record
+ S INQUE=1
+ NEW BDWDEST S BDWDEST=$O(^INRHD("B","HL IHS DW1COVID IE",0)) K ^INLHDEST(BDWDEST) ;IHS/CMI/LAB - kill at beginning of each batch
+ ;cmi/anch/maw 3/7/2007 added the following 3 lines for common header vars
+ S INA("BDW1ZHS4")="HL7"
+ I $G(INA("FILE"))=90213.2 S INA("BDW1ZHS5")="COEX"  ;^"_$$GET1^DIQ(INA("FILE"),INDA,.23)  ;cmi/anch/maw 3/7/2007 for desc of option ran
+ S INA("BDW1ZHS6")="2.5.1"  ;change this when version changes
+ S INA("BDW1BHS7")=$$DATE^INHUT($$GET1^DIQ(90213.2,INDA,.01,"I"),1)
+ S INA("BDW1BHS9")=INDA
+ S INA("BDW1BHS11")=$P($G(^AUTTLOC($P(^AUTTSITE(1,0),U),0)),U,10)_INDA
+ S INA("BDW1ZHS1")=$S($$GET1^DIQ(90213.2,INDA,.08,"I"):$$DATE^INHUT($$GET1^DIQ(90213.2,INDA,.08,"I")),1:$$DATE^INHUT($$GET1^DIQ(90213.2,INDA,.01,"I")))
+ S INA("BDW1ZHS2")=$$DATE^INHUT($$GET1^DIQ(90213.2,INDA,.09,"I"))
+ S INA("BDW1ZHS3")=INDA
+ Q
+ ;
+TRL ;-- generate the trailer record
+ S INQUE=1
+ S INA("BDW1ZTS1")=""  ;+$$GET1^DIQ(90213.2,INDA,1104)+$$GET1^DIQ(90213.2,INDA,.08)
+ S INA("BDW1ZTS2")=""  ;$$GET1^DIQ(90213.2,INDA,.06)
+ S INA("BDW1ZTS3")=""  ;0
+ S INA("BDW1ZTS4")=""  ;0
+ S INA("BDW1ZTS5")=""  ;$$GET1^DIQ(90213.2,INDA,1105)
+ S INA("BDW1BTS1")=$G(INA("BDW1ZTS6"))
+ S INA("BDW1BTS2")=$P($G(^DIC(4,$P(^AUTTSITE(1,0),U),0)),U)
+ S INA("BDW1BTS3")=1
+ D HFS  ;task to host file
+ ;
+QCNT(DEST) ;-- let's loop through and get a quick count of records
+ N BDWDA,BDWCNT
+ S BDWCNT=0
+ S BDWDA=0 F  S BDWDA=$O(^BDWCTMP(DEST,BDWDA)) Q:'BDWDA  D
+ . Q:'$O(^INTHU("AT",BDWDA,0))
+ . ;cmi/anch/maw 12/7/2007 filter out A40's?
+ . S BDWCNT=BDWCNT+1
+ Q +$G(BDWCNT)
+ ;
+SETZTS6(PFL,PIEN,QCNT) ;-- set ZTS-6 with actual counts
+ N TRL
+ S TRL=$P($G(^BDWCVLOG(PIEN,0)),U,12)
+ Q:'TRL
+ S TRL=$O(^INTHU("AT",TRL,0))
+ Q:'$G(TRL)
+ N LDA
+ S LDA=0 F  S LDA=$O(^INTHU(TRL,3,LDA)) Q:'LDA  D
+ . I $E($G(^INTHU(TRL,3,LDA,0)),1,3)="BTS" D
+ .. ;S $P(^INTHU(TRL,3,LDA,0),"|",7)=QCNT_"|CR"
+ .. S $P(^INTHU(TRL,3,LDA,0),"|",2)=QCNT  ;
+ Q
+ ;
+GETDIR ;get export directory
+ S BDWCDIR=$S($P($G(^AUTTSITE(1,1)),U,2)]"":$P(^AUTTSITE(1,1),U,2),1:$G(^XTV(8989.3,1,"DEV")))
+ I $G(BDWCDIR)="" S BDWCDIR="/usr/spool/uucppublic/"
+ Q
+HFSA(DEST,BHLCDIR,BHLCFNM) ;EP - export from this destination
+ S Y=$$OPEN^%ZISH(BHLCDIR,BHLCFNM,"W")
+ Q:Y
+ S BHLX=0 F  S BHLX=$O(^BDWCTMP(DEST,BHLX)) Q:'BHLX  D
+ . S BHLU=$O(^INTHU("AT",BHLX,0))
+ . Q:'BHLU  ;cmi/maw 6/28/2004 added for null node
+ . D LPINTHU(BHLU)
+ D ^%ZISC
+ ;*****LORI PUT SENDTO HERE WHEN READY
+ I $P($G(^AUTTSITE(1,0)),U,21)=1 S BDWSLASH="/" I 1
+ E  S BDWSLASH="\"
+ S BDWNOSLA=1 I $E(BDWCDIR,$L(BDWCDIR))="/"!($E(BDWCDIR,$L(BDWCDIR))="\") S BDWNOSLA=0
+ S BDWPAFN=BHLCDIR_$S(BDWNOSLA:BDWSLASH,1:"")_BHLCFNM
+ ;now loop through and delete them
+ S BHLX=0 F  S BHLX=$O(^BDWCTMP(DEST,BHLX)) Q:'BHLX  D
+ .S BHLU=$O(^INTHU("AT",BHLX,0))
+ .Q:'BHLU  ;cmi/maw 6/28/2004 added for null node
+ .S DA=BHLU,DIE="^INTHU(",DR=".03////C" D ^DIE K DIE,DA,DR
+ .Q
+ K ^BDWCTMP(DEST)
+ D UPLOG(BHLCFNM,BDWPIEN)
+ D AUTOSEND
+FTP ;
+ ;PUT FTP TO DW MACHINE HERE
+BULL ;now send mailman message to user who queued the job
+ D BULLET
+ Q
+ ;
+BULLET ;EP - called from BDWBHL to send bulletin
+ NEW XMSUB,XMDUZ,XMTEXT,XMY,BDWC,BDWBUL
+ KILL BDWBUL
+ I BDWUSER="" S BDWUSER=$G(DUZ)
+ S XMY(BDWUSER)=""
+ D WRITEMSG
+SUBJECT S XMSUB="* DATA WAREHOUSE PROCESSING COMPLETE *"
+SENDER S XMDUZ="Data Warehouse Export System"
+ S XMTEXT="BDWBUL("
+ D ^XMD
+ KILL BDWBUL
+ Q
+ ;
+WRITEMSG ;
+ S BDWC=0
+ S X="*********** DATA WAREHOUSE EXPORT SYSTEM *************" D SET
+ S X="This message is to inform you that the process has completed" D SET
+ S X="and the file has been written to the export directory for" D SET
+ S X=BDWDESC D SET
+ S X=" " D SET
+ I $G(BDWSFLG) D
+ .S X="The autoftp to the data warehouse FAILED." D SET
+ .S X="You will need to manually ftp the file named "_BDWPAFN D SET
+ .S X="to the data warehouse." D SET
+ Q
+ ;  
+SET ;
+ S BDWC=BDWC+1
+ S BDWBUL(BDWC)=X
+ Q
+ ;
+UPLOG(FNM,PIEN) ;-- update the log with the filename
+ S DIE="^BDWCVLOG(",DA=PIEN,DR=".04////"_$$NOW^XLFDT()_";.05///"_FNM_";.15////C"
+ D ^DIE
+ Q
+ ;
+LPINTHU(BHLUIEN)       ;EP - loop through UIF and set to file
+ S BHLUDA=0 F  S BHLUDA=$O(^INTHU(BHLUIEN,3,BHLUDA)) Q:'BHLUDA  D
+ . U IO W $P($G(^INTHU(BHLUIEN,3,BHLUDA,0)),"|CR|"),!
+ Q
+ ;
+DELAY(IDA,IA) ;-- determine the delay based on records
+ N BDWRCNT
+ Q 15  ;standard 15 minute delay for COVID
+ S BDWRCNT=$$GET1^DIQ(90213.1,IDA,1105)
+ I BDWRCNT>10000 Q 60
+ I BDWRCNT>40000 Q 90
+ I BDWRCNT>60000 Q 120
+ Q 45
+ ;
+HFS ;-- task the file to the host system
+ NEW BDWUSER,BDWDESC,F,BDWPFL,BDWPIEN
+ S BDWUSER=$$VALI^XBDIQ1(INA("FILE"),INDA,8801)
+ S BDWPFL=$G(INA("FILE"))  ;maw added 4/7/2005  for ZTS-6
+ S BDWPIEN=$G(INDA)  ;maw added 4/7/2005 for ZTS-6
+ S BDWDESC="COVID Export for: "_$$VAL^XBDIQ1(90213.2,INDA,.01)_" to "_$$VAL^XBDIQ1(90213.2,INDA,.02)
+ S ZTRTN="HFS1^BDWCBHL"
+ S ZTIO="",ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT,,,$$DELAY(INDA,INA("FILE"))),ZTDESC="DW COVID HFS CREATION" S ZTSAVE("BDW*")=""
+ D ^%ZTLOAD
+ Q
+HFS1 ;EP - called from taskman
+ N BDWDEST,BDWHDIR,BDWHFNM
+ S BDWDEST=$O(^INRHD("B","HL IHS DW1COVID IE",0))
+ Q:'BDWDEST
+ K ^INLHDEST(BDWDEST) ;kill off inlhdest
+ N BDWQCNT
+ S BDWQCNT=$$QCNT(BDWDEST)  ;4/7/05 maw quick count of records to put in ZTS-6
+ D SETZTS6(BDWPFL,BDWPIEN,BDWQCNT)
+ D GETDIR
+ Q:$G(BDWCDIR)=""
+ N BDWASU
+ S BDWASU=$P($G(^AUTTLOC($P($G(^AUTTSITE(1,0)),U),0)),U,10)
+ D NOW^%DTC
+ N BDWDTS
+ S BDWDTS=$TR(%,".")
+ S BDWCFNM=BDWASU_BDWDTS_".BDWC"
+ D HFSA(BDWDEST,BDWCDIR,BDWCFNM)
+ S ZTREQ="@"
+ Q
+ ;
+AUTOSEND ;EP
+ S BDWSFLG=$$SENDTO1^ZISHMSMU("DATA WAREHOUSE SEND",BDWPAFN)
+ S BDWSFLG(1)=$P(BDWSFLG,"^",2)
+ S BDWSFLG=+BDWSFLG
+ Q:$D(ZTQUEUED)
+ I BDWSFLG'=0 D
+ . W:'$D(ZTQUEUED) !,"COVID HL7 file was NOT successfully transferred to the data warehouse",!,"you will need to manually ftp it.",!
+ . W:'$D(ZTQUEUED) !,BDWSFLG(1),!!
+ ;
+ Q
+ ;

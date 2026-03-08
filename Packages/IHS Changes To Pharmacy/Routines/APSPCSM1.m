@@ -1,7 +1,8 @@
-APSPCSM1 ; IHS/MSC/PLS - CONTROLLED SUBSTANCE MANAGEMENT REPORT ;13-Aug-2013 09:25;PLS
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1007,1011,1013,1015,1016**;Sep 23, 2004;Build 74
+APSPCSM1 ; IHS/MSC/PLS - CONTROLLED SUBSTANCE MANAGEMENT REPORT ;25-Sep-2019 13:28;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1007,1011,1013,1015,1016,1023,1024**;Sep 23, 2004;Build 68
  ;=====================================================================
  ;IHS/MSC/MGH Added column for fills in CMOP
+ ;IHS/MSC/MGH added report for EPCS
  ;
  Q
 PRINT ;EP
@@ -44,7 +45,7 @@ PRINT1 ;EP
  ....K STATS
  ....S DFLG=1
  ..W:APSPXML !,$$TAG("PharmacyDivision",1)
- .E  D  ; Detailed report
+ .I APSPRTYP=2 D      ; Detailed report
  ..I APSPXML D
  ...W !,$$TAG("PharmacyDivision",0)
  ...W !,$$TAG("DivisionName",2,$$GET1^DIQ(59,DIV,.01))
@@ -83,7 +84,23 @@ PRINT1 ;EP
  .......S DFLG=1
  ...I APSPDET,APSPPRV'="*" D PRTDSUM
  ..W:APSPXML !,$$TAG("PharmacyDivision",1)
- .D:APSPDET PRTDSUM
+ .I APSPRTYP=3  D         ;EPCS Provider Report EPCS
+ ..W:APSPXML !,$$TAG("PharmacyDivision",0)
+ ..W:APSPXML !,$$TAG("DivisionName",2,$$GET1^DIQ(59,DIV,.01))
+ ..S SUB1="" F  S SUB1=$O(^TMP($J,"XREF",DIV,"D-PRV",SUB1)) Q:'$L(SUB1)  D  ; Provider
+ ...I APSPXML D
+ ....W !,$$TAG("Provider",0)
+ ....W !,$$TAG("ProvName",2,$P(SUB1,"|",1))
+ ....W !,$$TAG("ProvDEA",2,$P(SUB1,"|",2))
+ ...E  W !,"Provider: "_$P(SUB1,"|",1)_" DEA: "_$P(SUB1,"|",2),!
+ ...S SUB2="" F  S SUB2=$O(^TMP($J,"XREF",DIV,"D-PRV",SUB1,SUB2)) Q:'$L(SUB2)  D  ; Signed Date
+ ....S SUB3=0 F  S SUB3=$O(^TMP($J,"XREF",DIV,"D-PRV",SUB1,SUB2,SUB3)) Q:SUB3=""  D    ; Drug Name
+ .....S SUB4=0 F  S SUB4=$O(^TMP($J,"XREF",DIV,"D-PRV",SUB1,SUB2,SUB3,SUB4)) Q:SUB4=""  D    ; Patient Name
+ ......S SUB5=0 F  S SUB5=$O(^TMP($J,"XREF",DIV,"D-PRV",SUB1,SUB2,SUB3,SUB4,SUB5)) Q:'SUB5  D   ;Data Node
+ .......D PRINT2^APSPCSM2(^TMP($J,"DATA",SUB5))
+ .......S DFLG=1
+ ...W:APSPXML !,$$TAG("Provider",1)
+ ..W:APSPXML !,$$TAG("PharmacyDivision",1)
  .K STATS
  D:APSPDET PRTRTOT
  I APSPXML W !,$$TAG("PharmacyDivisions",1)
@@ -95,22 +112,16 @@ PRINTSUM(RPTTYP,DRGNM,STATS,FDT) ;EP -
  I APSPXML D
  .W !,$$TAG("DispenseSummary")
  .W:$G(FDT) !,$$TAG("FillDate",2,$P($TR($$FMTE^XLFDT(FDT,"5Z"),"@"," "),":",1,2))
- .;W !,$$TAG("DrugName",2,DRGNM)
  .W !,$$TAG("DrugName",2,$P(DAT,U,3)) ;P1013
- .;W !,$$TAG("RXCnt",2,$J(STATS("RXCNT"),6))
  .W !,$$TAG("FillCnt",2,$J(STATS("FILLS"),6))
  .W !,$$TAG("UnitType",2,$P(DAT,U,2))
  .W !,$$TAG("TotalUnits",2,$J(+$G(STATS("DRUG",+DAT)),8))
- .;W !,$$TAG("AvgUnitsDispPerRX",2,$J(+$G(STATS("DRUG",+DAT))\STATS("RXCNT"),6,1))
  .W !,$$TAG("AvgUnitsDispPerFill",2,$J(+$G(STATS("DRUG",+DAT))\STATS("FILLS"),6,1))
  .W !,$$TAG("DispenseSummary",1)
  E  D
  .I $G(FDT),((FDT'=LSTFDT)!NEWPG) D
  ..W "Fill Date ",$$FMTE^XLFDT(FDT,"5Z"),!
  ..S LSTFDT=FDT
- .;W DRGNM,?44,$J(STATS("RXCNT"),6),?51,$P(DAT,U,2),?63,$J(+$G(STATS("DRUG",+DAT)),8),?73,$J(+$G(STATS("DRUG",+DAT))\STATS("RXCNT"),6,1),!
- .;W DRGNM,?44,$J(STATS("FILLS"),6),?51,$P(DAT,U,2),?63,$J(+$G(STATS("DRUG",+DAT)),8),?73,$J(+$G(STATS("DRUG",+DAT))\STATS("FILLS"),6,1),!
- .;W DRGNM,?44,$E($P(DAT,U,2),1,10),?55,$J(STATS("FILLS"),6),?62,$J(+$G(STATS("DRUG",+DAT)),8),?74,$J(+$G(STATS("DRUG",+DAT))\STATS("FILLS"),6,1),?90,!
  .W $P(DAT,U,3),?44,$E($P(DAT,U,2),1,10),?55,$J(STATS("FILLS"),6),?62,$J(+$G(STATS("DRUG",+DAT)),8),?74,$J(+$G(STATS("DRUG",+DAT))\STATS("FILLS"),6,1),!
  .S NEWPG=0
  .D PRINT3  ; check page length
@@ -122,7 +133,6 @@ PRTDSUM ; EP -
  I APSPXML D
  .W !,$$TAG("ReportSubTotals")
  .S DRUGN="" F  S DRUGN=$O(STATS("RXDRUG",DRUGN)) Q:DRUGN=""  D
- ..;W !,$$TAG("DrugName",2,DRUGN)
  ..W !,$$TAG("DrugName",2,$P(STATS("DRUGN",DRUGN),U,3))
  ..W !,$$TAG("RXCount",2,$J(STATS("RXDRUG",DRUGN),6,0))
  ..S RX=0 F  S RX=$O(STATS("RXS",RX)) Q:'RX  D
@@ -135,12 +145,10 @@ PRTDSUM ; EP -
  .W !,"Report sub-totals",!
  .W !,?5,"Drug Name",?47,"# of fills",!
  .S DRUGN="" F  S DRUGN=$O(STATS("RXDRUG",DRUGN))  Q:DRUGN=""  D
- ..;W ?5,DRUGN,?47,$J(STATS("RXDRUG",DRUGN),6,0),!
  ..W ?5,$P(STATS("DRUGN",DRUGN),U,3),?47,$J(STATS("RXDRUG",DRUGN),6,0),!
  ..D PRINT3
  .S RX=0 F  S RX=$O(STATS("RXS",RX)) Q:'RX  D
  ..S RXCNT=$G(RXCNT)+1
- .;W !!,"Total prescription count: ",+$G(RXCNT)
  .W !,"Total fills (new, refill, and partial): ",+$G(STATS("FILLS"))
  Q
  ; Output totals for report
@@ -162,12 +170,10 @@ PRTRTOT ; EP -
  .W !!,"Report Totals",!
  .W !,?5,"Drug Name",?47,"# of fills",!
  .S DRUGN="" F  S DRUGN=$O(APSPRTOT("RXDRUG",DRUGN))  Q:DRUGN=""  D
- ..;W ?5,DRUGN,?47,$J(APSPRTOT("RXDRUG",DRUGN),6,0),!
  ..W ?5,$P(APSPRTOT("DRUGN",DRUGN),U,3),?47,$J(APSPRTOT("RXDRUG",DRUGN),6,0),!
  ..D PRINT3
  .S RX=0 F  S RX=$O(APSPRTOT("RXS",RX)) Q:'RX  D
  ..S RXCNT=$G(RXCNT)+1
- .;W !!,"Total prescription count: ",+$G(RXCNT)
  .W !,"Total fills (new, refill, and partial): ",+$G(APSPRTOT("FILLS"))
  Q
  ; Print the line
@@ -192,6 +198,11 @@ PRINT2(DATA) ; EP -
  .W !,$$TAG("ProviderDEA",2,$$GET1^DIQ(200,$P(DATA,U,14),53.2))
  .W !,$$TAG("Pharmacist",2,$$GET1^DIQ(200,$P(DATA,U,15),.01))
  .W !,$$TAG("RefillsRemaining",2,$P(DATA,U,16))
+ .;Patch 1024 EPCS data
+ .I $P(DATA,U,21)'="" W !,$$TAG("DigitallySigned",2,$P(DATA,U,21))
+ .I $P(DATA,U,22)'="" W !,$$TAG("HardCopy",2,$P(DATA,U,22))
+ .I $P(DATA,U,23)'="" W !,$$TAG("BackDoor",2,$P(DATA,U,23))
+ .I $P(DATA,U,21)=""&($P(DATA,U,22)="")&($P(DATA,U,23)="") W !,$$TAG("Clinic",2,"Clinic")
  .;IHS/MSC/MGH Patch 1015
  .W !,$$TAG("CMOP",2,$P(DATA,U,17))
  .W !,$$TAG("Dosing",2,$$GETSIG(RX))
@@ -200,6 +211,11 @@ PRINT2(DATA) ; EP -
  .;IHS/MSC/MGH Patch 1015 added CMOP field
  .W !,$P($TR($$FMTE^XLFDT($P(DATA,U,2),"5Z"),"@"," "),":",1,2),?14,$P(DATA,U,9),?20,$E($$GET1^DIQ(2,DFN,.01),1,16),?38,HRN,?48,$$GET1^DIQ(52,RX,.01),?60,$P(DATA,U,8),?107,$P(DATA,U,6),?117,$P(DATA,U,13),?127,$P(DATA,U,7)
  .W !,?5,$$GET1^DIQ(200,$P(DATA,U,14),.01),?35,$$GET1^DIQ(200,$P(DATA,U,14),53.2),?50,$E($$GET1^DIQ(200,$P(DATA,U,15),.01),1,22),?74,$P(DATA,U,16),?90,$P(DATA,U,17)
+ .;Patch 1024 EPCS data
+ .I $P(DATA,U,21)'="" W ?107,"Dig Sig"
+ .I $P(DATA,U,22)'="" W ?107,"Hard Copy"
+ .I $P(DATA,U,23)'="" W ?107,"Back Door"
+ .I $P(DATA,U,21)=""&($P(DATA,U,22)="")&($P(DATA,U,23)="") W ?107,"Clinic"
  .I APSPDOSE D
  ..W !,?5,"Dosing:" D OUTSIG($$GETSIG(RX),IOM,12)
  .D PRINT3 ;check page length
@@ -211,28 +227,33 @@ PRINT3 ;EP
  Q
  ;
 HDR ;EP
+ N S
+ S S=APSPSORT
  W:APSPPG @IOF
  S APSPPG=APSPPG+1,NEWPG=1
- W !,"Controlled Substance Management Report ("_$S(APSPRTYP=1:"Summary",1:"Detail")_")",?(IOM-28),$P($TR($$FMTE^XLFDT($$NOW^XLFDT,"5Z"),"@"," "),":",1,2),?(IOM-10),"Page: "_APSPPG
+ W !,"Controlled Substance Management Report ("_$S(APSPRTYP=1:"Summary",2:"Detail",3:"Provider")_")",?(IOM-28),$P($TR($$FMTE^XLFDT($$NOW^XLFDT,"5Z"),"@"," "),":",1,2),?(IOM-10),"Page: "_APSPPG
  W !,"Report Criteria:"
  W !,?5,"Inclusive Dates: "_APSPBDF_" to "_APSPEDF
  W !,?5,"Pharmacy Division: "_$S(APSPDIV:$$GET1^DIQ(59,APSPDIV,.01),1:"All")
  W !,?5,"Drug Class: "_APSPDCTN(APSPDCLS)
  I APSPRTYP=2 D
- .W !,?5,"Sorted by: "_$S(APSPSORT=1:"Drug Name, Fill Date",APSPSORT=3:"Drug Schedule, Drug Name then Fill Date",APSPSORT=2:"Fill Date then Drug Name",APSPSORT=4:"Patient then Fill Date",5:"Prescriber then Drug Name, Fill Date",1:"Unknown")
- E  D
- .W !,?5,"Sorted by: "_$S(APSPSORT=1:"Drug Name",1:"Fill Date then Drug Name")
+ .W !,?5,"Sorted by: "_$S(S=1:"Drug Name, Fill Date",S=3:"Drug Schedule, Drug Name then Fill Date",S=2:"Fill Date then Drug Name",S=4:"Patient then Fill Date",S=5:"Prescriber then Drug Name, Fill Date",1:"Unknown")
+ I APSPRTYP=3 D
+ .W !,?5,"Sorted by: Provider, Signed Date, Drug Name, Patient"
+ I APSPRTYP=1 D
+ .W !,?5,"Sorted by: "_$S(S=1:"Drug Name",1:"Fill Date then Drug Name")
  W !,?5,"CMOP meds: "_$S(APSPCMOP:"Included",1:"Not Included")
+ W !,?5,"Test Pts: "_$S(APSPTEST:"Included",1:"Not Included")
  I APSPDET,APSPSORT=4,APSPPAT W !,?7,"Patient sort restricted to ",$$GET1^DIQ(2,APSPPAT,.01)
  I APSPDET,APSPSORT=5,APSPPRV W !,?7,"Prescriber sort restricted to ",$$GET1^DIQ(200,APSPPRV,.01)
- D HDR1:APSPRTYP=2,HDR2:APSPRTYP=1
+ D HDR1:APSPRTYP=2,HDR2:APSPRTYP=1,HDR3:APSPRTYP=3
  Q
  ;
 HDR1 ;EP
  D DASH
  ;IHS/MSC/MGH added CMOP field
  W "Date Disp.",?14,"Type",?20,"Patient",?40,"HRN",?48,"Rx Number",?60,"Drug Name",?107,"Qty",?113,"Days Supply",?127,"Drug Schedule"
- W !,?5,"Prescriber",?35,"DEA Number",?50,"Pharmacist",?74,"Refills left",?90,"CMOP/Mail"
+ W !,?5,"Prescriber",?35,"DEA Number",?50,"Pharmacist",?74,"Refills left",?90,"CMOP/Mail",?107,"Sig Status"
  W !,?5,"Dosage Ordered"
  D DASH
  Q
@@ -240,14 +261,21 @@ HDR2 ;EP - Summary Report Header
  ; Note: Header states RX but the value printed is fills
  D DASH
  D PRINT3
- ;W ?45,"# of",?75,"Units",!
- ;W "Drug Name",?45,"Fills",?51,"Unit Type",?66,"Total",?72,"/Fill"
  W ?44,"Unit",?56,"# RXs",?64,"#Units",?74,"Avg",!
  W "Drug Name",?44,"Type",?56,"Filled",?64,"Filled",?73,"Unit/RX"
  D DASH
  Q
+HDR3 ;EP  added for epcs
+ D DASH
+ W "Date Signed.",?20,"Drug",?50,"Patient",?75,"HRN",?85,"Rx Number",?95,"Drug Schedule"
+ W !,?5,"Sig Status",?15,"Qty",?25,"Days Supply",?37,"Refills left",?50,"CMOP/Mail",?60,"Pharmacy"
+ W !,?5,"Dosage Ordered"
+ D DASH
+ Q
  ;
 HDRXML ;EP - XML Header
+ N S
+ S S=APSPSORT
  W $$XMLHDR^MXMLUTL()  ;"<?xml version='1.0'?>"
  W !,$$TAG("Report")
  W !,$$TAG("ReportName",2,"Controlled Substance Management Report ("_$S(APSPRTYP=1:"Summary",1:"Detail")_")")
@@ -256,10 +284,11 @@ HDRXML ;EP - XML Header
  W !,$$TAG("InclusiveDates",2,APSPBDF_" to "_APSPEDF)
  W !,$$TAG("PharmacyDivision",2,$S(APSPDIV:$$GET1^DIQ(59,APSPDIV,.01),1:"All"))
  W !,$$TAG("DrugClass",2,APSPDCTN(APSPDCLS))
- W:APSPDET !,$$TAG("SortBy",2,$S(APSPSORT=1:"Drug Name, Fill Date",APSPSORT=3:"Drug Schedule, Drug Name then Fill Date",APSPSORT=2:"Fill Date, Drug Name",APSPSORT=4:"Patient, Fill Date",5:"Prescriber, Drug Name then Fill Date",1:"Unknown"))
+ W:APSPDET !,$$TAG("SortBy",2,$S(S=1:"Drug Name, Fill Date",S=3:"Drug Schedule, Drug Name then Fill Date",S=2:"Fill Date, Drug Name",S=4:"Patient, Fill Date",S=5:"Prescriber, Drug Name then Fill Date",1:"Unknown"))
  I APSPDET,APSPSORT=4,APSPPAT W !,$$TAG("Patient sort restricted to "_$$GET1^DIQ(2,APSPPAT,.01),2)
  I APSPDET,APSPSORT=5,APSPPRV W !,$$TAG("Prescriber sort restricted to "_$$GET1^DIQ(200,APSPPRV,.01),2)
  W !,$$TAG("CMOP",2,$S(APSPCMOP=1:"CMOP Included",1:"CMOP Not Included"))
+ W !,$$TAG("TestPts",2,$S(APSPTEST:"Included",1:"Not Included"))
  W !,$$TAG("ReportCriteria",1)
  W !,$$TAG("Dispenses")
  Q
@@ -301,8 +330,6 @@ OUTSIG(X,RM,LI) ;EP - Output SIG
  N DIWL,DIWR,DIWF,LP
  S DIWL=0,DIWR=RM-LI,DIWF=""
  D ^DIWP
- ;S LP=0 F  S LP=$O(^PSRX(RX,"PRC",LP)) Q:'LP  D
- ;.I $D(^(LP,0)) S X=^(0) D ^DIWP
  I $D(^UTILITY($J,"W")) D
  .S LP=0 F  S LP=$O(^UTILITY($J,"W",DIWL,LP)) Q:'LP  W ?LI,^(LP,0),!
  K ^UTILITY($J,"W")

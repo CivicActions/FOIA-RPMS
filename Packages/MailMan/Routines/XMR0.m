@@ -1,0 +1,3 @@
+XMR0 ;(WASH ISC)/CAP- *OBSOLETE* ;04/09/98  13:36
+ ;;7.1;MailMan;**27,50**;Jun 02, 1994
+ Q

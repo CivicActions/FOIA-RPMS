@@ -1,6 +1,7 @@
-DINIT42 ;SFISC-INITIALIZE VA FILEMAN ;10MAR2008
- ;;22.0;VA FileMan;**76,157**;Mar 30, 1999;Build 9
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DINIT42 ;SFISC/XAK-INITIALIZE VA FILEMAN ;1/10/91  1:43 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  S %=47
 DD F I=1:5 S X=$E($T(DD+I),4,999),%=%+1 G FUNC:X?.P S ^DD("FUNC",%,0)=$P(X,";"),Y=I F DU=1,2,3,9 S Y=Y+1,X=$E($T(DD+Y),4,999) I X]"" S ^(DU)=X
  ;;PARAM
@@ -9,12 +10,12 @@ DD F I=1:5 S X=$E($T(DD+I),4,999),%=%+1 G FUNC:X?.P S ^DD("FUNC",%,0)=$P(X,";"),
  ;;
  ;;RETURNS VALUE OF PARAMETER NAMED BY ARGUMENT
  ;;IOM
- ;;S X=$G(IOM,80)
+ ;;S X=$S($D(IOM):IOM,1:80)
  ;;
  ;;0
  ;;RETURNS THE NUMBER OF COLUMN POSITIONS ON THE PAGE OR SCREEN (E.G., 80)
  ;;DUP
- ;;S %=X,X="" S:X1]"" $P(X,X1,%\$L(X1)+1)=X1,X=$E(X,1,%)
+ ;;S %=X,X="" Q:X1=""  S $P(X,X1,%\$L(X1)+1)=X1,X=$E(X,1,%)
  ;;
  ;;2
  ;;DUPLICATES THE 1ST ARGUMENT INTO AN 'N'-BYTE STRING, WHERE 'N' IS 2ND ARGUMENT
@@ -24,7 +25,7 @@ DD F I=1:5 S X=$E($T(DD+I),4,999),%=%+1 G FUNC:X?.P S ^DD("FUNC",%,0)=$P(X,";"),
  ;;
  ;;DELETES LEADING AND TRAILING SPACES FROM THE ARGUMENT STRING
  ;;TRANSLATE
- ;;S X=$TR(X2,X1,X)
+ ;;X "F %=1:1:$L(X1) F %Y=0:0 S %Y=$F(X2,$E(X1,%),%Y) Q:'%Y  S I=$E(X,%),X2=$E(X2,1,%Y-2)_I_$E(X2,%Y,999) S:I="""" %Y=%Y-1" S X=X2
  ;;
  ;;3
  ;;REPLACES, IN ARG1, EACH OCCURRENCE OF EACH CHAR IN ARG2 WITH THE CORRESPONDING CHAR IN ARG3
@@ -44,46 +45,32 @@ DD F I=1:5 S X=$E($T(DD+I),4,999),%=%+1 G FUNC:X?.P S ^DD("FUNC",%,0)=$P(X,";"),
  ;;1
  ;;RETURNS USER ATTRIBUTES: #=NUMBER,N=NAME,I=INITIAL,T=TITLE,NN=NICKNAME
  ;;VAR
- ;;Q:X  Q:$NA(@X)[U  S X=$G(@X)
+ ;;Q:X[U!(X["$C(94)")!X  S X=$S($D(@X):@X,1:"")
  ;;
  ;;1
  ;;RETURNS VALUE OF A LOCAL VARIABLE IF IT'S THERE
- ;;DUPLICATED
- ;;S X=X
+ ;;SETDATA
+ ;;S X1=X
  ;;
- ;;1
- ;;Takes as argument the name of a CROSS-REFERENCED field.  Returns BOOLEAN value, 1=field value is duplicated in another entry, ""=field value is unique
+ ;;2
+ ;;SETS FIRST ARGUMENT EQUAL TO THE SECOND ARGUMENT
  ;;NOON
- ;;N %DT,Y S %DT="XR",X="T@NOON" D ^%DT S X=+Y
+ ;;S %DT="XR",X="T@NOON" D ^%DT S X=+Y
  ;;D
  ;;0
  ;;RETURNS THE CURRENT DATE AND THE TIME VALUE OF 12:OO.
  ;;MID
- ;;N %DT,Y S %DT="XR",X="T@MID" D ^%DT S X=+Y
+ ;;S %DT="XR",X="T@MID" D ^%DT S X=+Y
  ;;D
  ;;0
  ;;RETURNS THE CURRENT DATE AND THE TIME VALUE OF 24:00.
- ;;NUMDATE4
- ;;S:X X=$E(X,4,5)_"/"_$E(X,6,7)_"/"_(1700+$E(X,1,3))
- ;;X
  ;;
- ;;DATE IN 'MM/DD/YYYY' FORMAT
- ;;NUMYEAR4
- ;;S:X X=1700+$E(X,1,3)
- ;;X
- ;;
- ;;YEAR NUMBER (YYYY) FOR A DATE
- ;
-FUNC F I=3:1:12 S X=$T(FUNC+I),^DD("FUNC",I+87,0)=$P(X,";",3),^(9)=$P(X,";",4)
- F I=91,92 S ^DD("FUNC",I,3)="VARIABLE"
+FUNC F I=2:1:8 S X=$T(FUNC+I),^DD("FUNC",I+91,0)=$P(X,";",3),^(9)=$P(X,";",4)
  G ^DINIT5
- ;;PRIORVALUE;Takes name of an Audited Field.  Returns as a multiple all prior values of the field, most recent first.
- ;;PRIORDATE;When it has an argument (Fieldname), returns as a multiple all prior Date/Times of auditing, most recent first.  Without an argument, it is most recent audited Date/Time for the Entry
- ;;PRIORUSER;When it has an argument (Fieldname), returns as a multiple all prior audited Users, most recent first.  Without an argument, it is most recent audited User for the Entry
- ;;MAXIMUM;Takes multiple-valued field or expression as argument.  Returns the maximum value of all the multiples.
- ;;MINIMUM;Takes multiple-valued field or expression as argument.  Returns the minimum value of all the multiples.
- ;;NEXT;Takes name of a Field. Returns the value that that field has in the next entry or sub-entry.
- ;;PREVIOUS;Takes name of a Field. Returns the value that that field has in the previous entry or sub-entry.
- ;;TOTAL;Takes multiple-valued field or expression as argument.  Returns the total of all the multiple values.
- ;;COUNT;Takes multiple-valued field or expression as argument.  Returns the number of multiples currently existing.
- ;;LAST;Takes multiple-valued field or expression as argument.  Returns the value of the last multiple.
+ ;;MAXIMUM;TAKES MULTIPLE-VALUED FIELD AS ARGUMENT.  RETURNS THE MAXIMUM VALUE OF ALL THE MULTIPLES.
+ ;;MINIMUM;TAKES MULTIPLE-VALUED FIELD AS ARGUMENT.  RETURNS THE MINIMUM VALUE OF ALL THE MULTIPLES.
+ ;;NEXT;TAKES SINGLE-VALUED FIELD AS ARGUMENT.  RETURNS THE VALUE THAT THAT FIELD HAS IN THE NEXT ENTRY OR SUB-ENTRY.
+ ;;PREVIOUS;TAKES SINGLE-VALUED FIELD AS ARGUMENT.  RETURNS THE VALUE THAT THAT FIELD HAS IN THE PREVIOUS ENTRY OR SUB-ENTRY.
+ ;;TOTAL;TAKES MULTIPLE-VALUED FIELD AS ARGUMENT.  RETURNS THE TOTAL OF ALL THE MULTIPLES FOR WHICH THERE ARE VALUES.
+ ;;COUNT;TAKES MULTIPLE-VALUED FIELD (OR FILE NAME) AS ARGUMENT.  RETURNS THE NUMBER OF MULTIPLES CURRENTLY EXISTING.
+ ;;LAST;TAKES MULTIPLE-VALUED FIELD NAME AS ARGUMENT.  RETURNS THE VALUE OF THE LAST MULTIPLE.

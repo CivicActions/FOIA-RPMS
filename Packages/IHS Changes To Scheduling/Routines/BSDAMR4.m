@@ -1,5 +1,5 @@
 BSDAMR4 ;cmi/anch/maw - BSD Appointment Management Reports Cancelled Appointment Listing 2/12/2007 1:22:04 PM
- ;;5.3;PIMS;**1007,1014,1016**;DEC 01, 2006;Build 20
+ ;;5.3;PIMS;**1007,1014,1016,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw new report for PATCH 1007 item 1007.19
  ;
@@ -63,25 +63,38 @@ INIT ; -- init variables and list array
  .. I '$G(VAUTD) Q:'$D(VAUTD(+$P($G(^SC(CLN,0)),U,15)))  ;cmi/anch/maw 11/22/06 added to screen on division item 1007.17 patch 1007
  .. S BSDREAI=$P($G(^DPT(BSDDFN,"S",BSDIEN,0)),U,15)
  .. I $G(BSDREAI) S BSDREA=$$GET1^DIQ(409.2,BSDREAI,.01)
+ .. I $G(BSDREA)]"" S BSDREA="@@@@@"_BSDREA
  .. S BSDCANR=$G(^DPT(BSDDFN,"S",BSDIEN,"R"))
  .. I BSDCANR]"" S BSDCANR="("_BSDCANR_")"
+ .. I $G(BSDCANR)]"" S BSDCANR="@@@@@"_BSDCANR
  .. S PAT=BSDDFN
  .. ; put appts into display array
- .. S LINE=$$PAD($E($$GET1^DIQ(2,PAT,.01),1,18),18)          ;patient name
+ .. ;S LINE=$$PAD($E($$GET1^DIQ(2,PAT,.01),1,18),18)          ;patient name
+ .. ;97933 maw p1022 PPN
+ .. N APDT
+ .. S LINE=$$PAD($$GETPREF^AUPNSOGI(PAT,"E",1),43)
  .. S LINE=LINE_$J($$HRCN^BDGF2(PAT,$$FAC^BSDU(CLN)),7)   ;chart#
- .. S LINE=$$PAD(LINE,27)_$$GET1^DIQ(2,PAT,.131)       ;phone
- .. S LINE=$$PAD(LINE,42)_$$FMTE^XLFDT(BSDIEN)            ;appt date
- .. S LINE=$$PAD(LINE,62)_$S($G(BSDREA)]"":BSDREA_" "_BSDCANR,1:"")         ;reason for appoinTment
+ .. S LINE=$$PAD(LINE,52)_$$GET1^DIQ(2,PAT,.131)       ;phone
+ .. S APDT=$$DTS^BSDU3(BSDIEN)
+ .. S LINE=$$PAD(LINE,66)_APDT            ;appt date
+ .. ;S LINE=$$PAD(LINE,64)_$$FMTE^XLFDT(BSDIEN)            ;appt date
+ .. S LINE=$$PAD(LINE,83)_$S($G(BSDREA)]"":BSDREA_" "_BSDCANR,1:"")         ;reason for appoinTment
  .. S ^TMP("BSD",$J,SUB,PAT,BSDIEN)=LINE  ;sort by category,clinic,date
  ;
  ; put sorted list into display array
- NEW S1,S2,S3
+ NEW S1,S2,S3,SLN,SLN1,SLN2
  S S1=0 F  S S1=$O(^TMP("BSD",$J,S1)) Q:S1=""  D
  . D SET(S1,.VALMCNT)
  . S S2=0 F  S S2=$O(^TMP("BSD",$J,S1,S2)) Q:S2=""  D
  .. ;I S1'=S2 D SET($$SP(2)_S2,.VALMCNT)
  .. S S3=0 F  S S3=$O(^TMP("BSD",$J,S1,S2,S3)) Q:S3=""  D
- ... D SET(^TMP("BSD",$J,S1,S2,S3),.VALMCNT)
+ ... S SLN=$G(^TMP("BSD",$J,S1,S2,S3))
+ ... ;20230706 61951 maw p1022 PPN
+ ... S SLN1=$P(SLN,"@@@@@")
+ ... S SLN2="   "_$P(SLN,"@@@@@",2)
+ ... D SET(SLN1,.VALMCNT)
+ ... D SET(SLN2,.VALMCNT)
+ ... ;D SET(^TMP("BSD",$J,S1,S2,S3),.VALMCNT)
  .. I S1'=S2 D SET("",.VALMCNT)
  . D SET("",.VALMCNT)
  ;
@@ -116,7 +129,8 @@ HDG ; heading for paper report
  D HDR W @IOF,?33,"Cancelled Appointment Listing"
  F I=1:1 Q:'$D(VALMHDR(I))  W !,VALMHDR(I)
  W !,$$REPEAT^XLFSTR("-",80)
- W !,"Patient Name",?20,"HRCN",?28,"Phone",?43,"Appt Date",?63,"Reason"
+ ;W !,"Patient Name",?20,"HRCN",?28,"Phone",?43,"Appt Date",?63,"Reason"
+ W !,"Patient Name/Reason",?44,"HRCN",?52,"Phone",?66,"Appt Date" ;p1022 new
  W !,$$REPEAT^XLFSTR("=",80)
  Q
  ;

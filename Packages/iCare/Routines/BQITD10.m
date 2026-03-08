@@ -1,5 +1,5 @@
 BQITD10 ;PRXM/HC/ALA-Obese Definition ; 04 Apr 2006  1:36 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;1.1;ICARE MANAGEMENT SYSTEM;**3**;Apr 03, 2008
  ;
  Q
  ;
@@ -15,6 +15,10 @@ POP(BQARY,TGLOB) ; EP -- By population
  ;
  ;  Clean out any previous data
  NEW DXNN,TDFN,DA,DIK,DFN,TMPG,TX,AGE,BMI,TMFRAME,EXDT,DTDIF,ENDT,STDT
+ S DXNN=$$GDXN^BQITUTL("Obese"),TDFN=""
+ F  S TDFN=$O(^BQIPAT("AB",DXNN,TDFN)) Q:TDFN=""  D
+ . S DA(1)=TDFN,DA=DXNN,DIK="^BQIPAT("_DA(1)_",20,"
+ . D ^DIK
  ;
  I $D(@BQARY) D
  . D POP^BQITDGN(.BQARY,.TGLOB)
@@ -48,6 +52,11 @@ PAT(DEF,TGLOB,BDFN) ; EP -- By patient
  ;Input
  ;  BDFN   - patient internal entry number
  ;
+ ; Delete the record
+ NEW BQDXN
+ S BQDXN=$$GDXN^BQITUTL(DEF)
+ D DEL
+ ;
  NEW AGE,BMI,BMID,VIENS,VST,VSDTM,TMFRAME,EXDT,DTDIF,ENDT,STDT
  S TMFRAME="T-60M",EXDT="",DTDIF=""
  S ENDT=$$DATE^BQIUL1(TMFRAME),STDT=$$DT^XLFDT()
@@ -62,3 +71,9 @@ PAT(DEF,TGLOB,BDFN) ; EP -- By patient
  .. S @TGLOB@(BDFN,"CRITERIA","BMI","V",VST,IEN)=VSDTM_U_U_IEN_U_"9000010.01"
  .. I EXDT'="" S $P(@TGLOB@(BDFN,"CRITERIA","BMI","V",VST,IEN),U,2)=EXDT
  Q 0
+ ;
+DEL ;EP - Delete entry
+ NEW DA,DIK
+ S DA(1)=BDFN,DA=BQDXN,DIK="^BQIPAT("_DA(1)_",20,"
+ D ^DIK
+ Q

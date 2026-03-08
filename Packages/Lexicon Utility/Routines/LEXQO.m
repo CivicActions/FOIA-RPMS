@@ -1,5 +1,5 @@
 LEXQO ;ISL/KER - Query - Output ;10/30/2008
- ;;2.0;LEXICON UTILITY;**62**;Sep 23, 1996;Build 10
+ ;;2.0;LEXICON UTILITY;**62**;Sep 23, 1996;Build 15
  ;               
  ; Global Variables
  ;    ^TMP(               SACC 2.3.2.5.1

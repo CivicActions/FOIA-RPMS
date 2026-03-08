@@ -1,51 +1,41 @@
-DIET ;SFISC/XAK-DISPLAY INPUT TEMPLATE    ALSO DOES AUDITING! ;22FEB2011
- ;;22.0;VA FileMan;**69,49,104,129,147**;Mar 30, 1999;Build 5
+DIET ;SFISC/XAK-DISPLAY INPUT TEMPLATE ;8/16/95  15:22 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**12**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+ I '$D(^DIE(D0,0)) S X="" Q
+ S X=^(0),DL=1,DIFILE(DL)=$P(X,U,4),W="FIRST" G Q:'$D(^DD(DIFILE(DL),0))
+A S DIPP(DL)=$S($D(^DIE(D0,"DR",DL,DIFILE(DL))):^(DIFILE(DL)),1:"ALL") F %A(DL)=1:1 S X=$P(DIPP(DL),";",%A(DL)) Q:X=""  D DJ
+ S %(DL)=0 F  S %(DL)=$O(^DIE(D0,"DR",DL,DIFILE(DL),%(DL))) S:%(DL)="" %(DL)=-1 G UP:%(DL)'>0 S DIPP(DL)=^(%(DL)) F %A(DL)=1:1 S X=$P(DIPP(DL),";",%A(DL)) Q:X=""  D DJ
+EXIT K DIFILE,DIPP,%A,% S X="" Q
  ;
- N DICMX
- I '$D(^DIE(D0,0)) G EXIT
- S DICMX="W X,!"
-EN ;
- N DI,DIET,DIETS,D
- S DIET=D0 D GET^DIETED("DIETS")
- F D=0:0 S D=$O(DIETS(D)) Q:'D  S X=DIETS(D) X DICMX Q:'$D(D)
-EXIT S X="" Q
+DJ S Y=+$P(X,":",1),Z=+$P(X,":",2) I Y,Z S X=Y-.00000001 F  S X=$O(^DD(DIFILE(DL),X)) S:X="" X=-1 Q:X=Z  G Q:X'>0 S %B=X,X=$P(^(X,0),U,1),Y="" D W S X=%B
+ I $L(X)<30 S Y=$S($D(^DD(DIFILE(DL),X,0)):^(0),1:""),X=$S(Y]"":$P(Y,U,1),1:X)
+W W !?DL*2-2,W," EDIT FIELD: ",X,"//" S W="THEN" Q:'$P(Y,U,2)  S DL=DL+1,DIFILE(DL)=+$P(Y,U,2),%(DL)=0 D A Q
+Q Q
  ;
+UP S DL=DL-1 G EXIT:'DL Q
  ;
- ;
-AUD N DP,DG,DPS,DIEX,DIIX,DIANUM ; DI*22*49
+AUD N DP,%,%D,%F,%T,C,DPS,DIEDA,DIEF,DIEX,DIIX,DIANUM,Y
  S DIIX="3^.01^A",DP=+DO(2) D AUDIT:DP>0 Q
 AUDIT ;
- N C,DIEDA,DIEF,%T,%F,%D,%,Y
  I $D(^DD(DP,+$P(DIIX,U,2),"AX")) X ^("AX") Q:'$T
  K % S DIEX=X D @+DIIX
- K DIIX,DPS,DIEX
+ K DPS,DIEX,DIEDA,DIEF,%T,DIIX,%F,%D,%
  Q
-3 ;'X' is NEW value
- I $D(DG),$D(DIANUM($P(DIIX,U,2))) S Y=X,(DIEX(1),C)=$P(^DD(DP,+$P(DIIX,U,2),0),U,2) D Y^DIQ S @DIANUM($P(DIIX,U,2))=Y K DIANUM($P(DIIX,U,2)) G I
-2 ;'X' is OLD value
+3 ;
+ I $D(DG),DG]"",$D(DIANUM(DG)) S Y=X,(DIEX(1),C)=$P(^DD(DP,+$P(DIIX,U,2),0),U,2) D Y^DIQ S @(DIANUM(DG)_"+DIIX)")=Y K DIANUM(DG) G I
+2 ;
  S:$D(DP(1)) DPS=DP(1) S DIEDA="",DIEF="",%=1,DP(1)=DP,%F=+DP,X=DA
  F C=1:1 Q:'$D(^DD(DP(1),0,"UP"))  S %F=^("UP"),%=$O(^DD(%F,"SB",DP(1),0)) S:%="" %=-1 S DIEDA=DA(C)_","_DIEDA,DIEF=%_","_DIEF,DP(1)=%F
- D ADD I $D(DG),+DIIX=2 S DIANUM($P(DIIX,U,2))="^DIA("_%F_","_+Y_",3)"
+ D ADD I $D(DG),DG]"" S DIANUM(DG)="^DIA("_%F_","_+Y_","
  S (DIEX(1),C)=$P(^DD(DP,+$P(DIIX,U,2),0),U,2),Y=DIEX D Y^DIQ
  S ^DIA(%F,"B",DIEDA_DA,%D)="",X=DIEX S:$D(DPS) DP(1)=DPS
  S ^DIA(%F,%D,0)=DIEDA_DA_U_%T_U_DIEF_+$P(DIIX,U,2)_U_DUZ_U_$P(DIIX,U,3),^(+DIIX)=Y
-I I (DIEX(1)["D")!(DIEX(1)["P")!(DIEX(1)["V")!(DIEX(1)["S") S ^(DIIX+.1)=X_U_DIEX(1)
+I I DIEX(1)["P"!(DIEX(1)["V")!(DIEX(1)["S") S ^(DIIX+.1)=X_U_DIEX(1)
  Q
- ;
-ACCESSED(%F,REF) ;WILL FLAG ENTRY 'REF' IN FILE '%F' AS BEING ACCESSED BY CURRENT USER, CURRENT TIME, CURRENT OPTION
- N Y,X,%T,%D,%,%I,%H
- D:'$G(DT) DT^DICRW
- Q:'%F!'REF  S %F=+%F,(REF,X)=+REF Q:'$D(^DIC(%F))
- D ADD ;COMES BACK WITH %T AND Y--THE AUDIT REF
- S ^DIA(%F,Y,0)=REF_U_%T_U_.01_U_DUZ_U_U_"i"
- S ^DIA(%F,"B",REF,Y)=""
- Q
- ;
-ADD S Y=$O(^DIA(%F,"A"),-1) I 'Y S ^DIA(%F,0)=$P(^DIC(%F,0),U)_" AUDIT^1.1I"
- F Y=Y+1:1 I '$D(^(Y)) D LOCK^DILF("^DIA(%F,Y)") I  Q:'$D(^(Y))  L -^DIA(%F,Y) ;**PATCH 147
- S ^(Y,0)=X L -^DIA(%F,Y)
- S %T=$G(XQY),%D=$S($D(XQORNOD)#2:XQORNOD,$D(HLORNOD)#2:HLORNOD,1:"") I %T!%D S ^DIA(%F,Y,4.1)=%T_U_%D
- S $P(^(0),U,3,4)=Y_U_($P(^DIA(%F,0),U,4)+1)
-TIME S %D=Y,%T=$$HTFM^DILIBF($H)
+ADD I '$D(^DIA(%F,0)) S ^DIA(%F,0)=$P(^DIC(%F,0),U,1)_" AUDIT^1.1I"
+ F Y=$P(^(0),U,3):1 I '$D(^(Y)) L +^DIA(%F,Y):0 Q:$T
+ S $P(^(0),U,3,4)=Y_U_($P(^(0),U,4)+1),^(Y,0)=X L -^DIA(%F,Y)
+ S %D=Y,%T=$P($H,",",2),%T=%T#60/100+(%T#3600\60)/100+(%T\3600)/100,%T=DT_%T
  S ^DIA(%F,"C",%T,Y)="",^DIA(%F,"D",DUZ,Y)=""
  Q

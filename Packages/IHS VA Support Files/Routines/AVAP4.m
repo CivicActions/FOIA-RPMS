@@ -1,12 +1,15 @@
 AVAP4 ;IHS/ORDC/LJF - CLEANUP PROVIDER CLASS ENTRIES; [ 05/11/94  2:57 PM ]
- ;;93.2;VA SUPPORT FILES;**4,5,6**;JUL 01, 1993;Build 12
+ ;;93.2;VA SUPPORT FILES;**4,5,6,27**;JUL 01, 1993;Build 8
  ;cleanup rtn for patches #4, 5, & 6
+ ;PATCH 27: THIS ROUTINE'S FUNCTION ENTIRELY DEPRECATED BY DELETION OF FILES 3/6/16
  ;
  Q  ;can only execute from line label
  ;
 CLASS ;EP >> kill off file 6 entries if no zero node
  ;      then if provider class set in file 200, fire xrefs for
  ;      provider class, affiliation, and code
+ ;
+ Q  ;AVA*93.2*27
  ;
  S U="^"
  W !!!,"This program will cleanup bad entries in your PROVIDER file"

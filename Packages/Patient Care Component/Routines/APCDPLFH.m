@@ -1,5 +1,5 @@
 APCDPLFH ;IHS/CMI/LAB - UPDATE ICD CODE FROM BSTS ; 31 Jan 2017  8:51 AM
- ;;2.0;IHS PCC SUITE;**11,15,19**;MAY 14, 2009;Build 5
+ ;;2.0;IHS PCC SUITE;**11,15,19,23**;MAY 14, 2009;Build 17
  ;; ;
  ;
  W !!,"This option is used to update the diagnosis on Problem List"

@@ -1,7 +1,6 @@
-XMDIR1B ;(WASH ISC)/CAP-Load VACO Directories (NOAVA) ;04/17/2002  08:47
- ;;8.0;MailMan;;Jun 28, 2002
- ; Entry points used by MailMan options (not covered by DBIA):
- ; REMOTES  XMEDIT-REMOTE-USER
+XMDIR1B ;(WASH ISC)/CAP- LOAD... VACO DIRECTORIES - NOAVA ;08/05/96  09:36
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**27**;Jun 02, 1994
  I $$NEWERR^%ZTER N $ETRAP,$ESTACK S $ETRAP=""
  S X="EOF^XMDIR1B",@^%ZOSF("TRAP"),XMB0=^%ZOSF("UPPERCASE")
 GO G P:'$D(ZTQUEUED)
@@ -28,7 +27,7 @@ P S X=Y X XMB0 F %=0:0 Q:$E(Y)'?1P  S Y=$E(Y,2,99)
  ;
  ;Network address
  S X=$$STRIP($P(XMY,":",9)),X=$P(X,"@")
- G R1:'$L(X),R1:X?.E1C.E S X("NET")=X_"@DOMAIN.NAME"
+ G R1:'$L(X),R1:X?.E1C.E S X("NET")=X_"@VACO.VA.GOV"
  I $D(^XMD(4.2997,"B",X("LN"))) S %="" F  S %=$O(^XMD(4.2997,"B",X("LN"),%)) Q:%=""  I $D(^XMD(4.2997,%,0)) S %6=^XMD(4.2997,%,0) I X("NET")=$P(%6,U,7) S XME="Already on file - not filed " D ER^XMDIR1 G R1
  ;
  D FILE^XMDIR1A(.X)

@@ -1,70 +1,56 @@
 ABSPOSUE ; IHS/FCS/DRS - impossible errors ;      
- ;;1.0;PHARMACY POINT OF SALE;**17**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**17,57**;JUN 01, 2001;Build 131
  Q
  ;----------------------------------------------------------------------
- ;IHS/SD/RLT - 04/10/06 - Patch 17
- ;    Fixed <NOTOPEN> error with E1 lookup.
- ;    Run HOME^%ZIS whether IOF is set or not.
+ ;IHS/SD/RLT 04/10/06 1.0*17 Fixed <NOTOPEN> error with E1 lookup. Run HOME^%ZIS whether IOF is set or not.
+ ;IHS/SD/SDR 1.0*57 ADO118931 Changed message to be user friendly and removed prompt
  ;----------------------------------------------------------------------
  ;
- ; Deal with impossible errors (errors which should never occur,
- ; and which weren't already trapped by M).
+ ;Deal with impossible errors (errors which should never occur, and which weren't already trapped by M).
  ;
 IMPOSS(UETYPE,UEOPT,UEMSG,UEMSG2,UELOC,UEROU,UENOLOG) ;EP - deal with impossible errors - called from many places
- ; $$IMPOSS^ABSPOSUE(UETYPE,UEOPT,UEMSG,UELOC,UEROU)
- ; UETYPE = kinds of problems which may have occured
- ;     ["FM" a Fileman call has returned an error
- ;     ["L"  a LOCK with ample time has failed
- ;     ["DB" a database error (some missing/incorrect field) 
- ;     ["P"  a programming error / some unexpected condition
- ;     ["DEV" some kind of device or file error
- ; UEOPT = options available; first one listed is the default
- ;     Defaults to "TRI"
- ;     ["R" retry - retry the operation; log err
- ;     ["I" ignore - continue as though operation had succeeded; log err
- ;     ["T" abort - log err and terminate
- ; UEMSG = optionally, an additional message to output
- ;    can be .MSG, and we'll walk the array for you.
- ; UEMSG2 = even more message, like UEMSG.  In a Fileman call failure,
- ;    you'd probably send   .FDA,.MSG
- ; UELOC = location, any number or name unique to the calling routine
- ; UEROU = the name of the calling routine
- ; UENOLOG = true if you do not want error log entry to be made
+ ;$$IMPOSS^ABSPOSUE(UETYPE,UEOPT,UEMSG,UELOC,UEROU)
+ ;UETYPE = kinds of problems which may have occured
+ ;    ["FM" a Fileman call has returned an error
+ ;    ["L"  a LOCK with ample time has failed
+ ;    ["DB" a database error (some missing/incorrect field) 
+ ;    ["P"  a programming error / some unexpected condition
+ ;    ["DEV" some kind of device or file error
+ ;UEOPT = options available; first one listed is the default
+ ;    Defaults to "TRI"
+ ;    ["R" retry - retry the operation; log err
+ ;    ["I" ignore - continue as though operation had succeeded; log err
+ ;    ["T" abort - log err and terminate
+ ;UEMSG = optionally, an additional message to output
+ ;   can be .MSG, and we'll walk the array for you.
+ ;UEMSG2 = even more message, like UEMSG.  In a Fileman call failure,
+ ;   you'd probably send   .FDA,.MSG
+ ;UELOC = location, any number or name unique to the calling routine
+ ;UEROU = the name of the calling routine
+ ;UENOLOG = true if you do not want error log entry to be made
  ;
- ; $$ returns 1 to retry, 0 to ignore
+ ;$$ returns 1 to retry, 0 to ignore
  ;
- ; Caller may do with these values what he desires.
+ ;Caller may do with these values what he desires.
  ;
- ; To prevent excessive errors, we won't actually log an error if
- ; another one has been logged recently.
+ ;To prevent excessive errors, we won't actually log an error if another one has been logged recently.
  ;
- ; This routine really isn't as important as it looks.   In fact,
- ; it will almost never be encountered in practice.  Its existence
- ; owes mostly to an outrageous ruling made in the name of,
- ; but contrary to, the very quality and maintainability that forced
- ; errors give you.  This in turn led to a significant delay 
- ; in the release of a product which has been proven to be dependable
- ; in practice. 
+ ;This routine really isn't as important as it looks. In fact, it will almost never be encountered in practice. Its existence
+ ;owes mostly to an outrageous ruling made in the name of, but contrary to, the very quality and maintainability that forced
+ ;errors give you. This in turn led to a significant delay in the release of a product which has been proven to be dependable
+ ;in practice.
  ;
- ; Formerly, a zero/zero forced error was found at various places 
- ; in the code.  In 13 months at ANMC, 11 months at Sitka, 
- ; and several months at Pawhuska, Wewoka, Santa Fe, and Taos, the
- ; zero div by zero traps were never encountered, but over $3,000,000
- ; in revenues were collected.  The ironic thing is,
- ; without those extra checking, of things like Fileman return values,
- ; sanity checks on input values, etc., the product would have been
- ; less reliable, yet it would have sailed through the verifiction
- ; phase of the project plan.
+ ;Formerly, a zero/zero forced error was found at various places in the code. In 13 months at ANMC, 11 months at Sitka, 
+ ;and several months at Pawhuska, Wewoka, Santa Fe, and Taos, the zero div by zero traps were never encountered, but over $3,000,000
+ ;in revenues were collected. The ironic thing is, without those extra checking, of things like Fileman return values,
+ ;sanity checks on input values, etc., the product would have been less reliable, yet it would have sailed through the verifiction
+ ;phase of the project plan.
  ;
- ; Forced errors already pervade all of the M language.  <UNDEF> is
- ; a forced error, for example.  And forced errors are an integral part
- ; of the design of the very hardware that runs these programs.
- ; Follow the anti-forced error policy to its logical end and you
- ; go to Intersleaze and say "stop issuing <UNDEF> and instead,
- ; prompt the user for the opportunity to continue" and then you go
- ; to Intel and say "remove the addressing exception trap from your
- ; microcode; our support organization wouldn't be able to cope with
- ; the problem report on something like that."
+ ;Forced errors already pervade all of the M language. <UNDEF> is a forced error, for example. And forced errors are an integral part
+ ;of the design of the very hardware that runs these programs. Follow the anti-forced error policy to its logical end and you
+ ;go to Intersleaze and say "stop issuing <UNDEF> and instead, prompt the user for the opportunity to continue" and then you go
+ ;to Intel and say "remove the addressing exception trap from your microcode; our support organization wouldn't be able to cope with
+ ;the problem report on something like that."
  ; 
  I $G(UEOPT)="" S UEOPT="TRI"
  I $G(ZTQUEUED) S UECHOICE=$E(UEOPT) G QD
@@ -73,33 +59,43 @@ IMPOSS(UETYPE,UEOPT,UEMSG,UEMSG2,UELOC,UEROU,UENOLOG) ;EP - deal with impossible
  D HOME^%ZIS  ;RLT
  ;IHS/SD/RLT - 04/10/06 - Patch 17 - end
  U IO
- I '$D(IORVON) N IORVON,IORVOFF D
- . N X S X="IORVON;IORVOFF" D ENDR^%ZISS
- W !!,IORVON
- W "An unexpected problem has been detected; notify programmer!"
- I $D(UELOC)!$D(UEROU) D
- . W !?5,"The problem occurred "
- . I $D(UELOC) W "at location ",UELOC," " W:$X>60 !
- . I $D(UEROU) W "in routine ",UEROU
- . W ".",!
- W !?5,"The likely source" W:UETYPE["," "s"
- W " of such a problem " W $S(UETYPE[",":"are",1:"is"),":",!!?5
- I UETYPE["FM" D
- . W "Fileman has reported an error to the program.",!?5
- I UETYPE["L" D
- . W "An interlock could not be obtained.",!?5
- I UETYPE["DB" D
- . W "An inconsistency in the database was detected.",!?5
- I UETYPE["DEV" D
- . W "An error condition trying to open a device or a file.",!?5
- I UETYPE["P" D
- . W "A condition the program was unprepared to handle",!?5
- . W "or perhaps an error in the program logic.",!?5
- W !,"A programmer should be notified of this unfortunate event.",!
- D MSG(.UEMSG),MSG(.UEMSG2)
- W IORVOFF,!!
+ ;start old absp*1.0*57 IHS/SD/SDR
+ ;I '$D(IORVON) N IORVON,IORVOFF D
+ ;.N X S X="IORVON;IORVOFF" D ENDR^%ZISS
+ ;W !!,IORVON
+ ;W "An unexpected problem has been detected; notify programmer!"
+ ;I $D(UELOC)!$D(UEROU) D
+ ;.W !?5,"The problem occurred "
+ ;.I $D(UELOC) W "at location ",UELOC," " W:$X>60 !
+ ;.I $D(UEROU) W "in routine ",UEROU
+ ;.W ".",!
+ ;W !?5,"The likely source" W:UETYPE["," "s"
+ ;W " of such a problem " W $S(UETYPE[",":"are",1:"is"),":",!!?5
+ ;I UETYPE["FM" D
+ ;.W "Fileman has reported an error to the program.",!?5
+ ;I UETYPE["L" D
+ ;.W "An interlock could not be obtained.",!?5
+ ;I UETYPE["DB" D
+ ;.W "An inconsistency in the database was detected.",!?5
+ ;I UETYPE["DEV" D
+ ;.W "An error condition trying to open a device or a file.",!?5
+ ;I UETYPE["P" D
+ ;.W "A condition the program was unprepared to handle",!?5
+ ;.W "or perhaps an error in the program logic.",!?5
+ ;W !,"A programmer should be notified of this unfortunate event.",!
+ ;D MSG(.UEMSG),MSG(.UEMSG2)
+ ;W IORVOFF,!!
+ ;N UECHOICE S UECHOICE=$$CHOICE ; Present the options; get I, R, T
+ ;end old start new absp*1.0*57 IHS/SD/SDR
+ U 0
+ W !!,"*****************************************************",!
+ W "*  Claims are currently being sent - connection     **",!
+ W "*  required for eligibility check is unavailable.   *",!
+ D CALLOIT^ABSPOSAE
+ D LOG2
  ;
- N UECHOICE S UECHOICE=$$CHOICE ; Present the options; get I, R, T
+ Q
+ ;end new absp*1.0*57 IHS/SD/SDR
 QD ;
  D LOGERR ; always log an error (unless too soon after prev. error)
  I UECHOICE="T" G HALT
@@ -134,7 +130,7 @@ LOGERR ; log an error
  S X=$P(X,U,2) I +$H'=+X G LOG2
  S X=$P(X,",",2) I $P($H,",",2)-X>300 G LOG2
  I '$G(ZTQUEUED) D
- . W !,"No additional error log entry will be made at this time.",!
+ .W !,"No additional error log entry will be made at this time.",!
  Q
 LOG2 ;
  Q:$G(UENOLOG)  ; requested: no error log entry

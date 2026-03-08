@@ -1,7 +1,10 @@
 DGPMV ;ALB/MRL/MIR - PATIENT MOVEMENT DRIVER; 10 MAR 89 [ 03/16/2004  7:49 AM ]
- ;;5.3;Registration;**60,200,268,1015,1017**;Aug 13, 1993;Build 5
+ ;;5.3;Registration;**60,200,268,1015,1017,1023**;Aug 13, 1993;Build 24
  ;IHS/ANMC/LJF  2/21/2001 Removed patient laygo; changed DHCP to IHS
  ;              3/08/2001 Added check for temporary chart #
+ ;IHS/CMI/FBD  10/30/2024 PIMS*5.3*1023 - screen patient movements to
+ ;                        remove discharged patients from list of 
+ ;                        selectables
  ;
  ;OPTION         VALUE OF DGPMT
  ;------         --------------
@@ -19,7 +22,8 @@ PAT1 W ! I DGPMT=5 S DGPMN=0 D SPCLU^DGPMV0 G OREN:'DGER,Q
  ;
  ;IHS/ANMC/LJF 2/21/2001 remove ability to add new patient
  ;S:DGPMT=1 DIC(0)=DIC(0)_"L",DLAYGO=2 S:"^1^4^"'[("^"_DGPMT_"^") DIC("S")="I $D(^DGPM($S(DGPMT'=5:""APTT1"",1:""APTT4""),+Y))" D ^DIC K DIC,DLAYGO G Q:Y'>0 S DFN=+Y,DGPMN=$P(Y,"^",3)
- S:"^1^4^"'[("^"_DGPMT_"^") DIC("S")="I $D(^DGPM($S(DGPMT'=5:""APTT1"",1:""APTT4""),+Y))" D ^DIC K DIC,DLAYGO G Q:Y'>0 S DFN=+Y,DGPMN=$P(Y,"^",3)
+ ;S:"^1^4^"'[("^"_DGPMT_"^") DIC("S")="I $D(^DGPM($S(DGPMT'=5:""APTT1"",1:""APTT4""),+Y))" D ^DIC K DIC,DLAYGO G Q:Y'>0 S DFN=+Y,DGPMN=$P(Y,"^",3)  ;PIMS*5.3*1023 - IHS/CMI/FBD - ORIGINAL LIME COMMENTED OUT
+ S:"^1^4^"'[("^"_DGPMT_"^") DIC("S")="I $D(^DPT(Y,.1)),$D(^DGPM($S(DGPMT'=5:""APTT1"",1:""APTT4""),+Y))" D ^DIC K DIC,DLAYGO G Q:Y'>0 S DFN=+Y,DGPMN=$P(Y,"^",3)  ;PIMS*5.3*1023 - IHS/CMI/FBD - SCREEN ADDED - NO MOVEMENTS ON DISCHARGED PATS
  ;IHS/ANMC/LJF 2/21/2001 end of changes
  ;
  ;IHS/ANMC/LJF 3/08/2001 checking for temporary chart #

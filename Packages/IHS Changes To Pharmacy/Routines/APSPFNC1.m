@@ -1,5 +1,5 @@
-APSPFNC1 ;IHS/CIA/DKM/PLS - Supporting calls for EHR and Pharmacy;12-Mar-2014 16:06;DU
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1004,1006,1016,1017,1018**;Sep 23, 2004;Build 21
+APSPFNC1 ;IHS/CIA/DKM/PLS - Supporting calls for EHR and Pharmacy;12-Dec-2023 17:14;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1004,1006,1016,1017,1018,1024,1026,1033,1034**;Sep 23, 2004;Build 37
  ;=================================================================
  ; RPC: APSPFNC GETRXS
  ; Fetch list of current prescriptions
@@ -9,6 +9,7 @@ APSPFNC1 ;IHS/CIA/DKM/PLS - Supporting calls for EHR and Pharmacy;12-Mar-2014 16
  ;   ~Type^PharmID^Drug^InfRate^StopDt^RefRem^TotDose^UnitDose^OrderID^Status^LastFill^Chronic^Issued^Rx #^Provider^Status Reason
  ;   <"\" or " "><Instruction Text>  where "\" indicates a new line
  ; Retrieve active inpatient & outpatient meds
+ ;IHS/MSC/MGH Updated 1026 to use parameter for NDC lookup
 GETRXS(DATA,DFN,DAYS) ;
  N ITMP,ILST,DAT
  K ^TMP("PS",$J)
@@ -171,13 +172,25 @@ SETMULT(Y,INDEX,SUB) ;
  Q
  ; Return Activity Log items for given prescription
 ACTLOG(DATA,RX) ;EP
- N AIEN,A0,CNT
+ N AIEN,A0,CNT,OCOM,STR,OTH
  S CNT=0
  S AIEN=0 F  S AIEN=$O(^PSRX(RX,"A",AIEN)) Q:'AIEN  D
  .S A0=^PSRX(RX,"A",AIEN,0)
  .S $P(A0,U,6)=$G(^PSRX(RX,"A",AIEN,9999999))
+ .S OTH=0,OCOM="",STR=""
  .S CNT=CNT+1
  .S DATA(CNT)=AIEN_U_A0
+ .F  S OTH=$O(^PSRX(RX,"A",AIEN,2,OTH)) Q:'+OTH  D
+ ..S STR=$G(^PSRX(RX,"A",AIEN,2,OTH,0))
+ ..I $E(STR,1,4)="Drug" D
+ ...S CNT=CNT+1
+ ...S DATA(CNT)="d^"_STR
+ ..E  D
+ ...I OCOM="" S OCOM=STR
+ ...E  S OCOM=OCOM_" "_STR
+ .I OCOM'="" D
+ ..S CNT=CNT+1
+ ..S DATA(CNT)="t^"_OCOM
  Q
  ; Return RXNORM value for associated NDC
  ; Patch 1017 changed to use Apelon lookup for RxNorm code
@@ -202,18 +215,24 @@ RXNORDRG(DRUG) ;EP -
 GETNDC(DRUG,PICKUP) ;EP -
  N NDC
  Q:PICKUP="" ""
- S NDC=$S(PICKUP="E":$$NAT(DRUG),PICKUP="P":$$NAT(DRUG),1:$$LOCAL(DRUG))
+ S NDC=$S(PICKUP="E":$$ERX(DRUG),PICKUP="P":$$ERX(DRUG),1:$$LOCAL(DRUG))
+ Q NDC
+ERX(DRG) ;Check parameter to see if local or national drug file used for erx
+ N NDC,TYPE
+ S TYPE=$$GET^XPAR("SYS","APSP SS NDC SOURCE")
+ I TYPE="L" S NDC=$$LOCAL(DRG)
+ E  S NDC=$$NAT(DRG)
  Q NDC
 LOCAL(DRG) ;Use drug NDC code
  N NDC
  S NDC=$$NDCFMT^PSSNDCUT($$GET1^DIQ(50,DRG,31)) I NDC'="" Q NDC
  ; - National Drug File NDC
- S NDC=$$NDC^APSPES4(DRG) S NDC=$$NDCFMT^PSSNDCUT(NDC)
+ S NDC=$$NDC^APSPES4(DRG) S NDC=$$NDCFMT^PSSNDCUT($P(NDC,U,1))
  Q NDC
 NAT(DRG) ;Use national NDC code
  N NDC,NDF
  ; - National Drug File NDC
- S NDC=$$NDC^APSPES4(DRG) S NDC=$$NDCFMT^PSSNDCUT(NDC) I NDC'="" Q NDC
+ S NDC=$$NDC^APSPES4(DRG) S NDC=$$NDCFMT^PSSNDCUT($P(NDC,U,1)) I NDC'="" Q NDC
  S NDC=$$NDCFMT^PSSNDCUT($$GET1^DIQ(50,DRG,31))
  Q NDC
  ; Return Dispense SIG in RXD segment of APSP REFILL REQUEST entry
@@ -236,3 +255,14 @@ SSDNTP(REFREQ) ;EP-
  S HLMSG=$$GHLDAT^APSPESG1(REFREQ)
  Q:'$L(HLMSG) ""
  Q $P($P($$GETSEG^APSPESG(.HLDATA,"RXD"),DEL,16),HLECH(1),2)
+ ; Return boolean flag indicating patient is an inpatient
+ISINPT(DFN) ;-
+ S DFN=+$G(DFN)
+ Q:'DFN 0
+ N VAIP
+ D IN5^VADPT
+ Q ''+$G(VAIP(5))
+ ; Returns presence of refills for a prescription
+HASREF(RX) ;-P1034
+ Q:'$G(RX) 0
+ Q ''$O(^PSRX(RX,1,$C(0)),-1)

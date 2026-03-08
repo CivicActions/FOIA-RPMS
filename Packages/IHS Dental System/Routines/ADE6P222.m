@@ -29,7 +29,7 @@ MODADA ;
  ;;tissue.  This procedure may be used to relieve pain, promote healing, or
  ;;prevent further deterioration.  Not to be used for endodontic access closure,
  ;;or as a base or liner under a restoration.
- ;;D3351^162^apexification/recalcification/pulpal regeneration – initial visit (apical closure/calcific repair of perforations, root resorption, pulp space disinfection, etc.)
+ ;;D3351^162^apexification/recalcification/pulpal regeneration Â– initial visit (apical closure/calcific repair of perforations, root resorption, pulp space disinfection, etc.)
  ;;Includes opening tooth, preparation of canal spaces, first placement of
  ;;medication and necessary radiographs.  (This procedure may include first phase
  ;;of complete root canal therapy.)
@@ -89,7 +89,7 @@ MODADA ;
  ;;D4321^36^provisional splinting - extracoronal
  ;;This is an interim stabilization of mobile teeth.  A variety of methods and
  ;;appliances may be employed for this purpose.  Identify the teeth involved.
- ;;D6055^56^connecting bar – implant supported or abutment supported
+ ;;D6055^56^connecting bar Â– implant supported or abutment supported
  ;;Utilized to stabilize and anchor a prosthesis.
  ;;D6950^20^precision attachment
  ;;A male and female pair constitutes one precision attachment, and is separate
@@ -97,20 +97,20 @@ MODADA ;
  ;;D7210^147^surgical removal of erupted tooth requiring removal of bone and/or sectioning of tooth, and including elevation of mucoperiosteal flap if indicated
  ;;Includes related cutting of gingiva and bone, removal of tooth structure,
  ;;minor smoothing of socket bone and closure.
- ;;D7953^56^bone replacement graft for ridge preservation – per site
+ ;;D7953^56^bone replacement graft for ridge preservation Â– per site
  ;;Osseous autograft, allograft or non-osseous graft is placed in an extraction
  ;;or implant removal site at the time of the extraction or removal to preserve
  ;;ridge integrity (e.g., clinically indicated in preparation for implant
  ;;reconstruction or where alveolar contour is critical to planned prosthetic
  ;;reconstruction).  Membrane, if used should be reported separately.
- ;;D7960^109^frenulectomy – also known as frenectomy or frenotomy – separate procedure not incidental to another procedure
+ ;;D7960^109^frenulectomy Â– also known as frenectomy or frenotomy Â– separate procedure not incidental to another procedure
  ;;Surgical removal or release of mucosal and muscle elements of a buccal,
  ;;labial or lingual that is associated with a pathological condition, or
  ;;interferes with proper oral development or treatment.
  ;;D9215^69^local anesthesia in conjunction with operative or surgical procedures
  ;;D9230^51^inhalation of nitrous oxide / anxiolysis, analgesia
  ;;D9420^43^hospital or ambulatory surgical center call
- ;;Care provided outside the dentist’s office to a patient who is in a hospital
+ ;;Care provided outside the dentistÂ’s office to a patient who is in a hospital
  ;;or ambulatory surgical center. Services delivered to the patient on the date
  ;;of service are documented separately using the applicable procedure codes.
  ;;***END***

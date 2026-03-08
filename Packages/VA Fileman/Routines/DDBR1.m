@@ -1,18 +1,20 @@
-DDBR1 ;SFISC/DCL-VA FILEMAN BROWSER PROTOCOLS ;NOV 04, 1996@13:47
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDBR1 ;SFISC/DCL-VA FILEMAN BROWSER PROTOCOLS;04:22 PM  20 Oct 1994; [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
 GOTO N X
 GTR S X(1)=$G(X(1)),X(2)="GoTo >" W $$WS(.X) D  G:X=""!(X=U) OUT
- .D EN^DIR0($P(DDBSY,";",3)-1,$L($G(X(2)))+2,30,1,"",100,"","","KPW",.X)
+ .D EN^DIR0($P(DDBSY,";",3)-1,$L($G(X(2)))+2,30,1,"",100,1,"","KPW",.X)
  .K DIR0
  .Q
- I $E(X)="?" S X(1)="* Screen (default), line"_$S('DDBRHTF:" or column",1:"")_" number preceeded by 'S', 'L'"_$S('DDBRHTF:" or 'C'",1:"")_" *" G GTR
+ I $E(X)="?" S X(1)="* Screen (default), line or column number preceeded by 'S', 'L' or 'C' *" G GTR
  I X S X=X*DDBSRL G LINE
  S $E(X)=$TR($E(X),"bclst","BCLST")
  I X["S",$TR($P(X,"S",2)," ") S X=$TR($P(X,"S",2)," ")*DDBSRL G LINE
  I X["L",$TR($P(X,"L",2)," ") S X=$TR($P(X,"L",2)," ") G LINE
- I X["C",'DDBRHTF,$TR($P(X,"C",2)," ") S X=$TR($P(X,"C",2)," ") I X>0&(X<256) S DDBSF=X G COLENT^DDBR0
+ I X["C",$TR($P(X,"C",2)," ") S X=$TR($P(X,"C",2)," ") I X>0&(X<256) S DDBSF=X G COLENT^DDBR0
  I $E(X)="T" G TOP^DDBR0
  I $E(X)="B" G BOT^DDBR0
  G OUT
@@ -27,7 +29,7 @@ FIND N D,Q,X
  S N=0
 BPR S X(1)=$G(X(1)),X(2)="Find What:  " W $$WS(.X) D  G:X="" OUT
  .N Y
- .D EN^DIR0($P(DDBSY,";",3)-1,$L($G(X(2)))+2,30,1,$P($G(DDBFNO),U,3,255),100,"","","KPW",.X,.Y)
+ .D EN^DIR0($P(DDBSY,";",3)-1,$L($G(X(2)))+2,30,1,$P($G(DDBFNO),U,3,255),100,1,"","KPW",.X,.Y)
  .K DIR0
  .S:$P($G(Y),U)="U" X=X_"/U"
  .Q
@@ -83,13 +85,13 @@ SDLRH(L,HLS) N I,J,SFR,STO
  I DDBZN F I=SFR:1:STO D
  .W:I'=SFR !
  .W $P(DDGLCLR,DDGLDEL)
- .I J=L,$D(@DDBSA@(L)) W $$HL($$HTD^DDBR0(@DDBSA@(L,0),L),HLS,$P(DDGLVID,DDGLDEL,6),$P(DDGLVID,DDGLDEL,7)) S DDBL=DDBL+1,L=L+1
+ .I J=L,$D(@DDBSA@(L)) W $$HL($E(@DDBSA@(L,0),DDBSF,DDBST),HLS,$P(DDGLVID,DDGLDEL,6),$P(DDGLVID,DDGLDEL,10)) S DDBL=DDBL+1,L=L+1
  .S J=J+1
  .Q
  I 'DDBZN F I=SFR:1:STO D
  .W:I'=SFR !
  .W $P(DDGLCLR,DDGLDEL)
- .I J=L,$D(@DDBSA@(L)) W $$HL($$HTD^DDBR0(@DDBSA@(L),L),HLS,$P(DDGLVID,DDGLDEL,6),$P(DDGLVID,DDGLDEL,7)) S DDBL=DDBL+1,L=L+1
+ .I J=L,$D(@DDBSA@(L)) W $$HL($E(@DDBSA@(L),DDBSF,DDBST),HLS,$P(DDGLVID,DDGLDEL,6),$P(DDGLVID,DDGLDEL,10)) S DDBL=DDBL+1,L=L+1
  .S J=J+1
  .Q
  Q
@@ -107,20 +109,10 @@ CS Q:$L(X,S)'>1 X
  S T="",C=$L(X,S)
  F I=1:1:C S P=$P(X,S,I),T=T_P_$S(I'=C:ON_S_RS,1:"")
  Q T
-HELPS N DDBHELPS
- S DDBHELPS=$S(DDBFLG["A":83,1:71)+DDBSRL
-HELP I $E(DDBSA,1,11)="^DI(.84,920" S DDBL=0 D SDLR^DDBR0(1),RLPIR^DDBR0 Q
- N DDBHA S DDBHA=$S(DDBFLG["A":"^DI(.84,9202,2)",1:"^DI(.84,9201,2)")
- I $D(^TMP("DDBLST",$J,"J")) D
- .K ^TMP("DDBLST",$J,"JS")
- .M ^TMP("DDBLST",$J,"JS")=^TMP("DDBLST",$J,"J")
- .K ^TMP("DDBLST",$J,"J")
- .Q
- D BROWSE^DDBR(DDBHA,"PNH"_$S(DDBFLG["A":"A",1:""),"VA FileMan Help Document",$G(DDBHELPS),"",IOTM-1,IOBM+1)
- K ^TMP("DDBLST",$J,"J")
- I $D(^TMP("DDBLST",$J,"JS")) M ^TMP("DDBLST",$J,"J")=^TMP("DDBLST",$J,"JS") K ^TMP("DDBLST",$J,"JS")
- W @IOSTBM
- D PSR^DDBR0(1)
+HELP(DDBHELP) N I,J
+ I DDBSA="^DI(.84,9201,2)" S DDBL=0 D SDLR^DDBR0(1),RCLSI^DDBR0 Q
+ N DDBHA S DDBHA="^DI(.84,9201,2)"
+ D BROWSE^DDBR(DDBHA,"PNH","VA FileMan Help Document","","",IOTM,IOBM,DDBHELP),PSR^DDBR0(1)
  Q
 LC(L,C) Q:$G(L)'>0 ""
  S C=$G(C,"-")

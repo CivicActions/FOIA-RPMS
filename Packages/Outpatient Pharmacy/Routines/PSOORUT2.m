@@ -1,5 +1,5 @@
-PSOORUT2 ;ISC BHAM/SAB - build listman screen ;06-Aug-2012 08:32;PLS
- ;;7.0;OUTPATIENT PHARMACY;**11,146,132,1005,1006,182,233,243,261,268,264,305,1015**;DEC 1997;Build 62
+PSOORUT2 ;ISC BHAM/SAB - build listman screen ;18-Sep-2023 10:17;DU
+ ;;7.0;OUTPATIENT PHARMACY;**11,146,132,1005,1006,182,233,243,261,268,264,305,1015,1023,1034**;DEC 1997;Build 37
  ;External reference to SDPHARM1 supported by DBIA 4196
  ;External reference ^PS(55 supported by DBIA 2228
  ;External reference ^DIC(31 supported by DBIA 658
@@ -10,16 +10,20 @@ PSOORUT2 ;ISC BHAM/SAB - build listman screen ;06-Aug-2012 08:32;PLS
  ;            IHS/MSC/PLS - 08/30/06 - Adjusted Medicare output to include Plan Name
  ;                          03/21/07 - Line PSOORUT2+55 - Check for SD v5.3 patch 318
  ;                          10/11/07 - Line NVA+6
+ ;            IHS/MSC/MGH   02/23/18 - +9 Added CS to header and then removed
+ ;            IHS/MSC/PLS - 04/17/23 - +16,+25
  ;
  K ^TMP("PSOHDR",$J),^TMP("PSOPI",$J) S DFN=PSODFN D ^VADPT,ADD^VADPT
- S ^TMP("PSOHDR",$J,1,0)=VADM(1),^TMP("PSOHDR",$J,2,0)=$P(VADM(2),"^",2)
+ ;IHS/MSC/PLS - p1034
+ ;S ^TMP("PSOHDR",$J,1,0)=VADM(1),^TMP("PSOHDR",$J,2,0)=$P(VADM(2),"^",2)
+ S ^TMP("PSOHDR",$J,1,0)=$$GETPREF^AUPNSOGI(DFN,"E",1),^TMP("PSOHDR",$J,2,0)=$P(VADM(2),"^",2)
  S ^TMP("PSOHDR",$J,3,0)=$P(VADM(3),"^",2),^TMP("PSOHDR",$J,4,0)=VADM(4),^TMP("PSOHDR",$J,5,0)=$P(VADM(5),"^",2)
  D NVA
  S POERR=1 D RE^PSODEM K POERR
  S ^TMP("PSOHDR",$J,6,0)=$S($P(WT,"^",8):$P(WT,"^",9)_" ("_$P(WT,"^")_")",1:"_______ (______)")
  S ^TMP("PSOHDR",$J,7,0)=$S($P(HT,"^",8):$P(HT,"^",9)_" ("_$P(HT,"^")_")",1:"_______ (______)") K VM,WT,HT S PSOHD=7
  S GMRA="0^0^111" D ^GMRADPT S ^TMP("PSOHDR",$J,8,0)=+$G(GMRAL)
- S $P(^TMP("PSOHDR",$J,9,0)," ",62)="ISSUE  LAST REF DAY"
+ S $P(^TMP("PSOHDR",$J,9,0)," ",59)="ISSUE    LAST  REF DAY"  ;p1034
  S ^TMP("PSOHDR",$J,10,0)=" #  RX #         DRUG                                 QTY ST  DATE  "_$S($G(PSORFG):"RELD",1:"FILL")_" REM SUP"
  ; IHS/CIA/PLS - 03/10/04 - Changed to IHS Eligibility
  S IEN=1
@@ -58,6 +62,12 @@ PSOORUT2 ;ISC BHAM/SAB - build listman screen ;06-Aug-2012 08:32;PLS
  S IEN=IEN+1,^TMP("PSOPI",$J,IEN,0)=VAPA(4),^TMP("PSOPI",$J,IEN,0)=^TMP("PSOPI",$J,IEN,0)_$J("",50-$L(VAPA(4)))_"CELL PHONE: "_$P(PSOTEL,"^",4)
  S PSOTMP=$P(VAPA(5),"^",2)_"  "_$S(VAPA(11)]"":$P(VAPA(11),"^",2),1:VAPA(6)),IEN=IEN+1,^TMP("PSOPI",$J,IEN,0)=PSOTMP
  S ^TMP("PSOPI",$J,IEN,0)=^TMP("PSOPI",$J,IEN,0)_$J("",50-$L(PSOTMP))_"WORK PHONE: "_$P(PSOTEL,"^",2)
+ S IEN=IEN+1
+ ;IHS/MSC/PLS - p1034 - Other Phone
+ N OTHPHN
+ S OTHPHN=$$GET1^DIQ(9000001,DFN,1801)
+ S ^TMP("PSOPI",$J,IEN,0)=""
+ S ^TMP("PSOPI",$J,IEN,0)=$J("",49)_"OTHER PHONE: "_OTHPHN
  S MAILD=+$P($G(^PS(55,DFN,0)),"^",3) D  K MAILD
  .S PSOTMP="Prescription Mail Delivery: "_$S(MAILD=1:"Certified Mail",MAILD=2:"DO NOT MAIL",MAILD=3:"Local - Regular Mail",MAILD=4:"Local - Certified Mail",1:"Regular Mail") S IEN=IEN+1,^TMP("PSOPI",$J,IEN,0)=PSOTMP
  .I MAILD<2!(MAILD>4) Q  ;ONLY FOR MAIL DELIVERIES 2,3,4

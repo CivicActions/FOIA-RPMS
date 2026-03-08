@@ -1,0 +1,10 @@
+ATXFM ;IHS/CMI/LAB-CREATED BY ^ATXSTX ON MAY 06, 2020;
+ ;;5.1;TAXONOMY;**34**;FEB 04, 1997;Build 65
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^ATXFMA ;    SURVEILLANCE ILI NO TMP NEEDED
+ D ^ATXFMB ;    BQI CONFIRMED COVID-19 DXS
+ D ^ATXFMC ;    BQI PROBABLE COVID-19 DXS
+ Q

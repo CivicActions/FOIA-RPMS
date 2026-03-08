@@ -1,8 +1,10 @@
 ABME5CLM ; IHS/ASDST/DMJ - 837 CLM Segment 
- ;;2.6;IHS Third Party Billing System;**6,8,9,10,11,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing System;**6,8,9,10,11,21,37**;NOV 12, 2009;Build 739
  ;Health Claim
- ;IHS/SD/SDR - 2.6*21 - HEAT183995 - Made Delayed Reason Code stop printing leading zero.
+ ;IHS/SD/SDR 2.6*21 HEAT183995 Made Delayed Reason Code stop printing leading zero.
  ;IHS/SD/SDR 2.6*21 HEAT302468 Added line back in to send ORIGINAL BILL AMOUNT if billing the non-primary insurer
+ ;IHS/SD/AML 2.6*37 ADO78452 Changed CLM05 to use last digit of bill type, not hardcoded '1'
+ ;IHS/SD/SDR 2.6*37 ADO76009 Made CLM02 check new CURRENT CHARGES field for secondary billing
  ;
 START ;EP - START HERE
  K ABMREC("CLM"),ABMR("CLM")
@@ -27,6 +29,10 @@ LOOP ;LOOP HERE
  S ABMR("CLM",30)=$P(ABMB2,U)  ;bill amount  ;abm*2.6*11 COB billing
  ;abm*2.6*21 IHS/SD/SDR HEAT302468 Added below line back in; original bill amount should be send for secondary billing
  I ABMPSQ'=1,(+$P(ABMB2,U,7)'=0) S ABMR("CLM",30)=$P(ABMB2,U,7)  ;abm*2.6*10 HEAT62019
+ I +$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U,8)'=0 D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .S ABMCDAYS=$S((+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3)'=0):$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3),1:1)  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .S ABMNCDYS=$S((+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6)'=0):$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6),1:0)  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .S ABMR("CLM",30)=+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U,8)*(ABMCDAYS+ABMNCDYS)  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ;I ABMPSQ'=1,(+$P(ABMB2,U,3)'=0) S ABMR("CLM",30)=$P(ABMB2,U,3)  ;abm*2.6*10 HEAT62019  ;abm*2.6*11 COB billing
  ;I ABMPSQ'=1,(+$P(ABMB2,U,7)>+$P(ABMB2,U,3)) S ABMR("CLM",30)=+$P(ABMB2,U,7)  ;abm*2.6*10 HEAT61340  ;abm*2.6*11 COB billing
  ;removed below line; was sending wrong amount
@@ -52,7 +58,8 @@ LOOP ;LOOP HERE
  I ABMP("EXP")'=31 D
  .S ABMR("CLM",60)=$$POS^ABMERUTL()
  .S $P(ABMR("CLM",60),":",2)="B"
- .S $P(ABMR("CLM",60),":",3)=1
+ .;S $P(ABMR("CLM",60),":",3)=1  ;abm*2.6*37 IHS/SD/AML ADO78452
+ .S $P(ABMR("CLM",60),":",3)=$E(ABMP("BTYP"),3)  ;abm*2.6*37 IHS/SD/AML ADO78452 Use bill type for 837P
  Q
 70 ;CLM06 - Provider Signature on File
  ;S ABMR("CLM",70)="Y"  ;abm*2.6*8 5010

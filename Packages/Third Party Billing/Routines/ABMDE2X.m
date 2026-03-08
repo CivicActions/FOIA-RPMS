@@ -1,8 +1,7 @@
-ABMDE2X ; IHS/ASDST/DMJ - PAGE 2 - INSURER data chk ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**3,6,8,9,10,11,21,27**;NOV 12, 2009;Build 486
+ABMDE2X ; IHS/SD/SDR - PAGE 2 - INSURER data chk ;  
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,6,8,9,10,11,21,27,29,35**;NOV 12, 2009;Build 659
  ;
- ; IHS/SD/SDR - V2.5 P3 - 1/24/03 - NOIS NEA-0301-180044
- ;     Modified routine to display patient info when workers comp
+ ; IHS/SD/SDR V2.5 P3 1/24/03 NOIS NEA-0301-180044 Modified routine to display patient info when workers comp
  ;
  ;IHS/SD/SDR 2.5 p8 IM15307/IM14092 - Modified to check for new MSP errors 194-197
  ;IHS/SD/SDR 2.5 p8 IM15111 - Check format of Medicare name
@@ -19,6 +18,10 @@ ABMDE2X ; IHS/ASDST/DMJ - PAGE 2 - INSURER data chk ;
  ;IHS/SD/SDR 2.6*21 VMBP RQMT_109 - Added code to get data from the VAMB Eligible file
  ;IHS/SD/SDR 2.6*27 CR10170 When replacement insurer is Medicaid it tries to do the NAME check but fails and drops error 203; fixed to use
  ;  the original insurer type for check.
+ ;IHS/SD/SDR 2.6*29 CR10836 Correction to fix issue with batch of claims printing same insurer on all claims following
+ ;  the first one with a secondary insurer
+ ;IHS/SD/SDR 2.6*35 ADO60706 Made change to stop error <UNDEF>SEL+67^ABMDE2X; it should use indirection to check active insurer since
+ ;  this routine is called in several places, for the 3P Claim file and the 3P Bill file
  ;
  ; *********************************************************************
 ERR ;
@@ -130,7 +133,8 @@ SEL ;EP - Entry Point for Checking Select Insurer for Errors
  .S $P(ABMV("X2"),U)=$P(ABMV("X2"),U)_";"_$S($P($G(^AUPN3PPH($P(ABMV("X2"),U),1)),U)'="":$P($G(^AUPN3PPH($P(ABMV("X2"),U),1)),U),1:$P($G(^AUPN3PPH($P(ABMV("X2"),U),0)),U))
  .S:$P(ABMV("X2"),U,2)]"" $P(ABMV("X2"),U,2)=$S($D(^AUTTRLSH($P(ABMV("X2"),U,2),0)):$P(ABMV("X2"),U,2)_";"_$P(^(0),U),1:"")
  S:$P(ABMV("X1"),U,4)="" ABME(68)=""
- I $P(ABMP("C0"),U,8)="" S ABME(111)=""  ;abm*2.6*8 HEAT37612
+ ;I $P(ABMP("C0"),U,8)="" S ABME(111)=""  ;abm*2.6*8 HEAT37612  ;abm*2.6*35 IHS/SD/SDR ADO60706
+ I $P(@(ABMP("GL")_"0)"),U,8)="" S ABME(111)=""  ;abm*2.6*35 IHS/SD/SDR ADO60706
  ;I $P($G(^AUTNINS(ABMX("INS"),2)),U)="R" D  ;abm*2.6*10 HEAT73780
  I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMX("INS"),".211","I"),1,"I")="R" D  ;abm*2.6*10 HEAT73780
  .S $P(ABMV("X1"),U,7)=$P(^AUTTLOC(ABMP("LDFN"),0),U,19)
@@ -189,6 +193,7 @@ SEL ;EP - Entry Point for Checking Select Insurer for Errors
  D ^ABMDE2X3
  S:$G(ABMP("INS"))="" ABMP("INS")=$P($G(ABMV("X1")),";")
  ;I $P($G(^AUTNINS(ABMP("INS"),2)),U)="R"!($P($G(^AUTNINS(ABMP("INS"),2)),U)="D") D  ;abm*2.6*10 HEAT73780
+ S ABMISV=""  ;abm*2.6*29 IHS/SD/SDR CR10836
  I ABMP("INS")'=$P($G(ABMV("X1")),";") S ABMISV=ABMP("INS"),ABMP("INS")=$P($G(ABMV("X1")),";")  ;abm*2.6*27 IHS/SD/SDR CR10170
  S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  I ABMITYP="R"!(ABMITYP="D") D  ;abm*2.6*10 HEAT73780

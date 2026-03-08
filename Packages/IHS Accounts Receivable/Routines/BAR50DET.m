@@ -1,8 +1,9 @@
 BAR50DET ;IHS/SD/POT - DISPLAY MATCH REASONS AND CLAIMS REPORT;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**,23,24**;OCT 26, 2005;Build 69
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**,23,24,31**;OCT 26, 2005;Build 90
  ;CALLED FROM BARED* AND BAR50*
  ;IHS/SD/POT NEW ROUTINE JAN 2013 - BAR*1.8*23
  ;IHS/SD/POT HEAT148835 CHANGED DEFAULT OF "Do you wish to print report of the matching process"  - BAR*1.8*24
+ ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 3 SET FLAG TO PRINT DEFAULT TO NO
  Q
 INS(BARTXT,BARMODE) ;
  NEW BARPTR,%
@@ -27,8 +28,8 @@ NOMATCH ;
  Q
 PRT ;EP
  W !
- S Y=$$DIR^XBDIR("Y","Do you wish to print report of the matching process","Y") ;DEFAULT = Y  - BAR*1.8*24
- ;S Y=$$DIR^XBDIR("Y","Do you wish to print report of the matching process","N") ;DEFAULT = N
+ ;S Y=$$DIR^XBDIR("Y","Do you wish to print report of the matching process","Y") ;DEFAULT = Y  - BAR*1.8*24
+ S Y=$$DIR^XBDIR("Y","Do you wish to print report of the matching process","N") ;DEFAULT = N ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 3
  Q:+Y<1
  D ^%ZIS
  Q:$D(DUOUT)

@@ -1,0 +1,9 @@
+ATXHI ;IHS/CMI/LAB-CREATED BY ^ATXSTX ON APR 30, 2025;
+ ;;5.1;TAXONOMY;**63**;FEB 04, 1997;Build 128
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^ATXHIA ;    SURVEILLANCE PCV CVX CODES
+ D ^ATXHIB ;    SURVEILLANCE FLU CVX CODES
+ Q

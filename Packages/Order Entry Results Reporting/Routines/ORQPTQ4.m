@@ -1,6 +1,5 @@
 ORQPTQ4 ; slc/CLA - Extrinsic functions for patient information ;13-Jul-2011 15:25;MGH
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**1002,1008,1010**;Dec 17, 1997;Build 47
- ; Modified - IHS/MSC/MGH - 07/13/11 - Line LASTVITL
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**1002,1008**;Dec 17, 1997
  Q
 DOB(DFN) ; extrinsic function to return patient date of birth:
  N VADM

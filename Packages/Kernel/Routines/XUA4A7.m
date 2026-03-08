@@ -1,5 +1,6 @@
-XUA4A7 ;ISCSF/RWF - K7, Give entrys into F6 a Provider key ;03/24/10  07:58
- ;;8.0;KERNEL;**49,542**;Jul 10, 1995;Build 6
+XUA4A7 ;ISCSF/RWF - K7, Give entrys into F6 a Provider key ;1/15/97  09:42 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**49**;Jul 10, 1995
  Q  ;don't enter from top.
 F6S ;Give provider the key.
  N %,X1,X2 S %=$G(^DIC(6,DA,"I")) I %,%<DT Q  ;see if inactive
@@ -48,14 +49,14 @@ F19K ;holder subfile V6.5 only
 LAYGO ;Called from ^DD(200,.01,"LAYGO",1,0)
  Q:DIC(0)'["E"
  W !,"Checking SOUNDEX for matches."
- N DIR,DUOUT,DIRUT,Y,XU1,XU2,XU3 S XU3=X
+ N %,XU1,XU2,XU3 S XU3=X
  S X=$$EN^XUA4A71(XU3),XU2=0
- F XU1=0:0 S XU1=$O(^VA(200,"ASX",X,XU1)) Q:XU1'>0  D  Q:$D(DIRUT)
+ F XU1=0:0 S XU1=$O(^VA(200,"ASX",X,XU1)) Q:XU1'>0  D
  . W !?5,$P($G(^VA(200,XU1,0)),"^") S XU2=XU2+1
- . I '(XU2#16) N X S DIR(0)="E" D ^DIR
+ . I '(XU2#16) R !,"Press Return to Continue. ",%:DTIME
  . Q
  I 'XU2 W !,"No matches found." S XU2=1 G L3
-L2 R !,"Do you still want to add this entry: NO//",XU2:DTIME S XU2=$TR($E(XU2_"N"),"NnYy^?","00110?")
+L2 R !,"Do you still want to add this entry: NO//",XU2:300 S XU2=$TR($E(XU2_"N"),"NnYy^?","00110?")
  I "01"'[XU2 W !?4,"Answer NO to stop the addition of ",XU3," as a new person.",!?4,"Answer YES to add, a '^' will be taken as a NO." G L2
 L3 I XU2
  S X=XU3

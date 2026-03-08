@@ -1,5 +1,5 @@
-BGPDAREA ; IHS/CMI/LAB - ihs area GPRA ;
- ;;7.0;IHS CLINICAL REPORTING;;JAN 24, 2007
+BGPDAREA ; IHS/CMI/LAB - ihs area GPRA ;  [ 08/14/02  7:40 PM ]
+ ;;1.0;IHS GPRA REPORTING;**1**;JUN 12, 2002
  ;
  ;
  ;IHS/CMI/LAB - patch 1 modified to allow July-June report
@@ -76,7 +76,7 @@ ZIS ;call to XBDBQUE
  F X=1:1:30 S BGPIND(X)=""
  ;
  W !! S %ZIS="PQM" D ^%ZIS
- ;I POP W !,"Report Aborted" S DA=BGPRPT,DIK="^BGPD(" D ^DIK K DIK D EXIT Q
+ I POP W !,"Report Aborted" S DA=BGPRPT,DIK="^BGPD(" D ^DIK K DIK D EXIT Q
  I $D(IO("Q")) G TSKMN
 DRIVER ;
  U IO

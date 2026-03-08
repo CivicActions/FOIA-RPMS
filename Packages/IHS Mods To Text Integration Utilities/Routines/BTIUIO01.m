@@ -1,0 +1,116 @@
+BTIUIO01 ; IHS/ITSC/MIR - IHS OBJECTS ADDED IN PATCHES ;12-Jun-2024 11:52
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1028,1029**;NOV 04, 2004;Build 34
+ ; Modified 10/05/2023 Feature 101137 - added Admission Balance
+ ; Modified 10/11/2023 Feature 101135 - added TOTONLY
+ ; Modified 10/19/2023 Feature 101137 - added Admission Fluid Balance Object
+ Q
+ ; Return information from GMRY PATIENT I/O FILE
+ ; Input: DFN     - IEN to File 2
+ ;        TARGET  - where the Output will be stored
+ ;        NUMHRS  - number of hours to include
+ ;        TOTONLY - if = 1 display Balances and Totals only
+LISTPTIO(DFN,TARGET,NUMHRS,TOTONLY) ;
+ K @TARGET Q:'$D(^GMR(126,DFN,0)) "~@"_$NA(@TARGET)
+ N LP,LP1,IVIEN,GIEN,EDT,SDATE,EDATE,CNT,ARRAY,INDTE,OUTDTE,ADMBAL,BAL,MAXL
+ S CNT=0,MAXL=22,BAL=$G(TOTONLY)
+ S EDT=$$NOW^XLFDT(),EDATE=9999999-EDT
+ S SDATE=9999999-$$FMADD^XLFDT(EDT,,-NUMHRS)
+ S LP=EDATE F  S LP=$O(^GMR(126,DFN,"IO",LP)) Q:LP>SDATE!'LP  D
+ .S INDTE=$$FMTE^XLFDT(9999999-LP,2),OUTDTE=$$FMTE^XLFDT(9999999-LP,9)
+ .S LP1="" F  S LP1=$O(^GMR(126,DFN,"IO",LP,LP1)) Q:LP1=""  D
+ ..S GIEN="" F  S GIEN=$O(^GMR(126,DFN,"IO",LP,LP1,GIEN)) Q:'GIEN  D
+ ...I LP1="IN"!(LP1="OUT") D GETFLDS(DFN,LP1,GIEN)
+ ...I LP1="IV" D
+ ....S IVIEN="" F  S IVIEN=$O(^GMR(126,DFN,"IO",LP,LP1,GIEN,IVIEN)) Q:'IVIEN  D GETIV(DFN,LP1,GIEN,IVIEN)
+ D CRTTRG
+ Q "~@"_$NA(@TARGET)
+ ;
+GETFLDS(DFN,LP1,GIEN) ;Get the fields for an entry
+ N IENS,ITYPE,LOC,WHO,IOFILE,COMM,AMT,OF
+ I LP1="IN" S IOFILE=126.01
+ I LP1="OUT" S IOFILE=126.02
+ S IENS=GIEN_","_DFN_","
+ ; Quit if EIE
+ Q:$$GET1^DIQ(IOFILE,IENS,9999999.01,"I")
+ S OF=(LP1="OUT"),CNT=CNT+1
+ S ITYPE=$$GET1^DIQ(IOFILE,IENS,1) S:ITYPE="OTHER" ITYPE="ZZ" S:$L(ITYPE)>(MAXL-4) MAXL=$L(ITYPE)+4
+ S AMT=$$GET1^DIQ(IOFILE,IENS,4-OF)
+ S ARRAY(LP1,ITYPE)=$G(ARRAY(LP1,ITYPE))+AMT
+ Q
+GETIV(DFN,LP1,GIEN,IVIEN) ;Get the fields for an IV entry
+ N IENS,IENS2,ITYPE,AMT,LOC,WHO,COMM
+ S IENS2=IVIEN_","_GIEN_","_DFN_","
+ ; Quit if EIE
+ Q:$$GET1^DIQ(126.313,IENS2,9999999.11,"I")
+ S IENS=GIEN_","_DFN_",",CNT=CNT+1
+ S ITYPE=$$GET1^DIQ(126.03,IENS,3) S:$L(ITYPE)>(MAXL-4) MAXL=$L(ITYPE)+4
+ S AMT=$$GET1^DIQ(126.313,IENS2,2)
+ S ARRAY(LP1,ITYPE)=$G(ARRAY(LP1,ITYPE))+AMT
+ Q
+CRTTRG ;Create an Output lines
+ N DT,DATE,LP,AMT,WHO,LOC,CNT,CNT1,TOT
+ S CNT=1,DT="",@TARGET@(1,0)="I&O "_$S(BAL:"Totals ",1:"")_NUMHRS_" hours"
+ S CNT=CNT+1,$P(@TARGET@(2,0),"-",$L(@TARGET@(1,0))+1)=""
+ S LP="" F  S LP=$O(ARRAY(LP)) Q:LP=""  D
+ .I 'BAL S CNT=CNT+1,@TARGET@(CNT,0)=$S(LP="IN":"Intake",LP="IV":"IV Intake",1:"Output")
+ .S ITYPE="" F  S ITYPE=$O(ARRAY(LP,ITYPE)) Q:ITYPE=""  D
+ ..N TYP S TYP=$S(ITYPE="ZZ":"OTHER",1:ITYPE)
+ ..I 'BAL S CNT=CNT+1,@TARGET@(CNT,0)="  "_TYP_": "_$J(ARRAY(LP,ITYPE),MAXL-$L(TYP))_"ml"
+ ..S TOT(LP)=$G(TOT(LP))+ARRAY(LP,ITYPE)
+ N TAMT S TAMT=0 F LP="IN","IV","OUT" D
+ .N HDR S HDR="Total "_$S(LP="IN":"Intake: ",LP="IV":"IV Intake: ",1:"Output: ")
+ .N AMT S AMT=+$G(TOT(LP)),TAMT=TAMT+AMT I LP="OUT",AMT S AMT=-AMT,TAMT=TAMT+AMT+AMT
+ .S CNT=CNT+1,@TARGET@(CNT,0)=HDR_$J(AMT,MAXL+4-$L(HDR))_"ml"
+ S CNT=CNT+1,@TARGET@(CNT,0)="Total Fluid Balance: "_$J(TAMT,MAXL-17)_"ml"
+ Q
+ ;
+ ; Input: DFN     - IEN to File 2
+ ;        TARGET  - where the Output will be stored
+LISTPTBL(DFN,TARGET) ; Fluid Balances
+ N NUMHRS,VAIP,ADMDT,SDATE,BAL8,BAL12,BAL24,ADMBAL,ADMBAL1,NOW K @TARGET
+ S @TARGET@(1,0)="I&O Fluid Balance"
+ S @TARGET@(2,0)="-----------------"
+ D IN5^VADPT S ADMDT=+$G(VAIP(13,1))
+ I 'ADMDT S @TARGET@(6,0)="Admission:         0ml  An inpatient encounter has not been selected"
+ S NOW=$$NOW^XLFDT,SDATE=9999999-NOW
+ I '$D(@TARGET@(6)) D
+ .S ADMDT=9999999-ADMDT,ADMBAL=0
+ .I $G(VAIP("D")) N SDATE S DATE=9999999-VAIP("D")
+ .D ADMBAL S @TARGET@(6,0)="Admission:     "_$J(ADMBAL,5)_"ml"
+ F NUMHRS=24,12,8 D
+ .S ADMDT=9999999-$$FMADD^XLFDT(NOW,,-NUMHRS)
+ .S ADMBAL=0 D ADMBAL
+ .S @("BAL"_NUMHRS)=ADMBAL
+ S @TARGET@(3,0)="Last 24 Hours: "_$J(BAL24,5)_"ml"
+ S @TARGET@(4,0)="Last 12 Hours: "_$J(BAL12,5)_"ml"
+ S @TARGET@(5,0)="Last  8 Hours: "_$J(BAL8,5)_"ml"
+ Q "~@"_$NA(@TARGET)
+ADMBAL ; Loop over entries
+ S LP=SDATE F  S LP=$O(^GMR(126,DFN,"IO",LP)) Q:LP>ADMDT!'LP  D
+ .S LP1="" F  S LP1=$O(^GMR(126,DFN,"IO",LP,LP1)) Q:LP1=""  D
+ ..S GIEN="" F  S GIEN=$O(^GMR(126,DFN,"IO",LP,LP1,GIEN)) Q:'GIEN  D
+ ...I LP1="IN"!(LP1="OUT") D
+ ....S IOFILE=$S(LP1="IN":126.01,1:126.02)
+ ....S IENS=GIEN_","_DFN_","
+ ....Q:$$GET1^DIQ(IOFILE,IENS,9999999.01,"I")      ; entered in error
+ ....S OF=(LP1="OUT")
+ ....S AMT=$$GET1^DIQ(IOFILE,IENS,4-OF)
+ ....S ADMBAL=ADMBAL+$S(LP1="IN":AMT,1:-AMT)
+ ...I LP1="IV" D
+ ....S IVIEN="" F  S IVIEN=$O(^GMR(126,DFN,"IO",LP,LP1,GIEN,IVIEN)) Q:'IVIEN  D
+ .....S IENS2=IVIEN_","_GIEN_","_DFN_","
+ .....Q:$$GET1^DIQ(126.313,IENS2,9999999.11,"I")   ; entered in error
+ .....S AMT=$$GET1^DIQ(126.313,IENS2,2)
+ .....S ADMBAL=ADMBAL+AMT
+ Q
+ADMBLNC(DFN,TARGET) ; Define an Admission Fluid Balance for the current visit
+ N VAIP,ADMDT,SDATE,ADMBAL
+ S SDATE=9999999-$$NOW^XLFDT K @TARGET
+ S @TARGET@(1,0)="Admission Fluid Balance"
+ S @TARGET@(2,0)="-----------------------"
+ D IN5^VADPT S ADMDT=+$G(VAIP(13,1))
+ I 'ADMDT S @TARGET@(3,0)="An inpatient encounter has not been selected" Q "~@"_$NA(@TARGET)
+ S ADMDT=9999999-ADMDT,ADMBAL=0 I $G(VAIP("D")) S SDATE=9999999-VAIP("D")
+ D ADMBAL
+ S @TARGET@(3,0)="Admission Fluid Balance: "_ADMBAL_"ml"
+ Q "~@"_$NA(@TARGET)

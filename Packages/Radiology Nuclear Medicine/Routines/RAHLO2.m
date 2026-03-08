@@ -1,5 +1,5 @@
-RAHLO2 ;HIRMFO/GJC-File rpt (data from bridge program) ;10/30/97  09:02
- ;;5.0;Radiology/Nuclear Medicine;**55,80,84**;Mar 16, 1998;Build 13
+RAHLO2 ;HIRMFO/GJC/MAW - File rpt (data from bridge program) ;27 Apr 2023 3:05 PM
+ ;;5.0;Radiology/Nuclear Medicine;**55,80,84,144,157,1009,1010**;Mar 16, 1998;Build 11
  ;
  ;Integration Agreements
  ;----------------------
@@ -50,10 +50,14 @@ DIAG ; Check if the Diagnostic Codes passed are valid.  Set RADX equal
  N RAXFIRST
  S I=0,RAXFIRST=1
  K RASECDX
+ ; KLM/p157 Check for primary designation and save position.
+ I $D(^TMP("RARPT-REC",$J,RASUB,"RADX","PDX")) S RAPRIM=$O(^TMP("RARPT-REC",$J,RASUB,"RADX","PDX",0))
+ I $G(RAPRIM)>0 S RAXFIRST=0 ;if primary designation, don't need RAXFIRST
  F  S I=$O(^TMP("RARPT-REC",$J,RASUB,"RADX",I)) Q:I'>0  D  Q:$D(RAERR)
  . S RADIAG=$G(^TMP("RARPT-REC",$J,RASUB,"RADX",I))
  . ;S:RADIAG']"" RAERR="Missing Diagnostic Code" Q:$D(RAERR)
  . Q:RADIAG']""  ;Missing Diagnostic Code  Patch 80
+ . Q:RADIAG=0  ;20221207 patch 1010 maw check to make sure a valid diag
  . ; If RADXIEN is a number, set RADXIEN to what is assumed to be a
  . ; valid pointer (ien) for file 78.3
  . I +RADIAG=RADIAG S RADXIEN=RADIAG
@@ -61,10 +65,13 @@ DIAG ; Check if the Diagnostic Codes passed are valid.  Set RADX equal
  . ; into the ien for file 78.3
  . I +RADIAG'=RADIAG S RADXIEN=$$FIND1^DIC(78.3,"","X",RADIAG)
  . I '$D(^RA(78.3,RADXIEN,0)) S RAERR="Invalid Diagnostic Code" Q
- . IF RAXFIRST S RADX=RADXIEN,RAXFIRST=0 Q  ; RADX=pri. Dx Code
+ . ;KLM/p144 Reject inactive DX codes
+ . I $P(^RA(78.3,RADXIEN,0),U,5)="Y" S RAERR="Inactive Diagnostic Code: "_RADXIEN Q
+ . ;p157 Primary may not be the first entry.. check if RAPRIM is the same as count.
+ . I RAXFIRST!($G(RAPRIM)=I) S RADX=RADXIEN,RAXFIRST=0 Q  ; RADX=pri. Dx Code
  . ; are any of the sec. Dx codes equal to our pri. Dx code?
  . ;S:RADXIEN=RADX RAERR="Secondary Dx codes must differ from the primary Dx code." Q:$D(RAERR)
- . Q:RADXIEN=RADX  ;Secondary Dx codes must differ from the primary Dx code  Patch 80
+ . Q:RADXIEN=$G(RADX)  ;Secondary Dx codes must differ from the primary Dx code  Patch 80
  . ;S:$D(RASECDX(RADXIEN))#2 RAERR="Duplicate secondary Dx codes." Q:$D(RAERR)
  . Q:$D(RASECDX(RADXIEN))#2  ;Duplicate secondary Dx codes. Patch 80
  . S RASECDX(RADXIEN)="" ; set the sec. Dx array
@@ -98,7 +105,7 @@ SECDX ; Kill old sec. Dx nodes, and add the new ones into the 70.14 multiple
 IMPTXT ; Check if the impression text consists only of the string
  ; 'impression:".  If 'impression:' is the only set of characters,
  ; (spaces are excluded) then delete the "RAIMP" node.
- N RA1 S RA1=$O(^TMP("RARPT-REC",$J,RASUB,"RAIMP",0))
+ N RA1,I1 S RA1=$O(^TMP("RARPT-REC",$J,RASUB,"RAIMP",0))
  Q:'RA1  N RAIMP S RAIMP=$G(^TMP("RARPT-REC",$J,RASUB,"RAIMP",RA1))
  I $$UP^XLFSTR($E(RAIMP,1,11))="IMPRESSION:" D
  . S $E(RAIMP,1,11)="" ; strip out 'impression:' if it is the first

@@ -1,5 +1,5 @@
-XMXBULL ;ISC-SF/GMB-Send Bulletin ;04/23/2002  08:46
- ;;8.0;MailMan;;Jun 28, 2002
+XMXBULL ;ISC-SF/GMB-Bulletin ;06/09/99  07:06
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces ^XMB (ISC-WASH/THM/RWF/CAP)
  ; TASKBULL creates and delivers a bulletin in background.
  ; SENDBULL creates bulletin in foreground; delivers in background
@@ -20,9 +20,6 @@ XMXBULL ;ISC-SF/GMB-Send Bulletin ;04/23/2002  08:46
  ;                     ["P" - priority
  ; XMINSTR("FROM")  (optional) String saying from whom (default is sender)
  ; XMINSTR("LATER") (optional) date/time to send the bulletin (default is now)
- ; XMINSTR("VAPOR") (optional) date/time to vaporize the bulletin.
- ;                  If supplied, it takes precedence over the bulletin's
- ;                  RETENTION DAYS field.
  ; XMATTACH    (in)  Array of files to attach to message
  ;                   ("IMAGE",x) imaging (BLOB) files
  ; Output:
@@ -31,7 +28,8 @@ XMXBULL ;ISC-SF/GMB-Send Bulletin ;04/23/2002  08:46
 TASKBULL(XMDUZ,XMBNAME,XMPARM,XMBODY,XMTO,XMINSTR,XMTASK,XMATTACH) ; Tasks it
  N XMBIEN
  K XMERR,^TMP("XMERR",$J)
- I XMDUZ=.6 D ERRSET^XMXUTIL(39321) Q  ;SHARED,MAIL may not send a bulletin.
+ I XMDUZ=.6 D  Q
+ . S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"TEXT",1)="SHARED,MAIL may not send a bulletin."
  S XMBIEN=$O(^XMB(3.6,"B",XMBNAME,""))
  D BULLETIN^XMKPO(XMDUZ,XMBNAME,XMBIEN,.XMPARM,.XMBODY,.XMTO,.XMINSTR,.XMTASK,.XMATTACH)
  Q
@@ -45,36 +43,31 @@ TASK ; TaskMan uses this entry point, and supplies variables:
 SENDBULL(XMDUZ,XMBNAME,XMPARM,XMBODY,XMTO,XMINSTR,XMZ,XMATTACH) ; Does it now
  N XMBIEN
  K XMERR,^TMP("XMERR",$J)
- I XMDUZ=.6 D ERRSET^XMXUTIL(39321) Q  ;SHARED,MAIL may not send a bulletin.
+ I XMDUZ=.6 D  Q
+ . S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"TEXT",1)="SHARED,MAIL may not send a bulletin."
  S XMBIEN=$O(^XMB(3.6,"B",XMBNAME,""))
  D SEND(XMDUZ,XMBIEN,.XMPARM,.XMBODY,.XMTO,.XMINSTR,.XMZ,.XMATTACH)
  Q
 SEND(XMDUZ,XMBIEN,XMPARM,XMBODY,XMTO,XMINSTR,XMZ,XMATTACH) ; Create and send the bulletin
- N XMREC,XMSUBJ,XMVDAYS
+ N XMREC
  S XMREC=^XMB(3.6,XMBIEN,0)
- S XMSUBJ=$$SUBJECT($P(XMREC,U,2),.XMPARM) Q:$D(XMERR)
- S XMVDAYS=$P(XMREC,U,3)
- I XMVDAYS,'$D(XMINSTR("VAPOR")) D
- . S XMINSTR("VAPOR")=$$FMADD^XLFDT(DT,XMVDAYS)
- E  K XMVDAYS
- D CRE8XMZ^XMXSEND(XMSUBJ,.XMZ) Q:$D(XMERR)
+ D CRE8XMZ^XMXSEND($$SUBJECT($P(XMREC,U,2),.XMPARM),.XMZ) Q:$D(XMERR)
  D:$G(XMINSTR("ADDR FLAGS"))'["I" INIT^XMXADDR
  D BULLADDR(XMDUZ,XMBIEN,.XMINSTR)
  D CHKADDR^XMXADDR(XMDUZ,.XMTO,.XMINSTR)
- I '$$GOTADDR^XMXADDR D  Q
+ I '$D(^TMP("XMY",$J)) D  Q
  . D CLEANUP^XMXADDR
- . D ERRSET^XMXUTIL(39320) ;No addressees.  Bulletin not sent.
+ . S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"TEXT",1)="No addressees.  Bulletin not sent."
  . D KILLMSG^XMXUTIL(XMZ)
  . S XMZ=-1
  I $P(XMREC,U,4),$G(XMINSTR("FLAGS"))'["P" S XMINSTR("FLAGS")=$G(XMINSTR("FLAGS"))_"P"
  D:$D(XMATTACH("IMAGE"))>9 ADDBLOB^XMXSEND(XMZ,.XMATTACH)
  D MOVEPART^XMXSEND(XMDUZ,XMZ,.XMINSTR)
- D MOVEBODY^XMXSEND(XMZ,"^XMB(3.6,"_XMBIEN_",1)") ; Bulletin text
+ D MOVEBODY^XMXSEND(XMZ,"^XMB(3.6,"_XMBIEN_",1)")  ; Bulletin text
  D DOPARMS(XMZ,.XMPARM)
- I $G(XMBODY)'="",$D(@XMBODY)>9,$O(@XMBODY@(0)) D MOVEBODY^XMXSEND(XMZ,XMBODY,"A") ; Append the text (no parm translation)
+ I $G(XMBODY)'="",$D(@XMBODY)>9,$O(@XMBODY@(0)) D MOVEBODY^XMXSEND(XMZ,XMBODY,"A")  ; Append the text (no parm translation)
  I $E(XMREC,1,2)="XM" D CHKNONVF(XMZ,$P(XMREC,U))
  D SEND^XMKP(XMDUZ,XMZ)
- I $D(XMVDAYS) K XMINSTR("VAPOR")
  D CLEANUP^XMXADDR
  D CHECK^XMKPL
  Q
@@ -87,9 +80,7 @@ BULLADDR(XMDUZ,XMBIEN,XMINSTR) ;
  Q
 SUBJECT(XMSUBJ,XMPARM) ;
  D:XMSUBJ["|" FILL(.XMSUBJ,.XMPARM)
- I $L(XMSUBJ)<3 S XMSUBJ=XMSUBJ_"..."
- I $L(XMSUBJ)>65 S XMSUBJ=$E(XMSUBJ,1,65)
- Q $$XMSUBJ^XMXPARM("XMSUBJ",XMSUBJ)
+ Q XMSUBJ
 DOPARMS(XMZ,XMPARM) ;
  N I,XMLINE
  S I=0
@@ -114,7 +105,7 @@ FILL(XMLINE,XMPARM) ;
  Q
 CHKNONVF(XMZ,XMBNAME) ; (CHecK NO eNVelope From)
  Q:$O(^TMP("XMY",$J,""),-1)'["@"
- I XMBNAME'="XM SEND ERR RECIPIENT",XMBNAME'="XM SEND ERR MSG" Q
+ I XMBNAME'="XM_TRANSMISSION_ERROR",XMBNAME'="XM SEND ERR RECIPIENT",XMBNAME'="XM SEND ERR MSG" Q
  ; This is an error bulletin sent by MailMan to someone at a remote site
  ; indicating that their message could not be delivered for some reason.
  ; We want to make sure that the 'envelope from' is null, so we pre-set

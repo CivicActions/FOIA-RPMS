@@ -1,5 +1,6 @@
-DDXP31 ;SFISC/DPC-CREATE EXPORT TEMPLATE ;10/14/94  14:56
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDXP31 ;SFISC/DPC-CREATE EXPORT TEMPLATE ;10/14/94  14:56 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 XPT ;
  S DDXPOUT=0

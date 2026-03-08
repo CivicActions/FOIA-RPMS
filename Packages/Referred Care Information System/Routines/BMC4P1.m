@@ -156,9 +156,9 @@ GREET ;;To add to mail message.
  ;;You need do nothing in response to this message.
  ;;  
  ;;Questions about this patch, which is a product of the RPMS DBA
- ;;,
- ;;can be directed to the Help Desk,
- ;;
+ ;;(Fonda Jackson at 971.235.5714),
+ ;;can be directed to the DIR/RPMS Support Center, at 505-248-4371,
+ ;;or via e-mail to "rpmshelp@mail.ihs.gov".
  ;;Please refer to patch "bmc*4.0*1".
  ;;  
  ;;###;NOTE: This line indicates the end of text in this message.

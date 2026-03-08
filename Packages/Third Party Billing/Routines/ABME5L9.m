@@ -1,7 +1,12 @@
 ABME5L9 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS Third Party Billing System;**6,8,9,10,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing System;**6,8,9,10,21,31,35**;NOV 12, 2009;Build 659
  ;Header Segments
- ;IHS/SD/SDR - 2.6*21 - HEAT70826 - Modified to remove 2310B loop based on SGTM entry
+ ;IHS/SD/SDR 2.6*21 HEAT70826 - Modified to remove 2310B loop based on SGTM entry
+ ;IHS/SD/SDR 2.6*31 CR8881 Changed it so referring provider secondary ID will only print if the NPI USAGE is set to Both or Legacy Only;
+ ;  if you added a legacy number and then changed the NPI USAGE to NPI ONLY and recreated the batch it was still printing the legacy number
+ ;  because it was populated; also updated to use the referring provider from page3 first, then check page4
+ ;IHS/SD/SDR 2.6*35 ADO60702 Loop 2310F Updated ambulance to look at new free-text fields in addition to destination variable pointer
+ ;
 EP ;START HERE
  N ABM
  K ABMP("PRV")  ;reset provider array
@@ -11,10 +16,13 @@ EP ;START HERE
  ; Loop 2310A - Referring Physician Name
  S ABMLOOP="2310A"
  I $D(ABMP("PRV","F")) D
- .S ABM("PRV")=$O(ABMP("PRV","F",0))
+ .;S ABM("PRV")=$O(ABMP("PRV","F",0))  ;abm*2.6*31 IHS/SD/SDR CR8881
+ .S ABM("PRV")=$O(ABMP("PRV","F"," "))  ;is there a provider from page3? if so use it  ;abm*2.6*31 IHS/SD/SDR CR8881
+ .I ABM("PRV")="" S ABM("PRV")=$O(ABMP("PRV","F",0))  ;if no page3 provider, use the one from page4  ;abm*2.6*31 IHS/SD/SDR CR8881
  .D EP^ABME5NM1("DN")
  .D WR^ABMUTL8("NM1")
- .I $P($G(ABMB8),U,18)'="" D
+ .;I $P($G(ABMB8),U,18)'="" D  ;abm*2.6*31 IHS/SD/SDR CR8881
+ .I (($P($G(ABMB8),U,18)'="")&(ABMNPIU'="N")) D  ;abm*2.6*31 IHS/SD/SDR CR8881
  ..D EP^ABME5REF($S($P($G(ABMB8),U,18)'="":$P(ABMB8,U,18),1:ABMP("RTYPE")),200,ABM("PRV"))
  ..D WR^ABMUTL8("REF")
  ;
@@ -95,10 +103,11 @@ EP ;START HERE
  .D EP^ABME5N4("AMB","PU")
  .D WR^ABMUTL8("N4")
  ;
- ; LOOP 2310F - Ambulance Drop-Off Location
+ ; LOOP 2310F - Ambulance Drop-Off Location (Destination)
  S ABMLOOP="2310F"
  ;I $G(ABMP("CLIN"))="A3"&($P($G(^ABMDBILL(DUZ(2),+ABMP("PCN"),12)),U,7)'="") D  ;abm*2.6*8 HEAT45242
- I $G(ABMP("CLIN"))="A3"&($P($G(^ABMDBILL(DUZ(2),+ABMP("BDFN"),12)),U,7)'="") D  ;abm*2.6*8 HEAT45242
+ ;I $G(ABMP("CLIN"))="A3"&($P($G(^ABMDBILL(DUZ(2),+ABMP("BDFN"),12)),U,7)'="") D  ;abm*2.6*8 HEAT45242  ;abm*2.6*35 IHS/SD/SDR ADO60702
+ I $G(ABMP("CLIN"))="A3"&(($P($G(^ABMDBILL(DUZ(2),+ABMP("BDFN"),12)),U,7)'="")!($P($G(^ABMDBILL(DUZ(2),+ABMP("BDFN"),16)),U)'="")) D  ;abm*2.6*8 HEAT45242  ;abm*2.6*35 IHS/SD/SDR ADO60702
  .D EP^ABME5NM1(45)
  .D WR^ABMUTL8("NM1")
  .D EP^ABME5N3("AMB","DO")

@@ -1,5 +1,5 @@
 BARRASMA ; IHS/SD/LSL - Age Summary Report Questions ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,23***;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,23,30**;OCT 26, 2005;Build 55
  ;
  ; IHS/ASDS/LSL - 02/27/02 - Routine created
  ;     Called from BARRASM
@@ -17,6 +17,7 @@ BARRASMA ; IHS/SD/LSL - Age Summary Report Questions ;
  ;     Add Visit Location Sort level to accomodate EISS
  ;     Move print logic to BARRASMB.  Routine too large
  ; ; MAR 2013 P.OTTIS ADDED NEW VA billing
+ ; IHS/SD/CPC - 11/16/2020 - BAR*1.8*30 CR10550
  Q
  ; *********************************************************************
  ;
@@ -27,8 +28,10 @@ ASK ; EP
  D LOC^BARRSL1                      ; Ask loc - return BARY("LOC")
  Q:$D(DTOUT)!($D(DUOUT))            ; Q if time or "^" out
  W:'$D(BARY("LOC")) "ALL"
- F  D SORT Q:BARA("SORT")           ; Ask sort criteria-required
- Q:'+$G(BARY("STCR"))               ; No sort criteria specified - Q
+ ;F  D SORT Q:BARA("SORT")
+ F  D SORT Q:BARA("SORT")!$D(DTOUT)!$D(DUOUT)!$D(DIROUT)           ; Ask sort criteria-required  ;BAR*1.8*30 CR10550
+ ;Q:'+$G(BARY("STCR"))
+ Q:'+$G(BARY("STCR"))!$D(DTOUT)!$D(DUOUT)!$D(DIROUT)                ; No sort criteria specified - Q ;BAR*1.8*30 CR10550
  I BARY("STCR")=1 D  Q
  . W !
  . D ARACCT^BARRSL2                 ; Ask A/R Account-return BARY(
@@ -76,7 +79,8 @@ SORT ;
  S DIR("?")="This is a required response.  Enter ^ to exit"
  D ^DIR
  K DIR
- S:($D(DTOUT)!$D(DUOUT)) BARA("SORT")=1
+ ;S:($D(DTOUT)!$D(DUOUT)) BARA("SORT")=1   ;BAR*1.8*30 CR10550
+ I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) Q  ;BAR*1.8*30 CR10550
  Q:Y<1
  S BARA("SORT")=1                   ; The question was answered
  S BARY("STCR")=+Y
@@ -102,4 +106,18 @@ RTYP ;
  Q:Y<1
  S BARY("RTYP")=+Y
  S BARY("RTYP","NM")=Y(0)
+ Q
+ASKDELIM  ;
+ ; Ask if comma separated or Spreadsheet XML output
+ S DIR(0)="S^1:Comma Separated file (.csv suffix)"
+ S DIR(0)=DIR(0)_";2:Spreadsheet XML (.xml suffix)"
+ S DIR(0)=DIR(0)_";3:Print format"
+ S DIR("A")="Select REPORT TYPE"
+ S DIR("B")=3
+ S DIR("?",1)="Enter the selection that corresponds to the desired output format."
+ S DIR("?")="Enter ^ to exit"
+ D ^DIR
+ K DIR
+ Q:Y<1
+ S BARDELIM=$S(+Y=1:"CSV",+Y=2:"XML",1:"PRINT")
  Q

@@ -1,9 +1,12 @@
 ABMDF34 ; IHS/SD/SDR - ADA-2012 Dental Export Routine ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**14,16,19**;NOV 12, 2009;Build 300
- ;IHS/SD/SDR - 2.6*14 - HEAT136149 - Fixed box 34 to print 'B' for ICD9 codes.
- ;IHS/SD/SDR - 2.6*14 Updated DX^ABMCVAPI call to be numeric
- ;IHS/SD/SDR - 2.6*16 HEAT231506 - Added code for 'AB' to print for ICD10.
- ;IHS/SD/AML - 2.6*19 - HEAT181886 - Change coor. dx from numeric to alpha
+ ;;2.6;IHS 3P BILLING SYSTEM;**14,16,19,29,30,37**;NOV 12, 2009;Build 739
+ ;IHS/SD/SDR 2.6*14 HEAT136149 Fixed box 34 to print 'B' for ICD9 codes.
+ ;IHS/SD/SDR 2.6*14 Updated DX^ABMCVAPI call to be numeric
+ ;IHS/SD/SDR 2.6*16 HEAT231506 Added code for 'AB' to print for ICD10.
+ ;IHS/SD/AML 2.6*19 HEAT181886 Change coor. dx from numeric to alpha
+ ;IHS/SD/SDR 2.6*29 CR10876 Formatted box 27 to 2 chars, with a leading zero if needed
+ ;IHS/SD/SDR 2.6*30 CR8870 Drop characters after decimal point for printing purposes
+ ;IHS/SD/SDR 2.6*37 ADO76301 Changed box 27 to check parameter before putting leading zero
  ;
  ;************************************************************************************
  K ABM
@@ -63,6 +66,11 @@ BODY ;
  .I $P(ABM(0),U,5) D
  ..S ABMOPS=$P(ABM(0),U,5)     ; IEN to DENTAL OPERATIVE SITE
  ..S $P(ABMF(ABM("F")),U,4)=$P($G(^ADEOPS(ABMOPS,88)),U)    ; Tooth mnemonic (d)  (27)
+ ..;I ($L($P(ABMF(ABM("F")),U,4))=1) S $P(ABMF(ABM("F")),U,4)=$S(($P(ABMF(ABM("F")),U,4)=+$P(ABMF(ABM("F")),U,4)):"0",1:" ")_$P(ABMF(ABM("F")),U,4)  ;abm*2.6*29 IHS/SD/SDR CR10876  ;abm*2.6*37 IHS/SD/SDR ADO76301
+ ..;start new abm*2.6*37 IHS/SD/SDR ADO76301
+ ..I (($D(^ABMDREC(ABMP("INS"))))&($P($G(^ABMDREC(ABMP("INS"),0)),U,3)="Y")) D  ;check 3P Dental Recode, tooth number leading zero Y/N
+ ...I ($L($P(ABMF(ABM("F")),U,4))=1) S $P(ABMF(ABM("F")),U,4)=$S(($P(ABMF(ABM("F")),U,4)=+$P(ABMF(ABM("F")),U,4)):"0",1:" ")_$P(ABMF(ABM("F")),U,4)
+ ..;end new abm*2.6*37 IHS/SD/SDR ADO76301
  .;
  .; Procedure date (24)
  .S $P(ABMF(ABM("F")),U)=$P(ABM(0),U,7)        ; DOS (24)
@@ -80,7 +88,8 @@ BODY ;
  ..S $P(ABMCORDX,",",ABMTMP)=$P("A^B^C^D^","^",$P(ABMCORDX,",",ABMTMP))
  .S $P(ABMF(ABM("F")),U,7)=$TR(ABMCORDX,",")     ;Coor. DX (29a)
  .;end new abm*2.6*19 HEAT181886
- .S $P(ABMF(ABM("F")),U,8)=$P(ABM(0),U,9)      ;Qty(29b)
+ .;S $P(ABMF(ABM("F")),U,8)=$P(ABM(0),U,9)      ;Qty(29b)  ;abm*2.6*30 IHS/SD/SDR 8870
+ .S $P(ABMF(ABM("F")),U,8)=$P($P(ABM(0),U,9),".")     ;Qty(29b) - drop everything after decimal  ;abm*2.6*30 IHS/SD/SDR 8870
  .;
  .S ABMDENP=$P($G(^ABMDREC(ABMP("INS"),0)),U,2)           ; Dent remap
  .S:ABMDENP="" ABMDENP=$P($G(^ABMDPARM(ABMP("LDFN"),1,3)),U,11)
@@ -122,7 +131,8 @@ OTHER ;
  ...I ABMMSDT]"" D
  ....S $P(ABMF(ABM("F")),U)=ABMMSDT
  ...S $P(ABMF(ABM("F")),U,6)=ABMED
- ...S $P(ABMF(ABM("F")),U,8)=ABMMSQTY
+ ...;S $P(ABMF(ABM("F")),U,8)=ABMMSQTY  ;abm*2.6*30 IHS/SD/SDR CR8870
+ ...S $P(ABMF(ABM("F")),U,8)=$P(ABMMSQTY,".")  ;abm*2.6*30 IHS/SD/SDR CR8870
  ...S $P(ABMF(ABM("F")),U,9)=ABMMS
  ...S $P(ABMF(ABM("F")),U,10)=ABMMSCHG
  ...S ABM("I")=ABM("I")+1
@@ -145,7 +155,8 @@ RXDATA N ABMRV
  ...S ABM("F")=ABM("F")+1
  ...S ABMRX=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,9)     ; NDC# name
  ...S ABMRXDT=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,10)  ; date/time
- ...S ABMRXQTY=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,5)  ; Quantity
+ ...;S ABMRXQTY=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,5)  ; Quantity  ;abm*2.6*30 IHS/SD/SDR CR8870
+ ...S ABMRXQTY=$P($P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,5),".")  ; Quantity  ;abm*2.6*30 IHS/SD/SDR CR8870
  ...S ABMRXCHG=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,6)  ; Charge
  ...S $P(ABMF(ABM("F")),U,4)=$E(ABMRX,1,3)
  ...S $P(ABMF(ABM("F")),U,5)=$E(ABMRX,4,8)

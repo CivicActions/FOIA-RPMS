@@ -1,0 +1,9 @@
+ATXFH ;IHS/CMI/LAB-CREATED BY ^ATXSTX ON APR 08, 2019;
+ ;;5.1;TAXONOMY;**29**;FEB 04, 1997;Build 54
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^ATXFHA ;    BGP IPC PERVASIVE DEVELOP DXS
+ D ^ATXFHB ;    BGP IPC SCHIZO PSYCHOTIC DXS
+ Q

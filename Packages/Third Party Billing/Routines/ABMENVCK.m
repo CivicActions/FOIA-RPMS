@@ -1,5 +1,5 @@
 ABMENVCK ;IHS/SD/SDR - ENVIRONMENT CHECKER ;   
- ;;2.6;IHS Third Party Billing;**1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS Third Party Billing;**1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43**;NOV 12, 2009;Build 794
  ;IHS/SD/SDR 2.6*14 updated checker to look for patches after 8 (meaning 9 thru 13)
  ;IHS/SD/SDR 2.6*16 Updated patches for patch 16
  ;IHS/SD/SDR 2.6*17 Updated to check for patch 16
@@ -12,7 +12,16 @@ ABMENVCK ;IHS/SD/SDR - ENVIRONMENT CHECKER ;
  ;IHS/SD/SDR 2.6*26 check for p25, aupn*99.1*26
  ;IHS/SD/SDR 2.6*27 check for p26; fixed so messages write for all checks; BSCV only wrote a message if it was missing.  Now more in line
  ;  with notes file
- ;
+ ;IHS/SD/SDR 2.6*28 check for p27; moved things around so order checked is the same as the notes file for readability purposes
+ ;IHS/SD/SDR 2.6*29 check for p28
+ ;IHS/SD/SDR 2.6*30 check for p29
+ ;IHS/SD/SDR 2.6*32 check for p30, p31
+ ;IHS/SD/SDR 2.6*33 check for p32,ABM GLOBAL install that contains the 3P Codes updates
+ ;IHS/SD/SDR 2.6*34 check for p33
+ ;IHS/SD/SDR 2.6*35 check for p34
+ ;IHS/SD/SDR 2.6*36 check for p35
+ ;IHS/SD/SDR 2.6*37 check for p36
+ ;IHS/SD/SDR 2.6*38 check for p37
  ;
  I '$G(DUZ) W !,"DUZ UNDEFINED OR 0." D SORRY(2) Q
  ;
@@ -24,21 +33,42 @@ ABMENVCK ;IHS/SD/SDR - ENVIRONMENT CHECKER ;
  ;
  S XPDQUIT=0
  ;
+ ;start old abm*2.6*34 IHS/SD/SDR
+ ;;start new abm*2.6*33 IHS/SD/SDR ADO60187
+ ;I '($D(^ABMTMP("3PUPD"))) D
+ ;.S XPDQUIT=2
+ ;.W !,$$CJ^XLFSTR("ABM GLOBAL*2.6*33 NOT INSTALLED",IOM),!
+ ;;end new abm*2.6*33 IHS/SD/SDR ADO60187
+ ;end old abm*2.6*34 IHS/SD/SDR
+ ;
+ I '$$VCHK("XU","8.0",2) S XPDQUIT=2
+ K X
+ S X=$$PATCH^XPDUTL("XU*8.0*1013")
+ I X'=1 W !,$$CJ^XLFSTR("KERNEL v8.0 Patch 1013 NOT INSTALLED",IOM) S XPDQUIT=2
+ ;I X=1 W !,$$CJ^XLFSTR("XU Patch 1013 installed.",IOM)  ;abm*2.6*27 IHS/SD/SDR SAC findings
+ K X
+ S X=$$PATCH^XPDUTL("XU*8.0*1014")
+ I X'=1 W !,$$CJ^XLFSTR("KERNEL v8.0 Patch 1014 NOT INSTALLED",IOM) S XPDQUIT=2
+ ;I X=1 W !,$$CJ^XLFSTR("XU Patch 1014 installed.",IOM)  ;abm*2.6*27 IHS/SD/SDR SAC findings
+ ;start new abm*2.6*29 IHS/SD/SDR per Floyd's email 3/18/19 - w/out p1018 there will be an error installing KIDS
+ K X
+ S X=$$PATCH^XPDUTL("XU*8.0*1018")
+ I X'=1 W !,$$CJ^XLFSTR("KERNEL v8.0 Patch 1018 NOT INSTALLED",IOM) S XPDQUIT=2
+ ;end new abm*2.6*29 IHS/SD/SDR
+ ;
  I '$$VCHK("DI","22.0",2) S XPDQUIT=2  ;abm*2.6*2
+ ;start new abm*2.6*29 IHS/SD/SDR per Floyd's email 3/18/19 - w/out p1018 there will be an error installing KIDS
+ K X
+ S X=$$PATCH^XPDUTL("DI*22.0*1018")
+ I X'=1 W !,$$CJ^XLFSTR("FileMan v22.0 Patch 1018 NOT INSTALLED",IOM) S XPDQUIT=2
+ ;end new abm*2.6*29 IHS/SD/SDR
+ ;
  ;start old abm*2.6*27 IHS/SD/SDR SAC findings
  ;;AUM*9.1*4 needed for new clinic code mapping
  ;S X=$$PATCH^XPDUTL("AUM*9.1*4")  ;abm*2.6*4
  ;I X'=1 W !,$$CJ^XLFSTR("AUM v9.1 Patch 4 NOT INSTALLED",IOM) S XPDQUIT=2  ;abm*2.6*4
  ;I X=1 W !,$$CJ^XLFSTR("AUM v9.1 Patch 4 installed.",IOM)  ;abm*2.6*4
  ;end old abm*2.6*27 IHS/SD/SDR SAC findings
- I '$$VCHK("AUM","10.1",2) S XPDQUIT=2  ;abm*2.6*2
- ;
- ;start new abm*2.6*26 IHS/SD/SDR CR9264
- K X
- S X=$$PATCH^XPDUTL("AUPN*99.1*26")
- I X'=1 W !,$$CJ^XLFSTR("AUPN v99.1 Patch 26 NOT INSTALLED",IOM) S XPDQUIT=2
- I X=1 W !,$$CJ^XLFSTR("AUPN v99.1 Patch 26 installed.",IOM)
- ;end new abm*2.6*26 IHS/SD/SDR CR9264
  ;
  I '$$VCHK("ABM","2.6",2) S XPDQUIT=2  ;abm*2.6*1
  ;start old code abm*2.6*7
@@ -63,7 +93,17 @@ ABMENVCK ;IHS/SD/SDR - ENVIRONMENT CHECKER ;
  ;F I=1:1:23 D  ;abm*2.6*24 IHS/SD/SDR  ;abm*2.6*25 IHS/SD/SDR
  ;F I=1:1:24 D  ;abm*2.6*25 IHS/SD/SDR  ;abm*2.6*26 IHS/SD/SDR
  ;F I=1:1:25 D  ;abm*2.6*26 IHS/SD/SDR  ;abm*2.6*27 IHS/SD/SDR
- F I=1:1:26 D  ;abm*2.6*27 IHS/SD/SDR
+ ;F I=1:1:26 D  ;abm*2.6*27 IHS/SD/SDR  ;abm*2.6*28 IHS/SD/SDR
+ ;F I=1:1:27 D  ;abm*2.6*27 IHS/SD/SDR  ;abm*2.6*28 IHS/SD/SDR  ;abm*2.6*29 IHS/SD/SDR
+ ;F I=1:1:28 D   ;abm*2.6*29 IHS/SD/SDR  ;abm*2.6*30 IHS/SD/SDR
+ ;F I=1:1:29 D   ;abm*2.6*30 IHS/SD/SDR  ;abm*2.6*33 IHS/SD/SDR
+ ;F I=1:1:32 D   ;abm*2.6*30 IHS/SD/SDR  ;abm*2.6*33 IHS/SD/SDR  ;abm*2.6*34 IHS/SD/SDR
+ ;F I=1:1:33 D  ;abm*2.6*34 IHS/SD/SDR  ;abm*2.6*35 IHS/SD/SDR
+ ;F I=1:1:34 D  ;abm*2.6*35 IHS/SD/SDR  ;abm*2.6*36 IHS/SD/SDR
+ ;F I=1:1:35 D  ;abm*2.6*36 IHS/SD/SDR  ;abm*2.6*37 IHS/SD/SDR
+ ;F I=1:1:36 D  ;abm*2.6*36 IHS/SD/SDR  ;abm*2.6*37 IHS/SD/SDR  ;abm*2.6*38 IHS/SD/SDR
+ ;F I=1:1:37 D  ;abm*2.6*36 IHS/SD/SDR  ;abm*2.6*38 IHS/SD/SDR
+ F I=1:1:42 D  ;abm*2.6*38 IHS/SD/SDR
  .S X=$$PATCH^XPDUTL("ABM*2.6*"_I)
  .I X'=1 S ABM=0 W !,$$CJ^XLFSTR("Need Third Party Billing v2.6 Patch "_I_"..... "_$S(ABM=0:"NOT ",1:"")_"Present",IOM)
  I ABM=0 S XPDQUIT=2
@@ -71,18 +111,10 @@ ABMENVCK ;IHS/SD/SDR - ENVIRONMENT CHECKER ;
  ;
  I '$$VCHK("AUT","98.1",2) S XPDQUIT=2
  ;
+ I '$$VCHK("AUM","10.1",2) S XPDQUIT=2  ;abm*2.6*2
+ ;
  S X=$$LAST^ABMENVCK("IHS DICTIONARIES (POINTERS)","98.1")
  I $P(X,U,1)'=14&($P(X,U,1)'>14) W !,$$CJ^XLFSTR("AUT v98.1 Patch 14 NOT INSTALLED",IOM) S XPDQUIT=2
- ;
- I '$$VCHK("XU","8.0",2) S XPDQUIT=2
- K X
- S X=$$PATCH^XPDUTL("XU*8.0*1013")
- I X'=1 W !,$$CJ^XLFSTR("KERNEL v8.0 Patch 1013 NOT INSTALLED",IOM) S XPDQUIT=2
- ;I X=1 W !,$$CJ^XLFSTR("XU Patch 1013 installed.",IOM)  ;abm*2.6*27 IHS/SD/SDR SAC findings
- K X
- S X=$$PATCH^XPDUTL("XU*8.0*1014")
- I X'=1 W !,$$CJ^XLFSTR("KERNEL v8.0 Patch 1014 NOT INSTALLED",IOM) S XPDQUIT=2
- ;I X=1 W !,$$CJ^XLFSTR("XU Patch 1014 installed.",IOM)  ;abm*2.6*27 IHS/SD/SDR SAC findings
  ;
  ;start new code abm*2.6*10
  N X,ABM,I
@@ -94,6 +126,19 @@ ABMENVCK ;IHS/SD/SDR - ENVIRONMENT CHECKER ;
  .W !,$$CJ^XLFSTR("Need BCSV IHS Code Set Versioning v1.0 Patch "_I_"..... "_$S(ABM=0:"NOT ",1:"")_"Present",IOM)  ;abm*2.6*27 IHS/SD/SDR SAC findings
  I ABM=0 S XPDQUIT=2
  ;end new code abm*2.6*10
+ ;
+ ;start new abm*2.6*26 IHS/SD/SDR CR9264
+ K X
+ ;start old abm*2.6*33 IHS/SD/SDR CR11502
+ S X=$$PATCH^XPDUTL("AUPN*99.1*26")
+ I X'=1 W !,$$CJ^XLFSTR("AUPN v99.1 Patch 26 NOT INSTALLED",IOM) S XPDQUIT=2
+ I X=1 W !,$$CJ^XLFSTR("AUPN v99.1 Patch 26 installed.",IOM)
+ ;end new abm*2.6*26 IHS/SD/SDR CR9264
+ ;end old start new abm*2.6*33 IHS/SD/SDR CR11502
+ S X=$$PATCH^XPDUTL("AUPN*99.1*28")
+ I X'=1 W !,$$CJ^XLFSTR("AUPN v99.1 Patch 28 NOT INSTALLED",IOM) S XPDQUIT=2
+ I X=1 W !,$$CJ^XLFSTR("AUPN v99.1 Patch 28 installed.",IOM)
+ ;end new abm*2.6*33 IHS/SD/SDR CR11502
  ;
  NEW DA,DIC
  S X="ABM",DIC="^DIC(9.4,",DIC(0)="",D="C"

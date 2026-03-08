@@ -1,5 +1,5 @@
 APCLAUD4 ; IHS/CMI/LAB - MORE AUDIT SEARCH ;
- ;;2.0;IHS PCC SUITE;**11**;MAY 14, 2009;Build 58
+ ;;2.0;IHS PCC SUITE;**11,25**;MAY 14, 2009;Build 37
  ;
  ;cmi/anch/maw 9/7/2007 code set versioning in ICDDSP
  ;
@@ -27,8 +27,10 @@ TOP1 I $Y>(IOSL-4) D TOPHD I $D(APCLQ) K APCLQ Q
  F JJ=0:0 S APCLPRV=$O(^XTMP("APCLAUD",APCLJOB,APCLBT,"PROV",APCLPRV)) Q:APCLPRV'=+APCLPRV  D PRVDSP
 TOP2 I $Y>(IOSL-4) D TOPHD I $D(APCLQ) K APCLQ Q
  I $D(APCLALLR) W !!,"10. ALL Diagnoses that match the Search Criteria." G TOP3
- W !!,"9.  Limited to ",APCLLIM," randomized Diagnoses " W:'$D(APCLNOSP) "per Provider " W !,"    that match the Search Criteria."
-TOP3 D TOPHD I $D(APCLQ) K APCLQ Q
+ W !!,"10. Limited to ",APCLLIM," randomized Diagnoses " W:'$D(APCLNOSP) "per Provider " W !,"    that match the Search Criteria."
+TOP3 ;
+ W !!,"11. ",$S(APCLPSD="P":"Includes PRIMARY Diagnoses only.",1:"Includes PRIMARY and SECONDARY diagnoses.")
+ D TOPHD I $D(APCLQ) K APCLQ Q
  Q
 TOPHD ;EP
  S APCLPG=APCLPG+1 G:APCLPG=1 TOPHD1

@@ -1,10 +1,10 @@
-DIFROM ;SFISC/XAK-GENERATE INITS ;2/27/99  12:38
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROM ;SFISC/XAK-GENERATE INITS ;02:57 PM  7 Sep 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  D Q
  S X=$S('$D(^DD("VERSION"))#2:0,1:^("VERSION")),Y=$P($T(DIFROM+1),";",3) G:X'=Y ERV K X,Y
  I $S('$D(DUZ(0)):1,DUZ(0)'="@":1,1:0) W !,"PROGRAMMER ACCESS REQUIRED",! Q
- D WARN1 G:Y'=1 Q
  D WARN
  S DIR("A")="Enter the Name of the Package (2-4 characters)"
  S DIR(0)="FO^2:4:0^I X'?1U1.NU K X"
@@ -54,23 +54,16 @@ E F E=E:0 S E=$O(F(+Y,E)) Q:E'>0  F D=0:0 S D=$O(^DD(E,"SB",D)) Q:D'>0  I Y-E!'$
 ERF S D=-1 W $C(7),!,"  INVALID FIELD LABEL:  "_E,! Q
 ERV W $C(7),!!,"Your FileMan Version number: "_X_"  does not match the version number",!,"on the DIFROM routine: "_Y_" !!",!!,"You must run ^DINIT before you can build an INIT!!",! K X,Y Q
 Q G Q^DIFROM11
-WARN1 N DIR W $C(7),!!,"  **  WARNING  **",!
- W "DIFROM does not support new VA FileMan version 22 data dictionary structures!",!!
- W "If you add new style Indexes or Keys to any file, they will not be",!,"transported by DIFROM.",!!
- W "You should use the Kernel Installation and Distribution System (KIDS)",!,"to transport files with new style Indexes or Keys."
- S DIR("A")="Do you wish to continue",DIR(0)="Y",DIR("B")="NO"
- D ^DIR Q
- ;
 WARN N I F I=1:1 Q:$T(WARN+I)=""  W !,$P($T(WARN+I),";;",2)
  ;;                    * * Please Note * *
  ;;
- ;;     DIFROM generates routines in the following format:
+ ;;     DIFROM gererates routines in the following format:
  ;;
  ;;     nmspInxx
  ;;     ^^^^^^^^
  ;;     ||||||||
  ;;     |||||| \\- xx is any combination of numbers and
- ;;     ||||||     uppercase alpha characters.
+ ;;     ||||||     upper case alpha characters.
  ;;     ||||||
  ;;     ||||| \--- n is a number 0 - 9 and uppercase letter N.
  ;;     |||||

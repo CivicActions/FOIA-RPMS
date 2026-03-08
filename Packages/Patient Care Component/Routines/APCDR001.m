@@ -1,5 +1,5 @@
-APCDR001 ; IHS/CMI/LAB - cont. review visit data ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDR001 ; IHS/CMI/TUCSON - cont. review visit data ; [ 12/21/03  1:09 PM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**7,8**;MAR 09, 1999
 VISIT ;EP;check fields in visit file
  D 06
  D 05

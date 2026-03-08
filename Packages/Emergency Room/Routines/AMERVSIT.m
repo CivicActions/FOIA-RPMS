@@ -1,5 +1,5 @@
 AMERVSIT ; IHS/OIT/SCR - INTERFACING ROUTINES OUTSIDE OF AMER NAMESPACE REQUIRED FOR PCC VISIT CREATION
- ;;3.0;ER VISIT SYSTEM;**1,5**;MAR 03, 2009;Build 14
+ ;;3.0;ER VISIT SYSTEM;**1,5,15,16**;MAR 03, 2009;Build 14
  ;
 VPRVIEN(AMERPCC,AMERPIEN) ; EP from AMERPCC1
  ; ROUTINE to locate ien of V PROVIDER file in question 
@@ -250,16 +250,17 @@ CHANGPAT(AMERODFN,AMERDA,AMERISNW) ; EP FROM EDADMIT^AMEREDTA
  .I +Y'=-1 S AMERNDFN=+Y
  .; IF THE PATIENT WAS ORIGINALLY CREATED FOR THIS VISIT, DON'T CREATE ANOTHER ONE
  .I (+Y=-1&AMERISNW) S AMERNDFN=0,AMERDONE=1 Q
- .I $P(Y,U,2)=$P($G(^DPT(AMERODFN,0)),U,1) D
- ..S DIR(0)="Y",DIR("A")="Do you want to register a new patient for this visit "
- ..S DIR("B")="NO"
- ..D ^DIR
- ..; Give user a chance to create a new patient if an existing patient was incorrectly identified
- ..I +Y=1 D
- ...S DOG="" K DFN D DOG^AG0
- ...S:$D(DFN) AMERNDFN=DFN
- ...Q
- ..Q
+ .;GDIT/HS/BEE;FEATURE#119442;AMER*3.0*16;Remove ability to call REG for new patient
+ .;I $P(Y,U,2)=$P($G(^DPT(AMERODFN,0)),U,1) D
+ .;.S DIR(0)="Y",DIR("A")="Do you want to register a new patient for this visit "
+ .;.S DIR("B")="NO"
+ .;.D ^DIR
+ .;.; Give user a chance to create a new patient if an existing patient was incorrectly identified
+ .;.I +Y=1 D
+ .;..S DOG="" K DFN D DOG^AG0
+ .;..S:$D(DFN) AMERNDFN=DFN
+ .;..Q
+ .;.Q
  .I AMERNDFN="" S AMERNDFN=AMERODFN Q  ; RETURN OLD PATIENT ID IF THE NEW PATIENT ID IS UNSUCCESSFUL
  .I AMERNDFN'=AMERODFN D
  ..S DIR(0)="Y",DIR("A")="Change patient from "_$P($G(^DPT(AMERODFN,0)),U,1)_" to "_$P($G(^DPT(AMERNDFN,0)),U,1)
@@ -338,7 +339,14 @@ UPDTVTIM(AMERDA,AMEROTIM,AMERNTIM) ; EP from AMEREDTA
  S APCDCVDT("VISIT DATE/TIME")=AMERNTIM
  S APCDCVDT("TALK")=""
  I AMERPCC<1 D EN^DDIOL("VISIT NOT FOUND - TIME NOT UPDATED","","!")
- D:AMERPCC>0 START^APCDCVDT
+ ;GDIT/HS/BEE;AMER*3.0*15;FEATURE#97912;04/12/2024;Synch BEDD admission date/time 
+ ;D:AMERPCC>0 START^APCDCVDT
+ I AMERPCC>0 D
+ . D START^APCDCVDT
+ . ;
+ . ;Update BEDD if in use
+ . I $T(VDTM^BEDDSYNC)]"" D VDTM^BEDDSYNC(AMERPCC,AMEROTIM,AMERNTIM)
+ ;
  I $D(APCDCVDT("ERROR FLAG")) D EN^DDIOL("ERRORS RETURNED AFTER UPDATING PCC VISIT TIME","","!!")
  K APCDCVDT
  Q

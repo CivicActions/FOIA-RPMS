@@ -1,6 +1,7 @@
 ADEGRL4 ; IHS/HQT/MJL - DENTAL ENTRY PART 6 ;09:35 PM  [ 03/24/1999   9:04 AM ]
- ;;6.0;ADE;;APRIL 1999;Build 13
+ ;;6.0;ADE;**38**;MAR 25, 1999;Build 158
  ;;IHS/OIT/GAB 10.2014 Modified for 2015 Code Updates - PATCH 26
+ ;;IHS/OIT/GAB 11.2022 File 3,6,16 Removal - ADE Patch 38
 VSTAT ;EP
  N ADEJ
  S ADEJ=$$FYVIS(ADEPAT,ADEVDATE)
@@ -34,7 +35,9 @@ FAC K DIC,Y S DIC="^ADEPARAM(DUZ(2),1,",DA(1)=DUZ(2),DIC(0)="AEZMQ",DIC("A")="Se
  Q
 PROV ;EP
  N DIR
- K DIC,Y S DIC=6,DIC(0)="MEZ"
+ ;K DIC,Y S DIC=6,DIC(0)="MEZ"
+ ;/IHS/OIT/GAB PATCH 38 Commented above line and added below line for File200 update
+ K DIC,Y S DIC=200,DIC(0)="MEZ"
  S DIC("S")="D SCRN2^ADEGRL1"
  W !,"Select HYGIENIST/THERAPIST: ",$S(ADEPVNM]"":ADEPVNM_"// ",1:"") R X:DTIME
  Q:'$T
@@ -53,7 +56,9 @@ PROV2 S DIR(0)="YA"
  Q
 REPD ;EP
  N DIR
- K DIC,Y S DIC=6,DIC(0)="MEZ"
+ ;K DIC,Y S DIC=6,DIC(0)="MEZ"
+ ;/IHS/OIT/GAB PATCH 38 Commented above line and added below line for File 3,6,16 removal, File200 update
+ K DIC,Y S DIC=200,DIC(0)="MEZ"
  S DIC("S")="D SCRN1^ADEGRL1"
  W !,"Select ATTENDING DENTIST: ",$S(ADERDNM]"":ADERDNM_"// ",1:"") R X:DTIME
  Q:'$T

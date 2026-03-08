@@ -1,5 +1,5 @@
 BCHMNRP ; IHS/CMI/LAB - MERGE NON-REGISTERED PATIENTS ; 
- ;;2.0;IHS RPMS CHR SYSTEM;;OCT 23, 2012;Build 27
+ ;;2.0;IHS RPMS CHR SYSTEM;**1**;OCT 23, 2012;Build 6
  ;
  ;
  W !!,"This option is used to merge two Non-Registered Patients who are"
@@ -9,7 +9,7 @@ BCHMNRP ; IHS/CMI/LAB - MERGE NON-REGISTERED PATIENTS ;
  W !,"value from the patient with Tribe recorded.  If both patients"
  W !,"have a data value and they are different you will be asked to"
  W !,"choose which value to use.  Values looked at are:  DOB, Sex,"
- W !,"SSN, Name, Tribe, Community of Residence.",!!
+ W !,"Name, Tribe, Community of Residence.",!!
 GETPAT1 ;
  K DIC
  S (BCHPAT1,BCHPAT2)=""
@@ -31,7 +31,7 @@ GETPAT2 ;
 CMM ;
  K BCHDATA,BCHMAST
  S BCHQUIT=0
- F BCHF=".01",".02",".03",".04",".05",".06" Q:BCHQUIT  D CHK
+ F BCHF=".01",".02",".03",".05",".06" Q:BCHQUIT  D CHK
  I BCHQUIT D XIT Q
  W !!,"I am going to merge the following two patients together using the"
  W !,"following values for the demographic data:"
@@ -74,7 +74,7 @@ MERGE ;
  I BCHMAST(".05")]"" S BCHT=$O(^AUTTTRI("B",BCHMAST(".05"),0))
  S BCHTC=""
  I BCHMAST(".06")]"" S BCHC=$O(^AUTTCOM("B",BCHMAST(".06"),0))
- S DA=BCHPAT1,DIE="^BCHRPAT(",DR=".01///"_BCHMAST(".01")_";.02///"_BCHMAST(".02")_";.03///"_BCHMAST(".03")_";.04///"_BCHMAST(".04")_";.05////"_BCHT_";.06////"_BCHC
+ S DA=BCHPAT1,DIE="^BCHRPAT(",DR=".01///"_BCHMAST(".01")_";.02///"_BCHMAST(".02")_";.03///"_BCHMAST(".03")_";.05////"_BCHT_";.06////"_BCHC
  D ^DIE
  K DA,DR,DIE
  ;repoint 1112 of CHR Record file

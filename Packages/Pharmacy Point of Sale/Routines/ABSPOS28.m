@@ -1,5 +1,5 @@
 ABSPOS28 ; IHS/FCS/DRS - test of insurance selection ; 
- ;;1.0;PHARMACY POINT OF SALE;**10**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**10,54**;JUN 01, 2001;Build 131
  ;------------------------------------------------
  ;IHS/SD/lwj 03/10/04 patch 10
  ; Routine adjusted to call ABSPFUNC to retrieve
@@ -75,7 +75,8 @@ TEST4(PCNDFN)      ;
  N INSCOV1 M INSCOV1=^ABSBITMS(9002302,PCNDFN,"INSCOV1")
  D ZWRITE^ABSPOS("INSCOV1")
  D ZWRITE^ABSPOS("ARRAY(0)")
- W $P(^DPT(ABSBPATI,0),U),!
+ ;W $P(^DPT(ABSBPATI,0),U),!
+ W $P(^DPT(ABSBPATI,0),U)_$$PPN1^ABSPUTL(ABSBPATI),!  ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  N A S A=0 F  S A=$O(ARRAY(A)) Q:'A  D
  . N X S X=$P(ARRAY(A),U)
  . W ARRAY(A),"     ",$P(^AUTNINS(X,0),U),!

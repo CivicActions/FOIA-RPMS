@@ -1,5 +1,5 @@
-ABMDF4A ; IHS/ASDST/DMJ - ADA Dental Export -part 2 ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF4A ; IHS/SD/SDR - ADA Dental Export -part 2 ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;Original;TMD;
  ;
  ;  IHS/DSD/DMJ - 7/20/98 - Patch 2 - NOIS XFA-0698-200102
@@ -24,7 +24,8 @@ ENT ;EP for getting data
  ;
 BADDR S ABM("J")=ABMP("BDFN"),ABM("I")=$P(^AUTNINS(ABMP("INS"),0),U)_"-"_ABMP("INS")
  S ABM("INS",ABM("I"),ABM("J"))=""
- I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D
+ ;I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D  ;abm*2.6*10 HEAT73780
+ I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")="N" D  ;abm*2.6*10 HEAT73780
  .S ABM("INS",ABM("I"),ABM("J"))=ABMP("PDFN")
  S ABM("IDFN")=ABMP("INS") D BADDR^ABMDLBL1 G PAT:'$D(ABM("ADD"))
  S ABMF(1)=U_$P(ABM("ADD"),U,1),ABMF(2)="X"_U_$P(ABM("ADD"),U,2),ABMF(3)=$P(ABM("ADD"),U,3)

@@ -1,5 +1,5 @@
 BQITHCH ;PRXM/HC/ALA-High Cholesterol ; 12 Apr 2006  10:09 AM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;1.1;ICARE MANAGEMENT SYSTEM;**3**;Apr 03, 2008
  Q
  ;
 DEF(TTGLOB) ;EP -- High Cholesterol Definition
@@ -28,7 +28,8 @@ DEF(TTGLOB) ;EP -- High Cholesterol Definition
  S TMFRAME="T-60M",ENDT=$$DATE^BQIUL1(TMFRAME),STDT=$$DT^XLFDT()
  S DTDIF=$$FMDIFF^XLFDT(STDT,ENDT,1),EXDT=""
  F TAX="DM AUDIT LDL CHOLESTEROL TAX","BGP LDL LOINC CODES" D BLD^BQITUTL(TAX,TREF)
- S TIEN="" F  S TIEN=$O(@TREF@(TIEN)) Q:TIEN=""  D
+ S TIEN=""
+ F  S TIEN=$O(@TREF@(TIEN)) Q:TIEN=""  D
  . S IEN=""
  . F  S IEN=$O(@GREF@("B",TIEN,IEN),-1) Q:IEN=""  D
  .. I $G(@GREF@(IEN,0))="" Q
@@ -51,7 +52,8 @@ DEF(TTGLOB) ;EP -- High Cholesterol Definition
  S TMFRAME="T-60M",ENDT=$$DATE^BQIUL1(TMFRAME),STDT=$$DT^XLFDT()
  S DTDIF=$$FMDIFF^XLFDT(STDT,ENDT,1),EXDT=""
  F TAX="DM AUDIT CHOLESTEROL TAX","BGP TOTAL CHOLESTEROL LOINC" D BLD^BQITUTL(TAX,TREF)
- S TIEN="" F  S TIEN=$O(@TREF@(TIEN)) Q:TIEN=""  D
+ S TIEN=""
+ F  S TIEN=$O(@TREF@(TIEN)) Q:TIEN=""  D
  . S IEN=""
  . F  S IEN=$O(@GREF@("B",TIEN,IEN),-1) Q:IEN=""  D
  .. I $G(@GREF@(IEN,0))="" Q
@@ -61,6 +63,7 @@ DEF(TTGLOB) ;EP -- High Cholesterol Definition
  .. S VSDTM=$$GET1^DIQ(9000010,VISIT,.01,"I")\1 Q:'VSDTM
  .. I $G(TMFRAME)'="",VSDTM<ENDT Q
  .. S RESULT=$$GET1^DIQ(FREF,IEN,.04,"E") Q:RESULT=""
+ .. ;
  .. I RESULT'>239 Q
  .. ; setting "TOTAL" is used below in determining the non HDL value
  .. S @BQGLBT@(DFN,VSDTM,"TOTAL",IEN)=RESULT_"^"_VISIT_"^"_IEN_"^"_FREF
@@ -73,7 +76,8 @@ DEF(TTGLOB) ;EP -- High Cholesterol Definition
  ;HDL Lab Test value check
  S FREF=9000010.09,GREF=$$ROOT^DILFD(FREF,"",1),TREF=$NA(^TMP("BQITAX",UID)) K @TREF
  F TAX="DM AUDIT HDL TAX","BGP HDL LOINC CODES" D BLD^BQITUTL(TAX,TREF)
- S TIEN="" F  S TIEN=$O(@TREF@(TIEN)) Q:TIEN=""  D
+ S TIEN=""
+ F  S TIEN=$O(@TREF@(TIEN)) Q:TIEN=""  D
  . S IEN=""
  . F  S IEN=$O(@GREF@("B",TIEN,IEN)) Q:IEN=""  D
  .. I $G(@GREF@(IEN,0))="" Q

@@ -1,13 +1,12 @@
-XMDIR1 ;(WASH ISC)/CAP-Load VACO Directories ;04/17/2002  08:47
- ;;8.0;MailMan;;Jun 28, 2002
- ; Entry points used by MailMan options (not covered by DBIA):
- ; OPTION   XMMGR-DIRECTORY-VACO
+XMDIR1 ;(WASH ISC)/CAP- LOAD... VACO DIRECTORIES ;01/28/98  06:48
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**27,55**;Jun 02, 1994
  Q
 ENT ;Batch Entry point (TaskMan)
  K ZTREQ,^TMP("XMDIR1",$J) S XMA=0
  ;
  ;LOCK to indicate to XMA5 that MailLink in being updated
- L +^XMD("XMDIR1"):1 E  G RES:$D(ZTQUEUED) W !!,$C(7),"<<< This task seems to be running already !",!,"(It cannot be run multiple times concurrently.) >>>" G Q
+ L +^XMD("XMDIR1"):1 E  G RES:$D(ZTQUEUED) W !!,*7,"<<< This task seems to be running already !",!,"(It cannot be run multiple times concurrently.) >>>" G Q
  ;
  U IO(0) S XMDIR1A("CODE")=$S($G(XMDIR1A)=1:"1A",1:"1B")
  I '$D(ZTQUEUED) W !!,"Killing off old AUTOMATIC entries for this code ("_XMDIR1A("CODE")_").",!!
@@ -63,9 +62,9 @@ OPTION G ENT:$D(ZTQUEUED)
  W !!,"Users are informed that an update is occuring if they are using"
  W !,"MailLink help options.  But are allowed to continue.",!!
  R !!,"Are you sure you want to do this (Answer 'YES/NO'): NO//",X:DTIME
- S:X="" X="NO" S X=$TR(X,"noyes","NOYES") I $E("YES",1,$L(X))'=X W !!,"Nothing done.",$C(7),!! Q
+ S:X="" X="NO" S X=$TR(X,"noyes","NOYES") I $E("YES",1,$L(X))'=X W !!,"Nothing done.",*7,!! Q
  I '$G(D) G INT
- D ZTSK W !!,$C(7),"Task #"_ZTSK_" scheduled.",!!
+ D ZTSK W !!,*7,"Task #"_ZTSK_" scheduled.",!!
  D ^%ZISC K ZTSK,ZTRTN,ZTDTH,XMDUZ,ZTDESC,IO("Q"),XMDIR1A,XMDIR1B
  Q
 ER ;Display error

@@ -1,0 +1,144 @@
+APSQI00E ; ; 23-OCT-1998
+ ;;1;APSQ;;OCT 23, 1998
+ F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,999) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
+Q Q
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,5,0)
+ ;;=MANUFACTURER:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,6,0)
+ ;;=DOSAGE FORM:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,7,0)
+ ;;=ESTIMATED USAGE/MONTH:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,8,0)
+ ;;=THERAPEUTIC CLASS:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,9,0)
+ ;;=SIMILAR DRUG STOCKED:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,10,0)
+ ;;=ADVANTAGE OF DRUG:
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,12,0)
+ ;;=THERAPEUTIC ACTS/INDICATES (WP):     SIDE EFFECTS,TOX,PRECAUTIONS (WP):
+ ;;^UTILITY(U,$J,"DIST(.403,",60,"AZ","X",2,14,0)
+ ;;=DOSAGES (WP):                        REFERENCES (WP):
+ ;;^UTILITY(U,$J,"DIST(.403,",61,0)
+ ;;=APSQ NF PT^@^@^^2980909.0919^^^9009035.1^0^0^1
+ ;;^UTILITY(U,$J,"DIST(.403,",61,12)
+ ;;=D VAL4^APSQCK
+ ;;^UTILITY(U,$J,"DIST(.403,",61,20)
+ ;;=D VAL44^APSQCK
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,0)
+ ;;=^.4031I^3^3
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,1,0)
+ ;;=1^^1,1^2^3
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,1,1)
+ ;;=Page 1
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,1,40,0)
+ ;;=^.4032IP^252^2
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,1,40,249,0)
+ ;;=APSQ NF PHARMACIST DISPLAY^1^1,1^d
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,1,40,252,0)
+ ;;=APSQ NF PT EDIT^2^3,1^e
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,1,40,"AC",1,249)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,1,40,"AC",2,252)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,1,40,"B",249,249)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,1,40,"B",252,252)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,2,0)
+ ;;=2^^1,1^3^1
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,2,1)
+ ;;=Page 2
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,2,40,0)
+ ;;=^.4032IP^251^1
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,2,40,251,0)
+ ;;=APSQ NF PHARMACIST DISPLAY1^1^1,1^d
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,2,40,"AC",1,251)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,2,40,"B",251,251)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,3,0)
+ ;;=3^^1,1^1^2
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,3,1)
+ ;;=Page 3
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,3,40,0)
+ ;;=^.4032IP^250^2
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,3,40,249,0)
+ ;;=APSQ NF PHARMACIST DISPLAY^1^1,1^d
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,3,40,250,0)
+ ;;=APSQ NF PHARMACIST EDIT^2^5,1^d
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,3,40,"AC",1,249)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,3,40,"AC",2,250)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,3,40,"B",249,249)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,3,40,"B",250,250)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,"B",1,1)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,"B",2,2)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,"B",3,3)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,"C","PAGE 1",1)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,"C","PAGE 2",2)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,40,"C","PAGE 3",3)
+ ;;=
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,0,0,"N")
+ ;;=7,252^1,252^1,252^7,252^1,252
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,249)
+ ;;=0^0^9009035.1^^d^^^^0
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,249,1,"D")
+ ;;=0^56^11^1
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,249,2,"D")
+ ;;=2^1^40^2
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,249,3,"D")
+ ;;=2^46^30^3
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,249,4,"D")
+ ;;=0^10^15^.01
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252)
+ ;;=2^0^9009035.1^^e^^^^1
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,1,"D")
+ ;;=3^18^35^7
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,1,"N")
+ ;;=0^5^2^0^2
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,2,"D")
+ ;;=3^55^15^7.1
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,2,"N")
+ ;;=0^5^5^1^5
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,3,"D")
+ ;;=8^14^3^7.5
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,3,"N")
+ ;;=6^4^4^6^4
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,4,"D")
+ ;;=10^19^1^80
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,4,"N")
+ ;;=3^7^7^3^7^^^^^^1
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,5,"D")
+ ;;=5^37^1^5,252
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,5,"N")
+ ;;=1^6^6^2^6
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,6,"D")
+ ;;=6^37^1^6,252
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,6,"N")
+ ;;=5^3^3^5^3
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,7,"D")
+ ;;=13^65^3^7,252
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,252,7,"N")
+ ;;=4^0^0^4^0
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",1,"FIRST")
+ ;;=1,252
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",2,0,0,"N")
+ ;;=16,251^14,251^14,251^17,251^14,251
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",2,251)
+ ;;=0^0^9009035.1^^d^^^^14
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",2,251,1,"D")
+ ;;=0^3^15^.01
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",2,251,2,"D")
+ ;;=0^57^11^1
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",2,251,3,"D")
+ ;;=1^18^20^4
+ ;;^UTILITY(U,$J,"DIST(.403,",61,"AZ",2,251,4,"D")
+ ;;=1^58^20^5

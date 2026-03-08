@@ -1,9 +1,10 @@
-DINIT12 ;SFISC/GFT,XAK-INITIALIZE VA FILEMAN ;16FEB2010
- ;;22.0;VA FileMan;**104,163**;Mar 30, 1999;Build 30
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DINIT12 ;SFISC/GFT,XAK-INITIALIZE VA FILEMAN ;08:20 AM  14 Sep 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 DD F I=1:1 S X=$T(DD+I),Y=$P(X," ",3,99) G T:X?.P S @("^DD("_$E($P(X," ",2),3,99)_")=Y")
  ;;.4,0 FIELD^^1819^21
- ;;.4,0,"DT" 2950909
+ ;;.4,0,"DT" 2921229
  ;;.4,.01,0 NAME^F^^0;1^K:$L(X)<2!($L(X)>30) X
  ;;.4,.01,1,0 ^.1^2^2
  ;;.4,.01,1,1,0 .4^B
@@ -28,10 +29,6 @@ DD F I=1:1 S X=$T(DD+I),Y=$P(X," ",3,99) G T:X?.P S @("^DD("_$E($P(X," ",2),3,99
  ;;.4,7,0 DATE LAST USED^D^^0;7^S %DT="EX" D ^%DT S X=Y K:Y<1 X
  ;;.4,1815,0 ROUTINE INVOKED^F^^ROU;E1,13^Q
  ;;.4,1815,9 @
- ;;.4,1815,1,0 ^.1^1^1
- ;;.4,1815,1,1,0 ^^^MUMPS
- ;;.4,1815,1,1,1 Q
- ;;.4,1815,1,1,2 D DELETROU^DIEZ($TR(X,U))
  ;;.4,1816,0 PREVIOUS ROUTINE INVOKED^F^^ROUOLD;E1,13^Q
  ;;.4,1816,9 @
  ;;.4,10,0 DESCRIPTION^.4001^^%D;0
@@ -43,9 +40,9 @@ DD F I=1:1 S X=$T(DD+I),Y=$P(X," ",3,99) G T:X?.P S @("^DD("_$E($P(X," ",2),3,99
 T ;
  ;;N D,D1,D2 S D2=^(0) S:$X>30 D1(1,"F")="!" S D=$P(D2,U,2) S:D D1(2)="("_$$FMTE^DILIBF(D)_")",D1(2,"F")="?30" S D=$P(D2,U,5) S:D D1(3)=" User #"_D,D1(3,"F")="?50" S D=$P(D2,U,4) S:D D1(4)=" File #"_D,D1(4,"F")="?59" D EN^DDIOL(.D1)
  S ^DD(.4,0,"ID","WRITE")=$P($T(T+1),";",3,99)
- S %X="^DD(.4," S %Y="^DD(.402," D %XY^%RCR
- S %X="^DD(.4001," S %Y="^DD(.4021," D %XY^%RCR
- K ^DD(.402,1804),^("SB",.404),^DD(.402,"GL","RD",0,1804)
+ S %X="^DD(.4," F %Y="^DD(.401,","^DD(.402," D %XY^%RCR
+ S %X="^DD(.4001," F %Y="^DD(.4012,","^DD(.4021," D %XY^%RCR
+ K ^DD(.402,1804),^("SB",.404),^DD(.402,"GL","RD",0,1804),^DD(.401,1815),^(1816),^(1620),^(.01,1,3)
  S ^DIC(.4,"%D",0)="^^3^3^2940908^"
  S ^DIC(.4,"%D",1,0)="This file stores the PRINT FIELDS data and other information about print"
  S ^DIC(.4,"%D",2,0)="templates.  These templates are used in the Print, Filegram, Extract, and"
@@ -55,21 +52,15 @@ T ;
 DD1 F I=1:1 S X=$T(DD1+I),Y=$P(X," ",3,99) G DD2:X?.P S @("^DD("_$E($P(X," ",2),3,99)_")=Y")
  ;;.4,0,"ID","WRIT" I $P(^(0),U,8) N D1 S @("D1=$P($P($C(59)_$S($D(^DD(.4,8,0)):$P(^(0),U,3),1:0)_$E("_DIC_"Y,0),0),$C(59)_$P(^(0),U,8)_"":"",2),$C(59),1)") D EN^DDIOL("**"_D1_"**","","?0")
  ;;.4,0,"ID","WRITED" I $G(DZ)?1"???".E N % S %=0 F  S %=$O(^DIPT(Y,"%D",%)) Q:%'>0  I $D(^(%,0))#2 D EN^DDIOL(^(0),"","!?5")
+ ;;.401,0,"ID","WRITED" I $G(DZ)?1"???".E N % S %=0 F  S %=$O(^DIBT(Y,"%D",%)) Q:%'>0  I $D(^(%,0))#2 D EN^DDIOL(^(0),"","!?5")
  ;;.402,0,"ID","WRITED" I $G(DZ)?1"???".E N % S %=0 F  S %=$O(^DIE(Y,"%D",%)) Q:%'>0  I $D(^(%,0))#2 D EN^DDIOL(^(0),"","!?5")
- ;;.4,1620,9 ^
- ;;.4,1620,9.01
- ;;.4,1620,9.1 D ^DIET
- ;;.402,1620,0 EDIT FIELDS^Cm^^ ; ^D EN^DIET
- ;;.402,1620,21,0 ^
- ;;.402,1620,21,1,0 This multi-line field displays all the "EDIT" prompts of this Input Template
- ;;.402,1620,23,0 ^
- ;;.402,1620,23,1,0 This Computed Multiple uses code in ^DIETED to build the entire displayable Input Template.  Then it is output node-by-node.
- ;;.402,1819,9.1 S X=$S('$D(^DIE(D0,"ROU"))#2:"NO",^("ROU")="":"NO",1:"YES")
  ;;.4,1819,0 COMPILED^CJ3^^ ; ^S X=$S('$D(^DIPT(D0,"ROU"))#2:"NO",^("ROU")="":"NO",1:"YES")
  ;;.4,1819,9 ^
  ;;.4,1819,9.01
  ;;.4,1819,9.1 S X=$S('$D(^DIPT(D0,"ROU"))#2:"NO",^("ROU")="":"NO",1:"YES")
  ;;.402,1819,0 COMPILED^CJ3^^ ; ^S X=$S('$D(^DIE(D0,"ROU"))#2:"NO",^("ROU")="":"NO",1:"YES")
+ ;;.402,1819,9 ^
+ ;;.402,1819,9.01
  ;;.402,1819,9.1 S X=$S('$D(^DIE(D0,"ROU"))#2:"NO",^("ROU")="":"NO",1:"YES")
  ;;
 DD2 N DICNT F DICNT=0:1:7 D @("^DINIT12"_DICNT)

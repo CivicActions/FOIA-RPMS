@@ -1,5 +1,5 @@
 AMHDLOG ; IHS/CMI/LAB - driver for primary care provider report ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;3.0;IHS BEHAVIORAL HEALTH;**6**;JAN 27, 2003
  ;
  W:$D(IOF) @IOF
  W !,"This report will display a list of who edited a BH record.",!!

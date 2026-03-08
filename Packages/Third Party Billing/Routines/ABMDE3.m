@@ -1,12 +1,14 @@
-ABMDE3 ; IHS/ASDST/DMJ - Edit Page 3 - QUESTIONS ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ABMDE3 ; IHS/SD/SDR - Edit Page 3 - QUESTIONS ;  
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,10,30,31**;NOV 12, 2009;Build 615
  ;
- ;IHS/DSD/DMJ - 4/27/1999 - NOIS QDA-0399-130056 Patch 1
- ;            new code looks for y2k hcfa form (#14) at line QUES+6
+ ;IHS/DSD/DMJ 4/27/1999 NOIS QDA-0399-130056 Patch 1 new code looks for y2k hcfa form (#14) at line QUES+6
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 6 - Added code for new page 3A
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - made code skip question 41 if not chiropractic clinic
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - made code skip question 42 if not optometry clinic
+ ;IHS/SD/SDR 2.5*8 task 6 Added code for new page 3A
+ ;
+ ;IHS/SD/SDR 2.6*6 5010 made code skip question 41 if not chiropractic clinic
+ ;IHS/SD/SDR 2.6*6 5010 made code skip question 42 if not optometry clinic
+ ;IHS/SD/SDR 2.6*31 CR11832 Populate (837I or UB-04) or delete (not 837I or UB-04) data from Admission Type and
+ ;   Admission Source if the SERVICE CATEGORY is either Telecommunications or Telemedicine
  ;
  ; *********************************************************************
  ;
@@ -14,6 +16,20 @@ OPT ;EP
  G XIT:$D(ABMP("WORKSHEET"))
  K ABM,ABME,ABMZ,DUOUT,ABMP("QU")
  S ABMP("OPT")="ENVJBQ"
+ ;start new abm*2.6*31 IHS/SD/SDR CR11832
+ S DIE="^ABMDCLM(DUZ(2),"
+ S DA=ABMP("CDFN")
+ I (("^T^M^"[("^"_$G(SERVCAT)_"^"))&("^28^31^"[("^"_$G(ABMP("EXP"))_"^"))) D
+ .I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),5)),U)="" D
+ ..S DR=".51///2"
+ ..D ^DIE
+ .I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),5)),U,2)="" D
+ ..S DR=".52///1"
+ ..D ^DIE
+ I (("^T^M^"[("^"_$G(SERVCAT)_"^"))&'("^28^31^"[("^"_$G(ABMP("EXP"))_"^"))) D
+ .S DR=".51////@;.52////@"
+ .D ^DIE
+ ;end new abm*2.6*31 IHS/SD/SDR CR11832
  D QUES
  S ABMZ("NUM")=$L(ABMP("QU"),",")
  D DISP
@@ -37,6 +53,11 @@ OPT ;EP
 V1 ;
  S ABMZ("TITL")="QUESTIONS - VIEW OPTION"
  D SUM^ABMDE1
+ ;start new abm*2.6*30 IHS/SD/SDR CR10215
+ S ABMT("VDFN")=0
+ F  S ABMT("VDFN")=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),11,ABMT("VDFN"))) Q:'ABMT("VDFN")  D
+ .S ABMDVDSP=ABMT("VDFN") D DSPLHOSP^ABMDVDSP
+ ;end new abm*2.6*30 IHS/SD/SDR CR10215
  D ^ABMDERR
  Q
  ;
@@ -92,7 +113,8 @@ QUES ;EP - for setting Questions Array
  F  S ABM("F")=$O(ABMP("EXP",ABM("F"))) Q:'ABM("F")  D
  .S ABM("QU")=$G(ABM("QU"))_$S($P(^ABMDEXP(ABM("F"),0),U,8)]"":$P(^(0),U,8),1:"1,2,3,4,5,6,7,8,9,10,11,12,13")_","
  .I $D(ABMP("EXP",3))!($D(ABMP("EXP",14))) D
- ..I $P($G(^AUTNINS(+$G(ABMP("INS")),2)),U)="D" S ABM("QU")=ABM("QU")_"14,"
+ ..;I $P($G(^AUTNINS(+$G(ABMP("INS")),2)),U)="D" S ABM("QU")=ABM("QU")_"14,"  ;abm*2.6*10 HEAT73780
+ ..I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")="D" S ABM("QU")=ABM("QU")_"14,"  ;abm*2.6*10 HEAT73780
  ..S ABM("QU")=ABM("QU")_"20,"
  .S ABM("QU")=$P(ABM("QU"),",13",1)_$P(ABM("QU"),",13",2)
  .F ABM("I")=1:1 S ABM=$P(ABM("QU"),",",ABM("I")) Q:ABM=""  S ABM("QU",+ABM)=$P(ABM,+ABM,2)

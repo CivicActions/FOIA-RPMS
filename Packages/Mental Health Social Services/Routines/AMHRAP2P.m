@@ -1,5 +1,5 @@
 AMHRAP2P ; IHS/CMI/LAB - print all visit report ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;4.0;IHS BEHAVIORAL HEALTH;**11**;JUN 02, 2010;Build 27
 PRINT ;
  D NOW^%DTC S Y=X D DD^%DT S AMHDT=Y
  S Y=AMHBD D DD^%DT S AMHBDD=Y S Y=AMHED D DD^%DT S AMHEDD=Y
@@ -11,8 +11,10 @@ PRINT ;
  I $Y>(IOSL-5) D HEAD G:$D(AMHQUIT) DONE
  W !?42,"------",?50,"------",?59,"-------",?70,"------",!
  ;W ?28,"Totals:",?40,$J(AMHTOT,8),?48,$J(AMHPTOT,8) S X=AMHTTOT,X=$J((X/60),6,1) W ?58,$J(X,8)
- W ?28,"Totals:",?40,$J(AMHTOT,8) S X=AMHTTOT,X=$J((X/60),6,1) W ?58,$J(X,8)
+ S T=$G(^XTMP("AMHRAP2",AMHJOB,AMHBTH,"TOTALUNIQUEPATS"))
+ W ?28,"Totals:",?40,$J(AMHTOT,8),?48,$J(T,8),"*" S X=AMHTTOT,X=$J((X/60),6,1) W ?58,$J(X,8)
  W ?68,$J(AMHNTOT,8)
+ W !!,"* represents total # of unique patients, the column will not add up."
 DONE ;
  D DONE^AMHLEIN,^AMHEKL
  K ^XTMP("AMHRAP2",AMHJOB,AMHBTH)

@@ -1,5 +1,5 @@
-APCLCP5P ; IHS/CMI/LAB - tally activity ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCP5P ; IHS/OHPRD/TMJ - tally activity ;  [ 02/06/02  11:13 AM ]
+ ;;3.0;IHS PCC REPORTS;**4,5,7,11**;FEB 05, 1997
  ;IHS/CMI/LAB - patch 4 file 200 fix
 START ;
  S APCL80S="-------------------------------------------------------------------------------"
@@ -51,12 +51,6 @@ HEAD1 ;
  S APCLLENG=$L($P(^APCLACTG(APCLACTG,0),U))
  W ?(80-(33+APCLLENG)/2),"CHART REVIEW REPORT FOR ",$P(^APCLACTG(APCLACTG,0),U)," STAFF",!
  W ?18,"VISIT DATES:  ",APCLBDD,"  TO  ",APCLEDD,!
- S X="" I '$D(APCLLOC) S X="All Locations"
- I $D(APCLLOC) S X="Locations: " S Y=0 F  S Y=$O(APCLLOC(Y)) Q:Y'=+Y  S X=X_$E($P(^DIC(4,Y,0),U),1,10)_"; "
- W $$CTR^APCLCP1P(X),!
- S X="" I '$D(APCLCLN) S X="All Clinics"
- I $D(APCLCLN) S X="Clinics: " S Y=0 F  S Y=$O(APCLCLN(Y)) Q:Y'=+Y  S X=X_$E($P(^DIC(40.7,Y,0),U),1,10)_"; "
- W $$CTR^APCLCP1P(X),!
  Q
 NOTE ;
  I $Y>(IOSL-6) D HEAD Q:$D(APCLQUIT)

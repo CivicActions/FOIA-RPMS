@@ -1,5 +1,5 @@
-%ZTM1 ;SEA/RDS-TaskMan: Manager, Part 3 (Validate Task) ;07/27/2005  18:13
- ;;8.0;KERNEL;**118,127,275,355**;JUL 10, 1995;Build 9
+%ZTM1 ;SEA/RDS-TaskMan: Manager, Part 3 (Validate Task) ;04 Jun 2003 2:54 pm
+ ;;8.0;KERNEL;**118,127,275**;JUL 10, 1995;
 MAIN ;
  ;SCHQ^%ZTM--examine task, determine device and destination, ^%ZTSK(ZTSK) lock at call.
  D LOOKUP D  D STORE
@@ -14,11 +14,11 @@ LOOKUP ;
  D TSKSTAT(2,"Inspected")
  S ZTREC=^%ZTSK(ZTSK,0)
  S ZTREC02="",ZTREC1=$G(^%ZTSK(ZTSK,.1)),ZTREC2=$G(^%ZTSK(ZTSK,.2))
- S ZTREC21="",ZTREC25=$G(^%ZTSK(ZTSK,.25)) ;,$P(ZTREC,U,6)=ZTDTH
- S ^%ZTSK(ZTSK,.02)="" ;Clear
+ S ZTREC25=$G(^%ZTSK(ZTSK,.25)) ;,$P(ZTREC,U,6)=ZTDTH
+ K ^%ZTSK(ZTSK,.02)
  Q
- ;
-ZIS ;MAIN--Determine Output Device
+ZIS ;
+ ;MAIN--Determine Output Device
  S ZTIO=$S($P(ZTREC2,U)]"":$P(ZTREC2,U),1:ZTST)
  I ZTIO="" S (IO,ZTREC2,ZTREC21,ZTREC25)="" G ZISX
  S $P(ZTREC2,U)=ZTIO,%ZIS="NQRST0",IOP=ZTIO,ZTIO(1)=$P(ZTREC2,U,5)
@@ -31,40 +31,40 @@ ZIS ;MAIN--Determine Output Device
  S:'$D(IOCPU) IOCPU=$P($G(^%ZIS(1,+$G(IOS),0)),U,9) ;need IOCPU
  S ZTREC21=$G(IOS)
 ZISX Q
- ;
-VOLUME ;determine destination volume set
+VOLUME ;
+ ;determine destination volume set
  S ZTDVOL(1)="",A=$P($G(IOCPU),":",2) ;device node
- S ZTNODE=$S($L(A):A,1:$P($P(ZTREC,U,14),":",2))
+ S ZTNODE=$S(A]"":A,1:$P($P(ZTREC,U,14),":",2))
  S A=$S(ZTIO="":"",1:$P($G(IOCPU),":")) ;device cpu
- S ZTDVOL=$S($L(A):A,1:$P($P(ZTREC,U,14),":")) ;Destination
+ S ZTDVOL=$S(A]"":A,1:$P($P(ZTREC,U,14),":")) ;Destination
  S ZTCVOL=$P(ZTREC,U,12),ZTCVT=$$VSTYP(ZTCVOL) ;Creation
  I ZTDVOL="" D
  . I ZTCVT="C" S ZTDVOL=$S(%ZTYPE="P":%ZTVOL,ZTCVOL]"":ZTCVOL,1:%ZTVOL),ZTDVOL(1)=1 Q
  . S ZTDVOL=$S(ZTCVOL]"":ZTCVOL,1:%ZTVOL) Q
  S ZTREC02=U_ZTDVOL_U_ZTNODE_U_ZTDVOL(1)
- ;
-V1 ;reject tasks with destination volume sets not in Volume Set file
+V1 ;
+ ;reject tasks with destination volume sets not in Volume Set file
  S ZT1=$O(^%ZIS(14.5,"B",ZTDVOL,""))
  I ZT1="" D REJCT("Task's volume set not listed in index.") Q
  S ZTS=$G(^%ZIS(14.5,ZT1,0))
  I ZTS="" D REJCT("Task's volume set not listed in file.") Q
- ;
-V2 ;lookup type of volume set, and reject tasks to F or O types
+V2 ;
+ ;lookup type of volume set, and reject tasks to F or O types
  S ZTYPE=$P(ZTS,U,10)
  I ZTYPE="F"!(ZTYPE="O") D REJCT("Task's volume set can't accept tasks.") Q
- ;
-V3 ;accept tasks with the current volume set as the destination
+V3 ;
+ ;accept tasks with the current volume set as the destination
  I ZTDVOL=%ZTVOL Q
- ;
-V4 ;reject tasks whose destination volume sets lack link access
+V4 ;
+ ;reject tasks whose destination volume sets lack link access
  I $P(ZTS,U,3)="N" D REJCT("Task's volume set has no link access.") Q
  Q
 VSTYP(VS) ;Get a VS's type
  Q:VS="" VS N %
  S %=$O(^%ZIS(14.5,"B",VS,0)),%=$G(^%ZIS(14.5,+%,0))
  Q $P(%,U,10)
- ;
-UCI ;MAIN--determine destination UCI
+UCI ;
+ ;MAIN--determine destination UCI
  S ZTUCI=$P($P(ZTREC,U,4),",")
  S ZTUCI=$S(ZTUCI]"":ZTUCI,1:$P(ZTREC,U,11))
  ;
@@ -98,7 +98,6 @@ U5 ;
  I ZT1]"" S ZTUCI=ZT1
  S $P(ZTREC02,U)=ZTUCI
  Q
- ;
 STORE ;Store Validated Data In Task Log, Quit If Needn't Do WAIT
  I %ZTREJCT S $P(ZTREC1,U,1,2)="B^"_$H ;Rejected
  I $D(^%ZTSK(ZTSK,0))[0 D TSKSTAT("I") S %ZTREJCT=1 Q

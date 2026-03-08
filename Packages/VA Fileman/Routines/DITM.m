@@ -1,5 +1,6 @@
-DITM ;SFISC/JCM(OHPRD)-FILE COMPARE AND MERGE DRIVER ;6/8/94  14:21
- ;;22.0;VA FileMan;;Mar 30, 1999
+DITM ;SFISC/JCM(OHPRD)-FILE COMPARE AND MERGE DRIVER ;6/8/94  14:21 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 START ;
  D ASK ; Asks file, from, to, merge ,etc.

@@ -1,0 +1,3 @@
+XMA5A ;(WASH ISC)/THM/CAP- * OBSOLETE * ;12/12/97  14:44
+ ;;7.1;MailMan;**31,36,50**;Jun 02, 1994
+ Q

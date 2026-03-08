@@ -1,10 +1,10 @@
-BMCRR19 ; IHS/PHXAO/TMJ - Weekly RRR Report for One Facility Only ;   
- ;;4.0;REFERRED CARE INFO SYSTEM;;JAN 09, 2006
+BMCRR19 ; IHS/PHXAO/TMJ - Weekly RRR Report for One Facility Only ;   [ 12/21/2004  2:56 PM ]
+ ;;3.0;REFERRED CARE INFO SYSTEM;**1**;DEC 20, 2004
  ;
  ;
  ;
  W !?10,"********  REVIEW LISTING BY DATE OF SERVICE  ********",!
- W !!,"This report will print a list of all Primary referrals that were initiated in a",!,"date range entered by the user.  This report can be used by the"
+ W !!,"This report will print a list of all referrals that were initiated in a date ",!,"range entered by the user.  This report can be used by the"
  W !,"CHS or Managed Care Committee to review the referrals.",!
  W !,"This report allows User to Select and report on an INDIVIDUAL FACILITY Only!!",!
  W !,"This report also allows the User to EXCLUDE a particular Local Category ",!
@@ -55,7 +55,7 @@ BROWSE ;
  S XBRP="VIEWR^XBLM(""^BMCRR19P"")"
  S XBRC="^BMCRR191",XBRX="XIT^BMCRR19",XBIOP=0 D ^XBDBQUE
  Q
-XIT ;EP - CALLED FROM BMCRR19
+XIT ;EP - CALLED FROM BMCRR19 ; IHS/PHX/TMJ 11/25/98 Kill off Additional Local variables
  K BMCBD,BMCBT,BMCBTH,BMCCOL,BMCD,BMCDA,BMCDATE,BMCED,BMCET,BMCFILE,BMCG,BMCHRN,BMCIOM,BMCJOB,BMCNODE,BMCODAT,BMCOPT,BMCP,BMCPG,BMCPN,BMCQUIT,BMCRCNT,BMCREF,BMCRREC,BMCSD,BMCWP,BMCX,BMCC
  K BMCLOCC,BMCLOCI,BMCLOCP,BMCLOCPP,BMCLCAT
  D KILL^AUPNPAT

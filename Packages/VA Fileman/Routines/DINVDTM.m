@@ -1,5 +1,6 @@
-%ZOSV ;SFISC/AC,LL/DFH,sfisc/fyb ;2:33 PM  1 Oct 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+%ZOSV ;SFISC/AC,LL/DFH,sfisc/fyb-View commands and special functions ;03:15 PM  21 Dec 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ; ** For DataTree **
  ;
@@ -20,8 +21,8 @@ BAUD ; Baud rate of device - used by BAUD field of the Device File
  ; Internal entry of device is D0
  ;ZETRAP BAUDERR
  ;S X=$zdevspeed($P(^%ZIS(1,D0,0),"^",2)) Q
+BAUDERR ;S X="" Q
  Q
-BAUDERR S X="" Q
  ;
 LGR() Q $ZR ;Last global reference
  ;
@@ -37,7 +38,9 @@ DEVOK ;X=Device $I, Y=0 if available, Y=999 if device is busy
  I X=$I S Y=$J Q
  I X<20,(X>9) S Y=0 D NULLDEV O X:("W":NULLDEV):0 C:$T X S:'$T Y=999 Q
  ZETRAP NODEV
- O X::0 I '$T S Y=999 Q
+ L:$D(%ZISLOCK) +@%ZISLOCK:60
+ O X::0 I '$T S Y=999 L:$D(%ZISLOCK) -@%ZISLOCK Q
+ L:$D(%ZISLOCK) -@%ZISLOCK
  C X S Y=0
  Q
 RES S Y=0,%ZISD0=$O(^%ZISL(3.54,"B",X,0))
@@ -82,9 +85,9 @@ PARSIZ ;
  S X=3 Q
  ;
 PRIINQ() ; Priority Inquire
- N X,Y S X=$J ;D JSTAT^%ZOSV1
- ;I ZVER S Y=$V(0,$V(1,(X-1*2)+100,-2)*16+5,-1)-128\2 S:Y Y=10-Y
- S Y=$$jstat^%mjob(X),Y=$P(Y,"|",7) S:Y Y=10-Y
+ N X,Y S X=$J D JSTAT^%ZOSV1
+ I ZVER S Y=$V(0,$V(1,(X-1*2)+100,-2)*16+5,-1)-128\2 S:Y Y=10-Y
+ E  S Y=$$jstat^%mjob(X),Y=$P(Y,"|",7) S:Y Y=10-Y
  Q Y
  ;
 PRIORITY ; Set priority of job
@@ -96,7 +99,8 @@ PRIORITY ; Set priority of job
 PRGMODE ;
  W ! S ZTPAC=$S($D(^VA(200,+DUZ,.1))#10:$P(^(.1),"^",5),1:""),XUVOL=^%ZOSF("VOL")
  I ZTPAC]"" X ^%ZOSF("EOFF") R !,"PAC: ",X:60 S X=$ZCONVERT(X,"U") X ^%ZOSF("EON") I X'=ZTPAC W "??",*7 Q
- S XMB="XUPROGMODE",XMB(1)=DUZ,XMB(2)=$I D ^XMB:$L($T(^XMB)) D BYE^XUSCLEAN K ZTPAC,X,XMB
+ I $D(^XMB(3.7,0)),$D(DUZ)#2 S XMB="XUPROGMODE",XMB(1)=DUZ,XMB(2)=$I D ^XMB:$D(^XMB(3.7,0)) K ^XMB(3.7,DUZ,100,$I),^XUSEC(0,"CUR",DUZ,+^XUTL("XQ",$J,0))
+ K ZTPAC,X,XMB
  X ^%ZOSF("UCI") S XUCI=Y,XQZ="PRGM^ZUA[MGR]",XUSLNT=1 D DO^%XUCI
  U:$I>99 $I:IXXLATE=2 D ^%mshell
  ;
@@ -115,10 +119,6 @@ BADUCI ; set flag and return to old namespace
  E  D ns^%m(CURUCI,1)
  Q Y
  ;
-VERSION(X) ;return OS version, X=1 - return OS
- Q $S($G(X):$P($ZV,"/"),1:$P($ZV,"/",2))
- ;
-SETNM(X) ;Set name, Fall into SETENV
 SETENV ; Set environment
  S XUENV=X_"^"
  I $P($ZVER,"/",2)>4.2 V 2:374:$C($L(X))_X:$J#256 Q

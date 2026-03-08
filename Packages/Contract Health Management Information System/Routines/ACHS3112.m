@@ -155,7 +155,7 @@ GREET ;;To add to mail message.
  ;;Do not respond to this message.
  ;;  
  ;;Questions about this patch may be directed to
- ;;the Help Desk,
+ ;;the ITSC Support Center, at 505-248-4371,
  ;;refer to patch "ACHS*3.1*12".
  ;;  
  ;;###;NOTE: This line end of text.

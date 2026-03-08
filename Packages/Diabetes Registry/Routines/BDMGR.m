@@ -1,5 +1,5 @@
 BDMGR ; IHS/CMI/LAB - BDM DMS GUI Reports ; [ 01/23/2009 4:11 PM ]
- ;;2.0;BDM DIABETES MANAGEMENT SYSTEM;**1,8**;JUN 14, 2007;Build 53
+ ;;2.0;BDM DIABETES MANAGEMENT SYSTEM;**1,8,17**;JUN 14, 2007;Build 138
  ;
  ;
  ;cmi/anch/maw 1/25/2005 added line in FUR for uppercase dx type
@@ -340,7 +340,7 @@ FUPROT(BDMRET) ;-- return the FU Protocols
  Q
  ;
 FUR(RETVAL,BDMSTR) ;-- print the followup report
- S X="MERR^BDMGU",@^%ZOSF("TRAP") ; m error trap
+ S X="MERR^BDMGU"  ;,@^%ZOSF("TRAP") ; m error trap
  N P,R,BDMRTYP,BDMRS,BDMST,BDMPS,BDMDD,BDMPA,BDMPABD,BDMPAED
  N BDMPBY,BDMPBYV,BDMRL,BDMLP,BDM,BDMDEMO
  S P="|",R="~"
@@ -363,8 +363,9 @@ FUR(RETVAL,BDMSTR) ;-- print the followup report
  S BDMPAED=$P(BDMSTR,P,8)
  S BDMEND=BDMPAED
  S BDMPBY=$P(BDMSTR,P,9)
- I $P(BDMPBY,"-",2)="Community" S BDMFL=9999999.05,BDMK="COMMUNITY"
- I $P(BDMPBY,"-",3)="Provider" S BDMFL=200,BDMK="PROVIDER"
+ S BDMFL=""  ;20230104 p17 added for where followed
+ I $P(BDMPBY,"-")=1 S BDMFL=9999999.05,BDMK="COMMUNITY"
+ I $P(BDMPBY,"-")=2 S BDMFL=200,BDMK="PROVIDER"
  S BDMPBYV=$P(BDMSTR,P,10)
  I BDMPBYV="All" S BDMPBYV=""
  F J=1:1 D  Q:$P(BDMPBYV,R,J)=""
@@ -383,7 +384,9 @@ FUR(RETVAL,BDMSTR) ;-- print the followup report
  . D ALL^BDMVRL42
  . S BDMY=Y
  . D PARSE^BDMVRL42
- I BDMRTYP'="All" S BDMY=BDMRTYP D PARSE^BDMVRL42
+ I BDMRTYP'="All" D
+ . S BDMY=BDMRTYP
+ . D PARSE^BDMVRL42
  ;N I
  ;F I=1:1 D  Q:$P(BDMRTYP,R,I)=""
  ;. ;Q:$P(BDMRTYP,R,I)=""

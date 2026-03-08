@@ -1,6 +1,10 @@
 ABMRSTI2 ; IHS/SD/SDR - Split Claim Billing (part 2); 
- ;;2.6;IHS 3P BILLING SYSTEM;**22**;NOV 12, 2009;Build 418
+ ;;2.6;IHS 3P BILLING SYSTEM;**22,32,35**;NOV 12, 2009;Build 659
  ;IHS/SD/SDR 2.6*22 HEAT335246 - New routine
+ ;IHS/SD/SDR 2.6*32 CR9764 Killed ^TMP("ABM-STIN",$J,"NEWCLMLST") if claim generator and after claims are split and cleaned up by page;
+ ;  was leaving stuff hanging around, causing claim data to get deleted when it shouldn't.  Also updated 13 mult insurer entry if it
+ ;  was COMPLETE to an ACTIVE status on new claims.
+ ;IHS/SD/SDR 2.6*35 ADO60700 Added counter for number of claims split
  ;
  Q
 SPLITCLM ;EP
@@ -51,6 +55,7 @@ SPLITCLM ;EP
  ;
  I +$G(ABMDLT)=1 D DEL  ;only delete if they asked to
  D REINDEX(ABMP("CDFN"))  ;reindex original claim
+ I $G(XQY0)'["ABMD TM INS SPLIT CLM" K ^TMP("ABM-STIN",$J,"NEWCLMLST")  ;this is used for the SPIN,STIN options, but messes up the claim generator  ;abm*2.6*32 IHS/SD/SDR CR9764
  ;I $G(ABMY("SPLIT"))'="A" D
  ;.W !,"Split claim complete."
  Q
@@ -63,6 +68,7 @@ NEWENTRY ;EP
  S DIC="^ABMDCLM(DUZ(2),"
  S DIC(0)="L"
  K DD,DO D FILE^DICN Q:+Y<0  S ABMC2=+Y
+ S ABMVCC=$S(+$G(ABMVCC)'=0:+$G(ABMVCC)_"/",1:"")_+$G(ABMC2)  ;abm*2.6*35 IHS/SD/SDR ADO60700
  S ABMCNT=+$G(ABMCNT)+1
  S ^TMP("ABM-STIN",$J,"NEWCLMLST",ABMP("CDFN"),ABMC2,ABMPG)=ABMCNT ;keep list of new claims sorted by old claim number
  S ABMC=+$G(ABMC)+1
@@ -76,6 +82,20 @@ NEWENTRY ;EP
  S DR=DR_";.07////"_$S(ABMPG="8D":997,ABMPG="8E":996,ABMPG="8F":995,1:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,7))  ;visit type
  S DR=DR_";.023////"_DUZ_";.024///"_ABMY("AUTODT")  ;who split and when
  D ^DIE
+ ;
+ ;start new abm*2.6*32 IHS/SD/SDR CR9764
+ ;Make sure 13 mult insurer status is ACTIVE for active insurer
+ S ABMAINS=$P($G(^ABMDCLM(DUZ(2),ABMC2,0)),U,8)
+ S ABM("AI")=0
+ F  S ABM("AI")=$O(^ABMDCLM(DUZ(2),ABMC2,13,ABM("AI"))) Q:'ABM("AI")  D
+ .I $P($G(^ABMDCLM(DUZ(2),ABMC2,13,ABM("AI"),0)),U)'=ABMAINS Q  ;we only want to change the active insurer
+ .S DA(1)=ABMC2
+ .S DA=ABM("AI")
+ .S DIE="^ABMDCLM(DUZ(2),"_DA(1)_",13,"
+ .S DR=".03////I"
+ .D ^DIE
+ ;end new abm*2.6*32 IHS/SD/SDR CR9764
+ ;
  ;label original claim
  S DIE="^ABMDCLM(DUZ(2),"
  S DA=ABMP("CDFN")

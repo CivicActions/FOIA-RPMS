@@ -1,5 +1,6 @@
-DINZVXD ;SFISC/MVB-SETS %ZOSF FOR VAX DSM(V6) ;1:10 PM  30 Sep 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINZVXD ;SFISC/MVB-SETS %ZOSF FOR VAX DSM V6 ;03:21 PM  21 Dec 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  K ^%ZOSF("MASTER"),^%ZOSF("SIGNOFF")
  F I=1:2 S Z=$P($T(Z+I),";;",2) Q:Z=""  S X=$P($T(Z+1+I),";;",2,99),^%ZOSF(Z)=X
@@ -60,7 +61,7 @@ Z ;
  ;;PRIINQ
  ;;S Y=$$PRIINQ^%ZOSV()
  ;;PRIORITY
- ;;Q  ;G PRIORITY^%ZOSV
+ ;;G PRIORITY^%ZOSV
  ;;PROGMODE
  ;;S Y=$$PROGMODE^%ZOSV()
  ;;RD
@@ -70,7 +71,7 @@ Z ;
  ;;RM
  ;;U $I:WIDTH=$S(X<256:X,1:0)
  ;;RSEL
- ;;K ^UTILITY($J) D ^%RSEL M ^UTILITY($J)=%UTILITY K %UTILITY
+ ;;K ^UTILITY($J) D ^%RSEL S X="" X "F %=0:1 S X=$O(%UTILITY(X)) Q:X=""""  S ^UTILITY($J,X)=""""" K %UTILITY
  ;;RSUM
  ;;ZL @X S Y=0 F %=1,3:1 S %1=$T(+%),%3=$F(%1," ") Q:'%3  S %3=$S($E(%1,%3)'=";":$L(%1),$E(%1,%3+1)=";":$L(%1),1:%3-2) F %2=1:1:%3 S Y=$A(%1,%2)*%2+Y
  ;;SS

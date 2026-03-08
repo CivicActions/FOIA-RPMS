@@ -1,5 +1,6 @@
-DIAXM2 ;SFISC/DCM-PROCESS MAPPING INFORMATION (CONT) ;3/11/93  2:59 PM
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIAXM2 ;SFISC/DCM-PROCESS MAPPING INFORMATION (CONT) ;3/11/93  2:59 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 P K DIC
  ;

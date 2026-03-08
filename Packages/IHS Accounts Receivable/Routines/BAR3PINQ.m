@@ -1,17 +1,14 @@
 BAR3PINQ ; IHS/SD/LSL - Inquire into 3P Bill file from A/R Bill file DEC 4,1996 ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**16**;OCT 22,2008
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**16,34**;OCT 26,2005;Build 139
  ;
- ; IHS/SD/LSL - 11/25/02 - V1.7 - NHA-0601-180049
- ;      Modified to search for bill in 3PB correctly (majority of the
- ;      routine has changed)
+ ;IHS/SD/LSL 11/25/02 V1.7 NHA-0601-180049 Modified to search for bill in 3PB correctly (majority of the routine has changed)
  ;
- ; M2 TMM 01/12/2010  HEAT 8727, Resolve error when 3P Claim does not exist.
- ;                    This scenario occurs when POS incorrectly creates claims 
- ;                    in ^ABMDBILL under individual site rather than the parent 
- ;                    facility and there are no corresponding claims in ^ABMDCLM.
- ;                         $ZE= <UNDEFINED>EN+7^DIC *DINDEX("#")
- ;                         . S:DINDEX("#")>1 DIC(0)=$TR(DIC(0),"M") Q
- ; ********************************************************************
+ ;M2 TMM 01/12/2010 HEAT 8727 Resolve error when 3P Claim does not exist.  This scenario occurs when POS incorrectly creates claims 
+ ;    in ^ABMDBILL under individual site rather than the parent facility and there are no corresponding claims in ^ABMDCLM.
+ ;    $ZE= <UNDEFINED>EN+7^DIC *DINDEX("#")
+ ;    .S:DINDEX("#")>1 DIC(0)=$TR(DIC(0),"M") Q
+ ;IHS/SD/SDR 1.8*34 ADO80817 Fixed so 3P CLAIM STATUS field will populate; was using 3P Bill IEN as 3P Claim IEN
+ ;*********************************************************
  ;
  ;Computed field routine utilization
  ; $$VAL^BAR3PINQ(A/R IEN,"B"-bill "C"-claim,field number)
@@ -26,19 +23,20 @@ VAL(BARDA,BARFILE,BARFLD) ;EP - Return field from remote file
  ;changes for supportability 
  I BARFILE'="B" G C
  ;
- ; -------------------------------
+ ;-------------------------------
 B ;EP - process "B"ill
  S BARDUZ2=DUZ(2)
  S DUZ(2)=$P(BAR3PBIL,",")
  S BARX=$$GET1^DIQ(9002274.4,$P(BAR3PBIL,",",2),BARFLD)
  S DUZ(2)=BARDUZ2
  G QUIT
- ; *********************************************************************
+ ;****************************************************
  ;
 C ;EP - process "C"laim information
  N BARTMP1,BARTMP2                              ;M2*ADD*TMM
  S BARTMP1=$P(BAR3PBIL,",",1)       ;3PB DUZ2   ;M2*ADD*TMM
- S BARTMP2=$P(BAR3PBIL,",",2)       ;3PB IEN    ;M2*ADD*TMM
+ ;S BARTMP2=$P(BAR3PBIL,",",2)      ;3PB IEN    ;M2*ADD*TMM  ;bar*1.8*34 IHS/SD/SDR ADO80817
+ S BARTMP2=+BARBL(.01)  ;3PB Claim IEN  ;bar*1.8*34 IHS/SD/SDR ADO80817
  I '$D(^ABMDCLM(BARTMP1,BARTMP2)) G QUIT        ;M2*ADD*TMM
  S BARDUZ2=DUZ(2)
  S DUZ(2)=$P(BAR3PBIL,",")

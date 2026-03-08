@@ -1,5 +1,5 @@
 BSTSUTIL ;GDIT/HS/BEE-Standard Terminology Utility Program ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;**1**;Dec 01, 2016;Build 36
+ ;;2.0;IHS STANDARD TERMINOLOGY;**1,3**;Dec 01, 2016;Build 46
  ;
  Q
  ;
@@ -441,7 +441,7 @@ CDJOB(NMIEN,TYPE,JTIME) ;EP - Kick off BSTS Background Process
  . S ZTRTN="A9CODE^BSTSVRSC",ZTDESC="BSTS - Refresh ICD-9 Autocodeable Codeset"
  ;
  S ZTIO=""
- I +$G(JTIME) S ZTDTH=$$JBTIME^BSTSVOFL()
+ I +$G(JTIME) S ZTDTH=$$JBTIME^BSTSUTL0()
  E  S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,2)
  D ^%ZTLOAD
  ;

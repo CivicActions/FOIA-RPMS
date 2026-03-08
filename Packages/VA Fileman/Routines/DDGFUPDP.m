@@ -1,5 +1,6 @@
-DDGFUPDP ;SFISC/MKO-UPDATE PAGE COORDINATES ;01:37 PM  19 Jan 1994
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDGFUPDP ;SFISC/MKO-UPDATE PAGE COORDINATES ;01:37 PM  19 Jan 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 PAGE(P1,P2,P3,P4,T,A) ;

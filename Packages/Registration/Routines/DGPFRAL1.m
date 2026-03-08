@@ -1,5 +1,5 @@
 DGPFRAL1 ;ALB/RBS - PRF ACTION NOT LINKED REPORT CONT. ; 10/12/05 2:48pm
- ;;5.3;Registration;**554,650,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**554,650,1015,1022**;MAY 28, 2004;Build 18
  ;
  ;This routine will be used to display or print all of the patient
  ;assignment history records that are not linked to a progress note.
@@ -177,11 +177,16 @@ PRINT(DGSORT,DGLIST) ;output report
  ... F  S DGDFN=$O(@DGLIST@(DGCAT,DGFG,DGNAM,DGDFN)) Q:DGDFN=""  D  Q:DGQ
  .... F  S DGLN=$O(@DGLIST@(DGCAT,DGFG,DGNAM,DGDFN,DGLN)) Q:DGLN=""  D  Q:DGQ
  ..... S DGSTR=$G(@DGLIST@(DGCAT,DGFG,DGNAM,DGDFN,DGLN))
+ ..... ;202307 97197 maw p1022 PPN
+ ..... N PRF
+ ..... S PRF=$$GETPREF^AUPNSOGI(DGDFN,"E",1)
  ..... W !
  ..... I $Y>(IOSL-4) D PAUSE(.DGQ) Q:DGQ  D HEAD S DGODFN="" W !
  ..... ; - write name and ssn once
  ..... I DGODFN'=DGDFN S DGODFN=DGDFN,DGOFG=DGFG D
- ...... W $E(DGNAM,1,18),?20,$P(DGSTR,U),?32,$E($P(DGSTR,U,2),1,17)
+ ...... W $G(PRF)
+ ...... W !,?20,$TR($P(DGSTR,U),"-",""),?32,$E($P(DGSTR,U,2),1,17)
+ ...... ;W $E(DGNAM,1,18),?20,$P(DGSTR,U),?32,$E($P(DGSTR,U,2),1,17)
  ..... ; - write new flag name
  ..... I DGOFG'=DGFG S DGOFG=DGFG W ?32,$E($P(DGSTR,U,2),1,17)
  ..... ; - write action detail
@@ -236,7 +241,8 @@ HEAD ;Print/Display page header
  Q:DGGRAND
  ;
  W !!,"CATEGORY: "_$S($G(DGCAT)=1:"Category I (National)",$G(DGCAT)=2:"Category II (Local)",1:"Both (Category I & II)")
- W !!,"PATIENT",?20,"SSN",?32,"FLAG NAME",?51,"ACTION",?69,"ACTION DATE"
+ W !!,"PATIENT",?20,"CHART #",?32,"FLAG NAME",?51,"ACTION",?69,"ACTION DATE"
+ ;W !!,"PATIENT",?20,"SSN",?32,"FLAG NAME",?51,"ACTION",?69,"ACTION DATE"
  W !,"------------------",?20,"----------",?32,"-----------------",?51,"----------------",?69,"-----------"
  Q
  ;

@@ -1,5 +1,5 @@
-BIUTL1 ;IHS/CMI/MWR - UTIL: PATIENT DEMOGRAPHICS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**2**;MAY 15,2012
+BIUTL1 ;IHS/CMI/MWR - UTIL: PATIENT DEMOGRAPHICS; MAY 10, 2010 [ 01/31/2025  8:16 PM ]
+ ;;8.5;IMMUNIZATION;**2,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  RETRIEVE PATIENTS FOR DUE LISTS & LETTERS.
  ;;  PATCH 2: Add YY option to DOBF.  DOBF
@@ -66,9 +66,9 @@ DOBF(DFN,BIDT,BINOA,BISL,BIADT,BIYY) ;EP
  Q X
  ;**********
  ;
- ;
  ;----------
 AGE(DFN,BIZ,BIDT) ;EP
+ ;V8.5 PATCH 29 - FID-107546 Tdap age check
  ;---> Return Patient's Age.
  ;---> Parameters:
  ;     1 - DFN  (req) IEN in PATIENT File.
@@ -76,61 +76,51 @@ AGE(DFN,BIZ,BIDT) ;EP
  ;                               2 will be assumed if not passed.
  ;     3 - BIDT (opt) Date on which Age should be calculated.
  ;
- N BIDOB,X,X1,X2  S:$G(BIZ)="" BIZ=2
- Q:'$G(DFN) "NO PATIENT"
- S BIDOB=$$DOB(DFN)
- Q:'BIDOB "Unknown"
- I '$G(BIDT)&($$DECEASED(DFN)) D  Q X
- .S X="DECEASED: "_$$TXDT1^BIUTL5(+^DPT(DFN,.35))
+ N X,Y,X1,X2,AGE
  S:'$G(DT) DT=$$DT^XLFDT
  S:'$G(BIDT) BIDT=DT
- Q:BIDT<BIDOB "NOT BORN"
+ S AGE=""
+ S:'$G(DFN) AGE="NO PATIENT"
+ S BIDOB=$$DOB(DFN)
+ S:'BIDOB AGE="Unknown"
+ I $$DECEASED(DFN) S AGE="DECEASED: "_$$TXDT1^BIUTL5(+^DPT(DFN,.35))
+ S:BIDT<BIDOB AGE="NOT BORN"
  ;
- ;---> Age in Years.
- N BIAGEY,BIAGEM,BID1,BID2,BIM1,BIM2,BIY1,BIY2
- S BIM1=$E(BIDOB,4,7),BIM2=$E(BIDT,4,7)
- S BIY1=$E(BIDOB,1,3),BIY2=$E(BIDT,1,3)
- S BIAGEY=BIY2-BIY1 S:BIM2<BIM1 BIAGEY=BIAGEY-1
- S:BIAGEY<1 BIAGEY="<1"
- Q:BIZ=1 BIAGEY
- ;
- ;---> Age in Months.
- S BID1=$E(BIM1,3,4),BIM1=$E(BIM1,1,2)
- S BID2=$E(BIM2,3,4),BIM2=$E(BIM2,1,2)
- S BIAGEM=12*BIAGEY
- I BIM2=BIM1&(BID2<BID1) S BIAGEM=BIAGEM+12
- I BIM2>BIM1 S BIAGEM=BIAGEM+BIM2-BIM1
- I BIM2<BIM1 S BIAGEM=BIAGEM+BIM2+(12-BIM1)
- S:BID2<BID1 BIAGEM=BIAGEM-1
- Q:BIZ=2 BIAGEM
- ;
- ;---> Age in Days.
- S X1=BIDT,X2=BIDOB
- D ^%DTC
- Q X
- ;
+ S X1=BIDT
+ S X2=BIDOB
+ D D^%DTC
+ S D=$S(X>209:30.4,1:30)
+ S M=X\D
+ S:M<1 M="<1"
+ S D=$S(X>2190:365.25,1:365)
+ S Y=X\D
+ S:Y<1 Y="<1"
+ S:AGE="" AGE=Y_U_M_U_X
+ Q AGE
  ;
  ;----------
 AGEF(DFN,BIDT) ;EP
+ ;V8.5 PATCH 29 - FID-107546 Tdap age check
  ;---> Age formatted "35 Months" or "23 Years"
  ;---> Parameters:
  ;     1 - DFN  (req) Patient's IEN (DFN).
  ;     2 - BIDT (opt) Date on which Age should be calculated.
  ;
- N Y
- S Y=$$AGE(DFN,2,$G(BIDT))
- Q:Y["DECEASED" Y
- Q:Y["NOT BORN" Y
+ N AGE,Y
+ S Y=""
+ S:'$G(BIDT) BIDT=DT
+ S AGE=$$AGE(DFN,1,BIDT)
+ S:$E(AGE)?1U Y=AGE
  ;
  ;---> If over 60 months, return years.
- I Y>60 S Y=$$AGE(DFN,1,$G(BIDT)) Q Y_$S(Y=1:"year",1:" yrs")
+ I $P(AGE,U,2)>60 S Y=+AGE_$S(Y=1:" year",1:" yrs")
  ;
  ;---> If under 1 month return days.
- I Y<1 S Y=$$AGE(DFN,3,$G(BIDT)) Q Y_$S(Y=1:" day",1:" days")
+ I $E(AGE)'?1U,$P(AGE,U,2)<1 S Y=+$P(AGE,U,3)_$S(Y=1:" day",1:" days")
  ;
  ;---> Return months
- Q Y_$S(Y=1:" mth",1:" mths")
- ;
+ I $E(AGE)'?1U,$P(AGE,U,2)<61 S Y=+$P(AGE,U,2)_$S(Y=1:" mth",1:" mths")
+ Q Y
  ;
  ;----------
 DECEASED(DFN,BIDT) ;EP
@@ -144,7 +134,6 @@ DECEASED(DFN,BIDT) ;EP
  Q:'X 0
  Q:'$G(BIDT) 1
  Q X
- ;
  ;
  ;----------
 SEX(DFN,PRON) ;EP
@@ -162,7 +151,6 @@ SEX(DFN,PRON) ;EP
  I PRON=3 Q $S(X="F":"her",1:"his")
  Q X
  ;
- ;
  ;----------
 SEXW(DFN) ;EP
  ;---> Return Patient sex: "Female"/"Male".
@@ -172,7 +160,6 @@ SEXW(DFN) ;EP
  Q:$$SEX(DFN)="M" "Male"
  Q:$$SEX(DFN)="F" "Female"
  Q "Unknown"
- ;
  ;
  ;----------
 ACTIVE(DFN) ;PEP - Return Patient's Active Status in Immunization Package.
@@ -189,7 +176,6 @@ ACTIVE(DFN) ;PEP - Return Patient's Active Status in Immunization Package.
  Q:X "Inactive"
  Q:X]"" X
  Q "Active"
- ;
  ;
  ;----------
 INACT(DFN,TEXT) ;PEP - Return date this patient became Inactive in Immunization.
@@ -211,7 +197,6 @@ INACT(DFN,TEXT) ;PEP - Return date this patient became Inactive in Immunization.
  Q:'$G(TEXT) X
  Q $$TXDT1^BIUTL5(X)
  ;
- ;
  ;----------
 INACTRE(DFN,BICODE) ;EP
  ;---> Return Reason for Inactive.
@@ -227,7 +212,6 @@ INACTRE(DFN,BICODE) ;EP
  S:Z="" Z="Not Recorded"
  Q Z
  ;
- ;
  ;----------
 INACTUSR(DFN,Z) ;EP
  ;---> Return User who made this Patient Inactive.
@@ -239,7 +223,6 @@ INACTUSR(DFN,Z) ;EP
  N X S X=$P($G(^BIP(DFN,0)),U,23)
  Q:$G(Z) X
  Q $$PERSON(X)
- ;
  ;
  ;----------
 INACTREG(DFN,DUZ2) ;EP
@@ -261,7 +244,6 @@ INACTREG(DFN,DUZ2) ;EP
  ;
  Q 0
  ;
- ;
  ;----------
 ENTERED(DFN,BIA,BIT) ;EP
  ;---> Return date this patient was entered.
@@ -280,7 +262,6 @@ ENTERED(DFN,BIA,BIT) ;EP
  Q:'$G(BIT) X
  Q $$TXDT1^BIUTL5(X)
  ;
- ;
  ;----------
 MOVEDLOC(DFN) ;EP
  ;---> Return Location where patient moved is receiving treatment elsewhere.
@@ -289,7 +270,6 @@ MOVEDLOC(DFN) ;EP
  ;
  Q:'$G(DFN) ""
  Q $P($G(^BIP(DFN,0)),U,12)
- ;
  ;
  ;----------
 LASTLET(DFN,TEXT) ;EP
@@ -306,16 +286,15 @@ LASTLET(DFN,TEXT) ;EP
  Q:'$G(TEXT) X
  Q $$TXDT1^BIUTL5(X)
  ;
- ;
  ;----------
 NAMAGE(DFN) ;EP
+ ;V8.5 PATCH 29 - FID-107546 Tdap age check
  ;---> Return Patient Name concatenated with age.
  ;---> Parameters:
  ;     1 - DFN  (req) Patient's IEN (DFN).
  ;
  Q:'$G(DFN) "NO PATIENT"
- Q $$NAME(DFN)_" ("_$$AGE(DFN)_"y/o)"
- ;
+ Q $$NAME(DFN)_" ("_$P($$AGE(DFN),U,2)_"y/o)"
  ;
  ;----------
 SSN(DFN) ;EP
@@ -328,7 +307,6 @@ SSN(DFN) ;EP
  S X=$P(^DPT(DFN,0),U,9)
  Q:X']"" "Unknown"
  Q X
- ;
  ;
  ;----------
 HRCN(DFN,DUZ2,BIX) ;EP
@@ -354,7 +332,6 @@ HRCN(DFN,DUZ2,BIX) ;EP
  S Y=$TR("12-34-56",123456,Y)
  Q Y
  ;
- ;
  ;----------
 DASH(BIDUZ2) ;EP
  ;---> Return 1 if Site Parameter says return Chart#s with dashes.
@@ -362,7 +339,6 @@ DASH(BIDUZ2) ;EP
  ;     1 - BIDUZ2 (req) User's DUZ(2)
  ;
  Q +$P($G(^BISITE(+$G(BIDUZ2),0)),U,12)
- ;
  ;
  ;----------
 HPHONE(DFN) ;EP
@@ -393,7 +369,6 @@ STREET(DFN,Z) ;EP
  Q:$P(^DPT(DFN,.11),U,X)="" $S(X=1:"Unknown",1:"")
  Q $P(^DPT(DFN,.11),U,X)
  ;
- ;
  ;----------
 CITY(DFN) ;EP
  ;---> Return patient's city.
@@ -404,7 +379,6 @@ CITY(DFN) ;EP
  Q:'$D(^DPT(DFN,.11)) "Unknown"
  Q:$P(^DPT(DFN,.11),U,4)="" "Unknown"
  Q $P(^DPT(DFN,.11),U,4)
- ;
  ;
  ;----------
 STATE(DFN) ;EP
@@ -417,7 +391,6 @@ STATE(DFN) ;EP
  Q:$P(^DPT(DFN,.11),U,5)="" "No State"
  Q $P(^DIC(5,$P(^DPT(DFN,.11),U,5),0),U,2)
  ;
- ;
  ;----------
 ZIP(DFN) ;EP
  ;---> Return patient's zipcode.
@@ -429,7 +402,6 @@ ZIP(DFN) ;EP
  Q:$P(^DPT(DFN,.11),U,6)="" "No Zip"
  Q $P(^DPT(DFN,.11),U,6)
  ;
- ;
  ;----------
 CTYSTZ(DFN) ;EP
  ;---> Return patient's city, state zip.
@@ -438,7 +410,6 @@ CTYSTZ(DFN) ;EP
  ;
  Q:'$G(DFN) "No Patient"
  Q $$CITY(DFN)_", "_$$STATE(DFN)_"  "_$$ZIP(DFN)
- ;
  ;
  ;----------
 CMGR(DFN,TEXT,ORDER) ;EP
@@ -454,7 +425,6 @@ CMGR(DFN,TEXT,ORDER) ;EP
  S Y=$P(^BIP(DFN,0),U,10)
  Q:'$G(TEXT) Y
  Q $$PERSON(Y,$G(ORDER))
- ;
  ;
  ;----------
 DPRV(DFN,TEXT,ORDER) ;EP
@@ -473,7 +443,6 @@ DPRV(DFN,TEXT,ORDER) ;EP
  Q:'$G(TEXT) Z
  Q $$PERSON(Z,$G(ORDER))
  ;
- ;
  ;----------
 PERSON(X,ORDER) ;EP
  ;---> Return person's name from File #200.
@@ -486,7 +455,6 @@ PERSON(X,ORDER) ;EP
  N Y S Y=$P(^VA(200,X,0),U)
  Q:'$G(ORDER) Y
  Q $$FL(Y)
- ;
  ;
  ;----------
 PARENT(DFN,BIX) ;EP
@@ -506,7 +474,6 @@ PARENT(DFN,BIX) ;EP
  Q:Y="" "Parent/Guardian of"
  Q Y_", for"
  ;
- ;
  ;----------
 INELIG(BIDFN) ;EP
  ;---> Return 1 if patient is Ineligible in RPMS Patient Registration.
@@ -517,7 +484,6 @@ INELIG(BIDFN) ;EP
  Q:$P($G(^AUPNPAT(BIDFN,11)),"^",12)="I" 1
  Q 0
  ;
- ;
  ;----------
 CONSENT(BIDFN) ;EP
  ;---> Return 1 if patient or guardian consented to participation in the state
@@ -527,3 +493,47 @@ CONSENT(BIDFN) ;EP
  ;
  Q:'$G(BIDFN) ""
  Q $P($G(^BIP(BIDFN,0)),"^",24)
+ ;=====
+ ;
+PTS2CHK ;EP;FIND PATIENTS TO CHECK
+ K ^BITMP("PTS2CHK")
+ N AGE,AGES,AGEF,NAM,DOB,P2CA,P2CP,CNT,QUIT,DFN
+ S QUIT=0
+ F  D P2C Q:QUIT
+ Q
+ ;=====
+ ;
+P2C ;
+ W @IOF
+ W !?10,"Patients Selected:"
+ W !?10,"Age",?15,"Patient",?42,"DOB",?52,"DFN"
+ W !?10,"---",?15,"-------------------------",?42,"--------",?52,"------"
+ S AGE=0
+ F  S AGE=$O(P2CA(AGE)) Q:'AGE  D
+ .S J=0
+ .S PT=0
+ .F  S PT=$O(P2CA(AGE,PT)) Q:'PT!(J>5)  D
+ ..S J=J+1
+ ..S NAM=$P(^DPT(PT,0),U,1,3)
+ ..W !?10,AGE,?15,$E($P(NAM,U),1,25),?42,$P(NAM,U,3)+17000000,?52,PT
+ K DIR
+ S DIR(0)="NO^1:99"
+ S DIR("A")="Select an age to check"
+ W !
+ D ^DIR
+ K DIR
+ I 'Y S QUIT=1 Q
+ K P2CA,P2CP
+ S CNT=0
+ S AGE=Y*10000
+ S AGES=DT-(AGE+30)
+ S AGEF=DT-(AGE-30)
+ S DFN=$O(^DPT(9999999999),-1)-$R(999)
+ F  S DFN=$O(^DPT(DFN),-1) Q:'DFN!(CNT>5)  D:'$D(^BITMP("PTS2CHK",Y,DFN))
+ .S DOB=$P(^DPT(DFN,0),U,3)
+ .S DOB=$P(^DPT(DFN,0),U,3)
+ .I DOB>AGES,DOB<AGEF,'$G(^DPT(DFN,.35)),$D(^AUPNVIMM("AC",DFN)) S HRN=$G(^AUPNPAT(DFN,41,DUZ(2),0)) I HRN,$P(HRN,U,3)="" S P2CA(Y,DFN)=DFN,P2CP(DFN)=Y,CNT=CNT+1
+ M ^BITMP("PTS2CHK")=P2CA
+ Q
+ ;=====
+ ;

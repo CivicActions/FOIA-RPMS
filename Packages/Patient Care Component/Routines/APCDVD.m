@@ -1,5 +1,5 @@
-APCDVD ; IHS/CMI/LAB - NO DESCRIPTION PROVIDED 18-MAY-1995 ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDVD ; IHS/CMI/TUCSON - NO DESCRIPTION PROVIDED 18-MAY-1995 ; [ 12/21/03  1:08 PM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**7**;MAR 09, 1999
  ;; ;
 EN ;PEP -- main entry point for APCD VISIT DISPLAY
  K ^TMP("APCDVDSG",$J)
@@ -16,7 +16,7 @@ EN ;PEP -- main entry point for APCD VISIT DISPLAY
  Q
  ;
 EN1 ;EP - called from input templates
- D EN^XBNEW("EN^APCDVD","APCDVSIT;VALM*")
+ D EN^XBNEW("EN^APCDVD","APCDVSIT")
  K Y
  Q
 HDR ; -- header code
@@ -36,15 +36,3 @@ EXIT ; -- exit code
 EXPND ; -- expand code
  Q
  ;
-IEN ;EP - called from option
- W !!,"Visit display by IEN"
- S DIR(0)="N^1:99999999999:0",DIR("A")="Enter the VISIT IEN" KILL DA D ^DIR KILL DIR
- I $D(DIRUT) Q
- I '$D(^AUPNVSIT(Y)) W !!,"That visit does not exist." K Y Q
- S APCDVSIT=Y
- D EN
- K APCDVSIT
- Q
- ;
-FINDDELV ;EP - called from option
- ;find and display a deleted visit, given date and optionally, patient name

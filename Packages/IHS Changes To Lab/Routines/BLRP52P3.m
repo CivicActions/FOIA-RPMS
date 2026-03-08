@@ -1,0 +1,182 @@
+BLRP52P3 ; IHS/MSC/MKK - 2021 CKD-EPI & BEDSIDE SCHWARTZ Post Install ; 29-Sep-2022 13:20 ; MKK
+ ;;5.2;IHS LABORATORY;**1052**;NOV 01, 1997;Build 17
+ ;
+EEP ; Ersatz EP
+ D EEP^BLRPRE52
+ Q
+ ;
+ ;
+POSTEGFR ; EP - Post Install for the new EGFRs Tests for LR*5.2*1052
+ NEW TAB,TAB2,TAB3,TAB4,TAB5
+ S TAB=$J("",5),TAB2=$J("",10),TAB3=$J("",15),TAB4=$J("",20),TAB5=$J("",25)
+ ;
+ D BMES^XPDUTL(TAB_"Begin Adding 2021 CKD-EPI & Bedside Schwartz Tests to file 60.")
+ D ADDBEDS
+ D ADDCKD
+ D BMES^XPDUTL(TAB_"End Adding 2021 CKD-EPI & Bedside Schwartz Tests to file 60.")
+ D MES^XPDUTL("")
+ ;
+ Q
+ ;
+ ;
+ADDBEDS ; EP - Bedside Schwartz
+ NEW DNIEN
+ ;
+ D BMES^XPDUTL(TAB2_"Begin Adding BEDSIDE SCHWARTZ Test to Laboratory Test (#60) File")
+ ;
+ S DNIEN=$$DNGFR("BEDSIDE SCHWARTZ",30)
+ ;
+ I DNIEN="Q" D  Q
+ . D MES^XPDUTL(TAB3_"ERROR Adding BEDSIDE SCHWARTZ DataName.")
+ . D MES^XPDUTL(TAB2_"End Adding Bedside Schwartz")
+ ;
+ S F60IEN=$$ADDF60(DNIEN,"BEDSIDE SCHWARTZ","BEDSIDE SCHWARTZ",50384)
+ I F60IEN="Q" D  Q
+ . D BMES^XPDUTL(TAB3_"ERROR Adding BEDSIDE SCHWARTZ Test to File 60.")
+ . D BMES^XPDUTL(TAB2_"End Adding BEDSIDE SCHWARTZ")
+ ;
+ D MES^XPDUTL(TAB2_"End Adding BEDSIDE SCHWARTZ Test to Laboratory Test (#60) File")
+ Q
+ ;
+ ;
+ADDCKD ; EP -- Add 2021 CKD-EPI test
+ NEW DNIEN,TEXT
+ ;
+ S TEXT="Adding 2021 CKD-EPI Test to Laboratory Test (#60) File."
+ ;
+ D BMES^XPDUTL(TAB2_"Begin "_TEXT)
+ ;
+ S DNIEN=$$DNGFR("2021 CKD-EPI",20)
+ ;
+ I DNIEN="Q" D  Q
+ . D MES^XPDUTL(TAB3_"ERROR Adding 2021 CKD-EDP DataName.")
+ . D MES^XPDUTL(TAB2_"End "_TEXT)
+ ;
+ S F60IEN=$$ADDF60(DNIEN,"2021 CKD-EPI","2021 CKD-EPI",98979)
+ I F60IEN="Q" D  Q
+ . D MES^XPDUTL(TAB3_"ERROR "_TEXT)
+ . D MES^XPDUTL(TAB2_"End "_TEXT)
+ ;
+ D MES^XPDUTL(TAB2_"End "_TEXT)
+ Q
+ ;
+ ;
+DNGFR(GFRTEXT,LEN) ; Create the GFR dataname
+ NEW DNDESC,DNIEN,JUSTADD,UCNT,UNIQUE,UNITEXT
+ ;
+ S UNITEXT=GFRTEXT
+ S DNIEN=$O(^DD(63.04,"B",UNITEXT,0))
+ I DNIEN D  Q DNIEN  ; If already exists, write message and exit with DataName IEN.
+ . D MES^XPDUTL(TAB3_UNITEXT_" DataName already exists.")
+ ;
+ ; Get Unique DN Number
+ S DA=$S($P($G(^XMB(1,1,"XUS")),U,17):$P(^("XUS"),U,17),1:0)*1000
+ F I=0:0 S DA=DA+1 Q:'$D(^DD(63.04,DA))
+ ;
+ ; Setup DataName
+ S DNIEN=DA
+ S ^DD(63.04,DNIEN,0)=UNITEXT_"^F^^"_DNIEN_";1^K:$L(X)>"_LEN_"!($L(X)<1) X"
+ S ^DD(63.04,DNIEN,3)="ANSWER MUST BE 1-"_LEN_" CHARACTERS IN LENGTH"
+ S ^DD(63.04,DNIEN,"DT")=DT
+ ;
+ S $P(^DD(63.04,0),U,4)=$P(^DD(63.04,0),U,4)+1
+ ;
+ ; Re-Index the file
+ S DIK="^DD(63.04,",DA(1)=63.04 D IX1^DIK
+ ;
+ Q DNIEN
+ ;
+ ;
+ADDF60(DNIEN,F60NAME,F60PRINT,LOINC) ; EP - Add GFR to LABORATORY TEST (#60) File
+ NEW ERRS,FDA,F60IEN,F60IENC,F61IEN,IEN,SITENOTE,SNIEN,SNTIEN,UCNT,UNIQUE,UNITEXT,UNIPNAME
+ ;
+ I $$FIND1^DIC(60,,"O",F60NAME) D  Q "OK" ; Skip if it already exists
+ . D MES^XPDUTL(TAB3_F60NAME_" Test already exists.")
+ . D SITESPEC(F60NAME,LOINC)
+ ;
+ S UNITEXT=F60NAME
+ S UNIPNAME=F60PRINT
+ S FDA(60,"+1,",.01)=UNITEXT         ; NAME
+ S FDA(60,"+1,",3)="BOTH"            ; TYPE
+ S FDA(60,"+1,",4)="CH"              ; SUBSCRIPT
+ S FDA(60,"+1,",17)="ROUTINE"        ; HIGHEST URGENCY ALLOWED
+ S FDA(60,"+1,",51)=UNIPNAME         ; PRINT NAME
+ S FDA(60,"+1,",999999902)=LOINC     ; IHS LOINC
+ ;
+ D UPDATE^DIE("ES","FDA","IEN","ERRS")
+ I $D(ERRS) D  Q "Q"
+ . D MES^XPDUTL(TAB3_"UPDATE^DIE ERROR.")
+ . D MES^XPDUTL(TAB4_"ERROR:"_$G(ERRS("DIERR",1,"TEXT",1)))
+ ;
+ S F60IEN=$G(IEN(1))
+ S F60IENC=$G(IEN(1))_","
+ ;
+ K FDA,ERRS
+ S FDA(60,F60IENC,5)="CH;"_DNIEN_";1"  ; LOCATION (DATA NAME)
+ S FDA(60,F60IENC,400)=DNIEN           ; DATA NAME
+ D UPDATE^DIE("S","FDA",,"ERRS")
+ I $D(ERRS) D  Q "Q"
+ . D MES^XPDUTL(TAB3_"UPDATE^DIE DATANAME ERROR.")
+ . D MES^XPDUTL(TAB4_"ERROR:"_$G(ERRS("DIERR",1,"TEXT",1)))
+ ;
+ S F61IEN=$$FIND1^DIC(61,,"O","SERUM")
+ K ERRS,FDA,IEN
+ S IEN(1)=F61IEN
+ S FDA(60.01,"+1,"_F60IENC,.01)=F61IEN   ; SITE/SPECIMEN
+ S FDA(60.01,"+1,"_F60IENC,1)=60         ; REFERENCE LOW
+ S FDA(60.01,"+1,"_F60IENC,6)="mL/min"   ; UNITS
+ S FDA(60.01,"+1,"_F60IENC,95.3)=LOINC
+ ;
+ D UPDATE^DIE("S","FDA","IEN","ERRS")
+ I $D(ERRS) D  Q "Q"
+ . D MES^XPDUTL(TAB3_"UPDATE^DIE ERROR During SITE/SPECIMEN update.")
+ . D MES^XPDUTL(TAB4_"ERROR:"_$G(ERRS("DIERR",1,"TEXT",1)))
+ ;
+ ; SITE NOTES DATE
+ K FDA,ERRS
+ S FDA(60.0505,"+1,"_F60IENC,.01)=DT
+ D UPDATE^DIE("S","FDA","SNIEN","ERRS")
+ Q:$D(ERRS) "OK"   ; Don't bother to report error -- it's not a big deal.
+ ;
+ ; Have to hard-set the SITE NOTES Text field.
+ ; FileMan WP^DIE does not see File 60.5051.
+ S SNTIEN=$G(SNIEN(1))
+ S ^LAB(60,F60IEN,11,SNTIEN,1,0)="^60.5051^1^1"
+ S SITENOTE="Created by LR*5.2*1052 Post-Install."
+ I +$G(XPDNM)="" D  ; If KIDS variable null, then not being created during an install process.
+ . I +$G(DUZ) S SITENOTE="Created by "_$$GET1^DIQ(200,DUZ,"NAME")_" ["_DUZ_"]"
+ . E  S SITENOTE=""
+ S:$L(SITENOTE) ^LAB(60,F60IEN,11,SNTIEN,1,1,0)=SITENOTE
+ ; 
+ Q "OK"
+ ;
+ ;
+SITESPEC(F60NAME,LOINC) ; EP - Ensure SITE/SPECIMEN node in file 60 is correct
+ NEW ERRS,F60IEN,F60IENC,F61IEN,FDA,IEN,SSIEN
+ ;
+ S F60IEN=$$FIND1^DIC(60,,"O",F60NAME)
+ S F61IEN=$$FIND1^DIC(61,,"O","SERUM")
+ Q:$D(^LAB(60,F60IEN,1,F61IEN,0))  ; If it exists, just exit
+ ;
+ S F60IENC=F60IEN_","
+ ;
+ ; Delete entire Site/Specimen node -- it's invalid
+ S SSIEN=$O(^LAB(60,F60IEN,1,0))
+ I SSIEN D
+ . S FDA(60.01,SSIEN_","_F60IEN_",",.01)="@"
+ . D UPDATE^DIE("S","FDA",,"ERRS")
+ ;
+ K ERRS,FDA,IEN
+ S IEN(1)=F61IEN
+ S FDA(60.01,"+1,"_F60IENC,.01)=F61IEN   ; SITE/SPECIMEN
+ S FDA(60.01,"+1,"_F60IENC,1)=60         ; REFERENCE LOW
+ S FDA(60.01,"+1,"_F60IENC,6)="mL/min"   ; UNITS
+ S FDA(60.01,"+1,"_F60IENC,95.3)=LOINC
+ ;
+ D UPDATE^DIE("S","FDA","IEN","ERRS")
+ I $D(ERRS) D  Q "Q"
+ . D MES^XPDUTL(TAB4_"UPDATE^DIE ERROR During SITE/SPECIMEN update.")
+ . D MES^XPDUTL(TAB5_"ERROR:"_$G(ERRS("DIERR",1,"TEXT",1)))
+ ;
+ D MES^XPDUTL(TAB4_"SITE/SPECIMEN update.")
+ Q

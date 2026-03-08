@@ -1,12 +1,5 @@
-ABMDF29A ; IHS/ASDST/DMJ - ADA 2006 Dental Export -part 2 ;    
- ;;2.6;IHS 3P BILLING SYSTEM;**3,6,8**;NOV 12, 2009
- ; IHS/SD/SDR-v2.5 p12 - IM25183/IM25226
- ;   Fix for <UNDEFINED>INS+13^ABMDF29A when no 2ndary insurer
- ; IHS/SD/SDR-v2.5 p12 - NO IM
- ;   check box for EPSDT when Medicaid & vtyp desc contains EPSDT
- ; IHS/SD/SDR-v2.5 p12 - IM25568 - Correction to FL 52a
- ;  Also removed old code due to space issue
- ; IHS/SD/SDR,AML-v2.5 p13 - IM26018 - Programming error at Santa Fe
+ABMDF29A ; IHS/SD/SDR - ADA 2006 Dental Export -part 2 ;    
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,6,8,10**;NOV 12, 2009;Build 43
  ; IHS/SD/SDR-abm*2.6*1 HEAT2948 - secondary info not printing correctly
  ; IHS/SD/SDR-abm*2.6*1 HEAT5760 - use ROI/AOB dates, not today, for 36 & 37
  ; IHS/SD/SDR-abm*2.6*1 HEAT6673 - Fixed prior auth to use N5,P12
@@ -28,21 +21,17 @@ BADDR ;
  S ABM("J")=ABMP("BDFN")
  S ABM("I")=$P(^AUTNINS(ABMP("INS"),0),U)_"-"_ABMP("INS")
  S ABM("INS",ABM("I"),ABM("J"))=""
- I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D
+ ;I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D  ;abm*2.6*10 HEAT73780
+ I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")="N" D  ;abm*2.6*10 HEAT73780
  .S ABM("INS",ABM("I"),ABM("J"))=ABMP("PDFN")
  S ABM("IDFN")=ABMP("INS")
  D BADDR^ABMDLBL1
  G PAT:'$D(ABM("ADD"))
- ;S ABMF(8)=$P(ABM("ADD"),U,1)  ;Ins Name(3) ;HEAT8604
  S ABMF(7)=$P(ABM("ADD"),U,1)  ;Ins Name(3) ;HEAT8604
- ;S ABMF(9)=$P(ABM("ADD"),U,2)  ;Ins Addr(3)  ;HEAT8604
  S ABMF(8)=$P(ABM("ADD"),U,2)  ;Ins Addr(3) ;HEAT8604
- ;S ABMF(10)=$P(ABMCSZ,U)  ;City(3)  ;HEAT8604
  S ABMF(9)=$P(ABMCSZ,U)  ;City(3) ;HEAT8604
  S ABMSTATE=$P(ABMCSZ,U,2)  ;St(3)
- ;S ABMF(10)=ABMF(10)_", "_$P($G(^DIC(5,+ABMSTATE,0)),U,2)  ;HEAT8604
  S ABMF(9)=ABMF(9)_", "_$P($G(^DIC(5,+ABMSTATE,0)),U,2)  ;HEAT8604
- ;S ABMF(10)=ABMF(10)_"  "_$P(ABMCSZ,U,3)  ;Zip(3)  ;HEAT8604
  S ABMF(9)=ABMF(9)_"  "_$P(ABMCSZ,U,3)  ;Zip(3)  ;HEAT8604
  K ABMCSZ,ABMSTATE
  ;2ndary info
@@ -54,7 +43,6 @@ BADDR ;
  .S ABMSCNT=ABMPINS
  .F  S ABMSCNT=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT)) Q:+ABMSCNT=0  D  Q:ABMIFLG=1
  ..S ABMSINS=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,"C",ABMSCNT,0))
- ..;I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U,3)="U" Q  ;unbillable  ;abm*2.6*8
  ..I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U,3)="U" K ABMSINS Q  ;unbillable  ;abm*2.6*8
  ..S ABMIFLG=1
  I $G(ABMSINS)'="" S ABMP("INS2")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMSINS,0)),U)
@@ -64,21 +52,17 @@ BADDR ;
  .S ABM("J")=ABMP("BDFN")
  .S ABM("I")=$P(^AUTNINS(ABMP("INS"),0),U)_"-"_ABMP("INS")
  .S ABM("INS",ABM("I"),ABM("J"))=""
- .I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D
+ .;I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D  ;abm*2.6*10 HEAT73780
+ .I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")="N" D  ;abm*2.6*10 HEAT73780
  ..S ABM("INS",ABM("I"),ABM("J"))=ABMP("PDFN")
  .S ABM("IDFN")=ABMP("INS")
  .D BADDR^ABMDLBL1
  .G PAT:'$D(ABM("ADD"))
- .;S $P(ABMF(21),U)=$P(ABM("ADD"),U,1)  ;2ndary Name(11) ;HEAT8604
  .S $P(ABMF(20),U)=$P(ABM("ADD"),U,1)  ;2ndary Name(11) ;HEAT8604
- .;S $P(ABMF(22),U)=$P(ABM("ADD"),U,2)  ;2ndary Addr(11) ;HEAT8604
  .S $P(ABMF(21),U)=$P(ABM("ADD"),U,2)  ;2ndary Addr(11) ;HEAT8604
- .;S $P(ABMF(23),U)=$P(ABMCSZ,U)  ;2ndary City(11) ;HEAT8604
  .S $P(ABMF(22),U)=$P(ABMCSZ,U)  ;2ndary City(11) ;HEAT8604
  .S ABMSTATE=$P(ABMCSZ,U,2)  ;2ndary ST(11)
- .;S $P(ABMF(23),U)=$P(ABMF(23),U)_", "_$P($G(^DIC(5,+ABMSTATE,0)),U,2)  ;2ndary ST(11) ;HEAT8604
  .S $P(ABMF(22),U)=$P(ABMF(22),U)_", "_$P($G(^DIC(5,+ABMSTATE,0)),U,2)  ;2ndary ST(11) ;HEAT8604
- .;S $P(ABMF(23),U)=$P(ABMF(23),U)_"  "_$P(ABMCSZ,U,3)  ;2ndary Zip(11) ;HEAT8604
  .S $P(ABMF(22),U)=$P(ABMF(22),U)_"  "_$P(ABMCSZ,U,3)  ;2ndary Zip(11) ;HEAT8604
  .K ABMCSZ,ABMSTATE
  .S ABMP("INS")=ABMPISAV
@@ -98,7 +82,8 @@ BADDR ;
  ..S $P(ABMF(16),U,4)=$P($G(^AUPN3PPH(+ABMX("PH"),0)),U,4)  ;Pol#(8) ;HEAT8604
  ..;start new code abm*2.6*1 HEAT2948
  ..;rel (10)
- ..I $P($G(^AUTNINS(ABMP("INS2"),2)),U)="P" D
+ ..;I $P($G(^AUTNINS(ABMP("INS2"),2)),U)="P" D  ;abm*2.6*10 HEAT73780
+ ..I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS2"),".211","I"),1,"I")="P" D  ;abm*2.6*10 HEAT73780
  ...S ABMSINS=$O(^AUPNPRVT(ABMP("PDFN"),11,"B",ABMP("INS2"),0))
  ...S ABMP("REL")=$P($G(^AUTTRLSH($P($G(^AUPNPRVT(ABMP("PDFN"),11,ABMSINS,0)),U,5),0)),U,5)
  ...;I ABMP("REL")=18 S $P(ABMF(19),U,2)="X"  ;HEAT8604
@@ -110,7 +95,8 @@ BADDR ;
  ...;I ABMP("REL")'=18&(ABMP("REL")'=19)&(ABMP("REL")'="01") S $P(ABMF(19),U,5)="X"    ;HEAT8604
  ...I ABMP("REL")'=17&(ABMP("REL")'=18)&(ABMP("REL")'="01") S $P(ABMF(18),U,5)="X"  ;HEAT8604
  ..;end new code HEAT2948
- .I $P($G(^AUTNINS(ABMP("INS2"),2)),U)="D" D
+ .;I $P($G(^AUTNINS(ABMP("INS2"),2)),U)="D" D  ;abm*2.6*10 HEAT73780
+ .I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS2"),".211","I"),1,"I")="D" D  ;abm*2.6*10 HEAT73780
  ..;I $P($G(^DPT(+ABMP("PDFN"),0)),U,2)="M" S $P(ABMF(16),U,2)="X"  ;sex(7)  ;HEAT8604
  ..I $P($G(^DPT(+ABMP("PDFN"),0)),U,2)="M" S $P(ABMF(16),U,2)="X"  ;sex(7)  ;HEAT8604
  ..;I $P($G(^DPT(+ABMP("PDFN"),0)),U,2)="F" S $P(ABMF(17),U,3)="X"  ;sex(7)  ;HEAT8604
@@ -151,11 +137,11 @@ LOC ;loc info
  .I ABMX("STATE")'="" D
  ..;S $P(ABMF(57),U)=$P(ABMF(57),U)_", "_ABMX("STATE")_" "_$P($G(^DIC(4,ABMP("LDFN"),1)),U,4)  ;zip(48)  ;HEAT8604
  ..S $P(ABMF(56),U)=$P(ABMF(56),U)_", "_ABMX("STATE")_" "_$P($G(^DIC(4,ABMP("LDFN"),1)),U,4)  ;zip(48)  ;HEAT8604
- .;start new code abm*2.6*6 NOHEAT
+ .;start new abm*2.6*6 NOHEAT
  .I $P($G(^AUTTLOC(ABMP("LDFN"),0)),U,2)="AIDC" D
  ..S $P(ABMF(55),U)="P.O. Box 31001-0674"  ;addr(48)
  ..S $P(ABMF(56),U)="Pasadena, CA  91110-0674"  ;city(48)
- .;end new code NOHEAT
+ .;end new NOHEAT
  K ABMCSZ
  ;S $P(ABMF(60),U,3)=$P(ABMV("X1"),U,6)  ;SSN/TIN(51)  ;HEAT8604
  S $P(ABMF(59),U,3)=$P(ABMV("X1"),U,6)  ;SSN/TIN(51)  ;HEAT8604
@@ -178,7 +164,7 @@ LOC ;loc info
  ;S $P(ABMF(60),U,4)=$P(ABMV("X1"),U,13)  ;city(56)  ;HEAT8604
  ;S $P(ABMF(60),U,4)=$P(ABMF(60),U,4)_", "_$P(^DIC(5,ABML,0),U,2)  ;st(56)  ;HEAT8604
  ;S $P(ABMF(60),U,4)=$P(ABMF(60),U,4)_"  "_$P(ABMV("X1"),U,15)  ;zip(56)  ;HEAT8604
- I $P(ABMF(58),U)="" D  ;default to mailing address if no physical address  ;abm*2.6*3 HEAT13493
+ I $P(ABMF(58),U)="" D  ;default to mailing addr if no physical addr  ;abm*2.6*3 HEAT13493
  .S $P(ABMF(58),U)=$P(ABMV("X1"),U,12)  ;addr(56)  ;HEAT8604 & HEAT13493
  .S $P(ABMF(59),U,4)=$P(ABMV("X1"),U,13)  ;city(56)  ;HEAT8604 * HEAT13493
  .S ABML=$P(ABMV("X1"),U,14)
@@ -198,14 +184,11 @@ LOC ;loc info
  .S $P(ABMF(59),U,4)=$P(ABMF(59),U,4)_", "_ABMX("STATE")_" 97624"  ;zip(56)  ;HEAT8604
  ;start old abm*2.6*3 HEAT13493
  ;I $P($G(^AUTNINS(ABMP("INS"),0)),U)["DELTA DENTAL" D
- ;.;S $P(ABMF(59),U)=$P($G(^DIC(4,ABMP("LDFN"),1)),U)  ;addr(56)  ;HEAT8604
  ;.S $P(ABMF(58),U)=$P($G(^DIC(4,ABMP("LDFN"),1)),U)  ;addr(56)  ;HEAT8604
- ;.;S $P(ABMF(60),U,4)=$P($G(^DIC(4,ABMP("LDFN"),1)),U,3)  ;city(56)  ;HEAT8604
  ;.S $P(ABMF(59),U,4)=$P($G(^DIC(4,ABMP("LDFN"),1)),U,3)  ;city(56)  ;HEAT8604
  ;.S ABMX("STATE")=$P($G(^DIC(4,ABMP("LDFN"),0)),U,2)  ;st(56)
  ;.S ABMX("STATE")=$P($G(^DIC(5,+ABMX("STATE"),0)),U,2)
  ;.I ABMX("STATE")'="" D
- ;..;S $P(ABMF(60),U,4)=$P(ABMF(60),U,4)_", "_ABMX("STATE")_" "_$P($G(^DIC(4,ABMP("LDFN"),1)),U,4)  ;zip(56)  ;HEAT8604
  ;..S $P(ABMF(59),U,4)=$P(ABMF(59),U,4)_", "_ABMX("STATE")_" "_$P($G(^DIC(4,ABMP("LDFN"),1)),U,4)  ;zip(56)  ;HEAT8604
  ;end old HEAT13493
 INSNUM ;Ins Info
@@ -217,7 +200,8 @@ INSNUM ;Ins Info
  .S:ABMPRV ABM("INUM")=$P($G(^VA(200,ABMPRV,9999999.18,ABMP("INS"),0)),U,2)
  ;S $P(ABMF(60),U,2)=ABM("INUM")  ;Dent Lic(55)  ;HEAT8604
  S $P(ABMF(59),U,2)=ABM("INUM")  ;Dent Lic(55)  ;HEAT8604
- S ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;Ins.type
+ ;S ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;Ins.type  ;abm*2.6*10 HEAT73780
+ S ABMP("ITYP")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;Ins.type  ;abm*2.6*10 HEAT73780
  I ABMP("ITYP")="D" D
  .S ABMMCD=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMP("INS"),0)),U,6)
 PRV ;Prov?
@@ -237,8 +221,8 @@ EMPL ;Emp. info
 REL ;Rel
  G INS:'$P(ABMV("X2"),U,2)
  S ABM=+$P($G(^AUTTRLSH(+$P(ABMV("X2"),U,2),0)),U,2)
- ;I ABM,ABM<8,ABM'=2 S $P(ABMF(16),U,$S(ABM=1:1,ABM=3:3,1:4))="X"   ;Rel to subscbr(18)  ;HEAT8604
- I ABM,ABM<8,ABM'=2 S $P(ABMF(15),U,$S(ABM=1:1,ABM=3:3,1:4))="X"   ;Rel to subscbr(18)  ;HEAT8604
+ ;I ABM,ABM<8,ABM'=2 S $P(ABMF(16),U,$S(ABM=1:1,ABM=3:3,1:4))="X"  ;Rel to subscbr(18)  ;HEAT8604
+ I ABM,ABM<8,ABM'=2 S $P(ABMF(15),U,$S(ABM=1:1,ABM=3:3,1:4))="X"  ;Rel to subscbr(18)  ;HEAT8604
  ;E  S $P(ABMF(16),U,$S(ABM=2:2,ABM=1:1,1:4))="X"  ;HEAT8604
  E  S $P(ABMF(15),U,$S(ABM=2:2,ABM=1:1,1:4))="X"  ;HEAT8604
 INS ;

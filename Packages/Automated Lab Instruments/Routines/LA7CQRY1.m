@@ -1,5 +1,5 @@
 LA7CQRY1 ;VA/DALOI/JMC - Lab HL7 Query Utility ; 11-Apr-2014 13:52 ; MAW
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,61,1027,68,1033**;NOV 1, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,61,1027,68,1033,1047**;NOV 1, 1997;Build 21
  ;
  ;;VA Patches:  46,61,68     ;Sep 27, 1994;Build 56
  ;
@@ -51,10 +51,14 @@ BUILDMSG ; Build HL7 message with result of query
  . S (HLQ,HL("Q"))=""
  . S LA7MSH(0)=$$MSH^LA7CHDR(LA7FS,LA7ECH,LA7SITE)
  . D FILESEG^LA7VHLU(GBL,.LA7MSH)
- I '$G(LA7INPT) D
- .S LA7SFT(0)=$$SFT(LA7FS,LA7ECH,LA7SITE)  ;MU2 sft segment
- .D FILE6249^LA7VHLU(LA76249,.LA7SFT)
- .D FILESEG^LA7VHLU(GBL,.LA7SFT)  ;add to the message
+ ;I '$G(LA7INPT) D
+ ;.S LA7SFT(0)=$$SFT(LA7FS,LA7ECH,LA7SITE)  ;MU2 sft segment
+ ;.D FILE6249^LA7VHLU(LA76249,.LA7SFT)
+ ;.D FILESEG^LA7VHLU(GBL,.LA7SFT)  ;add to the message
+ ;01132020 maw 2015 chit need SFT for all patients
+ S LA7SFT(0)=$$SFT(LA7FS,LA7ECH,LA7SITE)  ;MU2 sft segment
+ D FILE6249^LA7VHLU(LA76249,.LA7SFT)
+ D FILESEG^LA7VHLU(GBL,.LA7SFT)  ;add to the message
  ;
  F X="AUTO-INST","LRDFN","LRIDT","SUB","HUID","NLT","RUID","SITE" S LA(X)=""
  ;
@@ -423,11 +427,13 @@ OBXAAO(FS,ECH,ACC,LDFN,LIDT)  ;-build the OBX ask at order questions
  Q
  ;
 LOOKTAB(TYPE,TAB,VAL,ECH) ;-- find the value and description in the HL7 tables
+ I VAL="" Q ""  ;01132020 maw 2015 chit dont fail if VAL not passed in
  N DESC,IENI,GBL
  S GBL="^BHLTBL"
  I TYPE="" S GBL="^BHLOTBL"
  S IENI=$O(@GBL@("AVAL",TAB,VAL,0))
- Q:'IENI
+ ;Q:'IENI
+ I '$G(IENI) Q $G(VAL)
  S DESC=$P($G(@GBL@(IENI,0)),U,3)
  Q VAL_ECH_DESC_ECH_TYPE_TAB
  ;
@@ -436,6 +442,7 @@ LOOKDSC(TYPE,TAB,DSC,ECH) ;-- find a reverse value based on description
  S GBL="^BHLOTBL"
  I TYPE="" S GBL="^BHLOTBL"
  S IENI=$O(@GBL@("ADSC",TAB,DSC,0))
- Q:'IENI
+ I '$G(IENI) Q $G(VAL)
+ ;Q:'IENI
  S VAL=$P($G(@GBL@(IENI,0)),U,2)
  Q VAL_ECH_ECH_TYPE_TAB

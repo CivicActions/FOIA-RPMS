@@ -1,5 +1,5 @@
-ABMDF1A ; IHS/ASDST/DMJ - Set UB82 Print Array - cont ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF1A ; IHS/SD/SDR - Set UB82 Print Array - cont ;
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;Original;TMD;
  ;
  ;IHS/DSD/DMJ - 5/14/1999 - NOIS HQW-0599-100027 Patch 2
@@ -14,7 +14,9 @@ ACCDHR S $P(ABMF(8),U,8)=$P(ABM("B8"),U,4)
  ;
  ; Hosp Info
 DX ;
- I $P(ABM("B5"),U,9)]"",$D(^ICD9($P(ABM("B5"),U,9),0)) S $P(ABMF($S($P($G(^AUTNINS(ABMP("INS"),2)),U)="R":59,1:4)),U,6)=$P($$DX^ABMCVAPI($P(ABM("B5"),U,9),ABMP("VDT")),U,2)  ;CSV-c
+ ;I $P(ABM("B5"),U,9)]"",$D(^ICD9($P(ABM("B5"),U,9),0)) S $P(ABMF($S($P($G(^AUTNINS(ABMP("INS"),2)),U)="R":59,1:4)),U,6)=$P($$DX^ABMCVAPI($P(ABM("B5"),U,9),ABMP("VDT")),U,2)  ;CSV-c  ;abm*2.6*10 HEAT73780
+ S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
+ I $P(ABM("B5"),U,9)]"",$D(^ICD9($P(ABM("B5"),U,9),0)) S $P(ABMF($S(ABMITYP="R":59,1:4)),U,6)=$P($$DX^ABMCVAPI($P(ABM("B5"),U,9),ABMP("VDT")),U,2)  ;CSV-c  ;abm*2.6*10 HEAT73780
 ADMIT I $P(ABM("B6"),U,1)]"" S $P(ABMF(8),U,4)=$$HDTO^ABMDUTL($P(ABM("B6"),U))
 HR S $P(ABMF(8),U,5)=$P(ABM("B6"),U,2)
 TYPE I $P(ABM("B5"),U,1)]"" S $P(ABMF(8),U,6)=$P(^ABMDCODE($P(ABM("B5"),U,1),0),U)

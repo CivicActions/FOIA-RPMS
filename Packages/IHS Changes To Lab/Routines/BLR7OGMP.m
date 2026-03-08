@@ -1,5 +1,12 @@
-BLR7OGMP ; IHS/OIT/MKK - Lab Interim Report for EHR ; 13-Oct-2017 14:04 ;  MKK
- ;;5.2;IHS LABORATORY;**1028,1030,1031,1033,1039,1041**;NOV 01, 1997;Build 23
+BLR7OGMP ; IHS/OIT/MKK - Lab Interim Report for EHR ; 29-Mar-2022 13:55 ;  MKK
+ ;;5.2;IHS LABORATORY;**1028,1030,1031,1033,1039,1041,1051,1054**;NOV 01, 1997;Build 20
+ ;
+ ; ADO 74587 - LR*5.2*1054 - Designate Therapeutic Ref Ranges (if necessary)
+ ;
+ ; MSC/MKK - Modification - LR*5.2*1051 - (1) Use UID to determine Lab Arrival Time line
+ ;                                        (2) Add LAB DIRECTOR
+ ;                                        (3) Item 75549 - Use Pointer (if it exists) to retrieve UNITS
+ ;
  ;
  ; Cloned from LR7OGMP. This is a 127 column "report"
  ;
@@ -53,8 +60,11 @@ PRINT(OUTCNT) ; from LR7OGMC
  .. S REFHIGH=$P(STR,"^",3)
  .. ;
  .. S:$TR(REFLOW," ")'=""!($TR(REFHIGH," ")'="") RANGE=REFLOW_" - "_REFHIGH
+ .. ;
  .. S THERLOW=$P(STR,"^",11)
  .. S THERHIGH=$P(STR,"^",12)
+ .. ;
+ .. S:$TR(THERLOW," ")'=""!($TR(THERHIGH," ")'="") RANGE=THERLOW_" - "_THERHIGH  ; IHS/MSC/MKK - LR*5.2*1054
  .. ;
  .. I IDT S SITE=$P($G(^LR(LRDFN,"CH",IDT,+$P(SUB,";",2))),"^",9)
  .. S:+$G(SITE) SITECNT=SITECNT+1
@@ -89,6 +99,7 @@ PRINT(OUTCNT) ; from LR7OGMC
  .. ;
  .. ; Have to determine if Ref Ranges came from THERAPEUTIC fields
  .. ; I $L(REFLOW)<1,$L(REFHIGH)<1,$L(THERLOW),$L(THERHIGH),$L(LRX) S LRX=LRX_"(TR)"
+ .. I $L(LRX),($L(THERLOW)!($L(THERHIGH))) S LRX=LRX_" (TR)"  ; IHS/MSC/MKK - LR*5.2*1054
  .. ;
  .. I IDT S SITE=$P($G(^LR(LRDFN,"CH",IDT,+$P($G(SUB),";",2))),"^",9)
  .. S:+$G(SITE) SITECNT=SITECNT+1
@@ -102,7 +113,7 @@ PRINT(OUTCNT) ; from LR7OGMC
  .. S:$L(VALUE)<31 $E(LINE,35)=$G(VALUE)                   ; Result
  .. S $E(LINE,67)=FLAG                                     ; Abnormal Flag
  .. ; S:+$G(UNITS) UNITS=$P($G(^BLRUCUM(UNITS,0)),"^")
- .. S:UNITS?.N UNITS=$$GET1^DIQ(90475.3,UNITS,.01)         ; IHS/MSC/MKK - LR*5.2*1041
+ .. S:UNITS?.N UNITS=$$GET1^DIQ(90475.3,UNITS,.01)         ; MSC/MKK - LR*5.2*1051 - Item 75549 - 29-Mar-2022
  .. S:$G(UNITS)'="" $E(LINE,70)=$E(UNITS,1,16)             ; Units
  .. ; S:$G(LRX)'="" $E(LINE,88)=$E(LRX,1,16)               ; Reference Range
  .. ; S:+$G(SITE) $E(LINE,106)="["_SITE_"]"                ; Site
@@ -132,7 +143,10 @@ PRINT(OUTCNT) ; from LR7OGMC
  ... I $O(^TMP("LR7OG",$J,"TP",CDT,"C",CMNT)) S LINE="        "
  . ;
  . D:SITECNT<1 SETLINE($TR($J("",132)," ","="),.OUTCNT)
+ . D:SITECNT<1 LABDIR   ; IHS/MSC/MKK - LR*5.2*1051
+ . ;
  . D:SITECNT>0 PLS
+ . D:SITECNT>0 LABDIR   ; IHS/MSC/MKK - LR*5.2*1051
  Q
  ;
 RESULTHD ; EP - 'Results' Header
@@ -207,9 +221,9 @@ MUMPEVAL(EVAL) ;
  S @STR
  Q WOT
  ;
-SETLINE(LINE,CNT) ;
+SETLINE(LINE,CNT)  ; EP
+ S CNT=1+$G(CNT)
  S ^TMP("LR7OGX",$J,"OUTPUT",CNT)=LINE
- S CNT=CNT+1
  Q
  ;
  ;
@@ -366,15 +380,40 @@ GETCOMPD() ; EP - Get Completion Date
  ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1039
 LABARRT ; EP - Lab Arrival Time
  NEW LABARRT,LRAS,LRAA,LRAD,LRAN
- S LRAS=$P(ZERO,U,6)
- Q:$$GETACCCP^BLRUTIL3(LRAS,.LRAA,.LRAD,.LRAN)<1
+ ; S LRAS=$P(ZERO,U,6)
+ ; Q:$$GETACCCP^BLRUTIL3(LRAS,.LRAA,.LRAD,.LRAN)<1
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1051
+ ; Use UID from file 63 to get Lab Arrival Time, not Accession number
+ NEW UID,UIDSTR,LINE
+ S UID=$$GET1^DIQ(63.04,IDT_","_LRDFN,.31,"I")
+ Q:$L(UID)<1  ; Skip if no UID in file 63
+ ;
+ S UIDSTR=$$CHECKUID^LRWU4(UID)
+ Q:+UIDSTR<1  ; Skip if UID does not return Accession variables
+ ;
+ S LRAA=+$P(UIDSTR,U,2),LRAD=+$P(UIDSTR,U,3),LRAN=+$P(UIDSTR,U,4)
+ ; ----- END IHS/MSC/MKK - LR*5.2*1051
  ;
  S LABARRT=$$GET1^DIQ(68.02,LRAN_","_LRAD_","_LRAA,12,"I")
  Q:+LABARRT<1
  ;
- K LINE
+ ; K LINE     ; No need to Kill
  S $E(LINE,43)="Lab Arrival Date/Time: "_$$UP^XLFSTR($$FMTE^XLFDT(LABARRT,"5MPZ"))
  D SETLINE(LINE,.OUTCNT)
- K LINE
+ ; K LINE     ; No need to Kill
  Q
  ; ----- END IHS/MSC/MKK - LR*5.2*1039
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1051
+LABDIR ; EP
+ NEW LABDIR
+ S LABDIR=$$GET^XPAR("ALL","IHS RPMS LAB DIRECTOR")
+ ;
+ Q:LABDIR<1
+ ;
+ D SETLINE(" ",.OUTCNT)
+ D SETLINE("LAB DIRECTOR: "_$$GET1^DIQ(200,LABDIR,"NAME")_" "_$$GET1^DIQ(200,LABDIR,"TITLE"),.OUTCNT)
+ D SETLINE(" ",.OUTCNT)
+ Q
+ ; ----- END IHS/MSC/MKK - LR*5.2*1051 

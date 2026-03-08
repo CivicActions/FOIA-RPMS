@@ -1,5 +1,5 @@
 BARMAWO3 ; IHS/SD/LSL - Automatic Write-Off UFMS NON-BEN IN ERROR 2007 - Reversal ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**2,28**;OCT 26, 2005;Build 92
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**2,28,33**;OCT 26, 2005;Build 133
  ;
  ; THIS IS TO BE USE ONLY TO REVERSE THE WRITE OFFS ON NON-BEN ACCOUNTS
  ; WHEN PATCH 1 OF THE UFMS WRITE-OFF 2007 WERE MSITAKENLY MADE BECAUSE
@@ -13,6 +13,7 @@ BARMAWO3 ; IHS/SD/LSL - Automatic Write-Off UFMS NON-BEN IN ERROR 2007 - Reversa
  ;  without review and possible changes.  Routine EN^BARMAWO6 should be used instead.  A
  ;  quit has been added to this routine so it can't be accidentally run.
  ; *********************************************************************
+ ;IHS/SD/SDR 1.8*33 ADO60817 Changed to use 'C' xref even though routine isn't used anymore, just in case
  Q
  ;
 EN ; EP - IHS/DIT/CPC 1.8*28 CR 8349 START
@@ -93,22 +94,34 @@ TRANS ;
  ; APR 12,2007 @ 7:00 used because this is just before the release (4/13)
  ; of UFMS AWO coding. Code 916 did not exist before then.
  S BARDTTR=3070412.07
- F  S BARDTTR=$O(^BARTR(DUZ(2),BARDTTR)) Q:('+BARDTTR!(BARDTTR>BARNOW))  D ISITAWO
+ ;F  S BARDTTR=$O(^BARTR(DUZ(2),BARDTTR)) Q:('+BARDTTR!(BARDTTR>BARNOW))  D ISITAWO  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+ F  S BARDTTR=$O(^BARTR(DUZ(2),"C",BARDTTR)) Q:('+BARDTTR!(BARDTTR>BARNOW))  D
+ .S BARTRDFN=0
+ .F  S BARTRDFN=$O(^BARTR(DUZ(2),"C",BARDTTR,BARTRDFN)) Q:'BARTRDFN  D ISITAWO
+ ;end new bar*1.8*33 IHS/SD/SDR ADO60817
  Q
  ; *********************************************************************
  ;
 ISITAWO ;
  ; Check to see if trans is AUTO WRITE-OFF 2007
- S BARTR(0)=$G(^BARTR(DUZ(2),BARDTTR,0))    ; A/R Transaction 0 node
- S BARTR(1)=$G(^BARTR(DUZ(2),BARDTTR,1))    ; A/R Transaction 1 node
+ ;start old bar*1.8*33 IHS/SD/SDR ADO60817
+ ;S BARTR(0)=$G(^BARTR(DUZ(2),BARDTTR,0))    ; A/R Transaction 0 node
+ ;S BARTR(1)=$G(^BARTR(DUZ(2),BARDTTR,1))    ; A/R Transaction 1 node
+ ;end old start new bar*1.8*33 IHS/SD/SDR ADO60817
+ S BARTR(0)=$G(^BARTR(DUZ(2),BARTRDFN,0))    ; A/R Transaction 0 node
+ S BARTR(1)=$G(^BARTR(DUZ(2),BARTRDFN,1))    ; A/R Transaction 1 node
+ ;end new bar*1.8*33 IHS/SD/SDR ADO60817
  ;BAR*1.8*2
  S BARBL=$P(BARTR(0),U,4)                            ;BILL IEN
  Q:BARBL=""
- S POSTTRAN=$O(^BARTR(DUZ(2),"AC",BARBL,BARDTTR))  ;GET NEXT TRANSACTION
+ ;S POSTTRAN=$O(^BARTR(DUZ(2),"AC",BARBL,BARDTTR))  ;GET NEXT TRANSACTION  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ S POSTTRAN=$O(^BARTR(DUZ(2),"AC",BARBL,BARTRDFN))  ;GET NEXT TRANSACTION  ;bar*1.8*33 IHS/SD/SDR ADO60817
  I POSTTRAN'="" D
  .S POSTAWO=$$GET1^DIQ(90050.03,POSTTRAN_",",103,"I")
  .S POSTDEB=$$GET1^DIQ(90050.03,POSTTRAN_",",3,"I")   ;GET DEBIT OF NEXT TRANS
- S PRETRAN=$O(^BARTR(DUZ(2),"AC",BARBL,BARDTTR),-1)  ;GET NEXT TRANSACTION
+ ;S PRETRAN=$O(^BARTR(DUZ(2),"AC",BARBL,BARDTTR),-1)  ;GET NEXT TRANSACTION  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ S PRETRAN=$O(^BARTR(DUZ(2),"AC",BARBL,BARTRDFN),-1)  ;GET NEXT TRANSACTION  ;bar*1.8*33 IHS/SD/SDR ADO60817
  I PRETRAN'="" D
  .S PREAWO=$$GET1^DIQ(90050.03,PRETRAN_",",103,"I")
  .S PRECRED=$$GET1^DIQ(90050.03,PRETRAN_",",2,"I")   ;GET DEBIT OF PREVIOUS TRANS

@@ -1,10 +1,12 @@
-PSOPRVW ;BIR/SAB,MHA-enter/edit/view provider ;29-May-2012 15:05;PLS
- ;;7.0;OUTPATIENT PHARMACY;**11,146,153,1011,263,268,264,1015**;DEC 1997;Build 62
+PSOPRVW ;BIR/SAB,MHA-enter/edit/view provider ;12-Sep-2018 11:42;DU
+ ;;7.0;OUTPATIENT PHARMACY;**11,146,153,1011,263,268,264,1015,1023**;DEC 1997;Build 121
  ;
  ;Ref. to ^VA(200 supp. by IA 224
  ;Ref. to ^DIC(7 supp. by IA 491
  ;Ref.  to $$NPI^XUSNPI supp. by IA 4532
  ;Modified - IHS/MSC/PLS - 04/18/2011 - Line ED1 and ADD+2
+ ;         - IHS/MSC/MGH - 05/18/2017 - START+16,EDT+13 Changed for EPCS
+ ;                       - 11/28/2017 - ED1+1 Changed for EPCS
 START W ! S DIC("A")="Select Provider: ",DIC("S")="I $D(^VA(200,+Y,""PS""))",DIC="^VA(200,",DIC(0)="AEQMZ" D ^DIC G:"^"[X EX G:Y<0 START K DIC S PRNO=+Y
  W @IOF,"Name: "_$P(^VA(200,PRNO,0),"^")
  I +$P(^VA(200,PRNO,"PS"),"^",4),$P(^("PS"),"^",4)'>DT W ?40,$C(7),"* * * INACTIVE AS OF ",$E($P(^("PS"),"^",4),4,5),"/",$E($P(^("PS"),"^",4),6,7),"/",$E($P(^("PS"),"^",4),2,3)," * * *"
@@ -21,6 +23,9 @@ START W ! S DIC("A")="Select Provider: ",DIC("S")="I $D(^VA(200,+Y,""PS""))",DIC
  I $P($G(^VA(200,PRNO,"TPB")),"^",6) W $P($G(^VA(200,$P(^("TPB"),"^",6),0)),"^")
  W !,"Authorized to Write Orders: "_$S($P(^VA(200,PRNO,"PS"),"^"):"Yes",1:"No")
  W !,"Requires Cosigner: "_$S($P(^("PS"),"^",7):"Yes",1:"No"),?40,"DEA# "_$P(^VA(200,PRNO,"PS"),"^",2) I $P(^("PS"),"^",7),$D(^VA(200,+$P(^("PS"),"^",8),0)) W !,"Usual Cosigner: "_$P(^(0),"^")
+ ;IHS/MSC/MGH -changes for EPCS
+ W !,"DEA X#: "_$P(^VA(200,PRNO,"PS"),"^",11)
+ I $P($G(^VA(200,PRNO,"PS")),"^",2)]"" W ?40,"DEA Expiration Date: " S T=+$P($G(^VA(200,PRNO,"QAR")),"^",9) I T W $$FMTE^XLFDT(T)
  W !,"Class: " S PRCLS=+$P(^VA(200,PRNO,"PS"),"^",5),PRCLS=$S(PRCLS>0&$D(^DIC(7,PRCLS,0)):$P(^(0),"^"),1:"") W PRCLS,?40,"VA#  "_$P(^VA(200,PRNO,"PS"),"^",3)
  W !," Type: " S T=+$P(^("PS"),"^",6),L=$P(^DD(200,53.6,0),"^",3)_";"_T_":Unknown" F I=1:1 I $P($P(L,";",I),":",1)=T W $P($P(L,";",I),":",2) Q
  N NPI S NPI=$P($$NPI^XUSNPI("Individual_ID",PRNO),"^") W ?40,"NPI# "_$S(NPI>0:+NPI,1:"")
@@ -40,9 +45,15 @@ EX K DIC,DIE,DA,DR,D0,PRNO,PRCLS,STAT,T,Y,X,L,LF,I,DIR,DIROUT,DUOUT,DTOUT,DIRUT,
  Q
 ASK ;edit providers
  K DIR,DTOUT,DUOUT,DIROUT,DIRUT
+ N ARR,ARR2,LP,IENS
  W !! S DIC("A")="Select Provider: ",(DIC,DIE)=200,DIC(0)="AEQMZ" D ^DIC G:"^"[X EX G:Y<0 ASK S (FADA,DA)=+Y
  I '$D(^VA(200,DA,"PS")) G NPRV
-ASK1 W @IOF,?25,"Provider: "_$P(^VA(200,DA,0),"^"),! F DR="TPB","PS",".11",".13",".14" D EN^DIQ
+ASK1 ;W @IOF,?25,"Provider: "_$P(^VA(200,DA,0),"^"),! F DR="TPB","PS",".11",".13",".14" D EN^DIQ
+ W @IOF,?25,"Provider: "_$P(^VA(200,DA,0),"^"),!
+ F DR="TPB",".11",".13",".14" D EN^DIQ
+ S IENS=DA_","
+ D GETS^DIQ(200,IENS,"53.1:53.9","E","ARR")
+ D PRTARR(.ARR)
  K DIC,Y
 EDT W ! L +^VA(200,DA):$S(+$G(^DD("DILOCKTM"))>0:+^DD("DILOCKTM"),1:3)
  I '$T W $C(7),!!,"Provider Data is Being Edited by Another User!",! G QX
@@ -57,9 +68,21 @@ EDT W ! L +^VA(200,DA):$S(+$G(^DD("DILOCKTM"))>0:+^DD("DILOCKTM"),1:3)
  .I RTPB=""!('$P(RTPB,"^",3)) S DR="53.96////"_DUZ D ^DIE
  I $P($G(^VA(200,DA,"TPB")),"^",3) D
  .I RTPB=""!('$P(RTPB,"^",3)) S DR="53.96////"_DUZ D ^DIE
+ ;IHS/MSC/MGH - changes for EPCS
+ N PSORTPB S PSORTPB=$G(^VA(200,DA,"TPB"))
+ I $P(PSORTPB,"^",4)'=$P(RTPB,"^",4)!($P(PSORTPB,"^",5)'=$P(RTPB,"^",5)) D
+ .S DR="53.96////"_DUZ D ^DIE
  G:$G(PSOTPBFG) QX
 ED1 ;S DR="53.1:53.6;I X'=4 S Y=""@1"";29;8932.1;@1;53.7;I 'X S Y=""@2"";53.8;@2;53.9;.111:.116;.131:.134;.136;.137;.138;.141",DR(2,200.05)=".01;2;3"
- S DR="53.1:53.2;747.44;53.3:53.7;I 'X S Y=""@1"";53.8;@1;53.9;.111:.116;.131:.134;.136;.141;.151;"  ;IHS/MSC/PLS - 04/18/2011
+ ;IHS/MSC/MGH Only display fields not in  hash for non-EPCS provider
+ N HASH,PKI
+ D PKISITE^ORWOR(.PKI)
+ S HASH=$$GET1^DIQ(200,DA,9999999.19)
+ I PKI=0!(HASH="") D
+ .S DR="53.1;53.2;747.44;53.3;53.11DEA X#;55.1:55.6;53.4:53.7;I 'X S Y=""@1"";53.8;@1;53.9;.111:.116;.131:.134;.136;.141;.151;"  ;IHS/MSC/PLS - 04/18/2011
+ E  D
+ .S DR="53.1;53.4:53.7;I 'X S Y=""@1"";53.8;@1;53.9;.111:.116;.131:.134;.136;.141;.151;"  ;IHS/MSC/MGH - 11/28/2017
+ ;End changes
  D ^DIE S FADA=DA D:'$D(Y) KEY
 QX K FADA,RTPB L -^VA(200,DA) Q:$G(PSOTPBFG)  G:+$G(VADA) ADD G ASK
  Q
@@ -88,4 +111,51 @@ KEY I $D(^VA(200,DA,"PS")) D
  Q
 MS ;
  W !!,$C(7),"This provider will not be selectable during TPB medication order entry!!",!
+ Q
+PRTARR(ARRAY) ;Print array items
+ N CNT
+ S CNT=0
+ I $G(ARRAY(200,IENS,53.1,"E"))'="" D
+ .S CNT=CNT+1
+ .D FIELD^DID(200,53.1,"","LABEL","TEST1")
+ .S ARR2(CNT)=TEST1("LABEL")_": "_$G(ARRAY(200,IENS,53.1,"E"))
+ I $G(ARRAY(200,IENS,53.2,"E"))'="" D
+ .D FIELD^DID(200,53.2,"","LABEL","TEST1")
+ .S CNT=CNT+1
+ .S ARR2(CNT)=TEST1("LABEL")_": "_$G(ARRAY(200,IENS,53.2,"E"))
+ I $G(ARRAY(200,IENS,53.3,"E"))'="" D
+ .D FIELD^DID(200,53.3,"","LABEL","TEST1")
+ .S CNT=CNT+1
+ .S ARR2(CNT)=TEST1("LABEL")_": "_$G(ARRAY(200,IENS,53.3,"E"))
+ I $G(ARRAY(200,IENS,53.4,"E"))'="" D
+ .D FIELD^DID(200,53.4,"","LABEL","TEST1")
+ .S CNT=CNT+1
+ .S ARR2(CNT)=TEST1("LABEL")_": "_$G(ARRAY(200,IENS,53.4,"E"))
+ I $G(ARRAY(200,IENS,53.5,"E"))'="" D
+ .D FIELD^DID(200,53.5,"","LABEL","TEST1")
+ .S CNT=CNT+1
+ .S ARR2(CNT)=TEST1("LABEL")_": "_$G(ARRAY(200,IENS,53.5,"E"))
+ I $G(ARRAY(200,IENS,53.6,"E"))'="" D
+ .D FIELD^DID(200,53.6,"","LABEL","TEST1")
+ .S CNT=CNT+1
+ .S ARR2(CNT)=TEST1("LABEL")_": "_$G(ARRAY(200,IENS,53.6,"E"))
+ I $G(ARRAY(200,IENS,53.7,"E"))'="" D
+ .D FIELD^DID(200,53.7,"","LABEL","TEST1")
+ .S CNT=CNT+1
+ .S ARR2(CNT)=TEST1("LABEL")_": "_$G(ARRAY(200,IENS,53.7,"E"))
+ I $G(ARRAY(200,IENS,53.8,"E"))'="" D
+ .D FIELD^DID(200,53.8,"","LABEL","TEST1")
+ .S CNT=CNT+1
+ .S ARR2(CNT)=TEST1("LABEL")_": "_$G(ARRAY(200,IENS,53.8,"E"))
+ I $G(ARRAY(200,IENS,53.9,"E"))'="" D
+ .D FIELD^DID(200,53.9,"","LABEL","TEST1")
+ .S CNT=CNT+1
+ .S ARR2(CNT)=TEST1("LABEL")_": "_$G(ARRAY(200,IENS,53.9,"E"))
+ I $G(ARRAY(200,IENS,53.11,"E"))'="" D
+ .S CNT=CNT+1
+ .S ARR2(CNT)="DEA X#: "_$G(ARRAY(200,IENS,53.11,"E"))
+ S LP=0
+ F  S LP=$O(ARR2(LP)) Q:'+LP  D
+ .I LP#2=1 W !,?2,$G(ARR2(LP))
+ .I LP#2=0 W ?40,$G(ARR2(LP))
  Q

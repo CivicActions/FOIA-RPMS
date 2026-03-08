@@ -1,5 +1,5 @@
-PSJOE ;BIR/MLM-INPATIENT ORDER ENTRY ;29-May-2012 14:38;PLS
- ;;5.0; INPATIENT MEDICATIONS ;**7,26,29,33,42,50,56,72,58,85,95,80,1009,1011,110,111,133,140,151,149,1015**;16 DEC 97;Build 62
+PSJOE ;BIR/MLM-INPATIENT ORDER ENTRY ;13-Apr-2023 09:46;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**7,26,29,33,42,50,56,72,58,85,95,80,1009,1011,110,111,133,140,151,149,1015,1033**;16 DEC 97;Build 34
  ;
  ; Reference to ^PS(55 is supported by DBIA #2191.
  ; Reference to EN^VALM is supported by DBIA #10118.
@@ -10,6 +10,7 @@ PSJOE ;BIR/MLM-INPATIENT ORDER ENTRY ;29-May-2012 14:38;PLS
  ; Reference to ^SDAMA203 is supported by DBIA #4133.
  ;                           12/09/2010 - Line COPY+5
  ;            IHS/MSC/PLS  - 03/28/2011 - Line EN+5
+ ;                         - 12/30/2022 - Adding logic to SELECT, NEWSEL and ISIMO
 EN ; Start Inpatient LM OE
  ; Modified - IHS/MSC/JDS  - 11/20/2010 - Line RENEW+3
  N PSJLK,PSJNEWOE,PSJLMCON,PSJPROT,XQORS,VALMEVL D ENCV^PSGSETU,^PSIVXU
@@ -65,6 +66,10 @@ SELECT ; Select order from list
  ..Q:('$$LS^PSSLOCK(PSGP,PSJORD))
  ..Q:PSJORD=+PSJORD
  ..S PSGORD=""
+ ..I $$ISIMO(PSJORD),$$ISINPT^APSPFNC1($G(PSGP,$G(DFN))) D  Q:$G(DUOUT)
+ ...W !,"You are processing a Clinic Order for an Inpatient"
+ ...D PAUSE^VALM1 Q:$G(DUOUT)
+ ...S VALMSG="Processing clinic order"
  ..D DISACTIO(PSGP,PSJORD,"") S:PSJORD["V" PSJORD=ON
  ..D UNL^PSSLOCK(PSGP,PSJORD) Q:$G(Y)<0
  S VALMBCK="Q"
@@ -184,6 +189,10 @@ NEWSEL ;
  .Q:PSJORD=""!($G(Y)<0)  Q:('$$LS^PSSLOCK(PSGP,PSJORD))  D
  ..S PSGORD=""
  ..S ON=PSJORD
+ ..I $$ISIMO(PSJORD),$$ISINPT^APSPFNC1($G(PSGP,$G(DFN))) D  Q:$G(DUOUT)
+ ...W !,"You are processing a Clinic Order for an Inpatient"
+ ...D PAUSE^VALM1 Q:$G(DUOUT)
+ ...S VALMSG="Processing clinic order"
  ..D DISACTIO(PSGP,PSJORD,$G(PSJPNV)) S:PSJORD["V" PSJORD=ON
  ..D UNL^PSSLOCK(PSGP,PSJORD)
  ..I $G(PSJNOL) K PSJNOL I $D(ON),ON'=PSJORD D UNL^PSSLOCK(PSGP,ON)
@@ -210,3 +219,23 @@ COMPLEX(DFN,ON) ;
  S NDP2=$S(ON["P":$G(^PS(53.1,+ON,.2)),ON["U":$G(^PS(55,DFN,5,+ON,.2)),ON["V":$G(^PS(55,DFN,"IV",+ON,.2)),1:"")
  S COM=$P(NDP2,"^",8) I COM Q 1
  Q 0
+ISIMO(ZZOID) ;
+ Q $$DSPWRN(ZZOID)
+ N ORIFN,IMO,OR
+ S ORIFN=$$GET1^DIQ(53.1,+$G(PSJORD),49,"I")
+ D IMOOD^ORIMO(.OR,ORIFN)
+ S IMO=+$G(OR)
+ Q IMO
+ ; Returns 1 when inpatient location doesn't match order location
+DSPWRN(ZZOID) ;
+ Q:'$G(PSGP) 0  ;No Patient
+ N OCLN,WARD,PCLN,DFN,VADM,VAIP,VAIN,ORN
+ S ORN=$$ORD^PSSLOCK(PSGP,ZZOID)  ;Obtain Order number
+ Q:'ORN 0  ;No Order number
+ S OCLN=+$$GET1^DIQ(100,ORN,6,"I") ;Order Location
+ Q:'OCLN 0
+ S DFN=PSGP   ;Patient
+ D IN5^VADPT
+ S WARD=+$G(VAIP(5))
+ S PCLN=+$$GET1^DIQ(42,WARD,44,"I")     ;Clinic assoc with ward
+ Q OCLN'=PCLN

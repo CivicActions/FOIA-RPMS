@@ -1,5 +1,7 @@
 AGREPRT1 ; IHS/ASDS/EFG - ;  
- ;;7.1;PATIENT REGISTRATION;**4**;AUG 25,2005
+ ;;7.1;PATIENT REGISTRATION;**4,16**;AUG 25,2005;Build 1
+ ;IHS/OIT/NKD AG*7.1*16 SSN REMOVAL
+ ;
  S AGBDT=AG("B")-.1,AG("FAC")=DUZ(2)
  D ^AGPATCNT
  K DUOUT,DTOUT,DFOUT
@@ -73,7 +75,7 @@ END1 D ^%ZISC
  Q
 FILE W ?5,$P(^DPT(DFN,0),U),?43,$J($P(^AUPNPAT(DFN,41,DUZ(2),0),U,2),6)
  ;K ^UTILITY("DIQ1",$J) S DIC=2,DR=.09,DA=DFN D EN^DIQ1 I $D(^(DR)) W ?52,^(DR)
- W ?52,$$GET1^DIQ(9000001,DFN_",",1107.3)  ;IHS/SD/TPF AG*7.1*4
+ ;W ?52,$$GET1^DIQ(9000001,DFN_",",1107.3)  ;IHS/SD/TPF AG*7.1*4  ;IHS/OIT/NKD AG*7.1*16 SSN REMOVAL
  ;S DR=.03 D EN^DIQ1 I $D(^(DR)) W ?66,$J(^(DR),10)
  W ?66,$J($P($$GET1^DIQ(2,DFN_",",.03),"@"),10)  ;IHS/SD/TPF AG*7.1*4
  W ! I $Y>AGBM D RTRN^AG Q:$D(DUOUT)!$D(DTOUT)!$D(DFOUT)  D HDR
@@ -81,6 +83,6 @@ FILE W ?5,$P(^DPT(DFN,0),U),?43,$J($P(^AUPNPAT(DFN,41,DUZ(2),0),U,2),6)
 HDR ;S AGPGPG=AGPGPG+1,Y=AGBDT D DD^%DT W $$S^AGVDF("IOF"),!!,AG("USR"),?72,"page ",AGPGPG,!,AG("LOC"),!?23,"DAILY REGISTRATION ACTIVITY REPORT",!,AGUCI,!,AGTIME,!!,?80-(11+$L(Y))\2,"Report for ",Y,!!
  S AGPGPG=AGPGPG+1,Y=AGBDT D DD^%DT W $$S^AGVDF("IOF"),!!,AG("USR"),?72,"page ",AGPGPG,!,AG("LOC"),!?23,"DAILY REGISTRATION ACTIVITY REPORT",!,AGUCI,!,AGTIME,!!,?80-(36+$L(Y))\2,"Report from ",AGB," to ",AGE,!!  ;BAR*1.8*4 IM26905
  Q
-UCI1 I '$D(AG("TOP")) W ?80-$L(AG("HD"))\2,AG("HD"),!!,?13,"Name",?44,"IHS #",?56,"SSN",?70,"DOB",!,"-----------------------------------",?43,"------",?52,"-----------",?66,"------------",!
- K AG("TOP")
+ ;UCI1 I '$D(AG("TOP")) W ?80-$L(AG("HD"))\2,AG("HD"),!!,?13,"Name",?44,"IHS #",?56,"SSN",?70,"DOB",!,"-----------------------------------",?43,"------",?52,"-----------",?66,"------------",!  ;IHS/OIT/NKD AG*7.1*16 SSN REMOVAL
+UCI1 I '$D(AG("TOP")) W ?80-$L(AG("HD"))\2,AG("HD"),!!,?13,"Name",?44,"IHS #",?70,"DOB",!,"-----------------------------------",?43,"------",?66,"------------",! K AG("TOP")
  Q

@@ -1,5 +1,5 @@
 ABMDE3B ; IHS/ASDST/DMJ - Edit Page 3 - QUESTIONS - part 3 ; 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS Third Party Billing System;**10**;APR 24, 2006
  ;
  ; IHS/SD/SDR - v2.5 p10 - IM20076
  ;    Added EPSDT referral
@@ -40,7 +40,7 @@ ATYP S X=$O(^ABMDCODE("AC","T",1,"")) Q:X=""
  Q
  ;
 SPPROG K DIC
- K X,Y
+ K X,Y  ;abm*2.5*10
  S ABM("DICS")="9002274.3059" X:$D(^DD(ABM("DICS"),.01,12.1)) ^DD(ABM("DICS"),.01,12.1)
  I $D(^ABMDCLM(DUZ(2),ABMP("CDFN"),59))=10 S ABM("X")=$O(^(59,0)) I ABM("X")]"",$D(^(ABM("X"),0)) S ABM("X")=^(0) I $D(^ABMDCODE(ABM("X"),0)) S DIC("B")=$P(^(0),U,1)
  W ! S DIC="^ABMDCODE(",DIC(0)="QEAM" S DIC("A")="Select SPECIAL PROGRAM: " D ^DIC K DIC
@@ -49,7 +49,10 @@ SPPROG K DIC
 SP ;EP - Entry Point for setting UB-82 Special Prog code
  S ABM("Y")=+Y
  S DA(1)=ABMP("CDFN")
- I +$O(^ABMDCLM(DUZ(2),DA(1),59,0))=0 S DIC("P")=$P(^DD(9002274.3,59,0),U,2)
+ ;I '$D(^ABMDCLM(DUZ(2),DA(1),59,0)) S ^ABMDCLM(DUZ(2),DA(1),59,0)="^9002274.3059P^^"  ;abm*2.5*10 IM20076
+ I +$O(^ABMDCLM(DUZ(2),DA(1),59,0))=0 S DIC("P")=$P(^DD(9002274.3,59,0),U,2)  ;abm*2.5*10 IM20076
+ ;E  S ABM("X")=$O(^ABMDCLM(DUZ(2),DA(1),59,0)) I ABM("X")]"" S DA=ABM("X"),DIK="^ABMDCLM(DUZ(2),"_DA(1)_",59," D ^DIK  ;abm*2.5*10 IM20076
+ ;start new code abm*2.5*10 IM20076
  I +$O(^ABMDCLM(DUZ(2),DA(1),59,0))'=0 D
  .S ABM("X")=$O(^ABMDCLM(DUZ(2),DA(1),59,0))
  .I ABM("X")]"" D
@@ -62,9 +65,11 @@ SP ;EP - Entry Point for setting UB-82 Special Prog code
  ..Q:$D(DTOUT)!($D(DUOUT))!($D(DIRUT))!($D(DIROUT))
  ..I ABMANS>0 S DA=ABM("X"),DIK="^ABMDCLM(DUZ(2),"_DA(1)_",59," D ^DIK
  I +$O(^ABMDCLM(DUZ(2),DA(1),59,0))'=0,(+$G(ABMANS)<1) Q
+ ;end new code abm*2.5*10 IM20076
  S (DINUM,X)=ABM("Y")
  K DD,DO S DA(1)=ABMP("CDFN"),DIC="^ABMDCLM(DUZ(2),"_DA(1)_",59,",DIC(0)="LE"
  D FILE^DICN K DIC
+ ;start new code abm*2.5*10 IM20076
  ;EPSDT referral?
  S (DA,ABMPSCD)=+Y
  S DIE="^ABMDCLM(DUZ(2),"_DA(1)_",59,"
@@ -82,6 +87,7 @@ SP ;EP - Entry Point for setting UB-82 Special Prog code
  ..S DIC("A")="Select referral reason(s):"
  ..D ^DIC
  ..I $P(Y,U,3)'=1 S ABMX=ABMX-1
+ ;end new code abm*2.5*10 IM20076
  Q
  ;
 7 ; Outside Lab Charges

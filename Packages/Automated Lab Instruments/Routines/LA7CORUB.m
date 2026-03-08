@@ -1,5 +1,5 @@
 LA7CORUB ;VA/DALOI/JMC - Builder of HL7 Lab Results cont'd ; 22-Oct-2013 09:22 ; MAW
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**68,1033**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**68,1033,1047**;NOV 01, 1997;Build 21
  ;
  Q
  ;
@@ -207,7 +207,9 @@ OBR ;Observation Request segment for Lab Order
  ; Result status
  I LRSS="CH",$G(LA7RSDT)]"" S LA7RS="F"
  I LA7RS'="" S OBR(25)=$$OBR25^LA7VOBR(LA7RS)
- I LRSS="CH",$P($G(LA7RSDT),".")="",$G(LA7INPT) S OBR(25)="X",LA7REJ=1
+ ;I LRSS="CH",$P($G(LA7RSDT),".")="",$G(LA7INPT) S OBR(25)="X",LA7REJ=1  ;mu2
+ I LRSS="CH",$P($G(LA7RSDT),".")="",$G(LA7INPT) S OBR(25)="F",LA7REJ=1  ;01132019 maw 2015 chit
+ I LRSS="MI",$G(LA7Y)]"" S OBR(25)=$P(LA7Y,U,2)  ;maw 01242020 2015 chit
  I $G(OBR(25))="" S OBR(25)="P"  ;MU2
  ;
  ; Result copies to
@@ -219,11 +221,14 @@ OBR ;Observation Request segment for Lab Order
  I $G(LA7INPT),$G(LA7ADDON),$G(LA7ADDPN)]"" D  ;mu2 inpatient
  . Q:'$G(LA7OBRSN)
  . S LA7PARNT(1)=LA7ADDPN
- . S LA7PARNT(2)=1
- . S LA7PARNT(3)=""
+ . S LA7PARNT(1)=$G(LA7PNTLN)  ;01132020 maw 2015 chit
+ . ;S XXX=XXX
+ . S LA7PARNT(2)=""
+ . S LA7PARNT(3)=$G(LA7PNTRS)  ;01132020 maw 2015 chit
  I $D(LA7PARNT) D
- . I $G(LA7INPT),$G(LA7ADDON),$G(LA7OBRSN)=1 Q
+ . ;I $G(LA7INPT),$G(LA7ADDON),$G(LA7OBRSN)=1 Q  ;01132020 maw 2015 chit now do obr.26 for addons
  . S OBR(26)=$$OBR26^LA7COBR(LA7PARNT(1),LA7PARNT(2),LA7PARNT(3),LA7FS,LA7ECH)
+ . ;S XXX=XXX
  . S OBR(29)=$$OBR29^LA7COBR(LA("RUID"),LA("HUID"),LA7FS,LA7ECH)
  ;
  ;-- MU2 reason for study

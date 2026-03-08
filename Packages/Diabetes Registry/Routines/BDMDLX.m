@@ -1,0 +1,9 @@
+BDMDLX ;IHS/CMI/LAB-CREATED BY ^ATXSTX ON JUL 17, 2025;
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**19**;JUN 14, 2007;Build 159
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^BDMDLXA ;   DM AUDIT RSV CPT CODES
+ D ^BDMDLXB ;   DM AUDIT RSV IZ CVX CODES
+ Q

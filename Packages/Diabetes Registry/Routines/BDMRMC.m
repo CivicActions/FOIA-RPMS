@@ -1,5 +1,5 @@
 BDMRMC ; IHS/CMI/LAB - patients w/o dm on problem list ; 28 Oct 2015  2:08 PM
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**9**;JUN 14, 2007;Build 78
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**9,13**;JUN 14, 2007;Build 66
  ;
  ;
 START ;
@@ -65,6 +65,7 @@ EXIT ;clean up and exit
  Q
 PRINT ;EP - called from xbdbque
  ;loop bdmpats and print patient summary and optionally health summary
+ D LOG^BUSAAPI("O","P","P",$S($G(XQY0)]"":$P(XQY0,U),1:"BDMRMC"),"DM MULT PT SUMMARIES","BDMDETAL")
  S BDMMULTS=1
  S BDMPATX=0 F  S BDMPATX=$O(BDMPATS(BDMPATX)) Q:BDMPATX=""!($D(ACMZQUIT))  D
  .S DFN=BDMPATX

@@ -1,10 +1,11 @@
-PSSOPKI ;BHAM ISC/MHA-New API's to CPRS for DEA/PKI Pilot Project ;03/11/02
- ;;1.0;PHARMACY DATA MANAGEMENT;**61,69**;9/30/97
+PSSOPKI ;BHAM ISC/MHA-New API's to CPRS for DEA/PKI Pilot Project ;29-Nov-2017 17:18;DU
+ ;;1.0;PHARMACY DATA MANAGEMENT;**61,69,1023**;9/30/97;Build 121
  ;Reference to ^PSNDF(50.68 supported by DBIA 3735
+ ;Modified - IHS/MSC/MGH -05/12/2017 EPCS changes brought over from patch 166
  ;
-OIDEA(PSSXOI,PSSXOIP) ; CPRS Orderable Item call 
+OIDEA(PSSXOI,PSSXOIP) ; CPRS Orderable Item call
  ;returns the CS Federal Schedule code in the VA PRODUCT file (#50.68)
- ;or the DEA Special Hndl code depending on the "ND" node of the 
+ ;or the DEA Special Hndl code depending on the "ND" node of the
  ;drugs associated to the Orderable Item, and Usage passed in
  ;1  Sch. I Nar.
  ;2  II
@@ -62,3 +63,30 @@ DSET ;
  I +PSSDEAXV=3!(+PSSDEAXV=4)!(+PSSDEAXV=5) S PSSDEAXV=2_";"_PSSDEAXV
  S PSSX("DD",PSSDIENM)=PSSX("DD",PSSDIENM)_"^"_PSSDEAXV_"^"_$S($D(PSSHLF(PSSDIENM)):1,1:0)
  Q
+ ;IHS/MSC/MGH Added from patch 166 for EPCS
+DETOX(PSSDIEN) ;Returns 1 if the drug is a detox drug - drug name contains "BUPREN"  - PKI 2011 Project
+ Q:'$G(PSSDIEN) 0
+ Q:$P($G(^PSDRUG(PSSDIEN,0)),"^")'["BUPREN" 0
+ ;IHS/MSC/MGH addd from patch 183
+ N PSSJ,PSSY,PSSNDF S PSSJ=1
+ I +$P($G(^PSDRUG(PSSDIEN,"ND")),"^",3) S PSSNDF=$P(^("ND"),"^",3) D  Q PSSJ
+ .S PSSY=+$P($G(^PSNDF(50.68,PSSNDF,0)),"^",3) I $P($G(^PS(50.606,PSSY,0)),"^")["PATCH" S PSSJ=0
+ S PSSY=$P($G(^PSDRUG(PSSDIEN,2)),"^") I PSSY,$P($G(^PS(50.606,$P(^PS(50.7,PSSY,0),"^",2),0)),"^")["PATCH" S PSSJ=0
+ Q PSSJ
+ ;IHS/MSC/MGH added from patch 166 for EPCS
+OIDETOX(PSSXOI,PSSXOIP) ; CPRS Orderable Item to check a drug is a DETOX or not
+ ;Input - PSSXOI - Orderable Item IEN
+ ;      - PSSXOIP - Package
+ ;Output - returns 1 if the drugs associated to the Orderable Item contains the text "BUPREN" as part of the name
+ ;         otherwise it returns 0
+ N PSSDTOX,PSSLP,PSSDPK
+ I '$G(PSSXOI)!($G(PSSXOIP)="")!(PSSXOIP'="O") Q 0
+ S (PSSLP,PSSDTOX)=0
+ F  S PSSLP=$O(^PSDRUG("ASP",PSSXOI,PSSLP)) Q:'PSSLP!PSSDTOX  D
+ .I $P($G(^PSDRUG(PSSLP,"I")),"^"),$P($G(^("I")),"^")<DT Q
+ .S PSSDPK=$P($G(^PSDRUG(PSSLP,2)),"^",3)
+ .Q:PSSDPK=""!(PSSDPK'["O")
+ .I $$DETOX(PSSLP) S PSSDTOX=1 Q
+ Q PSSDTOX
+ ;
+ ;

@@ -1,5 +1,5 @@
-PSORXVW2 ;ISC-BIRM/PDW - view cmop activity logs ;29-May-2012 15:14;PLS
- ;;7.0;OUTPATIENT PHARMACY;**33,71,117,152,1005,148,1015**;DEC 1997;Build 62
+PSORXVW2 ;ISC-BIRM/PDW - view cmop activity logs ;21-Nov-2024 16:47;DU
+ ;;7.0;OUTPATIENT PHARMACY;**33,71,117,152,1005,148,1015,1036**;DEC 1997;Build 17
  ; External Referrence to file # 550.2 granted by DBIA 2231
  ;External reference to ^PS(50.607 supported by DBIA 2221
  ;External reference to ^PS(51.2 supported by DBIA 2226
@@ -7,6 +7,7 @@ PSORXVW2 ;ISC-BIRM/PDW - view cmop activity logs ;29-May-2012 15:14;PLS
  ;External reference to VA(200 supported by DBIA 10060
  ;get data from event multiple
  ; Modified - IHS/CIA/PLS - 01/09/04 - Line COPAY+1
+ ;            IHS/MSC/PLS - 11/21/2024 - Line PSORXVW2+17 - FID 111155
  S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=" "
  S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)="CMOP Event Log:",IEN=IEN+1
  S ^TMP("PSOAL",$J,IEN,0)="Date/Time             Rx Ref  TRN-Order       Stat             Comments",IEN=IEN+1,$P(^TMP("PSOAL",$J,IEN,0),"=",79)="="
@@ -15,7 +16,9 @@ PSORXVW2 ;ISC-BIRM/PDW - view cmop activity logs ;29-May-2012 15:14;PLS
  .S ^TMP("PSOAL",$J,IEN,0)=^TMP("PSOAL",$J,IEN,0)_"            "_$G(PSXT)_"    "_$S($G(PSXTST)=3:$E($P($G(PSXCAN),"^"),1,35),$G(PSXNDC)'="":"NDC: "_PSXNDC,1:"")
  . I PSXCAR="",PSXID="" Q
  . N X S X="Carrier: "_$E(PSXCAR,1,21)
- . S X=$$SETSTR^VALM1("Pkg ID: ",X,32,8)
+ .;IHS/MSC/PLS -p1036 FID - 111155
+ . S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=X
+ . S X="",X=$$SETSTR^VALM1("Pkg ID: ",X,1,8)
  . S X=X_PSXID
  . S IEN=IEN+1,^TMP("PSOAL",$J,IEN,0)=X
  D:$O(^PSRX(DA,5,0))

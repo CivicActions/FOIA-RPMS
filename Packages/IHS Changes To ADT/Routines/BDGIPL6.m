@@ -1,5 +1,5 @@
 BDGIPL6 ; IHS/ANMC/LJF - CHAPLAIN'S LIST ; 
- ;;5.3;PIMS;**1007**;FEB 27, 2007
+ ;;5.3;PIMS;**1007,1022**;MAY 28, 2004;Build 18
  ;
  ;
  ;cmi/anch/maw 2/22/2007 added code in PRINT to not close device if multiple copies PATCH 1007 item 1007.39
@@ -57,7 +57,12 @@ LINE ; set up dislay line for patient
  NEW LINE,X
  S X=$O(^DIC(42,"B",WD,0)) I X S X=$$GET1^DIQ(9009016.5,X,.02)
  S LINE=$$PAD(X,7)_RM                                 ;ward abbrv & room
- S LINE=$$PAD(LINE,15)_$E($$GET1^DIQ(2,DFN,.01),1,18)      ;name
+ ;97822 maw p1022 PPN
+ S PPN=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S LINE=$$PAD(LINE,15)_PPN
+ D SET(LINE,.VALMCNT,BDGCNT,DFN)
+ S LINE=""
+ ;S LINE=$$PAD(LINE,15)_$E($$GET1^DIQ(2,DFN,.01),1,18)      ;name
  S LINE=$$PAD(LINE,35)_$$AGE(DFN)                          ;age
  S LINE=$$PAD(LINE,45)_$E($$GET1^DIQ(9000001,DFN,1118),1,18)  ;community
  S LINE=$$PAD(LINE,65)_$P($$INPT1^BDGF1(DFN,DT),"@")       ;admit date

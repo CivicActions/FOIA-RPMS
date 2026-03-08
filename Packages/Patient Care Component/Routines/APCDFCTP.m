@@ -1,5 +1,5 @@
-APCDFCTP ; IHS/CMI/LAB - print apc report by prov disc ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDFCTP ; IHS/CMI/TUCSON - print apc report by prov disc ;
+ ;;2.0;IHS RPMS/PCC Data Entry;**9**;MAR 09, 1999
 START ;
  S APCD80S="-------------------------------------------------------------------------------",APCDPG=0
  S Y=APCDBD D DD^%DT S APCDBDD=Y S Y=APCDED D DD^%DT S APCDEDD=Y

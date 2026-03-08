@@ -1,5 +1,6 @@
-DIPKINI3 ; ; 30-MAR-1999
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIPKINI3 ; ; 22-DEC-1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;
@@ -13,7 +14,6 @@ NP K DIC,^UTILITY("DIFROM",$J) S DIC(0)="LX" I $D(^DIC(19,0))#2,^(0)?1"OPTION".E
  I $D(^DIC(19.1,0))#2,($P(^(0),U)?1"SECUR".E)!($P(^(0),U)="KEY") S (DIC,DLAYGO)=19.1,N="KEY" D ADD K ^UTILITY("DIFROM",$J)
  I $D(^DIC(9.8,0))#2,^(0)?1"ROUTINE^".E S (DIC,DLAYGO)=9.8,N="RTN" D ADD
  S DIC=.5,DLAYGO=0,N="FUN" D ADD
- I $P($G(^DIC(8994,0)),U)="REMOTE PROCEDURE" S (DIC,DLAYGO)=8994,N="REM" D ADD
  S DIC("S")="I $P(^(0),U,4)=DIFL" F N="DIPT","DIBT","DIE" S DIC=U_N_"(" D ADD
  K DIC("S") S N="DIST(.404,",DIC=U_N,DLAYGO=.404 D ADD
  S DIC("S")="I $P(^(0),U,8)=DIFL",N="DIST(.403,",DIC=U_N,DLAYGO=.403 D ADD

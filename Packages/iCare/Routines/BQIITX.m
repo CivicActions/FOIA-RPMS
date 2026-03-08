@@ -1,0 +1,9 @@
+BQIITX ;VNGT/HS/ALA-CREATED BY ^ATXSTX ON AUG 13, 2009;
+ ;;2.0;ICARE MANAGEMENT SYSTEM;**2**;May 29, 2009
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^BQIITXA ;   BKM CHLAMYDIA DXS
+ D ^BQIITXB ;   BKM TETANUS IZ CVX CODES
+ Q

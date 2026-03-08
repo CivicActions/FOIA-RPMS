@@ -1,0 +1,296 @@
+AMHRDU2 ; IHS/CMI/LAB - list refusals ;
+ ;;4.0;IHS BEHAVIORAL HEALTH;**12**;JUN 02, 2010;Build 46
+ ;
+ ;
+INFORM ;
+ W !,$$CTR($$USR)
+ W !,$$LOC()
+ W !!,$$CTR("TALLY AND LISTING OF ALL DRUG USE SCREENINGS",80)
+ W !!,"This report will tally DRUG USE screenings or a refusal "
+ W !,"that was documented in the time frame specified by the"
+ W !,"user.  Drug Use Screening is defined as any of the following documented:"
+ W !?5,"- Unhealthy Drug Screening Exam (Exam code 45)"
+ W !?5,"- Measurements: DAST-10"
+ W !?5,"- Health Factor categories 4PS, CAGE, CAGE-AID, or NIDA Quick Screen"
+ W !?5,"- Any TAPS-Sedative, TAPS-Cannabis, TAPS-Stimulant, TAPS-Opioid, "
+ W !?5,"  TAPS-Heroin Health Factor"
+ W !?5,"- POV ICD-10: Z02.83 (Encounter for blood-alcohol and blood-drug test)"
+ W !?5,"- refusal of exam code 45"
+ W !,"This report will tally the screenings by age groups, gender, "
+ W !,"screening exam result, clinic, Patient Community, Race, Ethnicity."
+ W !,"  Notes:  "
+ W !?10,"- this report will optionally, look at both PCC and the Behavioral"
+ W !?10,"   Health databases for evidence of screening/refusal"
+ W !?10,"- this is a tally screenings done, if a patient had"
+ W !?10,"   multiple screenings during the time period, all will be counted"
+ W !
+ D DBHUSR^AMHUTIL,PAUSE^AMHLEA
+ D XIT
+ S AMHREXC=$O(^AUTTEXAM("C",45,0))
+ I 'AMHREXC W !!,"Exam code 45 is missing from the EXAM table.  Cannot run report.",! H 3 D XIT Q
+ ;
+ ;
+DATES K AMHRED,AMHRBD
+ W !,"Please enter the date range during which the screening was done.",!,"To get all screenings ever put in a long date range like 01/01/1980",!,"to the present date.",!
+ K DIR W ! S DIR(0)="DO^::EXP",DIR("A")="Enter Beginning Date for Screening"
+ D ^DIR Q:Y<1  S AMHRBD=Y
+ K DIR S DIR(0)="DO^:DT:EXP",DIR("A")="Enter Ending Date for Screening"
+ D ^DIR Q:Y<1  S AMHRED=Y
+ ;
+ I AMHRED<AMHRBD D  G DATES
+ . W !!,$C(7),"Sorry, Ending Date MUST not be earlier than Beginning Date."
+ ;
+TALLY ;which items to tally
+ K AMHRTALL
+ W !!,"Please select which items you wish to tally on this report:",!
+ W !?3,"0)  Do not include any Tallies"
+ W !?3,"1)  Result"
+ W !?3,"2)  Gender"
+ W !?3,"3)  Age Groupings"
+ W !?3,"4)  Clinic"
+ W !?3,"5)  Ethnicity"
+ W !?3,"6)  Race"
+ W !?3,"7)  Patient Community"
+ K DIR S DIR(0)="L^0:7",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) G DATES
+ I Y="" G DATES
+ I Y[0 K AMHRTALL G EXCL
+ S AMHRTALL=Y
+ S A=Y,C="" F I=1:1 S C=$P(A,",",I) Q:C=""  S AMHRTALL(C)=""
+AGEG ;
+ I '$D(AMHRTALL(2)) G EXCL
+AGEGRP ;GET AGE GROUPS
+ W !!
+ D SETBIN
+BIN ;
+ W !,"The Age Groups to be used are currently defined as:",! D LIST
+ S DIR(0)="YO",DIR("A")="Do you wish to modify these age groups",DIR("B")="NO" D ^DIR K DIR
+ I $D(DIRUT) S AMHQUIT="" G TALLY
+ I Y=0 G EXCL
+RUN ;
+ K AMHQUIT S AMHRY="",AMHRA=-1 W ! F  D AGE Q:AMHRX=""  I $D(AMHQUIT) G BIN
+ D CLOSE I $D(AMHQUIT) G BIN
+ D LIST
+ G BIN
+ ;
+AGE ;
+ S AMHRX=""
+ S DIR(0)="NO^0:150:0",DIR("A")="Enter the starting age of the "_$S(AMHRY="":"first",1:"next")_" age group" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
+ I $D(DUOUT)!($D(DTOUT)) S AMHQUIT="" Q
+ S AMHRX=Y
+ I Y="" Q
+ I AMHRX?1.3N,AMHRX>AMHRA D SET Q
+ W $C(7) W !,"Make sure the age is higher the beginning age of the previous group.",! G RUN
+ ;
+SET S AMHRA=AMHRX
+ I AMHRY="" S AMHRY=AMHRX Q
+ S AMHRY=AMHRY_"-"_(AMHRX-1)_";"_AMHRX
+ Q
+ ;
+CLOSE I AMHRY="" Q
+GC ;
+ S DIR(0)="NO^0:150:0",DIR("A")="Enter the highest age for the last group" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
+ I $D(DUOUT)!($D(DTOUT)) S AMHQUIT="" Q
+ S AMHRX=Y I Y="" S AMHRX=199
+ I AMHRX?1.3N,AMHRX'<AMHRA S AMHRY=AMHRY_"-"_AMHRX,AMHRBIN=AMHRY Q
+ W "  ??",$C(7) G CLOSE
+ Q
+ ;
+LIST ;
+ S %=AMHRBIN
+ F I=1:1 S X=$P(%,";",I) Q:X=""  W !,$P(X,"-")," - ",$P(X,"-",2)
+ W !
+ Q
+ ;
+SETBIN ;
+ S AMHRBIN="0-12;13-17;18-64;65-125"
+ Q
+EXCL ;
+ K AMHRBINA
+ I '$D(AMHRBIN) D SETBIN
+ F I=1:1 S J=$P(AMHRBIN,";",I) Q:J=""  S AMHRBINA(J)=$P(J,"-",1)_U_$P(J,"-",2)
+ S AMHREXPC=""
+ W !!,"Would you like to include DRUG USE Screenings documented in the PCC clinical"
+ S DIR(0)="Y",DIR("A")="database",DIR("B")="N" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) G TALLY
+ S AMHREXPC=Y
+DEMO ;
+ D DEMOCHK^AMHUTIL1(.AMHDEMO)
+ I AMHDEMO=-1 G EXCL
+ZIS ;
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
+ I $D(DIRUT) G XIT
+ I $G(Y)="B" D BROWSE,XIT Q
+ S XBRP="PRINT^AMHRDU2P",XBRC="PROC^AMHRDU2",XBRX="XIT^AMHRDU2",XBNS="AMH"
+ D ^XBDBQUE
+ D XIT
+ Q
+BROWSE ;
+ S XBRP="VIEWR^XBLM(""^AMHRDU2P"")"
+ S XBNS="AMH",XBRC="PROC^AMHRDU2",XBRX="XIT^AMHRDU2",XBIOP=0 D ^XBDBQUE
+ Q
+XIT ;
+ D EN^XBVK("AMHR")
+ D ^XBFMK
+ Q
+PROC ;
+ S AMHRCNT=0
+ S AMHRH=$H,AMHRJ=$J
+ K ^XTMP("AMHRDU2",AMHRJ,AMHRH)
+ D XTMP^AMHUTIL("AMHRDU2","DRUG USE SCREENING REPORT")
+ ;now go through BH
+ S AMHRSD=$$FMADD^XLFDT(AMHRBD,-1),AMHRSD=AMHRSD_".9999"
+ F  S AMHRSD=$O(^AMHREC("B",AMHRSD)) Q:AMHRSD'=+AMHRSD!($P(AMHRSD,".")>AMHRED)  D
+ .S AMHRBIEN=0 F  S AMHRBIEN=$O(^AMHREC("B",AMHRSD,AMHRBIEN)) Q:AMHRBIEN'=+AMHRBIEN  D
+ ..S AMHRDATE=$P(AMHRSD,".")
+ ..Q:'$D(^AMHREC(AMHRBIEN,0))
+ ..Q:'$$ALLOWVI^AMHUTIL(DUZ,AMHRBIEN)
+ ..Q:AMHRDATE>AMHRED
+ ..Q:AMHRDATE<AMHRBD
+ ..S DFN=$P(^AMHREC(AMHRBIEN,0),U,8)
+ ..Q:DFN=""
+ ..Q:'$$ALLOWP^AMHUTIL(DUZ,DFN)
+ ..Q:$$DEMO^AMHUTIL1(DFN,$G(AMHDEMO))
+ ..K AMHBHSCS
+ ..D BHSCR
+ ..S D=0 F  S D=$O(AMHBHSCS(D)) Q:D'=+D  D
+ ...S AMHRCNT=AMHRCNT+1
+ ...S ^XTMP("AMHRDU2",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)=""
+ ...S ^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT)=AMHBHSCS(D)
+ ...S $P(^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ ...S $P(^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
+ ...S $P(^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,27)=$$COMMRES^AUPNPAT(DFN,"E")
+ ...;FOR CHECKING DUPES IN PCC
+ ...;S ^XTMP("AMHRDU2",AMHRJ,AMHRH,"SCREENS",DFN,$P(AMHBHSCS(D),U,1),$P(AMHBHSCS(D),U,2))=""
+PCC ;
+ Q:'AMHREXPC
+ S AMHRSD=$$FMADD^XLFDT(AMHRBD,-1),AMHRSD=AMHRSD_".9999"
+ F  S AMHRSD=$O(^AUPNVSIT("B",AMHRSD)) Q:AMHRSD'=+AMHRSD!($P(AMHRSD,".")>AMHRED)  D
+ .S AMHRBIEN=0 F  S AMHRBIEN=$O(^AUPNVSIT("B",AMHRSD,AMHRBIEN)) Q:AMHRBIEN'=+AMHRBIEN  D
+ ..S AMHRDATE=$P(AMHRSD,".")
+ ..Q:'$D(^AUPNVSIT(AMHRBIEN,0))
+ ..Q:$D(^AMHREC("AVISIT",AMHRBIEN))  ;visit is in BH
+ ..Q:'$$ALLOWPCC^AMHUTIL(DUZ,AMHRBIEN)
+ ..Q:AMHRDATE>AMHRED
+ ..Q:AMHRDATE<AMHRBD
+ ..S DFN=$P(^AUPNVSIT(AMHRBIEN,0),U,5)
+ ..Q:DFN=""
+ ..Q:'$$ALLOWP^AMHUTIL(DUZ,DFN)
+ ..Q:$$DEMO^AMHUTIL1(DFN,$G(AMHDEMO))
+ ..K AMHPCSCS
+ ..D PCCSCR^AMHRDU2P
+ ..S D=0 F  S D=$O(AMHPCSCS(D)) Q:D'=+D  D
+ ...S T=$P(AMHPCSCS(D),U,2)
+ ...S %=$P(AMHPCSCS(D),U,1)
+ ...;I $D(^XTMP("AMHDRU2",AMHRJ,AMHRH,"SCREENS",DFN,%,T)) Q  ;already found this in BH
+ ...S AMHRCNT=AMHRCNT+1
+ ...S ^XTMP("AMHRDU2",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)=""
+ ...S ^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT)=AMHPCSCS(D)
+ ...S $P(^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ ...S $P(^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
+ ...S $P(^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,27)=$$ETHN^AMHUTIL2(DFN)
+ ;now go through refusals in pcc
+ S AMHRRIEN=0 F  S AMHRRIEN=$O(^AUPNPREF(AMHRRIEN)) Q:AMHRRIEN'=+AMHRRIEN  D
+ .Q:'$D(^AUPNPREF(AMHRRIEN,0))
+ .Q:$P(^AUPNPREF(AMHRRIEN,0),U,5)'=9999999.15
+ .Q:$P(^AUPNPREF(AMHRRIEN,0),U,6)'=AMHREXC
+ .S AMHRDATE=$P(^AUPNPREF(AMHRRIEN,0),U,3)
+ .Q:AMHRDATE=""
+ .Q:AMHRDATE>AMHRED
+ .Q:AMHRDATE<AMHRBD
+ .S DFN=$P(^AUPNPREF(AMHRRIEN,0),U,2)
+ .Q:'$$ALLOWP^AMHUTIL(DUZ,DFN)
+ .Q:$$DEMO^AMHUTIL1(DFN,$G(AMHDEMO))
+ .;I $D(^XTMP("AMHRDU2",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)) Q
+ .S AMHRCNT=AMHRCNT+1
+ .S ^XTMP("AMHRDU2",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)=""
+ .S T=AMHRDATE
+ .S R=$$VALI^XBDIQ1(9000022,AMHRRIEN,.07)
+ .I R'="R",R'="U" Q
+ .S $P(T,U,2)="UNHEALTHY DRUG SCREENING EXAM;"_$S(R="R":"PATIENT REFUSED",1:"UNABLE TO SCREEN")
+ .S $P(T,U,3)=$$VAL^XBDIQ1(2,DFN,.02)
+ .S A=$$GETAGE^AMHRDU1($$AGE^AUPNPAT(DFN,AMHRDATE))
+ .S $P(T,U,4)=A
+ .S $P(T,U,5)=$$VAL^XBDIQ1(9000022,AMHRRIEN,1204) I $P(T,U,5)="" S $P(T,U,5)="UNKNOWN"
+ .S $P(T,U,6)="UNKNOWN"
+ .S $P(T,U,7)="UNKNOWN"
+ .S $P(T,U,8)=$$VAL^XBDIQ1(9002011.55,DFN,.02)
+ .S $P(T,U,9)=$$VAL^XBDIQ1(9002011.55,DFN,.03)
+ .S $P(T,U,10)=$$VAL^XBDIQ1(9002011.55,DFN,.04)
+ .S $P(T,U,11)=$$VAL^XBDIQ1(9000001,DFN,.14)
+ .S $P(T,U,15)=DFN
+ .S $P(T,U,20)="PCC"
+ .S ^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT)=T
+ .S $P(^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ .S $P(^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
+ .S $P(^XTMP("AMHRDU2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,27)=$$COMMRES^AUPNPAT(DFN,"E")
+ Q
+ ;
+BHSCR ;EP - is there a screening?  return in R
+ ;get measurements AUDC, AUDT, CRFTT
+ NEW R,X,M,P,E,AMHC
+ S R=""
+ S AMHC=0
+ S P=$P(^AMHREC(AMHRBIEN,0),U,8)
+ ;get measurements DAST-10
+ S X=0 F  S X=$O(^AMHRMSR("AD",AMHRBIEN,X)) Q:X'=+X  D
+ .S M=$$VAL^XBDIQ1(9002011.12,X,.01)
+ .S S=$$VAL^XBDIQ1(9002011.12,X,.04)
+ .S S=$S(S>1:"POSITIVE",1:"NEGATIVE")
+ .I M="DA10" S R=$$BHRT^AMHRDU1(AMHRBIEN,"DAST-10 (Score: "_$P(^AMHRMSR(X,0),U,4)_")",S,P,$$VALI^XBDIQ1(9002011.12,X,1204)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R
+ ;get exam
+ S E=$P($G(^AMHREC(AMHRBIEN,22)),U,1)
+ I E["REFUSE" S E="PATIENT REFUSED"
+ I E]"" S R=$$BHRT^AMHRDU1(AMHRBIEN,"UNHEALTHY DRUG SCREENING EXAM",$$VAL^XBDIQ1(9002011,AMHRBIEN,2201),P,$P($G(^AMHREC(AMHRBIEN,22)),U,2),$P($G(^AMHREC(AMHRBIEN,23)),U,1)) S AMHC=AMHC+1 S AMHBHSCS(AMHC)=R
+ ;HEALTH FACTORS 4PS, CAGE, CAGE-AID, NIDA, TAPS
+ S X=0 F  S X=$O(^AMHRHF("AD",AMHRBIEN,X)) Q:X'=+X  D
+ .S M=$$VALI^XBDIQ1(9002011.08,X,.01) D
+ ..I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C001" S R=$$BHRT^AMHRDU1(AMHRBIEN,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(AMHRBIEN,811)),U,1)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R Q
+ ..I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C023" S R=$$BHRT^AMHRDU1(AMHRBIEN,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(AMHRBIEN,811)),U,1)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R Q
+ ..I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C024" S R=$$BHRT^AMHRDU1(AMHRBIEN,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(AMHRBIEN,811)),U,1)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R Q
+ ..I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C036" S R=$$BHRT^AMHRDU1(AMHRBIEN,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(AMHRBIEN,811)),U,1)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R Q
+ ..I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C030" S R=$$BHRT^AMHRDU1(AMHRBIEN,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(AMHRBIEN,811)),U,1)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R Q
+ ..I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C031" S R=$$BHRT^AMHRDU1(AMHRBIEN,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(AMHRBIEN,811)),U,1)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R Q
+ ..I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C032" S R=$$BHRT^AMHRDU1(AMHRBIEN,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(AMHRBIEN,811)),U,1)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R Q
+ ..I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C033" S R=$$BHRT^AMHRDU1(AMHRBIEN,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(AMHRBIEN,811)),U,1)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R Q
+ ..I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C034" S R=$$BHRT^AMHRDU1(AMHRBIEN,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(AMHRBIEN,811)),U,1)) S AMHC=AMHC+1,AMHBHSCS(AMHC)=R Q
+ ;get pov
+ S X=0 F  S X=$O(^AMHRPRO("AD",AMHRBIEN,X)) Q:X'=+X  D
+ .S M=$$VAL^XBDIQ1(9002011.01,X,.01)
+ .I M="Z02.83" S R=$$BHRT^AMHRDU1(AMHRBIEN,M,"",P,$$VALI^XBDIQ1(9002011.01,X,1204)) S AMHC=AMHC+1,AMHBHSCD(AMHC)=R
+ Q
+ ;
+BHPPNAME(R) ;EP primary provider internal # from 200
+ NEW %,%1
+ S %=0,%1="" F  S %=$O(^AMHRPROV("AD",R,%)) Q:%'=+%  I $P(^AMHRPROV(%,0),U,4)="P" S %1=$P(^AMHRPROV(%,0),U),%1=$P($G(^VA(200,%1,0)),U)
+ I %1]"" Q %1
+ Q "UNKNOWN"
+SPRV(E) ;
+ I $P($G(^AUPNVXAM(E,12)),U,4) Q $$VAL^XBDIQ1(9000010.13,E,1204)
+ Q "UNKNOWN"
+PRVREF(R) ;
+ I $P($G(^AUPNPREF(R,12)),U,4)]"" Q $$VAL^XBDIQ1(9000022,R,1204)
+ Q "UNKNOWN"
+PPV(V) ;
+ NEW %
+ S %=$$PRIMPROV^APCLV(V)
+ I %]"" Q %
+ Q "UNKNOWN"
+CTR(X,Y) ;EP - Center X in a field Y wide.
+ Q $J("",$S($D(Y):Y,1:IOM)-$L(X)\2)_X
+ ;----------
+EOP ;EP - End of page.
+ Q:$E(IOST)'="C"
+ Q:IO'=IO(0)
+ Q:$D(ZTQUEUED)!'(IOT="TRM")!$D(IO("S"))
+ NEW DIR
+ K DIRUT,DFOUT,DLOUT,DTOUT,DUOUT
+ W !
+ S DIR("A")="End of Report.  Press Enter",DIR(0)="E" D ^DIR
+ Q
+ ;----------
+USR() ;EP - Return name of current user from ^VA(200.
+ Q $S($G(DUZ):$S($D(^VA(200,DUZ,0)):$P(^(0),U),1:"UNKNOWN"),1:"DUZ UNDEFINED OR 0")
+ ;----------
+LOC() ;EP - Return location name from file 4 based on DUZ(2).
+ Q $S($G(DUZ(2)):$S($D(^DIC(4,DUZ(2),0)):$P(^(0),U),1:"UNKNOWN"),1:"DUZ(2) UNDEFINED OR 0")

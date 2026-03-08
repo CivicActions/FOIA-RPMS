@@ -1,20 +1,26 @@
-ABMDEOK ; IHS/ASDST/DMJ - Approve Claim for Billing ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**9,19**;NOV 12, 2009;Build 300
+ABMDEOK ; IHS/SD/SDR - Approve Claim for Billing ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**9,19,29,30,34,37**;NOV 12, 2009;Build 739
  ;
- ; IHS/ASDS/SDH - 03/12/01 - V2.4 Patch 9 - NOIS XJG-0500-160047
- ;     Remove the post pre-payment on the fly functionality
- ; IHS/ASDS/SDH - 09/26/01 - V2.4 Patch 9 - NOIS NDA-1199-180065
- ;     Modified to add prompts for Unbillable secondary stuff
+ ;IHS/ASDS/SDH 03/12/01 2.4*9 NOIS XJG-0500-160047 Remove the post pre-payment on the fly functionality
+ ;IHS/ASDS/SDH 09/26/01 2.4*9 NOIS NDA-1199-180065 Modified to add prompts for Unbillable secondary stuff
  ;
- ; IHS/SD/SDR - v2.5 p9 - IM19585 - Added code to check status of active insurer; change to
- ;    initiated if complete
+ ;IHS/SD/SDR 2.5*9 IM19585 Added code to check status of active insurer; change to initiated if complete
  ;
- ;IHS/SD/SDR - 2.6*19 - HEAT193348 - Made change to stop duplicate bill from creating in A/R.  If the 3P Bill entry
+ ;IHS/SD/SDR 2.6*19 HEAT193348 Made change to stop duplicate bill from creating in A/R.  If the 3P Bill entry
  ;  thought it was incomplete for some reason, it would delete the 3P Bill without checking for the A/R Bill.  The
  ;  A/R Bill would have created when the 3P Claim was approved.  Updated the statuses of the 3P Bill check to include
  ;  approved.
+ ;IHS/SD/SDR 2.6*29 CR10696 Added check for high bill amount
+ ;IHS/SD/SDR 2.6*30 CR8901 Removed code that was changing the status of insurers.
+ ;IHS/SD/SDR 2.6*34 ADO60709 Put code back from p30.  If a bill was cancelled, not exported, and re-approved to the same
+ ;  insurer a second time the insurer status wasn't getting reset.  The code I added back fixes this and stops programming
+ ;  errors:
+ ;  a. 837P error is <UNDEF>60+6^ABME5SBR
+ ;  b. 837I error is <UNDEF>30+4^ABME5DMG
+ ;  c. ADA-2012 error is <UNDEF>SEL+4^ABMDE2X
+ ;IHS/SD/SDR 2.6*37 ADO76009 Added check for PI multiple to make sure it's the correct insurer entry to reset the status of
  ;
- ; *********************************************************************
+ ;*************************************
  ;
 ERR ;
  I $P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,5) D  G XIT
@@ -47,6 +53,8 @@ UNBIL ;
  . S ABMP("TOT")=ABMP("TOT")+$G(ABMP("WO"))+$G(ABMP("CO"))
  ;
 BGEN ;
+ S ABMULMT=$$UPPERLMT  ;abm*2.6*29 IHS/SD/SDR CR10696
+ I ABMULMT=1 Q  ;stop if they said no, don't acknowledge bill amount  ;abm*2.6*29 IHS/SD/SDR CR10696
  W !
  S DIR(0)="Y"
  S DIR("A")="Do You Wish to APPROVE this Claim for Billing"
@@ -55,6 +63,8 @@ BGEN ;
  K DIR
  G:$D(DIRUT)!$D(DIROUT)!(Y'=1) XIT
  I Y=1,+$G(ABM("W"))'=0 D ADJMNT
+ I Y=1,+$G(ABM("W"))'=0 S ABMULMT=$$UPPERLMT  ;abm*2.6*29 IHS/SD/SDR CR10696
+ I Y=1,+$G(ABM("W"))'=0 I ABMULMT=1 Q  ;stop if they said no, don't acknowledge bill amount  ;abm*2.6*29 IHS/SD/SDR CR10696
  ;
 BIL ;
  S DA=0
@@ -70,20 +80,24 @@ BIL ;
  .D ^DIK
  W !!,"Transferring Data...."
  ;if active insurer and status is complete, make it initiated
+ ;abm*2.6*34 IHS/SD/SDR ADO60709 - put the below section of code back in
+ ;start old abm*2.6*30 IHS/SD/SDR CR8901
  S I=0
  F  S I=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I)) Q:'I  D
  .I ($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0)),U)=ABMP("INS")!($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0)),U,11)=ABMP("INS"))),"CB"[($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0)),U,3)) D
+ ..I ((+$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0)),U,8)'=0)&($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,I,0)),U,8)'=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,26))) Q  ;not the right entry  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ..S DA(1)=ABMP("CDFN")
  ..S DIE="^ABMDCLM(DUZ(2),"_DA(1)_",13,"
  ..S DA=I
  ..S DR=".03////I"
  ..D ^DIE
  ..K DR
+ ;end old abm*2.6*30 IHS/SD/SDR CR8901
  D ^ABMDEBIL
  I '$D(ABMP("BDFN")) D  G XIT
- . K DIR
- . S DIR(0)="EO"
- . D ^DIR
+ .K DIR
+ .S DIR(0)="EO"
+ .D ^DIR
  ;
  S ABMP("OVER")=""
  S DIE="^ABMDCLM(DUZ(2),"
@@ -113,12 +127,12 @@ BIL ;
 XIT ;
  Q
  ;
- ; *********************************************************************
+ ;*******************************
 EOP ;
  W $$EN^ABMVDF("IOF")
  Q
  ;
- ; *********************************************************************
+ ;*******************************
 ADJMNT ;
  Q:$G(ABMSPLFG)=1  ;flag that transactions are split (see ^ABMPPFLR)
  S EXP=""
@@ -168,3 +182,50 @@ ADJMNT ;
  ...I $D(DTOUT)!$D(DIROUT)!$D(DIRUT)!$D(DUOUT) S ABMFLAG=1 Q
  ...I Y=1 S ABMP("EXP",ABMP("EXP"))=$G(ABMP("EXP",ABMP("EXP")))+ADJ,ABMFLAG=1,ABMP("WO")=ABMP("WO")-ADJ
  Q
+ ;
+ ;start new abm*2.6*29 IHS/SD/SDR CR10696
+UPPERLMT() ; EP
+ ;returns 0 to continue approve
+ ;        1 to quit and go back into claim
+ S ABMULMT=0
+ S ABMPULMT=+$P($G(^ABMDPARM(DUZ(2),1,2)),U,15)  ;SITM upper limit
+ S ABMEULMT=0
+ ;
+ I $D(ABMP("EXP")) D  ;if there are export modes (meaning NOT from ADMG option
+ .S ABMI=0
+ .F  S ABMI=$O(ABMP("EXP",ABMI)) Q:'ABMI  D
+ ..S ABMEULMT=+$P($G(^ABMDEXP(ABMI,1)),U,6)
+ ..S ABMBAMT=$G(ABMP("EXP",ABMI))
+ ..D ULMTCK  ;does checks and sets flags
+ ..I ABMUBFLG'="" D ULMTMSG
+ I '$D(ABMP("EXP")) D
+ .D ULMTCK
+ .I ABMUBFLG'="" D ULMTMSG
+ W !
+ S ABMULMT=0
+ Q:(ABMUBFLG="") ABMULMT  ;quit if neither check failed
+ S DIR(0)="Y"
+ S DIR("A")="Do you acknowledge the amount"
+ S DIR("B")="N"
+ D ^DIR
+ K DIR
+ I $D(DIRUT)!$D(DIROUT)!(Y'=1) S ABMULMT=1
+ Q ABMULMT
+ ;
+ULMTCK ; EP
+ S ABMUBFLG=""
+ I (('ABMEULMT)&('ABMPULMT)) Q  ;neither is populated - stop here and continue approval process
+ ;changed below during internal testing abm*2.6*29; felt that equals shouldn't drop the message
+ ;I ((ABMEULMT>0)&(ABMBAMT>ABMEULMT!(ABMBAMT=ABMEULMT))) S ABMUBFLG="E"
+ I ((ABMEULMT>0)&(ABMBAMT>ABMEULMT)) S ABMUBFLG="E"
+ I ((ABMUBFLG="")&(ABMPULMT>0)) D
+ .;I ((ABMBAMT>ABMPULMT)!(ABMBAMT=ABMPULMT)) S ABMUBFLG="P"
+ .I ((ABMBAMT>ABMPULMT)) S ABMUBFLG="P"
+ Q
+ULMTMSG ; EP
+ S ABMUBAMT=$S(ABMUBFLG="E":ABMEULMT,1:(ABMPULMT))  ;just in case both are populated, export mode first
+ W !!,$$EN^ABMVDF("RVN"),"WARNING: The "_$S((+$G(ABMI)'=0):$P(^ABMDEXP(ABMI,0),U)_" ",1:"")_"amount billed ($"_$FN(ABMBAMT,",",2)_") exceeds the"
+ W !?4,"UPPER BILL AMOUNT ($"_$FN(ABMUBAMT,",",2)_") set ",$S((ABMUBFLG="E"):"for this Export Mode",1:"in the SITM option")
+ W $$EN^ABMVDF("RVF")
+ Q
+ ;end new abm*2.6*29 IHS/SD/SDR CR10696

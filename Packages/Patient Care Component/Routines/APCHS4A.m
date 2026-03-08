@@ -1,5 +1,5 @@
-APCHS4A ; IHS/CMI/LAB - PART 4A OF APCHS -- SUMMARY PRODUCTION COMPONENTS ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHS4A ; IHS/TUCSON/LAB - PART 4A OF APCHS -- SUMMARY PRODUCTION COMPONENTS ;  [ 02/20/04  1:28 PM ]
+ ;;2.0;IHS RPMS/PCC Health Summary;**8,11,12**;JUN 24, 1997
  ;
 HFACT ; ******************** HEALTH FACTORS * 9000019 *********
  ; <SETUP>
@@ -71,8 +71,8 @@ EDUCASSE ;EP - called from component educational assessment
  X APCHSCKP Q:$D(APCHSQIT)  X:'APCHSNPG APCHSBRK
  W !,"Most recent Health Factor recorded.",!
  W !,"   Learning Preference:  ",$$LASTHF^APCHSMU(APCHSPAT,"LEARNING PREFERENCE","B"),!
- ;X APCHSCKP Q:$D(APCHSQIT)
- ;W !,"    Readiness to Learn:  ",$$LASTHF^APCHSMU(APCHSPAT,"READINESS TO LEARN","B"),!
+ X APCHSCKP Q:$D(APCHSQIT)
+ W !,"    Readiness to Learn:  ",$$LASTHF^APCHSMU(APCHSPAT,"READINESS TO LEARN","B"),!
  X APCHSCKP Q:$D(APCHSQIT)
  W !,"  Barriers to Learning:  "
  S C=$O(^AUTTHF("B","BARRIERS TO LEARNING",0)) ;ien of category passed

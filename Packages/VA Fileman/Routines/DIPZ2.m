@@ -1,10 +1,9 @@
-DIPZ2 ;SFISC/GFT,XAK-COMPILE PRINT TEMPLATES ;09:33 PM  9 Feb 1999
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIPZ2 ;SFISC/GFT,XAK-COMPILE PRINT TEMPLATES ;9/20/94  14:21 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F R=0:0 S R=$O(DXS(R)),W="" Q:'R  K:$D(DXS(R))>9 ^DIPT(DIPZ,"DXS",R) F R=R:0 S W=$O(DXS(R,W)) Q:W=""  S ^DIPT(DIPZ,"DXS",R,W)=DXS(R,W)
- S DIPZLR=DRN,DRN="",DIL=0 D NEW
-DXS I $D(^DIPT(DIPZ,"DXS")) S X=" I $D(DXS)<9 M DXS=^DIPT("_DIPZ_",""DXS"")" D L
- S X=" S I(0)="""_$$CONVQQ^DILIBF(DK)_""",J(0)="_DP D L
+ S DIPZLR=DRN,DRN="",DIL=0 D NEW I $D(^DIPT(DIPZ,"DXS")) S X=" I $D(DXS)<9 F X=0:0 S X=$O(^DIPT("_DIPZ_",""DXS"",X)) Q:'X  S Y=$O(^(X,"""")) F X=X:0 Q:Y=""""  S DXS(X,Y)=^(Y),Y=$O(^(Y))" D L
 DIL S DIL=$O(^UTILITY("DIPZ",$J,DIL)) G DHD:'DIL
  S DHT=^(DIL) I DRN<DIPZLR,DIL>DRN(+DRN) D SAVE G:DIPZQ K
  S X=DHT D L G DIL

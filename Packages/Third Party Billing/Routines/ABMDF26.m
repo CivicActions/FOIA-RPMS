@@ -1,5 +1,5 @@
 ABMDF26 ; IHS/ASDST/DMJ - ADA-99 Dental Export Routine V2000 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**8,10**;APR 05, 2002
  ;Original;TMD;09/12/95 8:48 AM
  ;
  ; IHS/SD/SDR - v2.5 p8 - IM12857/IM13525
@@ -79,6 +79,30 @@ BODY ;
  F  S ABMRCD=$O(ABMRV(ABMRCD)) Q:ABMRCD=""  D
  .S ABMED=0
  .F  S ABMED=$O(ABMRV(ABMRCD,ABMED)) Q:'+ABMED  D  Q:$D(DUOUT)
+ ..;start old code abm*2.5*10 IM20395
+ ..;D RESET:ABM("I")=0
+ ..;S ABM("F")=ABM("F")+1
+ ..;S ABMRX=$P(ABMRV(ABMRCD,ABMED),U,9)     ; NDC# name
+ ..;S ABMRXDT=$P(ABMRV(ABMRCD,ABMED),U,10)  ; date/time
+ ..;S ABMRXQTY=$P(ABMRV(ABMRCD,ABMED),U,5)  ; Quantity
+ ..;S ABMRXCHG=$P(ABMRV(ABMRCD,ABMED),U,6)  ; Charge
+ ..;S $P(ABMF(ABM("F")),U,4)=$E(ABMRX,1,3)
+ ..;S $P(ABMF(ABM("F")),U,5)=$E(ABMRX,4,8)
+ ..;S $P(ABMF(ABM("F")),U,9)=$E(ABMRX,9,99)
+ ..;I ABMRXDT]"" D
+ ..;.S $P(ABMF(ABM("F")),U)=$E(ABMRXDT,4,5)
+ ..;.S $P(ABMF(ABM("F")),U,2)=$E(ABMRXDT,6,7)
+ ..;.S $P(ABMF(ABM("F")),U,3)=$E(ABMRXDT,1,3)+1700
+ ..;S $P(ABMF(ABM("F")),U,8)=ABMRXQTY
+ ..;S $P(ABMF(ABM("F")),U,10)=ABMRXCHG
+ ..;S ABM("TCHRG")=ABM("TCHRG")+ABMRXCHG
+ ..;S ABM("I")=ABM("I")+1
+ ..;I ABM("I")=10 D
+ ..;.Q:($O(ABMRV(ABMRCD,ABMED))=""&($O(ABMRV(ABMRCD))=""))
+ ..;.S ABM("MORE")=1
+ ..;.D ^ABMDF26X                         ; Print form
+ ..;.S ABM("I")=0
+ ..;end old code start new code IM20395
  ..S ABMCNTR=0
  ..F  S ABMCNTR=$O(ABMRV(ABMRCD,ABMED,ABMCNTR)) Q:ABMCNTR=""  D
  ...D RESET:ABM("I")=0
@@ -103,6 +127,7 @@ BODY ;
  ....S ABM("MORE")=1
  ....D ^ABMDF26X                         ; Print form
  ....S ABM("I")=0
+ ;end new code IM20395
  ;
  D TAIL:ABM("I")
  Q

@@ -1,5 +1,5 @@
-BHSMBN ;IHS/CIA/MGH - Health Summary for V MED file ;01-May-2014 11:09;DU
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,6,9**;March 17, 2006;Build 16
+BHSMBN ;IHS/CIA/MGH - Health Summary for V MED file ;1-Dec-2024 11:09
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,6,9,21**;March 17, 2006;Build 45
  ;===================================================================
  ;Taken from APCHS77
  ; IHS/TUCSON/LAB - PART 7 OF BHS -- SUMMARY PRODUCTION COMPONENTS ;  [ 04/14/04  3:14 PM ]
@@ -8,6 +8,7 @@ BHSMBN ;IHS/CIA/MGH - Health Summary for V MED file ;01-May-2014 11:09;DU
  ;This routine makes health summaries for those medications sorted by name
  ;Patch 1 changes prescribed at to dispensed at as in IHS patch 15
  ;Patch 6 for non-VA meds and medication review
+ ; IHS/MSC/MIR  11/18/2024  CONT+3 has been updated for "Hold" status Feature 115724 (BHS patch 21)
  ;======================================================================
 MEDSCURR ; ************** CURRENT MEDICATIONS * 9000010.14 ********
  S BHSMTY="CURR" G CONT
@@ -18,7 +19,7 @@ MEDSNDUP ; ************* ALL, NON DUPLICATED *************
 CONT ; <SETUP>
  N BHSPAT,BHSQ,APCHZ
  S BHSPAT=DFN
- Q:'$D(^AUPNVMED("AC",BHSPAT))
+ I '$D(^AUPNVMED("AC",BHSPAT)),'$D(^PS(55,BHSPAT,"P","A")) Q
  D CKP^GMTSUP Q:$D(GMTSQIT)
  ; <BUILD>
  K ^TMP($J,"BHSMTB"),^TMP($J,"BHSMTP")

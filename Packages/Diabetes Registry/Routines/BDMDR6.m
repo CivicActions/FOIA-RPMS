@@ -1,5 +1,5 @@
 BDMDR6 ; IHS/CMI/LAB - patients w/o dm on problem list ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,3,8,9,10**;JUN 14, 2007;Build 12
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,3,8,9,10,13,19**;JUN 14, 2007;Build 159
  ;
  ;
 START ;
@@ -33,7 +33,7 @@ D ;
  S BDMND=Y
 ZIS ;
  S BDMTEMP=""
- S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen;S:Create Search Template;D:Create Delimited Output file",DIR("A")="Output Type",DIR("B")="P" KILL DA D ^DIR KILL DIR
+ S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen;S:Create Search Template;D:Create Delimited Output file",DIR("A")="Output Type",DIR("B")="B" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G GETDATES
  S BDMTEMP=Y
  I BDMTEMP="P"!(BDMTEMP="B") G DEMO
@@ -92,6 +92,7 @@ ONREG(P,R) ;
  S X=0 F  S X=$O(BDMREG(X)) Q:X'=+X!(G)  I $D(^ACM(41,"AC",DFN,X)) S G=1
  Q G
 PRINT ;EP - called from xbdbque
+ D LOG^BUSAAPI("O","P","P",$S($G(XQY0)]"":$P(XQY0,U),1:"BDMDR6"),"DM NOT ON REGISTER")
  S BDMIOSL=$S($G(BDMGUI):55,1:IOSL)
  S BDM80D="-------------------------------------------------------------------------------"
  S BDMPG=0 D HEAD

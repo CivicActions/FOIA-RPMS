@@ -1,5 +1,7 @@
 BLRMANPU ; IHS/MSC/MKK - Multiple Accession Not Performed Utility ;10-Jan-2017 09:29;MKK
- ;;5.2;IHS LABORATORY;**1039**;NOV 01, 1997;Build 38
+ ;;5.2;IHS LABORATORY;**1039,1054**;NOV 01, 1997;Build 20
+ ;
+ ; ADO 79349 - LR*5.2*1054 - Accession Lookup not to Fail with hyphenated Accession Area abbreviation.
  ;
 EEP ; Ersatz EP
  D EEP^BLRGMENU
@@ -175,7 +177,8 @@ GETRID(LRAA,LRAD,LRAN,LRAS,LRNOP) ; EP - Mark Accession as NOT Performed.
  S LRDPF=$P(^LR(LRDFN,0),U,2),DFN=$P(^(0),U,3)
  D PT^LRX
  ;
- S LRIDT=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,3)),U,5) L +^LR(LRDFN,LRSS,LRIDT):1 I '$T W !,"Someone else is working on this data." L -^LRO(68,LRAA,1,LRAD,1,LRAN) S LRNOP=1 Q
+ ; S LRIDT=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,3)),U,5) L +^LR(LRDFN,LRSS,LRIDT):1 I '$T W !,"Someone else is working on this data." L -^LRO(68,LRAA,1,LRAD,1,LRAN) S LRNOP=1 Q
+ S LRIDT=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,3)),U,5) L +^LR(LRDFN,LRSS,LRIDT):1 I '$T W !,"Someone else is working on this data." L -^LRO(68,LRAA,1,LRAD,1,LRAN):1 S LRNOP=1 Q   ; IHS/MSC/MKK - LOCKOUT Release Time
  I '$G(^LR(LRDFN,LRSS,LRIDT,0)) W !?5," Can't find Lab Data for this accession",! D UNLOCK S LRNOP=1 Q
  ;
  S LRTOTL=1,LRIFN=0
@@ -241,7 +244,8 @@ LRWU4AA ;
  ; Parse and process user input.
  S (X1,X2,X3)="",X1=$P(LRX," ",1),X2=$P(LRX," ",2),X3=$P(LRX," ",3)
  S:X3=""&(+X2=X2) X3=X2,X2=""
- I X1'?1A.AN D QUES^LRWU4 Q
+ ; I X1'?1A.AN D QUES^LRWU4 Q
+ I X1'?1AP.ANP D QUES^LRWU4 Q     ; IHS/MSC/MKK - LR*5.2*1054
  S LRAA=$O(^LRO(68,"B",X1,0))
  I LRAA<1 D WLQUES^LRWU4 Q:LRAA<1
  S %=$P(^LRO(68,LRAA,0),U,14)

@@ -1,5 +1,5 @@
 AMHRDE3P ; IHS/CMI/LAB - list refusals ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**5**;JUN 02, 2010;Build 18
+ ;;4.0;IHS BEHAVIORAL HEALTH;**5,11,12**;JUN 02, 2010;Build 46
  ;
  ;
 PRINT ;EP - called from xbdbque
@@ -166,8 +166,8 @@ SHOW ;
  I AMHRDESP]"" W !,"Only patients whose Designated Mental Health Provider",!?6,$P(^VA(200,AMHRDESP,0),U)," are included"
  I AMHRSSP]"" W !,"Only patients whose Designated Social Services Provider",!?6,$P(^VA(200,AMHRSSP,0),U)," are included"
  I AMHRCDP]"" W !,"Only patients whose Designated ASA/CD Provider",!?6,$P(^VA(200,AMHRCDP,0),U)," are included"
- I AMHRPPUN W !,"Only patients who had a visit on which a screeening was done",!?6,"but the primary provider on the visit was UNKNOWN are included."
- I AMHRSPUN W !,"Only patients who had a visit on which a screeening was done",!?6,"but the screening provider on the visit was UNKNOWN are included."
+ I AMHRPPUN W !,"Only patients who had a visit on which a screening was done",!?6,"but the primary provider on the visit was UNKNOWN are included."
+ I AMHRSPUN W !,"Only patients who had a visit on which a screening was done",!?6,"but the screening provider on the visit was UNKNOWN are included."
  I '$D(AMHRPROV) W !,"Visits to any Primary Provider are included"
  I '$D(AMHRSPRV) W !,"Visits on which any provider did the screening are included"
  I $D(AMHRPROV) W !,"Only screenings on which ",$P(^VA(200,AMHRPROV,0),U)," was the primary provider",!?6,"on the visit are included"

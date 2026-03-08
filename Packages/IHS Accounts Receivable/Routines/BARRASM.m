@@ -1,20 +1,19 @@
 BARRASM ; IHS/SD/LSL - Age Summary Report ; 09/15/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,6,7,23,24**;OCT 26, 2005;Build 69
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,6,7,23,24,30,31**;OCT 26, 2005;Build 90
  ; MODIFIED XTMP FILE NAME TO TMP TO MEET SAC REQUIREMENTS;MRS:BAR*1.8*7 IM29892
  ; IHS/ASDS/LSL - 02/27/02 - Routine created to replace BARRSAGE
  ;
  ; IHS/SD/LSL - 02/20/03 - V1.7 Patch 1
- ;     Modified to include report by Discharge Service
+ ;     Include report by Discharge Service
  ;     When sort by Clinic, make it alphabetical
- ;
  ; IHS/SD/LSL - 11/24/03 - V1.7 Patch 4
  ;     Add Visit Location Sort level to accomodate EISS
- ;
  ;IHS/SD/POT 03/15/13 ADDED NEW VA billing ;BAR*1.8*23
- ;
  ;IHS\OCAO\CPC -20131007 OCT 2013 HEAT#132196 PROBLEM WITH NO BILLING ENTITY - BAR*1.8*24
+ ;BAR*1.8*30 CR4976/11205 IHS/SD/CPC 20200728
+ ;BAR*1.8*31;IHS/OIT/FCJ CR#6369
  Q
- ; *********************************************************************
+ ; *******
 EN ; EP
  K BARY,BAR
  D:'$D(BARUSR) INIT^BARUTL           ; Set up basic A/R Variables
@@ -32,9 +31,8 @@ EN ; EP
  D ^BARDBQUE                         ; Double queuing
  D PAZ^BARRUTL                       ; Press return to continue
  Q
- ; *********************************************************************
- ;
-SETHDR ;
+ ; *******
+SETHDR ;EP ;BAR*1.8*31;IHS/OIT/FCJ CR#6369 ADDED "EP"
  ; Build header array
  S BAR("LVL")=0
  S BAR("HD",0)="Age Summary Report"
@@ -53,12 +51,14 @@ SETHDR ;
  S BAR("CONJ")="at "
  D CHK^BARRHD
  Q
- ; *********************************************************************
- ;
-COMPUTE ;EP - CALLED FROM BARBIZ
+ ; *******
+COMPUTE ;EP - CALLED FROM BARBIZ AND BARRTSK
  S BAR("SUBR")="BAR-ASM"
  K ^TMP($J,"BAR-ASM")
  K ^TMP($J,"BAR-ASMT")
+ K ^TMP($J,"BAR-ASMC")  ; /IHS/BEM/RAM 2 AUG 2014 ; added so we don't get cumulative counts.
+ K ^TMP($J,"BAR-DEMO")
+ K BAR("DEMO")
  D NOW^%DTC
  S BARRUN=%
  I BAR("LOC")="BILLING" D LOOP^BARRUTL Q
@@ -67,8 +67,7 @@ COMPUTE ;EP - CALLED FROM BARBIZ
  F  S DUZ(2)=$O(^BARBL(DUZ(2))) Q:'DUZ(2)  D LOOP^BARRUTL
  S DUZ(2)=BARDUZ2
  Q
- ; *********************************************************************
- ;
+ ; *******
 DATA ;
  ; Gather data for bills found in LOOP^BARRUTL
  ;
@@ -77,7 +76,6 @@ DATA ;
  ; BAR("SUB2") = Billing Entity / Allowance Category / Insurer Type
  ; BAR("SUB3") = A/R Account
  ; BAR("SUB4") = A/R Bill
- ;
  ; BAR(1) =  0-30 (Current)
  ; BAR(2) = 31-60
  ; BAR(3) = 61-90
@@ -85,7 +83,6 @@ DATA ;
  ; BAR(5) = 120+
  ; BAR(6) = Account Balance
  ; -------------------------------
- ;
  F I=1:1:6 S BAR(I)=0
  K BAR("SUB0")
  K BAR("SUB1"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4")
@@ -100,9 +97,10 @@ DATA ;
  S BAR(5)=$$GET1^DIQ(90050.01,BAR,7.7)
  S BAR(6)=$$GET1^DIQ(90050.01,BAR,15,"I")
  S BARRAGE=$$GET1^DIQ(90050.01,BAR,7.2)
- S ^BARASMD(BARRUN,BAR)=BAR(6)_U_BARRAGE_U_BAR("I")
  S BAR("SUB0")=$$GET1^DIQ(9999999.06,BAR("L"),.01)
+ S BAR("DEMO","ASUFAC")=$$GET1^DIQ(9999999.06,BAR("L"),.0799)
  S:BAR("SUB0")="" BAR("SUB0")="No Visit Location"
+ S ^BARASMD(BARRUN,+BAR("L"),BAR("SUB0"),BAR)=BAR(6)_U_BARRAGE_U_$G(BARY("STCR"))_U_$G(BARY("I"))_U_$G(BAR("ALL"))
  I ",1,2,3,4,"[(","_BARY("STCR")_",") D  Q
  . I BARY("STCR")=1 D
  . . S BAR("SUB1")=BAR("I")
@@ -142,14 +140,13 @@ DATA ;
  . I BAR("ALL")="V" S BAR("SUB2")="VETERANS"
   . ;
  ;I BARY("STCR")=6 D  ;OLD CODE
- ;. ;I $L(BAR("BI")) S BAR("SUB2")=$P($T(@BAR("BI")),";;",2)  ;BAR*1.8*1 IM21585
  ;. I $L(BAR("BI"))<4 S BAR("SUB2")=$P($T(@BAR("BI")),";;",2) ;BAR*1.8*1 IM21585
  ;. S:BAR("SUB2")="" BAR("SUB2")=BAR("BI")
  ;. E  S BAR("SUB2")=BAR("BI") 
  ;PROBLEM WITH NO BILLING ENTITY - IHS\OCAO\CPC -20131007 NEW CODE
  I BARY("STCR")=6 D
  . S BAR("SUB2")=BAR("BI") ;No Billing Entity
- . I $L(BAR("BI"))<4 I $P($T(@BAR("BI")),";;",2)]"" D  
+ . I $L(BAR("BI"))<4 I $P($T(@BAR("BI")),";;",2)]"" D
  . . S BAR("SUB2")=$P($T(@BAR("BI")),";;",2)
  I BARY("STCR")=7 D
  . I $L(BAR("BI")) S BAR("SUB2")=$P($T(@BAR("BI")),";;",3)  ;BAR*1.8*1 IM21585
@@ -159,6 +156,7 @@ DATA ;
  I BAR("SUB3")]"" S BAR("SUB3")=$$GET1^DIQ(90050.02,BAR("SUB3"),.01)
  I BAR("SUB3")="" S BAR("SUB3")="No A/R Account"
  S BAR("SUB4")=$$GET1^DIQ(90050.01,BAR,.01)
+ S BAR("DEMO",BAR("SUB4"))=$$GET1^DIQ(90050.01,BAR,.01)   ;BAR*1.8*30 CR10550
  I $G(BARY("RTYP"))=2 D
  . D DETAIL
  I $G(BARY("RTYP"))=3 D
@@ -166,8 +164,7 @@ DATA ;
  . D DETAIL
  D SUMMARY
  Q
- ; *********************************************************************
- ;
+ ; *******
 STANDARD ;
  ; Temp global for SORT CRITERIA Clinic or Visit or A/R Account
  ; or Discharge Service
@@ -179,6 +176,7 @@ STANDARD ;
  S $P(^TMP($J,"BAR-ASM",BAR("SUB0"),BAR("SUB1")),U,4)=$P(BARHLD,U,4)+BAR(4)
  S $P(^TMP($J,"BAR-ASM",BAR("SUB0"),BAR("SUB1")),U,5)=$P(BARHLD,U,5)+BAR(5)
  S $P(^TMP($J,"BAR-ASM",BAR("SUB0"),BAR("SUB1")),U,6)=$P(BARHLD,U,6)+BAR(6)
+ D ADDC^BARRASMC ; /IHS/BEM/RAM added to get 3rd level count totals of claims.
  ;
  ; Visit location totals
  S BARHLD=$G(^TMP($J,"BAR-ASM",BAR("SUB0")))
@@ -188,6 +186,7 @@ STANDARD ;
  S $P(^TMP($J,"BAR-ASM",BAR("SUB0")),U,4)=$P(BARHLD,U,4)+BAR(4)
  S $P(^TMP($J,"BAR-ASM",BAR("SUB0")),U,5)=$P(BARHLD,U,5)+BAR(5)
  S $P(^TMP($J,"BAR-ASM",BAR("SUB0")),U,6)=$P(BARHLD,U,6)+BAR(6)
+ D ADDB^BARRASMC ; /IHS/BEM/RAM added to get 2nd level count totals of claims.
  ;
  ; Report Total
  S BARHLD=$G(^TMP($J,"BAR-ASM"))
@@ -197,9 +196,9 @@ STANDARD ;
  S $P(^TMP($J,"BAR-ASM"),U,4)=$P(BARHLD,U,4)+BAR(4)
  S $P(^TMP($J,"BAR-ASM"),U,5)=$P(BARHLD,U,5)+BAR(5)
  S $P(^TMP($J,"BAR-ASM"),U,6)=$P(BARHLD,U,6)+BAR(6)
+ D ADDA^BARRASMC ; /IHS/BEM/RAM added to get top level count totals of claims.
  Q
- ; *********************************************************************
- ;
+ ; *******
 SUMMARY ;
  ; Temp global for SORT CRITERIA Allowance Category or Billing Entity
  ; and Report Type Summarize.
@@ -212,6 +211,7 @@ SUMMARY ;
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB2")),U,4)=$P(BARHLD,U,4)+BAR(4)
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB2")),U,5)=$P(BARHLD,U,5)+BAR(5)
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB2")),U,6)=$P(BARHLD,U,6)+BAR(6)
+ D SUMC^BARRASMC ; /IHS/BEM/RAM added to get 3rd level count totals of claims.
  ;
  ; Visit location totals
  S BARHLD=$G(^TMP($J,"BAR-ASMT",BAR("SUB0")))
@@ -222,6 +222,7 @@ SUMMARY ;
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0")),U,5)=$P(BARHLD,U,5)+BAR(5)
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0")),U,6)=$P(BARHLD,U,6)+BAR(6)
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0")),U,7)=BAR("L")   ; DUZ(2) value
+ D SUMB^BARRASMC ; /IHS/BEM/RAM added to get 2nd level count totals of claims.
  ;
  ; Report Total
  S BARHLD=$G(^TMP($J,"BAR-ASMT"))
@@ -231,9 +232,9 @@ SUMMARY ;
  S $P(^TMP($J,"BAR-ASMT"),U,4)=$P(BARHLD,U,4)+BAR(4)
  S $P(^TMP($J,"BAR-ASMT"),U,5)=$P(BARHLD,U,5)+BAR(5)
  S $P(^TMP($J,"BAR-ASMT"),U,6)=$P(BARHLD,U,6)+BAR(6)
+ D SUMA^BARRASMC  ; /IHS/BEM/RAM added to get top level count totals of claims.
  Q
- ; *********************************************************************
- ;
+ ; *******
 DETAIL ;
  ; Temp global for SORT CRITERIA Allowance Category or Billing Entity
  ; and Report Type Summarize by payor w/in.
@@ -247,8 +248,8 @@ DETAIL ;
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB2"),BAR("SUB3")),U,5)=$P(BARHLD,U,5)+BAR(5)
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB2"),BAR("SUB3")),U,6)=$P(BARHLD,U,6)+BAR(6)
  Q
- ; *********************************************************************
- ;
+ ;BAR*1.8*31;IHS/OIT/FCJ CR#6369
+ ; *******
 BILL ;
  ; Temp global for SORT CRITERIA Allowance Category or Billing Entity
  ; and Report Type Summarize by bill w/in payer w/in all cat/bill ent
@@ -261,8 +262,22 @@ BILL ;
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4")),U,4)=$P(BARHLD,U,4)+BAR(4)
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4")),U,5)=$P(BARHLD,U,5)+BAR(5)
  S $P(^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4")),U,6)=$P(BARHLD,U,6)+BAR(6)
+ N Y,BAR3P    ;BAR*1.8*30 CR4976/11205  ;FOUND IN BETA TESTING ADDED BAR3P
+ S BAR3P=$P($G(BAR(0)),U,17)
+ S BAR("DEMO","APPLYTO")="-",Y=999999999999999 S Y=$O(^ABMDBILL(BAR("L"),BAR3P,69,Y),-1)    ;BAR*1.8*30 CR4976/11205
+ I +Y]0 S BAR("DEMO","APPLYTO")=$P($G(^ABMDBILL(BAR("L"),BAR3P,69,Y,0)),U,2)    ;BAR*1.8*30 CR4976/11205
+ K Y,BAR3P    ;BAR*1.8*30 CR4976/11205 ;FOUND IN BETA TESTING ADDED BAR3P
+ S $P(^TMP($J,"BAR-DEMO",BAR("SUB0"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4")),U,1)=$G(BAR("SUB4"))_U_BAR("DEMO","APPLYTO")   ;BAR*1.8*30 CR4976/11205
+ S $P(^TMP($J,"BAR-DEMO",BAR("SUB0"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4"),1),U,1)=$P(BAR(0),U,9)_U_$P(BAR(0),U,2)_U_$$GET1^DIQ(90050.01,BAR_",",108,"I")_U_$$GET1^DIQ(90050.01,BAR_",",108,"E")   ;BAR*1.8*30 CR4976/11205
+ ;BAR*1.8*30 CR4976/11205 
+ I ($G(BARY("RTYP"))=3)&($G(BARY("STCR"))=5)&($P($G(XQY0),U)["UFMS") D
+ .S BARFY=$S($G(BARA)]"":BARA,1:"NO FY")
+ .S $P(^TMP($J,"BAR-ASMFY",+BARFY,BAR("SUB0"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4")),U,1)=BARA_U_^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4"))
+ .S $P(^TMP($J,"BAR-DEMFY",$P(BARP("UAGE"),U),BAR("SUB0"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4")),U,1)=$G(BAR("SUB4"))_U_BAR("DEMO","APPLYTO")
+ .S $P(^TMP($J,"BAR-DEMFY",$P(BARP("UAGE"),U),BAR("SUB0"),BAR("SUB2"),BAR("SUB3"),BAR("SUB4"),1),U,1)=$P(BAR(0),U,9)_U_$P(BAR(0),U,2)_U_$$GET1^DIQ(90050.01,BAR_",",108,"I")_U_$$GET1^DIQ(90050.01,BAR_",",108,"E")   ;BAR*1.8*30 CR4976/11205
+ .;BAR*1.8*30 CR4976/11205
  Q
- ; ********************************************************************
+ ; *******
  ;
  ; ********************************************************************
  ;THIS TABLE REPLICATES ^AUTTINTY INSURER TYPE (21 ENTRIES) P.OTT 4/12/2013

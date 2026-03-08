@@ -1,50 +1,35 @@
 BARPST5 ; IHS/SD/LSL - LIST TRANSACTION HISTORY OF A BILL ; 03/31/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,4,5,6,20,23,24**;OCT 26,2005;Build 69
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,4,5,6,20,23,24,33,35**;OCT 26,2005;Build 187
  ;
- ; IHS/SD/SDR - 03/11/2002 - V1.6 Patch 2 - NOIS HQW-0801-100024
- ;     Modified routine to output insurer field as well as Entry By,
- ;     Complete entry for Transaction Type, and A/R Account.  Also fixed
- ;     line in CHKLINE to fix unrelated <DPARM> error if "^" out of bill
- ;
- ; IHS/SD/SDR - 4/4/2002 - V1.6 Patch 2 - NOIS HQW-0302-100166
- ;     Modified so it won't display any of the following transaction
- ;     types.  They are causing confusion and are not necessary to 
- ;     display.
+ ;IHS/SD/SDR 03/11/2002 1.6*2 NOIS HQW-0801-100024 Modified routine to output insurer field
+ ;   as well as Entry By, Complete entry for Transaction Type, and A/R Account.  Also fixed line in
+ ;   CHKLINE to fix unrelated <DPARM> error if "^" out of bill
+ ;IHS/SD/SDR 4/4/2002 1.6*2 NOIS HQW-0302-100166 Modified so it won't display any of the following
+ ;   transaction types.  They are causing confusion and are not necessary to display.
  ;          COL BAT TO ACC POST - 115
  ;          COL BAT TO ACC UN-DIST -116 
  ;          COL BAT TO FACILITY -117 
  ;          COL BAT TO UN-DIST -118
+ ;IHS/SD/LSL 09/23/02 1.6*3 HIPAA -Display PENDING and GENERAL INFORMATION (2 new Adjustment Categories)
+ ;  on the Transaction History.  These categories should not affect the balance.
  ;
- ; IHS/SD/LSL - 09/23/02 - V1.6 Patch 3 - HIPAA
- ;     Display PENDING and GENERAL INFORMATION (2 new Adjustment
- ;     Categories) on the Transaction History.  These categories
- ;     should not affect the balance.
- ;
- ; IHS/SD/LSL - 10/17/03 - V1.7 Patch 4 - HIPAA
- ;      Display "e" next to transactions that were posted via Post
- ;      ERA Claims.
- ;
- ; IHS/SD/LSL - 02/13/04 - V1.7 Patch 5 - Remark Codes
- ;       Display Remark Code and NCPDP Reject/Payment codes
- ;       on Transaction on history
+ ;IHS/SD/LSL 10/17/03 1.7*4 HIPAA - Display "e" next to transactions that were posted via Post ERA Claims.
+ ;IHS/SD/LSL 02/13/04 1.7*5 Remark Codes - Display Remark Code and NCPDP Reject/Payment codes on Transaction on history
  ;       
- ;IHS/SD/RLT - 02/15/05 - V1.8 Patch 1 - IM15887
- ;       balances should not be affected by transaction
- ;       types of PENDING or GENERAL INFORMATION but should always
- ;       be displayed
- ; *********************************************************************
+ ;IHS/SD/RLT 1.8*1 02/15/05 IM15887 balances should not be affected by transaction types of PENDING or GENERAL INFORMATION but should always be displayed
+ ;IHS/SD/POT 1.8*23 JUL 2012 HEAT# 76003 ADDED TR IEN
+ ;IHS/SD/POT 1.8*23 APR 2013 CONDITIONAL DISPLAY OF TXD AND MESSSAGES
+ ;IHS/SD/POT 1.8*23 SEP 2013 FIXED INITIALS @ MESSAGES
+ ;IHS/SD/POT 1.8*23 OCT 2013 WRAP AND POSITION LONG MESSAGES 10/24/2013
+ ;IHS/SD/POT 1.8*23 DEC 2013 ASSIGNED BARFLGRP="N" 12/12/13 DEFAULT VAL FOR EXT CALLS
+ ;IHS/SD/SDR 1.8*24 belcourt HEAT118656
+ ;IHS/SD/POT 1.8*24 BETA: FIXING WRONGLY DISPLAYED TR TYPES 115,116,117,118
+ ;IHS/SD/SDR 1.8*33 ADO60817 Updated to display A/R Transaction .01 field instead of IEN; DINUM was removed from
+ ;   A/R Transaction file; also changed so display to sort transactions by date/time, if there is a mix of old and new formatted
+ ;   transactions they sometimes didn't display in the correct order
+ ;IHS/SD/SDR 1.8*35 ADO60910 Changes for PPN preferred name
+ ;*********************************************
  ;
- ;** List Detail command from posting command prompt
- ;** lists details from a single bill
- ;
- ;
- ;IHS/SD/POT JUL 2012 HEAT# 76003 ADDED TR IEN - BAR*1.8*23
- ;IHS/SD/POT APR 2013 CONDITIONAL DISPLAY OF TXD AND MESSSAGES - BAR*1.8*23
- ;IHS/SD/POT SEP 2013 FIXED INITIALS @ MESSAGES - BAR*1.8*23
- ;IHS/SD/POT OCT 2013 WRAP AND POSITION LONG MESSAGES 10/24/2013  - BAR*1.8*23
- ;IHS/SD/POT DEC 2013 ASSIGNED BARFLGRP="N" 12/12/13 DEFAULT VAL FOR EXT CALLS - BAR*1.8*23
- ;IHS/SD/SDR belcourt HEAT118656 - BAR*1.8*24
- ;IHS/SD/POT A/R P24 BETA: FIXING WRONGLY DISPLAYED TR TYPES 115,116,117,118 - BAR*1.8*24
 EN(BARBLDA) ; EP - Display bill history
  ;
 EN1 ;
@@ -55,7 +40,7 @@ EN1 ;
  S DIC=$$DIC^XBSFGBL(90050.01)
  D ENP^XBDIQ1(DIC,BARBLDA,DR,"BARBL(","")
  S BARBL(101,"I")=$$GET1^DIQ(90050.01,BARBLDA,101,"I")
- ; -------------------------------
+ ;-------------------------------
  ;
 GETPT ;
  I 'BARBL(101,"I") S BARBL(101,"I")=$G(BARPAT)
@@ -64,27 +49,46 @@ GETPT ;
  S DIC="^DPT("
  S DR=".111;.114;.115;.116;.131"
  D ENP^XBDIQ1(DIC,BARBL(101,"I"),DR,"BARPTA(","")
- ; -------------------------------
+ ;-------------------------------
  ;
 GETTX ;
  S DR="2;3;6;13;14;15;101;102;103;107;108;110;111;112"  ;BARHDR
  S DIC=$$DIC^XBSFGBL(90050.03)
  S BARTRDA=0
+ ;start old bar*1.8*33 IHS/SD/SDR ADO60817
+ ;F  S BARTRDA=$O(^BARTR(DUZ(2),"AC",BARBLDA,BARTRDA)) Q:'BARTRDA  D
+ ;.I '$D(^BARTR(DUZ(2),BARTRDA)) K ^BARTR(DUZ(2),"AC",BARBLDA,BARTRDA) Q
+ ;end old start new bar*1.8*33 IHS/SD/SDR ADO60817
+ S BARTCNT=1
+ K BARTF,BARLST
  F  S BARTRDA=$O(^BARTR(DUZ(2),"AC",BARBLDA,BARTRDA)) Q:'BARTRDA  D
- . I '$D(^BARTR(DUZ(2),BARTRDA)) K ^BARTR(DUZ(2),"AC",BARBLDA,BARTRDA) Q
- . I $D(^BARTR(DUZ(2),"AM4",BARBLDA,BARTRDA)) I BARFLGRP="M"!(BARFLGRP="B")!(BARFLGRP="O") D  Q  ; - BAR*1.8*23
- . . S BARMSG(BARTRDA)=""
- . . S BARTRX(BARTRDA)="MESSAGE"
- .S BARTEST=","_$P($G(^BARTR(DUZ(2),BARTRDA,1)),U)_","
- . ;----start old code ---------------
- . ;S BARTEST=BARTEST_$P($G(^BARTR(DUZ(2),BARTRDA,1)),U,2)_","  ;IHS/SD/SDR belcourt HEAT118656  - BAR*1.8*.24
- . ; ;Q:BARTEST=",,"               ; No transaction type  ;IHS/SD/SDR belcourt HEAT118656 - BAR*1.8*.24
- . ; Q:BARTEST=",,,"               ; No transaction type  ;IHS/SD/SDR belcourt HEAT118656 - BAR*1.8*.24
- . ;I ",115,116,117,118,"[BARTEST Q
- . ;--------new code-----------------
- . I ",115,116,117,118,"[BARTEST Q
- . I $P($G(^BARTR(DUZ(2),BARTRDA,1)),U)="" I $P($G(^BARTR(DUZ(2),BARTRDA,1)),U,2)="" QUIT  ;both [tr.type;adj cat] nil
- .W "."
+ .I '$D(^BARTR(DUZ(2),BARTRDA)) K ^BARTR(DUZ(2),"AC",BARBLDA,BARTRDA) Q
+ .S BARTEST=$P($G(^BARTR(DUZ(2),BARTRDA,1)),U)  ;transaction type  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .I ((BARTEST'="")&(",115,116,117,118,"[BARTEST)) Q  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .I $D(^BARTR(DUZ(2),"AM4",BARBLDA,BARTRDA)) I BARFLGRP="M"!(BARFLGRP="B")!(BARFLGRP="O") D  Q  ; - BAR*1.8*23
+ ..S BARMSG(BARTRDA)=""
+ ..S BARTRX(BARTRDA)="MESSAGE"
+ ..S BARLST($P($P($G(^BARTR(DUZ(2),BARTRDA,0)),U),".",1,2)_"."_$$FILLSTR^BARUFUT1(+$P($P($G(^BARTR(DUZ(2),BARTRDA,0)),U),".",3),3,"R","0"))=BARTRDA
+ .I $P($G(^BARTR(DUZ(2),BARTRDA,1)),U)="" I $P($G(^BARTR(DUZ(2),BARTRDA,1)),U,2)="" QUIT  ;both [tr.type;adj cat] nil  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .S BARLST($P($P($G(^BARTR(DUZ(2),BARTRDA,0)),U),".",1,2)_"."_$$FILLSTR^BARUFUT1(+$P($P($G(^BARTR(DUZ(2),BARTRDA,0)),U),".",3),3,"R","0"))=BARTRDA
+ S BART=0
+ F  S BART=$O(BARLST(BART)) Q:'BART  D
+ .S BARTRDA=$G(BARLST(BART))
+ .;end new bar*1.8*33 IHS/SD/SDR ADO60817
+ .;start old bar*1.8*33 IHS/SD/SDR ADO60817
+ .;I $D(^BARTR(DUZ(2),"AM4",BARBLDA,BARTRDA)) I BARFLGRP="M"!(BARFLGRP="B")!(BARFLGRP="O") D  Q  ; - BAR*1.8*23
+ .;.S BARMSG(BARTRDA)=""
+ .;.S BARTRX(BARTRDA)="MESSAGE"
+ .;end old bar*1.8*33 IHS/SD/SDR ADO60817
+ .;
+ .;S BARTEST=","_$P($G(^BARTR(DUZ(2),BARTRDA,1)),U)_","  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .;----start old code --------
+ .;S BARTEST=BARTEST_$P($G(^BARTR(DUZ(2),BARTRDA,1)),U,2)_","  ;IHS/SD/SDR belcourt HEAT118656  - BAR*1.8*24
+ .; ;Q:BARTEST=",,"               ;No transaction type  ;IHS/SD/SDR belcourt HEAT118656 - BAR*1.8*24
+ .; Q:BARTEST=",,,"               ;No transaction type  ;IHS/SD/SDR belcourt HEAT118656 - BAR*1.8*24
+ .;I ",115,116,117,118,"[BARTEST Q
+ .;--------new code-----------
+ .;W "."  ;removed; it writes the dot on the top of the browser screen so it's weird  ;bar*1.8*33 IHS/SD/SDR ADO60817
  .D ENP^XBDIQ1(DIC,BARTRDA,DR,"BARTRX(","1")
  .S BARTRX(BARTRDA,12)=$$GET1^DIQ(90050.03,BARTRDA,12,"I")
  .S BARTRX(BARTRDA,13)=$$GET1^DIQ(90050.03,BARTRDA,13,"I")
@@ -96,80 +100,92 @@ GETTX ;
  .S BARTRX(BARTRDA,112)=$$GET1^DIQ(90050.03,BARTRDA,112,"E")  ;IGNORE FLAG; SCR80 4.1.1
  .S BARTRX(BARTRDA,501)=$$GET1^DIQ(90050.03,BARTRDA,501,"E")  ;PAYMENT CREDIT APPLIED TO ;BAR*1.8*5 IHS/SD/TPF 6/17/2008
  .S BARTRX(BARTRDA,502)=$$GET1^DIQ(90050.03,BARTRDA,502,"E")  ;PAYMENT CREDIT APPLIED FROM ;BAR*1.8*5 IHS/SD/TPF 6/17/2008
-  ;W !
+ .S BARTRX(BARTRDA,".011")=$$GET1^DIQ(90050.03,BARTRDA,".011","I")  ;DATE/TIME  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .S BARTRX(BARTRDA,".01")=BARTRDA  ;save .01 as part of data  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ ;W !
  D HEAD
  S BARTRDA=0,BARBAL=0,BARQ=0,BARMCNT=0
- F  S BARTRDA=$O(BARTRX(BARTRDA)) Q:'BARTRDA  D  Q:BARQ
- . S BARQ=$$CHKLINE()
- . Q:BARQ
- . I BARFLGRP="M"!(BARFLGRP="B")!(BARFLGRP="O") I $D(BARMSG(BARTRDA)) D MESSAGE(BARTRDA) S BARMCNT=BARMCNT+1 Q  ; - BAR*1.8*23
- . I $G(BARTRX(BARTRDA))="MESSAGE" Q
- . I BARFLGRP="O" QUIT
- . W !
- . W $$SDT^BARDUTL($G(BARTRX(BARTRDA,12))) ;DT
- . I $G(BARTRX(BARTRDA,13))'="" W ?11,$P($G(^VA(200,BARTRX(BARTRDA,13),0)),U,2) ;INITIALS
- . S BARBATCH=$S($L($G(BARTRX(BARTRDA,14))):BARTRX(BARTRDA,14),1:"NO BATCH")
- . S BARITEM=$S($L($G(BARTRX(BARTRDA,15))):BARTRX(BARTRDA,15),1:"")
- . S:$G(BARTRX(BARTRDA,102))'="" BARTRX(BARTRDA,102)=$E(BARTRX(BARTRDA,102),1,19)_"/"_$E($G(BARTRX(BARTRDA,103)),1,19)  ;bar*1.8*20
- . S BARTT=$S($G(BARTRX(BARTRDA,101))["REFUND":BARTRX(BARTRDA,101),$L($G(BARTRX(BARTRDA,102))):BARTRX(BARTRDA,102),1:$G(BARTRX(BARTRDA,101)))
- . S BARPRE=""
- . I BARTRX(BARTRDA,106)="e" S BARPRE="e "
- . I BARTT["PENDING" S BARPRE="* "
- . I BARTRX(BARTRDA,106)="e",BARTT["PENDING" S BARPRE="*e "
- . S BARTT=BARPRE_BARTT
-  .W ?15,BARTT ;TRTYPE
- . I BARTT["REMARK" W ?45,BARTRX(BARTRDA,107)
- . I BARTT["NCPDP" W ?45,BARTRX(BARTRDA,108)
- . S (BARX,X)=$S($G(BARTRX(BARTRDA,2)):-BARTRX(BARTRDA,2),1:$G(BARTRX(BARTRDA,3)))
- . S X2=2
- . S X3=11
- . D COMMA^%DTC
- . I BARTT["PENDING" S X="**"_X_"**"
- . W ?54,X
- . N X
- . I BARTT'["PENDING"&(BARTT'["GENERAL") D
- . . S BARBAL=BARBAL+BARX
- . S X=BARBAL,X2=2,X3=11 D COMMA^%DTC
- . W ?68,X
- . W !
- . W ?15,BARTRX(BARTRDA,6)          ; A/R Account
- . W ?45,BARBATCH
- . W ?67,$J(BARITEM,3,0)
- . I BARTRX(BARTRDA,14,"I")'="",(BARTRX(BARTRDA,15,"I")'="") D
- . .N IENS
- . .S IENS=BARTRX(BARTRDA,15,"I")_","_BARTRX(BARTRDA,14,"I")_","
- . .W !?15,$$GET1^DIQ(90051.1101,IENS,20,"E")  ;SCHEDULE #\IPAC
- . .K IENS
- . I BARTT["REMARK" D
- . . S BARMKDSC=$$GET1^DIQ(90050.03,BARTRDA,"107:.02")
- . . W !?15,$E(BARMKDSC,1,40)
- . . I $L(BARMKDSC)>40 W !?15,$E(BARMKDSC,41,80)
- . I BARTT["NCPDP" D
- . . S BARNCPDP=$$GET1^DIQ(90050.03,BARTRDA,"108:.02")
- . . W !?15,$E(BARNCPDP,1,40)
- . . I $L(BARNCPDP)>40 W !?15,$E(BARNCPDP,41,80)
- . I $G(BARTRX(BARTRDA,110)) D
- . . S Y=BARTRX(BARTRDA,110) X ^DD("DD")
- . . W !?5,"REVERSAL DATE: ",Y  ;BARHDR
- . . W !?5,"REV TREASURY DEPOSIT NUMBER/IPAC: ",$G(BARTRX(BARTRDA,111))
- . I $G(BARTRX(BARTRDA,112))]"" W !?15,BARTRX(BARTRDA,112)
- . I BARTRX(BARTRDA,501)'="" W !?15,"PAYMENT CREDIT APPLIED TO: ",BARTRX(BARTRDA,501)
- . I BARTRX(BARTRDA,502)'="" W !?15,"PAYMENT CREDIT APPLIED FROM: ",BARTRX(BARTRDA,502)
- . I BARFLGRP="T"!(BARFLGRP="B") W !,?15,BARTRDA ; - BAR*1.8*23
+ ;F  S BARTRDA=$O(BARTRX(BARTRDA)) Q:'BARTRDA  D  Q:BARQ  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ S BART=0  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ F  S BART=$O(BARLST(BART)) Q:'BART  D  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .S BARTRDA=$G(BARLST(BART))  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .S BARQ=$$CHKLINE()
+ .Q:BARQ
+ .I BARFLGRP="M"!(BARFLGRP="B")!(BARFLGRP="O") I $D(BARMSG(BARTRDA)) D MESSAGE(BARTRDA) S BARMCNT=BARMCNT+1 Q  ; - BAR*1.8*23
+ .I $G(BARTRX(BARTRDA))="MESSAGE" Q
+ .I BARFLGRP="O" QUIT
+ .W !
+ .;W $$SDT^BARDUTL($G(BARTRX(BARTRDA,12))) ;DT  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .W $$SDT^BARDUTL(BARTRX(BARTRDA,".011")) ;DT  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .I $G(BARTRX(BARTRDA,13))'="" W ?11,$P($G(^VA(200,BARTRX(BARTRDA,13),0)),U,2) ;INITIALS
+ .S BARBATCH=$S($L($G(BARTRX(BARTRDA,14))):BARTRX(BARTRDA,14),1:"NO BATCH")
+ .S BARITEM=$S($L($G(BARTRX(BARTRDA,15))):BARTRX(BARTRDA,15),1:"")
+ .S:$G(BARTRX(BARTRDA,102))'="" BARTRX(BARTRDA,102)=$E(BARTRX(BARTRDA,102),1,19)_"/"_$E($G(BARTRX(BARTRDA,103)),1,19)  ;bar*1.8*20
+ .S BARTT=$S($G(BARTRX(BARTRDA,101))["REFUND":BARTRX(BARTRDA,101),$L($G(BARTRX(BARTRDA,102))):BARTRX(BARTRDA,102),1:$G(BARTRX(BARTRDA,101)))
+ .S BARPRE=""
+ .I BARTRX(BARTRDA,106)="e" S BARPRE="e "
+ .I BARTT["PENDING" S BARPRE="* "
+ .I BARTRX(BARTRDA,106)="e",BARTT["PENDING" S BARPRE="*e "
+ .S BARTT=BARPRE_BARTT
+ .W ?15,BARTT ;TRTYPE
+ .I BARTT["REMARK" W ?45,BARTRX(BARTRDA,107)
+ .I BARTT["NCPDP" W ?45,BARTRX(BARTRDA,108)
+ .S (BARX,X)=$S($G(BARTRX(BARTRDA,2)):-BARTRX(BARTRDA,2),1:$G(BARTRX(BARTRDA,3)))
+ .S X2=2
+ .S X3=11
+ .D COMMA^%DTC
+ .I BARTT["PENDING" S X="**"_X_"**"
+ .W ?54,X
+ .N X
+ .I BARTT'["PENDING"&(BARTT'["GENERAL") D
+ ..S BARBAL=BARBAL+BARX
+ .S X=BARBAL,X2=2,X3=11 D COMMA^%DTC
+ .W ?68,X
+ .W !
+ .W ?15,BARTRX(BARTRDA,6)          ; A/R Account
+ .W ?45,BARBATCH
+ .W ?67,$J(BARITEM,3,0)
+ .I BARTRX(BARTRDA,14,"I")'="",(BARTRX(BARTRDA,15,"I")'="") D
+ ..N IENS
+ ..S IENS=BARTRX(BARTRDA,15,"I")_","_BARTRX(BARTRDA,14,"I")_","
+ ..W !?15,$$GET1^DIQ(90051.1101,IENS,20,"E")  ;SCHEDULE #\IPAC
+ ..K IENS
+ .I BARTT["REMARK" D
+ ..S BARMKDSC=$$GET1^DIQ(90050.03,BARTRDA,"107:.02")
+ ..W !?15,$E(BARMKDSC,1,40)
+ ..I $L(BARMKDSC)>40 W !?15,$E(BARMKDSC,41,80)
+ .I BARTT["NCPDP" D
+ ..S BARNCPDP=$$GET1^DIQ(90050.03,BARTRDA,"108:.02")
+ ..W !?15,$E(BARNCPDP,1,40)
+ ..I $L(BARNCPDP)>40 W !?15,$E(BARNCPDP,41,80)
+ .I $G(BARTRX(BARTRDA,110)) D
+ ..S Y=BARTRX(BARTRDA,110) X ^DD("DD")
+ ..W !?5,"REVERSAL DATE: ",Y  ;BARHDR
+ ..W !?5,"REV TREASURY DEPOSIT NUMBER/IPAC: ",$G(BARTRX(BARTRDA,111))
+ .I $G(BARTRX(BARTRDA,112))]"" W !?15,BARTRX(BARTRDA,112)
+ .I BARTRX(BARTRDA,501)'="" W !?15,"PAYMENT CREDIT APPLIED TO: ",BARTRX(BARTRDA,501)
+ .I BARTRX(BARTRDA,502)'="" W !?15,"PAYMENT CREDIT APPLIED FROM: ",BARTRX(BARTRDA,502)
+ .;I BARFLGRP="T"!(BARFLGRP="B") W !,?15,BARTRDA ; - BAR*1.8*23  ;IHS/SD/SDR bar*1.8*33 ADO60817
+ .I BARFLGRP="T"!(BARFLGRP="B") W !,?15,$P($G(^BARTR(DUZ(2),BARTRX(BARTRDA,".01"),0)),U)  ;date/time/counter of transaction  ;IHS/SD/SDR bar*1.8*33 ADO60817
  Q:BARQ
  I BARFLGRP="O",BARMCNT=0 W !!!,"NO MESSAGES FOUND.",!!
  D EOP^BARUTL(1)
  Q
- ; *********************************************************************
+ ;**************************************
  ;
 HEAD ;
  W $$EN^BARVDF("IOF") ;,!
  S X="List of Transactions for Bill "_BARBL(.01)
  W ?80-$L(X)\2,X
- W !!,"Patient: "_BARBL(101),?45,"Beg DOS : "_BARBL(102)
- W !,"Address: "_$G(BARPTA(.111)),?45,"End DOS : "_BARBL(103)
+ ;W !!,"Patient: "_BARBL(101),?45,"Beg DOS : "_BARBL(102)  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ W !!,"Patient: "_BARBL(101)  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ I $$GETPREF^AUPNSOGI(BARBL(101,"I"),"I",1)'="" W " - "_$$GETPREF^AUPNSOGI(BARBL(101,"I"),"I",1)_"*"  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ ;W !,"Address: "_$G(BARPTA(.111)),?45,"End DOS : "_BARBL(103)  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ W !,"Address: "_$G(BARPTA(.111))  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ W ?45,"Beg DOS : "_BARBL(102)  ;bar*1.8*35 IHS/SD/SDR ADO60910
  W !,$G(BARPTA(.114))_", "_$G(BARPTA(.115))_" "_$G(BARPTA(.116))
- W ?45,"LST STMT: "
+ W ?45,"End DOS : "_BARBL(103)  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ ;W ?45,"LST STMT: "  ;bar*1.8*35 IHS/SD/SDR ADO60910
  W !!,"Phone #: "_$G(BARPTA(.131)),?45,"Insurer: "_$G(BARBL(3))
  W !?45,"Balance: "_$J(BARBL(15),0,2)
  W !!,"Trans Dt",?11,"By",?15,"Trans Type",?57,"Amount",?70,"Balance"
@@ -177,7 +193,7 @@ HEAD ;
  I BARFLGRP="T"!(BARFLGRP="B") W !?15,"Transaction #" ;,! ; - BAR*1.8*23
  S BARDSH="",$P(BARDSH,"-",IOM)="" W !,BARDSH
  Q
- ; *********************************************************************
+ ;*************************************
  ;
 CHKLINE() ;
  ; Q 0 = CONTINUE
@@ -196,24 +212,26 @@ MESSAGE(BARTRDA) ;
  ;^BARTR(DUZ(2),BARTRDA,10,2,0)="REASON: "
  N BARMSG1,BARMSG2,I,BARINIT,BARTXT,BARLINE,BAROK,BARST,BARWD
  S BARWD=43-15-1,BARST=1
- S BARINIT=$$SDT^BARDUTL(BARTRDA) ;DT
+ ;S BARINIT=$$SDT^BARDUTL(BARTRDA) ;DT  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ S BARINIT=$$SDT^BARDUTL($P($P($G(^BARTR(DUZ(2),BARTRDA,0)),U),"."))  ;bar*1.8*33 IHS/SD/SDR ADO60817
  S BARMSG1=$P($G(^BARTR(DUZ(2),BARTRDA,10,0)),U,3)
  S BARTXT=""
  F I=1:1:BARMSG1 D  ;------------------10/24/13----- - BAR*1.8*23
- . S BARLINE=$G(^BARTR(DUZ(2),BARTRDA,10,I,0))
- . I BARLINE]"" S BARTXT=BARTXT_" "_BARLINE
+ .S BARLINE=$G(^BARTR(DUZ(2),BARTRDA,10,I,0))
+ .I BARLINE]"" S BARTXT=BARTXT_" "_BARLINE
  F I=1:1 Q:$E(BARTXT)'=" "  S $E(BARTXT,1)=""
  S BAROK=0 I BARTXT]"" D
- . F I=1:1 D  Q:BAROK
- . . S BARLINE=$E(BARTXT,BARST,BARST+BARWD)
- . . I BARLINE="" S BAROK=1 Q
- . . W !
- . . I I=1 D
- . . . W BARINIT
- . . . W ?11,$$INITIALS(BARTRDA)
- . . S BARST=BARST+BARWD+1
- . . W ?15,BARLINE
- I BARFLGRP="B" W !?15,BARTRDA ; - BAR*1.8*23
+ .F I=1:1 D  Q:BAROK
+ ..S BARLINE=$E(BARTXT,BARST,BARST+BARWD)
+ ..I BARLINE="" S BAROK=1 Q
+ ..W !
+ ..I I=1 D
+ ...W BARINIT
+ ...W ?11,$$INITIALS(BARTRDA)
+ ..S BARST=BARST+BARWD+1
+ ..W ?15,BARLINE
+ ;I BARFLGRP="B" W !?15,BARTRDA ; - BAR*1.8*23  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ I BARFLGRP="B" W !?15,$P($G(^BARTR(DUZ(2),BARTRDA,0)),U) ;BAR*1.8*23  ;bar*1.8*33 IHS/SD/SDR ADO60817
  Q
 INITIALS(BARTRDA) ; - BAR*1.8*23
  N BARTMP,BARTMP2,BARINIT

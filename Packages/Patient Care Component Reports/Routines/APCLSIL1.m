@@ -1,26 +1,10 @@
 APCLSIL1 ;IHS/CMI/LAB - ILI SURVEILLANCE; 
- ;;3.0;IHS PCC REPORTS;**24,25,26,27,28,29,30,31**;FEB 05, 1997;Build 32
+ ;;3.0;IHS PCC REPORTS;**24,25,26,27,28,29,30,31,33**;FEB 05, 1997;Build 38
  ;
-WT(V) ;EP - get last wt
- NEW X,Y,Z
- S Y=""
- S X=0 F  S X=$O(^AUPNVMSR("AD",V,X)) Q:X'=+X  D
- .Q:$P($G(^AUPNVMSR(X,2)),U,1)  ;ENTERED IN ERROR
- .Q:$$VAL^XBDIQ1(9000010.01,X,.01)'="WT"
- .S Y=$P(^AUPNVMSR(X,0),U,4)
- Q Y
-HT(V) ;EP - get last wt
- NEW X,Y,Z
- S Y=""
- S X=0 F  S X=$O(^AUPNVMSR("AD",V,X)) Q:X'=+X  D
- .Q:$P($G(^AUPNVMSR(X,2)),U,1)  ;ENTERED IN ERROR
- .Q:$$VAL^XBDIQ1(9000010.01,X,.01)'="HT"
- .S Y=$P(^AUPNVMSR(X,0),U,4)
- Q Y
 HASADVN6(APCLV) ;EP - PATCH 27 - if return 1 then count visit and put pieces 2 through n in columns 66 through 75
  NEW X,P,Y,Z,APCLCLIN,T,G,C,D,CLNTAX,E
  S CLNTAX=$O(^ATXAX("B","SURVEILLANCE ILI CLINICS",0))
- I "AORSH"'[$P(^AUPNVSIT(APCLV,0),U,7) Q ""
+ I "AORSHIM"'[$P(^AUPNVSIT(APCLV,0),U,7) Q ""
  S APCLCLIN=$$CLINIC^APCLV(APCLV,"I")  ;get clinic code
  ;is there a PHN
  S X=0,P=0 F  S X=$O(^AUPNVPRV("AD",APCLV,X)) Q:X'=+X!(P)  D
@@ -50,29 +34,6 @@ HASADN61 ;
  ..D SET6
  I 'C Q ""  ;no diagnosis
  Q 1_U_D_U_E
-SET6 ;
- S C=C+1,P1=P1+1,P2=P2+1
- S $P(D,",",P1)=$$VAL^XBDIQ1(9000010.07,X,.01)
- S $P(E,",",P1)=$$VD^APCLV(APCLV)
- Q
-OTHVAC(P,VD) ;EP - get all vaccine history up to this visit date
- NEW C,X,Y,V,G,Z,R,P1,P2
- S R="",X=0,G=0
- S C=0,P1=-1,P2=0
- F  S X=$O(^AUPNVIMM("AC",P,X)) Q:X'=+X!(C>34)  D
- .Q:'$D(^AUPNVIMM(X,0))
- .S V=$$VD^APCLV($P(^AUPNVIMM(X,0),U,3))
- .;Q:V<3100801
- .Q:V>VD
- .S Y=$P($G(^AUPNVIMM(X,0)),U)
- .Q:'Y
- .Q:'$D(^AUTTIMM(Y,0))
- .S Z=$P(^AUTTIMM(Y,0),U,3)
- .S C=C+1,P1=P1+2,P2=P2+2
- .S $P(R,",",P1)=Z
- .S $P(R,",",P2)=V
- .Q
- Q R
 PN(P,V) ;EP
  I $P(^DPT(P,0),U,2)'="F" Q ""
  NEW T,X,Y,Q,ED,BD,APCL,LPD,%,G
@@ -87,7 +48,7 @@ PN(P,V) ;EP
  S X=0 F  S X=$O(APCL(X)) Q:X'=+X  D
  .S V=$P(APCL(X),U,5)
  .Q:'$D(^AUPNVSIT(V,0))
- .Q:"AORSHI"'[$P(^AUPNVSIT(V,0),U,7)
+ .Q:"AORSHIM"'[$P(^AUPNVSIT(V,0),U,7)
  .S (G,Y)=0 F  S Y=$O(^AUPNVPOV("AD",V,Y)) Q:Y'=+Y!(G)  D
  ..S Q=$P($G(^AUPNVPOV(Y,0)),U)
  ..Q:Q=""
@@ -120,6 +81,30 @@ PN(P,V) ;EP
  S %=$$LASTCPTT^APCLAPIU(P,LPD,ED,"SURVEILLANCE H1N1 DELIVERY CPT","D")
  I %]"" Q ""
  Q "Y"
+SET6 ;
+ S C=C+1,P1=P1+1,P2=P2+1
+ S $P(D,",",P1)=$$VAL^XBDIQ1(9000010.07,X,.01)
+ S $P(E,",",P1)=$$VD^APCLV(APCLV)
+ Q
+OTHVAC(P,VD) ;EP - get all vaccine history up to this visit date
+ NEW C,X,Y,V,G,Z,R,P1,P2
+ S R="",X=0,G=0
+ S C=0,P1=-1,P2=0
+ F  S X=$O(^AUPNVIMM("AC",P,X)) Q:X'=+X!(C>34)  D
+ .Q:'$D(^AUPNVIMM(X,0))
+ .S V=$$VD^APCLV($P(^AUPNVIMM(X,0),U,3))
+ .;Q:V<3100801
+ .Q:V>VD
+ .S Y=$P($G(^AUPNVIMM(X,0)),U)
+ .Q:'Y
+ .Q:'$D(^AUTTIMM(Y,0))
+ .S Z=$P(^AUTTIMM(Y,0),U,3)
+ .S C=C+1,P1=P1+2,P2=P2+2
+ .S $P(R,",",P1)=Z
+ .S $P(R,",",P2)=V
+ .Q
+ Q R
+ ;
 MONUP ;EP
  K APCLUP,APCLAC
  S APCLBD=$$FMADD^XLFDT(DT,-(3*365))

@@ -1,6 +1,11 @@
-RAO7PC4 ;HISC/SWM-utilities ;11/19/01  10:23
- ;;5.0;Radiology/Nuclear Medicine;**28,32,31,45,77**;Mar 16, 1998;Build 7
+RAO7PC4 ;HISC/SWM-utilities ; Apr 28, 2020@14:47:40
+ ;;5.0;Radiology/Nuclear Medicine;**28,32,31,45,77,157,169,1009**;Mar 16, 1998;Build 21
  ;08/10/2006 BAY/KAM Remedy Call 134839 Subscript Error
+ ;
+ ;IA          Type    File         Routine     Tag   
+ ;------------------------------------------------
+ ;1362        (C)                  ORB3        EN                   
+ ;
  Q
 EN1 ; api for CPRS notification alert #67
  Q:'$D(XQADATA)
@@ -9,14 +14,18 @@ EN1 ; api for CPRS notification alert #67
  D KIL1 ;  kill ^TMP nodes
  Q
 SET1 N RADFN,RADTI,RACNI,RAPROC1,RAPROC2,RAPHY1,RAPHY2,RAPMOD1,RAPMOD2,RAACNT
- N RAPATNAM,RASSN,RASTR,I,J,RACMU
+ N RAPATNAM,RASSN,RASTR,I,J,RACMU,RAOIFN
  ; 08/10/2006 BAY/KAM Remedy Call 134839/RA*5*77 - Added next line
  Q:$G(XQADATA)=""
  S RADFN=$P(XQADATA,"/") ; ien patient
  S RAACNT=0 ; counter
  S RADTI=$P(XQADATA,"/",2) ; inverse date of exam
  S RACNI=$P(XQADATA,"/",3) ; ien case
- S RAPROC1=$P(XQADATA,"/",4) ; ien 71, before
+ ;p157/KLM Set the before procedure from order if missing from alert data
+ S RAPROC1=$P(XQADATA,"/",4) I RAPROC1="" D  ; ien 71, before
+ .S RAOIFN=$P($G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0)),U,11)
+ .S:RAOIFN]"" RAPROC1=$P(^RAO(75.1,RAOIFN,0),U,2)
+ .Q
  S RAPROC2=$P(XQADATA,"/",5) ; ien 71, after
  S RAPHY1=$P(XQADATA,"/",6) ; ien 200 requesting physician, before
  S RAPHY2=$P(XQADATA,"/",7) ; ien 200 requesting physician, after
@@ -33,7 +42,7 @@ SET1 N RADFN,RADTI,RACNI,RAPROC1,RAPROC2,RAPHY1,RAPHY2,RAPMOD1,RAPMOD2,RAACNT
  .S ^TMP($J,"RAE4",$$INCR^RAUTL4(RAACNT))=" "
  I RAPROC2 D
  .S ^TMP($J,"RAE4",$$INCR^RAUTL4(RAACNT))=" Procedure changed"
- .S ^TMP($J,"RAE4",$$INCR^RAUTL4(RAACNT))="  From: "_$E($P(^RAMIS(71,RAPROC1,0),"^"),1,53)
+ .S ^TMP($J,"RAE4",$$INCR^RAUTL4(RAACNT))="  From: "_$S(RAPROC1]"":$E($P(^RAMIS(71,RAPROC1,0),"^"),1,53),1:"UNKNOWN") ;p157/KLM - add $S for 'unknown' procedure
  .S ^TMP($J,"RAE4",$$INCR^RAUTL4(RAACNT))="  To:   "_$E($P(^RAMIS(71,RAPROC2,0),"^"),1,53)_RACMU
  .S ^TMP($J,"RAE4",$$INCR^RAUTL4(RAACNT))=""
  I RAPHY2 D
@@ -131,11 +140,15 @@ SETNOTIF(RAIEN751) ; called by RAO7XX if patch OR*3.0*112 is installed
  Q:'$D(RASTRING)
  ;RASTRING is : dfn^invdt^caseien^befproc^aftproc^befphy^aftphy
  ;              ^befpmodA,pmodF,etc^aftpmodF,pmodH,etc
- N RAREQPHY
+ ;RAIEN751 - IEN file 75.1 RA5P169
+ ;Notification: #67 - IMAGING REQUEST CHANGED
+ N RAREQPHY,RAOIFN,RAORIFN
  S:+$P(RASTRING,"/",6) RAREQPHY(+$P(RASTRING,"/",6))=""
  S:+$P(RASTRING,"/",7) RAREQPHY(+$P(RASTRING,"/",7))=""
  S RAMSG="Imaging Exam Changed: "_$S($P(RASTRING,"/",5):"Proc., ",1:"")_$S($P(RASTRING,"/",7):"Rqstr, ",1:"")_$S($L($P(RASTRING,"/",8,9))>1:"Proc Mod",1:"")
  S:$E(RAMSG,$L(RAMSG)-1)="," RAMSG=$E(RAMSG,1,($L(RAMSG)-2))
- D EN^ORB3(67,+RASTRING,RAIEN751,.RAREQPHY,RAMSG,RASTRING)
- ;ORN mustbe 67,dfn,ienfile75.1,reqphys,messagetitle,string for api
+ S RAOIFN(0)=$G(^RAO(75.1,RAIEN751,0)),RAORIFN=$P(RAOIFN(0),"^",7) ;CPRS order IFN
+ D EN^ORB3(67,+RASTRING,RAORIFN,.RAREQPHY,RAMSG,RASTRING)
+ ;ORN mustbe 67,dfn,IFN #100,reqphys,messagetitle,string for api
  Q
+ ;

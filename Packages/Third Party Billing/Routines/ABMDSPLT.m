@@ -1,13 +1,13 @@
-ABMDSPLT ; IHS/ASDST/DMJ - SPLIT CLAIM IN TWO ;     
- ;;2.6;IHS Third Party Billing;**1,3,9,10,21**;NOV 12, 2009;Build 379
+ABMDSPLT ; IHS/SD/SDR - SPLIT CLAIM IN TWO ;     
+ ;;2.6;IHS Third Party Billing;**1,3,9,10,21,32**;NOV 12, 2009;Build 621
  ;
- ; IHS/SD/SDR - v2.5 p12 - UFMS
- ;   Added check to see if user is logged in before splitting
- ;   claims allowed
- ; IHS/SD/SDR - abm*2.6*1 - HEAT4480 - Added ARE YOU SURE prior to split
- ; IHS/SD/SDR - abm*2.6*3 - HEAT11948 - fix for <UNDEF>START+3^AUPNPAT
- ;IHS/SD/SDR - 2.6*21 - HEAT190661 - If user types '^' at section prompt they will be exited out of option without split.
+ ;IHS/SD/SDR 2.5*12 UFMS-Added check to see if user is logged in before splitting claims allowed
+ ;
+ ;IHS/SD/SDR 2.6*1 HEAT4480 Added ARE YOU SURE prior to split
+ ;IHS/SD/SDR 2.6*3 HEAT11948 fix for <UNDEF>START+3^AUPNPAT
+ ;IHS/SD/SDR 2.6*21 HEAT190661 If user types '^' at section prompt they will be exited out of option without split.
  ;  Also rearranged code so claim wouldn't get created until sections to be copied/moved were selected.
+ ;IHS/SD/SDR 2.6*32 CR9771 Added Backbill Limit messages to screen
  ;
  ; *********************************************************************
  ;
@@ -28,6 +28,24 @@ START ;START
  S DIC="^ABMDCLM(DUZ(2),",DIC(0)="L"
  S X=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U)
  ;start new code abm*2.6*1 HEAT4480
+ ;
+ ;start new abm*2.6*32 IHS/SD/SDR CR9771
+ S ABMBBL=0
+ S ABMVDT=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,2)
+ S ABMAINS=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,8)
+ S ABMBBL=+$P($G(^AUTNINS(ABMAINS,2)),U,4)
+ S:ABMBBL=0 ABMBBL=+$P(^ABMDPARM(DUZ(2),1,0),U,16)
+ I ABMBBL>0 D
+ .S X1=DT
+ .S X2=0-(ABMBBL*30.417)
+ .D C^%DTC
+ I ABMVDT<X D
+ .W !!,$$EN^ABMVDF("RVN")
+ .I +$P($G(^AUTNINS(ABMAINS,2)),U,4)'=0 W "** "_$P($G(^AUTNINS(ABMAINS,0)),U)_" has a backbilling limit of "_+$P($G(^AUTNINS(ABMAINS,2)),U,4)_" months  **",!
+ .W "** Site Parameters has a backbilling limit of "_+$P(^ABMDPARM(DUZ(2),1,0),U,16)_" months **",!
+ .W $$EN^ABMVDF("RVF")
+ ;end new abm*2.6*32 IHS/SD/SDR CR9771
+ ;
  W !!
  S DIR(0)="Y",DIR("A")="You are about to split a claim.  Are you sure?"
  S DIR("B")="NO"

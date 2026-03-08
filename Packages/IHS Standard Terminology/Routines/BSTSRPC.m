@@ -1,22 +1,22 @@
 BSTSRPC ;GDIT/HS/BEE - SNOMED Utilities - RPC Search ; 10 Aug 2012  9:24 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**4,5**;Dec 01, 2016;Build 22
  ;
  Q
  ;
 SEARCH(DATA,SEARCH,PC) ;EP - BSTS SNOMED SEARCH
  ;
- ;Description
- ;  Returns a list of SNOMED CT Terms matching the specified search string
- ;  
+ ;Desc
+ ;  Returns Terms matching specified search str
+ ;
  ;Input
- ;  SEARCH - The string to search on
- ;      PC - Return Parent/Children
+ ;SEARCH-String to search
+ ;PC-Return Parent/Children
  ;
  ;Output
- ;  ^TMP("BSTSRPC") - Name of global (passed by reference) in which the data is stored.
+ ;^TMP("BSTSRPC")-Name of global in which data stored
  ;
- ;Variables Used
- ;  UID - Unique TMP global subscript.
+ ;Vars Used
+ ;UID - Unique TMP global subscript.
  ;
  N UID,BSTSII,SVAR,STS,II,%D,NMID
  ;
@@ -38,17 +38,36 @@ SEARCH(DATA,SEARCH,PC) ;EP - BSTS SNOMED SEARCH
  ;
  ;Perform lookup
  S NMID=$P(SEARCH,U,3) S:NMID="" NMID=36
- S STS=$$SEARCH^BSTSAPI(SVAR,SEARCH)
+ ;GDIT/HS/BEE;02/19/2024;FEATURE#60466;Allow lookup by concept id or RxNorm
+ ;GDIT/HS/BEE;02/22/2024;FEATURE#60488;SNOMED to Conditional Map Display Lookup
+ I $E($P(SEARCH,U),1)="#" D
+ . NEW CONC
+ . S CONC=$E($P(SEARCH,U),2,99) Q:CONC=""
+ . S STS=$$CNCLKP^BSTSAPI(SVAR,CONC_U_NMID)
+ . ;
+ . ;Filter out inactive/subs
+ . D FLTR^BSTSRPCU(SVAR,NMID,SEARCH)
+ E  I $E($P(SEARCH,U),1)="?" D
+ . NEW ICD10
+ . S ICD10=$E($P(SEARCH,U),2,99) Q:ICD10=""
+ . D ICDLK^BSTSRPC1(SVAR,$E(SEARCH,2,$L(SEARCH)))
+ . ;
+ . ;Filter out inactive/subs
+ . D FLTR^BSTSRPCU(SVAR,NMID,SEARCH)
+ E  S STS=$$SEARCH^BSTSAPI(SVAR,SEARCH)
  ;
- ;Output Results
+ ;Results
  S II=0 F  S II=$O(@SVAR@(II)) Q:II=""  D
  . NEW PRBD,PRBT,CONC,DTS,FSND,FSNT,PRED,PRET,CHD
- . NEW ISA,ICD,SUB,SYN,MICD,D10,ISHDR,LAT,DFSTS,REPI
+ . NEW ISA,ICD,SUB,SYN,MICD,D10,ISHDR,LAT,DFSTS,REPI,HICD,MAP
  . ;
- . ;Problem Description and Term
+ . ;Problem Desc and Term
  . S PRBD=$G(@SVAR@(II,"PRB","DSC"))
  . S PRBT=$G(@SVAR@(II,"PRB","TRM"))
  . S CONC=$G(@SVAR@(II,"CON"))
+ . ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Inactive concepts - Do not include
+ . ;Filter out inactives
+ . I $G(@SVAR@(II,"INACTIVE")) Q
  . S DTS=$G(@SVAR@(II,"DTS"))
  . S FSND=$G(@SVAR@(II,"FSN","DSC"))
  . S FSNT=$G(@SVAR@(II,"FSN","TRM"))
@@ -85,6 +104,10 @@ SEARCH(DATA,SEARCH,PC) ;EP - BSTS SNOMED SEARCH
  ... NEW TRM,DSC
  ... S TRM=$G(@SVAR@(II,"SYN",ICNT,"TRM"))
  ... S DSC=$G(@SVAR@(II,"SYN",ICNT,"DSC"))
+ ... ;
+ ... ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Inactive terms
+ ... ;Filter out inactive term
+ ... I $G(@SVAR@(II,"SYN",ICNT,"INACTIVE")) Q
  ... S SYN=SYN_$S(SYN]"":$C(28),1:"")_DSC_$C(29)_TRM_$C(29)_"Synonym"_$C(29)_2
  . ;
  . ;ISA
@@ -118,10 +141,29 @@ SEARCH(DATA,SEARCH,PC) ;EP - BSTS SNOMED SEARCH
  ... I $$GET1^DIQ(9002318.4,CIEN_",",".03","I")'="P",$$GET1^DIQ(9002318.4,CIEN_",",".15","I")="" Q
  ... S SYN=SYN_$S(SYN]"":$C(28),1:"")_DTS_$C(29)_TRM_$C(29)_"Child"_$C(29)_4
  . ;
+ . ;GDIT/HS/BEE;02/19/2024;FEATURE#60465;SNOMED Search Utility Mapping Hover Help - Include hover info
+ . ;ICD Hover field
+ . S HICD=""
+ . D
+ .. NEW ADV,STS
+ .. ;
+ .. ;Only return if ICD10
+ .. I '$$ICD10^BSTSUTIL(DT) S HICD="No ICD9 mapping advice available" Q
+ .. ;
+ .. ;Get mapping advice
+ .. S STS=$$I10ADV^BSTSAPI("ADV",CONC_"^1")
+ .. S (HICD,ADV)="" F  S ADV=$O(ADV(ADV)) Q:ADV=""  S HICD=HICD_$S($L(HICD)]"":$C(13)_$C(10),1:"")_ADV(ADV)
+ .. S:HICD="" HICD="No ICD10 mapping advice available"
+ . ;
+ . ;GDIT/HS/BEE;02/19/2024;FEATURE#102687;BSTS - IPL search output to differentiate between "No map" vs "Conditional map"
+ . S MAP=1 I (HICD="")!(HICD["No mapping advice available")!(HICD["No ICD10 mapping advice available")!(HICD["No ICD9 mapping advice available") S MAP=0
+ . ;
  . S MICD=ICD
- . ;Save entry
+ . ;Save
  . S BSTSII=BSTSII+1,@DATA@(BSTSII)=PRBD_U_PRBT_U_PRED_U_PRET_U_CONC_U_DTS_U_FSND_U_FSNT_U_ISA
- . S @DATA@(BSTSII)=@DATA@(BSTSII)_U_ICD_U_SUB_U_D10_U_SYN_U_ISHDR_U_MICD_U_LAT_U_DFSTS_U_REPI_$C(30)
+ . ;GDIT/HS/BEE;02/19/2024;FEATURE#60465;SNOMED Search Utility Mapping Hover Help - Include hover information
+ . ;S @DATA@(BSTSII)=@DATA@(BSTSII)_U_ICD_U_SUB_U_D10_U_SYN_U_ISHDR_U_MICD_U_LAT_U_DFSTS_U_REPI_$C(30)
+ . S @DATA@(BSTSII)=@DATA@(BSTSII)_U_ICD_U_SUB_U_D10_U_SYN_U_ISHDR_U_MICD_U_LAT_U_DFSTS_U_REPI_U_HICD_U_MAP_$C(30)
  ;
 DONE ;
  S BSTSII=BSTSII+1,@DATA@(BSTSII)=$C(31)
@@ -135,19 +177,19 @@ USEARCH(DATA,SEARCH) ;EP - BSTS SNOMED UNIVERSE SEARCH
  ;
 ICD2SMD(DATA,INPUT) ;EP - BSTS ICD9 TO SNOMED
  ;
- ;Description
- ;  Returns a list of SNOMED CT Terms matching the specified ICD9 code
+ ;Desc
+ ;  Returns list of Terms matching the specified ICD9 code
  ;  
  ;Input
- ;  INPUT - "|" Delimited string
- ;          [1] ICD9 Code 
- ;          [2] Subset(s) (Optional) - Include only concepts in these subsets
- ;                                     (multiple subsets delimited by "~")
+ ;INPUT - "|" Delimited string
+ ;        [1] ICD9 Code 
+ ;        [2] Subset(s) (Optional) - Include only concepts in these subsets
+ ;                                   (multiple subsets delimited by "~")
  ;
  ;Output
  ;  ^TMP("BSTSRPC") - Name of global (passed by reference) in which the data is stored.
  ;
- ;Variables Used
+ ;Vars Used
  ;  UID - Unique TMP global subscript.
  ;
  N UID,BSTSII,SVAR,STS,II,SUBSETS,SNAPDT,%D
@@ -155,12 +197,11 @@ ICD2SMD(DATA,INPUT) ;EP - BSTS ICD9 TO SNOMED
  S INPUT=$G(INPUT,"")
  S INPUT=$TR(INPUT,"|","^")
  ;
- ;Strip off trailing "."
+ ;Strip trailing "."
  S $P(INPUT,U)=$$TKO^BSTSUTIL($P(INPUT,U),".")
  ;
  S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
  S DATA=$NA(^TMP("BSTSRPC",UID))
- ;S SVAR=$NA(^TMP("BSTSRPC1",UID))  ;Switch to local
  K @DATA
  ;
  S BSTSII=0
@@ -176,17 +217,17 @@ ICD2SMD(DATA,INPUT) ;EP - BSTS ICD9 TO SNOMED
  ;Perform lookup - ICD9
  I $E($P(INPUT,U),1)'="?" S STS=$$ICD2SMD^BSTSAPI("SVAR",$P(INPUT,U)_"^BCIX^")
  ;
- ;Perform lookup - Text
+ ;Perform lookup-Text
  I $E($P(INPUT,U),1)="?" D
  . NEW STRING
  . S STRING=$E($P(INPUT,U),2,9999)
  . S STS=$$SEARCH^BSTSAPI("SVAR",STRING_"^F^^^^^BCIX")
  ;
- ;Output Results
+ ;Results
  S II=0 F  S II=$O(SVAR(II)) Q:II=""  D
  . NEW CONC,DESC,PTERM,REL,SCHK,SUB,ICD
  . ;
- . ;Perform subset check to see it this Concept should be returned
+ . ;Perform subset check to see if should be returned
  . S SCHK=0 I SUBSETS]"",$D(SVAR(II,"SUB")) D
  .. NEW ICNT
  .. S ICNT="" F  S ICNT=$O(SVAR(II,"SUB",ICNT)) Q:ICNT=""  D
@@ -223,7 +264,7 @@ ICD2SMD(DATA,INPUT) ;EP - BSTS ICD9 TO SNOMED
  ... S SB=$G(SVAR(II,"SUB",ICNT,"SUB"))
  ... S SUB=SUB_$S(SUB]"":$C(28),1:"")_SB
  . ;
- . ;Get ISA (Parents) first
+ . ;Get ISA (Parents)
  . I $D(SVAR(II,"ISA")) D
  .. NEW ICNT,PICD
  .. S ICNT="" F  S ICNT=$O(SVAR(II,"ISA",ICNT)) Q:ICNT=""  D
@@ -235,7 +276,7 @@ ICD2SMD(DATA,INPUT) ;EP - BSTS ICD9 TO SNOMED
  ... ;Look up entry
  ... S STS=$$DTSLKP^BSTSAPI("VR",DTS_"^^^1")
  ... ;
- ... ;Perform subset check to see it this Concept should be returned
+ ... ;Perform subset check to see if Concept should be returned
  ... S SCHK=0 I SUBSETS]"",$D(VR(1,"SUB")) D
  .... NEW ICNT
  .... S ICNT="" F  S ICNT=$O(VR(1,"SUB",ICNT)) Q:ICNT=""  D
@@ -248,7 +289,7 @@ ICD2SMD(DATA,INPUT) ;EP - BSTS ICD9 TO SNOMED
  ... S PTRM=$G(VR(1,"PRE","TRM")) Q:PTRM=""
  ... S PCNC=$G(VR(1,"CON")) Q:PCNC=""
  ... ;
- ... ;ICD9 - Parent
+ ... ;ICD9-Parent
  ... S PICD="" I $D(VR(1,"IC9")) D
  .... NEW ICNT
  .... S ICNT="" F  S ICNT=$O(VR(1,"IC9",ICNT)) Q:ICNT=""  D
@@ -259,7 +300,7 @@ ICD2SMD(DATA,INPUT) ;EP - BSTS ICD9 TO SNOMED
  ... ;Set up output
  ... S REL=REL_$S(REL]"":$C(28),1:"")_"P"_$C(29)_PCNC_$C(29)_PDSC_$C(29)_PTRM_$C(29)_PICD
  . ;
- . ;Now get Children
+ . ;Get Children
  . I $D(SVAR(II,"CHD")) D
  .. NEW ICNT,CICD
  .. S ICNT="" F  S ICNT=$O(SVAR(II,"CHD",ICNT)) Q:ICNT=""  D
@@ -271,7 +312,7 @@ ICD2SMD(DATA,INPUT) ;EP - BSTS ICD9 TO SNOMED
  ... ;Look up entry
  ... S STS=$$DTSLKP^BSTSAPI("VR",DTS_"^^^1")
  ... ;
- ... ;Perform subset check to see it this Concept should be returned
+ ... ;Perform subset check to see if Concept should be returned
  ... S SCHK=0 I SUBSETS]"",$D(VR(1,"SUB")) D
  .... NEW ICNT
  .... S ICNT="" F  S ICNT=$O(VR(1,"SUB",ICNT)) Q:ICNT=""  D
@@ -284,7 +325,7 @@ ICD2SMD(DATA,INPUT) ;EP - BSTS ICD9 TO SNOMED
  ... S PTRM=$G(VR(1,"PRE","TRM")) Q:PTRM=""
  ... S PCNC=$G(VR(1,"CON")) Q:PCNC=""
  ... ;
- ... ;ICD - Children
+ ... ;ICD-Children
  ... S CICD="" I $D(VR(1,"IC9")) D
  .... NEW ICNT
  .... S ICNT="" F  S ICNT=$O(VR(1,"IC9",ICNT)) Q:ICNT=""  D
@@ -313,14 +354,14 @@ HDR ;
  NEW HDR
  S HDR="T00050PRB_DSC^T00250PRB_TRM^T00050PREF_DSC^T00250PREF_TRM^T00050CONCID^T00030DTSID^T00050FSN_DSC^T00250FSN_TRM"
  S HDR=HDR_"^T04096ISA^T04096ICD9^T04096SUBSETS^T0409610D^T04096SYNONYMS"
- S HDR=HDR_"^T00001ISA_SYN_HDR^T04096MAPPED_ICD^T00001PROMPT_LATERALITY^T00020DEFAULT_STATUS^T00001REQUIRE_EPISODICITY"
- S @DATA@(BSTSII)=HDR_$C(30)
+ S HDR=HDR_"^T00001ISA_SYN_HDR^T04096MAPPED_ICD^T00001PROMPT_LATERALITY^T00020DEFAULT_STATUS^T00001REQUIRE_EPISODICITY^T04096HOVER_ICD"
+ S @DATA@(BSTSII)=HDR_"^T00001COND_MAP"_$C(30)
  Q
  ;
 SUBSET(DATA,INPUT) ;EP - BSTS GET SUBSET LIST
  ;
- ;Description
- ;  Returns a list of Subsets available to select from
+ ;Desc
+ ;  Returns list of Subsets available to select from
  ;  
  ;Input
  ; INPUT - P1 (Optional) - Namespace ID - Default to SNOMED US EXT (#36)
@@ -330,10 +371,10 @@ SUBSET(DATA,INPUT) ;EP - BSTS GET SUBSET LIST
  ;       - P4 (Optional) - IPL - Pass 1 to return only problem list subsets (SRCH*)
  ;
  ;Output
- ;  ^TMP("BSTSRPC") - Name of global (passed by reference) in which the data is stored.
+ ;^TMP("BSTSRPC") - Name of global (passed by reference) in which the data is stored.
  ;
  ;Variables Used
- ;  UID - Unique TMP global subscript.
+ ;UID - Unique TMP global subscript.
  ;
  ;Always look LOCAL
  S $P(INPUT,"|",2)=1
@@ -352,15 +393,15 @@ SUBSET(DATA,INPUT) ;EP - BSTS GET SUBSET LIST
  ;
  S STS=$$SUBSET^BSTSAPI("VAR",$P(INPUT,U,1,3))
  ;
- ;Define header
+ ;Define hdr
  S @DATA@(0)="T04096SUBSET^T04096DISPLAY_SUBSETS"_$C(30)
  ;
- ;Loop through list and set up results
+ ;Loop through list and set results
  S II="" F  S II=$O(VAR(II)) Q:II=""  D
  . ;
  . NEW DISPSB
  . ;
- . ;Filter for Integrated Problem List
+ . ;Filter for IPL
  . I IPL,$E(VAR(II),1,4)'="SRCH" Q
  . S DISPSB=VAR(II) I $E(VAR(II),1,5)="SRCH " S DISPSB=$E(VAR(II),6,999)
  . ;
@@ -371,14 +412,14 @@ SUBSET(DATA,INPUT) ;EP - BSTS GET SUBSET LIST
  ;
 CDSET(DATA,INPUT) ;EP - BSTS GET CODESETS
  ;
- ;Description
- ;  Returns a list of Codesets available to select from
+ ;Desc
+ ;  Returns list of Codesets available to select
  ;  
  ;Input
- ; INPUT - P1 (Optional) - LOCAL - Pass 1 to perform local listing, otherwise leave
- ;                         blank for remote listing
- ;       - P2 (Optional) - DEBUG - Pass 1 to display debug information
- ;       - P3 (Optional) - Pass 1 to return codesets for the standalone search tool
+ ;INPUT - P1 (Optional)-LOCAL-Pass 1 to perform local listing, otherwise leave
+ ;                      blank for remote listing
+ ;      - P2 (Optional)-DEBUG-Pass 1 to display debug information
+ ;      - P3 (Optional)-Pass 1 to return codesets for the standalone search tool
  ;
  ;  10       ICD-9-CM
  ;X 32768    IHS
@@ -395,10 +436,10 @@ CDSET(DATA,INPUT) ;EP - BSTS GET CODESETS
  ;  5180     FDA UNII
  ;
  ;Output
- ;  ^TMP("BSTSRPC") - Name of global (passed by reference) in which the data is stored.
+ ;^TMP("BSTSRPC") - Name of global (passed by reference) in which data is stored.
  ;
- ;Variables Used
- ;  UID - Unique TMP global subscript.
+ ;Vars Used
+ ;UID - Unique TMP global subscript.
  ;
  N UID,BSTSII,STS,II,VAR,SA,%D
  ;
@@ -414,10 +455,10 @@ CDSET(DATA,INPUT) ;EP - BSTS GET CODESETS
  ;
  S STS=$$CODESETS^BSTSAPI("VAR",$P(INPUT,U,1,2))
  ;
- ;Define header
+ ;Define hdr
  S @DATA@(0)="T00010CODE^T04096CODESET_NAME"_$C(30)
  ;
- ;Loop through list and set up results
+ ;Loop through list and set results
  S II="" F  S II=$O(VAR(II)) Q:II=""  D
  . ;
  . NEW CODE,CODESET
@@ -429,7 +470,7 @@ CDSET(DATA,INPUT) ;EP - BSTS GET CODESETS
  . I SA=1,CODE<32770,CODE>32667 Q
  . I SA=1,CODE=35290 Q
  . ;
- . ;Save entry
+ . ;Save
  . S BSTSII=BSTSII+1,@DATA@(BSTSII)=CODE_U_CODESET_$C(30)
  ;
  S BSTSII=BSTSII+1,@DATA@(BSTSII)=$C(31)

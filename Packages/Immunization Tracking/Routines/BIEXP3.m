@@ -1,9 +1,10 @@
 BIEXP3 ;IHS/CMI/MWR - EXPORT IMMUNIZATION RECORDS.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**9**;OCT 01,2014
+ ;;8.5;IMMUNIZATION;**17**;MAR 01,2019;Build 3
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EXPORT IMMUNIZATION RECORDS: EXPORT ROUTINE
  ;;  PATCH 9: Changes to limit export of imms to specific vaccines within
  ;;           a date range.  START+75
+ ;;  PATCH 17: Fix to correct export for ALL vaccines.   START+86
  ;
  ;
  ;----------
@@ -92,6 +93,11 @@ START(BIRTN) ;EP
  ;---> (If not all vaccines, gather only ones selected--BIMMR.)
  ;---> If ImmServe export, get vaccines that should not be forecast.
  I BIFMT=3 D NOFORC^BIPATUP(.BINF)
+ ;
+ ;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ ;---> If Imms Rcv'd is not filtered for output, then set output="ALL".
+ S:('$D(BIMMRF)) BIMMRF("ALL")=""
+ ;**********
  ;
  D HISTORY^BIEXPRT3(BIFMT,.BIDE,.BIMMRF,,,,.BINF)
  ;**********

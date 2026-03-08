@@ -1,5 +1,5 @@
-BGOVAMI1 ; MSC/JS - VAMI Utilities ;28-Feb-2014 10:27;DU
- ;;1.1;BGO COMPONENTS;**13,14**;Mar 20, 2007;Build 16
+BGOVAMI1 ;IHS/MSC/JS - VAMI Utilities ;08-Nov-2021 13:36;DU
+ ;;1.1;BGO COMPONENTS;**13,14,30**;Mar 20, 2007;Build 16
  ;
  ;01.23.14 MSC/JS - Move GETVFIEN and NARR here to keep routine within 15k size limits
  ;02.06.14 MSC/MGH - Changed refusal to try and find exisiting one on edit
@@ -32,7 +32,7 @@ GETVFIEN(RET,INP) ;EP
  .F  S VFIEN=$O(@GBL@("AD",VIEN,VFIEN)) Q:'VFIEN  S RET=RET+1,RET(RET)=VFIEN
  E  I DFN D
  .S VFIEN="",XREF=$$VFPTXREF^BGOUTL2
- .; Return the records newest to oldest
+ .                                                                     ; Return the records newest to oldest
  .F  S VFIEN=$O(@GBL@(XREF,DFN,VFIEN),-1) Q:'VFIEN  S RET=RET+1,RET(RET)=VFIEN
  E  S RET=$$ERR^BGOUTL(1008)
  Q
@@ -47,15 +47,17 @@ SETREF(DFN,REFRES,REFDT,VFNEW) ; EP
  S TYPE="CPT"
  S CPT=$$GET^XPAR("ALL","BGO AMI THROMBO NOT DONE",1,"E")
  S CPT=$O(^ICPT("BA",$G(CPT)_" ",0))
- S:CPT="" CPT=92975 ;    default to CPT code DISSOLVE CLOT, HEART VESSEL
+ S:CPT="" CPT=92975                                                    ;    default to CPT code DISSOLVE CLOT, HEART VESSEL
  I '+REFRES S REFRES=23
- S DTDONE=$P(REFDT,".",1)
- I DTDONE="" S DTDONE="TODAY",DTDONE=$$DT^CIAU(DTDONE)
+ ;S DTDONE=$P(REFDT,".",1)
+ S DTDONE=REFDT
+ ;I DTDONE="" S DTDONE="TODAY",DTDONE=$$DT^CIAU(DTDONE)
+ I DTDONE="" S DTDONE=$$NOW^XLFDT
  I 'VFNEW D
  .S FOUND=0
  .N INV,Y
  .S INV="" F  S INV=$O(^AUPNPREF("AA",DFN,81,CPT,INV)) Q:INV=""!(FOUND=1)  D
- ..S Y=9999999-INV
+ ..S Y=9999999-$P(INV,".",1)_$S($P(INV,".",2)'="":"."_$P(INV,".",2),1:"")   ;P30 IHS/MSC/MGH added time
  ..Q:Y'=DTDONE
  ..S REFIEN=$O(^AUPNPREF("AA",DFN,81,CPT,INV,""))
  ..I +REFIEN S RIEN=REFIEN,FOUND=1
@@ -72,15 +74,16 @@ DELREF(VFIEN) ; EP
  ;I $G(^AUPNVAMI(VFIEN,5))="" Q RET  ; not a deleted record
  N DECDT,DFN,DNIRDT,DNIRDUZ,FNUM,INVDATE,NOD0,FILIEN,REFIEN,TYPE,CPT
  S NOD0=$G(^AUPNVAMI(VFIEN,0))
- S DFN=$P(NOD0,"^",2),DNIRDT=$P($P(NOD0,"^",15),".",1),DNIRDUZ=$P(NOD0,"^",16)
- I DNIRDT="" S DNIRDT=$P($P(NOD0,"^",12),".",1)  ;Get entered date if it was an edit
- ;I $G(DFN)=""!($G(DNIRDT)="")!($G(DNIRDUZ)="") Q RET
+ S DFN=$P(NOD0,"^",2),DNIRDT=$P(NOD0,"^",14),DNIRDUZ=$P(NOD0,"^",16)
+ ;I DNIRDT="" S DNIRDT=$P($P(NOD0,"^",12),".",1)                        ;Get entered date if it was an edit
+ I DNIRDT="" S DNIRDT=$P(NOD0,"^",15)                       ;Get entered date if it was an edit
+ I $G(DFN)=""!($G(DNIRDT)="")!($G(DNIRDUZ)="") Q RET
  I $G(DFN)=""!($G(DNIRDT)="") Q RET
- S INVDATE=9999999-DNIRDT
+ S INVDATE=9999999-$P(DNIRDT,".",1)_$S($P(DNIRDT,".",2)'="":"."_$P(DNIRDT,".",2),1:"")
  S CPT=$$GET^XPAR("ALL","BGO AMI THROMBO NOT DONE",1,"E")
  S TYPE=+$$CPT^ICPTCOD(CPT)
  I TYPE<0  Q RET
- N FNUM S FNUM=81 ;  p13 CPT codes only
+ N FNUM S FNUM=81                                                      ;  p13 CPT codes only
  S DECDT=0
  F  S DECDT=$O(^AUPNPREF("AA",DFN,FNUM,TYPE,DECDT)) Q:'DECDT  D
  .Q:DECDT'=INVDATE
@@ -119,7 +122,7 @@ GETREF(DNIR) ; EP
  .S SNOCHEK=$$CONC^BSTSAPI(IN)
  .K ^TMP("BSTSCMCL",$J)
  .S SNODESC=$P(SNOCHEK,"^",2)
- .I SNODESC="" D  ;  stored V Stroke field invalid, use default ID
+ .I SNODESC="" D                                                       ;  stored V Stroke field invalid, use default ID
  ..S IN=275936005_"^^^1"
  ..K ^TMP("BSTSCMCL",$J)
  ..S SNOCHEK=$$CONC^BSTSAPI(IN)

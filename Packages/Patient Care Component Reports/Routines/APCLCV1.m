@@ -1,5 +1,5 @@
-APCLCV1 ; IHS/CMI/LAB - Indian Beneficiary Calendar Year Visit Summary ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCV1 ; IHS/OHPRD/TMJ - Indian Beneficiary Calendar Year Visit Summary ;  [ 11/08/01  4:13 PM ]
+ ;;3.0;IHS PCC REPORTS;**5**;FEB 05, 1997
  ;APCL1 = New Patients 1st Visit (Indian)
  ;APCL2 = Est Patients 1st Visit (Indian)
  ;APCL3 = Total 1st Visits (Indian)
@@ -47,7 +47,7 @@ PROC ;
  I $D(APCLCLNT),APCLCLIN="" Q
  ;I APCLCL]"",APCLCL'=$P(APCLVREC,U,8) Q
  S DFN=$P(APCLVREC,U,5)
- Q:$$DEMO^APCLUTL(DFN,$G(APCLDEMO))
+ Q:$P(^DPT(DFN,0),U)["DEMO,PATIENT"
  Q:'$D(^AUPNVPOV("AD",APCLVIEN))
  Q:'$D(^AUPNVPRV("AD",APCLVIEN))
  ;

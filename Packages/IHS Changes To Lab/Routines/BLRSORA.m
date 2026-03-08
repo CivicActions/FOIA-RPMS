@@ -1,5 +1,8 @@
-BLRSORA ;VA/DRH/DALISC - HIGH/LOW VALUE TASKED REPORT ;2/19/91  11:42 ;
- ;;5.2;LAB SERVICE;**1038**;NOV 01, 1997;Build 6
+BLRSORA ;VA/DRH/DALISC - HIGH/LOW VALUE TASKED REPORT ; 27-Apr-2023 07:00 ; MKK
+ ;;5.2;IHS LABORATORY;**1038,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
  ;
 EEP ; EP - Ersatz EP
  D EEP^BLRGMENU
@@ -136,7 +139,8 @@ GTSC ;
  ;
 TST ;
  K DIC S DIC="^LAB(60,",DIC(0)="AEMOQ"
- S DIC("S")="I $P(^(0),U,5)[""CH"",""BO""[$P(^(0),U,3)" D ^DIC
+ ; S DIC("S")="I $P(^(0),U,5)[""CH"",""BO""[$P(^(0),U,3)" D ^DIC
+ S DIC("S")="I $P(^(0),U,5)[""CH"",""BO""[$P(^(0),U,3),+$G(^(.3))=0" D ^DIC  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  S LRA=$S(Y>0:2,1:0)
  S:X["^" LREND=1
  I Y>0 S $P(LRTST(LRTST,3),"^",1)=$P($P(^LAB(60,+Y,0),U,5),";",2)

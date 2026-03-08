@@ -1,5 +1,5 @@
 AMERFIX ; IHS/ANMC/GIS - RESTORES MISSING DATA TO ER VISIT FILE ; 
- ;;3.0;ER VISIT SYSTEM;;FEB 23, 2009
+ ;;3.0;ER VISIT SYSTEM;**13**;MAR 03, 2009;Build 36
  ;
 NEW N A,E,T,W,%,X,Y,Z,G
  N DIE,DA,DR,DIC,DQ,DI,D0
@@ -20,7 +20,9 @@ RUN S DA=0 F  S DA=$O(@G@(DA)) Q:'DA  D
 VAR S DR=""
  S A=$P($G(@G@(DA,0)),U) I 'A Q
  S T("D")=$P($G(@G@(DA,12)),U),W("D")=$P($G(@G@(DA,12)),U,3)
- S T("R")=$P($G(@G@(DA,12)),U,2),W("R")=$P($G(@G@(DA,12)),U,4)
+ ;GDIT/HS/BEE;Feature#73115/75284;AMER*3.0*13;Multiple nurse/provider handling
+ ;S T("R")=$P($G(@G@(DA,12)),U,2),W("R")=$P($G(@G@(DA,12)),U,4)
+ S T("R")=$P($G(@G@(DA,17)),U,11) S:$G(T("R"))="" T("R")=$P($G(@G@(DA,12)),U,2) S W("R")=$P($G(@G@(DA,12)),U,4)
  S T("S")=$P($G(@G@(DA,12)),U,6),W("S")=$P($G(@G@(DA,12)),U,7)
  S E=$P($G(@G@(DA,6)),U,2),W("V")=$P($G(@G@(DA,12)),U,5)
  Q

@@ -1,0 +1,3 @@
+XMA51 ;(WASH ISC)/AML,LL,CAP- * OBSOLETE * ;12/12/97  14:43
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+ Q

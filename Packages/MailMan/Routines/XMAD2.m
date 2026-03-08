@@ -1,7 +1,5 @@
-XMAD2 ;ISC-SF/GMB-Basket lookup/create API ;04/17/2002  07:31
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CAP
- ;
+XMAD2 ;(WASH ISC)/CAP-Basket lookup/create ;05/06/99  15:40
+ ;;7.1;MailMan;**31,50**;Jun 02, 1994
  ; Entry points (DBIA 1147):
  ; BSKT   Lookup/create a basket, return its number
  ;

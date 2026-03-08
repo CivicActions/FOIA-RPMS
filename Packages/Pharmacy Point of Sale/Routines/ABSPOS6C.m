@@ -1,5 +1,5 @@
 ABSPOS6C ; IHS/FCS/DRS - continuation of ABSPOS6* ; 
- ;;1.0;PHARMACY POINT OF SALE;**32**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**32,54**;JUN 01, 2001;Build 131
  Q
 DEFTIME() Q .0015 ; fifteen minutes is the default default
 UPDFREQ() Q 15 ; every fifteen seconds is the usual case
@@ -63,7 +63,8 @@ HDR ;EP - from ABSPOS6A ; -- header code
  I USER S %="Transmitted by "_$P($G(^VA(200,USER,0)),U)
  E  D
  . S %="All prescriptions"
- . I ONEPAT S %=%_" for patient "_$P(^DPT(ONEPAT,0),U)
+ . ;I ONEPAT S %=%_" for patient "_$P(^DPT(ONEPAT,0),U)
+ . I ONEPAT S %=%_" for patient "_$P(^DPT(ONEPAT,0),U)_$$PPN1^ABSPUTL(ONEPAT)  ;IHS/GDIT/AEF-3231115 ABSP*1.0*54 FID 77888
  S VALMHDR(1)=%
  S VALMHDR(2)="With activity in the past"
  S XQORM("B")="UC" ; the default is Update Continuously

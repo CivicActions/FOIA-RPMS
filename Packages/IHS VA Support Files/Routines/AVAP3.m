@@ -1,9 +1,11 @@
 AVAP3 ;IHS/ORDC/LJF - MOVE LICENSURE BACK TO FILE 6 [ 10/27/93  9:47 AM ]
- ;;93.2;VA SUPPORT FILES**3**;Jul 17, 1992;;Build 12
+ ;;93.2;VA SUPPORT FILES**3,27**;Jul 17, 1992;;Build 8
+ ;PATCH 27: THIS ROUTINE'S FUNCTION ENTIRELY DEPRECATED BY DELETION OF FILES 3/6/16
  ;
  Q  ;no direct entry to rtn
  ;
 LOOP ; loop thru provider file
+ Q  ;AVA*93.2*27
  Q:'$O(^DIC(6,0))  ;no data in provider file
  W !!,"Moving licensure data back to Provider file "
  S LJF6=0

@@ -1,5 +1,5 @@
 LRAPQAFS ;AVAMC/REG - FROZEN SECTION/SURG PATH RPTS ;8/14/95  18:13 [ 04/11/2003  11:26 AM ]
- ;;5.2T9;LR;**1002,1008,1018**;Nov 17, 2004
+ ;;5.2;LR;**1002,1008,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**72,242,252**;Sep 27, 1994
  S LRDICS="SP" D ^LRAP G:'$D(Y) END
  W !!,"Frozen section search with optional permanent path reports.",!,"This report may take a while and should be queued to print at non-peak hours.",!,"OK to continue " S %=2 D YN^LRU G:%'=1 END

@@ -1,6 +1,6 @@
-DDW2 ;SFISC/MKO-SETTINGS, MODES ;11:32 AM  25 Aug 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**18**;Mar 30, 1999
+DDW2 ;SFISC/MKO-SETTINGS, MODES ;7:15 AM  6 Sep 1995 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**11**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 TSET N DDWX
@@ -11,42 +11,6 @@ TSET N DDWX
  . D CUP(DDWMR+1,DDWC-DDWOFS) W DDWX
  . D POS(DDWRW,DDWC)
  Q
- ;
-TSALL ;Prompt for tab stops
- N DDWHLP,DDWANS,DDWCOD
- S DDWHLP(1)="  Specify in which column(s) you want to set tab stops. To set individual"
- S DDWHLP(2)="  tab stops, type a series of numbers separated by commas, for example:"
- S DDWHLP(3)="  4,7,15,20. To set tab stops at repeated intervals after the last stop,"
- S DDWHLP(4)="  or column 1, type the interval as +n, for example: 10,20,+5."
- D ASK^DDWG(5,"Columns in which to set tab stops: ",30,$G(DDWTAB),"D TSALLVAL^DDW2",.DDWHLP,.DDWANS,.DDWCOD)
- ;
- Q:DDWCOD="TO"!(DDWANS=U)!(DDWANS=DDWTAB)
- S DDWTAB=DDWANS
- S DDWRUL=$$RULER(DDWTAB)
- D RULER^DDW3,POS(DDWRW,DDWC)
- Q
- ;
-TSALLVAL ;Validate tab stops
- K DDWERR
- S:DDWX="@" DDWX=""
- I DDWX?1."^"!($P($G(DDWCOD),U)="TO") S DDWX=U Q
- I $TR(DDWX,"+,")?.E1.APC.E D
- . S DDWERR="  Response can contain only commas (,), plus signs (+), and numbers."
- Q
- ;
-RULER(TAB) ;Return the ruler with tab stops
- N C,INT,LAST,POS,RUL
- S RUL=$TR($J("",255)," ","=")
- ;
- ;Process each comma piece in tab
- S LAST=1
- F C=1:1:$L(TAB,",") D
- . S POS=$P(TAB,",",C) Q:POS'?.1"+"1.3N
- . I $E(POS)="+" D
- .. S INT=+$E(POS,2,999)
- .. F POS=LAST+INT:INT:255 S $E(RUL,POS)="T"
- . E  S:POS<256 $E(RUL,POS)="T",LAST=POS
- Q RUL
  ;
 LSET I 'DDWRAP D ERR("Margins cannot be set when wrap is off") Q
  I DDWC>231 D ERR("Left margin cannot be set beyond column 231") Q
@@ -83,12 +47,12 @@ REPLM S DDWREP=DDWREP+1#2
  Q
  ;
 STAT S DDWSTAT=DDWSTAT+1#2
- I DDWSTAT S DDWTO=1
+ I DDWSTAT D
+ . S DDWTO=1,DDWTC=1
  E  D
  . D CUP(DDWMR+2,1)
  . W $P(DDGLCLR,DDGLDEL) D POS(DDWRW,DDWC)
  . S DDWTO=DTIME
- . K DDWTC
  Q
  ;
 CUP(Y,X) ;Cursor positioning

@@ -1,0 +1,411 @@
+BLRVFOLU ;IHS/MSC/MKK - IHS LAB V Files' Ordering Location Updates ; 08-Jun-2023 09:55 ; MKK
+ ;;5.2;IHS LABORATORY;**1054**;NOV 01, 1997;Build 20
+ ;
+EEP ; EP -- Ersatz Entry Point
+ W !!,$C(7),$C(7),$C(7)
+ W ?9,$$SHOUTMSG^BLRGMENU("Must use Line Labels to access subroutines",60),!
+ W !!,$C(7),$C(7),$C(7)
+ Q
+ ;
+ ;
+QUEUPDT ; EP - Que the tasks
+ NEW TASKNUM,ZTIO,ZTDTH,ZTDESC,ZTRTN,ZTSK
+ ;
+ D ^XBFMK
+ S ZTIO="",ZTDTH=$H,ZTDESC="IHS V File Ordering Location Updates",ZTRTN="QUEEM^BLRVFOLU"
+ D ^%ZTLOAD
+ S TASKNUM=+$G(ZTSK)
+ D ^%ZISC
+ D BMES^XPDUTL($J("",5)_"V LAB & V MICRO Ordering Location Updating Program"_$S(TASKNUM:" Queued ["_TASKNUM_"]",1:" NOT QUEUED"))
+ D MES^XPDUTL("")
+ Q
+ ;
+ ;
+QUEEM ; EP - QUE 'EM
+ I $D(ZTQUEUED) S ZTREQ="@"
+ D VLABOLU
+ D VMICOLU
+ Q
+ ;
+ ;
+VLABOLU ; EP - V LAB Ordering Location Update
+ NEW (DILOCKTM,DISYS,DT,DTIME,DUZ,IO,IOBS,IOF,IOM,ION,IOS,IOSL,IOST,IOT,IOXY,U,XPARSYS,XQXFLG,ZTIO,ZTDTH,ZTDESC,ZTQUEUED,ZTRTN,ZTSK)
+ ; 
+ I $D(ZTQUEUED)<1  D
+ . S HEADER(1)="V LAB (#9000010.09) File"
+ . S HEADER(2)="Ordering Location Update"
+ . D HEADERDT^BLRGMENU
+ . W ?4
+ ;
+ ;
+ K ^XTMP("LRVLABOL")
+ S ^XTMP("LRVLABOL",0)=$$HTFM^XLFDT(+$H+180)_U_DT_U_"V LAB File UID Update Errors."_$S($D(ZTQUEUED):" Task #:"_ZTSK,1:"")
+ ;
+ S BEGPROC=$$NOW^XLFDT
+ S (CNT,CNTALRDY,CNTERRS,CNTVLAB)=0
+ S VLABIEN=.9999999
+ F  S VLABIEN=$O(^AUPNVLAB(VLABIEN))  Q:VLABIEN<1  D
+ . S CNTVLAB=CNTVLAB+1
+ . ;
+ . I $D(ZTQUEUED)<1 D
+ .. W:(CNTVLAB#10000)=0 "."
+ .. I $X>68 W $J($FN(CNTVLAB,","),11),!,?4
+ . ;
+ . ; ; Skip if Ordering Location already in V LAB
+ . I $L($$GET1^DIQ(9000010.09,VLABIEN,"ORDERING LOCATION"))  S CNTALRDY=CNTALRDY+1  Q
+ . ;
+ . S DFN=$$GET1^DIQ(9000010.09,VLABIEN,"PATIENT NAME","I")
+ . Q:DFN<1      ; Skip if no DFN
+ . ;
+ . S LRDFN=$$GET1^DIQ(2,DFN,"LABORATORY REFERENCE")
+ . Q:LRDFN<1    ; Skip if no LRDFN
+ . ;
+ . S VLLRAS=$$GET1^DIQ(9000010.09,VLABIEN,"LR ACCESSION NO.")
+ . Q:$L(VLLRAS)<1
+ . ;
+ . S COLLDTT=$$GET1^DIQ(9000010.09,VLABIEN,"COLLECTION DATE AND TIME","I")
+ . Q:COLLDTT<1  ; Skip if no Collection Date
+ . ;
+ . S LRIDT=9999999-COLLDTT
+ . Q:$D(^LR(LRDFN,"CH",LRIDT))<1    ; Skip if cannot determine Lab Data File entry
+ . ;
+ . S LDLRAS=$$GET1^DIQ(63.04,LRIDT_","_LRDFN,"ACCESSION")
+ . Q:VLLRAS'=LDLRAS  ; Skip if Accessions do not match
+ . ;
+ . S LRUID=$$GET1^DIQ(63.04,LRIDT_","_LRDFN,"UID")
+ . Q:$L(LRUID)<1     ; Skip if LRUID not found
+ . ;
+ . S X=$$CHECKUID^LRWU4(LRUID)
+ . Q:+X<1     ; Skip if UID not valid.
+ . ;
+ . S LRAA=$P(X,U,2),LRAD=$P(X,U,3),LRAN=$P(X,U,4)
+ . S ORDLOC=$$GET1^DIQ(68.02,LRAN_","_LRAD_","_LRAA,"ORDERING LOCATION","I")
+ . Q:ORDLOC<1      ; Skip if ORDERING LOCATION not found
+ . ;
+ . K FDA,ERRS
+ . S FDA(9000010.09,VLABIEN_",","ORDERING LOCATION")=ORDLOC
+ . D UPDATE^DIE("S","FDA",,"ERRS")
+ . I $D(ERRS)<1 S CNT=CNT+1  Q      ; Successful update.  Get next entry
+ . ;
+ . ; At this point, there was an error.  Store it.
+ . S CNTERRS=CNTERRS+1
+ . S ^XTMP("LRVLABOL",VLABIEN)=$$NOW^XLFDT_U_LRDFN_U_LRIDT_U_$G(ERRS("DIERR",1,"TEXT",1))
+ ;
+ S ENDPROC=$$NOW^XLFDT
+ S HOWLONG=$P($$FMDIFF^XLFDT(ENDPROC,BEGPROC,3)," ",2)
+ S HOURS=$P(HOWLONG,":")
+ S MINUTES=$P(HOWLONG,":",2)
+ S HOWLONG="Process took approximately "_$S(HOURS:HOURS_" hours and ",1:"")_MINUTES_" minutes."
+ I HOURS<1,+MINUTES<1 S HOWLONG="Process took less than a minute."
+ ;
+ I $D(ZTQUEUED) D  Q      ; If QUEUED, send Alert & MailMan message to LMI Mail Group and then Quit
+ . K MSGARRAY
+ . D MAKEMSG("V LAB ORDERING LOCATION Update Process Completed.")
+ . D MAKEMSG(HOWLONG)
+ . D MAKEMSG($FN(CNTVLAB,",")_" V LAB entries analyzed.",5)
+ . D MAKEMSG($S(CNT:$FN(CNT,","),1:"No")_" V LAB ORDERING LOCATION field entr"_$$PLURALI^BLRVFUID(CNT)_" updated.",10)
+ . D:CNTERRS MAKEMSG($J($FN(CNTERRS,","),$L($FN(CNT,",")))_" V LAB UPDATE^DIE Errors.",10)
+ . ; 
+ . D MAILALMI^BLRUTIL3("V LAB ORDERING LOCATION Updates",.MSGARRAY,"V LAB LRUID Updater",1)
+ . ;
+ . K:CNTERRS<1 ^XTMP("LRVLABOL")  ; Clear XTMP if no errors.
+ ;
+ S RJ=$L($FN(CNTVLAB,","))
+ W !!,"V LAB ORDERING LOCATION Update Process Completed."
+ W !!,HOWLONG
+ W !!,?4,$FN(CNTVLAB,",")," V LAB entries analyzed."
+ W !,?4,$S(CNT:$J($FN(CNT,","),RJ),1:"No")," V LAB ORDERING LOCATION field entr",$$PLURALI(CNT)," updated."
+ W:CNTALRDY !,?4,$J($FN(CNTALRDY,","),RJ)," V LAB LAB ORDERING LOCATION field entr",$$PLURALI(CNT)," already updated."
+ W:CNTERRS !,?4,$J($FN(CNTERRS,","),RJ)," V LAB UPDATE^DIE Errors."
+ D PRESSKEY^BLRGMENU(4)
+ ;
+ K:CNTERRS<1 ^XTMP("LRVLABOL")  ; Clear XTMP if no errors.
+ Q
+ ;
+ ;
+VMICOLU ; EP - V MICRO Ordering Location Update
+ NEW (DILOCKTM,DISYS,DT,DTIME,DUZ,IO,IOBS,IOF,IOM,ION,IOS,IOSL,IOST,IOT,IOXY,U,XPARSYS,XQXFLG,ZTIO,ZTDTH,ZTDESC,ZTQUEUED,ZTRTN,ZTSK)
+ ; 
+ I $D(ZTQUEUED)<1 D
+ . S HEADER(1)="V MICROBIOLOGY (#9000010.25) File"
+ . S HEADER(2)="ORDERING LOCATION Update"
+ . D HEADERDT^BLRGMENU
+ . W ?4
+ ;
+ K ^XTMP("LRVMICOL")
+ S ^XTMP("LRVMICOL",0)=$$HTFM^XLFDT(+$H+180)_U_DT_U_"V LAB File ORDERING LOCATION Update Errors"_$S($D(ZTQUEUED):" Task #:"_ZTSK,1:"")
+ ;
+ S BEGPROC=$$NOW^XLFDT
+ S (CNT,CNTALRDY,CNTCDTMM,CNTERRS,CNTINUID,CNTLRAS,CNTNOCDT,CNTNODFN,CNTNOLDI,CNTNOMIF,CNTNOUID,CNTNVLRS,CNTOLNF,CNTVMIC)=0
+ S VMICIEN=.9999999
+ F  S VMICIEN=$O(^AUPNVMIC(VMICIEN))  Q:VMICIEN<1  D
+ . S CNTVMIC=CNTVMIC+1
+ . ;
+ . I $D(ZTQUEUED)<1 D
+ .. W:(CNTVMIC#1000)=0 "."
+ .. I $X>68 W $J($FN(CNTVMIC,","),11),!,?4
+ . ;
+ . ; Skip if ORDERING LOCATION already in V MICRO
+ . I $L($$GET1^DIQ(9000010.25,VMICIEN,"ORDERING LOCATION")) S CNTALRDY=CNTALRDY+1  Q
+ . ;
+ . S DFN=$$GET1^DIQ(9000010.25,VMICIEN,"PATIENT NAME","I")
+ . I DFN<1 S CNTNODFN=CNTNODFN+1  Q    ; Skip if no DFN
+ . ;
+ . S LRDFN=$$GET1^DIQ(2,DFN,"LABORATORY REFERENCE")
+ . I LRDFN<1  S CNTNOLDI=1+CNTNOLDI  Q  ; Skip if no LRDFN
+ . ;
+ . S LRAS=$$GET1^DIQ(9000010.25,VMICIEN,"LR ACCESSION NO.")
+ . I $L(LRAS)<1 S CNTNVLRS=CNTNVLRS+1  Q    ; Skip if no Accession Number
+ . ;
+ . S COLLDTT=$$GET1^DIQ(9000010.25,VMICIEN,"COLLECTION DATE AND TIME","I")
+ . I COLLDTT<1  S CNTNOCDT=CNTNOCDT+1  Q      ; Skip if no Collection Date
+ . ;
+ . ; Skip if cannot parse Accession
+ . I $$GETACCCP^BLRUTIL3(LRAS,.LRAA,.LRAD,.LRAN)<1 S CNTLRSIV=1+$G(CNTLRSIV)  Q
+ . ;
+ . S LRAAIEN=$$FIND1^DIC(68,,"O",LRAA)
+ . S LRSS=$$GET1^DIQ(68,LRAAIEN,"LR SUBSCRIPT","I")
+ . ;
+ . I LRSS'="MI" S CNTWLRSS=1+$G(CNTWLRSS)  Q     ; Skip if not "MI" subscripted Accession
+ . ;
+ . S PCCFILE="^AUPNVMIC(""ALR0"","_$C(34)_LRAS_$C(34)_",",VFILENUM=9000010.25,VFILNAME="V MICRO"
+ . ;
+ . S LRUID=$$GET1^DIQ(68.02,LRASIEN,"UID","I")
+ . S LRASCOLD=$$GET1^DIQ(68.02,LRASIEN,"DRAW TIME","I")
+ . S LRASORDL=$$GET1^DIQ(68.02,LRASIEN,"ORDERING LOCATION","I")
+ . ;
+ . I COLLDTT'=LRASCOLD S CNTCDTMM=1+$G(CNTCDTMM)  Q  ; Skip if Collection Dates do not match
+ . ;
+ . K FDA,ERRS
+ . S FDA(9000010.25,VMICIEN_",","ORDERING LOCATION")=LRASORDL
+ . D UPDATE^DIE("S","FDA",,"ERRS")
+ . I $D(ERRS)<1 S CNT=CNT+1  Q      ; Successful update.  Get next entry
+ . ;
+ . ; At this point, there was an error.  Store it.
+ . S CNTERRS=CNTERRS+1
+ . S ^XTMP("LRVMICOL",VMICIEN)=$$NOW^XLFDT_U_LRDFN_U_VFCOLLDT_U_$G(ERRS("DIERR",1,"TEXT",1))
+ ;
+ S ENDPROC=$$NOW^XLFDT
+ S HOWLONG=$P($$FMDIFF^XLFDT(ENDPROC,BEGPROC,3)," ",2)
+ S HOURS=$P(HOWLONG,":")
+ S MINUTES=$P(HOWLONG,":",2)
+ S HOWLONG="Process took approximately "_$S(HOURS:HOURS_" hours and ",1:"")_MINUTES_" minutes."
+ I HOURS<1,+MINUTES<1 S HOWLONG="Process took less than a minute."
+ ;
+ I $D(ZTQUEUED) D  Q      ; If QUEUED, send Alert & MailMan message to LMI Mail Group and then Quit
+ . K MSGARRAY
+ . D MAKEMSG("V MICRO ORDERING LOCATION Update Process Completed.")
+ . D MAKEMSG(HOWLONG)
+ . D MAKEMSG($FN(CNTVMIC,",")_" V MICRO entries analyzed.",5)
+ . D MAKEMSG($S(CNT:$FN(CNT,","),1:"No")_" V MICRO ORDERING LOCATION field entr"_$$PLURALI^BLRVFUID(CNT)_" updated.",10)
+ . D:CNTERRS MAKEMSG($J($FN(CNTERRS,","),$L($FN(CNT,",")))_" V MICRO UPDATE^DIE Errors.",5)
+ . ;
+ . D MAILALMI^BLRUTIL3("V MICRO ORDERING LOCATION Updates",.MSGARRAY,"V MICRO ORD LOC Updater",1)
+ . ;
+ . K:CNTERRS<1 ^XTMP("LRVMICOL")  ; Clear XTMP if no errors.
+ ;
+ W !!,"V MICRO ORDERING LOCATION Update Process Completed."
+ W !!,HOWLONG
+ S RJ=$L($FN(CNTVMIC,","))
+ W !!,?4,$FN(CNTVMIC,",")," V MICRO entries analyzed."
+ W !,?4,$S(CNT:$J($FN(CNT,","),RJ),1:"No")," V MICRO ORDERING LOCATION field entr",$$PLURALI(CNT)," updated."
+ W:CNTALRDY !,?4,$J($FN(CNTALRDY,","),RJ)," V MICRO ORDERING LOCATION field entr",$$PLURALI(CNTALRDY)," already Updated."
+ W:CNTERRS !,?4,$J($FN(CNTERRS,","),RJ)," V MICRO UPDATE^DIE Error",$$PLURAL(CNTERRS),"."
+ ;
+ W !
+ D ENDMSG(CNTNODFN,"WITHOUT DFNs.")
+ D ENDMSG(CNTNOLDI,"tied to DFNs without LRDFNs.")
+ D ENDMSG(CNTNVLRS,"tied to entries WITHOUT Accession number.")
+ D ENDMSG(CNTNOCDT,"with no collection date.")
+ D ENDMSG(CNTLRSIV,"where could not parse Accession.")
+ D ENDMSG(CNTWLRSS,"with invalid LR subscript.")
+ D ENDMSG(CNTCDTMM,"did not match V MICRO Collection Date.")
+ D ENDMSG(CNTNOMIF,"that could not match Lab Data.")
+ D ENDMSG(CNTOLNF,"Accession Ordering Location not Found.")
+ ;
+ D PRESSKEY^BLRGMENU(4)
+ ;
+ K:CNTERRS<1 ^XTMP("LRVMICOL")  ; Clear XTMP if no errors.
+ D ^XBFMK  ; Clear FileMan variables.
+ Q
+ ;
+MAKEMSG(TEXT,TAB) ; EP
+ NEW NODE
+ ;
+ S NODE=$O(MSGARRAY("A"),-1)+1
+ S MSGARRAY(NODE)=$J("",+$G(TAB))_$S($L($G(TEXT)):TEXT,1:" ")
+ S MSGARRAY(NODE+1)=" "
+ Q
+ ;
+ENDMSG(CNTVAR,EXPLAN) ; EP
+ Q:CNTVAR<1
+ ;
+ W !,?9,$J($FN(CNTVAR,","),RJ)," entr",$$PLURALI(CNTVAR)," ",EXPLAN
+ Q
+ ;
+LRASUOLF ; EP - Use Accession to set ORDERING LOCATION field in PCC Lab File
+ NEW (DILOCKTM,DISYS,DT,DTIME,DUZ,IO,IOBS,IOF,IOM,ION,IOS,IOSL,IOST,IOT,IOXY,U,XPARSYS,XQXFLG)
+ ;
+ D SETBLRVS("LRASUOLF")
+ S HEADER(1)="V FILE ORDERING LOCATION Update"
+ D HEADERDT^BLRGMENU
+ D ^LRWU4
+ I LRAA<1!(LRAD<1)!(LRAN<1) D BADSTUFF("Invalid Accession.")  Q
+ I $D(^LRO(68,LRAA,1,LRAD,1,LRAN))<1 D BADSTUFF($S(BLRLRAS?.N:"UID",1:"Accession")_" "_BLRLRAS_" does Not exist in Accession file.")  Q
+ ;
+ S LRASIEN=LRAN_","_LRAD_","_LRAA
+ S LRDFN=$$GET1^DIQ(68.02,LRASIEN,"LRDFN","I")
+ S LRAS=$$GET1^DIQ(68.02,LRASIEN,"ACCESSION","I")
+ S LRAA=$P(LRAS," ")
+ S LRAAIEN=$$FIND1^DIC(68,,"O",LRAA)
+ S LRSS=$$GET1^DIQ(68,LRAAIEN,"LR SUBSCRIPT","I")
+ ;
+ I LRSS'="CH",LRSS'="MI" D BADSTUFF("Invalid Accession.  Subscript = '"_LRSS_"'.")  Q
+ ;
+ S:LRSS="CH" PCCFILE="^AUPNVLAB(""ALR0"","_$C(34)_LRAS_$C(34)_",",VFILENUM=9000010.09,VFILNAME="V LAB"
+ S:LRSS="MI" PCCFILE="^AUPNVMIC(""ALR0"","_$C(34)_LRAS_$C(34)_",",VFILENUM=9000010.25,VFILNAME="V MICRO"
+ K HEADER(1)
+ S HEADER(1)=VFILNAME_" ORDERING LOCATION Update"
+ ;
+ S LRUID=$$GET1^DIQ(68.02,LRASIEN,"UID","I")
+ S LRASCOLD=$$GET1^DIQ(68.02,LRASIEN,"DRAW TIME","I")
+ S LRASORDL=$$GET1^DIQ(68.02,LRASIEN,"ORDERING LOCATION","I")
+ ;
+ S HEADER(2)="Accession "_LRAS
+ S HEADER(3)=$$CJ^XLFSTR("UID: "_LRUID,IOM)
+ S HEADER(4)=" "
+ S HEADER(5)="IEN"
+ S $E(HEADER(5),10)="Coll Dt"
+ S $E(HEADER(5),27)="UPDATE^DIE Message"
+ S MAXLINES=IOSL-4,LINES=MAXLINES+10
+ S (CNT,CNTALRDY,CNTVFILE,PG)=0,QFLG="NO"
+ S HDRONE="NO"
+ ;
+ S VFILEIEN=0
+ F  S VFILEIEN=$O(@(PCCFILE_VFILEIEN_")"))  Q:VFILEIEN<1!(QFLG="Q")  D
+ . S CNTVFILE=CNTVFILE+1
+ . ;
+ . ; Skip if ORDERING LOCATION already existent
+ . I $L($$GET1^DIQ(VFILENUM,VFILEIEN,"ORDERING LOCATION")) S CNTALRDY=CNTALRDY+1  Q
+ . ;
+ . S VFCOLLDT=$$GET1^DIQ(VFILENUM,VFILEIEN,"COLLECTION DATE AND TIME","I")
+ . Q:VFCOLLDT'=LRASCOLD   ; Skip if Collection Dates do not match
+ . ;
+ . K FDA,ERRS
+ . S FDA(VFILENUM,VFILEIEN_",","ORDERING LOCATION")=LRASORDL
+ . D UPDATE^DIE("S","FDA",,"ERRS")
+ . ;
+ . I LINES>MAXLINES D HEADERPG^BLRGMENU(.PG,.QFLG,HDRONE)  Q:QFLG="Q"
+ . ;
+ . W VFILEIEN
+ . W ?9,VFCOLLDT
+ . W:$D(ERRS)<1 ?26,"ORDERING LOCATION ",LRASORDL," Added."
+ . I $D(ERRS) D LINEWRAP^BLRGMENU(26,$G(ERRS("DIERR",1,"TEXT",1)),53)
+ . W !
+ . S LINES=LINES+1
+ . S CNT=CNT+1
+ ;
+ I CNT<1 K HEADER(4),HEADER(5)  D HEADERDT^BLRGMENU
+ I CNT W !!
+ W ?4,CNTVFILE," ",VFILNAME," Entr",$$PLURALI(CNTVFILE)," analyzed."
+ W:CNTALRDY !!,?9,CNTALRDY," Entr",$$PLURALI(CNTALRDY)," that already have Ordering Location."
+ W !!,?9,CNT," entr",$$PLURALI(CNT)," updated."
+ D PRESSKEY^BLRGMENU(4)
+ Q
+ ;
+ ;
+VLABRERR ; EP - V LAB ORDERING LOCATION Update Errors Report
+ D REPTERRS("LRVLABOL")
+ Q
+ ;
+ ;
+VMICRERR ; EP - V MICRO ORDERING LOCATION Update Errors Re
+ D REPTERRS("LRVMICOL")
+ Q
+ ;
+ ;
+REPTERRS(XTMPN) ; EP - ORDERING LOCATION Update Errors Report
+ NEW (XTMPN,DILOCKTM,DISYS,DT,DTIME,DUZ,IO,IOBS,IOF,IOM,ION,IOS,IOSL,IOST,IOT,IOXY,U,XPARSYS,XQXFLG)
+ ;
+ S WOTVFILE=$S(XTMPN="LRVLABOL":"V LAB",XTMPN="LRVMICOL":"V MICRO")
+ ;
+ S HEADER(1)=WOTVFILE_" ORDERING LOCATION Update"
+ S HEADER(2)="Errors Report"
+ ;
+ I $O(^XTMP(XTMPN,0))<1 D  Q
+ . D HEADERDT^BLRGMENU
+ . W ?4,"No ",WOTVFILE," Error Data."
+ . D PRESSKEY^BLRGMENU(9)
+ ;
+ D SETHEAD(.HDRONE)
+ ;
+ S HEADER(3)=" "
+ S HEADER(4)=WOTVFILE
+ S $E(HEADER(4),10)="Error"
+ S HEADER(5)="IEN"
+ S $E(HEADER(5),10)="Date"
+ S $E(HEADER(5),20)="LRDFN"
+ S $E(HEADER(5),30)="LRIDT"
+ S $E(HEADER(5),47)="UPDATE^DIE Error Message"
+ ;
+ D ^%ZIS
+ U IO
+ ;
+ S MAXLINES=IOSL-4,LINES=MAXLINES+10
+ S (CNT,PG)=0,QFLG="NO"
+ ;
+ S VLABIEN=.9999999
+ F  S VLABIEN=$O(^XTMP(XTMPN,VLABIEN))  Q:VLABIEN<1!(QFLG="Q")  D
+ . S STR=$G(^XTMP(XTMPN,VLABIEN))
+ . S ERRDATE=$P(STR,U,1)
+ . S LRDFN=$P(STR,U,2)
+ . S LRIDT=$P(STR,U,3)
+ . S ERRMSG=$P(STR,U,4)
+ . ;
+ . I LINES>MAXLINES D HEADERPG^BLRGMENU(.PG,.QFLG,HDRONE)  Q:QFLG="Q"
+ . ;
+ . W VLABIEN
+ . W ?9,$$FMTE^XLFDT(ERRDATE,"2DZ")
+ . W ?19,LRDFN
+ . W ?29,LRIDT
+ . D LINEWRAP^BLRGMENU(46,ERRMSG,34)
+ . W !
+ . S LINES=LINES+1
+ ;
+ D ^%ZISC
+ ;
+ D PRESSKEY^BLRGMENU(4)
+ Q
+ ;
+ ;
+ ; ============================= UTILITIES =============================
+ ;
+UTILS ; EP - Exclusive NEW put here to facilitate adding new routines.
+ NEW (DILOCKTM,DISYS,DT,DTIME,DUZ,IO,IOBS,IOF,IOM,ION,IOS,IOSL,IOST,IOT,IOXY,U,XPARSYS,XQXFLG)
+ Q
+ ;
+ ;
+SETBLRVS(TWO) ; EP - Set the BLRVERN variables
+ K BLRVERN,BLRVERN2
+ S BLRVERN=$TR($P($T(+1),";")," ")
+ S:$L($G(TWO)) BLRVERN2=TWO
+ Q
+ ;
+PLURAL(CNT) ; EP - Return "s" if CNT>1, else return "".
+ Q $S(CNT>1:"s",1:"")
+ ;
+PLURALI(CNT) ; EP - If CNT=1 return "y", else return "ies"
+ Q $S(CNT=1:"y",1:"ies")
+ ;
+SETHEAD(HDRONE) ; EP - Set the HDRONE variable
+ D HEADERDT^BLRGMENU
+ D HEADONE^BLRGMENU(.HDRONE)
+ D HEADERDT^BLRGMENU
+ Q
+ ;
+BADSTUFF(STR,TAB)       ; EP - BADSTUFF error message
+ S TAB=$S($L($G(TAB))<1:4,1:TAB)
+ W !!,?TAB,STR,"  Routine Ends.",!
+ D PRESSKEY^BLRGMENU(TAB+5)
+ Q
+ ;

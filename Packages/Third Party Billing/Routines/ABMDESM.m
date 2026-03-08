@@ -1,35 +1,43 @@
-ABMDESM ; IHS/ASDST/DMJ - Display Summarized Claim Info ; 17 Oct 2013  9:59 AM
- ;;2.6;IHS 3P BILLING SYSTEM;**6,8,13**;NOV 12, 2009;Build 213
+ABMDESM ; IHS/SD/SDR - Display Summarized Claim Info ; 17 Oct 2013  9:59 AM
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,8,13,29,33,37**;NOV 12, 2009;Build 739
  ;
- ; IHS/ASDS/DMJ - 04/18/00 - V2.4 Patch 1 - NOIS XAA-0400-200044
+ ;IHS/ASDS/DMJ 04/18/00 2.4 Patch 1 NOIS XAA-0400-200044
  ;     Modified mode of export loop to include 16 and 17
- ; IHS/ASDS/LSL - 05/15/00 - V2.4 Patch 1 - NOIS NDA-0500-180042
+ ;IHS/ASDS/LSL 05/15/00 2.4 Patch 1 NOIS NDA-0500-180042
  ;     Modified to populate total by export mode properly.
- ; IHS/ASDS/DMJ - 07/24/01 - v2.4 Patch 7 - NOIS HQW-0701-100066
+ ;IHS/ASDS/DMJ 07/24/01 2.4 Patch 7 NOIS HQW-0701-100066
  ;     Modified mode of export loop to include 20
- ; IHS/ASDS/SDH - 08/14/01 - V2.4 Patch 9 - NOIS NDA-1199-180065
- ;     Modified to include groupler allowance, non-covered, and 
- ;     penalties in the writeoff category.
+ ;IHS/ASDS/SDH 08/14/01 V2.4 Patch 9 NOIS NDA-1199-180065
+ ;     Modified to include groupler allowance, non-covered, and penalties in the writeoff category.
  ;
- ; IHS/SD/SDR - v2.5 p10 - IM21581 - Added active insurer print to summary
- ; IHS/SD/SDR - v2.5 p11 - NPI; Added checks for new export modes (27/28/29)
- ; IHS/SD/SDR - v2.5 p13 - IM25002 - Change for Medi-Cal when Medi/Medi
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - added export mode 32
- ;IHS/SD/SDR - 2.6*13 - Added check for new export mode 35
+ ;IHS/SD/SDR 2.5 p10 IM21581 Added active insurer print to summary
+ ;IHS/SD/SDR 2.5 p11 NPI; Added checks for new export modes (27/28/29)
+ ;IHS/SD/SDR 2.5 p13 IM25002 Change for Medi-Cal when Medi/Medi
+ ;
+ ;IHS/SD/SDR 2.6*6 5010 added export mode 32
+ ;IHS/SD/SDR 2.6*13 Added check for new export mode 35
+ ;IHS/SD/SDR 2.6*29 CR10410 Medicare non-covered on the summary screen
+ ;IHS/SD/SDR 2.6*33 ADO60189/CR9512 Added call to new Inpatient Summary page; added line for covered charges; also fixed the bill amount for
+ ;   the secondary so it will now include the non-covered.
+ ;IHS/SD/SDR 2.6*37 ADO76036 Made COB page display for 837D
  ;
  ; *********************************************************************
  ;
  S ABMP("GL")="^ABMDCLM(DUZ(2),"_ABMP("CDFN")_",",ABMP("TOT")=0,ABMP("NC")=0
  I '$G(ABMQUIET) W $$EN^ABMVDF("IOF")
  S ABMP("TMP-EXP")=ABMP("EXP")
+ S ABMEXPMS=ABMP("EXP")  ;abm*2.6*37 IHS/SD/SDR AD076036
+ K ABMTFLAG  ;abm*2.6*37 IHS/SD/SDR ADO76036
  ;F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,23,24,27,28,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*6 5010
  ;F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,23,24,27,28,32,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*6 5010  ;abm*2.6*8 5010
  ;F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,24,27,28,31,32,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*6 5010  ;abm*2.6*8 5010  ;abm*2.6*13 export mode 35
- F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,24,27,28,31,32,35,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*13 export mode 35
+ ;F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,24,27,28,31,32,35,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*13 export mode 35  ;abm*2.6*37 IHS/SD/SDR ADO76036
+ F ABMP("EXP")=1,10,11,2,3,13,14,15,16,17,19,20,21,22,24,27,28,31,32,33,35,51 I $D(ABMP("EXP",ABMP("EXP"))) D  ;abm*2.6*13 export mode 35  ;abm*2.6*37 IHS/SD/SDR ADO76036
  .D ^ABMDESM1
  .S ABMP("EXP",ABMP("EXP"))=+ABMS("TOT")
  .I $P(^ABMDEXP(ABMP("EXP"),0),U)["UB" D  Q
  ..S ABMP("NC")=$S($P($G(ABMP("FLAT")),U,2):$P(ABMS($P(ABMP("FLAT"),U,2)),U,5),1:0)
+ ..S ABMP("COVD")=$S($P($G(ABMP("FLAT")),U,2):$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),7)),U,3)*$P(ABMS($P(ABMP("FLAT"),U,2)),U,3),1:0)  ;abm*2.6*33 IHS/SD/SDR ADO60189
  ..I ABMS("TOT"),'$G(ABMQUIET) D ^ABMDES1,^ABMPPADJ
  .Q:'ABMS("TOT")
  .Q:$G(ABMQUIET)
@@ -57,6 +65,7 @@ VTYP S ABMP=3 F  S ABMP=$O(ABMP("EXP",ABMP)) Q:'ABMP  D
  .Q:ABMP=28
  .Q:ABMP=31  ;abm*2.6*8 5010
  .Q:ABMP=32  ;abm*2.6*6 5010
+ .Q:ABMP=33  ;abm*2.6*37 IHS/SD/SDR ADO76036
  .Q:ABMP=35  ;abm*2.6*13 export mode 35
  .Q:ABMP=51
  .I $P($G(^ABMDEXP(ABMP,1)),U)]"" D @("^"_$P(^(1),U)) I 1
@@ -68,12 +77,17 @@ VTYP S ABMP=3 F  S ABMP=$O(ABMP("EXP",ABMP)) Q:'ABMP  D
  S ABMP("RATIO")=1/$S((ABMP("TOT")-ABMP("NC"))>0:(ABMP("TOT")-ABMP("NC")),1:1)
  ;
  W $$EN^ABMVDF("IOF")
+ I $G(ABMP("PAGE"))[7 D ^ABMDESIP Q  ;abm*2.6*33 IHS/SD/SDR ADO60189
  S $P(ABM("="),"=",80)=""
- W !,?35,"SUMMARY",!,ABM("=")
+ ;W !,?35,"SUMMARY",!,ABM("=")  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ W !,?35,"SUMMARY",!  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ F ABM=1:1:80 W "="  ;abm*2.6*33 IHS/SD/SDR ADO60189
  W !!,"Active Insurer: ",$P($G(^AUTNINS(ABMP("INS"),0)),U),!
  W !!,?30,"Previous",?68,"Bill"
- W !,?8,"Form",?18,"Charges",?30,"Payments",?41,"Write-offs",?54,"Non-cvd",?67,"Amount"
- W !?5,"----------  ----------  ----------  ----------  ----------  ----------"
+ ;W !,?8,"Form",?18,"Charges",?30,"Payments",?41,"Write-offs",?54,"Non-cvd",?67,"Amount"  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ W !,?7,"Form",?18,"Charges",?30,"Payments",?41,"Write-offs",?54,"Non-cvd",?67,"Amount"  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ ;W !?5,"----------  ----------  ----------  ----------  ----------  ----------"  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ W !?1,"--------------  ----------  ----------  ----------  ----------  ----------"  ;abm*2.6*33 IHS/SD/SDR ADO60189
  S ABM("NT")=ABMP("NC")
  F ABM=0:0 S ABM=$O(ABMP("EXP",ABM)) Q:'ABM  D
  .W !?1,$P(^ABMDEXP(ABM,0),U)  ;form name
@@ -85,17 +99,20 @@ VTYP S ABMP=3 F  S ABMP=$O(ABMP("EXP",ABMP)) Q:'ABMP  D
  .S ABM("W")=+$FN(ABMP("WO")*ABMP("RATIO")*(ABMP("EXP",ABM)-ABM("NT")),"",3)
  .W ?41,$J($FN(ABM("W"),",",2),10)  ;writeoffs
  .D MEDICHK  ;check for Medicare/Medi-Cal
- .I $G(ABMMFLG)'=1 S ABMP("EXP",ABM)=ABMP("EXP",ABM)-ABM("P")-ABM("W")-ABM("NT")
+ .;I $G(ABMMFLG)'=1 S ABMP("EXP",ABM)=ABMP("EXP",ABM)-ABM("P")-ABM("W")-ABM("NT")  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ .I $G(ABMMFLG)'=1 S ABMP("EXP",ABM)=ABMP("EXP",ABM)-ABM("P")-ABM("W")  ;abm*2.6*33 IHS/SD/SDR ADO60189
  .S:ABMP("EXP",ABM)<0 ABMP("EXP",ABM)=0
- .W ?53,$J($FN(ABM("NT"),",",2),10)  ;non-covered
+ .;W ?53,$J($FN(ABM("NT"),",",2),10)  ;non-covered  ;abm*2.6*29 IHS/SD/SDR CR10410
+ .W ?53,$J($FN(+$G(ABM("NT"))+$G(ABMP("21NC")),",",2),10)  ;non-covered  ;abm*2.6*29 IHS/SD/SDR CR10410
  .I ABMP("NC") S ABM("NT")=0
  .W ?65,$J($FN(ABMP("EXP",ABM),",",2),10)  ;amount
  W !?17,"==========  ==========  ==========  ==========  =========="
  W !?17,$J($FN(ABMP("TOT"),",",2),10)
  W ?29,$J($FN(ABMP("PD"),",",2),10)
  W ?41,$J($FN(ABMP("WO"),",",2),10)
- W ?53,$J($FN(ABMP("NC"),",",2),10)
- S ABMP("TOT")=ABMP("TOT")-ABMP("NC")
+ ;W ?53,$J($FN(ABMP("NC"),",",2),10)  ;abm*2.6*29 IHS/SD/SDR CR10410
+ W ?53,$J($FN(+$G(ABMP("NC"))+$G(ABMP("21NC")),",",2),10)  ;abm*2.6*29 IHS/SD/SDR CR10410
+ ;S ABMP("TOT")=ABMP("TOT")-ABMP("NC")  ;removed; it should be the whole amount every time  ;abm*2.6*33 IHS/SD/SDR ADO60189
  S ABMP("TOT")=+$FN($S(ABMP("TOT")<1:0,1:ABMP("TOT")),"",3)
  W ?65,$J($FN(ABMP("TOT"),",",2),10)
  ;

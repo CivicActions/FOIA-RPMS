@@ -1,5 +1,6 @@
-%ZTLOAD5 ;SEA/RDS-TaskMan: P I: Task Status ;1/18/08  14:29
- ;;8.0;KERNEL;**49,339,446**;JUL 10, 1995;Build 44
+%ZTLOAD5 ;SEA/RDS-TaskMan: P I: Task Status ;11/08/96  14:55 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**49**;JUL 10, 1995
  ;
 INPUT ;check input parameters for error conditions
  N %,ZT1,ZT2,ZT3
@@ -7,17 +8,12 @@ INPUT ;check input parameters for error conditions
  I $D(ZTSK)>1 S %=ZTSK K ZTSK S ZTSK=%
  S ZTSK(0)=0,ZTSK(1)=0,ZTSK(2)="Undefined"
  I ZTSK<1!('$D(^%ZTSK(ZTSK,0))) Q
- L +^%ZTSK(ZTSK):5 E  S ZTSK(2)="Busy" Q  ;p446
- D SEARCH L -^%ZTSK(ZTSK)
+ L +^%ZTSK(ZTSK) D SEARCH L -^%ZTSK(ZTSK)
  Q
  ;
 SEARCH ;search ^%ZTSCH for task
- I $D(^%ZTSCH("TASK",ZTSK))#2 D  Q
- . S ZTSK(0)=1,ZTSK(1)=2,ZTSK(2)="Active: Running"
- . ;With a zero lock timeout it may report "active" falsely
- . L +^%ZTSCH("TASK",ZTSK):0 I $T S ZTSK(1)=5,ZTSK(2)="Inactive: Interrupted" L -^%ZTSCH("TASK",ZTSK) ;p446
- . Q
- S ZT1=0 D  Q:ZTSK(0)  ;*339
+ I $D(^%ZTSCH("TASK",ZTSK))#2 S ZTSK(0)=1,ZTSK(1)=2,ZTSK(2)="Active: Running" Q
+ S ZT1="" D  Q:ZTSK(0)
  . F  S ZT1=$O(^%ZTSCH(ZT1)) Q:ZT1'>0  I $D(^%ZTSCH(ZT1,ZTSK))#2 S ZTSK(0)=1,ZTSK(1)=1,ZTSK(2)="Active: Pending" Q
  S ZT1="" D  Q:ZTSK(0)
  . F  S ZT1=$O(^%ZTSCH("IO",ZT1)),ZT2="" Q:ZT1=""  D  Q:ZTSK(0)
@@ -27,7 +23,7 @@ SEARCH ;search ^%ZTSCH for task
  S ZT1="" D  Q:ZTSK(0)
  . F  S ZT1=$O(^%ZTSCH("LINK",ZT1)),ZT2="" Q:ZT1=""  D  Q:ZTSK(0)
  . . F  S ZT2=$O(^%ZTSCH("LINK",ZT1,ZT2)) Q:ZT2=""  I $D(^(ZT2,ZTSK))#2 S ZTSK(0)=1,ZTSK(1)=1,ZTSK(2)="Active: Pending" Q
- S ZT1=0 D  Q:ZTSK(0)  ;*339
+ S ZT1="" D  Q:ZTSK(0)
  . F  S ZT1=$O(^%ZTSCH("C",ZT1)) Q:ZT1'>0  I $D(^(ZT1,ZTSK)) S ZTSK(0)=1,ZTSK(2)="Active: Pending" Q
  ;
 FLAG ;If we didn't find it in a list, use status flag
@@ -53,7 +49,7 @@ RTN ;Find tasks with matching routines
  ;From %ZTLOAD input param RTN,LST
  Q:$G(RTN)=""
  N ZTSK,X D ENV
- S:'$D(LST) LST="^TMP($J)" S:RTN'["^" RTN="^"_RTN S ZTSK=0
+ S:'$D(LST) LST="^TMP($J)" S:RTN'["^" RTN="^"_RTN S ZTSK=0 
  F  S ZTSK=$O(^%ZTSK(ZTSK)) Q:ZTSK'>0  S X=$G(^%ZTSK(ZTSK,0)) D
  . Q:$$SKIP()
  . I $P(X,"^",1,2)=RTN S @LST@(ZTSK)="" Q
@@ -80,8 +76,3 @@ ENV ;Setup
  S ZTKEY=$D(^XUSEC("ZTMQ",DUZ)),U="^"
  X ^%ZOSF("UCI") S ZTUCI=Y
  Q
- ;
-JOB ;Return JOB # for running task. Called from JOB^ZTLOAD (*339)
- N Z1,Z2 S Z1=""
- I $G(ZTM)>0 S Z2=$G(^%ZTSCH("TASK",ZTM)),Z1=$S($L(Z2):$P(Z2,"^",10),1:"")
- Q Z1

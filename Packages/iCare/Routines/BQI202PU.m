@@ -1,5 +1,5 @@
 BQI202PU ;VNGT/HS/ALA-2.0.2 Install Utility Program ; 07 May 2009  10:03 AM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;2.0;ICARE MANAGEMENT SYSTEM;**2**;May 29, 2009
  ;
 TPS ; Set tooltips
  NEW TEXT,BQIUPD,ERROR,BI,BJ,HELP,IEN
@@ -68,8 +68,8 @@ DX ; Check diagnosis code pointers
  F  S CN=$O(^BQI(90507.8,CN)) Q:'CN  D
  . S DN=0
  . F  S DN=$O(^BQI(90507.8,CN,10,DN)) Q:'DN  D
- .. S DXC=$P(^BQI(90507.8,CN,10,DN,0),U,2)_" "
- .. S DXN=$$FIND1^DIC(80,"","X",DXC,"BA","","ERROR")
+ .. S DXC=$P(^BQI(90507.8,CN,10,DN,0),U,2)
+ .. S DXN=$$FIND1^DIC(80,"","Q",DXC,"BA","","ERROR")
  .. I $P(^BQI(90507.8,CN,10,DN,0),U,1)=DXN Q
  .. NEW DA,IENS
  .. S DA(1)=CN,DA=DN,IENS=$$IENS^DILF(.DA)

@@ -1,5 +1,36 @@
 BSTSRPCU ;GDIT/HS/BEE - SNOMED Utilities - RPC Universe Search ; 10 Aug 2012  9:24 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**5**;Dec 01, 2016;Build 22
+ ;
+ Q
+ ;
+ ;GDIT/HS/BEE;03/12/2024;FEATURE#60466;Allow lookup by concept id or RxNorm
+ ;GDIT/HS/BEE;03/12/2024;FEATURE#60488;SNOMED to Conditional Map Display Lookup
+FLTR(SVAR,NMID,SEARCH) ;Filter out inactives and not in subset(s)
+ ;
+ NEW SUB,SCNT,FILTER
+ ;
+ ;Get subsets to filter on
+ S SUB=$P(SEARCH,U,4)
+ S:SUB="ALL" SUB="IHS PROBLEM ALL SNOMED"
+ ;
+ S SCNT="" F  S SCNT=$O(@SVAR@(SCNT)) Q:SCNT=""  D
+ . ;
+ . ;Filter out inactives
+ . I $G(@SVAR@(SCNT,"INACTIVE"))=1 K @SVAR@(SCNT) Q
+ . ;
+ . NEW SB,ISB,CONC,CIEN
+ . ;
+ . Q:SUB=""
+ . ;Retrieve the concept info
+ . S CONC=$G(@SVAR@(SCNT,"CON")) Q:CONC=""
+ . S CIEN=$O(^BSTS(9002318.4,"C",NMID,CONC,"")) Q:CIEN=""
+ . ;
+ . ;Subset filter
+ . S FILTER=1
+ . F ISB=1:1:$L(SUB,"~") S SB=$P(SUB,"~",ISB) I SB]"",$D(^BSTS(9002318.4,CIEN,4,"B",SB)) S FILTER=0
+ . ;
+ . ;Remove if not in subset
+ . I FILTER K @SVAR@(SCNT)
  ;
  Q
  ;

@@ -1,5 +1,5 @@
-APSPDRP1 ; IHS/DSD/ENM - PRINT DUE REVIEW REPORT ;  [ 09/03/97   1:30 PM ]
- ;;6.0;IHS PHARMACY MODIFICATIONS;;09/03/97
+APSPDRP1 ;IHS/MSC/PLS - PRINT DUE REVIEW REPORT;08-Jan-2023 10:41;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1032**;Sep 23, 2004;Build 26
  ; This routine is responsible for getting the information to
  ; print and doing the formatting of the report.
  ; The routine calls APSDRP2 to do the actual printing.  I had to

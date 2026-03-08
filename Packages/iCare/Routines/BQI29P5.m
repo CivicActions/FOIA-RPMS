@@ -1,0 +1,105 @@
+BQI29P5 ;GDIT/HCSD/ALA-iCare 2.9 Patch 5 ; 09 Feb 2023  10:04 AM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5**;Mar 01, 2021;Build 20
+ ;
+PRE ;EP - Pre-install
+ NEW DA,DIK
+ S DA=0,DIK="^BQI(90506,"
+ F  S DA=$O(^BQI(90506,DA)) Q:'DA  D ^DIK
+ S DA=0,DIK="^BQIIMM("
+ F  S DA=$O(^BQIIMM(DA)) Q:'DA  D ^DIK
+ S DA=09,DIK="^BQI(90506.9,"
+ F  S DA=$O(^BQI(90506.9,DA)) Q:'DA  D ^DIK
+ ;
+CLN ;
+ NEW CODE,NM,DA,DIK,IEN,DIU
+ S DIK="^BQI(90506.1,"
+ F CODE="2017_","2018_","2019_" D
+ . S NM=CODE
+ . F  S NM=$O(^BQI(90506.1,"B",NM)) Q:NM=""!($E(NM,1,5)'=CODE)  D
+ .. S IEN=$O(^BQI(90506.1,"B",NM,""))
+ .. S DA=IEN D ^DIK
+ ;
+ NEW IEN
+ S IEN=$O(^BQI(90506.1,"B","ORPDATE","")) I IEN'="" D
+ . S BQUPD(90506.1,IEN_",",.1)=1,BQUPD(90506.1,IEN_",",.11)=$$FMADD^XLFDT(DT,-1)
+ S BQUPD(90506.3,"79,",.01)="ZUpdate Provider",BQUPD(90506.3,"79,",.03)=1
+ D FILE^DIE("","BQUPD","ERROR")
+ Q
+ ;
+POS ;
+ D ^BQIUSRC
+ D ^BQIULAY
+ D ^BQIULAY3
+ S ^BQI(90506.5,46,10,4,1)="D DEF^BQICMUT1(""EX"",RIEN,""EBY"",.RESULT)"
+ D ^BQIUDEF
+ D ^BQIUCONV
+ D ^BQIBTX
+ D ^BQIULAY2
+ D ^BQIULAY4
+ ;
+ D LENC
+ D CHIM
+ D DTMP
+ ;
+RP ; Set BTPWRPC and BUSARPC into BQIRPC
+ NEW IEN,DA,X,DIC,Y
+ S DA(1)=$$FIND1^DIC(19,"","B","BQIRPC","","","ERROR"),DIC="^DIC(19,"_DA(1)_",10,",DIC(0)="LMNZ"
+ I $G(^DIC(19,DA(1),10,0))="" S ^DIC(19,DA(1),10,0)="^19.01IP^^"
+ S X="BTPWRPC"
+ D ^DIC I +Y<1 K DO,DD D FILE^DICN
+ NEW IEN,DA,X,DIC,Y
+ S DA(1)=$$FIND1^DIC(19,"","B","BQIRPC","","","ERROR"),DIC="^DIC(19,"_DA(1)_",10,",DIC(0)="LMNZ"
+ I $G(^DIC(19,DA(1),10,0))="" S ^DIC(19,DA(1),10,0)="^19.01IP^^"
+ S X="BUSARPC"
+ D ^DIC I +Y<1 K DO,DD D FILE^DICN
+ ;
+VR ;Set the version number
+ NEW DA
+ S DA=$O(^BQI(90508,0))
+ S BQIUPD(90508,DA_",",.08)="2.9.5.4"
+ S BQIUPD(90508,DA_",",.09)="2.9.5.4"
+ S BQIUPD(90508,DA_",",4.18)="@"
+ D FILE^DIE("","BQIUPD","ERROR")
+ Q
+ ;
+LENC ;Location of Encounters
+ NEW ZTDTH,ZTDESC,ZTRTN,ZTIO,ZTSAVE,NOW
+ S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,3)
+ S ZTDESC="Set Visit Location Encounter Xref",ZTRTN="VEF^BQINIGH5",ZTIO=""
+ K ^XTMP("BQIVHLOC"),^XTMP("BQIVLENC")
+ S ZTSAVE("VN")=0
+ D ^%ZTLOAD
+ K ZTSK
+ Q
+ ;
+CHIM ;Childhood Immunizations
+ NEW ZTDTH,ZTDESC,ZTRTN,ZTIO,ZTSAVE
+ S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,6)
+ S ZTDESC="Update Childhood Immunizations",ZTRTN="BEG^BQIIMINT",ZTIO=""
+ D ^%ZTLOAD
+ K ZTSK
+ Q
+ ;
+DTMP ; Default Template update
+ NEW ZTDTH,ZTDESC,ZTRTN,ZTIO,ZTSAVE
+ S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,4)
+ S ZTDESC="Update Templates",ZTRTN="MV^BQI29P5",ZTIO=""
+ D ^%ZTLOAD
+ K ZTSK
+ Q
+ ;
+MV ;
+ ;Loop through user templates and move to panel
+ NEW DZ,PLN,LOG,TN,SN
+ S DZ=0 F  S DZ=$O(^BQICARE(DZ)) Q:'DZ  D
+ . ;Remove default STI/STD template so it can be rebuilt
+ . S SN=$O(^BQICARE(DZ,15,"B","STI/STD Default",""))
+ . I SN'="" S DA(1)=DZ,DA=SN,DIK="^BQICARE("_DA(1)_",15," D ^DIK
+ . K DA,SN,DIK
+ . S PLN=0 F  S PLN=$O(^BQICARE(DZ,1,PLN)) Q:'PLN  D
+ .. S TN=0 F  S TN=$O(^BQICARE(DZ,1,PLN,4,TN)) Q:'TN  D
+ ... NEW DA,IENS
+ ... S DA(2)=DZ,DA(1)=PLN,DA=TN,IENS=$$IENS^DILF(.DA)
+ ... S BQDATA(90505.14,IENS,.03)=1
+ . I $D(BQDATA) D FILE^DIE("","BQDATA","ERROR")
+ Q

@@ -1,8 +1,11 @@
 ABMDE31 ;IHS/SD/SDR - AMBULANCE - PAGE 3A ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**6**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,35**;NOV 12, 2009;Build 659
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 6 - New routine for page 3A
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - added patient count
+ ;IHS/SD/SDR 2.5*8 task 6 - New routine for page 3A
+ ;
+ ;IHS/SD/SDR 2.6*6 5010 - added patient count
+ ;IHS/SD/SDR 2.6*35 ADO60702 Changed Destination to use both old and some new fields so it can be free-text if needed;
+ ;  also fixed variable pointer for .127 field to use VA Patient (DPT), not Patient (AUPNPAT)
  ;
  ;
 OPT ;EP
@@ -58,12 +61,87 @@ E1 ;Edit data
  ;destination (3)
  I ABMP("FLDS")[3 D
  .K DIR,DIC,DIE,DR,DA,X
- .S DA=ABMP("CDFN")
- .S DIE="^ABMDCLM("_DUZ(2)_","
- .S DIC("V")="Q:X'=""PATIENT'S HOME""  I X=""PATIENT'S HOME"" S X=$P($G(^DPT(ABMP(""PDFN""),0)),U) I +Y(0)=9000001 K DIC(""V"")"
- .S ABMDVAR=$P($G(^DIC(4,DUZ(2),0)),U)
- .S DR=".127//^S X=ABMDVAR;.1216Destination Modifier"
- .D ^DIE
+ .;start old abm*2.6*35 IHS/SD/SDR ADO60702
+ .;S DA=ABMP("CDFN")
+ .;S DIE="^ABMDCLM("_DUZ(2)_","
+ .;S DIC("V")="Q:X'=""PATIENT'S HOME""  I X=""PATIENT'S HOME"" S X=$P($G(^DPT(ABMP(""PDFN""),0)),U) I +Y(0)=9000001 K DIC(""V"")"
+ .;S ABMDVAR=$P($G(^DIC(4,DUZ(2),0)),U)
+ .;S DR=".127//^S X=ABMDVAR;.1216Destination Modifier"
+ .;D ^DIE
+ .;end old start new abm*2.6*35 IHS/SD/SDR ADO60702
+ .W !!?3,"Editing Destination:",!
+ .K ABMANS,ABMDFLG
+ .S DIR(0)="S^F:File (Location/Vendor/Patient);T:Free-Text"
+ .S DIR("A")="What do you want to add? F/T"
+ .S DIR("?")="Answer with <F>ile or Free-<T>ext"
+ .D ^DIR
+ .Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!$D(DIRUT)
+ .S ABMDANS=Y
+ .;
+ .S ABMDFLG=1
+ .I ($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16)),U)'="") D  Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!$D(DIRUT)
+ ..S ABMDREC=$$GETDEST($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16)),U))
+ ..W !!?15,$P(ABMDREC,U)
+ ..W !?15,$P(ABMDREC,U,2)
+ ..W !?15,$P(ABMDREC,U,3)
+ ..I $P(ABMDREC,U,4)'="" W ", "_$P(ABMDREC,U,4)_"  "_$P(ABMDREC,U,5)
+ ..W !!,"You already have a Destination entry."
+ ..D ^XBFMK
+ ..S DIR(0)="Y"
+ ..S DIR("A")="Are you sure you want to change it?"
+ ..D ^DIR
+ ..Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)!$D(DIRUT)
+ ..S ABMDFLG=Y
+ .Q:'ABMDFLG
+ .;
+ .D ^XBFMK
+ .I ABMDANS="T" D
+ ..S DA=ABMP("CDFN")
+ ..S DIE="^ABMDCLM("_DUZ(2)_","
+ ..S DR=".127////@;.1216////@"
+ ..D ^DIE
+ ..S DR="1601//;1602//;1603//;1604//;1605//"_";.1216Destination Modifier//"
+ ..D ^DIE
+ .I ABMDANS="F" D
+ ..S DA=ABMP("CDFN")
+ ..S DIE="^ABMDCLM("_DUZ(2)_","
+ ..S DR="1601////@;1602////@;1603////@;1604////@;1605////@;.1216////@"
+ ..D ^DIE
+ ..S DIC("V")="Q:X'=""PATIENT'S HOME""  I X=""PATIENT'S HOME"" S X=$P($G(^DPT(ABMP(""PDFN""),0)),U) I +Y(0)=9000001 K DIC(""V"")"
+ ..S ABMDVAR=$P($G(^DIC(4,DUZ(2),0)),U)
+ ..S DR=".127//^S X=ABMDVAR"_";.1216Destination Modifier"
+ ..D ^DIE
+ ..;
+ ..;this next section is going to take anything that was entered under the 'File' option and store into the free-text fields
+ ..;it was decided that the Destination field shouldn't change when Registration (or the other file entries are changed) but
+ ..;that it should remain whatever the name/address was at the time the claim was approved
+ ..S ABM("DEST")=$$GET1^DIQ(9002274.3,ABMP("CDFN"),".127","I")
+ ..Q:ABM("DEST")=""
+ ..S ABM("DIEN")=+ABM("DEST")
+ ..I ABM("DEST")["AUTTLOC" D
+ ...S ABM("DNM")=$P($G(^DIC(4,ABM("DIEN"),0)),U)
+ ...S ABM("DADDR")=$P($G(^AUTTLOC(ABM("DIEN"),0)),U,12)
+ ...S ABM("DCTY")=$P($G(^AUTTLOC(ABM("DIEN"),0)),U,13)
+ ...S ABM("DST")=$P($G(^AUTTLOC(ABM("DIEN"),0)),U,14)
+ ...S ABM("DZIP")=$P($G(^AUTTLOC(ABM("DIEN"),0)),U,15)
+ ..I ABM("DEST")["DPT" D
+ ...S ABM("DNM")=$P($G(^DPT(ABM("DIEN"),0)),U)
+ ...S ABM("DADDR")=$P($G(^DPT(ABM("DIEN"),.11)),U)
+ ...S ABM("DCTY")=$P($G(^DPT(ABM("DIEN"),.11)),U,4)
+ ...S ABM("DST")=$P($G(^DPT(ABM("DIEN"),.11)),U,5)
+ ...S ABM("DZIP")=$P($G(^DPT(ABM("DIEN"),.11)),U,6)
+ ..I ABM("DEST")["AUTTVNDR" D
+ ...S ABM("DNM")=$P($G(^AUTTVNDR(ABM("DIEN"),0)),U)
+ ...S ABM("DADDR")=$P($G(^AUTTVNDR(ABM("DIEN"),13)),U)
+ ...S ABM("DCTY")=$P($G(^AUTTVNDR(ABM("DIEN"),13)),U,2)
+ ...S ABM("DST")=$P($G(^AUTTVNDR(ABM("DIEN"),13)),U,3)
+ ...S ABM("DZIP")=$P($G(^AUTTVNDR(ABM("DIEN"),13)),U,4)
+ ..;
+ ..S DR="1601////"_ABM("DNM")_";1602////"_ABM("DADDR")_";1603////"_ABM("DCTY")_";1604////"_ABM("DST")_";1605////"_ABM("DZIP")
+ ..S DR=DR_";.127////@"
+ ..D ^DIE
+ ..;
+ .;end new abm*2.6*35 IHS/SD/SDR ADO60702
  ;
  I ABMP("FLDS")[5 D
  .K DIR,DIC,DIE,DR,DA,DIR
@@ -124,6 +202,7 @@ DISP ;
  W !,?8,"[02] Modifier.........: ",$P(ABMAREC,U,14)_"  "_$S($P(ABMAREC,U,14)'="":$P($P($P(^DD(9002274.3,.1214,0),U,3),$P(ABMAREC,U,14)_":",2),";"),1:"")  ;modifier
  ;
  S ABMDIEN=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),12)),U,7)
+ I +ABMDIEN=0 S ABMDIEN=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16)),U)  ;abm*2.6*35 IHS/SD/SDR ADO60702
  S ABMDREC=$$GETDEST(ABMDIEN)  ;variable pointer; get data
  W !?3,"[03] Destination............: ",$P(ABMDREC,U)  ;destination
  W !?33,$P(ABMDREC,U,2)  ;destination address
@@ -165,8 +244,22 @@ XIT ;
  K ABM,ABMV,ABME
  Q
 GETDEST(ABMDIEN) ;EP - figure out data for destination - variable pointer
+ ;
+ ;start new abm*2.6*35 IHS/SD/SDR ADO60702
+ I $P(ABMDIEN,";",2)="" D  Q ABMDREC
+ .;next line is for when bill is being printed/reprinted, since this code is used there as well; ABMP("CDFN") won't be defined in that case
+ .I +$G(ABMP("CDFN"))=0 S ABMP("CDFN")=+$G(ABMP("B0"))
+ .S ABMDREC=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16)),U)
+ .S $P(ABMDREC,U,2)=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16)),U,2)
+ .S $P(ABMDREC,U,3)=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16)),U,3)
+ .S $P(ABMDREC,U,4)=$S(+$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16)),U,4)'=0:$P($G(^DIC(5,$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16)),U,4),0)),U),1:"")
+ .S $P(ABMDREC,U,5)=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16)),U,5)
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60702
+ ;
  I $G(ABMDIEN)="" S ABMDREC="" Q ""
- I $P(ABMDIEN,";",2)["AUPNPAT" D  Q ABMDREC
+ ;
+ ;I $P(ABMDIEN,";",2)["AUPNPAT" D  Q ABMDREC  ;abm*2.6*35 IHS/SD/SDR ADO60702
+ I $P(ABMDIEN,";",2)["DPT" D  Q ABMDREC  ;abm*2.6*35 IHS/SD/SDR ADO60702
  .S ABMDREC="PATIENT'S HOME"
  .S $P(ABMDREC,U,2)=$P($G(^DPT(+ABMDIEN,.11)),U)  ;pt street
  .S $P(ABMDREC,U,3)=$P($G(^DPT(+ABMDIEN,.11)),U,4)  ;pt city

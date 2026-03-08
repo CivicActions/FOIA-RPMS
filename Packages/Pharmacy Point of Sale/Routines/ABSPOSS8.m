@@ -1,9 +1,10 @@
 ABSPOSS8 ; IHS/FCS/DRS - 9002313.99 ;  
- ;;1.0;PHARMACY POINT OF SALE;**19,39,45,46,48**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**19,39,45,46,48,57**;JUN 01, 2001;Build 131
  ;----------------------------------------------------------------------
  ;IHS/SD/RLT 11/7/06 - Patch 19
  ; Force user to run BAS setup option first.  Running other options
  ; first causes error creating the ^ABSP(9002313.99,1,0) node.
+ ;IHS/SD/SDR 1.0*57 ADO125991 Added prompt for number of days to check backbilling
  ; 
  Q
 PART1 ;EP - option ABSP SETUP PART 1 - the basic setup
@@ -31,6 +32,14 @@ PART1 ;EP - option ABSP SETUP PART 1 - the basic setup
  S DR=DR_";.04R~Multiply the unit price by what factor (1 = 100%, .95 = 95%, etc.) ?"
  S DR=DR_";.05R~What is the default DISPENSING FEE?"
  D ^DIE
+ ;start new absp*1.0*57 IHS/SD/SDR ADO125991
+ W !
+ D ^XBFMK
+ S DIE=9002313.99,DA=1
+ S DR="6004R~Number of days to do backbilling check//90"
+ D ^DIE
+ S ABSPSET=$$LOG^BUSAAPI("A","S","","ABSPPOS8","ABSP: BAS basic pharmacy setup","")
+ ;end new absp*1.0*57 IHS/SD/SDR ADO125991
  Q
 NEW99 ; create new entry in 9002313.99
  Q:$P($G(^ABSP(9002313.99,1,0)),U)]""  ; already has an entry
@@ -40,9 +49,9 @@ NEW99 ; create new entry in 9002313.99
 N99A D UPDATE^DIE("","FDA","IEN","MSG")
  I $D(MSG) D LOG^ABSPOSL2("N99A^ABSPOSS8",.MSG) ; /IHS/OIT/RAM ; 12 JUN 17 ; AND LOG IT IF AN ERROR OCCURS.
  I '$D(MSG),IEN(1)=1,$D(^ABSP(9002313.99,1,0)) D  Q  ; success
- . ; Insurance base scores - default to Private primary,
- . ; Medicaid secondary, Medicare tertiary, No insurance last
- . S ^ABSP(9002313.99,1,"INS BASE SCORES")="900^300^600^300^100"
+ .; Insurance base scores - default to Private primary,
+ .; Medicaid secondary, Medicare tertiary, No insurance last
+ .S ^ABSP(9002313.99,1,"INS BASE SCORES")="900^300^600^300^100"
  ; Failure:
  D ZWRITE^ABSPOS("FDA","IEN","MSG")
  G N99A:$$IMPOSS^ABSPOSUE("FM","TRI","UPDATE^DIE failed",,"N99A",$T(+0))
@@ -70,17 +79,17 @@ CHK1 ;Set out of order messages on the following options
  E  S OPTMSG="Basic setup NOT complete - Contact site MGR"
  ;
  F OPTCNT=1:1:9 D
- . D ^XBFMK      ;kill FileMan variables
- . S OPTIEN=0
- . S OPTIEN=$O(^DIC(19,"B",OPTNAME(OPTCNT),OPTIEN))
- . Q:OPTIEN=""
- . S OPTMSG2=$P($G(^DIC(19,OPTIEN,0)),U,3)
- . I OPTMSG'="@"&(OPTMSG2'="") Q
- . I OPTMSG'="@"&(OPTMSG2="Basic setup NOT complete - Contact site MGR") Q
- . I OPTMSG="@"&(OPTMSG2'="Basic setup NOT complete - Contact site MGR") Q
- . S DIE=19,DA=OPTIEN
- . S DR="2///^S X=OPTMSG"
- . D ^DIE
+ .D ^XBFMK      ;kill FileMan variables
+ .S OPTIEN=0
+ .S OPTIEN=$O(^DIC(19,"B",OPTNAME(OPTCNT),OPTIEN))
+ .Q:OPTIEN=""
+ .S OPTMSG2=$P($G(^DIC(19,OPTIEN,0)),U,3)
+ .I OPTMSG'="@"&(OPTMSG2'="") Q
+ .I OPTMSG'="@"&(OPTMSG2="Basic setup NOT complete - Contact site MGR") Q
+ .I OPTMSG="@"&(OPTMSG2'="Basic setup NOT complete - Contact site MGR") Q
+ .S DIE=19,DA=OPTIEN
+ .S DR="2///^S X=OPTMSG"
+ .D ^DIE
  Q
 INS ;EP - option ABSP INSURANCE SEL
  N DIE,DA,DR,DIDEL,DTOUT
@@ -124,8 +133,8 @@ INS ;EP - option ABSP INSURANCE SEL
 10 W !!,"Select any additional insurance rules that might",!
  W "be needed for distinguishing among private insurances.",!
  I 'ALLRULES,$$ALLRULES D  G 10
- . D TEMPLATE^ABSPOSS2("ABSP INSURANCE RULES AVAIL",9002313.94)
- . S ALLRULES=1
+ .D TEMPLATE^ABSPOSS2("ABSP INSURANCE RULES AVAIL",9002313.94)
+ .S ALLRULES=1
  I 'MYRULES,$$MYRULES D RPTINUSE S MYRULES=1 G 10
  W !,"Usually, the plus points value for a rule is about 10 or 20",!
  W "and the minus points value is 0."

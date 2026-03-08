@@ -1,6 +1,6 @@
-DDR0 ;SF/DCM-FileMan Delphi Components' RPCs ;4/28/98  10:52
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DDR0 ;SF/DCM-FileMan Delphi Components' RPCs ;2/24/98  16:01 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**34**;Feb 28, 1998
  ;
  Q
 FINDC(DDRDATA,DDR) ; -- broker callback to get list data
@@ -9,21 +9,12 @@ FINDC(DDRDATA,DDR) ; -- broker callback to get list data
  D PARSE(.DDR)
  S DDROUT=""
  D FIND^DIC(DDRFILE,DDRIENS,DDRFLDS,DDRFLAGS,DDRVAL,DDRMAX,DDRXREF,DDRSCRN,DDRID,DDROUT,"DDRERR")
- I $G(DDRFLAGS)["P" D
- . Q:'$D(^TMP("DILIST",$J))
- . N COUNT S COUNT=^TMP("DILIST",$J,0) Q:'COUNT  D 1
- . I XWBAPVER>1 S ^(.3)="[MAP]",^TMP("DILIST",$J,.4)=^TMP("DILIST",$J,0,"MAP")
- . K ^TMP("DILIST",$J,0) S ^(.5)="[BEGIN_diDATA]",^(COUNT+1)="[END_diDATA]"
- . Q
- I $G(DDRFLAGS)'["P" D
- . Q:'$D(^TMP("DILIST",$J))
- . N COUNT S COUNT=^TMP("DILIST",$J,0) Q:'COUNT
- . D 1,UNPACKED
- . Q
+ I $D(^TMP("DILIST",$J)) D 1,UNPACKED
  D 3,4
  Q
-1 Q:'$P(COUNT,U,3)
- S ^TMP("DILIST",$J,.1)="[Misc]",^(.2)="MORE"
+1 N X S X=^TMP("DILIST",$J,0)
+ Q:'$P(X,U,3)
+ S ^TMP("DILIST",$J,.1)="[Misc]",^TMP("DILIST",$J,.2)="MORE"
  Q
 3 I $D(DIERR) D ERROR
  Q
@@ -65,6 +56,8 @@ Z(%) ;
  S ^TMP("DILIST",$J,"ZERR",I)=%,I=I+1
  Q
 UNPACKED ;
+ N COUNT,IXCNT
+ S COUNT=+^TMP("DILIST",$J,0) Q:'COUNT
  K ^TMP("DILIST",$J,0)
  S ^TMP("DILIST",$J,.5)="[BEGIN_diDATA]" K ^TMP("DILIST",$J,1)
  S ^TMP("DILIST",$J,2,.1)="BEGIN_IENs",^(COUNT+1)="END_IENs"

@@ -1,5 +1,5 @@
 BDGEPI ; IHS/ANMC/LJF - EXTENDED PATIENT INQUIRY ; 
- ;;5.3;PIMS;**1007,1008,1010**;APR 26, 2002
+ ;;5.3;PIMS;**1007,1008,1010,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw 9/7/2007 mods in ASK PATCH 1007
  ;cmi/flag/maw 8/31/2009 PATCH 1010 change reference of UB92 to UB04
@@ -27,7 +27,11 @@ EN ;EP; -- main entry point for BDG EXTENDED PI
 HDR ; -- header code
  NEW X
  S VALMHDR(1)=$$SP(15)_$$CONF^BDGF
- S X=$$NAMEPRT^BDGF2(DFN)_" (#"_$$HRCN^BDGF2(DFN,DUZ(2))_")"
+ ;202307 77894 maw p1022 PPN
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S X=$G(PRF)_" (#"_$$HRCN^BDGF2(DFN,DUZ(2))_")"
+ ;S X=$$NAMEPRT^BDGF2(DFN)_" (#"_$$HRCN^BDGF2(DFN,DUZ(2))_")"
  S VALMHDR(2)=$$SP(75-$L(X)\2)_X
  S X=$$STATUS^BDGF2(DFN),VALMHDR(3)=$$SP(75-$L(X)\2)_X
  Q

@@ -1,5 +1,5 @@
-INHVCRV ; JC Hrubovcak ; 22 Oct 1999 15:49 ; 
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHVCRV ;ihs/cmi/maw - Logon utilities ; 
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  ; HL7/PWS logon utilities
  Q
@@ -105,16 +105,16 @@ LOGON(INV,INOA,INODA) ; $$function - Validate user, based on information sent
  I INH9("USER")'>0 Q "0^Invalid Access/Verify code"
  S X=$$DIVCHK^INHULOG(INH9("USER")) Q:'X "0^"_X  ; validate division
  ; Determine if user is an authorized HCP
- S INH9("HCP")=$P($G(^DIC(3,INH9("USER"),8000)),"^") ; get provider
+ S INH9("HCP")=$P($G(^VA(200,INH9("USER"),8000)),"^") ; get provider
  ;;Folloing logic is specific to CHCS. Must be revised if used for IHS
  ;I '$G(INANYONE) S X=$$PWSPRO^ORGISPRO(INH9("USER")) Q:X "0^User '"_INH9("USER")_"' is not an authorized HCP"
  ; get remote system timeout value (used to determine if remote has
  ; disconnected w/out notifying connected system)
  S INH9("DTIME")=$$DTIME^INHULOG(INH9("USER"),900)
- S INHZERO=$G(^DIC(3,INH9("USER"),0))
+ S INHZERO=$G(^VA(200,INH9("USER"),0))
  S INH9("FMACC")=$P(INHZERO,"^",4)
  S INH9("DEFDIV")=$P(INHZERO,"^",16)
- S INH9("MSIGN")=$P($G(^DIC(3,INH9("USER"),200)),"^",4)
+ S INH9("MSIGN")=$P($G(^VA(200,INH9("USER"),200)),"^",4)
  S INODA(3,INH9("USER"))="" S:'$G(INANYONE) INODA(6,INH9("HCP"))=""
  ; ZIL segment is returned in LoS Ack (not in ApS Ack)
  S:'$G(INOA("~NOZIL")) INOA("ZIL4")=INH9("USER"),INOA("ZIL5")=INH9("HCP"),INOA("ZIL6")=INH9("DTIME"),INOA("ZIL10")=$$TICKET^INHULOG,INOA("ZIL12")=INH9("FMACC"),INOA("ZIL13")=INH9("DEFDIV"),INOA("ZIL14")=INH9("MSIGN")

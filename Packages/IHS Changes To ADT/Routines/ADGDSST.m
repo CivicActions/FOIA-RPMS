@@ -1,10 +1,5 @@
-ADGDSST ; IHS/ADC/PDW/ENM - DAY SURGERY STATISTICS BY SERVICE ; [ 12/16/2003  3:14 PM ]
+ADGDSST ; IHS/ADC/PDW/ENM - DAY SURGERY STATISTICS BY SERVICE ; [ 07/16/1999  3:21 PM ]
  ;;5.0;ADMISSION/DISCHARGE/TRANSFER;**3**;MAR 25, 1999
- ;IHS/ITSC/WAR 12/16/03 Added call to 'old'(?) init of IHS variales
- I '$D(DGOPT("GEN"))&($D(^DG(43,1,9999999))) D VAR^ADGVAR
- I '$D(DGOPT("GEN")) D
- .S DGOPT("GEN")=$P(^BDGPAR(1,0),U,5)  ;Last attempt to get min age
- ;IHS/ITSC/WAR 12/16/03 end of mod
  ;
  W @IOF,!!!?18,"DAY SURGERY STATISTICS BY SERVICE",!!
  ;***> get date range
@@ -33,10 +28,7 @@ C3 S DGN=$O(^ADGDS("AA",DGDT,DFN,DGN)) G C2:DGN=""
  S:DGSRV'="" DGSRV=$S($D(^DIC(45.7,DGSRV,0)):$P(^(0),U),1:"")
  S AGE=$$VAL^XBDIQ1(9000001,DFN,1102.99)
  I AGE="" S ^TMP($J,"ERR",DFN)="Date of Birth missing or invalid" G C3
- ;IHS/ITSC/WAR 12/16/03 added $G to avoid undefined if the OLD DS
- ;      varialbes were not able to be setup by the VAR^ADGVAR call
- ;I AGE'<$P(DGOPT("GEN"),U,5) S DGA(DGSRV,"A")=$S($D(DGA(DGSRV,"A")):DGA(DGSRV,"A")+1,1:1) S:'$D(DGA(DGSRV,"P")) DGA(DGSRV,"P")=0
- I AGE'<$P($G(DGOPT("GEN")),U,5) S DGA(DGSRV,"A")=$S($D(DGA(DGSRV,"A")):DGA(DGSRV,"A")+1,1:1) S:'$D(DGA(DGSRV,"P")) DGA(DGSRV,"P")=0
+ I AGE'<$P(DGOPT("GEN"),U,5) S DGA(DGSRV,"A")=$S($D(DGA(DGSRV,"A")):DGA(DGSRV,"A")+1,1:1) S:'$D(DGA(DGSRV,"P")) DGA(DGSRV,"P")=0
  E  S DGA(DGSRV,"P")=$S($D(DGA(DGSRV,"P")):DGA(DGSRV,"P")+1,1:1) S:'$D(DGA(DGSRV,"A")) DGA(DGSRV,"A")=0
  G C3
  ;

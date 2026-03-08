@@ -1,5 +1,5 @@
 BDGOPL ; IHS/ANMC/LJF - OPERATORS' LIST OF INPATIENTS ;  [ 08/12/2003  3:58 PM ]
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
  I $$BROWSE^BDGF="B" D EN Q
  D ZIS^BDGF("QP","EN^BDGOPL","OPERATORS' LIST","")
@@ -35,11 +35,14 @@ INIT ; -- init variables and list array
  Q
  ;
 LINE ; set up dislay line for patient
- NEW LINE,X
+ NEW LINE,X,NM,RNM,PNM
  ;
- S LINE=$E($$GET1^DIQ(2,DFN,.01),1,23)  ;name
+ ;S LINE=$E($$GET1^DIQ(2,DFN,.01),1,23)  ;name
+ S LINE=$$GETPREF^AUPNSOGI(DFN,"E",1)  ;20230614 maw 61946 p1022
  I $$OPTOUT^BDGF1(DFN) S LINE=$$REPEAT^XLFSTR("*",20)   ;if patient opted out of directory;IHS/ITSC/LJF 10/03/2003
+ D SET(LINE,.VALMCNT)
  ;
+ S LINE=""
  S LINE=$$PAD(LINE,25)_$$PHONE                                ;rm phone
  S LINE=$$PAD(LINE,33)_$G(^DPT(DFN,.101))                     ;room
  S LINE=$$PAD(LINE,42)_$$WRDABRV^BDGF1(DFN)                   ;ward

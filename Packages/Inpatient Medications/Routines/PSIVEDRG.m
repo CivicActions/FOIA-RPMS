@@ -1,5 +1,5 @@
-PSIVEDRG ;BIR/MLM-ENTER/EDIT DRUGS FOR IV ORDER ;29-May-2012 14:32;PLS
- ;;5.0; INPATIENT MEDICATIONS ;**21,33,50,65,74,84,128,147,1015**;16 DEC 97;Build 62
+PSIVEDRG ;BIR/MLM-ENTER/EDIT DRUGS FOR IV ORDER ;29-Jan-2020 11:40;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**21,33,50,65,74,84,128,147,1015,1025**;16 DEC 97;Build 33
  ;
  ; References to ^PS(52.6 supported by DBIA# 1231.
  ; References to ^PS(52.7 supported by DBIA# 2173.
@@ -7,6 +7,7 @@ PSIVEDRG ;BIR/MLM-ENTER/EDIT DRUGS FOR IV ORDER ;29-May-2012 14:32;PLS
  ;
  ; Modified - IHS/MSC/PB - 4/25/12 modified to add the new stability offset value to the DRG array
  ; this value is used to determine the iv expiration date
+ ; Modified - IHS/MSC/MGH  1/16/20 Leading/trailing zeros
 DRG ; Edit Additive/Solution data
  NEW DRGOC,PSGORQF ;If PSGORQF=1 abort order after order check.
  K PSIVOLD S DRG(2)="" I $D(DRG(DRGT)) S DRGI=+$O(DRG(DRGT,0)) I DRGI S PSIVOLD=1 D SETDRG
@@ -49,6 +50,11 @@ AMT ;
  I DRGT="SOL",'$G(PSIVOLD),($G(P(4))_$G(P(23))'["S") G DRG4
 1 ; Strength/Volume
  W !,$S(DRGT="AD":"Strength: ",1:"Volume: ") W:+DRG(3) DRG(3),"//" R X:DTIME S:'$T X="^" Q:X="^"  G:X=""&DRG(3) 2 I X="" W $C(7),$S(DRGT="AD":"Strength",1:"Volume")," is REQUIRED!" G 1
+ ;IHS/MSC/MGH change for leading/trailing zeros
+ N ERR,LOOP
+ D ZEROS^APSPLIQ(.ERR,X)
+ I $D(ERR)>1 D  G 1
+ .S LOOP="" F  S LOOP=$O(ERR(LOOP)) Q:'+LOOP  W !,$G(ERR(LOOP))
  D:$D(X) IT G:'$D(X)!($G(X)["?") AMT S DRG(3)=X I X="" D FIELD^DID($S(DRGT="AD":53.157,1:53.158),1,"","XECUTABLE HELP","PSJEX") X PSJEX("XECUTABLE HELP") K PSJEX G AMT
 2 I DRGT="AD",$G(P("DTYP"))>1,P(4)'="S",P(23)'="S" K DIR S DIR(0)="53.157,2" S:DRG(4)]"" DIR("B")=DRG(4) D ^DIR Q:$D(DTOUT)!$D(DUOUT)  S:Y DRG(4)=Y
 DRG4 ;

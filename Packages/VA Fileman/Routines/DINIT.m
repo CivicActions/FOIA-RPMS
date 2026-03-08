@@ -1,12 +1,12 @@
-DINIT ;SFISC/GFT,XAK-INITIALIZE VA FILEMAN ;1:06 PM  30 Mar 1999
-V ;;22.0;VA FileMan;;Mar 30, 1999
+DINIT ;SFISC/GFT,XAK-INITIALIZE VA FILEMAN ;5/23/96  10:24 [ 09/09/1998  12:03 PM ]
+V ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+V ;;21.0;VA FileMan;**8**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  D KL^DINIT6
 N ;
  D VERSION N DIFROM S DIFROM=VERSION W !!,X D DT^DICRW
- I $G(^DD("VERSION"))]"",^DD("VERSION")_"z"]](VERSION_"z") D
- . W $C(7),!!,"*** WARNING!!  VA FileMan version "_^DD("VERSION")_" is currently loaded on this system.",!,"This Initialization will bring in VA FileMan version "_VERSION_", an earlier version!!",!!
- S Y=$G(^DD("OS")) I Y,"1,2,3,4,5,6,10,11,12,13,15,"[(Y_",") W $C(7),!!,"Your defined operating system entry "_$P($G(^DD("OS",Y,0)),U)_" does not support the",!,"1995 M Standards.",!!,"You may not initialize VA FileMan V21." G KL^DINIT6
+ I $G(^DD("VERSION"))]]VERSION W $C(7),!!,"*** WARNING!!  VA FileMan version "_^DD("VERSION")_" is currently loaded on this system.",!,"This Initialization will bring in VA FileMan version "_VERSION_", an earlier version!!",!!
+ S Y=$G(^DD("OS")) I Y,"1,2,3,4,5,6,10,11,12,13,15,"[(Y_",") W $C(7),!!,"Your defined operating system entry "_$P($G(^DD("OS",Y,0)),U)_" does not support the",!,"1994 M Standards.",!!,"You may not initialize VA FileMan V21." G KL^DINIT6
 DO W !!,"Initialize VA FileMan now?  NO//" R Y:60 G:Y["^"!("Nn"[$E(Y))!('$T) KL^DINIT6
  I "Yy"'[$E(Y) W !,"Answer YES to begin Initializing VA FileMan" G DO
 NA W !!,"SITE NAME: " I $D(^DD("SITE")) W ^("SITE"),"// "
@@ -18,9 +18,9 @@ NO W !!,"SITE NUMBER: " W:$D(^DD("SITE",1)) ^(1),"// "
  S:X>0 ^DD("SITE")=%X,^DD("SITE",1)=X
  I X'>0 W "  ENTER A NUMBER, CORRESPONDING TO YOUR INSTITUTION" G NO
  ;***** REMOVE AFTER V21 INIT *****
- ;D
- ;. N DIREC F DIREC=0:0 S DIREC=$O(^DI(.84,DIREC)) Q:'DIREC  Q:DIREC>10000  K ^DI(.84,DIREC,5)
- ;. Q
+ D
+ . N DIREC F DIREC=0:0 S DIREC=$O(^DI(.84,DIREC)) Q:'DIREC  Q:DIREC>10000  K ^DI(.84,DIREC,5)
+ . Q
  ;*********************************
  K ^DD(0) D ^DINIT0,^DINIT11B
  D OSETC
@@ -46,9 +46,6 @@ GO S I=$C(126),DIT=$P($H,",",2)
  K ^DIC(.403),^(.404),^(1.2)
  K ^DD(.44),^(.441),^(.4411),^(.447),^(.448),^(.411),^(.42),^(.81),^DIC(.44),^(.81)
  F I=.2,.4,.401,.402,.5,.6,.83,1.1,1.11,1.12,1.13 K ^DIC(I,"%D")
- K ^DIC(.46),^DD(.46),^(.461),^(.463)
- K ^DIC(.11),^(.31) F I=.11,.111,.112,.114,.31,.312 K ^DD(I)
- F I=1.521,1.52101,1.5211,1.5212,1.5213,1.5214,1.5215,1.5216,1.5217,1.5218,1.5219,1.52191,1.52192 K ^DIC(I),^DD(I)
  G ^DINIT0F0
  ;
 OSETC ;BRING IN MUMPS OS, DIALOG & LANGUAGE DD AND DATA FOR FILEMAN
@@ -69,7 +66,7 @@ OSETC ;BRING IN MUMPS OS, DIALOG & LANGUAGE DD AND DATA FOR FILEMAN
  . Q
  ;
  K ^UTILITY(U,$J),^UTILITY("DIK",$J) W !!,"Now loading DIALOG and LANGUAGE Files"
- S DN="^DINIT" F R=1:1:39 D @(DN_$$B36(R)) W "."
+ S DN="^DINIT" F R=1:1:45 D @(DN_$$B36(R)) W "."
  S $P(^DIC(.84,0),U,1,2)="DIALOG^.84",$P(^DI(.84,0),U,1,2)="DIALOG^.84I" I $D(^DIC(.84,0,"GL")) D A1^DINIT3
  S $P(^DIC(.85,0),U,1,2)="LANGUAGE^.85",$P(^DI(.85,0),U,1,2)="LANGUAGE^.85I" I $D(^DIC(.85,0,"GL")) D A1^DINIT3
  F I=.84,.841,.842,.844,.845,.847,.8471,.85 D XX^DINIT3

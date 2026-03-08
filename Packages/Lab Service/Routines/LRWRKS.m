@@ -1,11 +1,14 @@
-LRWRKS ;VA/SLC/RWF - WORK SHEET ACCESSION LIST ;JUL 06, 2010 3:14 PM;
- ;;5.2;LAB SERVICE;**153,358,1027**;NOV 01, 1997
- ;;5.2;LAB SERVICE;**153,358**;Sep 27, 1994
+LRWRKS ;VA/SLC/RWF - WORK SHEET ACCESSION LIST ; 26-Apr-2023 13:40 ; MKK
+ ;;5.2;LAB SERVICE;**153,358,1027,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
  K DIC S DIC="^LRO(68,",DIC(0)="AEMOQ",LREND=0 D ^DIC S LRAA=+Y,LRNAME=$P(Y,U,2) G END:LRAA<1
  K LRSTAR,DIC D STAR^LRWU3:$P(^LRO(68,LRAA,0),U,3)="Y",PHD:'$D(LRSTAR) G END:LREND
 W G END:'$D(^LRO(68,LRAA,1,LRAD,1,0))&'$D(LRSTAR)
  S LRUNC=0,LRTSE=-1
- K DIC W !,"Do you want a specific test?" S %=2 D YN^DICN IF %=1 S DIC="^LAB(60,",DIC(0)="AEMOQ" D ^DIC S LRTSE=+Y
+ ; K DIC W !,"Do you want a specific test?" S %=2 D YN^DICN IF %=1 S DIC="^LAB(60,",DIC(0)="AEMOQ" D ^DIC S LRTSE=+Y
+ K DIC W !,"Do you want a specific test?" S %=2 D YN^DICN IF %=1 S DIC="^LAB(60,",DIC(0)="AEMOQ",DIC("S")="I +$G(^(.3))=0" D ^DIC S LRTSE=+Y  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  W !,"Do you want only incomplete entries?" S %=1 D YN^DICN S:%=2 LRUNC=1
  W !,"Do you want a long list?" S %=2 D YN^DICN S LRSHORT=(%=2)
  S %ZIS="Q" D ^%ZIS G END:POP

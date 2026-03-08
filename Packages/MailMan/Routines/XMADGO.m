@@ -1,7 +1,5 @@
-XMADGO ;ISC-SF/GMB-Start Background Message Delivery ;04/17/2002  07:25
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CAP
- ;
+XMADGO ;(WASH ISC)/CAP-Start Background Message Delivery ;05/06/99  15:43
+ ;;7.1;MailMan;**5,27,50**;Jun 02, 1994
  ; Entry points (DBIA 10068):
  ; ZTSK     Start tasks to deliver messages in local delivery queues
 ZTSK ; Start Background Delivery Processes

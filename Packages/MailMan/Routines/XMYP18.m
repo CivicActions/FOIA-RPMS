@@ -1,0 +1,10 @@
+XMYP18 ;ISC-SF/GMB-Post- Init ;04/28/2003  10:24
+ ;;8.0;MailMan;**18**;Jun 28, 2002
+POST ; Post-init
+ Q:^XMB("NETNAME")'[".VA.GOV"
+ S ^XMB(1,1,3)=1 ; field 31: AUTO-FORWARD LIMITED?
+ ; field 31.1: AUTO-FORWARD APPROVED SITE
+ N XMFDA
+ S XMFDA(4.33,"+1,1,",.01)=".VA.GOV"
+ D UPDATE^DIE("","XMFDA")
+ Q

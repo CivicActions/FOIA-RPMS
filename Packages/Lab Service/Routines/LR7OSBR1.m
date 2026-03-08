@@ -1,5 +1,5 @@
 LR7OSBR1 ;slc/dcm - Silent BB rpt cont. ;8/11/97
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**121,201,228,230,292**;Sep 27, 1994
  ;from LRBLPBR
  ;Reference to GETS^DIQ supported by IA #2056

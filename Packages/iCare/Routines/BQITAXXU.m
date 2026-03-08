@@ -1,5 +1,5 @@
-BQITAXXU ;GDHSD/HS/ALA-Update Taxonomies for pointers ; 17 Dec 2015  4:08 PM
- ;;2.7;ICARE MANAGEMENT SYSTEM;;Dec 19, 2017;Build 23
+BQITAXXU ;GDIT/HS/ALA-Update Taxonomies for pointers ; 17 Dec 2015  4:08 PM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**2**;Mar 01, 2021;Build 13
  ;
  ;Repoint taxonomies in 90507.8
  NEW ALRT,TXN,TAX,ATXN,TYP
@@ -54,13 +54,13 @@ BQITAXXU ;GDHSD/HS/ALA-Update Taxonomies for pointers ; 17 Dec 2015  4:08 PM
  ;
 LTAX ;EP  Add Lab Taxonomies to ^ATXLAB
  NEW X,DIC,DLAYGO,DA,DR,DIE,Y,LTAX,D0,DINUM,TAXX,ATXN
- S DIC="^ATXLAB(",DIC(0)="L",DLAYGO=9002228
+ S DIC="^ATXLAB(",DIC(0)="FL",DLAYGO=9002228
  ; Loop through the Taxonomies
  D LDLAB(.LTAX)
  F BJ=1:1 Q:'$D(LTAX(BJ))  S X=LTAX(BJ) D
  . I $D(^ATXLAB("B",X)) Q  ; Skip pre-existing Lab taxonomies
  . D ^DIC S DA=+Y
- . I DA<1 Q
+ . I DA<1 K DO,DD D FILE^DICN S DA=+Y I DA=-1 Q
  . S BQTXUP(9002228,DA_",",.02)=$P(X," ",2,999)
  . S BQTXUP(9002228,DA_",",.05)=DUZ
  . S BQTXUP(9002228,DA_",",.06)=DT
@@ -69,10 +69,11 @@ LTAX ;EP  Add Lab Taxonomies to ^ATXLAB
  . S BQTXUP(9002228,DA_",",.08)="B"
  . D FILE^DIE("E","BQTXUP")
  ;
+ S BQIDA=1
  F BJ=1:1 Q:'$D(LTAX(BJ))  S TAXX=LTAX(BJ) D
  . S TXN=$O(^BQI(90508,BQIDA,10,"B",TAXX,"")) I TXN'="" Q
  . NEW DA,DIC,DLAYGO,IENS
- . S DA(1)=BQIDA,DIC(0)="L",DLAYGO=90508.03,DIC="^BQI(90508,"_DA(1)_",10,",X=TAXX
+ . S DA(1)=BQIDA,DIC(0)="FL",DLAYGO=90508.03,DIC="^BQI(90508,"_DA(1)_",10,",X=TAXX
  . D ^DIC
  . S DA=+Y I DA=-1 Q
  . S IENS=$$IENS^DILF(.DA)
@@ -90,7 +91,4 @@ LDLAB(ARRAY) ;EP;Load site-populated Lab tests
  Q
  ;
 LAB ;EP;LAB TESTS (SITE-POPULATED)
- ;;BQI MMR TITER TAX
- ;;BQI HEP A TITER TAX
- ;;BQI HEP B TITER TAX
- ;;BQI VARICELLA TITER TAX
+ ;;BQI COVID BRKTHRU TAX 

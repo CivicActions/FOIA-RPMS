@@ -1,5 +1,5 @@
 LA7COBX ;VA/DALOI/JMC - LAB OBX Segment message builder ; 22-Oct-2013 09:22 ; MAW
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,1018,64,1027,68,1033**;NOV 01, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,1018,64,1027,68,1033,1047**;NOV 01, 1997;Build 21
  ;
  ; Reference to $$LOSVUID^HDISVAP supported by DBIA #4801
  ;
@@ -176,6 +176,7 @@ OBX8(LA7FLAG) ; Build OBX-8 sequence - Abnormal flags
  ;
  S LA7Y=$TR(LA7FLAG,"*",$E(LA7FLAG,1)) ; abnormal flag
  Q $S(LA7Y]"":LA7Y,1:"N")  ;MU2 send normal if no flag
+ Q $S(LA7Y]"":LA7Y,1:"")  ;01132020 maw 2015 chit wants blank for scenario 5B
  ;
  ;
 OBX11(LA7FLAG) ; Build OBX-11 sequence - Observation result status

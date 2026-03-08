@@ -1,5 +1,5 @@
-RARTR2 ;HIRMFO/GJC-Queue/print Radiology Reports (utility) ;3/11/96
- ;;5.0;Radiology/Nuclear Medicine;**15,27,1001**;Mar 16, 1998
+RARTR2 ;HIRMFO/GJC ihs/cmi/maw-Queue/print Radiology Reports (utility) ; Jul 27, 2023@14:18
+ ;;5.0;Radiology/Nuclear Medicine;**15,27,1001,1007,1009,1010**;Mar 16, 1998;Build 13
 SETDIV ;get division params
  S RAMDV="" N RADTI,RACNI,RADTE,RACN,RADATE,Y,RADFN
  S Y=RARPT D RASET^RAUTL2 S LOC=$P(^RADPT(RADFN,"DT",RADTI,0),U,4)
@@ -13,11 +13,29 @@ WRITE ; Write out Report Text, Impression Text, Clinical History and
  ; Get Additional Clinical History, Report Text and Impression text
  ; from file 74
  I RAP="AH"!(RAP="R")!(RAP="I") D
+ . ;
+ . D WRTTR2^BRARPT7    ;DAY/JSL - P1010 add a new report display 
+ . Q                   ;DAY/JSL - P1010 Quit
+ . ; 
+ . ; DAY/JSL - P1010 The rest of the loop lines are not executed
  . S ZRAP=$S(RAP="AH":"H",1:RAP)
- . F  S RAV=$O(^RARPT(RARPT,ZRAP,RAV)) Q:RAV'>0!($D(RAOOUT))  S RAXX=^(RAV,0) D HANG:($Y+RAFOOT+4)>IOSL Q:$D(RAOOUT)  D HD^RARTR:($Y+RAFOOT+4)>IOSL S X=RAXX D ^DIWP
+ . ;
+ . ;IHS/CMI/DAY - Patch 1007 - Print Header on Page 2 of Reports
+ . ;F  S RAV=$O(^RARPT(RARPT,ZRAP,RAV)) Q:RAV'>0!($D(RAOOUT))  S RAXX=^(RAV,0) D HANG:($Y+RAFOOT+4)>IOSL Q:$D(RAOOUT)  D HD^RARTR:($Y+RAFOOT+4)>IOSL S X=RAXX D ^DIWP
+ . F  S RAV=$O(^RARPT(RARPT,ZRAP,RAV)) Q:RAV'>0  D  Q:$D(RAOOUT)
+ . . S RAXX=^RARPT(RARPT,ZRAP,RAV,0)
+ . . I ($Y+RAFOOT+4)>IOSL D  Q:$D(RAOOUT)
+ . . . D HANG
+ . . . Q:$D(RAOOUT)
+ . . . I $E(IOST)="P" D HD^RARTR
+ . . S DIWF="|N"  ;cmi/maw 20210623 patch 1009 CR10054
+ . . S X=RAXX
+ . . D ^DIWP
+ ;End Patch
+ ;
  ; Get Clinical History from file 70
  I RAP="H" D
- . F  S RAV=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H",RAV)) Q:RAV'>0!($D(RAOOUT))  S RAXX=^(RAV,0) D HANG:($Y+RAFOOT+4)>IOSL Q:$D(RAOOUT)  D HD^RARTR:($Y+RAFOOT+4)>IOSL S X=RAXX D ^DIWP
+ . F  S RAV=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H",RAV)) Q:RAV'>0!($D(RAOOUT))  S RAXX=^(RAV,0) D HANG:($Y+RAFOOT+4)>IOSL Q:$D(RAOOUT)  D HD^RARTR:($Y+RAFOOT+4)>IOSL S X=RAXX,DIWF="|N" D ^DIWP
  D ^DIWW:$D(RAXX)
  Q
 FOOT ; footer
@@ -43,18 +61,27 @@ HANG ; end-of-page prompt
  Q
 SET ; Set up our TMP global for mailman
  N DIWF,DIWL,DIWR,RAX,X,RAPX S RAX=0
- S DIWF="",DIWL=5,DIWR=70 K ^UTILITY($J,"W")
+ ;S DIWF="",DIWL=5,DIWR=70 K ^UTILITY($J,"W")  ;cmi/maw patch 1009 orig line
+ S DIWF="",DIWL=1,DIWR=75 K ^UTILITY($J,"W")  ;cmi/maw patch 1009 20210519 CR10054
  ; Get Additional Clinical History, Report Text and Impression text
  ; from file 74
  I RAP="AH"!(RAP="R")!(RAP="I") D
+ . ;
+ . ;CMI/BJI/DAY - add new report display
+ . D SETTR2^BRARPT7 Q
+ . ;
  . S RAPX=$S(RAP="AH":"H",1:RAP)
  . F  S RAX=$O(^RARPT(RARPT,RAPX,RAX)) Q:RAX'>0  D
- . . S X=$G(^RARPT(RARPT,RAPX,RAX,0)) D ^DIWP
+ . . S X=$G(^RARPT(RARPT,RAPX,RAX,0))
+ . . ;S DIWF="|N"  ;cmi/maw 20210623 patch 1009 CR10054  20221214 1010 removed
+ . . D ^DIWP
  . Q
  ; Get Clinical History from file 70
  I RAP="H" D
  . F  S RAX=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H",RAX)) Q:RAX'>0  D
- . . S X=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H",RAX,0)) D ^DIWP
+ . . S X=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H",RAX,0))
+ . . ;S DIWF="|N"  ;cmi/maw 20210623 patch 1009 CR10054 20221214 1010 removed
+ . . D ^DIWP
  . Q
  S RAX=0 F  S RAX=$O(^UTILITY($J,"W",DIWL,RAX)) Q:RAX'>0  D
  . S X=$G(^UTILITY($J,"W",DIWL,RAX,0))

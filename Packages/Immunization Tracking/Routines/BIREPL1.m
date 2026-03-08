@@ -1,5 +1,5 @@
 BIREPL1 ;IHS/CMI/MWR - REPORT, ADULT IMM; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**26,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW OR PRINT ADULT IMMUNIZATION REPORT.
  ;
@@ -29,7 +29,9 @@ START(BIX) ;EP
  S:$G(BIUP)="" BIUP="u"
  ;
  D SETVARS^BIUTL5 N VALMCNT
+ S BISPD=BIX
  I $G(BIX)="PRINT" D PRINT,RESET^BIREPL Q
+ I $G(BIX)="CSV" D DELIM^BIREPCSV("BIREPL1","ADULT IMMUNIZATION REPORT","ADL"),RESET^BIREPL Q  ;IHS/LAB patch 31 delimited output
  ;
  ;---> Set BIRTN in case user runs Patient List then needs to return
  ;---> to INIT here.
@@ -187,3 +189,103 @@ ERROR(BIERR) ;EP
  ;
  D ERRCD^BIUTL2($G(BIERR),,1) S BIPOP=1
  Q
+PCV13(BIDFN,BICPTI,BIQDT) ;EP
+ ;---> Return number of HPV's patient received, concat
+ ;---> Parameters:
+ ;     1 - BIDFN  (req) Patient DFN
+ ;     2 - BICPTI (opt) 1=Include CPT Coded Visits, 0=Ignore CPT.
+ ;     3 - BIQDT  (opt) Quarter Ending Date (ignore Visits after this date).
+ ;
+ ;---> Check V Imms for PCV13's.
+ N BICVXS,BIDATE,BIDOSES,I,J,BIABD,T,D,BD,ED,G,V,X
+ S BIDATE=0,BIDOSES=0,J=0
+ S:('$G(BIQDT)) BIQDT=$G(DT)
+ S BICVXS="100,133,152"
+ S BIDATE=$$LASTIMM^BIUTL11(BIDFN,BICVXS,BIQDT)
+ ;set up array by date
+ F I=1:1 S J=$P(BIDATE,",",I) Q:J=""  S BIABD(J)=""
+ ;
+ ;---> Check (if requested) V CPTs for HPV's.
+ D:$G(BICPTI)
+ .N BICPTS,J S J=0
+ .S BICPTS="90669,90670"
+ .S BIDATE=$$LASTCPT^BIUTL11(BIDFN,BICPTS,BIQDT,1)
+ .F I=1:1 S J=$P(BIDATE,",",I) Q:J=""  S BIABD(J)=""
+ ;
+ S J=0 F  S J=$O(BIABD(J)) Q:J'=+J  S BIDOSES=BIDOSES+1
+ Q BIDOSES
+PCV15(BIDFN,BICPTI,BIQDT) ;EP
+ ;---> Return number of HPV's patient received, concat
+ ;---> Parameters:
+ ;     1 - BIDFN  (req) Patient DFN
+ ;     2 - BICPTI (opt) 1=Include CPT Coded Visits, 0=Ignore CPT.
+ ;     3 - BIQDT  (opt) Quarter Ending Date (ignore Visits after this date).
+ ;
+ ;---> Check V Imms for PCV13's.
+ N BICVXS,BIDATE,BIDOSES,I,J,BIABD,T,D,BD,ED,G,V,X
+ S BIDATE=0,BIDOSES=0,J=0
+ S:('$G(BIQDT)) BIQDT=$G(DT)
+ S BICVXS="215"
+ S BIDATE=$$LASTIMM^BIUTL11(BIDFN,BICVXS,BIQDT)
+ ;set up array by date
+ F I=1:1 S J=$P(BIDATE,",",I) Q:J=""  S BIABD(J)=""
+ ;
+ ;---> Check (if requested) V CPTs for HPV's.
+ D:$G(BICPTI)
+ .N BICPTS,J S J=0
+ .S BICPTS="90671"
+ .S BIDATE=$$LASTCPT^BIUTL11(BIDFN,BICPTS,BIQDT,1)
+ .F I=1:1 S J=$P(BIDATE,",",I) Q:J=""  S BIABD(J)=""
+ ;
+ S J=0 F  S J=$O(BIABD(J)) Q:J'=+J  S BIDOSES=BIDOSES+1
+ Q BIDOSES
+PCV20(BIDFN,BICPTI,BIQDT) ;EP
+ ;---> Return number of HPV's patient received, concat
+ ;---> Parameters:
+ ;     1 - BIDFN  (req) Patient DFN
+ ;     2 - BICPTI (opt) 1=Include CPT Coded Visits, 0=Ignore CPT.
+ ;     3 - BIQDT  (opt) Quarter Ending Date (ignore Visits after this date).
+ ;
+ ;---> Check V Imms for PCV13's.
+ N BICVXS,BIDATE,BIDOSES,I,J,BIABD,T,D,BD,ED,G,V,X
+ S BIDATE=0,BIDOSES=0,J=0
+ S:('$G(BIQDT)) BIQDT=$G(DT)
+ S BICVXS="216"
+ S BIDATE=$$LASTIMM^BIUTL11(BIDFN,BICVXS,BIQDT)
+ ;set up array by date
+ F I=1:1 S J=$P(BIDATE,",",I) Q:J=""  S BIABD(J)=""
+ ;
+ ;---> Check (if requested) V CPTs for HPV's.
+ D:$G(BICPTI)
+ .N BICPTS,J S J=0
+ .S BICPTS="90677"
+ .S BIDATE=$$LASTCPT^BIUTL11(BIDFN,BICPTS,BIQDT,1)
+ .F I=1:1 S J=$P(BIDATE,",",I) Q:J=""  S BIABD(J)=""
+ ;
+ S J=0 F  S J=$O(BIABD(J)) Q:J'=+J  S BIDOSES=BIDOSES+1
+ Q BIDOSES
+PPSV23(BIDFN,BICPTI,BIQDT) ;EP
+ ;---> Return number of HPV's patient received, concat
+ ;---> Parameters:
+ ;     1 - BIDFN  (req) Patient DFN
+ ;     2 - BICPTI (opt) 1=Include CPT Coded Visits, 0=Ignore CPT.
+ ;     3 - BIQDT  (opt) Quarter Ending Date (ignore Visits after this date).
+ ;
+ ;---> Check V Imms for PCV13's.
+ N BICVXS,BIDATE,BIDOSES,I,J,BIABD,T,D,BD,ED,G,V,X
+ S BIDATE=0,BIDOSES=0,J=0
+ S:('$G(BIQDT)) BIQDT=$G(DT)
+ S BICVXS="33,109"
+ S BIDATE=$$LASTIMM^BIUTL11(BIDFN,BICVXS,BIQDT)
+ ;set up array by date
+ F I=1:1 S J=$P(BIDATE,",",I) Q:J=""  S BIABD(J)=""
+ ;
+ ;---> Check (if requested) V CPTs for HPV's.
+ D:$G(BICPTI)
+ .N BICPTS,J S J=0
+ .S BICPTS="90732,G0009,G8115,G9279"
+ .S BIDATE=$$LASTCPT^BIUTL11(BIDFN,BICPTS,BIQDT,1)
+ .F I=1:1 S J=$P(BIDATE,",",I) Q:J=""  S BIABD(J)=""
+ ;
+ S J=0 F  S J=$O(BIABD(J)) Q:J'=+J  S BIDOSES=BIDOSES+1
+ Q BIDOSES

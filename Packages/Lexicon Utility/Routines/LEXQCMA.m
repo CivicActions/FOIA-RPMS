@@ -1,5 +1,5 @@
 LEXQCMA ;ISL/KER - Query - CPT Modifiers - Ask ;10/30/2008
- ;;2.0;LEXICON UTILITY;**62**;Sep 23, 1996;Build 10
+ ;;2.0;LEXICON UTILITY;**62**;Sep 23, 1996;Build 15
  ;               
  ; Global Variables
  ;    ^DIC(81.3           ICR   4492

@@ -1,0 +1,85 @@
+ADSIZPR ;GDIT/HS/BEE-ADS IZ Parameter Export ; 17 Nov 2020  3:00 PM
+ ;;1.0;DISTRIBUTION MANAGEMENT;**1,6**;Apr 23, 2020;Build 8
+ ;
+ ;This option will loop through entries in the IZ PARAMETERS (#90480) file
+ ;and send state exchange information to the central repository
+ ;
+EN ;EP - Front end for export process
+ ;
+ NEW FAC,IZIEN,SASUFAC,SDBID,SINFO,STR
+ N ADSDT,CNT S ADSDT=$$NOW^XLFDT,CNT=0   ;IHS/GDIT/AEF ADS*1.0*6 FID107834; NEW LINE
+ ;
+ ;Retrieve the default facility
+ S FAC=$$FACILITY()
+ ;
+ ;Get the site ASUFAC and DBID
+ S SINFO=$$SITE()
+ S SASUFAC=$P(SINFO,U)  ;Site ASUFAC
+ S SDBID=$P(SINFO,U,2)  ;Site DBID
+ ;
+ ;Loop through the file entries
+ S IZIEN=0 F  S IZIEN=$O(^BYIMPARA(IZIEN)) Q:'IZIEN  D
+ . ;
+ . NEW PSNAME,PSAGE,PSVRSN,PSSTATE,PAIEN
+ . ;
+ . ;Retrieve primary state fields
+ . S PSNAME=$$GET1^DIQ(90480,IZIEN_",",.01,"E") Q:PSNAME=""  ;SITE NAME
+ . S PSAGE=$$GET1^DIQ(90480,IZIEN_",",.06,"E")  ;AGES TO EXPORT
+ . S PSVRSN=$$GET1^DIQ(90480,IZIEN_",",.11,"E")  ;VERSION IN USE
+ . S PSSTATE=$$GET1^DIQ(90480,IZIEN_",",.14,"E") S:PSSTATE="" PSSTATE="UNKNOWN"  ;NAME OF STATE FOR EXCHANGE
+ . ;
+ . ;Set up the primary entry
+ . ;BEGIN IHS/GDIT/AEF ADS*1.0*6 FID110314 ADD GUID, DOMAIN NAME
+ . ;D LOG^BSTSAPIL("IZP",42,"STATE",$$TFRMT^ADSRPT(FAC_"|"_PSNAME_"||"_PSAGE_"|"_PSVRSN_"|"_PSSTATE_"|"_"P"_"|"_SASUFAC_"|"_SDBID))
+ . S STR=FAC_"|"_PSNAME_"||"_PSAGE_"|"_PSVRSN_"|"_PSSTATE_"|"_"P"_"|"_SASUFAC_"|"_SDBID_"|"_$P($$SITE^ADSUTL,U,4)_"|"_$P($$SITE^ADSUTL,U,5)
+ . D LOG^BSTSAPIL("IZP",42,"STATE",$$TFRMT^ADSRPT(STR))
+ . ;END IHS/GDIT/AEF ADS*1.0*6 FID110314 ADD GUID, DOMAIN NAME
+ . S CNT=CNT+1   ;IHS/GDIT/AEF ADS*1.0*6 FID107834; NEW LINE
+ . ;
+ . ;Loop through additional states
+ . S PAIEN=0 F  S PAIEN=$O(^BYIMPARA(IZIEN,3,PAIEN)) Q:'PAIEN  D
+ .. ;
+ .. NEW ASNAME,ASAGE,ASVRSN,ASSTATE,DA,IENS
+ .. ;
+ .. ;Retrieve additional state fields
+ .. S DA(1)=IZIEN,DA=PAIEN,IENS=$$IENS^DILF(.DA)
+ .. S ASNAME=$$GET1^DIQ(90480.03,IENS,.01,"E") Q:ASNAME=""  ;Additional SITE NAME
+ .. S ASAGE=$$GET1^DIQ(90480.03,IENS,.06,"E")  ;Additional AGES TO EXPORT
+ .. S ASVRSN=$$GET1^DIQ(90480.03,IENS,.11,"E")  ;Additional VERSION IN USE
+ .. S ASSTATE=$$GET1^DIQ(90480.03,IENS,.14,"E") S:ASSTATE="" ASSTATE="UNKNOWN" ;Additional NAME OF STATE FOR EXCHANGE
+ .. ;
+ .. ;Set up the secondary entry
+ .. ;BEGIN IHS/GDIT/AEF ADS*1.0*6 FID110314 ADD GUID, DOMAIN NAME
+ .. ;D LOG^BSTSAPIL("IZP",42,"STATE",$$TFRMT^ADSRPT(FAC_"|"_PSNAME_"|"_ASNAME_"|"_ASAGE_"|"_ASVRSN_"|"_ASSTATE_"|"_"A"_"|"_SASUFAC_"|"_SDBID))
+ .. S STR=FAC_"|"_PSNAME_"|"_ASNAME_"|"_ASAGE_"|"_ASVRSN_"|"_ASSTATE_"|"_"A"_"|"_SASUFAC_"|"_SDBID_"|"_$P($$SITE^ADSUTL,U,4)_"|"_$P($$SITE^ADSUTL,U,4,5)
+ .. D LOG^BSTSAPIL("IZP",42,"STATE",$$TFRMT^ADSRPT(STR))
+ .. ;;END IHS/GDIT/AEF ADS*1.0*6 FID110314 ADD GUID, DOMAIN NAME
+ .. S CNT=CNT+1   ;IHS/GDIT/AEF ADS*1.0*6 FID107834; NEW LINE
+ ;
+ ;IHS/GDIT/AEF ADS*1.0*6 FID107834; New lines below
+ ;Update ADS EXPORT LOG file:
+ D UPDTLOG^ADSUTL(ADSDT,"IZ",CNT)
+ Q
+ ;
+FACILITY() ;Get the default facility (site #)
+ ;
+ NEW FAC
+ ;
+ S FAC=$P($$SITE^VASITE(),U,3)
+ S:FAC="" FAC="*Unknown*"
+ Q FAC
+ ;
+SITE() ;Get the site ASUFAC and DBID
+ ;
+ NEW RSIEN,RSLOC,ASUFAC,DBID
+ ;
+ ;Get the location from RPMS SITE
+ S RSIEN=$O(^AUTTSITE(0)) I RSIEN="" Q ""
+ S RSLOC=$$GET1^DIQ(9999999.39,RSIEN_",",.01,"I") I RSLOC="" Q ""
+ ;
+ ;Get the site ASUFAC and DBID
+ S ASUFAC=$$GET1^DIQ(9999999.06,RSLOC_",",.12,"E")
+ S RSLOC=$$GET1^DIQ(9999999.06,RSLOC_",",.32,"E")
+ ;
+ ;Return the values
+ Q ASUFAC_U_RSLOC

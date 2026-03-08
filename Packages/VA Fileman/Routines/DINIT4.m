@@ -1,6 +1,7 @@
-DINIT4 ;SFISC/GFT-INITIALIZE VA FILEMAN ;8/31/2009
- ;;22.0;VA FileMan;**162**;Mar 30, 1999;Build 21
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DINIT4 ;SFISC/GFT-INITIALIZE VA FILEMAN ;9/19/91  11:49 AM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 DD F I=1:1 S X=$E($T(DD+I),4,999) G ^DINIT41:X?.P S ^DD("FUNC",I,0)=$P(X,";",1),Y=1 F DU=1,2,3,9,10 S Y=Y+1 I $P(X,";",Y)]"" S ^(DU)=$P(X,";",Y)
  ;;SQUAREROOT;D SQR^DIXC S X=$S(X'>0:"",1:Y);;;
  ;;TIME;S X=$E($P(X,".",2)_"0000",1,4),%=X>1159 S:X>1259 X=X-1200 S X=X\100_":"_$E(X#100+100,2,3)_" "_$E("AP",%+1)_"M";;;
@@ -25,8 +26,8 @@ DD F I=1:1 S X=$E($T(DD+I),4,999) G ^DINIT41:X?.P S ^DD("FUNC",I,0)=$P(X,";",1),
  ;;NUMYEAR;S:X X=$E(X,2,3);^D;;YEAR NUMBER (00-99) FOR A DATE
  ;;NUMDATE;S:X X=$E(X,4,5)_"/"_$E(X,6,7)_"/"_$E(X,2,3);^D;;DATE IN 'NN/NN/NN' FORMAT
  ;;REPLACE;X "F %=0:0 S %=$F(X2,X1,%) Q:%<2  S X2=$E(X2,1,%-$L(X1)-1)_X_$E(X2,%,999),%=%-$L(X1)+$L(X)" S X=X2;;3;THE 1ST ARGUMENT, WITH ALL OCCURRENCES OF THE 2ND ARGUMENT REPLACED BY THE 3RD
- ;;NOW;N %I,%H,% D NOW^%DTC S X=%;D;0;CURRENT DATE/TIME
- ;;TODAY;N %I,%H,% D NOW^%DTC;D;0;CURRENT DATE
+ ;;NOW;S %=$P($H,",",2),X=DT_(%\60#60/100+(%\3600)+(%#60/10000)/100);D;0;CURRENT DATE/TIME
+ ;;TODAY;S X=DT;D;0;CURRENT DATE
  ;;PAGE;S X=$S($D(DC)#2:DC,1:"");;0;PAGE NUMBER (OF OUTPUT)
  ;;SETTAB;S DIWT=X,X="" F %=1:1 S Y="X"_% Q:'$D(@Y)  S DIWT=@Y_","_DIWT;;VARIABLE;SET TAB STOPS;W
  ;;RIGHT-JUSTIFY;S X="" S:'$D(DIWF) DIWF="" S:DIWF'["R" DIWF=DIWF_"R";;0;;W

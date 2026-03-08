@@ -1,5 +1,5 @@
-BGPDPA ; IHS/CMI/LAB - IHS gpra print ;
- ;;7.0;IHS CLINICAL REPORTING;;JAN 24, 2007
+BGPDPA ; IHS/CMI/LAB - IHS gpra print ;  [ 08/19/02  3:57 PM ]
+ ;;1.0;IHS GPRA REPORTING;**1**;JUN 12, 2002
  ;
  ;
 IA ;EP

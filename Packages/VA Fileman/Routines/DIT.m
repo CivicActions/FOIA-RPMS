@@ -1,5 +1,6 @@
-DIT ;SFISC/GFT-GET XFR ANSWERS ;4/6/94  13:03
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIT ;SFISC/GFT-GET XFR ANSWERS ;4/6/94  13:03 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 0 S DIC="^DOPT(""DIT""," G OPT:$D(^DOPT("DIT",2)) S ^(0)="TRANSFER OPTION^1.01" K ^("B")
  F X=1,2 S ^DOPT("DIT",X,0)=$P("TRANSFER^COMPARE/MERGE",U,X)_" FILE ENTRIES"

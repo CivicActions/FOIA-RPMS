@@ -1,5 +1,5 @@
 ABMDTIMR ; IHS/ASDST/DMJ - INSURER MERGE ; 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**9**;APR 05, 2002
  ;
  ; IHS/SD/SDR - v2.5 p9 - IM17864
  ;   Remove merge changes to 3P Bill file
@@ -54,6 +54,7 @@ PTR S DIE="^AUTNINS(",DA=ABM("X"),DR=".17////0;.27////"_ABM("Y")_";.41////MERGED
  S DA(1)="" F  S DA(1)=$O(^AUPNPRVT("I",ABM("X"),DA(1))) Q:'DA(1)  D
  .S DA="" F  S DA=$O(^AUPNPRVT("I",ABM("X"),DA(1),DA)) Q:'DA  S DIE="^AUPNPRVT("_DA(1)_",11,",DR=".01///"_ABM("Y") D ^ABMDDIE K DR
  S DA="" F  S DA=$O(^AUPN3PPH("E",ABM("X"),DA)) Q:'DA  S DIE="^AUPN3PPH(",DR=".03////"_ABM("Y") D ^ABMDDIE K DR
+ ;S DA="" F  S DA=$O(^ABMDBILL(DUZ(2),"AJ",ABM("X"),DA)) Q:'DA  S DIE="^ABMDBILL(DUZ(2),",DR=".08////"_ABM("Y") D ^ABMDDIE K DR  ;abm*2.5*9 IM17864
  S DA="" F  S DA=$O(^AUTTPIC("C",ABM("X"),DA)) Q:'DA  S DIE="^AUTTPIC(",DR=".02////"_ABM("Y") D ^ABMDDIE K DR
  S DA="" F  S DA=$O(^AUTNEMPL("AI",ABM("X"),DA)) Q:'DA  S DIE="^AUTNEMPL(",DR=".08////"_ABM("Y") D ^ABMDDIE K DR
  S DA="" F  S DA=$O(^ABPVFAC("I",ABM("X"),DA)) Q:'DA  S DIE="^ABPVFAC(",DR="7////"_ABM("Y") D ^ABMDDIE K DR

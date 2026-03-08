@@ -1,5 +1,6 @@
-DINIT001 ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ;11:25 AM  22 Aug 2006
- ;;22.0;VA FileMan;**150**;Mar 30, 1999;Build 2
+DINIT001 ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS  [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
@@ -26,23 +27,19 @@ Q Q
  ;;^DIC(.84,"%D",8,0)
  ;;=reserved for VA FileMan.
  ;;^DD(.84,0)
- ;;=FIELD^^8^11
+ ;;=FIELD^^1.2^10
  ;;^DD(.84,0,"DT")
- ;;=2960426
+ ;;=2940526
  ;;^DD(.84,0,"ID","WRITE")
- ;;=N DIALID S DIALID(1)=$P($G(^(0)),U,5) S:DIALID(1)="" DIALID=+$O(^(2,0)),DIALID(1)=$E($G(^(DIALID,0)),1,42) S DIALID(1,"F")="?10" D EN^DDIOL(.DIALID)
+ ;;=N DIALID S DIALID=$O(^(2,0)) S:DIALID DIALID(1)=$E($G(^(DIALID,0)),1,42),DIALID(1,"F")="?10" D EN^DDIOL(.DIALID)
  ;;^DD(.84,0,"IX","B",.84,.01)
  ;;=
  ;;^DD(.84,0,"IX","C",.84,1.2)
  ;;=
- ;;^DD(.84,0,"IX","D",.84,1.3)
- ;;=
  ;;^DD(.84,0,"NM","DIALOG")
  ;;=
- ;;^DD(.84,0,"PT",1.52192,4)
- ;;=
  ;;^DD(.84,.01,0)
- ;;=DIALOG NUMBER^RNJ14,3X^^0;1^K:+X'=X!(X>9999999999.999)!(('$G(DIFROM))&(X<10000.001))!(X?.E1"."4N.N) X S:$G(X) DINUM=X
+ ;;=DIALOG NUMBER^RNJ13,3X^^0;1^K:+X'=X!(X>999999999.999)!(('$G(DIFROM))&(X<10000.001))!(X?.E1"."4N.N) X S:$G(X) DINUM=X
  ;;^DD(.84,.01,1,0)
  ;;=^.1
  ;;^DD(.84,.01,1,1,0)
@@ -52,7 +49,7 @@ Q Q
  ;;^DD(.84,.01,1,1,2)
  ;;=K ^DI(.84,"B",$E(X,1,30),DA)
  ;;^DD(.84,.01,3)
- ;;=Type a Number between 10000.001 and 9999999999.999, up to 3 Decimal Digits
+ ;;=Type a Number between 10000.001 and 999999999.999, up to 3 Decimal Digits
  ;;^DD(.84,.01,21,0)
  ;;=^^1^1^2940523^
  ;;^DD(.84,.01,21,1,0)
@@ -111,28 +108,6 @@ Q Q
  ;;=filled in for each entry on this file.
  ;;^DD(.84,1.2,"DT")
  ;;=2940623
- ;;^DD(.84,1.3,0)
- ;;=SHORT DESCRIPTION^F^^0;5^K:$L(X)>42!($L(X)<1) X
- ;;^DD(.84,1.3,1,0)
- ;;=^.1
- ;;^DD(.84,1.3,1,1,0)
- ;;=.84^D
- ;;^DD(.84,1.3,1,1,1)
- ;;=S ^DI(.84,"D",$E(X,1,30),DA)=""
- ;;^DD(.84,1.3,1,1,2)
- ;;=K ^DI(.84,"D",$E(X,1,30),DA)
- ;;^DD(.84,1.3,1,1,"DT")
- ;;=2960426
- ;;^DD(.84,1.3,3)
- ;;=Description used to identify entry on lookup.  Answer must be 1-42 characters in length.
- ;;^DD(.84,1.3,21,0)
- ;;=^^2^2^2960426^
- ;;^DD(.84,1.3,21,1,0)
- ;;=Short description is used to identify an entry on lookup.  The "WRITE"
- ;;^DD(.84,1.3,21,2,0)
- ;;=identifier will display this description if it is not null.
- ;;^DD(.84,1.3,"DT")
- ;;=2960426
  ;;^DD(.84,2,0)
  ;;=DESCRIPTION^.842^^1;0
  ;;^DD(.84,2,21,0)
@@ -163,35 +138,3 @@ Q Q
  ;;=TEXT^.844^^2;0
  ;;^DD(.84,4,21,0)
  ;;=^^7^7^2941122^
- ;;^DD(.84,4,21,1,0)
- ;;=Actual text of the message.  If parameters (variable pieces of text) are
- ;;^DD(.84,4,21,2,0)
- ;;=to be inserted into the dialogue when the message is built, the parameter
- ;;^DD(.84,4,21,3,0)
- ;;=will appear as a 'window' in this TEXT field, surrounded by vertical bars.
- ;;^DD(.84,4,21,4,0)
- ;;=The data within the 'window' will represent a subscript of the input
- ;;^DD(.84,4,21,5,0)
- ;;=parameter list that is passed to BLD^DIALOG or $$EZBLD^DIALOG when
- ;;^DD(.84,4,21,6,0)
- ;;=building the message. This same subscript should be used as the .01 of the
- ;;^DD(.84,4,21,7,0)
- ;;=PARAMETER field in this file to document the parameter.
- ;;^DD(.84,5,0)
- ;;=PARAMETER^.845^^3;0
- ;;^DD(.84,6,0)
- ;;=POST MESSAGE ACTION^K^^6;E1,245^K:$L(X)>245 X D:$D(X) ^DIM
- ;;^DD(.84,6,3)
- ;;=This is Standard MUMPS code.  This code will be executed whenever this message is retrieved through a call to BLD^DIALOG or $$EZBLD^DIALOG.
- ;;^DD(.84,6,9)
- ;;=@
- ;;^DD(.84,6,21,0)
- ;;=^^6^6^2941122^
- ;;^DD(.84,6,21,1,0)
- ;;=If some special action should be taken whenever this message is built,
- ;;^DD(.84,6,21,2,0)
- ;;=MUMPS code can be entered here.  This code will be executed by the
- ;;^DD(.84,6,21,3,0)
- ;;=BLD^DIALOG or $$EZBLD^DIALOG routines, immediately after the message text
- ;;^DD(.84,6,21,4,0)
- ;;=has been built in the output array.  For example, the code could set a

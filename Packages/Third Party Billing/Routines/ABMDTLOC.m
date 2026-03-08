@@ -1,5 +1,5 @@
-ABMDTLOC ; IHS/ASDST/DMJ - Table Maintenance of LOCATION FILE ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDTLOC ; IHS/ASDST/DMJ - Table Maintenance of LOCATION FILE ;   [ 09/19/2002   9:06 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**2**;APR 05, 2002
  ;
  ; IHS/ASDS/DMJ - 10/19/01 - V2.4 Patch 9 - NOIS HQW-1001-100086
  ;     Allow Place of Service entry

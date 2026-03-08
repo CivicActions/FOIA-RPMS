@@ -145,7 +145,7 @@ MAIL ; Send a local mail note to current user and programmers.
  ;;produced/sent by this function, read the DESCRIPTION field of 
  ;;option "XB PACKAGE TRACKING".
  ;;E.g., ITSC is requesting a copy of the file be sent to
- ;;   "cmbsyb.hqw.DOMAIN.NAME"
+ ;;   "cmbsyb.hqw.ihs.gov"
  ;;and the option description will describe how you can control that
  ;;sending, or configure the option to send the information to other
  ;;systems.

@@ -347,7 +347,7 @@ FIXADJ3 ;EP
 STUFFDCM ;
  D BMES^XPDUTL("Updating Debt Collection Target ID in ZISH SEND PARAMETERS file....")
  K DIC,DIE,DA,DR,DIR
- S TARGETID="asdstgw.d1.na.DOMAIN.NAME"
+ S TARGETID="asdstgw.d1.na.ihs.gov"
  F X="BAR DCM B","BAR DCM F" D
  .S DIC="^%ZIB(9888888.93,"
  .S DIC(0)=""
@@ -382,7 +382,7 @@ ADDF ;ADD FOREGROUND
  S PASSWORD="vjrsshn9"
  S SENDCMD="sendto"
  S TYPE="F"
- ;S TARGETIP="quovadx-ie.DOMAIN.NAME"
+ ;S TARGETIP="quovadx-ie.ihs.gov"
  S TARGETIP="quovadx-ie"  ;BAR*1.8*4
  S ARGS="-i -u -a"
  S DR=".02///^S X=TARGETIP"
@@ -412,7 +412,7 @@ ADDB ;ADD BACKGROUND
  S PASSWORD="vjrsshn9"
  S SENDCMD="sendto"
  S TYPE="B"
- ;S TARGETIP="quovadx-ie.DOMAIN.NAME"
+ ;S TARGETIP="quovadx-ie.ihs.gov"
  S TARGETIP="quovadx-ie"  ;BAR*1.8*4
  S ARGS="-i -u -a"
  S DR=".02///^S X=TARGETIP"

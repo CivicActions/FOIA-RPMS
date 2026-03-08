@@ -1,5 +1,5 @@
 ABMEMCRC ; IHS/SD/SDR - 3PB recreate batch of ICD9 bills   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;
  ; IHS/SD/SDR - v2.5 p12 - New routine
  ;   Recreate batches for specified insurer that meet selection criteria
@@ -122,7 +122,8 @@ BILLCK ;
  Q
 OUTPUT ;
  S ABMINS("IEN")=ABMINS  ;Active Insurer IEN
- S ABMITYP=$P(^AUTNINS(ABMINS("IEN"),2),U)  ;Insurer type
+ ;S ABMITYP=$P(^AUTNINS(ABMINS("IEN"),2),U)  ;Insurer type  ;abm*2.6*10 HEAT73780
+ S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMINS("IEN"),".211","I"),1,"I")  ;Insurer type  ;abm*2.6*10 HEAT73780
  S ABMEXP=21  ;export type
  D NEWB    ; Create a new batch in 3P TX STATUS
  I $G(Y)<0 D MSG^ABMERUTL("Could not enter batch in 3P TX STATUS file.") Q
@@ -180,7 +181,8 @@ NEWB ;
 CLAIM ;one claim
  K ABMP
  S ABMP("INS")=ABMINS
- S ABMP("ITYPE")=$P($G(^AUTNINS(ABMINS,2)),U)
+ ;S ABMP("ITYPE")=$P($G(^AUTNINS(ABMINS,2)),U)  ;abm*2.6*10 HEAT73780
+ S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMINS,".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  S ABMP("BDFN")=ABMBDFN
  Q:'$D(^ABMDBILL(DUZ(2),ABMP("BDFN"),0))
  D SET^ABMUTLP(ABMP("BDFN"))

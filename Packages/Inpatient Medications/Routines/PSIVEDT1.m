@@ -1,8 +1,12 @@
-PSIVEDT1 ;BIR/MLM-EDIT IV ORDER (CONT) ;10 Mar 98 / 2:36 PM
- ;;5.0; INPATIENT MEDICATIONS ;**3,7,41,47,50,64,58,116,110,111**;16 DEC 97
+PSIVEDT1 ;BIR/MLM-EDIT IV ORDER (CONT) ;13-Jun-2024 15:04;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**3,7,41,47,50,64,58,116,110,111,1025,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^PS(55 is supported by DBIA# 2191.
  ; Reference to ^PS(51.1 is supported by DBIA# 2177.
+ ;
+ ; Modified
+ ; Modified - IHS/MSC/MGH  modified 01/16/2020     59+8 leading/trailing zeros
+ ;            IHS/MSC/PLS - 06/13/2024 - Line 26+9 - FID 103810
  ;
 10 ; Start Date
  D:'P(2)&P("IVRM")!($G(PSJREN)) ENT^PSIVCAL
@@ -42,7 +46,9 @@ A25 I $G(ON)["V"!($G(ON)["U") I $$COMPLEX^PSJOE(DFN,ON) D  Q
  I X="@" D DEL^PSIVEDRG S:%=1 P(9)="" G 26
  I X["???",($E(P("OT"))="I"),(PSIVAC["C") D ORFLDS G 26
  ;/I X?1."?"!($L(X)>22)!($L(X," ")>2) S F1=55.01,F2=.09 D ENHLP^PSIVORC1 G 26
- I X?1."?"!($L(X)>22)!($L(X," ")>3) S F1=55.01,F2=.09 D ENHLP^PSIVORC1 G 26
+ ;IHS/MSC/PLS - 06/13/2024 - FID 103810
+ ;I X?1."?"!($L(X)>22)!($L(X," ")>3) S F1=55.01,F2=.09 D ENHLP^PSIVORC1 G 26
+ I X?1."?"!($L(X)>22) S F1=55.01,F2=.09 D ENHLP^PSIVORC1 G 26
  S P(7)="" N PSGOES K PSGOES D EN^PSIVSP S:XT<0 X="" I $G(X)="" W $C(7),"??" G 26
  S P(9)=X,P(11)=Y,P(15)=XT
  Q
@@ -70,6 +76,12 @@ A25 I $G(ON)["V"!($G(ON)["U") I $$COMPLEX^PSJOE(DFN,ON) D  Q
  I X="@" D DEL^PSIVEDRG S:%=1 P(8)="" G 59
  I X["???",($E(P("OT"))="I"),(PSIVAC["C") D ORFLDS G 59
  I X["?" S F1=53.1,F2=59 D ENHLP^PSIVORC1 G 59
+ ;IHS/MSC/MGH check for leading and trailing zeros
+ N ERR,LOOP
+ D ZEROS^APSPLIQ(.ERR,X)
+ I $D(ERR)>1 D  G 59
+ .S LOOP=""
+ .F  S LOOP=$O(ERR(LOOP)) Q:'+LOOP  W !,$G(ERR(LOOP))
  I X]"" D ENI^PSIVSP W:'$D(X) $C(7)," ??" G:'$D(X) 59 S P(8)=X
  I P(8)="" W $C(7),!!,"An infusion rate must be entered!" G 59
  Q

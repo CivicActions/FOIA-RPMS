@@ -1,5 +1,5 @@
-BTIUPCC1 ; IHS/ITSC/LJF - IHS PCC OBJECTS ;06-Jan-2016 12:37;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1002,1004,1005,1006,1010,1012,1013,1016**;NOV 04, 2004;Build 10
+BTIUPCC1 ; IHS/ITSC/LJF - IHS PCC OBJECTS ;03-Mar-2020 14:36;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1002,1004,1005,1006,1010,1012,1013,1016,1021,1022**;NOV 04, 2004;Build 11
  ;IHS/ITSC/LJF 02/24/2005 PATCH 1002 - enhanced measurement display
  ;             04/14/2005 PATCH 1002 - fixed logic for last measurement on same day
  ;             01/26/2006 PATCH 1004 - Added fix for problem list w/o dates
@@ -10,6 +10,7 @@ BTIUPCC1 ; IHS/ITSC/LJF - IHS PCC OBJECTS ;06-Jan-2016 12:37;DU
  ;            Patch 1010 added qualifiers
  ;            Patch 1012 Problems changed for new statuses
  ;            Patch 1016 added comments to problems
+ ;            Patch 1021 added to check 30 visits
 LASTPRC(DFN,TIUICD,TIUPRC) ;EP -- returns date of last X procedure
  ;TIUICD=array of ICD procedure codes
  ;TIUPRC=phrase explaining type of procedures; used in output
@@ -91,22 +92,25 @@ BMI(DFN,TIUCAP) ;EP -- returns BMI based on last ht and wt
  ;
 LSTMEAS(DFN,TIUMSR) ; -- returns most current measurement (internal values)
  ;IHS/ITSC/LJF 04/`4/2005 PATCH 1002 rewrote logic to deal with >1 measurement per day
- NEW MSR,VDT,IEN,X,Y,TIU,LINE,ARR,DATE,STOP,QUALIF
+ NEW MSR,VDT,IEN,X,Y,TIU,LINE,ARR,DATE,STOP,QUALIF,CNT
  S MSR=$O(^AUTTMSR("B",TIUMSR,0)) I MSR="" Q ""
  ;
  ;S STOP=$O(^AUPNVMSR("AA",DFN,MSR,0))\1   ;stop at most recent date
  ;I 'STOP Q "none found"                             ;none to be found
- S VDT=0
+ S VDT=0,CNT=0
  S LINE=""
- F  S VDT=$O(^AUPNVMSR("AA",DFN,MSR,VDT)) Q:'VDT!(LINE'="")  D
- . S IEN=0
+ ;S CNT=CNT+1
+ F  S VDT=$O(^AUPNVMSR("AA",DFN,MSR,VDT)) Q:'VDT!(CNT>30)  D
+ . S IEN=0,CNT=CNT+1
  . F  S IEN=$O(^AUPNVMSR("AA",DFN,MSR,VDT,IEN)) Q:'IEN  D
  .. K TIU D ENP^XBDIQ1(9000010.01,IEN,".03;.04;2;1201","TIU(","I")
  .. ; value ^ visit ien ^ event date internal format
  .. Q:TIU(2,"I")=1                ;Quit if entered in error
  .. S LINE=$G(TIU(.04))_U_$G(TIU(.03,"I"))_U_$G(TIU(1201,"I"))
  .. ;I TIUMSR'="BP" S Y=$P(LINE,U),Y=$J(Y,5,2),$P(LINE,U)=Y
- .. S DATE=$S($G(TIU(1201,"I"))]"":TIU(1201,"I"),1:(9999999-$P(VDT,"."))_"."_$P(VDT,".",2))
+ .. ;IHS/MSC/MGH 1021 Changed lookup to not add a . if there is no time
+ .. S DATE=$S($G(TIU(1201,"I"))]"":+TIU(1201,"I"),1:(9999999-VDT))
+ .. ;S DATE=$S($G(TIU(1201,"I"))]"":TIU(1201,"I"),1:(9999999-$P(VDT,"."))_"."_$P(VDT,".",2))
  .. S QUALIF=$$QUAL^BTIULO7A(IEN)
  .. S ARR(DATE,IEN)=LINE_U_QUALIF_U_IEN
  ;
@@ -140,7 +144,8 @@ PROBLEM(DFN,STATUS,DATES,TARGET,COMMENT) ;EP -- returns the patient's problem li
  ... S CNT=CNT+1
  ... S @TARGET@(CNT,0)=TXT_" Problems: "
  .. S LINE=$$GET1^DIQ(9000011,PROB,.05)      ;prov narrative
- .. ;I $P(LINE,"|",1)["*" S LINE=$P(LINE,"|",2)
+ .. S LINE=$TR(LINE,"|","-")
+ .. I $P(LINE,"-",2)="" S LINE=$P(LINE,"-",1)
  .. S EXTRA=""
  .. I $L(LINE)>75 S EXTRA=$E(LINE,76,$L(LINE)),LINE=$E(LINE,1,75)
  .. S CNT=CNT+1,PCNT=PCNT+1
@@ -169,7 +174,11 @@ UPDPROB(DFN,TARGET) ;EP; -- returns list of problems added or updated today
  .. I (ADD'=DT)&(MOD'=DT) Q                                                      ;not added or updated today
  .. S CNT=$G(CNT)+1
  .. I CNT=1 S @TARGET@(1,0)="Problem List Updates: " S CNT=2
- .. S LINE=$$GET1^DIQ(9000011,PROB,.05)_" ["_STATUS_"] "       ;prov narrative and status
+ .. S LINE=$$GET1^DIQ(9000011,PROB,.05)
+ ..;IHS/MSC/MGH Removed the | from the narrative
+ .. S LINE=$TR(LINE,"|","-")
+ .. I $P(LINE,"-",2)="" S LINE=$P(LINE,"-",1)
+ .. S LINE=LINE_" ["_STATUS_"] "       ;prov narrative and status
  .. S CLASS=$$GET1^DIQ(9000011,PROB,.15)  ;CLASSIFICATION
  .. I CLASS'="" S LINE=LINE_" Classification: "_LINE
  .. S LINE=LINE_"  ("_$S(ADD=MOD:"Added",1:"Updated")_")"
@@ -193,6 +202,7 @@ DSPFACN ; DISPLAY NOTES FOR SELECTED FACILITY
  Q
 DSPN ; DISPLAY SINGLE NOTE
  N NTEDTE,TXT2,COMM,X,SUBCOUNT,SUBLINE
+ S NTEDTE=""
  Q:$P(BTIUN,U,4)="E"
  Q:$P(BTIUN,U,4)="I"
  S COMM=$P(BTIUN,U,3) S X=$P(BTIUN,U,5)

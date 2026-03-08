@@ -1,5 +1,7 @@
 AGREPRT2 ; IHS/ASDS/EFG - ; 
- ;;7.1;PATIENT REGISTRATION;**4**;AUG 25,2005
+ ;;7.1;PATIENT REGISTRATION;**4,16**;AUG 25,2005;Build 1
+ ;IHS/OIT/NKD AG*7.1*16 SSN REMOVAL
+ ;
  S AGBDT=AG("B"),AGB=AGBDT,AGEDT=AG("E"),AGBDT=AGBDT-.1,(AGTOTAL,AGPGPG)=0
  I '$D(AG("TOTPAT")) S AG("FAC")=DUZ(2) D ^AGPATCNT
  S X=$P(^DIC(4,DUZ(2),0),U) D CTR^AG S AG("LOC")=X,AG("USR")=$P(^VA(200,DUZ,0),U),AGBM=IOSL-10 I $D(AGIO),AGIO=IO S AGBM=IOSL-4
@@ -20,7 +22,7 @@ A3 ;EP - From TaskMan.
  S DFN=0 F  S DFN=$O(^TMP("AGREP",$J,DFN)) Q:'DFN!($G(AG("QUIT")))  D
  .W ?5,$P(^DPT(DFN,0),U),?43,$J($P(^AUPNPAT(DFN,41,DUZ(2),0),U,2),6)
  .;K ^UTILITY("DIQ1",$J) S DIC=2,DR=.09,DA=DFN D EN^DIQ1 W:$D(^(DR)) ?52,^(DR) S DR=.03 D EN^DIQ1 W:$D(^(DR)) ?66,$J(^(DR),10)
- .W ?52,$$GET1^DIQ(9000001,DFN_",",1107.3)  ;IHS/SD/TPF AG*7.1*4
+ .;W ?52,$$GET1^DIQ(9000001,DFN_",",1107.3)  ;IHS/SD/TPF AG*7.1*4  ;IHS/OIT/NKD AG*7.1*16 SSN REMOVAL
  .W ?66,$J($P($$GET1^DIQ(2,DFN_",",.03),"@"),10)  ;IHS/SD/TPF AG*7.1*4
  .W ! I $Y>AGBM D
  ..D RTRN^AG I 'Y S AG("QUIT")=1 Q
@@ -35,5 +37,6 @@ K D ^%ZISC K AG,AGE,AGIO,AGTIME,AGB,AGBDT,AGED,AGEDT,AGREPRNT,AGTOTAL,B,AGBM,DA,
  Q
 HDR S AGPGPG=AGPGPG+1 W $$S^AGVDF("IOF"),AG("USR"),?72,"page ",AGPGPG,!,AG("LOC"),!?25,"NEW PATIENT REGISTRATION REPORT",!,AGUCI,!,AGTIME,!!?80-$L("Report from "_B_" thru "_E)/2,"Report from ",B," thru ",E,!!
  Q
-HDR1 W !?23,"The Following Patients Were Added: ",!!?13,"Name",?44,"IHS #",?56,"SSN",?70,"DOB",!,"-----------------------------------",?43,"------",?52,"-----------",?66,"------------",!
+ ;HDR1 W !?23,"The Following Patients Were Added: ",!!?13,"Name",?44,"IHS #",?56,"SSN",?70,"DOB",!,"-----------------------------------",?43,"------",?52,"-----------",?66,"------------",!  ;IHS/OIT/NKD AG*7.1*16 SSN REMOVAL
+HDR1 W !?23,"The Following Patients Were Added: ",!!?13,"Name",?44,"IHS #",?70,"DOB",!,"-----------------------------------",?43,"------",?66,"------------",!
  Q

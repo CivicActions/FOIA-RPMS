@@ -1,5 +1,8 @@
 ABMDEDIC ; IHS/ASDST/DMJ - Claim Selection ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**33,37,38**;NOV 12, 2009;Build 756
+ ;IHS/SD/SDR 2.6*33 ADO60185/CR11502 Removed complete SSN from display; Display preferred name
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
+ ;IHS/SD/SDR 2.6*38 ADO99134 Removed SSN from display
  ;
 CLM ;SELECT CLAIM
  K ABMP("CDFN")
@@ -9,12 +12,14 @@ CLM ;SELECT CLAIM
  Q:$D(DIRUT)
  S ABM("INPUT")=Y
  I Y=" " D  Q
+ .S DIC("W")="S Z=$P($G(^ABMDCLM(DUZ(2),+Y,0)),""^"") W !?10 D DICW^ABMDECLN"  ;abm*2.6*37 IHS/SD/SDR ADO81491
  .S X=Y,DIC="^ABMDCLM(DUZ(2),",DIC(0)="EMQ" D ^DIC
  .Q:+Y<0
  .S ABMP("CDFN")=+Y
  I $D(^ABMDCLM(DUZ(2),+Y,0)) D
  .Q:$P($G(^ABMDCLM(DUZ(2),+Y,0)),U)=""
- .S DIC("W")="S ABMP(0)=^(0) D DICW^ABMDEDIC"
+ .;S DIC("W")="S ABMP(0)=^(0) D DICW^ABMDEDIC"  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .S DIC("W")="S Z=$P($G(^ABMDCLM(DUZ(2),+Y,0)),""^"") W !?10 D DICW^ABMDECLN"  ;abm*2.6*37 IHS/SD/SDR ADO81491
  .S ABMP("CDFN")=+Y
  .S X=Y,DIC="^ABMDCLM(DUZ(2),",DIC(0)="EM" D ^DIC
  .S DIR(0)="Y",DIR("A")="Correct Claim",DIR("B")="YES"
@@ -38,9 +43,16 @@ PAT ;PATIENT LOOKUP
  .W ?5,"Claim# ",I
  .S ABM("ZERO")=$G(^ABMDCLM(DUZ(2),I,0)) N J F J=1:1:8 S ABM(J)=$P(ABM("ZERO"),U,J)
  .S ABM(4)=$P(ABM("STATUS"),ABM(4)_":",2),ABM(4)=$P(ABM(4),";",1)
- .W ?20,$$SDT^ABMDUTL(ABM(2))
- .W ?31,$P($G(^ABMDVTYP(+ABM(7),0)),U)
- .W ?55,$P($G(^DIC(40.7,+ABM(6),0)),U)
+ .;start old abm*2.6*33 IHS/SD/SDR ADO60185
+ .;W ?20,$$SDT^ABMDUTL(ABM(2))
+ .;W ?31,$P($G(^ABMDVTYP(+ABM(7),0)),U)
+ .;W ?55,$P($G(^DIC(40.7,+ABM(6),0)),U)
+ .;end old start new abm*2.6*33 IHS/SD/SDR ADO60185
+ .W ?23,$$SDT^ABMDUTL(ABM(2))
+ .W ?35,$E($P($G(^ABMDVTYP(+ABM(7),0)),U),1,23)
+ .W ?60,$E($P($G(^DIC(40.7,+ABM(6),0)),U),1,20)
+ .;end new abm*2.6*33 IHS/SD/SDR ADO60185
+ .;
  .W !,?6,$P($G(^AUTTLOC(+ABM(3),0)),U,2)
  .W ?21,$P($G(^AUTNINS(+ABM(8),0)),U)
  .W ?50,"Status: ",ABM(4)
@@ -57,10 +69,29 @@ SEL ;SELECT
  Q
  ;
 DICW ;EP - for displaying claim identifiers
- I $G(DZ)["?" W ?46,$P(^DPT(+ABMP(0),0),U,2)," ",$$HDT^ABMDUTL($P(^(0),U,3))," ",$P(^(0),U,9)
- I  I $G(DUZ(2)),$D(^AUPNPAT(+ABMP(0),41,DUZ(2),0)) W ?68,$P($G(^AUTTLOC(DUZ(2),0)),U,7)," ",$P(^AUPNPAT(+ABMP(0),41,DUZ(2),0),U,2)
- I $G(X)'=+ABMP(0)!($G(DZ)["?") W !
- W ?17,"Clm:",Y,"  ",$$HDT^ABMDUTL($P(ABMP(0),U,2))," "
+ ;I $G(DZ)["?" W ?46,$P(^DPT(+ABMP(0),0),U,2)," ",$$HDT^ABMDUTL($P(^(0),U,3))," ",$P(^(0),U,9)  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;I $G(DZ)["?" W ?46,$P(^DPT(+ABMP(0),0),U,2)," ",$$HDT^ABMDUTL($P(^(0),U,3))," ","***-**-"_$E($P(^(0),U,9),6,9)  ;abm*2.6*33 IHS/SD/SDR ADO60185  ;ABM*2.6*37 IHS/SD/SDR ADO81491
+ ;
+ ;
+ ;start old abm*2.6*38 IHS/SD/SDR ADO99134
+ ;I $G(DZ)["?" W $S($$GETPREF^AUPNSOGI(+ABMP(0),"I","")'="":"-"_$$GETPREF^AUPNSOGI(+ABMP(0),"I","")_"*",1:""),?46,$P(^DPT(+ABMP(0),0),U,2)," ",$$HDT^ABMDUTL($P(^(0),U,3))," ","***-**-"_$E($P(^(0),U,9),6,9)  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;I  I $G(DUZ(2)),$D(^AUPNPAT(+ABMP(0),41,DUZ(2),0)) W ?68,$P($G(^AUTTLOC(DUZ(2),0)),U,7)," ",$P(^AUPNPAT(+ABMP(0),41,DUZ(2),0),U,2)
+ ;end old start new abm*2.6*38 IHS/SD/SDR ADO99134
+ I $G(DZ)["?" W ?25,$S($$GETPREF^AUPNSOGI(+ABMP(0),"I",1)'="":"-"_$$GETPREF^AUPNSOGI(+ABMP(0),"I",1)_"*",1:""),?50,$P(^DPT(+ABMP(0),0),U,2)," ",$$HDT^ABMDUTL($P(^(0),U,3))
+ I  I $G(DUZ(2)),$D(^AUPNPAT(+ABMP(0),41,DUZ(2),0)) W ?66,$P($G(^AUTTLOC(DUZ(2),0)),U,7)," ",$P(^AUPNPAT(+ABMP(0),41,DUZ(2),0),U,2)
+ ;end new abm*2.6*38 IHS/SD/SDR ADO99134
+ ;
+ ;
+ ;I $G(X)'=+ABMP(0)!($G(DZ)["?") W !  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ I $G(X)'=+ABMP(0)!($G(DZ)["?")
+ I  I $G(DUZ(2)),$D(^AUPNPAT(+ABMP(0),41,DUZ(2),0)) D
+ .;I $$GETPREF^AUPNSOGI(+ABMP(0),"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .;.W "* - ",$$GETPREF^AUPNSOGI(+ABMP(0),"")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .;W ?70,$P($G(^AUTTLOC(DUZ(2),0)),U,7)," ",$P(^AUPNPAT(+ABMP(0),41,DUZ(2),0),U,2)  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ ;W !  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
+ ;W ?17,"Clm:",Y,"  ",$$HDT^ABMDUTL($P(ABMP(0),U,2))," "  ;abm*2.6*38 IHS/SD/SDR ADO99134
  I $P(ABMP(0),U,7) W $E($P($G(^ABMDVTYP($P(ABMP(0),U,7),0)),U),1,12)
  I $P(ABMP(0),U,6),$P(ABMP(0),U,3) W ?51,$E($P($G(^DIC(40.7,$P(ABMP(0),U,6),0)),U),1,15),?68,$E($P($G(^AUTTLOC($P(ABMP(0),U,3),0)),U,2),1,12)
  I $P(ABMP(0),U,8) W !?25,$E($P($G(^AUTNINS($P(ABMP(0),U,8),0)),U),1,30)
@@ -88,9 +119,15 @@ MULT ;EP for Selecting Multiple Claims
  S AUPNLK("ALL")=1
  K DIC S ABM("C")=0,DIC="^ABMDCLM(DUZ(2),",DIC(0)="QEAM" W !
  F ABM=1:1 W ! D  Q:X=""!$D(DUOUT)!$D(DTOUT)
+ .S DIC("W")="S Z=$P($G(^ABMDCLM(DUZ(2),+Y,0)),""^"") W !?10 D DICW^ABMDECLN"  ;abm*2.6*37 IHS/SD/SDR ADO81491
 SELO .S ABM("E")=$E(ABM,$L(ABM)),DIC("A")="Select "_ABM_$S(ABM>3&(ABM<21):"th",ABM("E")=1:"st",ABM("E")=2:"nd",ABM("E")=3:"rd",1:"th")_" CLAIM: ",DIC(0)="QEAM" D ^DIC
  .Q:X=""!$D(DUOUT)!$D(DTOUT)
  .I +Y<1 G SELO
  .S ABMM(+Y)=""
+ .;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ .S ABMPDFN=$P($G(^ABMDCLM(DUZ(2),+Y,0)),U)
+ .;I $$GETPREF^AUPNSOGI(ABMPDFN,"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .;.W !?3,"Preferred Name: ",$$EN^ABMVDF("RVN"),$$GETPREF^AUPNSOGI(ABMPDFN,""),$$EN^ABMVDF("RVF"),!  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  K DIC
  G XIT

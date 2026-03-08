@@ -1,5 +1,6 @@
-PXRMVITL ;SLC/PKR - Handle vitals findings. ;08/19/2010
- ;;2.0;CLINICAL REMINDERS;**6,12,17,18**;Feb 04, 2005;Build 152
+PXRMVITL ;SLC/PKR - Handle vitals findings. ;10-Apr-2025 06:50
+ ;;2.0;CLINICAL REMINDERS;**6,12,17,18,1016**;Feb 04, 2005;Build 32
+ ;IHS/MSC/MIR 04/10/2025 Patch 1016  SUPPLEMENTAL O2 was added
  ;
  ;===========================================================
 EVALFI(DFN,DEFARR,ENODE,FIEVAL) ;Evaluate vital measurement findings.
@@ -38,6 +39,7 @@ GETDATA(DAS,FIEVT) ;Return data for a GMRV Vital Measurement entry.
  . S FIEVT("SYSTOLIC")=$P(FIEVT("RATE"),"/",1)
  . S FIEVT("DIASTOLIC")=$P(FIEVT("RATE"),"/",$L(FIEVT("RATE"),"/"))
  S IND=0
+ I GMRVDATA(8)]"" S FIEVT("SUPPLEMENTAL O2")=$$SUPL(GMRVDATA(8))
  ;Load the external form of the qualifiers.
  F  S IND=$O(GMRVDATA(12,IND)) Q:IND=""  D
  . S TEMP=$P(GMRVDATA(12,IND),U,1)
@@ -47,7 +49,9 @@ GETDATA(DAS,FIEVT) ;Return data for a GMRV Vital Measurement entry.
  I STOP'="" S FIEVT("STOP CODE")=$P(^DIC(40.7,STOP,0),U,1,2)
  E  S FIEVT("STOP CODE")=""
  Q
- ;
+SUPL(VAL) ; Possible adding .0
+ I $P(VAL," ")'["." S VAL=$P(VAL," ")_".0 "_$P(VAL," ",2,99)
+ Q VAL
  ;===========================================================
 MHVOUT(INDENT,IFIEVAL,NLINES,TEXT) ;Produce the MHV output.
  N DATE,EM,IND,JND,NAME,NOUT,RATE,TEMP,TEXTOUT,TYPE

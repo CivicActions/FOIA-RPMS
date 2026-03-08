@@ -1,5 +1,5 @@
 ABMEAUTO ; IHS/ASDST/DMJ - AUTO APPROVE CLAIM ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**12**;FEB 04, 2002
  ;Original;DMJ;04/30/96 4:06 PM
 START ;START HERE
  Q:'$G(ABMP("CDFN"))
@@ -11,7 +11,7 @@ START ;START HERE
  D ERRIN^ABMDECK
  Q:$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),"^",5)
  D ^ABMDESM
- S ABMAUTOF=1
+ S ABMAUTOF=1  ;abm*2.5*12
  D ^ABMDEBIL
  I $D(^ABMDCLM(DUZ(2),ABMP("CDFN"),65)) D
  .S DIE="^ABMDCLM(DUZ(2),",DA=ABMP("CDFN"),DR=".04///U" D ^DIE
@@ -29,6 +29,7 @@ START ;START HERE
  .K ^ABMDTMP(ABMP("CDFN"))
  K ABMQUIET
  Q
+ ;start new code abm*2.5*12
  ; *********************************************************************
 AUTOUFMS ;EP - create/populate UFMS Cashiering Session
  ;location
@@ -103,3 +104,4 @@ AUTOUFMS ;EP - create/populate UFMS Cashiering Session
  D FILE^DICN
  K ABMAUTOF
  Q
+ ;end new code abm*2.5*12

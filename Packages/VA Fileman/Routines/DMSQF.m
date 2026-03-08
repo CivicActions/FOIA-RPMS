@@ -1,6 +1,6 @@
-DMSQF ;SFISC/JHM-INITIALIZE SQLI_FILE ;11/17/97  13:28
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQF ;SFISC/JHM-INITIALIZE SQLI_FILE ;11/17/97  13:28 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
  Q
 INI ;INITIALIZE ^DMSQ - CLEAR ALL TABLES
  N I F I="S","KF","T","E","C","P","F","EX","ET","DT","DM","OF" D CLF^DMSQU(I)

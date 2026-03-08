@@ -1,5 +1,8 @@
 AVAPI004 ; ; 15-AUG-1995
- ;;93.2;PATCHES FOR VA SUPPPORT FILES;;AUG 15, 1995;Build 12
+ ;;93.2;PATCHES FOR VA SUPPPORT FILES;**27**;AUG 15, 1995;Build 8
+ ;PATCH 27: THIS ROUTINE'S FUNCTION PARTIALLY DEPRECATED BY DELETION OF FILES 3/6/16
+ ;          ORIGINAL LINES 172+ DELETED TO EXCISE PROCESSING OF 3/6/16 SYNC XREFS
+ ;
  Q:'DIFQ(200)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,999) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
 Q Q
  ;;^DD(200,0,"PT",9002196,113240)
@@ -166,47 +169,3 @@ Q Q
  ;;=
  ;;^DD(200,53.5,0)
  ;;=PROVIDER CLASS^P7'^DIC(7,^PS;5^Q
- ;;^DD(200,53.5,1,0)
- ;;=^.1
- ;;^DD(200,53.5,1,1,0)
- ;;=200^AIHS^MUMPS
- ;;^DD(200,53.5,1,1,1)
- ;;=G F6S^AVA4A7
- ;;^DD(200,53.5,1,1,2)
- ;;=G F6K^AVA4A7
- ;;^DD(200,53.5,1,1,3)
- ;;=Gives provider key; updates entry in file 6
- ;;^DD(200,53.5,1,1,"%D",0)
- ;;=^^12^12^2940511^
- ;;^DD(200,53.5,1,1,"%D",1,0)
- ;;= 
- ;;^DD(200,53.5,1,1,"%D",2,0)
- ;;=     *** MUMPS X-REF "AIHS" CREATED BY INDIAN HEALTH SERVICE ***
- ;;^DD(200,53.5,1,1,"%D",3,0)
- ;;= 
- ;;^DD(200,53.5,1,1,"%D",4,0)
- ;;=MUST BE FIRST CROSS-REFERENCE FOR THIS FIELD!!! Creates entry in file 6.
- ;;^DD(200,53.5,1,1,"%D",5,0)
- ;;=All other x-refs on this field must be executed AFTER entry created in
- ;;^DD(200,53.5,1,1,"%D",6,0)
- ;;=file 6.
- ;;^DD(200,53.5,1,1,"%D",7,0)
- ;;= 
- ;;^DD(200,53.5,1,1,"%D",8,0)
- ;;=When you give a New Person entry a PROVIDER CLASS, they are then
- ;;^DD(200,53.5,1,1,"%D",9,0)
- ;;=designated as a provider.  This x-ref gives them the "PROVIDER" security
- ;;^DD(200,53.5,1,1,"%D",10,0)
- ;;=key.  The KEY field will create an entry in the Provider file if not
- ;;^DD(200,53.5,1,1,"%D",11,0)
- ;;=already there.  Then this x-ref will update all fields common to both
- ;;^DD(200,53.5,1,1,"%D",12,0)
- ;;=files by executing the set logic for all x-refs on this file.
- ;;^DD(200,53.5,1,1,"DT")
- ;;=2940511
- ;;^DD(200,53.5,1,2,0)
- ;;=200^ACX36^MUMPS
- ;;^DD(200,53.5,1,2,1)
- ;;=N % S %=$P(^DIC(3,DA,0),U,16) I %,$D(^DIC(6,%,0)) S $P(^DIC(6,%,0),U,4)=X
- ;;^DD(200,53.5,1,2,2)
- ;;=N % S %=$P(^DIC(3,DA,0),U,16) I %,$D(^DIC(6,%,0)) S $P(^DIC(6,%,0),U,4)=""

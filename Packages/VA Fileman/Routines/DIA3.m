@@ -1,6 +1,7 @@
-DIA3 ;SFISC/GFT-UPDATE POINTERS, CHECK CODE IN INPUT STRING, CHECK FILE ACCESS ;19SEP2004
- ;;22.0;VA FileMan;**159**;Mar 30, 1999;Build 8
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIA3 ;SFISC/GFT-UPDATE POINTERS, CHECK CODE IN INPUT STRING, CHECK FILE ACCESS ;9/7/94  09:57 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  S Y=DIA("P"),DH=1,DTO=DIA D PTS^DIT:'$D(^UTILITY("DIT",$J,0)) S ^UTILITY("DIT",$J,0)=0 Q:$D(^(0))<9
  D ASK^DITP Q:%-1
  S Y=0 I @("$O("_DIC_"0))'>0") G D
@@ -30,13 +31,16 @@ QFIXPT K ^UTILITY("DIT",$J),DIFLG,DIFILE,DIDELIEN,DIIOP,DIPTIEN Q
 X ;
  I 'Y S:'DSC&DB DB=DB+1 S Y=0 F  S Y=$O(Y(Y)) D D^DIA:Y'="" I Y="" S Y=-1 G 2^DIA
  S Y=X I DUZ(0)="@",X'?.E1":" S X=$S(X["//^":$P(X,"//^",2),1:X),X=$S(X[";":$P(X,";"),1:X) D ^DIM G:$D(X) P^DIA:X=Y I Y["//^",'$D(X) G BAD
- I Y[";" F %=2:1 S D=$P(Y,";",%) Q:D=""  S D=$S(D="DUP":"d",D="REQ":"R","""R""d"""[D:"",$A(D)=34:$E(D,2,$F(D,"""",2)-2),D="T":D,1:"") G BAD:D="",DIA3^DIQQQ:$A(D)>45&($A(D)<58)!(D[":") S DV=D_$C(126)_DV
+ I Y[";" F %=2:1 S D=$P(Y,";",%) Q:D=""  S D=$S(D="DUP":"d",D="REQ":"R","""R""d"""[D:"",$A(D)=34:$E(D,2,$F(D,"""",2)-2),1:D) G BAD:D="",DIA3^DIQQQ:$A(D)>45&($A(D)<58)!(D[":") S DV=D_$C(126)_DV
  I Y[";" S X=$P(Y,";",1) S:'$D(DIAB) DIAB=Y G DIC^DIA
  F DK="///+","//+","///","//" I Y[DK S DP=$P(Y,DK,2,9) I DP'?1"/".E&(DP'?1"^".E)!(DUZ(0)="@") G DEF
  G BAD:Y'?.E1":"
 E K X S:'$D(DIAB) DIAB=Y S DICOMP=L_"WE?",DQI="Y(",DA="DR(99,"_DXS_",",X=Y,DICMX=1 D ^DICOMPW I '$D(X) K DIAB G BAD:'$D(DP),ACC
+ ;G L:DUZ(0)="@"
+ ;I $D(^DIC(3,"AFOF")) G ACC:'$D(^DIC(3,DUZ,"FOF",+DP,0)),ACC:'$P(^(0),U,6),L
+ ;I $D(^DIC(+DP,0,"WR")) F D=1:1 S %=$E(^("WR"),D) I DUZ(0)[% Q:%]""  G ACC
 L I $D(X)>1 S DXS=DXS+1,%=0 F  S %=$O(X(%)) Q:%=""  S @(DA_"%)=X(%)")
- S %=-1 S L=$S(Y>L:+Y,1:L\100+1*100),Y=U_DP_U_U_X_" S X=$S(D(0)>0:D(0),1:"""")",DRS=99 K X D DB^DIA S DI=+DP G FILETOP^DIA
+ S %=-1 S L=$S(Y>L:+Y,1:L\100+1*100),Y=U_DP_U_U_X_" S X=$S(D(0)>0:D(0),1:"""")",DRS=99 K X D DB^DIA S DI=+DP G EN^DIA
  ;
 DEF S X="DA,DV,DWLC,0)=X" F J=L:-1 Q:I(J)[U  S X="DA("_(L-J+1)_"),"_I(J)_","_X
  S DICMX="S DWLC=DWLC+1,"_DIA_X,DA="DR(99,"_DXS_",",DHIT=Y,X=DP,DQI="X(",DICOMP=L_"T?" D EN^DICOMP,DICS^DIA,XEC K X S X=$P(DHIT,DK,1),DV=DV_DK_DP G DIC^DIA:DV'[";"

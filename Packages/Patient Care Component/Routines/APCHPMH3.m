@@ -1,5 +1,5 @@
-APCHPMH3 ; IHS/CMI/LAB - Patient Wellness Handout ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHPMH3 ; IHS/CMI/GRL - Patient Wellness Handout ;  
+ ;;2.0;IHS RPMS/PCC Health Summary;**16,17**;JUN 24, 1997
  ;
  ;
  ;

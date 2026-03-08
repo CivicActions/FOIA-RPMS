@@ -1,5 +1,5 @@
 BQIPDSC2 ;GDHD/HCS/ALA-Panel descriptions continued ; 04 Nov 2016  8:53 AM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**1,3**;Mar 01, 2021;Build 32
  ;;
  ;
 POV ;EP - POVs
@@ -18,9 +18,10 @@ POV ;EP - POVs
  . S VALUE=$G(FPARMS("VAL","POVS"))
  . Q:VALUE=""
  . NEW TXT,BSIEN
- . S BSIEN=$O(^BSTS(9002318.4,"C",36,VALUE,""))
- . S TXT=$S(BSIEN'="":$G(^BSTS(9002318.4,BSIEN,1)),1:"")
- . S DSC=$S($G(FPARMS(PORD,"PVNOT"))="Y":"without",1:"with")_" POV SNOMED Concept ID "_VALUE_" "_TXT
+ . ;S BSIEN=$O(^BSTS(9002318.4,"C",36,VALUE,""))
+ . ;S TXT=$S(BSIEN'="":$G(^BSTS(9002318.4,BSIEN,1)),1:"")
+ . ;S DSC=$S($G(FPARMS(PORD,"PVNOT"))="Y":"without",1:"with")_" POV SNOMED Concept IDs "_VALUE_" "_TXT
+ . S DSC=$S($G(FPARMS(PORD,"PVNOT"))="Y":"without",1:"with")_" POV SNOMED Concept IDs "_VALUE
  I FNAME="POVSB" D
  . S VALUE=$G(FPARMS("VAL","POVSB"))
  . S DSC=$S($G(FPARMS(PORD,"PVNOT"))="Y":"without",1:"with")_" POV SNOMED Concept IDs found in subset "_VALUE
@@ -41,12 +42,12 @@ PDAT ;EP - POV Dates
  . I VALUE["(" S VALUE=VALUE_")"
  . S DSC="for "_VALUE
  I FNAME="PVRANGE" D
- . NEW PVRANGE,RFROM,RTHRU
  . S PVRANGE=$$GETVAL(OWNR,PLIEN,"PVRANGE")
  . I $G(PPIEN)'="" D RANGE^BQIDCAH1(PVRANGE,PPIEN,"PVRANGE")
  . I PVRANGE'["Ever" S VALUE=PVRANGE_" ("_$$FMTE^BQIUL1(RFROM)_"-"_$$FMTE^BQIUL1(RTHRU)_")"
  . I PVRANGE["Ever" S VALUE=PVRANGE
  . S DSC="for timeframe "_VALUE
+ . K PVRANGE,RFROM,RTHRU
  Q
  ;
 GETVAL(OWNR,PLIEN,FLD) ;EP - Retrieve Single field value
@@ -76,12 +77,12 @@ MDAT ;EP - Measurement Dates
  . I VALUE["(" S VALUE=VALUE_")"
  . S DSC="for "_VALUE
  I FNAME="MSRANGE" D
- . NEW MSRANGE,RFROM,RTHRU
  . S MSRANGE=$$GETVAL(OWNR,PLIEN,"MSRANGE")
  . I $G(PPIEN)'="" D RANGE^BQIDCAH1(MSRANGE,PPIEN,"MSRANGE")
  . I MSRANGE'["Ever" S VALUE=MSRANGE_" ("_$$FMTE^BQIUL1(RFROM)_"-"_$$FMTE^BQIUL1(RTHRU)_")"
  . I MSRANGE["Ever" S VALUE=MSRANGE
  . S DSC="for timeframe "_VALUE
+ . K MSRANGE,RFROM,RTHRU
  Q
  ;
 MSRS(MSVAL) ;EP - Measurement result
@@ -110,3 +111,168 @@ MSRS(MSVAL) ;EP - Measurement result
  E  S STR=STR_" equal to "_N1
  S MSVAL=STR
  Q MSVAL
+ ;
+EXAM ;EP - Exams
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"EXNOT") Q:PORD=""
+ ;
+ I FNAME="EXAM" D
+ . S VALUE=$G(FPARMS("VAL","EXAM"))
+ . Q:VALUE=""
+ . S DSC=$S($G(FPARMS(PORD,"EXNOT"))="Y":"without",1:"with")_" Exam "_VALUE
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"EXAM")
+ Q
+ ;
+EXDAT ;EP - Exam Dates
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"EXAM") Q:PORD=""
+ I FNAME="EXFROM" D
+ . NEW EXFROM,EXTHRU
+ . S EXFROM=$$GETVAL(OWNR,PLIEN,"EXFROM")
+ . I EXFROM]"" S VALUE=VALUE_" (Range from date "_$$FMTE^BQIUL1(EXFROM)
+ . S EXTHRU=$$GETVAL(OWNR,PLIEN,"EXTHRU")
+ . I EXTHRU]"" S VALUE=VALUE_$S(VALUE["Range":" thru date ",1:" (Range thru date ")_$$FMTE^BQIUL1(EXTHRU)
+ . I VALUE["(" S VALUE=VALUE_")"
+ . S DSC="for "_VALUE
+ I FNAME="EXRANGE" D
+ . S EXRANGE=$$GETVAL(OWNR,PLIEN,"EXRANGE")
+ . I $G(PPIEN)'="" D RANGE^BQIDCAH1(EXRANGE,PPIEN,"EXRANGE")
+ . I EXRANGE'["Ever" S VALUE=EXRANGE_" ("_$$FMTE^BQIUL1(RFROM)_"-"_$$FMTE^BQIUL1(RTHRU)_")"
+ . I EXRANGE["Ever" S VALUE=EXRANGE
+ . S DSC="for timeframe "_VALUE
+ . K EXRANGE,RFROM,RTHRU
+ Q
+ ;
+EXRS(EVAL) ; EP - Exam Results
+ NEW SCODE
+ S SCODE=$P(^DD(9000010.13,.04,0),"^",3)
+ Q $$SCD^BQIUL2(SCODE,EVAL)
+ ;
+HF ;EP - health factors
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"HFNOT") Q:PORD=""
+ S DSC=$S($G(FPARMS(PORD,"HFNOT"))="Y":"not found for ",1:"found for ")_"Health Factor(s) "
+ I FNAME="HFCAT" D
+ . S DSC=DSC_"category "_$G(FPARMS("VAL","HFCAT"))
+ I FNAME="HFTX" D
+ . S DSC=DSC_"taxonomy "_$G(FPARMS("VAL","HFTX"))
+ I FNAME="HFACT" D
+ . S DSC=DSC_$G(FPARMS("VAL","HFACT"))
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"HFACT")
+ Q
+ ;
+HFDT ;EP-health factor
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"HFNOT") Q:PORD=""
+ I FNAME="HFFROM" D
+ . NEW EFROM,ETHRU
+ . S EFROM=$$GETVAL(OWNR,PLIEN,"HFFROM")
+ . I EFROM]"" S VALUE="(Range from date "_$$FMTE^BQIUL1(EFROM)
+ . S ETHRU=$$GETVAL(OWNR,PLIEN,"HFTHRU")
+ . I ETHRU]"" S VALUE=VALUE_$S(VALUE["Range":" thru date ",1:" (Range thru date ")_$$FMTE^BQIUL1(ETHRU)
+ . I VALUE["(" S VALUE=VALUE_")"
+ . S DSC="for "_VALUE
+ I FNAME="HFRANGE" D
+ . S HFRANGE=$$GETVAL(OWNR,PLIEN,"HFRANGE")
+ . I $G(PPIEN)'="" D RANGE^BQIDCAH1(HFRANGE,PPIEN,"HFRANGE")
+ . I HFRANGE'["Ever" S VALUE=HFRANGE_" ("_$$FMTE^BQIUL1(RFROM)_"-"_$$FMTE^BQIUL1(RTHRU)_")"
+ . I HFRANGE["Ever" S VALUE=HFRANGE
+ . S DSC="for timeframe "_VALUE
+ . K HFRANGE,RFROM,RTHRU
+ Q
+ ;
+VC ;EP - Vaccine (Immunizations)
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"VACGRP") Q:PORD=""
+ S DSC="Vaccine "_$S($G(FPARMS(PORD,"VACNOT"))="Y":"not found for ",1:"found for ")
+ I FNAME="VACGRP" D
+ . S DSC=DSC_" group "_$G(FPARMS("VAL","VACGRP"))
+ I FNAME="VACTX" D
+ . S DSC=DSC_" taxonomy "_$G(FPARMS("VAL","VACTX"))
+ I FNAME="VACC" D
+ . S DSC=DSC_$G(FPARMS("VAL","VACC"))
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"VACC")
+ Q
+ ;
+VCDT ;EP-vaccination dates
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"VACGRP") Q:PORD=""
+ I FNAME="VACFROM" D
+ . NEW EFROM,ETHRU
+ . S EFROM=$$GETVAL(OWNR,PLIEN,"VACFROM")
+ . I EFROM]"" S VALUE="(Range from date "_$$FMTE^BQIUL1(EFROM)
+ . S ETHRU=$$GETVAL(OWNR,PLIEN,"VACTHRU")
+ . I ETHRU]"" S VALUE=VALUE_$S(VALUE["Range":" thru date ",1:" (Range thru date ")_$$FMTE^BQIUL1(ETHRU)
+ . I VALUE["(" S VALUE=VALUE_")"
+ . S DSC="for "_VALUE
+ I FNAME="VACRANGE" D
+ . S VCRANGE=$$GETVAL(OWNR,PLIEN,"VACRANGE")
+ . I $G(PPIEN)'="" D RANGE^BQIDCAH1(VCRANGE,PPIEN,"VACRANGE")
+ . I VCRANGE'["Ever" S VALUE=VCRANGE_" ("_$$FMTE^BQIUL1(RFROM)_"-"_$$FMTE^BQIUL1(RTHRU)_")"
+ . I VCRANGE["Ever" S VALUE=VCRANGE
+ . S DSC="for timeframe "_VALUE
+ . K VCRANGE,RFROM,RTHRU,EFROM,ETHRU
+ Q
+ ;
+HRSK ;EP-High risk conditions
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"HRISK") Q:PORD=""
+ S DSC="having High Risk Conditions of "
+ I FNAME="HRISK" D
+ . S DSC=DSC_$G(FPARMS("VAL","HRISK"))
+ Q
+ ;
+IMUNO ;EP-Immunocompromised conditions
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"HRIMUNO") Q:PORD=""
+ S DSC="having Immunocompromised Conditions of "
+ I FNAME="HRIMUNO" D
+ . S DSC=DSC_$G(FPARMS("VAL","HRIMUNO"))
+ Q
+ ;
+ORDT ;EP-Order Dates
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"ORFROM") Q:PORD=""
+ S PPIEN=$$PP^BQIDCDF(FSOURCE)
+ I FNAME="ORFROM"!(FNAME="ORSTARTF")!(FNAME="ORSTOPF") D
+ . NEW EFROM,ETHRU
+ . I FNAME="ORFROM" D FDT(FNAME)
+ . I FNAME="ORSTARTF" D FDT(FNAME)
+ . I FNAME="ORSTOPF" D FDT(FNAME)
+ ;
+ I FNAME="ORTHRU"!(FNAME="ORSTART")!(FNAME="ORSTOPT") D
+ . I FNAME="ORTHRU" D TDT(FNAME)
+ . I FNAME="ORSTARTT" D TDT(FNAME)
+ . I FNAME="ORSTOPT" D TDT(FNAME)
+ . I VALUE["(" S VALUE=VALUE_")"
+ . S DSC="for "_VALUE
+ I FNAME="ORRANGE" D
+ . S ORRANGE=$$GETVAL(OWNR,PLIEN,"ORRANGE")
+ . I $G(PPIEN)'="" D RANGE^BQIDCAH1(ORRANGE,PPIEN,"ORRANGE")
+ . S VALUE=ORRANGE_" ("_$$FMTE^BQIUL1(RFROM)_"-"_$$FMTE^BQIUL1(RTHRU)_")"
+ . S DSC="for timeframe "_VALUE
+ . K ORRANGE,RFROM,RTHRU,ETHRU,EFROM,VALUE
+ Q
+ ;
+FDT(DCODE) ;EP
+ S EFROM=$$GETVAL(OWNR,PLIEN,DCODE)
+ I EFROM]"" S VALUE="(From date "_$$FMTE^BQIUL1(EFROM)
+ Q
+ ;
+TDT(DCODE) ;EP
+ S ETHRU=$$GETVAL(OWNR,PLIEN,"ORTHRU")
+ I ETHRU]"" S VALUE=VALUE_$S(VALUE["Range":" thru date ",1:" thru date ")_$$FMTE^BQIUL1(ETHRU)
+ Q
+ ;
+ORD ;EP-Orders
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"OROP") Q:PORD=""
+ I FNAME="ORCLO"!(FNAME="ORCLI") D
+ . I $G(FPARMS("VAL","ORCLO"))="Y" S DSC=DSC_" for outpatient orders"
+ . I $G(FPARMS("VAL","ORCLI"))="Y" S DSC=DSC_" for inpatient orders"
+ I FNAME="ORLOC" D
+ . S DSC=DSC_$S($L(FPARMS("VAL","ORLOC"),", ")>1:" Order Hosp Locations: ",1:" Order Hosp Location: ")_$G(FPARMS("VAL","ORLOC"))
+ I FNAME="ORNOLOC" D
+ . I $G(FPARMS("VAL","ORNOLOC"))'="" S DSC=DSC_" Where the order has no Hosp Location"
+ I FNAME="ORSLOC" D
+ . S DSC=DSC_$S($L(FPARMS("VAL","ORSLOC"),", ")>1:" Order Site Locations: ",1:" Order Site Location: ")_$G(FPARMS("VAL","ORSLOC"))
+ I FNAME="ORNOSLOC" D
+ . I $G(FPARMS("VAL","ORNOSLOC"))'="" S DSC=DSC_" Where the order has no Site Location"
+ I FNAME="ORPROV" D
+ . S DSC=DSC_$S($L(FPARMS("VAL","ORPROV"),", ")>1:" Ordering providers: ",1:" Ordering provider: ")_$G(FPARMS("VAL","ORPROV"))
+ I FNAME="ORSTAT" D
+ . S DSC=DSC_$S($L(FPARMS("VAL","ORSTAT"),", ")>1:" With statuses: ",1:" With status: ")_$G(FPARMS("VAL","ORSTAT"))
+ I FNAME="ORITM" D
+ . S DSC=DSC_$G(FPARMS("VAL","ORITM"))
+ S PORD=$$PORD^BQIDCDF(FSOURCE,"OROP")
+ Q

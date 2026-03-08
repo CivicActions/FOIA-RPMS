@@ -1,5 +1,5 @@
 BDMDMAP ; IHS/CMI/LAB - print hs for dm patients with appts ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,8,10**;JUN 14, 2007;Build 12
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,8,10,13**;JUN 14, 2007;Build 66
  ;
  ;
  ;this routine will go through the Diabetes Register
@@ -15,8 +15,9 @@ EP ;EP - called from option interactive
  W !,"appointments and the clinic names if selecting a set of clinics.",!
 REGISTER ;get register name
  S BDMREG=""
+ ;D REG^BDMFUTIL
  W ! S DIC="^ACM(41.1,",DIC(0)="AEMQ",DIC("A")="Enter the Name of the Register: " D ^DIC
- I Y=-1 S BDMREG="" W !,"No Register Selected." G EOJ
+ I Y=-1 W !,"No Register Selected." G EOJ
  S BDMREG=+Y
 DATES K BDMED,BDMBD
  K DIR W ! S DIR(0)="DO^::EXP",DIR("A")="Enter Beginning Appointment Date"
@@ -142,6 +143,7 @@ DONE ;
  Q
  ;
 PRINT ;EP - called from xbdbque
+ D LOG^BUSAAPI("O","P","P",$S($G(XQY0)]"":$P(XQY0,U),1:"BDMDMAP"),"DM RPT ON REG W/APPT")
  S BDMIOSL=$S($G(BDMGUI):55,1:IOSL)
  K BDMQ S BDMPG=0 D HEADER
  I '$D(^XTMP("BDMDMAP",BDMJ,BDMH)) W !!,"NO DATA TO REPORT",! G DONE

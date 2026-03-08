@@ -1,5 +1,5 @@
-RAUTL8 ;HISC/CAH-Utility routines ; 06 Oct 2013  11:07 AM
- ;;5.0;Radiology/Nuclear Medicine;**45,72,99,90,1003,1005**;Nov 01, 2010;Build 13
+RAUTL8 ;HISC/CAH IHS/OIT/NST - Utility routines ;18 Aug 2025 4:11 PM
+ ;;5.0;Radiology/Nuclear Medicine;**45,72,99,90,137,156,1003,1005,1008,1009,1013**;Mar 16, 1998;Build 13
  ;
  ;Called by File 70, Exam subfile, Procedure Fld 2 Input transform
  ;RA*5*45: modified -  logic in PRC1, ASK, ASK1, & MES1 subroutines
@@ -254,6 +254,7 @@ ASKSEX() ;RA*5.0*99 - Determine the sex of the patient by asking the user.
  ;Return: the place holder value ('Y' is reset in the RA ORDER EXAM input template)
  ;necessary for branching within that template.
  ;
+ ;
  ;IHS/BJI/DAY - Patch 1005 - Gender Fix
  ;RA ORDER EXAM already screens out Males, and we want to treat any
  ;non-males as if they are female, so don't even ask the question
@@ -270,27 +271,39 @@ ASKPREG() ;RA*5.0*99 - Evaluate the conditions to present the PREGNANCY
  ;SCREENING (70.03 ; 32) prompt to the user. Called from the RA EXAM EDIT
  ;input template & the RA REGISTER compiled input template.
  ;
- ;Input: RA0(17) (global) The IEN of the report associated with this exam.
- ;                Note: no IEN will exist when the case is being registered.
- ;        RADFN  (global) the IEN of the patient
- ;            Y  (global) the place holder for the RA EXAM EDIT input template. 
+ ;Input vars
+ ;   RADFN - The DFN of the patient (global)
+ ; RAQRYST - The value returned by the function: CHKSTAT^RANPROU().
+ ;           Is RAQRYST is zero if study is complete (order #9).
+ ;           Checked in the RA EXAM EDIT input template.
+ ;       Y - The initial place holder value from the RA EXAM EDIT input
+ ;           template.
+ ;
+ ;Output var
+ ;     RAY - The place holder variable returned by this function.
+ ;           Either the place holder value is unchanged or is changed
+ ;           if pregnancy is possible or if the study is complete. 
+ ; 
  ;
  ;Return: the place holder value (Y = $$ASKPREG^RAUTL8) necessary for
  ;branching within these templates.
  ;
- N %,DIERR,RAERR,RAGE,RAST,VAERR,X,RAY S RAY=Y
- S RAGE=$$PTAGE^RAUTL8(RADFN,""),Y=$G(RA0(17))_","
- D:+Y GETS^DIQ(74,Y,5,"I","RAST","RAERR")
- S RAST=$G(RAST(74,Y,5,"I"),"")
+ ;P137/KLM - Removed report status check. Pregnancy screen will be presented
+ ;regardless of the report status.
+ ;
+ N %,DIERR,RAERR,RAGE,VAERR,X,RAY S RAY=Y
+ S RAGE=$$PTAGE^RAUTL8(RADFN,"")
  ;
  ;IHS/BJI/DAY - Patch 1005 - Allow Pregnancy Edit of Verified Reports
+ ;IHS/OIT/NST - Patch 1013 - Change age range 8-64 years old
  ;Controlled by a site parameter
- I +$G(RAMDIV),$P($G(^RA(79,+RAMDIV,9999999)),U,3)=1,$$PTSEX^RAUTL8(RADFN)'="M",(RAGE<56),(RAGE>11) Q RAY
+ I +$G(RAMDIV),$P($G(^RA(79,+RAMDIV,9999999)),U,3)=1,$$PTSEX^RAUTL8(RADFN)'="M",(RAGE<65),(RAGE>7) Q RAY
  ;End patch
  ;
  ;IHS/BJI/DAY - Patch 1005 - Gender Fix
  ;I $$PTSEX^RAUTL8(RADFN)'="F"!((RAGE>55)!(RAGE<12))!(RAST="V")!(RAST="EF") S RAY="@8001"
- I $$PTSEX^RAUTL8(RADFN)="M"!(RAGE>55)!(RAGE<12)!(RAST="V")!(RAST="EF") S RAY="@8001"
+ I $$PTSEX^RAUTL8(RADFN)="M"!(RAGE>64)!(RAGE<8) S RAY="@8001"  ;IHS/OIT/NST P1013
  ;
+ S:$G(RAQRYST)=0 RAY="@8001" ;P156/gjc
  Q RAY
  ;

@@ -1,5 +1,5 @@
 AMHRAS1 ; IHS/CMI/LAB - list ALCOHOL ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;4.0;IHS BEHAVIORAL HEALTH;**11,12**;JUN 02, 2010;Build 46
  ;
  ;
 INFORM ;
@@ -11,11 +11,13 @@ INFORM ;
  W !,"the user.  Alcohol Screening is defined as any of the following documented:"
  W !?5,"- Alcohol Screening Exam (Exam code 35)"
  W !?5,"- Measurements: AUDC, AUDT, CRFT"
- W !?5,"- Health Factor with Alcohol/Drug Category (CAGE)"
- W !?5,"- Diagnoses V79.1, 29.1"
+ W !?5,"- Any CAGE [F018-F022] or CAGE-AID [F210-F214] Health Factor"
+ W !?5,"- Any TAPS-Alcohol Health Factor [F175-F179]"
+ W !?5,"- Diagnoses 29.1"
  W !?5,"- Education Topics: AOD-SCR, CD-SCR"
- W !?5,"- CPT Codes: 99408, 99409, G0396, G0397, H0049"
- W !?5,"- refusal of exam code 35"
+ W !?5,"- CPT 99408, 99409, G0396, G0397, G0442, G0443, G2011, G2196, G2197, H0049,"
+ W !?5,"  H0050, 3016F [BGP ALCOHOL SCREENING CPTS]"
+ W !?5,"- refusal of exam code 35 (Alcohol Screening exam)"
  W !,"This report will tally the patients by age, gender, screening exam result,"
  W !,"provider (either exam provider, if available, or primary provider on the "
  W !,"visit), clinic, date of screening, designated PCP, MH Provider, SS Provider"
@@ -46,13 +48,14 @@ DATES K AMHRED,AMHRBD
 TALLY ;which items to tally
  K AMHRTALL
  W !!,"Please select which items you wish to tally on this report:",!
- W !?3,"0)  Do not include any Tallies",?40,"6)  Date of Screening"
- W !?3,"1)  Type/Result of Screening",?40,"7)  Primary Provider on Visit"
- W !?3,"2)  Gender",?40,"8)  Designated MH Provider"
- W !?3,"3)  Age of Patient",?40,"9)  Designated SS Provider"
- W !?3,"4)  Provider who Screened",?40,"10) Designated ASA/CD Provider"
- W !?3,"5)  Clinic",?40,"11) Designated Primary Care Provider"
- K DIR S DIR(0)="L^0:11",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
+ W !?3,"0)  Do not include any Tallies",?40,"7)  Primary Provider on Visit"
+ W !?3,"1)  Type/Result of Screening",?40,"8)  Designated MH Provider"
+ W !?3,"2)  Gender",?40,"9)  Designated SS Provider"
+ W !?3,"3)  Age of Patient",?40,"10) Designated ASA/CD Provider"
+ W !?3,"4)  Provider who Screened",?40,"11) Designated Primary Care Provider"
+ W !?3,"5)  Clinic",?40,"12) Race"
+ W !?3,"6)  Date of Screening",?40,"13) Ethnicity"
+ K DIR S DIR(0)="L^0:13",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G DATES
  I Y="" G DATES
  S AMHRTALL=Y
@@ -73,7 +76,7 @@ LIST ;
 LIST1 ;
  S AMHRSORT=""
  W !
- S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN"
+ S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN;Q:Race;E:Ethnicity"
  S DIR("A")="How would you like the list to be sorted",DIR("B")="H"
  KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G LIST
@@ -87,10 +90,17 @@ DP ;
 DEMO ;
  D DEMOCHK^AMHUTIL1(.AMHDEMO)
  I AMHDEMO=-1 G DP
-ZIS ;
- S XBRP="PRINT^AMHRAS1P",XBRC="PROC^AMHRAS1",XBRX="XIT^AMHRAS1",XBNS="AMHR"
+ZIS ;CALL TO XBDBQUE
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
+ I $D(DIRUT) G XIT
+ I $G(Y)="B" D BROWSE,XIT Q
+ S XBRP="PRINT^AMHRAS1P",XBRC="PROC^AMHRAS1",XBRX="XIT^AMHRAS1",XBNS="AMH"
  D ^XBDBQUE
  D XIT
+ Q
+BROWSE ;
+ S XBRP="VIEWR^XBLM(""^AMHRAS1P"")"
+ S XBNS="AMH",XBRC="PROC^AMHRAS1",XBRX="XIT^AMHRAS1",XBIOP=0 D ^XBDBQUE
  Q
 XIT ;
  D EN^XBVK("AMHR")
@@ -112,6 +122,8 @@ PROC ;
  .I $P(AMHREFS,U,1)>$P(AMHALSC,U,1) S AMHALSC=AMHREFS,AMHPFI="PCC"
  .I AMHALSC="" Q  ;no screenings
  .S ^XTMP("AMHRAS1",AMHRJ,AMHRH,"PTS",DFN)=AMHALSC,$P(^XTMP("AMHRAS1",AMHRJ,AMHRH,"PTS",DFN),U,20)=AMHPFI
+ .S $P(^XTMP("AMHRAS1",AMHRJ,AMHRH,"PTS",DFN),U,25)=$$RACE^AMHUTIL2(DFN)
+ .S $P(^XTMP("AMHRAS1",AMHRJ,AMHRH,"PTS",DFN),U,26)=$$ETHN^AMHUTIL2(DFN)
  Q
  ;
 BHPPNAME(R) ;EP primary provider internal # from 200
@@ -172,7 +184,8 @@ BHALCS(P,BDATE,EDATE) ;EP - pass back last BH screening
  ..I R]"" Q
  ..S X=0 F  S X=$O(^AMHRHF("AD",V,X)) Q:X'=+X!(R]"")  D
  ...S M=$$VALI^XBDIQ1(9002011.08,X,.01)
- ...I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U)="ALCOHOL/DRUG" S R=$$BHRT(V,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(V,811)),U,1))
+ ...I $P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C001"!($P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C036")!($P(^AUTTHF($P(^AUTTHF(M,0),U,3),0),U,2)="C029") D  Q
+ ....S R=$$BHRT(V,$$VAL^XBDIQ1(9002011.08,X,.01),"",P,$$VALI^XBDIQ1(9002011.08,X,.05),$P($G(^AMHRHF(V,811)),U,1)) Q
  ..I R]"" Q
  ..S X=0 F  S X=$O(^AMHRPRO("AD",V,X)) Q:X'=+X!(R]"")  D
  ...S M=$$VAL^XBDIQ1(9002011.01,X,.01)
@@ -185,7 +198,8 @@ BHALCS(P,BDATE,EDATE) ;EP - pass back last BH screening
  ..S X=0 F  S X=$O(^AMHRPROC("AD",V,X)) Q:X'=+X!(R]"")  D
  ...S M=$$VALI^XBDIQ1(9002011.04,X,.01)
  ...Q:'$$ICD^ATXCHK(M,$O(^ATXAX("B","BGP ALCOHOL SCREENING CPTS",0)),1)
- ...S R=$$BHRT(V,"CPT: "_$$VAL^XBDIQ1(9002011.04,X,.01),"",P,"")
+ ...S J="" I $$ICD^ATXCHK(M,$O(^ATXAX("B","BGP ALCOHOL POSITIVE SCRN CPTS",0)),1) S J=" (POS)"
+ ...S R=$$BHRT(V,"CPT: "_$$VAL^XBDIQ1(9002011.04,X,.01)_J,"",P,"")
  ..I R]"" Q
  Q R
 BHRT(V,TYPE,RES,PAT,PROVSCRN,COMMENT) ;EP
@@ -193,8 +207,8 @@ BHRT(V,TYPE,RES,PAT,PROVSCRN,COMMENT) ;EP
  S COMMENT=$G(COMMENT)
  NEW T,D
  S (D,T)=$P($P(^AMHREC(V,0),U),".")
- S $P(T,U,2)=TYPE_";"_RES
- S $P(T,U,3)=$P(^DPT(PAT,0),U,2)
+ S $P(T,U,2)=TYPE_";"_$S(RES="NEGATIVE":"NORMAL/NEGATIVE",1:RES)
+ S $P(T,U,3)=$$VAL^XBDIQ1(2,PAT,.02)
  S $P(T,U,4)=$$AGE^AUPNPAT(PAT,D)
  S $P(T,U,5)=$S($G(PROVSCRN)]"":$P(^VA(200,PROVSCRN,0),U),1:"UNKNOWN")
  S $P(T,U,6)=$$VAL^XBDIQ1(9002011,V,.25)
@@ -239,7 +253,7 @@ REFUSAL(PAT,F,I,B,E) ;EP
  S (X,T)="" F  S X=$O(^AUPNPREF("AA",PAT,F,I,X)) Q:X'=+X!(T]"")  S Y=0 F  S Y=$O(^AUPNPREF("AA",PAT,F,I,X,Y)) Q:Y'=+Y  S D=$P(^AUPNPREF(Y,0),U,3) I D'<B&(D'>E) D
  .S T=D
  .S $P(T,U,2)="REFUSED;"_$$VAL^XBDIQ1(9000022,Y,.07)
- .S $P(T,U,3)=$P(^DPT(PAT,0),U,2)
+ .S $P(T,U,3)=$$VAL^XBDIQ1(2,PAT,.02)
  .S $P(T,U,4)=$$AGE^AUPNPAT(PAT,D)
  .S $P(T,U,5)=$$VAL^XBDIQ1(9000022,Y,1204) I $P(T,U,5)="" S $P(T,U,5)="UNKNOWN"
  .S $P(T,U,6)="UNKNOWN"
@@ -254,7 +268,7 @@ PCCV(S,PAT) ;EP
  S T=""
  S $P(T,U)=$P(S,U)
  S $P(T,U,2)=$P(S,U,2)_";"_$P(S,U,3)
- S $P(T,U,3)=$P(^DPT(PAT,0),U,2)
+ S $P(T,U,3)=$$VAL^XBDIQ1(2,PAT,.02)
  S $P(T,U,4)=$$AGE^AUPNPAT(PAT,$P(S,U))
  S $P(T,U,5)=$$SCRNPCC(S)
  S $P(T,U,6)=$$VAL^XBDIQ1(9000010,$P(S,U,4),.08)

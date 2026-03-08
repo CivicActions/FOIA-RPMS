@@ -1,12 +1,9 @@
-%ZISF ;SFISC/AC - HOST FILES (VAX DSM) ;06/02/2005  12:10
- ;;8.0;KERNEL;**104,385**;JUL 10, 1995;Build 3
+%ZISF ;SFISC/AC - HOST FILES (VAX DSM) ;05/06/98  16:32 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1007**;APR 1, 2003
+ ;;8.0;KERNEL;**104**;JUL 10, 1995
 HFS Q:$D(IOP)&$D(%IS("HFSIO"))&$D(%IS("IOPAR"))
- ;Calling parameters in %ZIS override Device file.
- N %
- ;Get file name
  I $D(%ZIS("HFSNAME")) S IO=%ZIS("HFSNAME"),%X=IO
  E  D ASKHFS
- ;Mode or actual parameters
 H S:$D(%ZIS("HFSMODE")) %ZISOPAR=$$MODE(%ZIS("HFSMODE"))
 H1 I $D(IO("Q"))!(%IS["Z") S IO("HFSIO")=""
  S %ZHFN=$S(%X]"":%X,1:IO),%ZHFN=$$CHKNM(%ZHFN),%XX=$&ZLIB.%PARSE(%ZHFN)
@@ -14,14 +11,11 @@ H1 I $D(IO("Q"))!(%IS["Z") S IO("HFSIO")=""
  I %XX]"",$&ZLIB.%GETDVI(%XX,"DEVCLASS")="DISK"
  E  S DUOUT=1,POP=1 W:'$D(IOP) !,"HOST FILE NAME NOT VALID" Q
 H2 S IO=$&ZLIB.%PARSE(%ZHFN,".DAT") I $D(IO("HFSIO")) S IO("HFSIO")=IO
- W:'$D(IOP)&$D(%ZIS("HFSNAME")) "    HOST FILE USED:  "_IO,!
- ;Check Ask Parameters
+ W:'$D(IOP)&$D(%ZIS("HFSNAME")) "    HOST FILE TO USE:  "_IO,!
  D ASKPAR^%ZIS6,SETPAR^%ZIS3
- ;Mode or actual parameters
 HFSIOO Q:$D(%ZIS("HFSMODE"))
- I '$D(IOP),%ZTYPE="HFS",'$P(^%ZIS(1,%E,0),"^",4),%ZISOPAR="",$P($G(^%ZIS(1,%E,1)),"^",6) W !,?20,"INPUT/OUTPUT OPERATION: R//"
+ I '$D(IOP),%ZTYPE="HFS",'$P(^%ZIS(1,%E,0),"^",4),%ZISOPAR="",$P($G(^%ZIS(1,%E,1)),"^",6) W ?45,"INPUT/OUTPUT OPERATION: "
  Q:'$T  D SBR^%ZIS1 I $D(DTOUT)!$D(DFOUT)!$D(DUOUT) S POP=1 Q
- S:%X="" %X="R"
  D HOPT:%X="?"!($F("?^R^N^RW",%X)'>1),HOPT1:%X="??"
  G HFSIOO:%X="?"!($F("?^R^N^RW",%X)'>1)
  S %ZISOPAR=$S(%X="R":"(READONLY)",%X="N":"(NEWVERSION)",1:"") Q
@@ -41,20 +35,18 @@ ASKHFSIO(DA) ;Ask HFS Input/Output operation.
  Q 0
  ;
 CHKNM(H) ;Check HFS for dir
- I (H'[":")&(H'["[") Q $$DEFDIR^%ZISH("")_H ;disk:[directory]file
- Q H
+ I H[":"!(H["[") Q H
+ Q $$DEFDIR^%ZISH("")_H
  ;
 MODE(X) ;Returns OPEN parameters in Y
  N Y
  S Y=$S(X["R"&(X["W"):"",X["A":"",X="R":"(READONLY)",X="W":"(NEWVERSION)",1:"(NEWVERSION)")
  Q Y
 HOPT W !,"Enter one of the following host file input/ouput operation:"
- W !,?16,"R = READONLY",!,?16,"N = NEWVERSION",!,?15,"RW = READ/WRITE",!
- Q
+ W !,?16,"R = READONLY",!,?16,"N = NEWVERSION",!,?15,"RW = READ/WRITE",! Q
 HOPT1 S %ZISI=$O(^DIC(9.2,"B","XUHFSPARAM-VXD",0)) Q:'%ZISI  Q:'$D(^DIC(9.2,+%ZISI,0))  Q:$P(^(0),"^",1)'="XUHFSPARAM-VXD"
  Q:$D(^DIC(9.2,+%ZISI,1))'>9  F %X=0:0 S %X=$O(^DIC(9.2,+%ZISI,1,%X)) Q:%X'>0  I $D(^(%X,0)) W !,^(0)
- W ! S %X="??"
- Q
+ W ! S %X="??" Q
  ;
  ;--- OPEN/CLOSE EXECUTES, PRE-OPEN and POST-CLOSE EXECUTES FOR P-MESSAGE ---
 OEXPMSG Q  ;Open Execute for p-message device
@@ -68,4 +60,3 @@ OEXDDBR D OPEN^DDBRZIS Q  ;Open Execute for Browser device
 CEXDDBR D CLOSE^DDBRZIS Q  ;Close Execute for Browser device
 POXDDBR I '$$TEST^DDBRT S %ZISQUIT=1 W $C(7),!,"Browser not selectable from current terminal.",! Q  ;Pre-close Execute for Browser device
 PCXDDBR D POST^DDBRZIS Q  ;Post-close Execute for Browser device
- Q

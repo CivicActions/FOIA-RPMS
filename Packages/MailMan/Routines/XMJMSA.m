@@ -1,5 +1,5 @@
-XMJMSA ;ISC-SF/GMB-Send Anonymous User Suggestion Message ;04/17/2002  10:12
- ;;8.0;MailMan;;Jun 28, 2002
+XMJMSA ;ISC-SF/GMB-Anonymous User Suggestion Message ;02/22/99  10:24
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces ^XMANON (ISC-WASH/CAP)
  ; Entry points used by MailMan options (not covered by DBIA):
  ; SEND    XMSUGGESTION
@@ -7,29 +7,27 @@ XMJMSA ;ISC-SF/GMB-Send Anonymous User Suggestion Message ;04/17/2002  10:12
  ; SUGGESTION BOX basket of SHARED,MAIL.  If this basket doesn't exist,
  ; it will be created.
  ;
- ; MailMan masks (does not record) the actual identity of the sender.
+ ; MailMan carefully fails to record the actual identity of the sender.
  ;
  ; To use it, put the XMSUGGESTION option onto the appropriate menu.
  ; To stop a particular person from using it, put a 'Reverse/negative
  ; Lock' onto the XMSUGGESTION option and assign that key to the
  ; person you do not want to be able to use it.
 SEND ;
- N XMSUBJ,XMABORT,XMFINISH,XMDIR,XMY,XMOPT,XMOX
- D SET^XMXSEC2("ES",37305,.XMOPT,.XMOX) ; Edit Subject
- D SET^XMXSEC2("ET",37306,.XMOPT,.XMOX) ; Edit Text
- D SET^XMXSEC2("T",37334,.XMOPT,.XMOX) ; Transmit now
- S XMDIR("A")=$$EZBLD^DIALOG(34067) ; Select Message option:
- S XMDIR("B")=XMOX("O","T")_":"_XMOPT("T") ; Transmit now
- S XMDIR("??")="@" ; no help screen
+ N XMSUBJ,XMABORT,DIR,Y,X,XMFINISH
  S XMABORT=0
  ;D WARNING(.XMABORT) Q:XMABORT
+ S XMSUBJ="Suggestion"
  D ES Q:XMABORT  ; Edit the subject
  K ^TMP("XM",$J)
  D ET Q:XMABORT  ; Edit the text
  S XMFINISH=0
  F  D  Q:XMFINISH!XMABORT
- . D XMDIR^XMJDIR(.XMDIR,.XMOPT,.XMOX,.XMY,.XMABORT) Q:XMABORT
- . D @XMY
+ . S DIR(0)="SAM^ES:Edit Subject;ET:Edit Text;T:Transmit now"
+ . S DIR("A")="Select Message option:  "
+ . S DIR("B")="Transmit now"
+ . D ^DIR I $D(DIRUT) S XMABORT=1 Q
+ . D @Y
  K ^TMP("XM",$J)
  Q
 ES ;
@@ -45,24 +43,20 @@ ET ; Edit text
 T ; Transmit the message
  N XMDUZ,DUZ,XMINSTR,XMZ
  S XMFINISH=1,(XMDUZ,DUZ)=.6
- S XMINSTR("FROM")=$$EZBLD^DIALOG(34665) ; Anonymous
+ S XMINSTR("FROM")="Anonymous"
  S XMINSTR("SHARE DATE")="3991231"
- S XMINSTR("SHARE BSKT")=$$EZBLD^DIALOG(34666) ; SUGGESTION BOX
+ S XMINSTR("SHARE BSKT")="SUGGESTION BOX"
  D CRE8XMZ^XMXSEND(XMSUBJ,.XMZ,1) Q:XMZ<1
- W $$EZBLD^DIALOG(34217,XMZ) ; Sending [|1|]...
+ W "  Sending [",XMZ,"]... "
  D MOVEBODY^XMXSEND(XMZ,"^TMP(""XM"",$J)")
  D ADDRNSND^XMXSEND(XMDUZ,XMZ,XMDUZ,.XMINSTR)
- W !,$$EZBLD^DIALOG(34213) ;  Sent
+ W !,"  Sent"
  Q
 WARNING(XMABORT) ;
- ;                 * * * * *  ATTENTION  * * * * *
- ;      Anonymous messages may or may not be totally anonymous.
- ;                Please check with your local IRM
- ; to find out if your facility has methods in place to identify you.
- N XMTEXT
  W @IOF
- D BLD^DIALOG(34667,"","","XMTEXT","F")
- D MSG^DIALOG("WM","",79,"","XMTEXT")
- W !!
+ W !,$$CJ^XLFSTR("* * * * *  ATTENTION  * * * * *",79)
+ W !!,$$CJ^XLFSTR("Anonymous messages may or may not be totally anonymous.",79)
+ W !!,$$CJ^XLFSTR("Please check with your local IRM",79)
+ W !,$$CJ^XLFSTR("to find out if your facility has methods in place to identify you.",79),!!
  D PAGE^XMXUTIL(.XMABORT)
  Q

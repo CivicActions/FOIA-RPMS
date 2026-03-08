@@ -1,7 +1,15 @@
 APCDUTL ; IHS/CMI/LAB - DATA ENTRY UTILITIES ; 
- ;;2.0;IHS PCC SUITE;**2,7,10,20**;MAY 14, 2009;Build 25
+ ;;2.0;IHS PCC SUITE;**2,7,10,20,25**;MAY 14, 2009;Build 37
  ;
  ;
+AGE(P,D) ;EP - called to get exact age in years based on DOB
+ NEW B,J,K,M
+ S B=$$DOB^AUPNPAT(P)  ;DOB
+ S J=$E(D,1,3)-$E(B,1,3)  ;YEARS DIFFERENCE
+ S K=$E(D,4,7)  ;M/D OF VD
+ S M=$E(B,4,7)  ;M/D OF DOB
+ I +M>+K S J=J-1
+ Q J
 NR ;EP - called from APCD NRS (ADD) input template
  NEW A,B,C,D
  D EN^DDIOL("Nutritional Risk Screening Factors",,"!!")

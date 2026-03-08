@@ -1,11 +1,12 @@
-PSOORUTL ;ISC BHAM/SAB  - updates order status from oerr ;29-May-2012 15:03;PLS
- ;;7.0;OUTPATIENT PHARMACY;**14,46,146,132,1002,1005,1007,118,199,223,148,249,274,225,1015**;DEC 1997;Build 62
+PSOORUTL ;ISC BHAM/SAB  - updates order status from oerr ;21-Dec-2018 17:28;DU
+ ;;7.0;OUTPATIENT PHARMACY;**14,46,146,132,1002,1005,1007,118,199,223,148,249,274,225,1015,1024**;DEC 1997;Build 68
  ;External reference to EN^ORERR - 2187
  ;External reference to ^PS(55 - 2228
  ;Input variables, poerr("psofilnm")=pharmacy pointer # from OE/RR, poerr("stat")=Order Control status
  ;poerr("pharmst")=will contain 'ZE'if rx has expired, poerr("comm")=Comments, poerr("user")=Person placing request
  ; Modified - IHS/CIA/PLS - 11/11/04 - Line PEXIT+7 and new EP CANDATE (Removed in patch 1010)
  ;            IHS/MSC/PLS - 08/14/08 - Line CAN+2
+ ; Modified - IHS/MSC/MGH - 12/21/18 - Added call in CAN to send msg to Surescripts
 EN(POERR) ;
  N PSZORS,III
  F OO=0:0 S OO=$O(MSG(OO)) Q:'OO  I $P(MSG(OO),"|")="ZRN" S NVA=1
@@ -54,6 +55,9 @@ CAN S ACOM="Discontinued by OE/RR." I $P(^PSRX(DA,"STA"),"^")=3!($P(^("STA"),"^"
  .D NOW^%DTC S ^PSRX(DA,"A",0)="^52.3DA^"_(ACNT+1)_"^"_(ACNT+1),^PSRX(DA,"A",ACNT+1,0)=%_"^C^"_POERR("USER")_"^"_RFCNT_"^"_$G(ACOM)
  .S REA="C" D EXP^PSOHELP1
  I $G(^PS(52.4,DA,0))]"" S PSCDA=DA,DIK="^PS(52.4," D ^DIK S DA=PSCDA K DIK,PSCDA
+ ;IHS/MSC/MGH Send message to Surescripts if it can be cancelled
+ N DOCAN S DOCAN=$$PPSL^APSPFNC6(RXDA,"Cancel")   ;Check to see if msg to surescripts can be sent
+ I DOCAN=0 D CANCEL^APSPES6(RXDA)                 ;Send Cancel message
  Q
 HD ;place order on hold
  G:POERR("STAT")="RL" REL^PSOORUT1 S (ACT,ORS)=0 I POERR("PSOFILNM")["S" D  G EXIT

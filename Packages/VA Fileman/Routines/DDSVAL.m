@@ -1,5 +1,6 @@
 DDSVAL ;SFISC/MKO-GET,PUT FOR DD IELDS ;9:38 AM  29 Aug 1995
- ;;22.0;VA FileMan;;Mar 30, 1999
+ ;;21.0;VA FileMan;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**4,11**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 GET(DDSFILE,DA,DDSFLD,DDSER,DDSPARM) ;Get value for file/field

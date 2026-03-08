@@ -1,7 +1,29 @@
 APCLSIL4 ; IHS/CMI/LAB - ILI surveillance export ; 
- ;;3.0;IHS PCC REPORTS;**28,29,30,31**;FEB 05, 1997;Build 32
+ ;;3.0;IHS PCC REPORTS;**28,29,30,31,33,34**;FEB 05, 1997;Build 43
  ;
-HASPVAC(V) ;EP - get flu iz
+HASCVAC(V) ;EP - get COVID iz
+ NEW C,X,Y,Z,T,G
+ S C=0,X=0 F  S X=$O(^AUPNVIMM("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVIMM(X,0)),U) D
+ .Q:'Y
+ .Q:'$D(^AUTTIMM(Y,0))
+ .S G=$$VAL^XBDIQ1(9999999.14,Y,.09)
+ .Q:G=""
+ .Q:$$UP^XLFSTR(G)'["COVID"
+ .S Z=$P(^AUTTIMM(Y,0),U,3)  ;CVX CODE
+ .;
+ .S C=1_U_Z_U_$$VAL^XBDIQ1(9000010.11,X,.05) I $P(^AUPNVIMM(X,0),U,5),$D(^AUTTIML($P(^AUPNVIMM(X,0),U,5),0)) S C=C_U_$$VAL^XBDIQ1(9999999.41,$P(^AUPNVIMM(X,0),U,5),.02)
+ .S Z=$$VALI^XBDIQ1(9000010.11,X,1201)
+ .S $P(C,U,5)=$S(Z:$P(Z,".",1),1:$$VD^APCLV(V))
+ .Q
+ I C Q C
+ S T=$O(^ATXAX("B","SURVEILLANCE CLI CPT VAX",0))
+ S C=0,X=0 F  S X=$O(^AUPNVCPT("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVCPT(X,0)),U) D
+ .Q:'Y
+ .I '$$ICD^APCLSILU(Y,T,1) Q
+ .S C=1_U_$$VAL^XBDIQ1(9000010.18,X,.01),$P(C,U,5)=$$VD^APCLV(V)
+ I C Q C
+ Q C
+HASPVAC(V) ;EP - get PCV iz
  NEW C,X,Y,Z,T
  S T=$O(^ATXAX("B","SURVEILLANCE PCV CVX CODES",0))
  S C=0,X=0 F  S X=$O(^AUPNVIMM("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVIMM(X,0)),U) D
@@ -30,7 +52,7 @@ PCVFEB(APCLV,D) ;EP
  .S V=$P(APCL(X),U,5)
  .Q:'$D(^AUPNVSIT(V,0))
  .S Z=0
- .I "AORSHI"'[$P(^AUPNVSIT(V,0),U,7) Q  ;no chart reviews or Telephone calls
+ .I "AORSHIM"'[$P(^AUPNVSIT(V,0),U,7) Q  ;no chart reviews or Telephone calls
  .I $P(^AUPNVSIT(V,0),U,7)="H" S Z=1  ;h
  .I $P(^AUPNVSIT(V,0),U,7)="I" S Z=1
  .I $$CLINIC^APCLV(V,"C")=30 S Z=1
@@ -65,7 +87,7 @@ PCVECPEH(APCLV,D) ;EP
  S APCLX=0 F  S APCLX=$O(APCL(APCLX)) Q:APCLX'=+APCLX!(G]"")  D
  .S V=$P(APCL(APCLX),U,5)
  .Q:'$D(^AUPNVSIT(V,0))
- .I "AORSHI"'[$P(^AUPNVSIT(V,0),U,7) Q
+ .I "AORSHIM"'[$P(^AUPNVSIT(V,0),U,7) Q
  .;S APCLCLIN=$$CLINIC^APCLV(V,"I")  ;get clinic code
  .;is there a PHN
  .;S X=0,S=0 F  S X=$O(^AUPNVPRV("AD",APCLV,X)) Q:X'=+X!(P)  D
@@ -104,7 +126,7 @@ PCVANGIO(APCLV,D) ;EP
  S APCLX=0 F  S APCLX=$O(APCL(APCLX)) Q:APCLX'=+APCLX!(G]"")  D
  .S V=$P(APCL(APCLX),U,5)
  .Q:'$D(^AUPNVSIT(V,0))
- .I "AORSH"'[$P(^AUPNVSIT(V,0),U,7) Q
+ .I "AORSHIM"'[$P(^AUPNVSIT(V,0),U,7) Q
  .;S APCLCLIN=$$CLINIC^APCLV(V,"I")  ;get clinic code
  .;is there a PHN
  .;S X=0,S=0 F  S X=$O(^AUPNVPRV("AD",APCLV,X)) Q:X'=+X!(P)  D
@@ -143,7 +165,7 @@ PCVASTH(APCLV,D) ;EP
  .S V=$P(APCL(X),U,5)
  .Q:'$D(^AUPNVSIT(V,0))
  .S Z=0
- .I "AORSHI"'[$P(^AUPNVSIT(V,0),U,7) Q  ;no chart reviews or Telephone calls or events
+ .I "AORSHIM"'[$P(^AUPNVSIT(V,0),U,7) Q  ;no chart reviews or Telephone calls or events
  .I $P(^AUPNVSIT(V,0),U,7)="H" S Z=1  ;h
  .I $$CLINIC^APCLV(V,"C")=30 S Z=1
  .I $$CLINIC^APCLV(V,"C")=80 S Z=1
@@ -172,7 +194,7 @@ PCVIMMUN(APCLV,D) ;EP
  S X=0 F  S X=$O(APCL(X)) Q:X'=+X!(G]"")  D
  .S V=$P(APCL(X),U,5)
  .Q:'$D(^AUPNVSIT(V,0))
- .I "AORSH"'[$P(^AUPNVSIT(V,0),U,7) Q  ;no chart reviews or Telephone calls
+ .I "AORSHIM"'[$P(^AUPNVSIT(V,0),U,7) Q  ;no chart reviews or Telephone calls
  .;does it have a IMMUNIOLOGICAL dx?
  .S T=$O(^ATXAX("B","SURVEILLANCE IMMUNOLOGICAL",0))
  .Q:'T
@@ -196,7 +218,7 @@ SET ;EP
  S TST=0
  ;I '$$PROD^XUPROD() S TST=1
  I $P($G(^APCLILIC(1,0)),U,5)="T" S TST=1
- S F=$S(TST:"FLZ",$G(APCLFLF):"FLF",$G(APCLFLFN):"FLF",1:"FLU")_"_"_APCLASU_"_"_$$DATE^APCLSIHL(DT)_"_P31.txt"    ;IHS/CMI/LAB - PATCH 31 FILENAME AND PATCH #
+ S F=$S(TST:"FLZ",$G(APCLFLF):"FLF",$G(APCLFLFN):"FLF",1:"FLU")_"_"_APCLASU_"_"_$$DATE^APCLSIHL(DT)_"_P34.txt"    ;IHS/CMI/LAB - PATCH 31 FILENAME AND PATCH #
  ;S F=$S(TST:"FLZ",$G(APCLFLF):"FLF",1:"FLU")_"_"_APCLASU_"_"_$$DATE^APCLSILI(DT)_".txt"
  S APCLFDA(9001003.312,APCLIENS,.02)=F
  S APCLFDA(9001003.312,APCLIENS,.05)=$S(XBFLG:0,1:1)
@@ -212,24 +234,17 @@ RUNTIME(B,E) ;
  S S=(86400*($P(E,",")-$P(B,",")))+($P(E,",",2)-$P(B,",",2)),H=$P(S/3600,".") S:H="" H=0 D
  .S S=S-(H*3600),M=$P(S/60,".") S:M="" M=0 S S=S-(M*60),SEC=S S RT="RUN TIME (H.M.S): "_H_"."_M_"."_SEC
  Q RT
-HASADVN6(APCLV,D1,D2) ;EP - PATCH 27 - if return 1 then count visit and put pieces 2 through n in columns 66 through 75
+HASADVN6(APCLV,D1) ;EP - PATCH 27 - if return 1 then count visit and put pieces 2 through n in columns 66 through 75
  NEW X,P,Y,Z,T,G,C,APCL,E,S,V,PAT,P1,P2,APCLVDAT,APCLHAS
  S G=""
- ;S D=$$VD^APCLV(APCLV) ;VISIT DATE
+ S APCLVDAT=$$VD^APCLV(APCLV) ;VISIT DATE
  ;S E=$$FMADD^XLFDT(D,60) ;END DATE TO LOOK
  S PAT=$P(^AUPNVSIT(APCLV,0),U,5)
  S (C,P1,P2)=0
  S (D,E)=""
  K APCLHAS
- I D1="" G D2
+ I D1="" Q ""
  D ALLV^APCLAPIU(PAT,D1,$$FMADD^XLFDT(D1,60),"APCL")
- S APCLVDAT=D1
- D D
- I D1=D2 Q 1_U_D_U_E
-D2 ;
- K APCL
- D ALLV^APCLAPIU(PAT,D2,$$FMADD^XLFDT(D2,60),"APCL")
- S APCLVDAT=D2
  D D
  I 'C Q ""
  Q 1_U_D_U_E
@@ -241,7 +256,7 @@ D ;
  .Q:'$D(^AUPNVSIT(V,0))
  .S Z=0
  .;
- .I "AORSH"'[$P(^AUPNVSIT(V,0),U,7) Q  ;no chart reviews or Telephone calls
+ .I "AORSHM"'[$P(^AUPNVSIT(V,0),U,7) Q  ;no chart reviews or Telephone calls
  .S CLNTAX=$O(^ATXAX("B","SURVEILLANCE ILI CLINICS",0))
  .S APCLCLIN=$$CLINIC^APCLV(V,"I")  ;get clinic code
  .;is there a PHN
@@ -267,8 +282,8 @@ HASADN61 .;
  ...S A=$$AGE^APCLSILU(PAT,2,$$VD^APCLV(V))
  ...Q:A<24
  ...Q:A>59
- ...Q:$$VD^APCLV(V)=APCLVDAT  ;$$VD^APCLV(APCLV)  ;NOT SAME DATE AS VACCINE
- ...Q:$$VD^APCLV(V)>$$FMADD^XLFDT(APCLVDAT,14)
+ ...Q:$$VD^APCLV(V)=D1  ;$$VD^APCLV(APCLV)  ;NOT SAME DATE AS VACCINE
+ ...Q:$$VD^APCLV(V)>$$FMADD^XLFDT(D1,14)
  ...D SET6
  ...Q
  ..I $$ICD^APCLSILU(T,$O(^ATXAX("B","SURVEILLANCE ADV EVENT FEBRILE",0)),9) D  Q
@@ -319,5 +334,5 @@ HASNVAC(V) ;EP - get h1n1 vaccine
  S C=0,X=0 F  S X=$O(^AUPNVCPT("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVCPT(X,0)),U) D
  .Q:'Y
  .Q:'$$ICD^APCLSILU(Y,T,1)
- .S C=1_U_$$VAL^XBDIQ1(9000010.18,X,.01)
+ .S C=1_U_$$VAL^XBDIQ1(9000010.18,X,.01),$P(C,U,5)=$$VD^APCLV(V)
  Q C

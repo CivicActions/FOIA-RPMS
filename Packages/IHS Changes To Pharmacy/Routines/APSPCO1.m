@@ -1,5 +1,5 @@
-APSPCO1 ; IHS/MSC/PLS - List Manager Complete Orders, CON'T ;24-Jul-2013 08:46;PLS
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1013**;Sep 23, 2004;Build 74
+APSPCO1 ; IHS/MSC/PLS - List Manager Complete Orders, CON'T ;15-May-2018 14:30;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1013,1023**;Sep 23, 2004;Build 121
  ;=================================================================
  Q
  ; Input: EFLG - Edit flag
@@ -21,6 +21,7 @@ EDTLLST ;EP- Create/Edit a location restriction list
  Q
 CHGCOM ;EP- Change comment associated with order
  N DA,DUOUT,Y,VAL,ITM,DTOUT,DIRUT,DIE,DR,LST,APSPCOQF,COM
+ S LST=""
  S DIR("A")="Select Orders by number",DIR(0)="LO^1:"_VALMCNT D ^DIR
  I $D(DUOUT) S VALMBCK="R" Q
  I +Y D FULL^VALM1 S LST=Y

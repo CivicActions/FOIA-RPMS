@@ -1,5 +1,8 @@
-TIULMED3 ; SLC/MAM - Cont. of Active/Recent Med Objects Routine ;05-Nov-2013 12:26;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**198,213,1013**;Jun 20, 1997;Build 33
+TIULMED3 ; SLC/MAM - Cont. of Active/Recent Med Objects Routine ;13-Feb-2025 12:03
+ ;;1.0;TEXT INTEGRATION UTILITIES;**198,213,1013,1029,1030**;NOV 10, 2004;Build 40
+ ; IHS/MSC/JSM updated to add legend at end of medication list for HOLD being replaced by
+ ;              BEHORX LABEL HOLD STATUS XPAR - p1029 (Feature 106931)
+ ; IHS/MSC/MIR 02/13/2025  added STHOLD in SORTSAVE+11, SORTSAVE+18, SORTSAVE+83 (Feature 119124)
 GETCLASS ; Get Drug Class, filter out supplies  BP/ELR
  I +DRUGIDX D
  .N TEMPNODE
@@ -34,14 +37,14 @@ SORTSAVE ;Sort & save Meds Data in TARGET
  ;     Med Name, and reverse issue date, followed by a counter
  ;     to avoid erasing meds issued on the same day
  ;
- N MED,CNT,XSTR,TIUXSTAT
+ N MED,CNT,XSTR,TIUXSTAT,STHOLD S STHOLD=0
  N DATA,NODE
  S MED="",CNT=1000000
  F  S MED=$O(@TARGET@("B",MED)) Q:MED=""  D
  .S (XSTR,TIUXSTAT)=""
  .F  S XSTR=$O(@TARGET@("B",MED,XSTR)) Q:XSTR=""  D
  .. F  S TIUXSTAT=$O(@TARGET@("B",MED,XSTR,TIUXSTAT)) Q:TIUXSTAT=""  D
- ...S NODE=@TARGET@("B",MED,XSTR,TIUXSTAT)
+ ...S NODE=@TARGET@("B",MED,XSTR,TIUXSTAT) S:TIUXSTAT["HOLD" STHOLD=1  ; MIR added STHOLD Feature 119124
  ...S DATA=$P(NODE,U,3)_U_$P(NODE,U,5)_U_MED,CNT=CNT+1
  ...S @TARGET@("C",DATA,(9999999-$P(NODE,U))_CNT)=$P(NODE,U,2)_U_$P(NODE,U,4)
  ;
@@ -104,6 +107,10 @@ SORTSAVE ;Sort & save Meds Data in TARGET
  ...S HEADER=OLDHEADR,TAB=OLDTAB
  ..S COUNT=COUNT+1,TOTAL=TOTAL+1
  ..D ADDMED^TIULMED1(0)
+ ;IHS/MSC/JSM p1029 Added next line if there are orders to display
+ S TAB=0
+ I STHOLD D
+ .D ADD^TIULMED1(" "),ADD^TIULMED1("(*) behind the status of the medication indicates pharmacy may be contacted about available fills of this medication")
  I COUNT'=TOTAL D
  .S TAB=0
  .D ADD^TIULMED1(" ")

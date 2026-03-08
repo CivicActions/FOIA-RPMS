@@ -1,5 +1,5 @@
 BSTSMAP1 ;GDIT/HS/BEE-Standard Terminology API Program - Mapping Logic ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**5**;Dec 01, 2016;Build 22
  ;
  Q
  ;
@@ -419,10 +419,10 @@ BCOND(CONC,CDARY) ;Build the condition array
  ;Loop through each map group
  S MGRP=0 F  S MGRP=$O(^BSTS(9002318.4,CIEN,14,"C",MGRP)) Q:'MGRP  D
  . ;
- . NEW MPRI
+ . NEW MPRI,NCTR
  . ;
  . ;Loop through by priority
- . S MPRI="" F  S MPRI=$O(^BSTS(9002318.4,CIEN,14,"C",MGRP,MPRI)) Q:MPRI=""  D
+ . S NCTR=0,MPRI="" F  S MPRI=$O(^BSTS(9002318.4,CIEN,14,"C",MGRP,MPRI)) Q:MPRI=""  D
  .. ;
  .. NEW CNTR
  .. ;
@@ -431,6 +431,9 @@ BCOND(CONC,CDARY) ;Build the condition array
  ... ;
  ... NEW CIEN1
  ... ;
+ ... ;GDIT/HS/BEE;02/22/2024;FEATURE#62463;Integrated Mapping Logic Modifications
+ ... S NCTR=NCTR+1
+ ... ;
  ... ;Loop through by CIEN1 (IEN of the ICD CONDITIONAL MAPPING multiple)
  ... S CIEN1="" F  S CIEN1=$O(^BSTS(9002318.4,CIEN,14,"C",MGRP,MPRI,CNTR,CIEN1)) Q:CIEN1=""  D
  .... ;
@@ -438,7 +441,10 @@ BCOND(CONC,CDARY) ;Build the condition array
  .... NEW CIEN2,COD,DA,IENS
  .... S DA(1)=CIEN,DA=CIEN1,IENS=$$IENS^DILF(.DA)
  .... S COD=$$GET1^DIQ(9002318.414,IENS,".04","E") Q:COD=""  ;Code
- .... S CDARY(MGRP,CNTR)=COD
+ .... ;
+ .... ;GDIT/HS/BEE;02/22/2024;FEATURE#62463;Integrated Mapping Logic Modifications
+ .... ;S CDARY(MGRP,CNTR)=COD
+ .... S CDARY(MGRP,NCTR)=COD
  .... ;
  .... ;Loop through by Condition (priority/counters could have >1 condition - AND logic applies)
  .... S CIEN2=0 F  S CIEN2=$O(^BSTS(9002318.4,CIEN,14,CIEN1,1,CIEN2)) Q:'CIEN2  D
@@ -459,7 +465,9 @@ BCOND(CONC,CDARY) ;Build the condition array
  ..... S COND="S PASS=0 I ("_VAR_"]"""")!("_VAR_"=""""&("_VAL_"="""")),"_VAR_OP_VAL_" S PASS=1"
  ..... ;
  ..... ;Set up the array
- ..... S CDARY(MGRP,CNTR,CIEN2)=COND
+ ..... ;GDIT/HS/BEE;02/22/2024;FEATURE#62463;Integrated Mapping Logic Modifications
+ ..... ;S CDARY(MGRP,CNTR,CIEN2)=COND
+ ..... S CDARY(MGRP,NCTR,CIEN2)=COND
  ;
  Q
  ;

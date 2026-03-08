@@ -1,5 +1,5 @@
 BIRPC1 ;IHS/CMI/MWR - REMOTE PROCEDURE CALLS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**10**;MAY 30,2015
+ ;;8.5;IMMUNIZATION;**10,25**;OCT 24, 2011;Build 22
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  RETURNS PATIENT DATA, DATA FOR AN IMMUNIZATION OR SKIN TEST VISIT.
  ;;  PATCH 3: Add Eligibility Code to default Hx string.  GET+35
@@ -93,7 +93,7 @@ GET(BIDATA,BIDA,BIVTYPE,BIDE) ;PEP - Return data for one Immunization or Skin Te
  ;---> Add Date VIS Presented to Patient (YYYYMMDD) and Date of Event ONLY.
  ;I '$D(BIDE),BIVTYPE="I" F I=4,6,24,27,29:1:37,43,49,51,61,65,67,68,76,77,78,80,82,84,87  S BIDE(I)=""
  I '$D(BIDE),BIVTYPE="I" D
- .F I=4,6,24,27,29:1:37,43,49,51,61,65,67,68,76,77,78,80,82,84,85,87,90,91  S BIDE(I)=""
+ .F I=4,6,24,27,29:1:37,43,49,51,61,65,67,68,76,77,78,80,82,84,85,87,90,91,95  S BIDE(I)=""
  ;**********
  ;
  ;---> IEN PC  DATA
@@ -130,7 +130,7 @@ GET(BIDATA,BIDA,BIVTYPE,BIDE) ;PEP - Return data for one Immunization or Skin Te
  ;---> 87 29 = Administrative Note.
  ;---> 90 30 = Date VIS Presented to Patient.
  ;---> 91 31 = Date of Event (1201) ONLY; if 1201 is null, return null.
- ;
+ ;---> 95 32 = Ordering Provider
  ;
  ;---> SKIN TEST:
  ;---> If this is a Skin Test Visit, collect these Data Elements.

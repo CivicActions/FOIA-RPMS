@@ -1,5 +1,5 @@
 ABMDRBR ; IHS/ASDST/DMJ - Brief Claims Listing ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**13**;APR 05, 2002
  ;Original;TMD;
  ;
  ; IHS/SD/SDR - v2.5 p13 - NO IM

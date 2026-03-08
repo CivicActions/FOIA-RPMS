@@ -1,7 +1,9 @@
 BLRWU4 ;VA/DALOI/RWF - READ ACCESSION ; 22-Oct-2013 09:22 ; MKK
- ;;5.2;LAB SERVICE;**1033**;NOV 01, 1997
+ ;;5.2;IHS LABORATORY;**1033,1054**;NOV 01, 1997;Build 20
  ;
  ; Clone of LRWU4 routine.
+ ;
+ ; ADO 79349 - LR*5.2*1054 - Accession Lookup not to Fail with hyphenated Accession Area abbreviation.
  ;
  ; Hard setting the LRVBY variable to 1.  VA comments follow.
  ;
@@ -41,7 +43,8 @@ AA ;
  ; Parse and process user input.
  S (X1,X2,X3)="",X1=$P(LRX," ",1),X2=$P(LRX," ",2),X3=$P(LRX," ",3)
  S:X3=""&(+X2=X2) X3=X2,X2=""
- I X1'?1A.AN D QUES Q
+ ; I X1'?1A.AN D QUES Q
+ I X1'?1AP.ANP D QUES Q  ; IHS/MSC/MKK - LR*5.2*1054
  S LRAA=$O(^BLRARC68("B",X1,0))
  I LRAA<1 D WLQUES Q:LRAA<1
  S %=$P(^BLRARC68(LRAA,0),U,14)

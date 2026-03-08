@@ -1,5 +1,6 @@
-DIU4 ;SFISC/XAK-SPECIFIER ;6/11/93  2:29 PM
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIU4 ;SFISC/XAK-SPECIFIER ;6/11/93  2:29 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  W ! S DIU=Y K DIR G S:'$D(^DD(DI,0,"SP",+Y))
  S DIR("A",1)=$P(DIU,U,2)_" is already a specifier."

@@ -1,19 +1,23 @@
 BARPUC ; IHS/SD/LSL - UN-ALLOCATED CASH JAN 16,1997 ; 01/26/2009
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**3,4,6,7,9,10,17,21,23**;OCT 26, 2005
- ;MAR 2013 P.OTTIS ADDED NEW VA billing
- ; ********************************************
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**3,4,6,7,9,10,17,21,23,33,37,39**;OCT 26, 2005;Build 231
+ ;IHS/SD/POT MAR 2013 ADDED NEW VA billing
+ ;IHS/SD/SDR 1.8*33 ADO60909 Updated to use NEW^BARTR to create new transaction
+ ;IHS/SD/SDR 1.8*37 ADO60825 Added logic to tag that option is being used so don't close cashiering session
+ ;IHS/SD/SDR 1.8*39 ADO111585 Rearranged display and included chk#
+ ;********************************************
  ;
 EN ;EP - Unallocated Posting
  S BARESIG=""
  D SIG^XUSESIG
  Q:X1=""  ;elec signature test
  S BARESIG=1
- D RAYGO^BARPST  ;ROLLOVER QUESTION-
+ S ^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID)=+$G(^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID))+1 ;bar*1.8*37 IHS/SD/SDR ADO60825
+ D RAYGO^BARPST  ;ROLLOVER QUESTION
  ;
 ENTRY ;
  S REIMBURS=0  ;BAR*1.8*4 SCR? 2 REIMBURSEMENT MODE
  S TRANSFER=0  ;BAR*1.8*4 UFMS SCR? TRANSFER MODE
- D ^BARVKL0       ;KILL OFF BAR* VARIABLES
+ D ^BARVKL0    ;KILL OFF BAR* VARIABLES
  K ^TMP($J,"BARVL")
  I '$D(BARUSR) D INIT^BARUTL  ;INITIALIZE VARIABLES  
  W !!
@@ -26,20 +30,21 @@ GETTX ;
  S (BARCNT,BARTX)=0
  S BARTT=$O(^BARTBL("B","UN-ALLOCATED",""))
  F  S BARTX=$O(^BARTR(DUZ(2),"AGL","O",BARTX)) Q:'BARTX  D
- . Q:$$GET1^DIQ(90050.03,BARTX,101,"I")'=BARTT
- . Q:'$$CKDATE^BARPST($P(^BARTR(DUZ(2),BARTX,0),U,14),0,"COLLECTION")  ;IGNORE OLD BATCHES;MRS;BAR*1.8*6 DD 4.2.4
- . S ^TMP($J,"BARVL",BARTX)=""
+ .Q:$$GET1^DIQ(90050.03,BARTX,101,"I")'=BARTT
+ .Q:'$$CKDATE^BARPST($P(^BARTR(DUZ(2),BARTX,0),U,14),0,"COLLECTION")  ;IGNORE OLD BATCHES;MRS;BAR*1.8*6 DD 4.2.4
+ .S ^TMP($J,"BARVL",BARTX)=""
  I '$D(^TMP($J,"BARVL")) D  G EXIT
- . W *7,"No open UNALLOCATED CASH transactions on file!"
- . D EOP^BARUTL(0)
- ;;; routine ^BARPTR finds g/l transactions and returns selected trx.
+ .W *7,"No open UNALLOCATED CASH transactions on file!"
+ .D EOP^BARUTL(0)
+ ;routine ^BARPTR finds g/l transactions and returns selected trx.
  S BARTR=$$EN^BARPTR()
  I +BARTR=0 G EXIT
  ;
 LOADTX ;
- ; ** get u/c transaction detail
+ ;** get u/c transaction detail
  K BARTX
- S DR="2;6;14;15;105"
+ ;S DR="2;6;14;15;105"  ;bar*1.8*39 IHS/SD/SDR ADO111585
+ S DR=".01;2;3;6;14;15;17"  ;bar*1.8*39 IHS/SD/SDR ADO111585
  S DA=+BARTR
  S DIC="^BARTR(DUZ(2),"
  S DIQ(0)="0I"
@@ -50,26 +55,42 @@ LOADTX ;
  ;
 CHOOSE ;
  D TOP^BARPTR
- W ?3,$J(BARTX(2,"I"),8,2)
- W ?15,$E(BARTX(6),1,30)
- W ?47,BARTX(14),!
+ ;start old bar*1.8*39 IHS/SD/SDR ADO111585
+ ;W ?3,$J(BARTX(2,"I"),8,2)
+ ;W ?15,$E(BARTX(6),1,30)
+ ;W ?47,BARTX(14),!
+ ;end old start new bar*1.8*39 IHS/SD/SDR ADO111585
+ W !,BARANS_"."
+ W ?3,$J(BARTX(2),8,2)  ;Credit
+ W:'$$CKDATE^BARPST($P(^BARTR(DUZ(2),BARTR,0),U,14),0,"COLLECTION") "LTR"
+ W ?15,$E(BARTX(6),1,25)  ;A/R Acct
+ W ?42,$P($G(^BARCOL(DUZ(2),BARTX(14,"I"),1,BARTX(15,"I"),8)),U)  ;check#
+ W ?77,BARTX(15)  ;item
+ W !,BARTX(.01)  ;TRDFN
+ W ?27,BARTX(14)  ;batch
+ ;TDN
+ W ?58
+ W $S($G(BARTX(17))'="":BARTX(17),$$GET1^DIQ(90051.1101,BARTX(15,"I")_","_BARTX(14,"I")_",",20,"E")'="":$$GET1^DIQ(90051.1101,BARTX(15,"I")_","_BARTX(14,"I")_",",20,"E"),1:"<NO TDN>")
+ W ?76,$S($O(^BAR(90052,"D",BARTX(14),0))'="":"LTR",1:"")
+ W !
+ ;end new bar*1.8*39 IHS/SD/SDR ADO111585
  S BARPRTQ=0 ; PRINT COMMENTS ON LETTER VARIABLE PKD BAR 1.8.17
  K DIR
  S DIR(0)="SAO^1:Post to A/R Bill;2:Refund;3:Unbilled Reimb;4:Transfers;5:Add Item Message;6:Exit"
  S DIR("A")="Action (1=Post to an A/R Bill, 2=Refund, 3=Unbilled Reimbursement, 4=Transfer to another facility, 5=Add Item Message, 6=Exit): "  ;BAR*1.8*P17 
- I $$IHS^BARUFUT(DUZ(2)) D               ;MRS:BAR*1.8*7 TO131 REQ_11
- . ;;;I $$IHSERA^BARUFUT(DUZ(2)) D               ;MRS:BAR*1.8*7 TO131 REQ_11
- . S DIR(0)="SAO^1:Post to A/R Bill;2:Refund;3:Transfers;4:Add Item Message;5:Exit"
- . S DIR("A")="Action (1=Post to an A/R Bill, 2=Refund, 3=Transfer to another facility, 4=Add Item Message, 5=Exit): "  ;BAR*1.8*P17
+ I $$IHS^BARUFUT(DUZ(2)) D  ;MRS:BAR*1.8*7 TO131 REQ_11
+ .;I $$IHSERA^BARUFUT(DUZ(2)) D  ;MRS:BAR*1.8*7 TO131 REQ_11
+ .S DIR(0)="SAO^1:Post to A/R Bill;2:Refund;3:Transfers;4:Add Item Message;5:Exit"
+ .S DIR("A")="Action (1=Post to an A/R Bill, 2=Refund, 3=Transfer to another facility, 4=Add Item Message, 5=Exit): "  ;BAR*1.8*P17
  D ^DIR
  N STR
- S STR=$P($E($P(DIR("A"),Y,2),2,99),",")  ; Get the Action Choice
+ S STR=$P($E($P(DIR("A"),Y,2),2,99),",")  ;Get the Action Choice
  I $D(DIRUT) G ENTRY
  I Y=1 G GETBILL
  I Y=2 D REFUND G ENTRY
  I STR["Unbilled Reimb" D REIMBURS S REIMBURS=1 G ENTRY
  I STR["Transfer" D TRANSFER G ENTRY
- I STR["Item Message" D ITMSG^BARPUC2 G ENTRY  ; Adding Item Msg per Adrian
+ I STR["Item Message" D ITMSG^BARPUC2 G ENTRY  ;Adding Item Msg per Adrian
  G EXIT
  ;--------------------------------
  ;
@@ -82,6 +103,7 @@ GETBILL ;
  G ENTRY
  ;
 EXIT ;
+ S ^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID)=+$G(^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID))-1 ;bar*1.8*37 IHS/SD/SDR ADO60825
  K ^TMP($J,"BARVL")
  D ^BARVKL0
  Q
@@ -115,7 +137,7 @@ REFTO ;
 REFPST ;** post refund
  N DIC,DR,DA
  S BARTT=39
- ; correct posting of refunds
+ ;correct posting of refunds
  S BARCAT=19
  S (BARATYP,BARX,BARJ)=0
  F  S BARX=$O(^BARTBL("D",BARCAT,BARX)) Q:'BARX  D  Q:BARJ>1
@@ -130,8 +152,8 @@ REFPST ;** post refund
  D ^DIC
  K DIC
  I +Y<0 D  G AMT
- . K BARAMT
- . W *7,!!
+ .K BARAMT
+ .W *7,!!
  S BARATYP=+Y
  S NEWEXTYP=$P(Y,U,2)
  S NEWTYP=$P(Y,U)
@@ -149,8 +171,8 @@ ASKREF ;EP - VERIFY ENTRY
  S BARCHK=$$GET1^DIQ(90051.1101,BARTX(15,"I")_","_BARTX(14,"I")_",",11,"E")
  S BARSCHED=$$GET1^DIQ(90051.1101,BARTX(15,"I")_","_BARTX(14,"I")_",",20,"E")
  I ASKREF="L" D  Q  ; If comments exist, give option to print BAR1.8*17 PKD 2/24/2010 
- . D PRTQ^BARPUC2  ; Question
- . D LETTER^BARUFLTR(BARAMT,BARTX(14),BARCHK,BARSCHED,BARTX(6),"REFUND LETTER",NEWTYP_" "_NEWEXTYP) Q
+ .D PRTQ^BARPUC2  ; Question
+ .D LETTER^BARUFLTR(BARAMT,BARTX(14),BARCHK,BARSCHED,BARTX(6),"REFUND LETTER",NEWTYP_" "_NEWEXTYP) Q
  W !!
  K DIR
  S DIR(0)="Y"
@@ -159,7 +181,7 @@ ASKREF ;EP - VERIFY ENTRY
  D ^DIR
  G:'Y!$D(DTOUT)!$D(DUOUT) ASKREF
  K ASKREF
- ;CONTINMUE ON TO POST THE REFUND
+ ;CONTINUE ON TO POST THE REFUND
  ;
 REIMCONT ;EP - REIMBURSEMENT CONTINUED
 TRANCONT ;EP - TRANSFER CONTINUED
@@ -178,14 +200,14 @@ TRANCONT ;EP - TRANSFER CONTINUED
 PX ; 
  S X=$$NEW^BARTR
  I X<1 D  G:'REIMBURS&'(TRANSFER) REFUND Q
- . W !!,"The system couldn't create a "_$S($G(REIMBURS):"REIMBURSEMENT",$G(TRANSFER):"TRANSFER",1:"REFUND")_" transaction.  Please try again.",!
+ .W !!,"The system couldn't create a "_$S($G(REIMBURS):"REIMBURSEMENT",$G(TRANSFER):"TRANSFER",1:"REFUND")_" transaction.  Please try again.",!
  S DA=X
  S DIE=90050.03
  S DIDEL=90050
  D ^DIE
  K DIDEL
  ;
- ;** Update account
+ ;**Update account
  N BARUNAC
  S BARUNAC=$$GET1^DIQ(90050.03,+BARTX("ID"),6,"I")
  S BARTX(304)=$$GET1^DIQ(90050.02,BARUNAC,304,"I")
@@ -211,8 +233,8 @@ PX ;
  G:REIMBURS!(TRANSFER) FINISH  ;IHS/SD/TPF BAR*1.8*3 UFMS SCR2
  ;
  ;** update collection batch 
- ; Next 9 lines of code to post refund amount to a batch,
- ; if the transaction record has a batch/item number defined
+ ;Next 9 lines of code to post refund amount to a batch,
+ ;if the transaction record has a batch/item number defined
  I BARTX(14,"I")'>0 G FINISH
  S DA=BARTX(15,"I")     ;A/R COLLECTION ITEM
  S DA(1)=BARTX(14,"I")  ;A/R COLLECTION BATCH
@@ -222,8 +244,7 @@ PX ;
  S DIE=$$DIC^XBDIQ1(90051.1101)
  S DA=BARTX(15,"I")
  S DA(1)=BARTX(14,"I")
- ;THIS IS A COMPUTED FIELD OFF OF $$ITT^BARCBC I DON'T THINK THIS DOES
- ;ANYTHING
+ ;THIS IS A COMPUTED FIELD OFF OF $$ITT^BARCBC I DON'T THINK THIS DOES ANYTHING
  S DR="106////^S X=BARITRF"  ;ITEM REFUNDED UNDER ITEM SUBFILE
  S DIDEL=90050
  D ^DIE
@@ -232,50 +253,54 @@ PX ;
 FINISH ;
  K DR,DIC
  I (+BARTX(2,"I"))-(+BARAMT)'=0 D  G CLOSE
- . D ENP^XBDIQ1("^BARTR(DUZ(2),",+BARTX("ID"),"6;8;10;11;14;15;101;104;105","BARSIB(","0I")
- . S BARREM=(+BARTX(2,"I"))-(+BARAMT)
- . S DIC="^BARTR(DUZ(2),"
- . S DIC(0)="L"
- . S DLAYGO=90050
- . L +^BARTR(DUZ(2)):2
- . F  D NOW^%DTC S X=% I '$D(^BARTR(DUZ(2),"B",X)) L -^BARTR(DUZ(2)) D ^DIC K DLAYGO Q
- . S BARSIB=+Y
- . I BARSIB<1 D  G FINISH
- . . W !,"Couldn't create a new UN-ALLOCATED transaction.  The system is trying again.",!
- . S DA=BARSIB
- . S DIE="^BARTR(DUZ(2),"
- . S DR="2////^S X=BARREM"
- . S DR=DR_";12////^S X=DT"
- . S DR=DR_";13////^S X=DUZ"
- . S DR=DR_";201////^S X=+BARTX(""ID"")"
- . S DR=DR_";6////^S X=BARSIB(6,""I"")"
- . S DR=DR_";8////^S X=BARSIB(8,""I"")"
- . S DR=DR_";10////^S X=BARSIB(10,""I"")"
- . S DR=DR_";11////^S X=BARSIB(11,""I"")"
- . S DR=DR_";14////^S X=BARSIB(14,""I"")"
- . S DR=DR_";15////^S X=BARSIB(15,""I"")"
- . S DR=DR_";101////^S X=BARSIB(101,""I"")"
- . S DR=DR_";104////^S X=BARSIB(104,""I"")"
- . S DR=DR_";105////^S X=BARSIB(105,""I"")"
- . S DIDEL=90050
- . D ^DIE
- . K DIDEL
- . S DIE="^BARTR(DUZ(2),"
- . S DR="2////^S X=BARAMT"
- . S DR=DR_";105////^S X=""R"""
- . S DR=DR_";202////^S X=+BARSIB"
- . S DA=+BARTX("ID")
- . S DIDEL=90050
- . D ^DIE
- . K DIDEL
- . Q
+ .D ENP^XBDIQ1("^BARTR(DUZ(2),",+BARTX("ID"),"6;8;10;11;14;15;101;104;105","BARSIB(","0I")
+ .S BARREM=(+BARTX(2,"I"))-(+BARAMT)
+ .;start old bar*1.8*33 IHS/SD/SDR ADO60909
+ .;S DIC="^BARTR(DUZ(2),"
+ .;S DIC(0)="L"
+ .;S DLAYGO=90050
+ .;L +^BARTR(DUZ(2)):2
+ .;F  D NOW^%DTC S X=% I '$D(^BARTR(DUZ(2),"B",X)) L -^BARTR(DUZ(2)) D ^DIC K DLAYGO Q
+ .;end old start new bar*1.8*33 IHS/SD/SDR ADO60909
+ .S Y=$$NEW^BARTR()
+ .;end new bar*1.8*33 IHS/SD/SDR ADO60909
+ .S BARSIB=+Y
+ .I BARSIB<1 D  G FINISH
+ ..W !,"Couldn't create a new UN-ALLOCATED transaction.  The system is trying again.",!
+ .S DA=BARSIB
+ .S DIE="^BARTR(DUZ(2),"
+ .S DR="2////^S X=BARREM"
+ .S DR=DR_";12////^S X=DT"
+ .S DR=DR_";13////^S X=DUZ"
+ .S DR=DR_";201////^S X=+BARTX(""ID"")"
+ .S DR=DR_";6////^S X=BARSIB(6,""I"")"
+ .S DR=DR_";8////^S X=BARSIB(8,""I"")"
+ .S DR=DR_";10////^S X=BARSIB(10,""I"")"
+ .S DR=DR_";11////^S X=BARSIB(11,""I"")"
+ .S DR=DR_";14////^S X=BARSIB(14,""I"")"
+ .S DR=DR_";15////^S X=BARSIB(15,""I"")"
+ .S DR=DR_";101////^S X=BARSIB(101,""I"")"
+ .S DR=DR_";104////^S X=BARSIB(104,""I"")"
+ .S DR=DR_";105////^S X=BARSIB(105,""I"")"
+ .S DIDEL=90050
+ .D ^DIE
+ .K DIDEL
+ .S DIE="^BARTR(DUZ(2),"
+ .S DR="2////^S X=BARAMT"
+ .S DR=DR_";105////^S X=""R"""
+ .S DR=DR_";202////^S X=+BARSIB"
+ .S DA=+BARTX("ID")
+ .S DIDEL=90050
+ .D ^DIE
+ .K DIDEL
+ .Q
  I (+BARTX(2,"I"))-(+BARAMT)=0 D
- . S DIE="^BARTR(DUZ(2),"
- . S DR="105////^S X=""R"""
- . S DA=+BARTX("ID")
- . S DIDEL=90050
- . D ^DIE
- . K DIDEL
+ .S DIE="^BARTR(DUZ(2),"
+ .S DR="105////^S X=""R"""
+ .S DA=+BARTX("ID")
+ .S DIDEL=90050
+ .D ^DIE
+ .K DIDEL
  ;
 CLOSE ;
  K ^BARTMP($J)
@@ -322,8 +347,8 @@ ASKVER ;EP - VERIFY ENTRY
  S BARSCHED=$$GET1^DIQ(90051.1101,BARTX(15,"I")_","_BARTX(14,"I")_",",20,"E")
  ;I ASKVER="L" D LETTER^BARUFLTR(BARAMT,BARTX(14),BARCHK,BARSCHED,BARTX(6),"UNBILLED REIMBURSEMENT LETTER") Q  ;PRINT REIMBURSMENT LETTER
  I ASKVER="L" D  Q
- . D PRTQ^BARPUC2  ; Question to print comments
- . D LETTER^BARUFLTR(BARAMT,BARTX(14),BARCHK,BARSCHED,BARTX(6),"UNBILLED REIMBURSEMENT LETTER",NEWTYP_" "_EXNEWTYP) Q  ;PRINT REIMBURSMENT LETTER ;BAR*1.8*4
+ .D PRTQ^BARPUC2  ; Question to print comments
+ .D LETTER^BARUFLTR(BARAMT,BARTX(14),BARCHK,BARSCHED,BARTX(6),"UNBILLED REIMBURSEMENT LETTER",NEWTYP_" "_EXNEWTYP) Q  ;PRINT REIMBURSMENT LETTER ;BAR*1.8*4
  W !!
  K DIR
  S DIR(0)="Y"
@@ -378,8 +403,8 @@ ASKVERT ;EP - VERIFY ENTRY
  S BARCHK=$$GET1^DIQ(90051.1101,BARTX(15,"I")_","_BARTX(14,"I")_",",11,"E")
  S BARSCHED=$$GET1^DIQ(90051.1101,BARTX(15,"I")_","_BARTX(14,"I")_",",20,"E")
  I ASKVERT="L" D  Q
- . D PRTQ^BARPUC2  ; Question to print comments
- . D LETTER^BARUFLTR(BARAMT,BARTX(14),BARCHK,BARSCHED,TEXBARAC,"TRANSFER LETTER") Q  ;PRINT TRANSFER LETTER
+ .D PRTQ^BARPUC2  ; Question to print comments
+ .D LETTER^BARUFLTR(BARAMT,BARTX(14),BARCHK,BARSCHED,TEXBARAC,"TRANSFER LETTER") Q  ;PRINT TRANSFER LETTER
  W !!
  K DIR
  S DIR(0)="Y"
@@ -389,7 +414,7 @@ ASKVERT ;EP - VERIFY ENTRY
  G:'Y!$D(DTOUT)!$D(DUOUT) ASKVERT
  D REIMCONT
  Q
- ; ********************************************************************
+ ;********************************************************************
  ;THIS TABLE REPLICATES ^AUTTINTY INSURER TYPE (21 ENTRIES) P.OTT 4/12/2013
  ;AND MAPS INSURER TYPE CODE TO CATEGORY (IE: W --> OTHER)
 H ;;PRIVATE INSURANCE;;HMO

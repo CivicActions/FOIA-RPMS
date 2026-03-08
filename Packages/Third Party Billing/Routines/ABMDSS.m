@@ -1,5 +1,5 @@
 ABMDSS ; IHS/ASDST/DMJ - SET UP NEW SITE ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**9**;APR 05, 2002
  ;
  ; IHS/SD/SDR - v2.5 p9 - IM19365
  ;    Added file # 9002274.32 for 3P Cancelled Claims Data
@@ -12,7 +12,7 @@ LOOP ;LOOP THROUGH 3P FILES
  F I=1:1 S ABM("FN")=$P($T(TXT+I),";;",2) Q:'ABM("FN")  D
  .S ABM("GL")=^DIC(ABM("FN"),0,"GL")_"0)"
  .Q:$D(@(ABM("GL")))
- .W !,"Initializing ",$P(^DIC(ABM("FN"),0),U)," file."
+ .W !,"Initializing ",$P(^DIC(ABM("FN"),0),"^",1)," file."
  .S @ABM("GL")=^DIC(ABM("FN"),0)
  .I ABM("FN")=9002274.5 S ^ABMDPARM(ABM("LOC"),1,0)=ABM("LOC"),^ABMDPARM(ABM("LOC"),"B",ABM("LOC"),1)=""
  D ERR
@@ -31,7 +31,7 @@ INS ;set up 3P insurer file
  Q:$O(^ABMNINS(DUZ(2),0))
  S I=0 F  S I=$O(^AUTNINS(I)) Q:'I  D
  .Q:'$D(^AUTNINS(I,39))
- .S ^ABMNINS(DUZ(2),I,0)=$P(^AUTNINS(I,0),U)
+ .S ^ABMNINS(DUZ(2),I,0)=$P(^AUTNINS(I,0),"^",1)
  .M ^ABMNINS(DUZ(2),I,1)=^AUTNINS(I,39)
  .S $P(^ABMNINS(DUZ(2),I,1,0),"^",2)="9002274.091P"
  .S J=0 F  S J=$O(^ABMNINS(DUZ(2),I,1,J)) Q:'J  D

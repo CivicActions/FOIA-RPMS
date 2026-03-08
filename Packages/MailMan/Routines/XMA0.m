@@ -1,7 +1,5 @@
-XMA0 ;ISC-SF/GMB-Print Message APIs ;04/17/2002  07:08
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CAP/THM
- ;
+XMA0 ;(WASH ISC)/CAP/THM-Print Message ;06/24/99  10:53
+ ;;7.1;MailMan;**15,36,50**;Jun 02, 1994
  ; Entry points (DBIA 1230):
  ; ENTPRT  Print a message (interactive)
  ; HDR     Print a message (headerless)
@@ -13,8 +11,8 @@ ENTPRT ; Print a message (interactive)
  ; XMZ  Message number
  ; XMK  Basket number
  N XMV
- D INITAPI^XMVVITAE
- D PRINT^XMJMP(XMDUZ,XMK,XMZ)
+ D INIT^XMVVITAE
+ D PRINT^XMJMP(XMDUZ,XMK,$P(^XMB(3.7,XMDUZ,2,XMK,0),U,1),XMZ)
  Q
 HDR ; Print a message (headerless)
  ; Needs:
@@ -38,10 +36,13 @@ PR2 ; Print a message
  ; $P(XMTYPE,";",6) response from which to start printing
  D PRINTIT(1,$G(XMTYPE))
  Q
-PRINTIT(XMPRTHDR,XMTYPE) ;
- N XMV,XMWHICH
- Q:XMTYPE=U
- D INITAPI^XMVVITAE
- S XMWHICH=+$P(XMTYPE,";",6)_"-"  ; print from
- D PRTMSG^XMJMP(XMDUZ,XMK,XMZ,XMWHICH,0,XMPRTHDR)
+PRINTIT(XMPRTHDR,XMWHICH) ;
+ N XMV,XMKN,XMRESPS,XMPTR,XMRECIPS
+ Q:XMWHICH=U
+ D INIT^XMVVITAE
+ S XMKN=$P(^XMB(3.7,XMDUZ,2,XMK,0),U,1)
+ D RESPONSE^XMJMP(XMDUZ,XMZ,.XMRESPS,.XMPTR)
+ S XMRECIPS=0  ; don't print recipients
+ S XMWHICH=+P(XMWHICH,";",6)_"-"_XMRESPS  ; print from
+ D PRINTMSG^XMJMP
  Q

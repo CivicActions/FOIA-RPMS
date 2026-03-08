@@ -1,5 +1,5 @@
-APCLT1 ; IHS/CMI/LAB - TOP T POVS ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLT1 ; IHS/OHPRD/TMJ - TOP T POVS ;  [ 06/02/99  9:26 AM ]
+ ;;3.0;IHS PCC REPORTS;**1,4**;FEB 05, 1997
  ;IHS/CMI/LAB - patch 4 Y2K
  ;
  ;IHS/TUCSON/LAB - added subroutine APWI for patch 1 to allow
@@ -28,7 +28,7 @@ CLINIC ;
  I Y=1 G APWI
 CLINIC1 ;
  S X="CLINIC",DIC="^AMQQ(5,",DIC(0)="FM",DIC("S")="I $P(^(0),U,14)" D ^DIC K DIC,DA I Y=-1 W "OOPS - QMAN NOT CURRENT - QUITTING" G EXIT
- D PEP^AMQQGTX0(+Y,"APCLCLNT(")
+ D ^AMQQGTX0(+Y,"APCLCLNT(")
  I '$D(APCLCLNT) G CLINIC
  I $D(APCLCLNT("*")) K APCLCLNT
 APWI ;ask appt or walk ins ;IHS/TUCSON/LAB - added this subroutine patch 1 05/01/97
@@ -38,9 +38,6 @@ APWI ;ask appt or walk ins ;IHS/TUCSON/LAB - added this subroutine patch 1 05/01
  S APCLAPWI=Y
  ;IHS/TUCSON/LAB -  05/01/97 of patch 1
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G APWI
  S XBRC="PROC^APCLT1",XBRP="^APCLT1P",XBNS="APCL",XBRX="EXIT^APCLT1"
  D ^XBDBQUE
  D EXIT
@@ -71,7 +68,6 @@ V1 ;
  Q
 PROC1 ;
  Q:'$P(APCLVREC,U,8)  ;no clinic
- Q:$$DEMO^APCLUTL($P(APCLVREC,U,5),$G(APCLDEMO))
  Q:'$D(^AUPNVPRV("AD",APCLVIEN))  ;no provider
  S APCLPP=$$PRIMPROV^APCLV(APCLVIEN,"I")
  Q:'APCLPP  ;no primary provider returned

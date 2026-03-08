@@ -1,5 +1,5 @@
 BMCRPC3 ;  IHS/CAS/AU - GUI-REFERRED CARE INFO SYSTEM (3/4);     
- ;;4.0;REFERRED CARE INFO SYSTEM;**7,8,12,13**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**7,8,12,13,31**;JAN 09, 2006;Build 168
  ;
  ;GDIT/HS/BEE 10/19/17 - p12 CR#8528: Alphabetize the Referral-to-SNOMED terms
  ;GDIT/HS/BEE 10/19/17 - p12 - Address XINDEX/SAC issues
@@ -179,7 +179,7 @@ UPDTSTRF(RSLT,REFIEN,STATUS) ;;Update Status Of Referral against Ref IEN return 
  I '$D(REFIEN) S RSLT="~`0^Referral Ien is not provided" Q RSLT
  I '$D(STATUS) S RSLT="~`0^Referral Status is not provided" Q RSLT
  I REFIEN'>0 S RSLT="~`0^Referral Ien is not provided" Q RSLT
- S FDA(90001,REFIEN_",",.15)=$G(STATUS)
+ S FDA(90001,REFIEN_",",.15)=$G(STATUS),BMCRIEN=REFIEN
  D FILE^DIE("","FDA","ERR1")
  I $D(ERR1("DIERR")) S RSLT="~`0^Error updating referral:"_$G(ERR1("DIERR","1","TEXT",1)) Q RSLT
  ;D SENDXM^BMCRPC3(REFIEN,"M") ;;Send mailman message

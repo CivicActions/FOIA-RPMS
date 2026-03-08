@@ -1,5 +1,5 @@
 ABSPECFM ; IHS/FCS/DRS - JWS 04:09 PM 28 May 1996 ;   [ 09/04/2002  1:55 PM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,9,47**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,9,47,52**;JUN 01, 2001;Build 131
  ;----------------------------------------------------------------------
  ;----------------------------------------------------------------------
  ;NCPDP Field Format Functions
@@ -107,10 +107,11 @@ TRANREJ(REJCD) ;EP - REJCD will be the incoming rejection code
  ;
  N REJECT,REJIEN
  ;
- S REJIEN=0
+ S REJIEN=0 ; /IHS/OIT/RAM ; 30 JAN 2020 ; THIS INSURES THAT THE $D(REJIEN) BELOW WILL *ALWAYS* BE TRUE.
  S REJIEN=$O(^ABSPF(9002313.93,"B",REJCD,REJIEN))  ;find record
- S:$D(REJIEN) REJECT=$P($G(^ABSPF(9002313.93,REJIEN,0)),U,2)
- S:'$D(REJECT) REJECT="Description not found for rejection code"
+ ; S:$D(REJIEN) REJECT=$P($G(^ABSPF(9002313.93,REJIEN,0)),U,2) ; /IHS/OIT/RAM ; 30 JAN 2020 ; OLD BROKEN Reject Code Finder.
+ S:REJIEN'="" REJECT=$P($G(^ABSPF(9002313.93,REJIEN,0)),U,2) ; /IHS/OIT/RAM ; 30 JAN 2020 ; P52 ; test for '="" instead of $d (which would always be true.)
+ S:'$D(REJECT) REJECT="Unknown rejection code" ; /IHS/OIT/RAM ; 30 JAN 2020 ; P52 ; Shortened unknown code text.
  S REJECT=REJCD_" ("_REJECT_" )"
  S REJECT=$$ANFF(REJECT,50)
  ;
@@ -120,10 +121,11 @@ TRANSCD(SRVCD) ;EP - SRCCD will be the incoming reason for service code
  ;
  N SCDIEN,SCDESC
  ;
- S SCDIEN=0
+ S SCDIEN=0 ; /IHS/OIT/RAM ; 30 JAN 2020 ; THIS INSURES THAT THE $D(SCDIEN) BELOW WILL *ALWAYS* BE TRUE.
  S SCDIEN=$O(^ABSPF(9002313.82439,"B",SRVCD,SCDIEN))  ;find record
- S:$D(SCDIEN) SCDESC=$P($G(^ABSPF(9002313.82439,SCDIEN,0)),U,2)
- S:'$D(SCDESC) SCDESC="Description not found for service code"
+ ; S:$D(SCDIEN) SCDESC=$P($G(^ABSPF(9002313.82439,SCDIEN,0)),U,2) ; /IHS/OIT/RAM ; 30 JAN 2020 ; OLD BROKEN Service Code Finder.
+ S:SCDIEN'="" SCDESC=$P($G(^ABSPF(9002313.82439,SCDIEN,0)),U,2) ; /IHS/OIT/RAM ; 30 JAN 2020 ; P52 ; test for '="" instead of $d (which would always be true.)
+ S:'$D(SCDESC) SCDESC="Unknown service code" ; /IHS/OIT/RAM ; 30 JAN 2020 ; P52 ; Shortened unknown code text.
  S SCDESC=SRVCD_" ("_SCDESC_" )"
  S SCDESC=$$ANFF(SCDESC,50)
  ;

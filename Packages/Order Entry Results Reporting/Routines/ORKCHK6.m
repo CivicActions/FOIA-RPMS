@@ -1,6 +1,5 @@
-ORKCHK6 ; slc/CLA - Support routine called by ORKCHK to do SESSION mode order checks ;15-Jun-2010 21:19;PLS
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,32,74,87,94,123,162,190,1005,249,1010**;Dec 17, 1997;Build 47
- ; Modified - IHS/MSC/PLS - 12/07/09 - Added Allergy-Drug Interaction order check during SESSION type
+ORKCHK6 ; slc/CLA - Support routine called by ORKCHK to do SESSION mode order checks ;3/6/97  9:35
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**6,32,74,87,94,123,162,190**;Dec 17, 1997
  Q
  ;
 EN(ORKS,ORKDFN,ORKA,ORENT,ORKTMODE) ;perform order checking for entire ordering session
@@ -22,13 +21,11 @@ EN(ORKS,ORKDFN,ORKA,ORENT,ORKTMODE) ;perform order checking for entire ordering 
 PHARM ;process pharmacy order checks:
  N ORPSPKG,ORPSA,ORKDD
  N ORCRITN,ORCRITF,ORCRITD,ORSIGN,ORSIGF,ORSIGD,ORDUPN,ORDUPF,ORDUPD,ORDUPC,ORDUPCF,ORDUPCD
- N ORALLRN,ORALLRF,ORALLRD  ;Patch 1005
  ;
  D PARAMS("CRITICAL DRUG INTERACTION",.ORCRITN,.ORCRITF,.ORCRITD)
  D PARAMS("SIGNIFICANT DRUG INTERACTION",.ORSIGN,.ORSIGF,.ORSIGD)
  D PARAMS("DUPLICATE DRUG ORDER",.ORDUPN,.ORDUPF,.ORDUPD)
  D PARAMS("DUPLICATE DRUG CLASS ORDER",.ORDUPCN,.ORDUPCF,.ORDUPCD)
- D PARAMS("ALLERGY-DRUG INTERACTION",.ORALLRN,.ORALLRF,.ORALLRD)  ;Patch 1005
  ;
  ;dispense drug selected:
  I $L($G(HL7LPTR)),($G(HL7LCOD)="99PSD") D
@@ -53,10 +50,8 @@ PHARM ;process pharmacy order checks:
  Q
  ;
 RXOCS ;drug-drug interaction, duplicate drug order, duplicate drug class
- ; The following line has been modified to add the Allery-Drug Interaction
- Q:ORALLRF_ORCRITF_ORSIGF_ORDUPF_ORDUPCF'["E"  ;quit if none are "E"nabled
+ Q:ORCRITF_ORSIGF_ORDUPF_ORDUPCF'["E"  ;quit if none are "E"nabled
  N ORKRX,ORPSNUM
- N ORKAL  ;Patch 1005
  I $L($G(HL7LPTR)),($G(HL7LCOD)="99PSD") D
  .D CHKSESS^ORKPS(.ORKRX,ORKDFN,HL7LPTR,OI,ORKPDATA,ORKDG)
  .N CHK,XX S CHK=0,XX=""
@@ -87,8 +82,8 @@ RXOCS ;drug-drug interaction, duplicate drug order, duplicate drug class
  ...S ORPSNUM=$P(XX,U,4)  ;get the associated order number
  ...I $L(ORPSNUM),$G(^OR(100,+ORPSNUM,0)) S ORKT=$$FULLTEXT^ORQOR1(+ORPSNUM),ORKTXT=$P(ORKT,U)_" ["_$P(ORKT,U,2)_"]"
  ...E  S ORKTXT=$P(XX,U,3)
- ...S ORKMSG="Duplicate drug order: "_ORKTXT
- ...S ORKS("ORK",ORDUPD_","_$G(ORNUM)_","_ORPSNUM_",Duplicate drug order: "_$P(XX,U,3))=ORNUM_U_ORDUPN_U_ORDUPD_U_ORKMSG_U_$G(ORPSNUM)
+ ...S ORKMSG="Duplicate order: "_ORKTXT
+ ...S ORKS("ORK",ORDUPD_","_$G(ORNUM)_","_ORPSNUM_",Duplicate order: "_$P(XX,U,3))=ORNUM_U_ORDUPN_U_ORDUPD_U_ORKMSG_U_$G(ORPSNUM)
  ..;
  ..;duplicate class:
  ..I $P(XX,U)="DC" D
@@ -98,12 +93,6 @@ RXOCS ;drug-drug interaction, duplicate drug order, duplicate drug class
  ...E  S ORKTXT=$P(XX,U,5)
  ...S ORKMSG="Duplicate drug class order: "_$P(XX,U,3)
  ...S ORKS("ORK",ORDUPCD_","_$G(ORNUM)_","_ORPSNUM_","_$E(ORKMSG,1,225))=ORNUM_U_ORDUPCN_U_ORDUPCD_U_ORKMSG_" ("_ORKTXT_")"_U_$G(ORPSNUM)
- ;drug-allergy interaction  ;Patch 1005
- I $L($G(HL7NPTR)),($G(HL7NCOD)="99NDF") D
- .D RXN^ORQQAL(.ORKAL,ORKDFN,"DR",HL7NPTR,$G(HL7LPTR)) I (ORKAL>0) D
- ..Q:$L($P(ORKAL,U,2))<1
- ..S ORKMSG="Previous adverse reaction to: "_$P(ORKAL,U,2)
- ..S ORKS("ORK",ORALLRD_","_$G(ORNUM)_","_$E(ORKMSG,1,225))=ORNUM_U_ORALLRN_U_ORALLRD_U_ORKMSG
  Q
  ;
 OI2DD(ORPSA,OROI,ORPSPKG)       ;rtn dispense drugs for a PS OI

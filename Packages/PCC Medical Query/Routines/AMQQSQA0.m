@@ -1,8 +1,6 @@
-AMQQSQA0 ; IHS/CMI/THL - AMQQSQA SUBROUTINE...GETS ATTRIBUTE ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
- ;-----
-FUNQ W !,AMQQSQQQ
- R X:DTIME E  S X=U
+AMQQSQA0 ; OHPRD/DG - AMQQSQA SUBROUTINE...GETS ATTRIBUTE ; [ 01/31/2008   5:08 PM ]
+ ;;2.0;PCC QUERY UTILITY;**4,17,18,20,21**;FEB 07, 2007
+FUNQ W !,AMQQSQQQ R X:DTIME E  S X=U
  K AMQQSVAL
  I $E(X)="\" S X=$E(X,2,999),AMQQLCOF=""
  I X="",AMQQSQFN=1,"ILG"'[AMQQSQST D WHAT
@@ -23,14 +21,11 @@ TEMPLOOK I X="????",AMQQCCLS="P" D ITEM^AMQQHELP G FUNQ
 EN1 ; ENTRY POINT FROM AMQQQ1
  I X["NOT"!(X["'") D NOT I X="" G FUNQ
  I X="VISIT" W !!,"Enter a specific VISIT characteristic like: LOCATION, CLINIC, PROVIDER etc.",!! G FUNQ
-ADIC S DIC="^AMQQ(5,"
- S DIC(0)="ES"
- S D="C"
- S DIC("S")="I +Y<1000"
+ADIC S DIC="^AMQQ(5,",DIC(0)="ES",D="C"
+ S DIC("S")="I +Y<1000" ;IHS/CMI/THL PATCH 17
  I $D(AMQQXX),$D(AMQQNECO) S DIC(0)=""
- D ^AMQQSQAC
- D IX^DIC
- K DIC
+ ;D ^AMQQSQAC,IX^DIC K DIC
+ D ^AMQQSQAC D IX^DIC K DIC
 SY I +Y=315!(+Y=35) D ^AMQQSQP Q:$D(AMQQQUIT)  G FUNQ
  I Y'=-1,AMQQCCLS="V",'$D(AMQQXX),$P(^AMQQ(5,+Y,0),U,20)="M" D NOVM G FUNQ
  I $D(AMQQSQNT),"EV"[AMQQSQST,$P(^AMQQ(5,+Y,0),U,20)="B",Y["BETWEEN" S X="",Y=-1,AMQQSQFN=1 K AMQQSQNT
@@ -48,48 +43,40 @@ SY I +Y=315!(+Y=35) D ^AMQQSQP Q:$D(AMQQQUIT)  G FUNQ
  ;
 NOT I $E(X,1,4)="NOT " S X=$E(X,5,99),AMQQSQNT="" Q
  I $E(X)="'" S X=$E(X,2,99),AMQQSQNT="" Q
- S %=$L(X)
- I $E(X,%-3,%)=" NOT" S X=$E(X,1,%-4),AMQQSQNT=""
+ S %=$L(X) I $E(X,%-3,%)=" NOT" S X=$E(X,1,%-4),AMQQSQNT=""
  Q
  ;
 SPEC I X="*" W "  (All values)"
  I X="@" W "  (Null)"
 SCK ; ENTRY POINT FROM AMQQSQA
- S Z="ANY;*;ALL;EXISTS;BLANK;EMPTY;NULL;@"
- F I=1:1 S %=$P(Z,";",I) Q:%=""  I X=$E(%,1,$L(X)) W $E(%,$L(X)+1,99) S X=% D S1 G SCKEXIT
+ S Z="ANY;*;ALL;EXISTS;BLANK;EMPTY;NULL;@" F I=1:1 S %=$P(Z,";",I) Q:%=""  I X=$E(%,1,$L(X)) W $E(%,$L(X)+1,99) S X=% D S1 G SCKEXIT
  I $G(AMQQSQST)="Q",$L(X)>2 S %=$E(X,1,3) F I=1:1 S Z=$P("POS^ABN^NEG^NML^NOR",U,I) Q:Z=""  I Z=% S AMQQSVAL=$S($E(Z)="N":"NEG",1:"POS"),Y="72^IS" G SCKEXIT
  I $G(AMQQSQST)="S",$L(X)>2 D SET^AMQQSQA1 G SCKEXIT
 SCKEXIT I $D(AMQQRECV),$G(AMQQCOMP)'="" S $P(AMQQRECV,U,11)=$P(AMQQCOMP,";",4)
  Q
  ;
-S1 S X=$S(I=1:"ANY",I<5:"ALL",1:"NULL")
- K Y
+S1 S X=$S(I=1:"ANY",I<5:"ALL",1:"NULL") K Y
  I AMQQSQST="I" S $P(AMQQCOMP,";",5)=X,AMQQSQQT="" Q
  I X'="NULL",$G(AMQQCOMP)'=";;"!($G(AMQQSQFN)>1) S Y=-1 Q
  I $D(AMQQSQNT),X="NULL" S X="EXISTS" K AMQQSQNT W " = ",X
  I $D(AMQQSQNT),X="EXISTS" S X="NULL" K AMQQSQNT W " = ",X
  I $D(AMQQNMAS),X'="NULL" S Y=-1 Q
  I $G(AMQQCOMP)?1.";",'$D(^UTILITY("AMQQ",$J,"SQ",$S($D(AMQQSQNN):AMQQSQNN,1:"ZZZ"))) S $P(AMQQCOMP,";",4)=X,AMQQSQCV=AMQQCOMP,AMQQSQQT="" Q
- S AMQQSQCV=AMQQCOMP
- S AMQQSQQT=""
+ S AMQQSQCV=AMQQCOMP,AMQQSQQT=""
  S AMQQSQNN=+$G(AMQQSQNN)
- S:$D(AMQQFSQN) ^UTILITY("AMQQ",$J,"SQ",AMQQSQNN,X)=""
- I X="NULL",'$D(AMQQFSQN) S AMQQFSQX=""
+ S:$D(AMQQFSQN) ^UTILITY("AMQQ",$J,"SQ",AMQQSQNN,X)="" I X="NULL",'$D(AMQQFSQN) S AMQQFSQX=""
  I X="NULL",$G(AMQQSQAA),$D(AMQQSQGF) S ^UTILITY("AMQQ",$J,$S(AMQQUSQL>1:"SQXS",1:"SQXQ"),AMQQSQAA,AMQQSQNN)=""
+ ; I X="NULL",'$D(AMQQSQGF) S $P(AMQQCOMP,";",6)=1
  I $D(AMQQYYMI) S AMQQYYMS="" Q
  I '$D(AMQQXX) D ^AMQQSQL
  Q
  ;
-NOVM W !!,"Sorry, """,$P(Y,U,2),""" should be entered as a new attribute of VISIT"
- W !,"and not a subquery of """,AMQQATNM,""""
+NOVM W !!,"Sorry, """,$P(Y,U,2),""" should be entered as a new attribute of VISIT",!,"and not a subquery of """,AMQQATNM,""""
  W !!,*7
  Q
  ;
-WHAT S DIR(0)="SO^1:WHOOPS...let me try again;2:"_$S($G(AMQQONE)="":("FIND ALL "_AMQQCNAM_" who have a "_AMQQSQAN_" recorded"),1:("SHOW every "_AMQQSQAN_" for "_AMQQONE))_";3:EXIT"
- S DIR("A")=$C(10)_"     What do you want to do"
- S DIR("B")=1,DIR("?")=""
- D ^DIR
- K DIR
+WHAT S DIR(0)="SO^1:WHOOPS...let me try again;2:"_$S($G(AMQQONE)="":("FIND ALL "_AMQQCNAM_" who have a "_AMQQSQAN_" recorded"),1:("SHOW every "_AMQQSQAN_" for "_AMQQONE))_";3:EXIT" ;IHS/OHPRD/GIS 5/14/94
+ S DIR("A")=$C(10)_"     What do you want to do",DIR("B")=1,DIR("?")="" D ^DIR K DIR ;IHS/OHPRD/GIS 5/14/94
  I $D(DUOUT)+$D(DTOUT)+$D(DIRUT) K DTOUT,DIRUT,DTOUT S X="" Q
  S X=$S(Y=1:"AGAIN",Y=2:"ALL",Y=3:"^",1:"")
  Q

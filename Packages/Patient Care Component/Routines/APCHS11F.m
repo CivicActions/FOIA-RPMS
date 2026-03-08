@@ -1,5 +1,5 @@
-APCHS11F ; IHS/CMI/LAB - CONTINUATION OF ROUTINES ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHS11F ; IHS/TUCSON/LAB - CONTINUATION OF ROUTINES ;  [ 11/14/01  10:04 AM ]
+ ;;2.0;IHS RPMS/PCC Health Summary;**3,5**;JUN 24, 1997
  ;IHS/CMI/LAB - patch 3 for new imm package 1/5/1999
  ; Special HMR routine for ANMC: pneumovax -- to be in next release
  ;

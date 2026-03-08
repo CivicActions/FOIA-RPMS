@@ -1,5 +1,5 @@
 BQIDCINP ;GDIT/HS/ALA-Find Inpatient Patients ; 06 Nov 2012  3:43 PM
- ;;2.4;ICARE MANAGEMENT SYSTEM;;Apr 01, 2015;Build 41
+ ;;2.3;ICARE MANAGEMENT SYSTEM;**3,4**;Apr 18, 2012;Build 66
  ;
  Q
  ;
@@ -46,7 +46,6 @@ EN(DATA,PARMS,MPARMS) ;EP
  . F  S LOC=$O(^DGPM("CN",LOC)) Q:LOC=""  D
  .. S IEN=""
  .. F  S IEN=$O(^DGPM("CN",LOC,IEN)) Q:IEN=""  D
- ... I $G(^DGPM(IEN,0))="" Q
  ... S DFN=$P(^DGPM(IEN,0),U,3),$P(@DCRIT@("INP",DFN,IEN),U,1)=1
  ... S ADTM=$P(^DGPM(IEN,0),U,1)\1
  ... I $G(AFDT)'="",ADTM<AFDT!(ADTM>AEDT) S $P(@DCRIT@("INP",DFN,IEN),U,1)=0 Q
@@ -58,7 +57,6 @@ EN(DATA,PARMS,MPARMS) ;EP
  .. S IEN=""
  .. F  S IEN=$O(^DGPM("B",AFDT,IEN)) Q:IEN=""  D
  ... I $$GET1^DIQ(405,IEN_",",.02,"E")'="ADMISSION" Q
- ... I $G(^DGPM(IEN,0))="" Q
  ... S DFN=$P(^DGPM(IEN,0),U,3),$P(@DCRIT@("INP",DFN,IEN),U,1)=1
  ... D ADM
  ;
@@ -82,7 +80,6 @@ EN(DATA,PARMS,MPARMS) ;EP
  .. F  S DFDT=$O(^AUPNVINP("B",DFDT)) Q:DFDT=""!(DFDT\1>DEDT)  D
  ... S VIEN=""
  ... F  S VIEN=$O(^AUPNVINP("B",DFDT,VIEN)) Q:VIEN=""  D
- .... I $G(^AUPNVINP(VIEN,0))="" Q
  .... S VISIT=$P(^AUPNVINP(VIEN,0),U,3),DFN=$P(^(0),U,2)
  .... S IEN=$O(^DGPM("AVISIT",VISIT,"")) I IEN="" Q
  .... S DFN=$P(^DGPM(IEN,0),U,3),$P(@DCRIT@("INP",DFN,IEN),U,6)=1

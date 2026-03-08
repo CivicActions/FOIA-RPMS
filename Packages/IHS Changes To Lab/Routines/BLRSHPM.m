@@ -1,5 +1,5 @@
-BLRSHPM ;cmi/anch/maw - BLR Reference Lab Shipping Manifest Others ; 22-Apr-2016 15:14 ; MAW
- ;;5.2;IHS LABORATORY;**1027,1031,1033,1034,1036,1039,1040**;NOV 01, 1997;Build 5
+BLRSHPM ;cmi/anch/maw - BLR Reference Lab Shipping Manifest Others ; 25-Apr-2022 15:14 ; MKK
+ ;;5.2;IHS LABORATORY;**1027,1031,1033,1034,1036,1039,1040,1043,1051**;NOV 01, 1997;Build 19
  ;
  ;10/17/2005 cmi/anch/maw added reprint of shipping manifest
  ;3/28/2006 cmi/anch/maw added device close before print and before storing
@@ -14,13 +14,19 @@ BLRSHPM ;cmi/anch/maw - BLR Reference Lab Shipping Manifest Others ; 22-Apr-2016
  ;10/1/2008 cmi/anch/maw masked all but 4 digits on SSN at labcorp request
  ;09/19/2013 msc/mkk - missing variables reset subroutine P1031FIX.
  ;
+ ; IHS/MSC/MKK - LR*5.2*1051 - Item 78863 - Wrong DOB on Manifest
+ ;
+ ;
 PRT(RE,CP) ;EP - print shipping manifest
  ;ihs/cmi/maw PATCH 1033 10/24/2013 added since LRUID is not there sometimes after patch 1031
  I $G(LRUID),'$G(RE) G:$D(^BLRSHPM("B",LRUID)) EOJ      ; Quit if Accession exists in ^BLRSHPM because it's already been printed
  ;
- I $G(LRUID) D P1031FIX   ; IHS/MSC/MKK - LR*5.2*1033/1034
+ ; I $G(BLRRL("PAT")) D DMG(BLRRL("PAT"))
+ ; I $G(LRUID) D P1031FIX   ; IHS/MSC/MKK - LR*5.2*1034
+ I $G(LRUID) D P1031FIX^BLRSHPM2  ; IHS/MSC/MKK - LR*5.2*1051
  I $P($G(^BLRRL($P($G(^BLRSITE($S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),"RL")),U),0)),U)["LABCORP" D  Q  ;go to the Quest Manifest
  . D PRT^BLRSHPML(CP)
+ I $D(^TMP("BLRRL",$J,"COMMON","LOC")),$$TESTING^BLRRLEVN($O(^SC("B",^TMP("BLRRL",$J,"COMMON","LOC"),0))) D PRT^BLRSHPML(CP) Q  ;maw remove after testing
  Q:'$D(^TMP("BLRRL",$J))  ;don't print shipping manifest if no data
  W:'+$G(BLRAGUI) !!,"Now printing shipping manifest for this accession"
  D ^%ZISC  ;maw 3/28/2006
@@ -32,6 +38,12 @@ PRT(RE,CP) ;EP - print shipping manifest
  D ^%ZISC  ;maw 3/28/2006
  I I=1 D STOR(.BLRSHIEN,^TMP("BLRRL",$J,"COMMON","UID"))  ;store the shipping manifest as well as print
  D EOJ
+ Q
+ ;
+DMG(PAT) ;-- lets reset the patient variables DOB, SEX, and SSN
+ Q:'$D(^DPT(PAT))
+ S X=PAT
+ D ^AUPNPAT
  Q
  ;
 NEWPRT  ;-- now want copies
@@ -97,39 +109,6 @@ PHDR ;-- write the common stuff to the device
  W !,"LAB ARRIVAL (COLLECTION DATE/TIME): "_$$FMTE^XLFDT(^TMP("BLRRL",$J,"COMMON","CDT"))
  Q
  ;
- ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1033
-P1031FIX ; EP - Forcefully reset AGE, DOB, ORDNUM, and SEX variables
- NEW ALLGOOD,DFN,LRAA,LRAD,LRAN,LRAS,LRDFN,LRIDT,LRSS,ORDNUM
- ;
- ; Check to see if all variables okay
- S ALLGOOD=1
- S:$G(SEX)="" ALLGOOD=0
- S:+$G(DOB)<1 ALLGOOD=0
- S:+$G(AGE)<1 ALLGOOD=0
- S:+$G(BLRRL("ORD"))<1 ALLGOOD=0
- S:+$G(^TMP("BLRRL",$J,"COMMON","ORD"))<1 ALLGOOD=0
- Q:ALLGOOD    ; All variables set - just return
- ; 
- D RETACCV^BLRUTIL4(LRUID,.LRAA,.LRAD,.LRAN,.LRDFN,.LRSS,.LRIDT,.LRAS)
- Q:LRAA<1!(LRAD<1)!(LRAN<1)!(LRDFN<1)            ; If any Accession variables null, then exit
- ;
- Q:$$GET1^DIQ(63,LRDFN,"PARENT FILE","I")'=2     ; If data not from VA PATIENT file, then exit
- ;
- S DFN=$$GET1^DIQ(63,LRDFN,"NAME","I")           ; Get Patient IEN from Lab Data (#63) File
- ; Set AGE, DOB & SEX (if missing) from VA Patient (#2) File
- S:$G(SEX)="" SEX=$$SEX^AUPNPAT(DFN)
- S:+$G(DOB)<1 DOB=$$DOB^AUPNPAT(DFN)
- S:+$G(AGE)<1 AGE=$$AGE^AUPNPAT(DFN)
- ;
- ; Get Order # from Accession (#68) File
- S ORDNUM=+$$GET1^DIQ(68.02,LRAN_","_LRAD_","_LRAA_",","ORDER #")
- Q:ORDNUM<1   ; If order # is zero, can't reset, so just return
- ;
- ; Set Order number (if missing)
- S:+$G(BLRRL("ORD"))<1 BLRRL("ORD")=ORDNUM
- S:+$G(^TMP("BLRRL",$J,"COMMON","ORD"))<1 ^TMP("BLRRL",$J,"COMMON","ORD")=ORDNUM
- Q
- ; ----- END IHS/MSC/MKK - LR*5.2*1033
  ;
 WRTS ;-- write the output to the device
  N BLRDA,BLRIEN

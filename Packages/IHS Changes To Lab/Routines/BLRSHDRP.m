@@ -1,6 +1,10 @@
-BLRSHDRP ;IHS/OIT/MKK - NON-MICRO STATE HEALTH DEPT REPORT PRINTER [ 07/22/2005 ]
- ;;5.2;LR;**1020**;Sep 13, 2005
+BLRSHDRP ;IHS/OIT/MKK - NON-MICRO STATE HEALTH DEPT REPORT PRINTER ; 09-Mar-2022 ; MKK
+ ;;5.2;LR;**1020,1051**;NOV 01, 1997;Build 19
  ;;
+ ;
+ ; MSC/MKK - LR*5.2*1051 - 09-Mar-2022 - Item 76016 - Adding RACE and ETHNICITY
+ ;      Reference to DEM^VADPT supported by IA # 10061
+ ;
  ; Lab PSG gave permission to retrieve program from PIMC and distribute
  ; nationally.  This is called by BLRSHDRC.
  ; 
@@ -127,6 +131,8 @@ PRTIT ;
  W ?98,$P(Y,U,9)                  ; ZIP
  W ?108,$E($P(Y1,U,11),1,23)      ; LOCATION
  ;
+ D OTHRDEMO(LRDFN)                ; IHS/MSC/MKK - LR*5.2*1051 - 09-Mar-2022 - Item 76016
+ ;
  W !,?5,"Result: ",$P(Y,U,11)
  ;
  ; start - vjm 4/14/2000
@@ -197,3 +203,14 @@ PRESSRTN ; EP
  S DIR("A")="Press RETURN to continue"      ; Success or failure is irrelevant.
  D ^DIR                                     ; Used only prior to exit
  Q
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1051 - 09-Mar-2022 - Item 76016
+OTHRDEMO(LRDFN) ; EP
+ NEW (LRDFN,DISYS,DT,DTIME,DUZ,IO,IOBS,IOF,IOM,ION,IOS,IOSL,IOST,IOT,IOXY,U,XPARSYS,XQXFLG)
+ ;
+ S DFN=$P($G(^LR(LRDFN,0)),U,3)
+ D DEM^VADPT
+ W !,?5,"Race: ",$P($G(VADM(12,1)),U,2)
+ W ?55,"Ethnicity: ",$P($G(VADM(11,1)),U,2)
+ Q
+ ; ----- END IHS/MSC/MKK - LR*5.2*1051 - 09-Mar-2022 - Item 76016

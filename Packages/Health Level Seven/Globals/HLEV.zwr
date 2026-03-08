@@ -1,0 +1,16 @@
+CACHE FORMAT
+ZWR
+^HLEV(776.4,"AF",<site>,<type>,"RECEIVED","YEAR",<year>)=count
+^HLEV(776.4,"AF",<site>,<type>,"RECEIVED","YEAR",<year>,"MONTH",<month>)=count
+^HLEV(776.4,"AF",<site>,<type>,"RECEIVED","YEAR",<year>,"MONTH",<month>,"DAY",<day))=count
+^HLEV(776.4,"AF",<site>,<type>,"RECEIVED","YEAR",<year>,"MONTH",<month>,"DAY",<day","HOUR",<hour>)=count
+^HLEV(776.4,"AF",<site>,<type>,<review status>)=count
+^HLEV(776.4,"AJ",<eariest date/time that the record may be purged>,<IEN>)=""
+^HLEV(776.4,"AK",<CREATE DT/TM>,<ien>)=""
+^HLEV(776.4,"AF",<site>,<type>,"RECEIVED","YEAR",<year>)=count
+^HLEV(776.4,"AF",<site>,<type>,"RECEIVED","YEAR",<year>,"MONTH",<month>)=count
+^HLEV(776.4,"AF",<site>,<type>,"RECEIVED","YEAR",<year>,"MONTH",<month>,"DAY",<day))=count
+^HLEV(776.4,"AF",<site>,<type>,"RECEIVED","YEAR",<year>,"MONTH",<month>,"DAY",<day","HOUR",<hour>)=count
+^HLEV(776.4,"AF",<site>,<type>,<review status>)=count
+^HLEV(776.4,"AJ",<eariest date/time that the record may be purged>,<IEN>)=""
+^HLEV(776.4,"AK",<CREATE DT/TM>,<ien>)=""

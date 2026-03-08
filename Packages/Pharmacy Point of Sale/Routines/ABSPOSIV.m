@@ -1,5 +1,5 @@
 ABSPOSIV ; IHS/FCS/DRS - Old-style input ;    [ 09/12/2002  10:11 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,10,48**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,10,48,54**;JUN 01, 2001;Build 131
  ; old-style kept for those who want it
  ;EP - Branched to here from ABSPOSI
  ;----------------------------------------------------------------------
@@ -163,7 +163,8 @@ GETRX1 ;
  S Y=+Y
  S X=$G(^PSRX(Y,0))
  S PT=$P(X,U,2),DG=$P(X,U,6)
- I PT]"" W "  ",$P($G(^DPT(PT,0)),U)
+ ;I PT]"" W "  ",$P($G(^DPT(PT,0)),U)
+ I PT]"" W "  ",$P($G(^DPT(PT,0)),U)_$$PPN1^ABSPUTL(PT)  ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  I DG]"" W "  ",$P($G(^PSDRUG(DG,0)),U)
  S ABSBRXI=Y,ABSBRXR=$$SETRXR
  N IEN59 S IEN59=$$IEN59(ABSBRXI,ABSBRXR,1)

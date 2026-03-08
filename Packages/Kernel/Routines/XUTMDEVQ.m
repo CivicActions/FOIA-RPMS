@@ -1,5 +1,5 @@
-XUTMDEVQ ;ISCSF/RWF - Device call and Queue in one place ;01/18/2006
- ;;8.0;KERNEL;**20,120,275,389**;Jul 10, 1995;Build 1
+XUTMDEVQ ;ISCSF/RWF - Device call and Queue in one place ;06/11/99  10:33
+ ;;8.0;KERNEL;**20,120,275**;Jul 10, 1995
  ;  this routine has four entry points:  EN, DEV, NODEV, QQ
  ;  usage:
  ;D EN^XUTMDEVQ(ZTRTN,ZTDESC,.ZTSAVE,[.]%ZIS,[FLAG])
@@ -12,7 +12,7 @@ XUTMDEVQ ;ISCSF/RWF - Device call and Queue in one place ;01/18/2006
  ;
 EN(ZTRTN,ZTDESC,ZTSAVE,%ZIS,%) ;ZTSAVE AND %ZIS pass by reference.
  Q:$G(ZTRTN)=""
- N %RET,ZTIO,ZTDTH,ZTSYNC,ZTCPU,ZTUCI N:'$G(%) ZTSK K IO("Q")
+ N ZTIO,ZTDTH,ZTSYNC,ZTCPU,ZTUCI N:'$G(%) ZTSK K IO("Q")
  D ZIS I POP G KILL
  I '$D(IO("Q")) D RUN G KILL
  D ZTLOAD
@@ -20,12 +20,12 @@ KILL K ZTDTH,ZTSAVE
  Q
 ZIS ;
  S:$G(%ZIS)'["Q" %ZIS=$G(%ZIS)_"Q"
- D ^%ZIS
+ D ^%ZIS:'$D(XGWIN),^ZISG:$D(XGWIN)
  Q
 ZTLOAD ;
- K IO("Q"),ZTSK
- D ^%ZTLOAD,HOME^%ZIS
- S:$D(ZTSK) %RET=ZTSK
+ K IO("Q")
+ D ^%ZTLOAD
+ D HOME^%ZIS
  Q
 RUN ;
  U IO
@@ -60,7 +60,7 @@ DEV(ZTRTN,ZTDESC,%VAR,%VOTH,%ZIS,IOP,%WR) ;  single que ask for device
  D SETUP,ZIS I POP G OUT
  I '$D(IO("Q")) D RUN S %RET=0
  D ZTLOAD
-OUT I $G(%WR),%RET'=0,'$D(ZTQUEUED) D
+OUT I $G(%WR),%RET'=0,'$D(XGWIN),'$D(ZTQUEUED) D
  .W !! I %RET<0 W "Request Aborted",!
  .E  W "Task queued ["_(+%RET)_"]",!
  .I $P(%RET,U,2) W !,"Second task queued ["_$P(%RET,U,2)_"]",!
@@ -129,25 +129,16 @@ QQ(%RTN,%DESC,%VAR1,%VOTH1,%ZIS,IOP,%WR,%RTN2,%DESC2,%VAR2,%VOTH2) ;
  I $D(%VAR1) M %VAR=%VAR1
  I $D(%VOTH1) M %VOTH=%VOTH1
  I $G(%DESC)]"" S ZTDESC=%DESC
- D SETUP S ZTIO="",%RET=-1,ZTSAVE("XUTMQQ")=%TMP D ZTLOAD I %RET>0 S %RET=%RET_U_%TMP
+ D SETUP S ZTIO="",%RET=-1 D ZTLOAD I %RET>0 S %RET=%RET_U_%TMP
  G OUT
  ;
-REQQ(ZTSK,ZTDTH,%VAR) ;Reschedule the second part of a QQ task.
- ;The task to work on should be in XUTMQQ.
- N ZTIO,ZTDESC,ZTRTN,ZTSYNC,ZTCPU,ZTUCI,ZTSAVE,ZTPRI,ZTKIL,ZTREQ
- I $G(ZTSK)=""!($G(ZTDTH)="") Q 0
- D VAR
- D REQ^%ZTLOAD
- Q $G(ZTSK(0),0)  ;Return 1 for rescheduled, 0 for fail.
- ;
 SETUP ;  setup %ztload variables
- K ZTDTH,ZTSYNC,ZTCPU,ZTUCI,ZTSAVE,ZTPRI,ZTKIL,ZTSK,IO("Q") N I,X,Y
- D VAR
- I $D(%VOTH) F  S X=$O(%VOTH(X)) Q:X=""  S:'$D(@X) @X=%VOTH(X)
+ K ZTIO,ZTDTH,ZTSYNC,ZTCPU,ZTUCI,ZTSAVE,ZTPRI,ZTKIL,ZTSK,IO("Q") N I,X,Y
+ I $D(%VAR)#2 F I=1:1:$L(%VAR,";") S X=$P(%VAR,";",I),ZTSAVE(X)=""
+ S X="" F  S X=$O(%VAR(X)) Q:X=""  S ZTSAVE(X)=%VAR(X)
+ I $D(%VOTH) F  S X=$O(%VOTH(X)) Q:X=""  S:$D(@X) @X=%VOTH(X)
  I '$D(ZTDESC) S ZTDESC=$TR($P(ZTRTN,"("),U,"~")
  Q
  ;
-VAR ;Setup ZTSAVE
- I $D(%VAR)#2 F I=1:1:$L(%VAR,";") S X=$P(%VAR,";",I),ZTSAVE(X)=""
- S X="" F  S X=$O(%VAR(X)) Q:X=""  S ZTSAVE(X)=%VAR(X)
- Q
+ ;
+ZTLOAD2 K IO("Q"),ZTSK D ^%ZTLOAD,HOME^%ZIS S:$D(ZTSK) %RET=ZTSK Q

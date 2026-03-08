@@ -1,9 +1,9 @@
-APCLAP8P ; IHS/CMI/LAB - APC Visit Counts Print Report ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLAP8P ; IHS/OHPRD/TMJ - APC Visit Counts Print Report ;  [ 12/16/2003  2:00 PM ]
+ ;;3.0;IHS PCC REPORTS;**16**;FEB 05, 1997
  ;to tally average number of visit per day of week by clinic
 START ;
  S APCL80S="*******************************************************************************"
- S APCLDT=$$FMTE^XLFDT(DT)
+ S %DT="",X="T" D ^%DT S DT=Y D DD^%DT S APCLDT=Y
  S Y=APCLBD D DD^%DT S APCLBDD=Y S Y=APCLED D DD^%DT S APCLEDD=Y
  S (APCLTOT,APCLPG)=0,APCLCLN="" D HEAD
  K APCLQUIT

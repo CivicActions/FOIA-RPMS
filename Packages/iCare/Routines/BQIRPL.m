@@ -1,5 +1,5 @@
 BQIRPL ;PRXM/HC/DLS - Patient Problem List  ; 15 Jun 2008  8:09 PM
- ;;2.4;ICARE MANAGEMENT SYSTEM;;Apr 01, 2015;Build 41
+ ;;2.3;ICARE MANAGEMENT SYSTEM;**3,4**;Apr 18, 2012;Build 66
  ;
  Q
  ;

@@ -1,5 +1,5 @@
 SDNOS1 ;ALB/LDB - NO-SHOW REPORT ; 07 May 99 11:13 AM
- ;;5.3;Scheduling;**194,410,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Scheduling;**194,410,1015,1022**;MAY 28, 2004;Build 18
  ;IHS/ANMC/LJF 11/03/2000 changed SSN to HRCN
  ;                        used IHS call for rebook date
  ;                        added total # appts to % statement
@@ -35,7 +35,11 @@ HDR  ;D NOW^%DTC S Y=% X ^DD("DD") W @IOF,Y,?70,"PAGE " S P1=P1+1 W P1  ;IHS/ANM
  D DIV^SDNOS1A D:SDABB HDR3 Q
  ;
 HDR1 ;Q:SDIO=IO&(SDEND)  W !,"DATE",?23,"TIME",?32,"PATIENT",?63,"SSN",!,"----",?23,"----",?32,"-------",?63,"---"  ;IHS/ANMC/LJF 11/03/2000
- Q:SDIO=IO&(SDEND)  W !,"DATE",?23,"TIME",?32,"PATIENT",?63,"HRCN",!,"----",?23,"----",?32,"-------",?63,"----"  ;IHS/ANMC/LJF 11/03/2000
+ ;Q:SDIO=IO&(SDEND)  W !,"DATE",?23,"TIME",?32,"PATIENT",?63,"HRCN",!,"----",?23,"----",?32,"-------",?63,"----"  ;IHS/ANMC/LJF 11/03/2000
+ ;202307 61951 maw p1022
+ Q:SDIO=IO&(SDEND)  W !,"Appt Date/Time",?16,"Patient",?72,"HRCN"
+ W !
+ F I=1:1:80 W "-"
  Q
  ;
 WR S (SDNO,X1,Y3)=0 S C1=0 F C6=1:1 S Y3=C1,C1=$O(^UTILITY($J,"SDNO",SDDIV,SDC,C1)) Q:SDEND  D:(C6=1)&(C1?1"***".E) NONE Q:C1?1"***".E!(C1="")!(SDEND)  S:C6=1 Y3=C1 S X1=0 Q:SDIO=IO(0)&(SDEND)  D WR1
@@ -53,9 +57,15 @@ WR2 S X=C1 X ^DD("FUNC",2,1) S Y2=X
  S X=C1 D DW^%DTC S SDOW=X,Y=C1 X ^DD("DD") S Y1=$P(Y,"@")
  Q:SDEND
  I $Y+6>IOSL D:SDIO=IO(0) SCR Q:SDEND  D HDR,HDR1 S SDHD=1 Q:SDEND
- I SDHD=1 S X=C1 X ^DD("FUNC",2,1) S Y2=X W !!,SDOW,?10,Y1 W:$L(Y2)>7 ?22 W:$L(Y2)<8 ?23 W Y2,?32,SDPT,?63,C3
- I $P(Y3,".",2)']""&('SDHD) W !!,SDOW,?10,Y1 W:$L(Y2)>7 ?22 W:$L(Y2)<8 ?23 W Y2,?32,SDPT,?63,C3
- I $P(Y3,".",2)]""&('SDHD) W !! W:$L(Y2)>7 ?22 W:$L(Y2)<8 ?23 W Y2,?32,SDPT,?63,C3
+ ;20230707 61951 maw p1022 PPN
+ N BSDDT
+ S BSDDT=$$DTS^BSDU3(C1)
+ ;I SDHD=1 S X=C1 X ^DD("FUNC",2,1) S Y2=X W !!,SDOW,?10,Y1 W:$L(Y2)>7 ?22 W:$L(Y2)<8 ?23 W Y2,?32,SDPT,?63,C3
+ ;I $P(Y3,".",2)']""&('SDHD) W !!,SDOW,?10,Y1 W:$L(Y2)>7 ?22 W:$L(Y2)<8 ?23 W Y2,?32,SDPT,?63,C3
+ ;I $P(Y3,".",2)]""&('SDHD) W !! W:$L(Y2)>7 ?22 W:$L(Y2)<8 ?23 W Y2,?32,SDPT,?63,C3
+ I SDHD=1 W !!,BSDDT,?16,SDPT,?72,C3
+ I $P(Y3,".",2)']""&('SDHD) W !!,BSDDT,?16,SDPT,?72,C3
+ I $P(Y3,".",2)]""&('SDHD) W !!,BSDDT,?16,SDPT,?72,C3
  W !,?32,"CLERK: ",$S($P(SDX,U,3):$P($G(^VA(200,$P(SDX,U,3),0)),U),$P(SDX,U)["NT":"NONE - NO ACTION TAKEN",1:"UNKNOWN")
  S SDHD=0,Y3=C1
 WR3  ;I $P(SDX,U)["A" W !,?32,"REBOOKED ON " S SDRB=$P(SDX,U,2),Y=SDRB X ^DD("DD") W Y,!  ;IHS/ANMC/LJF 11/03/2000

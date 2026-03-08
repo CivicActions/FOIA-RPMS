@@ -1,5 +1,5 @@
-BCQMENCK ;GDIT/IHS/FS - MAGIC MAPPER - ENVIRONMENT CHECKER ;05/07/18 07:49;FS  
- ;;1.0;IHS CODE MAPPING;;MAY 07, 2018;Build 21
+BCQMENCK ;GDIT/IHS/FS - MAGIC MAPPER - ENVIRONMENT CHECKER ;09/11/24 07:53;FS  
+ ;;1.0;IHS CODE MAPPING;**12,13**;OCT 01, 2025;Build 91
  ;
  ;
  I '$G(DUZ) W !,"DUZ UNDEFINED OR 0." D SORRY(2) Q
@@ -8,10 +8,13 @@ BCQMENCK ;GDIT/IHS/FS - MAGIC MAPPER - ENVIRONMENT CHECKER ;05/07/18 07:49;FS
  ;
  S X=$P(^VA(200,DUZ,0),U)
  W !!,$$CJ^XLFSTR("Hello, "_$P(X,",",2)_" "_$P(X,","),IOM)
- W !!,$$CJ^XLFSTR("Checking Environment for "_$P($T(+2),";",4)_" V "_$P($T(+2),";",3)_" Patch 4"_".",IOM),!
+ W !!,$$CJ^XLFSTR("Checking Environment for "_$P($T(+2),";",4)_" V "_$P($T(+2),";",3)_" Patch 13"_".",IOM),!
  ;
  S XPDQUIT=0
  I '$$VCHK("XU","8.0",2) S XPDQUIT=2
+ I '$$VCHK("DI","22",2) S XPDQUIT=2
+ I '$$VCHK("AUM","25.0",2),'$$PATCH^XPDUTL("AUM*25.0*4") S XPDQUIT=2
+ I '$$VCHK("AVA","93.2",2),'$$PATCH^XPDUTL("AVA*93.2*29") S XPDQUIT=2
  ;
  I XPDQUIT D SORRY(XPDQUIT) Q
  ;

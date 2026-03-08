@@ -1,4 +1,4 @@
-AGTXALL ;IHS/ASDS/EFG - EXPORT ALL REG DATA ;9:58 AM  19 Oct 2010
+AGTXALL ;IHS/ASDS/EFG - EXPORT ALL REG DATA ;  
  ;;7.1;PATIENT REGISTRATION;**1,2**;JAN 31, 2007
  ;
  Q:'$$CHK^AGTXALL1
@@ -198,11 +198,11 @@ INTRO ;;
  ;;to the Patient Registration export in format, but differs in kind,
  ;;because no quality checks are performed for missing or inconsistent
  ;;data.  The resulting export global, ^AGTXDATA(, will be sent to:
-DW ;;www.ihs.gov
+DW ;;ircsrv1.hqw.ihs.gov
  ;;where the data will be used to re-load NPIRS with PtReg information.
- ;;
+ ;;  
  ;;Historical comprehensive extract info (max 5):
- ;;
+ ;;  
  ;;Performed              Time (sec)  Patients  Records  File Size (bytes)
  ;;---------------------  ----------  --------  -------  -----------------
  ;;###

@@ -1,5 +1,5 @@
-BGOPROB1 ; IHS/BAO/TMD - pull patient PROBLEMS ;10-Jun-2016 14:18;MGH
- ;;1.1;BGO COMPONENTS;**13,14,20,21**;Mar 20, 2007;Build 1
+BGOPROB1 ; IHS/BAO/TMD - pull patient PROBLEMS ;31-Aug-2023 11:15
+ ;;1.1;BGO COMPONENTS;**13,14,20,21,31,32,33**;Mar 20, 2007;Build 1
  ;---------------------------------------------
  ; Edit a problem entry
  ;  DFN   = Patient IEN
@@ -8,13 +8,13 @@ BGOPROB1 ; IHS/BAO/TMD - pull patient PROBLEMS ;10-Jun-2016 14:18;MGH
  ;  List(n)
  ;        "P"[1] ^ SNOMED CT [2] ^ Descriptive CT [3] ^ Provider text [4] ^ Mapped ICD [5]
  ;        ^ Location [6] ^ Date of Onset [7] ^ Status [8] ^ Class [9] ^ Problem # [10] ^ Priority [11]
- ;        ^ Inpt Dx  [12] ^ Laterality codes [13]
+ ;        ^ Inpt Dx  [12] ^ Laterality codes [13] ^ Nonredisclosure [14]
  ;        "A"[1] ^ Classification [2] ^ Control [3] ^ V asthma IEN [4]
  ;        "Q"[1] ^ Type [2] ^ Qualifier IEN [3] ^ Qual SNOMED [4] ^ By [5] ^ When [6] ^DEL [7]
 EDIT(RET,DFN,PRIEN,VIEN,ARRAY) ;EP
  N CLASS,DIEN,ONSET,NARR,LIEN,PRNUM,LOCN,DMOD,DENT,STAT,IMP,LAT,LATEXT
- N FDA,IEN,FPNUM,FPIEN,FNUM,IENS,PRNEW,PRIOR,SNOCT,DESCT,XIEN,ERR
- N ODIEN,ONARR,OCLASS,OSNOCT,ODESCT,OSTAT,OLDLAT,STAT2,SNODATA,VAPR,INPT
+ N FDA,IEN,FPNUM,FPIEN,FNUM,IENS,PRNEW,PRIOR,SNOCT,DESCT,XIEN,ERR,OLDREDIS
+ N ODIEN,ONARR,OCLASS,OSNOCT,ODESCT,OSTAT,OLDLAT,STAT2,SNODATA,VAPR,INPT,REDIS
  S FNUM=$$FNUM,RET="",ERR=0
  S PRIEN=$G(PRIEN),VIEN=$G(VIEN)
  S (DIEN,SNOCT)=""
@@ -34,6 +34,7 @@ PROB(RET,INP) ;PROBLEM DATA
  S OSNOCT=$$GET1^DIQ(9000011,PRIEN,80001)
  S ODESCT=$$GET1^DIQ(9000011,PRIEN,80002)
  S OLDLAT=$$GET1^DIQ(9000011,PRIEN,.22)
+ S OLDREDIS=$$GET1^DIQ(9000011,PRIEN,.23,"I")  ;Patch 31
  S DIEN=$P(INP,U,5)
  S DIEN=$P($P(INP,U,5),"|",1)
  S NARR=$P(INP,U,4)
@@ -101,6 +102,8 @@ PROB(RET,INP) ;PROBLEM DATA
  I DESCT'=ODESCT S @FDA@(80002)=DESCT
  I (OLDLAT'=LAT)&($P(LAT,"|",2)'="") S @FDA@(.22)=LAT
  S:LAT="" @FDA@(.22)="@"
+ S REDIS=$P(INP,U,14)
+ I REDIS'=OLDREDIS S @FDA@(.23)=REDIS  ;Patch 31
  D FILE^DIE("","FDA","ERR")
  I ERR S RET=-1_U_"Unable to Edit problem"
  Q:RET
@@ -244,8 +247,14 @@ FNDFP(PRIEN,FNUM) ;
  .S X=$G(@GBL@(IEN,0))
  .I +X=DIEN,$P(X,U,2)=DFN,$P(X,U,3)\1=DMOD,$P(X,U,4)=NIEN S RET=IEN
  Q RET
-EDPROB(RET,DFN) ;Get active problems for a patient
+ ; Get active problems for a patient
+ ;  DFN = Patient IEN
+ ;  EXT = Extended, 1 to include the Status and Eye Related pieces (pieces 5 and 6)
+ ;-------------------------------------------------------------------------
+ ;Array(n)=Problem Ien [1] ^ Prov Narrative [2] ^ SNOMED CONCEPT ID [3] ^ ICD [4] ( ^ Status [5] ^ Eye dx [6] )
+EDPROB(RET,DFN,EXT) ;
  N IEN,ITM,SNO,CNT,STATUS,STAT,CODE,ICD
+ S EXT=$G(EXT)
  S CNT=0,STATUS="ASEOR"
  S RET=$$TMPGBL^BGOUTL
  S STAT="" F  S STAT=$O(^AUPNPROB("ACTIVE",DFN,STAT)) Q:STAT=""  D
@@ -256,9 +265,24 @@ EDPROB(RET,DFN) ;Get active problems for a patient
  ..I $$AICD^BGOUTL2 S CODE=$P($$ICDDX^ICDEX(ICD,$$NOW^XLFDT,"","I"),U,2)
  ..E  S CODE=$$GET1^DIQ(80,ICD,.01)
  ..S SNO=$$GET1^DIQ(9000011,IEN,80001)
- ..Q:SNO=""
+ ..;Q:SNO=""&'+$G(EXT)  ;p33 - Added check for EXT
+ ..Q:SNO=""             ;p35 - Removed check for EXT
  ..S CNT=CNT+1
- ..S @RET@(CNT)=IEN_U_ITM_U_SNO_U_CODE
+ ..I EXT D
+ ...;Get extended data for IPL
+ ...N EYE,STAT2
+ ...S EYE=0
+ ...S STAT2=$$GET1^DIQ(9000011,IEN,.12)
+ ...I $$GET^XPAR("ALL","BGO IPL EYE DX") D
+ ....N REC8,DESCT,OUT,IN,X,ARR
+ ....S REC8=$G(^AUPNPROB(IEN,800))
+ ....S DESCT=$P(REC8,U,2)
+ ....S OUT="ARR"
+ ....S IN=DESCT_"^EHR IPL EYE FILTER"
+ ....S X=$$VALSBTRM^BSTSAPI(.OUT,.IN)
+ ....S:+X&+$G(@OUT) EYE=1
+ ...S @RET@(CNT)=IEN_U_ITM_U_SNO_U_CODE_U_STAT2_U_EYE
+ ..E  S @RET@(CNT)=IEN_U_ITM_U_SNO_U_CODE
  Q
 INPT(RET,DFN) ;Return data for current or more recent inpt stay
  N INPT,INVST,IEN,INVDT,PRIEN
@@ -378,3 +402,4 @@ SETPRI(RET,INP) ;EP
  Q
  ; Return file number
 FNUM() Q 9000011
+ 

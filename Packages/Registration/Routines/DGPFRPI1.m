@@ -1,5 +1,5 @@
 DGPFRPI1 ;ALB/RBS - PRF PRINCIPAL INVEST REPORT CONT. ; 6/8/04 5:07pm
- ;;5.3;Registration;**554,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**554,1015,1022**;MAY 28, 2004;Build 18
  ;
  ;This routine will be used to display/print all patient assignments
  ;for a Principal Investigator assigned to the Research record flag.

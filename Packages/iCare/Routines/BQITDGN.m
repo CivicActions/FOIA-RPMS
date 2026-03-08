@@ -1,5 +1,5 @@
 BQITDGN ;PRXM/HC/ALA-General Taxonomy Diagnosis Category ; 10 Apr 2006  6:53 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**7**;Mar 01, 2021;Build 14
  Q
  ;
 POP(BQARY,TGLOB,KEEP) ; EP -- By population
@@ -30,6 +30,8 @@ POP(BQARY,TGLOB,KEEP) ; EP -- By population
  ;  ENDT - End date of the timeframe
  ;  PRIM - Clinical ranking e.g. primary diagnosis only or primary/secondary.
  ;  SERV - Visit service categories
+ ;  ADD - Add extra codes
+ ;  REM - Remove codes
  ;
  NEW N,TAX,NIT,TMFRAME,FREF,GREF,TREF,STDT,GLOBAL,IEN,TIEN,VISIT,VSDTM,ENDT
  NEW TPGLOB,SAME,EXDT,DTDIF,TPRGL,PRIM,SERV,VSERV
@@ -55,10 +57,12 @@ POP(BQARY,TGLOB,KEEP) ; EP -- By population
  Q
  ;
 PROC ;Process each entry
+ NEW ADD,REM
  S TAX=$P(@BQARY@(N),U,1),NIT=$P(@BQARY@(N),U,3)
  S TMFRAME=$P(@BQARY@(N),U,4),FREF=$P(@BQARY@(N),U,5)
  S PLFLG=+$P(@BQARY@(N),U,6),SAME=+$P(@BQARY@(N),U,7)
  S PRIM=+$P(@BQARY@(N),U,8),SERV=$P(@BQARY@(N),U,9)
+ S ADD=$P(@BQARY@(N),U,10),REM=$P(@BQARY@(N),U,11)
  S EXDT="",DTDIF=""
  I TMFRAME'="" D
  . S ENDT=$$DATE^BQIUL1(TMFRAME),STDT=$$DT^XLFDT()
@@ -69,6 +73,16 @@ PROC ;Process each entry
  S TREF=$NA(^TMP("BQITAX",UID))
  K @TREF
  D BLD^BQITUTL(TAX,TREF)
+ ; Add additional codes if defined
+ I $G(ADD)'="" D
+ . NEW TFIL,TN,CD
+ . S TN=$O(^ATXAX("B",TAX,"")) I TN="" Q
+ . S TFIL=$P(^ATXAX(TN,0),"^",15)
+ . F I=1:1 S CD=$P(ADD,"|",I) Q:CD=""  D BLDSV^BQITUTL(TFIL,CD_" ",TREF)
+ ; Remove codes if defined
+ I $G(REM)'="" D
+ . F I=1:1 S CD=$P(REM,"|",I) Q:CD=""  D
+ .. S TN="" F  S TN=$O(@TREF@(TN)) Q:TN=""  I $P(@TREF@(TN),"^",1)=CD K @TREF@(TN)
  ;  For each entry in the taxonomy reference
  S TIEN="" F  S TIEN=$O(@TREF@(TIEN)) Q:TIEN=""  D
  . ;  If problem flag, check the problem file for any instances of
@@ -156,6 +170,7 @@ PROCP ; Process one patient
  S TMFRAME=$P(@BQARY@(N),U,4),FREF=$P(@BQARY@(N),U,5)
  S PLFLG=+$P(@BQARY@(N),U,6),SAME=+$P(@BQARY@(N),U,7)
  S PRIM=+$P(@BQARY@(N),U,8),SERV=$P(@BQARY@(N),U,9)
+ S ADD=$P(@BQARY@(N),U,10),REM=$P(@BQARY@(N),U,11)
  S EXDT="",DTDIF=""
  I TMFRAME'="" D
  . S ENDT=$$DATE^BQIUL1(TMFRAME),STDT=$$DT^XLFDT()
@@ -164,6 +179,16 @@ PROCP ; Process one patient
  K @TREF
  S TPRGL=$NA(^TMP("TPRBLM",UID)) K @TPRGL
  D BLD^BQITUTL(TAX,TREF)
+ ; Add additional codes if defined
+ I $G(ADD)'="" D
+ . NEW TFIL,TN,CD
+ . S TN=$O(^ATXAX("B",TAX,"")) I TN="" Q
+ . S TFIL=$P(^ATXAX(TN,0),"^",15)
+ . F I=1:1 S CD=$P(ADD,"|",I) Q:CD=""  D BLDSV^BQITUTL(TFIL,CD_" ",TREF)
+ ; Remove codes if defined
+ I $G(REM)'="" D
+ . F I=1:1 S CD=$P(REM,"|",I) Q:CD=""  D
+ .. S TN="" F  S TN=$O(@TREF@(TN)) Q:TN=""  I $P(@TREF@(TN),"^",1)=CD K @TREF@(TN)
  I PLFLG D PPRB(PTDFN,TPRGL) I $D(@TPRGL@(PTDFN))>0,'$D(@TGLOB@(PTDFN)) M @TGLOB@(PTDFN)=@TPRGL@(PTDFN) Q
  S IEN=""
  F  S IEN=$O(@GREF@("AC",PTDFN,IEN),-1) Q:'IEN  D

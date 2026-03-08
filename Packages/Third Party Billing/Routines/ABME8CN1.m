@@ -1,5 +1,5 @@
-ABME8CN1 ; IHS/ASDST/DMJ - 837 CN1 Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8CN1 ; IHS/ASDST/DMJ - 837 CN1 Segment [ 02/04/2003  11:07 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1**;APR 05, 2002
  ;Transaction Set Header
  ;
 START ;START HERE
@@ -20,7 +20,6 @@ LOOP ;LOOP HERE
  Q
 20 ;CN101 - Contract Type Code
  S ABMR("CN1",20)=""
- S ABMR("CN1",20)=$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,11)
  Q
 30 ;CN102 - Monetary Amount
  S ABMR("CN1",30)=""
@@ -30,7 +29,6 @@ LOOP ;LOOP HERE
  Q
 50 ;CN104 - Reference Identification
  S ABMR("CN1",50)=""
- S ABMR("CN1",50)=$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,12)
  Q
 60 ;CN105 - Terms Discount Percent
  S ABMR("CN1",60)=""

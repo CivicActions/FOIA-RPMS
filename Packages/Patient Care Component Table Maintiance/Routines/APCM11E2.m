@@ -1,11 +1,11 @@
-APCM11E2 ; IHS/CMI/LAB - IHS MU ;
- ;;1.0;IHS MU PERFORMANCE REPORTS;**1,2,4,5,6**;MAR 26, 2012;Build 65
+APCM11E2 ;IHS/CMI/LAB - IHS MU; 
+ ;;2.0;IHS PCC SUITE;**6**;MAY 14, 2009;Build 11
  ;;;;;;Build 3
 CPOE ;EP - CALCULATE CPOE MEDICATIONS MEASURE
  ;for each provider or for the facility find out if this
  ;patient had a visit of A, O, R, S to this provider or facility
  ;if so, then check to see if they had any prescription in file 52
- ;with an issue date in the EHR reporting period, if so they are in the
+ ;with an issue date in the time period, if so they are in the
  ;denominator for that provider/facility and then update counter
  ;
  ;if they had any prescription that had a nature of order of electronic
@@ -14,7 +14,7 @@ CPOE ;EP - CALCULATE CPOE MEDICATIONS MEASURE
  S (APCMD1,APCMN1)=0
  I APCMRPTT=1 D  Q
  .S APCMP=0 F  S APCMP=$O(APCMPRV(APCMP)) Q:APCMP'=+APCMP  D
- ..I $D(APCM100R(APCMP,APCMTIME)) S F=$P(^APCMMUM(APCMIC,0),U,11) D S^APCM11E1(APCMRPT,APCMIC,"Provider is excluded from this measure as he/she had < 100 prescriptions issued during the EHR reporting period.",APCMP,APCMRPTT,APCMTIME,F,1)
+ ..I $D(APCM100R(APCMP,APCMTIME)) S F=$P(^APCMMUM(APCMIC,0),U,11) D S^APCM11E1(APCMRPT,APCMIC,"Provider is excluded from this measure as he/she had < 100 prescriptions issued during the time period.",APCMP,APCMRPTT,APCMTIME,F,1) Q
  ..Q:'$D(APCMHVTP(APCMP))  ;no visits to this provider for this patient so don't bother, the patient is not in the denominator
  ..D CPOE1
  .Q
@@ -45,9 +45,8 @@ HADRX(P,BD,ED) ;EP - did patient have a RX in file 52 with an issue date
  I '$G(BD) Q ""
  I '$G(ED) Q ""
  I '$D(^AUPNPAT(P,0)) Q ""
- NEW EXDT,IFN,ID,G,APCMUD,D,R
+ NEW EXDT,IFN,ID,G
  S G=""
- I APCMRPTT=2 G UD
  S EXDT=$$FMADD^XLFDT(BD,-730)
  F  S EXDT=$O(^PS(55,P,"P","A",EXDT)) Q:'EXDT!(G]"")  S IFN=0 F  S IFN=$O(^PS(55,P,"P","A",EXDT,IFN)) Q:'IFN!(G]"")  D:$D(^PSRX(IFN,0))
  .Q:$P($G(^PSRX(IFN,"STA")),"^")=13
@@ -55,29 +54,6 @@ HADRX(P,BD,ED) ;EP - did patient have a RX in file 52 with an issue date
  .Q:ID<BD
  .Q:ID>ED
  .S G=ID_U_$$VAL^XBDIQ1(52,IFN,.01)
- I G Q G
- I APCMRPTT=1 Q ""
-UD ;
- S APCMUD=0,G="" F  S APCMUD=$O(^PS(55,P,5,APCMUD)) Q:APCMUD'=+APCMUD!(G)  D
- .Q:'$D(^PS(55,P,5,APCMUD,0))
- .S D=$P($P(^PS(55,P,5,APCMUD,0),U,14),".")
- .Q:D<BD
- .Q:D>ED
- .S R=$O(^PS(55,P,5,APCMUD,1,0)) Q:'R  ;NO DRUG
- .S R=$P(^PS(55,P,5,APCMUD,1,R,0),U,1)
- .S R=$P(^PSDRUG(R,0),U,1)
- .S G=D_U_"UNIT DOSE: "_R
- I G Q G
- ;IV
- S APCMUD=0,G="" F  S APCMUD=$O(^PS(55,P,"IV",APCMUD)) Q:APCMUD'=+APCMUD!(G)  D
- .Q:'$D(^PS(55,P,"IV",APCMUD,0))
- .S D=$P($P(^PS(55,P,"IV",APCMUD,0),U,2),".")
- .Q:D<BD
- .Q:D>ED
- .S R=$P($G(^PS(55,P,"IV",APCMUD,.2)),U,1)
- .I 'R S R=""
- .I R S R=$P($G(^PS(50.7,R,0)),U,1)
- .S G=D_U_"IV: "_R
  Q G
 ORES(R,D) ;EP - DID PROVIDER HAVE ORES OR ORESLE ON DATE D
  I '$G(R) Q ""
@@ -85,8 +61,8 @@ ORES(R,D) ;EP - DID PROVIDER HAVE ORES OR ORESLE ON DATE D
  NEW K,J
  S K=$O(^DIC(19.1,"B","ORES",0))
  S J=$O(^DIC(19.1,"B","ORELSE",0))
- I $D(^VA(200,R,51,K,0)),$P(^VA(200,R,51,K,0),U,3)'>D Q 1
- I $D(^VA(200,R,51,J,0)),$P(^VA(200,R,51,J,0),U,3)'>D Q 1
+ I $D(^VA(200,R,51,K,0)),$P(^VA(200,R,51,K,0),U,2)'>D Q 1
+ I $D(^VA(200,R,51,J,0)),$P(^VA(200,R,51,J,0),U,2)'>D Q 1
  Q ""
 HADNOEP(P,BD,ED) ;EP - did patient have a RX in file 52 with an issue date
  ;between BD and ED
@@ -96,7 +72,6 @@ HADNOEP(P,BD,ED) ;EP - did patient have a RX in file 52 with an issue date
  I '$D(^AUPNPAT(P,0)) Q ""
  NEW EXDT,IFN,ID,O,N,A,B
  S N=""
- I APCMRPTT=2 G UD1
  S EXDT=$$FMADD^XLFDT(BD,-730)
  F  S EXDT=$O(^PS(55,P,"P","A",EXDT)) Q:'EXDT!(N]"")  S IFN=0 F  S IFN=$O(^PS(55,P,"P","A",EXDT,IFN)) Q:'IFN!(N]"")  D:$D(^PSRX(IFN,0))
  .Q:$P($G(^PSRX(IFN,"STA")),"^")=13
@@ -108,56 +83,14 @@ HADNOEP(P,BD,ED) ;EP - did patient have a RX in file 52 with an issue date
  .Q:O=""
  .S B=$P($G(^OR(100,O,0)),U,6)
  .Q:B=""
- .;Q:'$$ORES(B,ID)
+ .Q:'$$ORES(B,ID)
  .S A=0 F  S A=$O(^OR(100,O,8,A)) Q:A'=+A!(N]"")  D
  ..Q:'$D(^OR(100,O,8,A,0))
  ..S B=$P(^OR(100,O,8,A,0),U,12)
  ..Q:B=1
  ..Q:B=""
  ..S N=$P($P(^OR(100,O,8,A,0),U),".")_U_$P(^ORD(100.02,B,0),U,1)_U_$P(^OR(100,O,0),U)
- I N Q N
- I APCMRPTT=1 Q ""
-UD1 ;
- S G="",N=""
- S APCMUD=0 F  S APCMUD=$O(^PS(55,P,5,APCMUD)) Q:APCMUD'=+APCMUD!(N]"")  D
- .Q:'$D(^PS(55,P,5,APCMUD,0))
- .S D=$P($P(^PS(55,P,5,APCMUD,0),U,14),".")
- .Q:D<BD
- .Q:D>ED
- .;GET ORDER #
- .S O=$P($P(^PS(55,P,5,APCMUD,0),U,21),";")
- .Q:O=""
- .S B=$P($G(^OR(100,O,0)),U,6)
- .Q:B=""
- .;Q:'$$ORES(B,D)
- .S A=0 F  S A=$O(^OR(100,O,8,A)) Q:A'=+A!(N]"")  D
- ..Q:'$D(^OR(100,O,8,A,0))
- ..S B=$P(^OR(100,O,8,A,0),U,12)
- ..Q:B=1
- ..Q:B=""
- ..S N=$P($P(^OR(100,O,8,A,0),U),".")_U_$P(^ORD(100.02,B,0),U,1)_U_$P(^OR(100,O,0),U)
- I N Q N
- ;CHECK IV
- S G="",N=""
- S APCMUD=0 F  S APCMUD=$O(^PS(55,P,"IV",APCMUD)) Q:APCMUD'=+APCMUD!(N]"")  D
- .Q:'$D(^PS(55,P,"IV",APCMUD,0))
- .S D=$P($P(^PS(55,P,"IV",APCMUD,0),U,2),".")
- .Q:D<BD
- .Q:D>ED
- .;GET ORDER #
- .S O=$P($P(^PS(55,P,"IV",APCMUD,0),U,21),";")
- .Q:O=""
- .S B=$P($G(^OR(100,O,0)),U,6)
- .Q:B=""
- .;Q:'$$ORES(B,D)
- .S A=0 F  S A=$O(^OR(100,O,8,A)) Q:A'=+A!(N]"")  D
- ..Q:'$D(^OR(100,O,8,A,0))
- ..S B=$P(^OR(100,O,8,A,0),U,12)
- ..Q:B=1
- ..Q:B=""
- ..S N=$P($P(^OR(100,O,8,A,0),U),".")_U_$P(^ORD(100.02,B,0),U,1)_U_$P(^OR(100,O,0),U)
- I N Q N
- Q ""
+ Q N
 DEMO ;EP - CALCULATE DEMOGRAPHICS
  ;for each provider or for the facility find out if this
  ;patient had a visit of A, O, R, S to this provider or facility
@@ -197,10 +130,8 @@ HASDEMO(P,BD,ED,T,DODV) ;
  .Q:B>ED
  .S C=C+1,PL="Preferred Language"
  S G=$P(^DPT(P,0),U,2) I G]"" S C=C+1,G="Gender"
- S R=""
- I $T(RACE^AGUTL)]"" S R=$$RACE^AGUTL(P)
- I R S C=C+1,R="Race" I 1
- E  S R=$$VAL^XBDIQ1(2,P,.06) I R]"" S C=C+1,R="Race"
+ S R=$$VAL^XBDIQ1(2,P,.06)
+ I R]"" S C=C+1,R="Race"
  S Z=0 F  S Z=$O(^DPT(P,.06,Z)) Q:Z'=+Z!(E]"")  D
  .S E=$P($G(^DPT(P,.06,Z,0)),U,1)
  .Q:E=""

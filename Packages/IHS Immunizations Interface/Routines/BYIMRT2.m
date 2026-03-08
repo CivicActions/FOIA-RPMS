@@ -1,0 +1,500 @@
+BYIMRT2 ;IHS/CIM/THL - IMMUNIZATION DATA EXCHANGE;
+ ;;3.0;BYIM IMMUNIZATION DATA EXCHANGE;**3,4,5,6,7**;AUG 20, 2020;Build 747
+ ;
+ ;
+ ;REAL-TIME HL7 MESSAGE PROCESSING - CONTINUED
+ ;
+ ;=====
+SCH(DS,QMODE) ;EP;SEND QUERY FOR ALL SCHEDULED PATIENTS FOR 'TODAY'
+ ;
+ ;   DS = MANUALLY SET DATE FOR SCHEDULED APPTS QUERIES TO BE SENT
+ ;        IF NOT SET THEN FILEMAN 'DT' ("TODAY") IS USED
+ ;
+ N HL,DAT,P,P0,C0,DFN,DATX,PLIST,QRY
+ S BYIMDUZ=$$DUZ^BYIMIMM()
+ S:'$G(QMODE) QMODE=+$P($G(^BYIMPARA(BYIMDUZ,9)),U,4)
+ Q:'QMODE
+ S HL=0
+ F  S HL=$O(^SC(HL)) Q:'HL  D
+ .S DAT=$S($G(DS):DS,1:DT)-.001
+ .F  S DAT=$O(^SC(HL,"S",DAT)) Q:'DAT!(DAT>($S($G(DS):DS,1:DT)+.999))  D
+ ..S P=0
+ ..F  S P=$O(^SC(HL,"S",DAT,1,P)) Q:'P  S P0=$G(^(P,0)),C0=$G(^("C")) D
+ ...S DFN=+P0
+ ...S DATX=$P(DAT,".")
+ ...D:"23"[QMODE
+ ....Q:'C0!$D(^BYIMSCQ(DATX,DFN,"CHKIN"))
+ ....S ^BYIMSCQ(DATX,DFN,"CHKIN",HL)=""
+ ....S PLIST(DFN)=""
+ ...D:"13"[QMODE
+ ....Q:'P0!$D(^BYIMSCQ(DATX,DFN,"APPT"))
+ ....S ^BYIMSCQ(DATX,DFN,"APPT",HL)=""
+ ....S PLIST(DFN)=""
+ Q:'$O(PLIST(0))
+ S QRY=$$QUERY^BYIMAPI(.PLIST,.QRY)
+ Q
+ ;=====
+ ;
+QPURGE ;EP;TO PURGE OLD QUERY/RESPONSE ENTRIES
+ D QPURGE^BYIMRT3
+ Q
+ ;=====
+ ;
+SCHDT ;EP;TO SELECT SPECIFIC DATE FOR WHICH TO SEND QUERIES FOR SCHEDULED
+ ;APPOINTMENTS AND/OR CHECK-INS
+ ;
+ S BYIMDUZ=$$DUZ^BYIMIMM()
+ S QMODE=+$P($G(^BYIMPARA(BYIMDUZ,9)),U,4)
+ I 'QMODE D  Q:$G(BYIMQUIT)
+ .W @IOF
+ .W !?10,"Auto Query Mode is not set."
+ .W !?10,"To Set the mode for the system:"
+ .W !!?10,"Use the BYIM Main Menu 'Set' option"
+ .W !?10,"then select: 'SET   SET UP Immunization Data Exchange Parameters"
+ .W !?10,"then select: '1   Edit Parameters for (name of state)'"
+ .W !?10,"and go to and set the 'Auto Query Mode' parameter."
+ .W !!?10,"You can also select one of the choices below"
+ .W !?10,"to run the auto query one time."
+ .K DIR
+ .S DIR(0)="SO^1:Scheduled appointments only;2:Check-ins only;3:Both Scheduled appts and Check-ins"
+ .S DIR("A")="Which auto query mode"
+ .W !!
+ .D ^DIR
+ .K DIR
+ .I 'Y S BYIMQUIT=1 Q
+ .S QMODE=Y
+ S QMODED=$S(QMODE=1:"Scheduled appointments only",QMODE=2:"Check-ins only",1:"Both Scheduled appts and Check-ins")
+ ;
+ W @IOF
+ W !?10,"Select a date on which to send queries for:"
+ W !?10,QMODED
+ K DIR
+ S DIR(0)="DO^::EP"
+ S DIR("A")="     Date for Appointment Queries"
+ W !!
+ D ^DIR
+ K DIR
+ Q:'Y
+ S DS=Y
+ W !!?10,"Queries will be sent for all patients who have"
+ W !?10,QMODED," on ",Y(0)
+ D PAUSE
+ I $G(BYIMPAUS)]"",BYIMPAUS[U W !!,"No queries sent..." H 2 Q
+ D SCH(DS,QMODE)
+ Q
+ ;=====
+ ;
+DCHK ;CHECK DFN'S IN BYIMRT
+ S XX=0
+ F  S XX=$O(^BYIMRT(XX)) Q:'XX  S X=^(XX,0) D
+ .S ACT=$P(X,U,2)
+ .D:ACT="VXU" DVXU
+ .D:ACT="RSP"!(ACT="QBP") DQBP
+ Q
+ ;=====
+ ;
+DVXU ;
+ S Y=$G(^BYIMRT(XX,1,2,0))
+ S D1=+$P(X,"_",3)
+ S D2=+$P(Y,"|",3)
+ I D1'=D2 W !,XX,?10,D1,?20,D2,!?10,X,!?10,Y
+ D OCHK
+ Q
+ ;=====
+ ;
+OCHK ;CHECK EACH ORC FOR CORRECT PATIENT
+ S X=0
+ F  S X=$O(^BYIMRT(XX,1,X)) Q:'X  S Y=^(X,0) I Y["ORC|",Y'["9999^" D
+ .S IEN=$$IIEN^BYIMIMM8(Y)
+ .S D3=$P($G(^AUPNVIMM(IEN,0)),U,2)
+ .I D3'=D2 W !?10,"PID: ",D2,?25,"ORC: ",D3
+ Q
+ ;=====
+ ;
+DQBP ;
+ S DFN=$P(X,"_",3)
+ S Y=$G(^BYIMRT(XX,1,2,0))
+ S D1=$TR($P($P(Y,"|",5),U,1,2),U,",")
+ S D2=$P($P($G(^DPT(DFN,0)),U),",")_","_$P($P($P($G(^(0)),U),",",2)," ")
+ I D1'=D2 W !,XX,?10,D1,?40,D2,!?10,X,!?10,Y
+ Q:"QBP"
+ D OCHK
+ Q
+ ;=====
+ ;
+SCHQ ;SCHEDULE APPTS AND CHECK-INS FOR QUERY AUTO SEND TESTING
+ D TEST^BYIMRT
+ S X=0
+ F  S X=$O(TMP(X)) Q:'X  M PLIST=TMP(X)
+ M ^BYIMTMP("PLIST","SCH TEST")=PLIST
+ D NOW^%DTC
+ S NOW=%
+ S X1=DT
+ S X2=1
+ D C^%DTC
+ S APT=X_"."_$P(NOW,".",2)
+ S JJ=0
+ S CL=0
+ F  S CL=$O(^SC(CL)) Q:'CL!'$O(PLIST(0))  S X=$O(^SC(CL,"S",NOW),-1) D:X
+ .K DIC,DA,DR
+ .S DA(1)=CL
+ .S DIC="^SC("_DA(1)_",""S"","
+ .S DIC(0)="L"
+ .S (DINUM,X)=APT
+ .D FILE^DICN
+ .S APTDA=+Y
+ .S JJ=JJ+1
+ .K DIC,DA,DR
+ .S DA(2)=CL
+ .S DA(1)=APTDA
+ .S DIC="^SC("_DA(2)_",""S"","_DA(1)_",1,"
+ .S DIC(0)="L"
+ .S (PX,X)=$O(PLIST(0))
+ .K PLIST(X)
+ .I JJ#2 S DIC("DR")="309////"_APT
+ .D FILE^DICN
+ .S PTDA=+Y
+ .S ^BYIMTMP("PLIST","SCH TEST",CL,APTDA,PTDA,X)=""
+ .S ^BYIMTMP("PLIST","SCH TEST",CL,APTDA,PTDA,X)="CI"
+ Q
+ ;=====
+ ;
+RTDEST ;EP;CHECK DESTINATION GLOBAL FOR RT MESSAGES
+ S BYIMDEST="HL IHS IZV04 FRAMEWORK"
+ S BYIMDDA=$O(^INRHD("B",BYIMDEST,0))
+ Q:'BYIMDDA
+ N PRI
+ S PRI=0
+ F  S PRI=$O(^INLHDEST(BYIMDDA,PRI)) Q:'PRI  D
+ .N BYIMDT
+ .S BYIMDT=""
+ .F  S BYIMDT=$O(^INLHDEST(BYIMDDA,PRI,BYIMDT)) Q:BYIMDT=""  D
+ ..N BYIMU
+ ..S BYIMU=0
+ ..F  S BYIMU=$O(^INLHDEST(BYIMDDA,PRI,BYIMDT,BYIMU)) Q:'BYIMU  D
+ ...Q:'$D(^INTHU(BYIMU,3))
+ ...D UIF(BYIMU)
+ Q
+ ;=====
+ ;
+UIF(BYIMU) ;PROCESS UIF
+ Q:'$G(BYIMU)
+ Q:'$D(^INTHU(BYIMU,3))
+ N XX
+ S XX=$G(^INTHU(BYIMU,3,2))
+ Q:XX=""
+ N DFN,HRN,LOC,HRN,LOCDA,X,Y,Z
+ S HRN=""
+ S:XX["PID|" HRN=$P(XX,"|",4)
+ S:XX["QRD|" HRN=$P($P(XX,"|",9),U)
+ S:XX["QPD|" HRN=$P(XX,"|",3)
+ S LOC=$E(HRN,1,6)
+ S HRN=+$E(HRN,7,99)
+ S LOCDA=$O(^AUTTLOC("C",LOC,0))
+ Q:'LOCDA!'HRN
+ S DFN=""
+ S X=0
+ F  S X=$O(^AUPNPAT("D",HRN,X)) Q:'X!DFN  I $D(^AUPNPAT("D",HRN,X,LOCDA)) S DFN=X
+ Q:'DFN
+ S BYIMSTP="IN"
+ S MID=$$SFILE^BYIMRT(BYIMU,DFN,BYIMSTP)
+ Q
+ ;=====
+ ;
+RSPS(DA,X0,X,Y) ;EP;TO SET 'RSP' CROSS REFERENCE
+ Q:'$G(DA)!(X0="")!'$G(Y)
+ N DFN,X4,X5,X10,XD,XT,XDT
+ S DFN=$P(X0,"_",3)
+ S X4=$S(Y=.04:X,1:$P(X0,U,4))
+ S X5=$S(Y=.05:X,1:$P(X0,U,5))
+ S XDT=$S(Y=.05:X,1:$P(X0,U,5))
+ S X10=$S(Y=.1:X,1:$P(X0,U,10))
+ I DFN,XDT,X10,DA S ^BYIMRT("RSP",DFN,XDT,X10,DA)=""
+ Q
+ ;=====
+ ;
+RSPK(DA,X0,X,Y) ;EP;TO KILL 'RSP' CROSS REFERENCE
+ Q:'$G(X)!'$G(DA)!(X0="")!'$G(Y)
+ N DFN,X4,X5,X10,XD,XT,XDT
+ S DFN=$P(X0,"_",3)
+ S X4=$S(Y=.04:X,1:$P(X0,U,4))
+ S X5=$S(Y=.05:X,1:$P(X0,U,5))
+ S XDT=$S(Y=.05:X,1:$P(X0,U,5))
+ S X10=$S(Y=.1:X,1:$P(X0,U,10))
+ I DFN,XDT,X10,DA K ^BYIMRT("RSP",DFN,XDT,X10,DA)
+ Q
+ ;=====
+ ;
+DELCHK ;CHECK FOR IMMS ON VISITS WITH OTHER V FILE ENTRIES ATTACHED
+ K ^BYIMTMP($J,"DELCHK")
+ N J,K,X,Y,Z
+ S J=0
+ S X=9999999999
+ F  S X=$O(^AUPNVSIT(X),-1) Q:'X  S Y=^(X,0),DE=$P(Y,U,9) D:Y>3000101
+ .Q:'$D(^AUPNVIMM("AD",X))
+ .S K=0
+ .S Z=0
+ .F  S Z=$O(^AUPNVIMM("AD",X,Z)) Q:'Z  S K=K+1
+ .Q:DE=K!(DE<K)
+ .S J=J+1
+ .S ^BYIMTMP($J,"DELCHK",X)=DE_U_K
+ Q
+ ;=====
+ ;
+RESP ;EP;REVIEW RT RESPONSE FILES
+ ;V3.0 PATCH 6 - FID-83958 HL7 ERROR MESSAGE PROCESSING
+ K BYIMQUIT,^BYIMTMP("ARR",$J)
+ F  D RESP1 Q:$D(BYIMQUIT)
+ K BYIMQUIT,^BYIMTMP("ARR",$J)
+ ;V3.0 PATCH 6 - FID-83958 END
+ Q
+ ;=====
+ ;
+RESP1 ;REVIEW RESPONSES
+ N RSPDA,QRYDA,DTYP
+ K ^BYIMTMP($J,"BYIM RT")
+ K BYIMQUIT,DIR
+ W @IOF
+ W:RT="RESP" !!?10,"Review Responses from the State IIS"
+ W:RT="SENT" !!?10,"Select Original Query or VXU sent"
+ K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
+ S BYIMQUIT=""
+ S DIC="^BYIMRT("
+ S DIC(0)="AEMQ"
+ W !
+ D:RT="RESP"
+ .S DIC("A",1)="Select by Pat Name, Query/VXU Date or Message ID: "
+ .S DIC("A")="Find a Query or VXU Response"
+ .S DIC("S")="S BYX=$G(^(0)) I ""qbpvxu""[$P($P(BYX,U),""_"",2),""QBPVXU""[$P(BYX,U,2),$O(^BYIMRT(""ACT"",$P(BYX,"".""),""RSP"",+$P(BYX,U,10),0))"
+ .D ^DIC
+ .K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
+ .I Y<0 S BYIMQUIT=1 Q
+ .S QRYDA=+Y
+ .S BYX=$P($G(^BYIMRT(QRYDA,0)),U)
+ I RT="ACK" D  Q
+ .S DIC("A",1)="Select Message ID or Pat Name: "
+ .S DIC("A")="Find a State ERROR Response"
+ .S DIC("S")="S BYX=$G(^(0)) I ($P($P(BYX,U),""_"",2))?6N&(""ACK""[$P(BYX,U,2))&($O(^BYIMRT(""ACT"",$P(BYX,"".""),""ACK"",+$P(BYX,U,10),0)))!(BYX[""vxu""&($P(BYX,U,2)=""RSP"")&$O(^BYIMRT(""ACT"",$P(BYX,"".""),""RSP"",+$P(BYX,U,10),0)))"
+ .D ^DIC
+ .K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
+ .I Y<0 S BYIMQUIT=1 Q
+ .S ACKDA=+Y
+ .S ACK0=$G(^BYIMRT(ACKDA,0))
+ .I ACK0["izrt_vxu" D
+ ..N AS
+ ..S AS=+$P(ACK0,U,10)
+ ..S QRYDA=$O(^BYIMRT("ACT",$P($P(ACK0,U),"."),"VXU",AS,0))
+ .S DTYP=3
+ .;V3.0 PATCH 7 - FID-106212 SELECT DISPLAY OF COMBO OR INDIVIDUAL VAX
+ .S IND=1
+ .D DISP^BYIMRT1(ACKDA,DTYP,$S($G(QRYDA):QRYDA,1:ACKDA),IND)
+ .;V3.0 PATCH 7 FID-106212  END
+ .S BYIMQUIT=1
+ D:RT="SENT"
+ .S DIC("A")="Select Pat Name, VXU or Query Date or Message ID: "
+ .S DIC("S")="I ""vxu""[$P($P(^(0),U),""_"",2)&($P(^(0),U,2)=""VXU"")"
+ .S DIC("S")="I ""qbpvxu""[$P($P(^(0),U),""_"",2)&(""QBPVXU""[$P(^(0),U,2))"
+ .D ^DIC
+ .I Y<0 S BYIMQUIT=1 Q
+ .S VXUDA=+Y
+ K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
+ Q:$G(BYIMQUIT)
+ I RT="SENT" D  Q
+ .S DTYP=$$DT()
+ .Q:$G(BYIMQUIT)
+ .;V3.0 PATCH 7 - FID-106212 SELECT DISPLAY OF COMBO OR INDIVIDUAL VAX
+ .D DISP^BYIMRT1(VXUDA,DTYP,VXUDA,1)
+ .;V3.0 PATCH 7 FID-106212  END
+ S FILE=$P($P($G(^BYIMRT(QRYDA,0)),U),".")
+ S STATE=+$P($G(^BYIMRT(QRYDA,0)),U,10)
+ S TYP=$S(RT="RESP":"RSP",1:"ACK")
+ S RSPDA=$S(FILE]"":$O(^BYIMRT("ACT",FILE,TYP,STATE,0)),1:"")
+ I 'RSPDA D  Q
+ .S DFN=+$P(FILE,"_",3)
+ .S PNAM=$P($G(^DPT(DFN,0)),U)
+ .W !!,"No response on file yet for this query",$S(PNAM]"":" for "_PNAM,1:""),"."
+ .D PAUSE
+ S DTYP=$S(TYP="ACK":3,1:$$DT())
+ ;V3.0 PATCH 7 - FID-106212 SELECT DISPLAY OF COMBO OR INDIVIDUAL VAX
+ I DTYP=1,BYX["_qbp_" D IND^BYIMRT4 I 1
+ E  S IND=1
+ Q:$G(BYIMQUIT)
+ ;V3.0 PATCH 7 FID-106212  END
+ N RSP
+ S T=0
+ S J=0
+ S RSP=0
+ F  S RSP=$O(^BYIMRT("ACT",FILE,TYP,STATE,RSP)) Q:'RSP  S J=J+1,RSP(J)=RSP,T=J
+ ;V3.0 PATCH 7 - FID-106212 SELECT DISPLAY OF COMBO OR INDIVIDUAL VAX
+ I T=1 S RSPDA=RSP(1) D DISP^BYIMRT1(RSPDA,DTYP,QRYDA,IND) Q
+ ;V3.0 PATCH 7 FID-106212  END
+ W !!,"Which response file(s)"
+ W !!?10,"No.",?15,"Response from  Resp ID   Mess ID"
+ W !?10,"---",?15,"-------------  --------  ---------------"
+ N JJ,TJ
+ S JJ=0
+ F  S JJ=$O(RSP(JJ)) Q:'JJ  D
+ .S TJ=JJ
+ .S RSP=RSP(JJ)
+ .S Y=$G(^BYIMRT(RSP,0))
+ .S ID=$P(Y,U,6)
+ .W !?10,JJ,?15,$P($G(^DIC(5,+$P(Y,U,10),0)),U),?30,RSP,?40,ID
+ K DIR
+ S DIR(0)="LO:1:"_TJ
+ S DIR("A")="Display responses from which state(s)"
+ W !
+ D ^DIR
+ K DIR
+ Q:'Y
+ S BYIMY=Y
+ F JJ=1:1 S X=$P(BYIMY,",",JJ) Q:'X  D
+ .S RSPDA=RSP(X)
+ .Q:'RSPDA
+ .D DISP^BYIMRT1(RSPDA,DTYP,QRYDA,IND)
+ ;V3.0 PATCH 7 FID-106212  END
+ Q
+ ;=====
+ ;
+DT() ;DISPLAY TYPE
+ K DIR
+ S:$G(FILE)["vxu" DTYP=2
+ S Y=1
+ S DIR(0)="SO^1:Immunization Information Only;2:HL7 Message Content"
+ S DIR("A")="Which display option"
+ S DIR("B")="Immunization Information Only"
+ W !!
+ I $G(DTYP)'=2 D ^DIR
+ K DIR
+ I 'Y S BYIMQUIT=1 Q ""
+ S DTYP=Y
+ Q DTYP
+ ;=====
+ ;
+RXA(X,XX) ;EP;EVALUATE RXA RESPONSE SEGMENT AND SET ^BYIMRT(RSPDA,2 NODE
+ ;    X  =    HL7 message line
+ ;    XX =    message line number
+ Q:$G(X)=""!'$G(XX)
+ N Y,Z,AD,IMM,QUAN,TYPE,LOT,EXP,LOC,ORC,RXR,VIS,REACT,AGE,AD,CVX
+ N VOL,EXP,MAN,SITE,ASU,LOC,DUP,IDA,NDC
+ I XX,$G(^BYIMRT(RSPDA,2,XX,0))]"" S (RXA(XX),X0)=^(0) D RXA1(X0) Q
+ S STA=$P(X,"|",21)
+ S ORC=$S($G(^BYIMRT(RSPDA,1,XX-1,0))["ORC|":^(0),1:"")
+ S RXR=$S($G(^BYIMRT(RSPDA,1,XX+1,0))["RXR|":^(0),1:"")
+ S (VIS,REACT,VAL,REA)=""
+ ;PATCH 3 CR-12045 ENSURE EACH RESPONSE ENTRY FOR EACH COMPONENT
+ ;FOR COMPOUND IMM HAS IEN IF APPLICABLE
+ F J=2:1:6 D
+ .S SEG=$G(^BYIMRT(RSPDA,1,XX+J,0))
+ .I SEG["OBX|",SEG["29768-9" S VIS=$P(SEG,"|",6)
+ .I SEG["OBX|",SEG["30945-0" S REACT=$P($P(SEG,"|",6),U,2)
+ .I SEG["OBX|",SEG["59781-5" S VAL=$P($P(SEG,"|",6),U)
+ .I SEG["OBX|",SEG["30982-3" S REA=$P($P(SEG,"|",6),U)
+ S (VD,Y)=$E($P(X,"|",4),1,8)
+ ;V3.0 PATCH 5 - FID-83076 AGE VALUE FIX
+ S AGE=$$AGE^BYIMRT1(VD,DOB)
+ S AD=Y
+ S CVX=$P($P(X,"|",6),U)
+ I CVX'["-" S IDA=+$O(^AUTTIMM("C",+CVX,0))
+ I CVX["-" D
+ .S NDC=+$O(^BINDC("B",CVX,9999999999),-1)
+ .S IDA=+$P($G(^BINDC(NDC,0)),U,2)
+ S Y=$G(^AUTTIMM(IDA,0))
+ S CVX=+$P(Y,U,3)
+ S IMM=$P(Y,U,2)
+ S VOL=+$TR($P(X,"|",7),"^")
+ S TYPE=$TR($E($P($P(X,"|",10),U,2),1,7),"^")
+ S LOT=$P(X,"|",16)
+ S Y=$E($P(X,"|",17),1,8)
+ S EXP=Y
+ S MAN=$E($P($P(X,"|",18),U,2),1,15)
+ S SITE=$P($P(RXR,"|",3),U)
+ S IEN=$$IIEN^BYIMIMM8(ORC)
+ S:'IEN IEN=""
+ S ASU=$S($P(ORC,"|",3)'["-":$E($P(ORC,"|",3),1,6),1:$P($P($P(ORC,"|",3),U),"-",2))
+ S LOC=$P($P(X,"|",12),U,4)
+ S LOC=$$LOC^BYIMRT1(IEN,LOC)
+ D RXA2
+ S RXA(XX)=CVX_U_IMM_U_AD_U_AGE_U_LOC_U_REACT_U_VOL_U_SITE_U_LOT_U_MAN_U_VIS_U_IEN_U_U_VAL_U_REA_U_STA
+ S DUP=CVX_"_"_AD
+ S ^BYIMTMP("DUP CHK",RSPDA,DUP,"LINE",XX)=""
+ S:IEN ^BYIMTMP("DUP CHK",RSPDA,DUP,"IEN",+IEN,XX)=""
+ S:'$D(^BYIMRT(RSPDA,2,XX,0)) ^BYIMRT(RSPDA,2,XX,0)=RXA(XX)
+ S ^BYIMRT(RSPDA,2,0)="^90480.22^"_XX_U_XX
+ ;PATCH 3 CR-12045 END
+ Q
+ ;=====
+ ;
+RXA1(X0) ;EP;RXA1 ARRAY SETUP
+ S CVX=+$P(X0,U)
+ S IDA=+$O(^AUTTIMM("C",CVX,0))
+ S IMM=$P($G(^AUTTIMM(IDA,0)),U,2)
+ S AD=$P(X0,U,3)
+ S AGE=$P(X0,U,4)
+ S LOC=$P(X0,U,5)
+ S REACT=$P(X0,U,6)
+ S VOL=+$P(X0,U,7)
+ S SITE=$P(X0,U,8)
+ S LOT=$P(X0,U,9)
+ S MAN=$P(X0,U,10)
+ S VIS=$P(X0,U,11)
+ S IEN=$P(X0,U,12)
+ S VAL=$P(X0,U,14)
+ S REA=$P(X0,U,15)
+ S STA=$P(X0,U,16)
+ S PDP=$P(X0,U,17)
+ S STA=$S(STA="CP":"COMPLETE",STA="RE":"REFUSED",STA="NA":"NOT ADMINISTERED",STA="PA":"PARTIALLY ADMINISTERED",1:"")
+ ;
+RXA2 ;EP;=====
+ ;PATCH 3 CR-12045 ENSURE EACH RESPONSE ENTRY FOR EACH COMPONENT
+ ;FOR COMPOUND IMM HAS IEN IF APPLICABLE
+ N CVX,IMM,IM0,CMP,J,X,Y,Z
+ S IM0=$G(^AUTTIMM(IDA,0))
+ S IMM=$P(IM0,U,2)
+ S CVX=$P(IM0,U,3)
+ S CMP=$P(IM0,U,21,26)
+ ;V3.0 PATCH 7 FID-106212 CHANGES TO INCLUDE COMBO PRIMARY IMM
+ I $L(CMP)=5!$G(IND),CVX D  Q
+ .D RXA21
+ F J=1:1:6 S X=$P(CMP,U,J) I X S Y=$P($G(^AUTTIMM(X,0)),U,3) S:Y CMP(Y)=$P(^AUTTIMM(X,0),U,2)
+ S JX=0
+ S X=""
+ F  S X=$O(CMP(X)) Q:X=""  S CVX=X,IMM=CMP(X) D
+ .S JX=JX+.1
+ .;V3.0 PATCH 7 FID-106212 CHANGES TO INCLUDE COMBO PRIMARY IMM
+ .S:XX>1 ^BYIMRT(RSPDA,2,XX+JX,0)=X_U_IMM_U_AD_U_AGE_U_LOC_U_REACT_U_VOL_U_SITE_U_LOT_U_MAN_U_VIS_U_IEN_U_U_VAL_U_REA_U_STA
+ ;V3.0 PATCH 7 FID-106212  END
+ ;PATCH 3 CR-12045 END
+ Q
+ ;=====
+ ;
+RXA21 ;DISPLAY EACH LINE AND COMPOUND IMMS
+ S JJ=JJ+11
+ S Y=$S('IEN:"",1:"S")
+ S $E(Y,3)=$J(CVX,3)
+ S $E(Y,7)=$E(IMM,1,7)
+ S $E(Y,15)=AD
+ S $E(Y,24)=$J(AGE,6)
+ S $E(Y,31)=$E(LOC,1,8)
+ S $E(Y,40)=$E(REACT,1,8)
+ S $E(Y,49)=$E(VOL,1,3)
+ S $E(Y,53)=SITE
+ S $E(Y,57)=$E(LOT,1,6)
+ S $E(Y,64)=$E(MAN,1,3)
+ S $E(Y,68)=VAL
+ S $E(Y,70)=$E(REA,1,3)
+ S $E(Y,74)=$E(STA,1,6)
+ S DISP(JJ)=Y
+ Q
+ ;=====
+ ;
+PAUSE ;PAUSE
+ D PAUSE^BYIMIMM6
+ Q
+ ;=====
+ ;
+ACK ;EP;DISPLAY ERROR RESPONSES
+ S RT="ACK"
+ D RESP
+ Q
+ ;=====
+ ;

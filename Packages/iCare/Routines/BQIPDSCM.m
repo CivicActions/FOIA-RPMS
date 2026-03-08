@@ -1,5 +1,5 @@
 BQIPDSCM ;VNGT/HS/BEE-Panel Description Utility ; 7 Apr 2008  4:28 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.7;ICARE MANAGEMENT SYSTEM;**2**;Dec 19, 2017;Build 10
  ;
  Q
  ;
@@ -228,7 +228,7 @@ PSVST(BQITYPE,BQIVST,BQITIME,BQIMPRM) ;EP - Assemble Primary/Secondary Provider 
  ;BQIMPRM = Passed in MPARMS array. Gets updated with visit check description
  ;
  ;
- N STR
+ NEW STR
  I BQITYPE=""!(BQIVST="")!(BQITIME="") Q
  ;
  ;Assemble Visit Check Description
@@ -368,7 +368,7 @@ MPARMS(PARMS,DEL) ;EP - Convert multiple values into single value
  . S VAL="",VALS=""
  . F  S VAL=$O(PARMS(NAME,VAL)) Q:VAL=""  S VALS=VALS_VAL_$S($G(PARMS(NAME,VAL))]"":PARMS(NAME,VAL),1:DEL) K PARMS(NAME,VAL)
  . S VALS=$$TKO^BQIUL1(VALS,DEL)
- . S PARMS(NAME)=VALS
+ . S PARMS(NAME)=$$TRUNC(VALS)
  ;
  Q
  ;
@@ -394,6 +394,6 @@ FPARMS(FPARMS) ;EP - Convert multiple filter values into single value
  ... I NAME="DEC" S VALS=VALS_APOS_VAL_APOS_$S($G(FPARMS(PORD,NAME,VAL))]"":FPARMS(PORD,NAME,VAL),1:", ") K FPARMS(PORD,NAME,VAL) Q
  ... S VALS=VALS_APOS_VAL_APOS_$S($G(FPARMS(PORD,NAME,VAL))]"":FPARMS(PORD,NAME,VAL),1:" OR ") K FPARMS(PORD,NAME,VAL)
  .. F DLM=", "," AND "," OR " S VALS=$$TKO^BQIUL1(VALS,DLM)
- .. S FPARMS(PORD,NAME)=VALS
+ .. S FPARMS(PORD,NAME)=$$TRUNC(VALS)
  ;
  Q

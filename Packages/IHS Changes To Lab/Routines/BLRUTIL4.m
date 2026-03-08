@@ -1,5 +1,5 @@
 BLRUTIL4 ;IHS/MSC/MKK - MISC IHS LAB UTILITIES (Cont) ; 17-Jul-2015 06:30 ; MKK
- ;;5.2;LR;**1031,1033,1034,1035**;NOV 01, 1997;Build 5
+ ;;5.2;IHS LABORATORY;**1031,1033,1034,1035,1054**;NOV 01, 1997;Build 20
  ;
  ; Determines if MODULE exists on server
 MODEXIST(MODULE) ; EP
@@ -100,8 +100,6 @@ GETHRCN(LRDFN,INHRCN) ; EP
  ;
  Q:+HRCN HRCN
  ;
- D ENTRYAUD^BLRUTIL("GETHRCN^BLRUTIL4 8.5")
- ;
  ; Could not retrieve HRCN, so return passed variable.
  Q $G(INHRCN)
  ;
@@ -166,37 +164,41 @@ CURLABP() ; EP - Return current Lab Patch
  Q LABPATCH
  ;
  ; The following moved from LRRP1 because LRRP1 became > 15000 bytes
- ; The following moved from LRRP1 because LRRP1 became > 15000 bytes
 GETCOMPD() ; EP -- Get Completion Date for test
  NEW COMPD,D3,DATALN,LRAA,LRAD,LRAN,LRAS,LRAT,LRSS,LOG,STR,TESTIEN,TMPDT,VLABIEN
  ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 0.0")     ; IHS/MSC/MKK - LR*5.2*1034
- ;
  S LRAS=$P(LR0,"^",6)
  Q:'$L(LRAS) " "
- ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 1.0")     ; IHS/MSC/MKK - LR*5.2*1034
  ;
  ; If no Pointer to file 60, return null
  S TESTIEN=+$P($G(LRDATA),"^",1)
  Q:TESTIEN<1 " "
  ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 2.0")     ; IHS/MSC/MKK - LR*5.2*1034
+ S DATALN=+$P($P($G(^LAB(60,+$G(LRTSTS),0)),"^",5),";",2)  ; Get DATA NAME
  ;
- ; If test PENDING, there is no complete date -- return null
- S DATALN=+$P($P($G(^LAB(60,+$G(LRTSTS),0)),"^",5),";",2)
+ ; If test PENDING, then return blank
  I $$UP^XLFSTR($P($G(^LR(LRDFN,"CH",LRIDT,DATALN)),"^",1))["PEND" Q " "
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054 - Lab Data File Only
+ S COMPD=$P($G(^LR(LRDFN,"CH",LRIDT,DATALN)),U,6)     ; LEDI test level complete date
+ Q:+$G(COMPD)>2000000 $$FMTE^XLFDT(COMPD,"2MZ")
+ ;
+ ; If not at the test level, try DATE REPORT COMPLETED field
+ S COMPD=$P($G(^LR(LRDFN,"CH",LRIDT,0)),U,3)
+ Q:+$G(COMPD)>2000000 $$FMTE^XLFDT(COMPD,"2MZ")
+ ;
+ ; At this point, no result date in the Lab Data file.  Go no further. End with blank
+ Q " "
+ ;
+ ; Note that none of the following lines in this subroutine will be used.
+ ; ----- END IHS/MSC/MKK - LR*5.2*1054
  ;
  ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1033
  ; Try to get COMPLETE DATE from Lab Data File
  ; S COMPD=+$G(^LR(LRDFN,"CH",LRIDT,+$P(LRDATA,U,10),"IHS"))
  S COMPD=$G(^LR(LRDFN,"CH",LRIDT,+$P(LRDATA,U,10),"IHS"))  ; IHS/MSC/MKK - LR*5.2*1035
  ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 3.0")     ; IHS/MSC/MKK - LR*5.2*1035
- ;
  I +COMPD,COMPD["," S COMPD=$$HTFM^XLFDT(COMPD)  ; IHS/MSC/MKK - LR*5.2*1035
- ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 3.5")     ; IHS/MSC/MKK - LR*5.2*1035
  ;
  Q:+$G(COMPD)>2000000 $$FMTE^XLFDT(COMPD,"2MZ")
  ; ----- END IHS/MSC/MKK - LR*5.2*1033
@@ -210,8 +212,6 @@ GETCOMPD() ; EP -- Get Completion Date for test
  ; Try to get COMPLETE DATE for the test from Accession file
  S COMPD=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,4,TESTIEN,0)),"^",5)
  ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 4.0")     ; IHS/MSC/MKK - LR*5.2*1035
- ;
  Q:+$G(COMPD)>2000000 $$FMTE^XLFDT(COMPD,"2MZ")
  ;
  ; Completed date is null in Accession file; will try to get date
@@ -223,8 +223,6 @@ GETCOMPD() ; EP -- Get Completion Date for test
  . I $E(LRAD,1,3)'=$E($P($P($G(^BLRTXLOG(LOG,12)),"^"),"."),1,3) Q   ; Wrong year
  . ;
  . S COMPD=+$P($G(^BLRTXLOG(LOG,13)),"^",9)
- ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 5.0")     ; IHS/MSC/MKK - LR*5.2*1034
  ;
  Q:+$G(COMPD)>2000000 $$FMTE^XLFDT(COMPD,"2MZ")
  ;
@@ -238,8 +236,6 @@ GETCOMPD() ; EP -- Get Completion Date for test
  . I $E($P($G(^AUPNVLAB(VLABIEN,12)),"^",1),1,12)'=$E($P(LR0,"^"),1,12) Q
  . ;
  . S COMPD=+$P($G(^AUPNVLAB(VLABIEN,12)),"^",12)      ; V LAB Result Date
- ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 6.0")     ; IHS/MSC/MKK - LR*5.2*1034
  ;
  Q:+$G(COMPD)>2000000 $$FMTE^XLFDT(COMPD,"2MZ")
  ;
@@ -256,11 +252,7 @@ GETCOMPD() ; EP -- Get Completion Date for test
  S COMPD=$P(LR0,"^",3)
  ; ----- END IHS/MSC/MKK - LR*5.2*1035
  ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 7.0")     ; IHS/MSC/MKK - LR*5.2*1034
- ;
  Q:+$G(COMPD)>2000000 $$FMTE^XLFDT(COMPD,"2MZ")
- ;
- D ENTRYAUD^BLRUTIL("GETCOMPD^BLRUTIL4 8.0")     ; IHS/MSC/MKK - LR*5.2*1035
  ;
  ; All results dates checked and nothing found, so quit with null
  Q " "

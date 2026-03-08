@@ -1,5 +1,5 @@
-BDWUTIL1 ; IHS/CMI/LAB - Data Warehouse Utilities ;
- ;;1.0;IHS DATA WAREHOUSE;**1,2,4**;JAN 23, 2006;Build 24
+BDWUTIL1 ; IHS/CMI/LAB - Data Warehouse Utilities ; 05 Dec 2022  5:32 PM
+ ;;1.0;IHS DATA WAREHOUSE;**1,2,4,8,9**;JAN 24, 2006;Build 103
  ;
  ;
  ;
@@ -132,7 +132,6 @@ PROV(RETVAL,BDWV) ;EP
  .;7th is specialty
  .;8th is type
  .S Y=BDWPIEN ;ien in file 200 should be in Y
- .I $P(^DD(9000010.06,.01,0),U,2)[6 S Y=$G(^DIC(16,BDWPIEN,"A3"))
  .I Y="" Q
  .;get USC1 node value
  .S D=$P(^AUPNVPRV(BDWP,0),"^",3) Q:D=""
@@ -140,6 +139,13 @@ PROV(RETVAL,BDWV) ;EP
  .I D="" Q
  .S G=$$PCC(Y,D)
  .S $P(RETVAL(BDWC),"^",6)=G
+ .;IHS/CMI/LAB - added IEN to piece 9, NPI to piece 10 and DEA # to piece 11
+ .S X=$$GET1^DIQ(9999999.06,$P(^AUTTSITE(1,0),U),.32)
+ .S X=X_$$LZERO^BDWAID(BDWPIEN,10)
+ .S $P(RETVAL(BDWC),"^",9)=X
+ .S $P(RETVAL(BDWC),"^",10)=$$NPI^BDWHUTL(BDWPIEN)
+ .S $P(RETVAL(BDWC),"^",11)=$$DEA^BDWHUTL(BDWPIEN)
+ .S $P(RETVAL(BDWC),"^",12)=$$VAL^XBDIQ1(9000010.06,BDWP,.04)
  .Q
  Q
 PCC(P,D) ;EP - RETURN CLASS^SPEC^TYPE for provider P on date D
@@ -149,7 +155,7 @@ PCC(P,D) ;EP - RETURN CLASS^SPEC^TYPE for provider P on date D
  I '$O(^VA(200,P,"USC1",0)) Q ""
  NEW X,Y,Z
  S (X,Z)=0 F  S X=$O(^VA(200,P,"USC1",X)) Q:X'=+X!(Z)  D
- .S Y=$G(^VA(200,P,"USC1",0))
+ .S Y=$G(^VA(200,P,"USC1",X,0))
  .I $P(Y,U,2)]"",$P(Y,U,3)]"",D'<$P(Y,U,2),D'>$P(Y,U,3) S Z=X Q  ;both dates and a match
  .I $P(Y,U,2)]"",$P(Y,U,3)="",D'<$P(Y,U,2) S Z=X Q  ;beg date, no expire visit after beg
  .Q
@@ -184,32 +190,15 @@ PROC(RETVAL,BDWV) ;EP
  . I $G(MOD1STR)="" D
  .. I $G(MOD2STR)]"" S $P(RETVAL(BDWC),"^",13)=MOD2STR
  .S Y=$P(^AUPNVPRC(BDWP,0),"^",11) ;ien in file 200 should be in Y
- .Q:'Y
- .I $P(^DD(9000010.08,.11,0),U,2)[6 S Y=$G(^DIC(16,$P(^AUPNVPRC(BDWP,0),"^",11),"A3"))
- .I Y="" Q
+ .;Q:'Y
+ .;I $P(^DD(9000010.08,.11,0),U,2)[6 S Y=$G(^DIC(16,$P(^AUPNVPRC(BDWP,0),"^",11),"A3"))
+ .;I Y="" Q
  .;get USC1 node value
  .S D=$P(^AUPNVPRC(BDWP,0),"^",3) Q:BDWP=""
  .S D=$P($G(^AUPNVSIT(D,0)),"^"),D=$P(D,".",1)
  .I D="" Q
  .S G=$$PCC(Y,D)
  .S $P(RETVAL(BDWC),"^",7)=G
- .S $P(RETVAL(BDWC),"^",10)=$G(CS)  ;coding system
- .;the following is for CPT modifier
- . N MOD1,MOD1C,MOD1I,MOD2,MOD2C,MOD2I,MOD1STR,MOD2STR
- . S MOD1I=$$GET1^DIQ(9000010.08,BDWP,.17,"I")
- . S MOD1=$$GET1^DIQ(9000010.08,BDWP,.17)
- . S MOD1C=$$GET1^DIQ(81.3,MOD1I,.02)
- . S MOD1STR=$S(MOD1]"":MOD1_"!"_MOD1C_"!"_"CPTM",1:"")
- . S MOD2I=$$GET1^DIQ(9000010.08,BDWP,.18,"I")
- . S MOD2=$$GET1^DIQ(9000010.08,BDWP,.18)
- . S MOD2C=$$GET1^DIQ(81.3,MOD2I,.02)
- . S MOD2STR=$S(MOD2]"":MOD2_"!"_MOD2C_"!"_"CPTM",1:"")
- . I $G(MOD1STR)]"" D
- .. S $P(RETVAL(C),"^",13)=MOD1STR
- .. I $G(MOD2STR)]"" S $P(RETVAL(C),"^",13)=MOD1STR_"~"_MOD2STR
- . I $G(MOD1STR)="" D
- .. I $G(MOD2STR)]"" S $P(RETVAL(C),"^",13)=MOD2STR
- .Q
  Q
 IMM(RETVAL,BDWV) ;EP
  I '$D(^AUPNVSIT(BDWV)) Q
@@ -296,7 +285,7 @@ MED(RETVAL,BDWV) ;EP
  I $P($G(^BDWSITE(1,11)),U,1) Q
  I '$G(BDWV) Q
  I '$D(^AUPNVSIT(BDWV)) Q
- NEW BDWI,BDWC,BDWD,BDWQ,BDWNDC,BDWCLS
+ NEW BDWI,BDWC,BDWD,BDWQ,BDWNDC,BDWCLS,BDWDOS,BDWSIG,%,D,V,I
  S (BDWI,BDWC)=0 F  S BDWI=$O(^AUPNVMED("AD",BDWV,BDWI)) Q:BDWI'=+BDWI  D
  .Q:'$D(^AUPNVMED(BDWI,0))  ;cmi/anch/maw 9/11/2007 patch 2
  .S BDWD=$P(^AUPNVMED(BDWI,0),"^") Q:'$D(^PSDRUG(BDWD,0))
@@ -305,8 +294,32 @@ MED(RETVAL,BDWV) ;EP
  .S BDWNDC=$P($G(^PSDRUG($P(^AUPNVMED(BDWI,0),"^"),2)),"^",4)
  .I BDWNDC="" S BDWNDC=$P($G(^PSDRUG($P(^AUPNVMED(BDWI,0),"^"),2)),"^",4)
  .S BDWCLS=$P(^PSDRUG($P(^AUPNVMED(BDWI,0),"^"),0),"^",2)
- .S RETVAL(BDWC)=$P(^PSDRUG(BDWD,0),"^")_"^"_BDWQ_"^"_BDWNDC_"^"_BDWCLS
- .Q
+ .;DRUG NAME^QUANTITY^NDC^CLASS^DAYS SUPPLY^DATE DISCONTINUED^COMMENT
+ .S RETVAL(BDWC)=$P(^PSDRUG(BDWD,0),"^")_"^"_BDWQ_"^"_BDWNDC_"^"_BDWCLS_"^"_$$VAL^XBDIQ1(9000010.14,BDWI,.07)_"^"_$$DATE^INHUT($$VAL^XBDIQ1(9000010.14,BDWI,.08))_"^"_$$VAL^XBDIQ1(9000010.14,BDWI,1101)
+ .;get rx #
+ .NEW %,R
+ .S %=$$VAL^XBDIQ1(9000010.14,BDWI,1102)
+ .I %="" S %=$O(^PSRX("APCC",BDWI,0)) I % S %=$$VAL^XBDIQ1(52,%,.01)
+ .S $P(RETVAL(BDWC),U,8)=%
+ .;IHS/CMI/LAB patch 8 added RXNORM field 9999999.27 from file 50
+ .S $P(RETVAL(BDWC),U,9)=$$VAL^XBDIQ1(50,BDWD,9999999.27)
+ .;IHS/CMI/LAB - patch 8 get dosage ordered from file 52, field 113,.01
+ .S %=$O(^PSRX("APCC",BDWI,0))
+ .S BDWDOS=""
+ .I % D
+ ..S I=0 F  S I=$O(^PSRX(%,6,I)) Q:I'=+I  D
+ ...Q:'$D(^PSRX(%,6,I,0))
+ ...S D=$P(^PSRX(%,6,I,0),U,1),V=$P(^PSRX(%,6,I,0),U,3) I V S V=$P($G(^PS(50.607,V,0)),U,1)
+ ...I BDWDOS]"" S BDWDOS=BDWDOS_"~"
+ ...S BDWDOS=BDWDOS_D_" "_V
+ .S $P(RETVAL(BDWC),U,10)=BDWDOS
+ .;get sig into piece 11
+ .S BDWSIG=""
+ .I % D
+ ..S I=0 F  S I=$O(^PSRX(%,"SIG1",I)) Q:I'=+I  D
+ ...S D=$P($G(^PSRX(%,"SIG1",I,0)),U,1)
+ ...S BDWSIG=BDWSIG_D
+ .S $P(RETVAL(BDWC),U,11)=$$SUBESC^INHUT(BDWSIG,"|^~\&","O")
  Q
 PAP(V) ;EP - was pap performed Y/N
  I '$G(V) Q ""
@@ -370,3 +383,17 @@ CDEATH(PAT) ;-- get the cause of death and coding system
  S CS=$S($D(^ICDS(0)):$P($$ICDDX^ICDEX(CD),U,20),1:"")
  Q CD_U_U_$S(CS=30:"I10",1:"I9")
  ;
+WS(V) ;EP - where seen snonmeds format snomed~snomed field 2601 visit
+ NEW W,R
+ S R=""
+ S W="" F  S W=$O(^AUPNVSIT(V,26,"B",W)) Q:W=""  D
+ .I R]"" S R=R_"~"
+ .S R=R_W
+ Q R
+FTF(V) ;EP - FACE TO FACE snonmeds format snomed~snomed field 2801 visit
+ NEW W,R
+ S R=""
+ S W="" F  S W=$O(^AUPNVSIT(V,28,"B",W)) Q:W=""  D
+ .I R]"" S R=R_"~"
+ .S R=R_W
+ Q R

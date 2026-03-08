@@ -1,9 +1,10 @@
 ABSPOSUU ; IHS/OIT/CNI/RAN REPORT - utilities[ 05/04/2010  5:18 PM ]
- ;;1.0;PHARMACY POINT OF SALE;**38,39,40,44,47**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**38,39,40,44,47,52**;JUN 01, 2001;Build 131
  Q
  ;----------------------------------------------------------------------
  ;IHS/OIT/CNI/RAN 05042010 patch 38 - Following two subroutines are new and facilitate paging.
 PRESSANY()  ;EP from ABSPOSR9 and other places IHS/OIT/CNI/RAN 05042010 patch 38
+ ; /IHS/OIT/RAM ; P52 ; ONLY CALLED ONCE, AND BUGGY; REMOVING CALL FOR STANDARD ^DIR CALL.
  N TIMEOUT
  I '$$TOSCREEN^ABSPOSU5 Q 0  ;Only do if printing to screen
  N X,I,DONE
@@ -17,11 +18,18 @@ PRESSANY()  ;EP from ABSPOSR9 and other places IHS/OIT/CNI/RAN 05042010 patch 38
  ;I X="^" S DONE=1
  I (X="^")!(X="^^")!(X=-1) S DONE=1    ;IHS/OIT/CNI/SCR patch 39 alpha
  Q DONE
-WRITE(TEXT)  ;EP from ABSPOSR9 and other places IHS/OIT/CNI/RAN 05042010 patch 38 
+ ;
+WRITE(TEXT)  ;EP from ABSPOSR9 and other places IHS/OIT/CNI/RAN 05042010 patch 38
+ ; /IHS/OIT/RAM ; ADD CODE FOR "LONGER PAGES" LIKE PRINT JOBS / HFS FILES.
+ N LINES,DIR,ABSPQUIT,X,Y
  S ABSPQUIT=0
- I $Y>21 S ABSPQUIT=$$PRESSANY
- I ABSPQUIT Q ABSPQUIT
- W @TEXT
+ S LINES=$S(+$G(IOSL):+$G(IOSL),1:24) ; if terminal line length is undefined, default to 24.
+ I $Y>(LINES-3)&($$TOSCREEN^ABSPOSU5) D
+ . S DIR(0)="E" D ^DIR
+ . I $D(DUOUT)!($D(DIROUT))!($D(DIRUT))!($D(DTOUT)) S ABSPQUIT=1 Q
+ . S ABSPQUIT='(+Y) W:'ABSPQUIT @IOF
+ W:'ABSPQUIT @TEXT
+ ;I 'ABSPQUIT,$G(TEXT)]"",$G(@TEXT)]"" W @TEXT   ;ABSP*1.0*53 FID 77362
  Q ABSPQUIT
 GTNDCDRG(ABSPCLMI,ABSPPRX)  ;IHS/OIT/CNI/RAN 04282010 patch 39 - Add NDC # and Drug name
  ;IHS/OIT/RCS 06062012 Patch 44 - Check for Rx # with leading zero's HEAT # 64329
@@ -82,7 +90,7 @@ INS() ; SELECT THE INSURER OR CHOOSE ALL INSURERS
 CODE()  ;SELECT THE REJECTION CODE OR CHOOSE ALL CODES
  ;IHS/OIT/SCR 082109 START changes patch 34
  N DIC,X,Y
- S DIC="^ABSPRJC("
+ S DIC="^ABSPF(9002313.93," ; /IHS/OIT/RAM ; P52 ; CHANGE TO ACCESS THE ABSP NCPDP REJECT CODES FILE.
  S DIC(0)="AEMNQZ"
  S DIC("A")="Please choose a REJECTION CODE or leave blank for ALL: "
  D ^DIC K DIC

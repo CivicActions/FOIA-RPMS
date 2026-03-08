@@ -1,5 +1,5 @@
 ICPTPRN ;ALB/MTC,RMO,ABR,MRY - CPT PRINT-OUT DRIVER ; 1/03/03 3:21pm
- ;;6.0;CPT/HCPCS;**4,8,9,12,13**;May 19, 1997;Build 44
+ ;;6.0;CPT/HCPCS;**4,8,9,12,13**;May 19, 1997;Build 9
  ;
  ;modified to sort in code name order using temp global;abr 1/96
  ;

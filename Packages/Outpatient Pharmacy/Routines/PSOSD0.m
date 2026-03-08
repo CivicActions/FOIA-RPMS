@@ -1,8 +1,9 @@
-PSOSD0 ;BHAM ISC/SAB - action or informational profile cont. ;6/21/07 8:20am
- ;;7.0;OUTPATIENT PHARMACY;**2,19,40,66,107,110,258,206**;DEC 1997;Build 39
+PSOSD0 ;BHAM ISC/SAB - action or informational profile cont. ;19-Aug-2025 10:04;DU
+ ;;7.0;OUTPATIENT PHARMACY;**2,19,40,66,107,110,258,206,1036**;DEC 1997;Build 17
  ;External reference to ^PS(50.605 supported by DBIA 696
  ;External reference to ^SC supported by DBIA 10040
  ;External reference to ^PSDRUG supported by DBIA 221
+ ;Modified - IHS/MSC/PLS - 01/17/2025 - Line ACTS+2 - FID 119026
 CLASS S (ZCLASS,CLASS)="",RXCNT=0 F Z0=0:0 S CLASS=$O(^TMP($J,"PRF",CLASS)) Q:CLASS=""  S PCLASS=$S($D(^PS(50.605,+$O(^PS(50.605,"B",CLASS,0)),0)):CLASS_" - "_$P(^(0),"^",2),1:"UNCLASSIFIED") D DRUG Q:$D(DTOUT)!($D(DUOUT))
  Q
 DRUG S DRUG="" F Z1=0:0 S DRUG=$O(^TMP($J,"PRF",CLASS,DRUG)) Q:DRUG=""  S FDT="" F Z3=0:0 S FDT=$O(^TMP($J,"PRF",CLASS,DRUG,FDT)) Q:'FDT  D RXN Q:$D(DTOUT)!($D(DUOUT))
@@ -92,4 +93,5 @@ RXN3 W ! K RX0,RX3,RX2,PRDT,LABEL,PHYS,PSI,PSII,PSIII,II,Y,SIG,X,FILL,FILLS,PHYS
  Q
 ACTS ;
  S ACTS=$S($P(RX0,"^",15)["PENDING":"PENDING",$P(RX0,"^",15)["Suspended":"Active/Susp",1:$P(RX0,"^",15))
+ I "HoldHOLD"[ACTS S ACTS="Active/SD"  ;p1036
  Q

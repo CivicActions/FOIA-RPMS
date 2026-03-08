@@ -1,23 +1,14 @@
-DDS2 ;SFISC/MLH-UP ARROW JUMP, BRANCH ;10:46 AM  17 Jun 1997
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDS2 ;SFISC/MLH-UP ARROW JUMP, BRANCH ;9:15 AM  29 Oct 1996 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**20**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
-UPA ;Up-arrow jump
- Q:$E(X)'=U
+UPA ;
  I X?1"^"1.E,X'="^^",$G(DDSDN) D MSG^DDSMSG("No jumping allowed.",1) Q
  I X?1"^"1.E,X'="^^" D JMP Q
- ;
- ;Up-arrow only
- I 'DDO D E^DDS3 Q
- I $D(DDSREP),DA D POSTACT D:$D(DDSBR)[0 END^DDSM Q
- I $G(DDSDN)=1 D MSG^DDSMSG("No exit allowed, since navigation for the block is disabled.",1) Q
- D POSTACT S:$D(DDSBR)[0 DDSOSV=DDO,DDO=0 Q
- Q
- ;
-POSTACT ;Execute post action
- Q:$G(DDSO(12))?." "
- N X
- S X=$G(DDSOLD) X DDSO(12)
- D:$D(DDSBR)#2 BR
+ I $E(X)=U,$D(DDSREP),DA D END^DDSM Q
+ I $E(X)=U,DDO,$G(DDSDN)=1 D MSG^DDSMSG("No exit allowed, since navigation for the block is disabled.",1) Q
+ I $E(X)=U,DDO S DDSOSV=DDO,DDO=0 Q
+ I $E(X)=U,'DDO D E^DDS3 Q
  Q
  ;
 JMP ;Up-arrow jump
@@ -49,9 +40,9 @@ JMP ;Up-arrow jump
  . I DDS2DA="" D
  .. D MSG^DDSMSG($C(7)_$P($T(ERR),";;",2))
  .. S DDO=DDS2O
- . E  D CKUNED D:'$G(DDS2UNED)
- .. D POSTACT
- .. S:$D(DDSBR)[0 DDACT="NP",DDSPG=DDS2P,DDSBK=DDS2B,DDSBR=""
+ . E  D
+ .. D CKUNED
+ .. I '$G(DDS2UNED) S DDACT="NP",DDSPG=DDS2P,DDSBK=DDS2B,DDSBR=""
  ;
  E  I DDS2B'=DDSBK D
  . S DDS2DA=@DDSREFT@(DDS2P,DDS2B)
@@ -61,13 +52,9 @@ JMP ;Up-arrow jump
  . E  I $P($G(@DDSREFS@(DDS2P,DDS2B)),U,4) D
  .. D MSG^DDSMSG($C(7)_$P($T(ERR1),";;",2))
  .. S DDO=DDS2O
- . E  D CKUNED D:'$G(DDS2UNED)
- .. D POSTACT
- .. S:$D(DDSBR)[0 DDACT="NB",DDSBK=DDS2B,DDSBR=""
+ . E  D CKUNED I '$G(DDS2UNED) S DDACT="NB",DDSBK=DDS2B,DDSBR=""
  ;
- E  D CKUNED D:'$G(DDS2UNED)
- . D POSTACT
- . S:$D(DDSBR)[0 DDACT="N"
+ E  D CKUNED I '$G(DDS2UNED) S DDACT="N"
  ;
 KILL S X=DDS2X
  K DDH,DDSI,DDSPGRP,DDSX

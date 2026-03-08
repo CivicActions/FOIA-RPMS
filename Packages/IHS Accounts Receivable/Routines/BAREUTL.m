@@ -1,6 +1,7 @@
 BAREUTL ; IHS/SD/LSL - EDI UTILITIES ;  11/05/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**23**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**23,30**;OCT 26, 2005;Build 55
  ;MAR 2013 P.OTT DO NOT SHOW CHKS IF NOT PART OF THE ERA FILE
+ ;IHS/SD/CPC - BAR*1.8*30 CR10550
  Q
  ; ********************************************************************
  ;
@@ -61,12 +62,16 @@ LINE ;
  S:$G(BARBTCHN)="" BARBTCHN="** no RPMS match **"
  S BARTMP(BARCNT)=BARCKIEN
  W !!,$J(BARCNT,2),")"
- W " CHECK #: ",$E($P(BARTMP2,U),1,16)
+ ;W " CHECK #: ",$E($P(BARTMP2,U),1,16)   ;BAR*1.8*30 CR10550
+ W " CHECK #: "   ;BAR*1.8*30 CR10550
+ I $L($P(BARTMP2,U))<16 W $E($P(BARTMP2,U),1,16)   ;BAR*1.8*30 CR10550
+ I $L($P(BARTMP2,U))>15 W $$PRTFMT^BARCHKU1($P(BARTMP2,U),16)   ;BAR*1.8*30 CR10550
  W ?31,"BATCH:",?38,$E($G(BARBTCHN),1,31)
  W ?71,"ITEM: ",$J($P(BARTMP2,U,4),3)
  W !?7,"A/R ACCOUNT: ",$E($G(BARACCT),1,15)
  W ?36,"BATCHED AMT: ",$J($FN($G(BARBDOL),",",2),10)
  W ?61,"BALANCE: ",$J($FN($G(BARBBAL),",",2),10)
+ I $L($P(BARTMP2,U))<16 W !,?4,"FULL CHECK #:  ",$P(BARTMP2,U)   ;BAR*1.8*30 CR10550
  Q
  ; ********************************************************************
  ;

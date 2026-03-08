@@ -1,5 +1,5 @@
-BGPDP13 ; IHS/CMI/LAB - print ind 13 ;
- ;;7.0;IHS CLINICAL REPORTING;;JAN 24, 2007
+BGPDP13 ; IHS/CMI/LAB - print ind 13 ;   [ 08/19/02  3:41 PM ]
+ ;;1.0;IHS GPRA REPORTING;**1**;JUN 12, 2002
  ;
  ;
 I13 ;EP ; 

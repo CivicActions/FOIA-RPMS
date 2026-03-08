@@ -1,5 +1,6 @@
-DILFD ;SFISC/STAFF-LIBRARY OF FUNCTIONS ;11/18/94  11:05
- ;;22.0;VA FileMan;;Mar 30, 1999
+DILFD ;SFISC/STAFF-LIBRARY OF FUNCTIONS ;11/18/94  11:05 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
 ROOT(DIC,DA,CP,ERR) ;

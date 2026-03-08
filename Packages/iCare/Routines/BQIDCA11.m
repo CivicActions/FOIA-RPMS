@@ -1,0 +1,250 @@
+BQIDCA11 ;GDIT/HCSD/ALA-Ad Hoc Logic ; 16 Feb 2023  9:31 AM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5,7**;Mar 01, 2021;Build 14
+ ;
+PROBS(FGLOB,TGLOB,PROBS,PROBSB,FDT,TDT,PROP,MPARMS) ;EP - Problem SNOMED search
+ NEW PVPT,PSUB,TREF,NGLOB,LCT,CT,IEN,PVS
+ I $G(TGLOB)="" Q
+ I $G(PROBS)'="" D PVS
+ I $G(PROBSB)'="" D
+ . S TREF=$NA(^TMP("BQISNLST",$J))
+ . K @TREF
+ . S OK=$$SUBLST^BSTSAPI(TREF,PROBSB_"^36^1")
+ . S PVS="" F  S PVS=$O(@TREF@(PVS)) Q:PVS=""  S PROBS=$P(@TREF@(PVS),"^",1),MPARMS("PROBS",PROBS)=""
+ ;
+ I $D(MPARMS("PROBS")) S PROBS="" F  S PROBS=$O(MPARMS("PROBS",PROBS)) Q:PROBS=""  D PVS
+ ;
+FIN ;
+ I PROP="!" Q
+ I PROP="&" D
+ . NEW IEN,PROBS,CT,LCT
+ . S PROBS="",CT=0 F  S PROBS=$O(MPARMS("PROBS",PROBS)) Q:PROBS=""  S CT=CT+1
+ . S IEN="" F  S IEN=$O(PVPT(IEN)) Q:IEN=""  D
+ .. S LCT=0,PB="" F  S PB=$O(PVPT(IEN,PB)) Q:PB=""  S LCT=LCT+1
+ .. I LCT'=CT K PVPT(IEN),@CRIT@("PROB",IEN) Q
+ .. I LCT=CT S @TGLOB@(IEN)="" Q
+ Q
+ ;
+PVS ;
+ NEW PDFN,PIEN
+ S TDT=$S(TDT'="":TDT,1:DT)
+ I $G(FGLOB)'="" D  Q
+ . S PDFN=""
+ . F  S PDFN=$O(@FGLOB@(PDFN)) Q:PDFN=""  D
+ .. I FDT="" D
+ ... S PIEN="" F  S PIEN=$O(^AUPNPROB("APCT",PDFN,PROBS,PIEN)) Q:PIEN=""  D
+ .... S STAT=$P(^AUPNPROB(PIEN,0),U,12) I STAT="" Q
+ .... I $G(PRSTAT)'="",STAT'=PRSTAT Q
+ .... I $D(MPARMS("PRSTAT")),'$D(MPARMS("PRSTAT",STAT)) Q
+ .... D PCHK
+ .. I FDT'="" D
+ ... ;S BGT=9999999-FDT,ENT=9999999-TDT,BDT=ENT-1
+ ... S PIEN=""  F  S PIEN=$O(^AUPNPROB("APCT",PDFN,PROBS,PIEN)) Q:PIEN=""  D
+ .... S VSDTM=$$PROB^BQIUL1(PIEN)
+ .... I FDT'="",VSDTM<FDT!(VSDTM>TDT) Q
+ .... S STAT=$P(^AUPNPROB(PIEN,0),U,12) I STAT="" Q
+ .... I $G(PRSTAT)'="",STAT'=PRSTAT Q
+ .... I $D(MPARMS("PRSTAT")),'$D(MPARMS("PRSTAT",STAT)) Q
+ .... D PCHK
+ ;
+ I $G(FGLOB)="" D
+ . S PIEN=""
+ . F  S PIEN=$O(^AUPNPROB("ASCT",PROBS,PIEN)) Q:PIEN=""  D
+ .. I $G(^AUPNPROB(PIEN,0))="" Q
+ .. S PDFN=$P($G(^AUPNPROB(PIEN,0)),U,2) I PDFN="" Q
+ .. S VSDTM=$$PROB^BQIUL1(PIEN)
+ .. I FDT'="",VSDTM<FDT!(VSDTM>TDT) Q
+ .. S STAT=$P(^AUPNPROB(PIEN,0),U,12) I STAT="" Q
+ .. I $G(PRSTAT)'="",STAT'=PRSTAT Q
+ .. I $D(MPARMS("PRSTAT")),'$D(MPARMS("PRSTAT",STAT)) Q
+ .. D PCHK
+ ;
+ Q
+ ;
+PCHK ; EP
+ I PROP="!" S @TGLOB@(PDFN)="",@CRIT@("PROB",PDFN,PIEN)="" Q
+ I PROP="&" S PVPT(PDFN,PROBS)=PIEN,@CRIT@("PROB",PDFN,PIEN)=""
+ Q
+ ;
+PCK ;EP
+ I PROP="!" S @TGLOB@(PDFN)="",@CRIT@("PROB",PDFN,PIEN)="" Q
+ I PROP="&" S PVPT(PDFN,PROB)=PIEN,@CRIT@("PROB",PDFN,PIEN)=""
+ Q
+ ;
+PROB(FGLOB,TGLOB,PROB,PROBTX,FDT,TDT,PROP,MPARMS) ;EP - Problem search
+ NEW PVPT,PTAX,TREF,NGLOB,LCT,CT,IEN
+ I $G(TGLOB)="" Q
+ I $G(PROB)'="" D PR G FIN2
+ I $G(PROBTX)'="" D
+ . S TREF=$NA(MPARMS("PROB"))
+ . K @TREF
+ . S PTAX=$P(@("^"_$P(PROBTX,";",2)_$P(PROBTX,";",1)_",0)"),"^",1)
+ . D BLD^BQITUTL(PTAX,TREF)
+ . S PV="" F  S PV=$O(@TREF@(PV)) Q:PV=""  S MPARMS("PROB",PV)=""
+ ;
+ I $D(MPARMS("PROB")) S PROB="" F  S PROB=$O(MPARMS("PROB",PROB)) Q:PROB=""  D PR
+ ;
+FIN2 ;
+ I PROP="!" Q
+ I PROP="&" D
+ . NEW IEN,PROB,CT,LCT,PB
+ . S PROB="",CT=0 F  S PROB=$O(MPARMS("PROB",PROB)) Q:PROB=""  S CT=CT+1
+ . S IEN="" F  S IEN=$O(PVPT(IEN)) Q:IEN=""  D
+ .. S LCT=0,PB="" F  S PB=$O(PVPT(IEN,PB)) Q:PB=""  S LCT=LCT+1
+ .. I LCT'=CT K PVPT(IEN),@CRIT@("PROB",IEN) Q
+ .. I LCT=CT S @TGLOB@(IEN)=""
+ Q
+ ;
+PR ;EP
+ NEW PDFN,PIEN,STAT
+ S TDT=$S(TDT'="":TDT,1:DT)
+ I $G(FGLOB)'="" D  Q
+ . NEW IEN
+ . S PDFN="" F  S PDFN=$O(@FGLOB@(PDFN)) Q:PDFN=""  D
+ .. S PIEN="" F  S PIEN=$O(^AUPNPROB("AC",PDFN,PIEN)) Q:PIEN=""  D
+ ... I $P($G(^AUPNPROB(PIEN,0)),U,1)'=PROB,'$D(^AUPNPROB(PIEN,12,"B",PROB)) Q
+ ... S VSDTM=$$PROB^BQIUL1(PIEN)
+ ... I FDT'="",VSDTM<FDT!(VSDTM>TDT) Q
+ ... S STAT=$P(^AUPNPROB(PIEN,0),U,12) I STAT="" Q
+ ... I $G(PRSTAT)'="",STAT'=PRSTAT Q
+ ... I $D(MPARMS("PRSTAT")),'$D(MPARMS("PRSTAT",STAT)) Q
+ ... D PCK
+ ;
+ S PIEN=""
+ F  S PIEN=$O(^AUPNPROB("B",PROB,PIEN)) Q:PIEN=""  D PICD
+ S PIEN=""
+ F  S PIEN=$O(^XTMP("BQIPBICD",PROB,PIEN)) Q:PIEN=""  D PICD
+ Q
+ ;
+PICD ;
+ I $G(^AUPNPROB(PIEN,0))="" Q
+ S PDFN=$P($G(^AUPNPROB(PIEN,0)),U,2) I PDFN="" Q
+ S VSDTM=$$PROB^BQIUL1(PIEN)
+ I FDT'="",VSDTM<FDT!(VSDTM>TDT) Q
+ S STAT=$P(^AUPNPROB(PIEN,0),U,12) I STAT="" Q
+ I $G(PRSTAT)'="",STAT'=PRSTAT Q
+ I $D(MPARMS("PRSTAT")),'$D(MPARMS("PRSTAT",STAT)) Q
+ D PCK
+ Q
+ ;
+VIS(FGLOB,TGLOB,FDT,TDT,VSCLN,VSPROV,VSSCAT,VSHLOC,VSLOC,VSNUM,MPARMS) ;EP
+ NEW VSGLOB,VCNT,VCNT,RIEN,VDFN,WIEN,NCNT,LC
+ S VSGLOB=$NA(^TMP("BQIVISIT",UID)) K @VSGLOB
+ S VNDATA=$NA(^TMP("BQINOVIS",UID)) K @VNDATA
+ K @CRIT@("VISIT")
+ I $G(TGLOB)="" Q
+ ;
+ S VCNT=0
+ ; Determine populate count
+ D
+ . I $G(VSPROV)'=""!($D(MPARMS("VSPROV"))) S VCNT=VCNT+1
+ . I $G(VSCLN)'=""!($D(MPARMS("VSCLN"))) S VCNT=VCNT+1
+ . I $G(VSSCAT)'=""!($D(MPARMS("VSSCAT"))) S VCNT=VCNT+1
+ . ;AUPNVSIT("AHL"
+ . I $G(VSHLOC)'=""!($D(MPARMS("VSHLOC"))) S VCNT=VCNT+1
+ . I $G(VSLOC)'=""!($D(MPARMS("VSLOC"))) S VCNT=VCNT+1
+ . S VCNT=VCNT+1 Q
+ ;
+ S FDT=$S(FDT'="":FDT-.001,1:FDT),TDT=$S(TDT'="":TDT,1:DT)
+ F  S FDT=$O(^AUPNVSIT("B",FDT)) Q:FDT=""!(FDT\1>TDT)  D
+ . S RIEN=""
+ . F  S RIEN=$O(^AUPNVSIT("B",FDT,RIEN)) Q:'RIEN  D
+ .. ; If the visit is deleted, quit
+ .. I $$GET1^DIQ(9000010,RIEN_",",.11,"I")=1 Q
+ .. S VDFN=$$GET1^DIQ(9000010,RIEN_",",.05,"I") I VDFN="" Q
+ .. D VFL(1)
+ .. I $G(VSSCAT)'="",$P(^AUPNVSIT(RIEN,0),"^",7)=VSSCAT D VFL(2)
+ .. I $D(MPARMS("VSSCAT")) S LC="" F  S LC=$O(MPARMS("VSSCAT",LC)) Q:LC=""  I $P(^AUPNVSIT(RIEN,0),"^",7)=LC D VFL(4)
+ .. I $G(VSCLN)'="",$P(^AUPNVSIT(RIEN,0),"^",8)=VSCLN D VFL(3)
+ .. I $D(MPARMS("VSCLN")) S LC="" F  S LC=$O(MPARMS("VSCLN",LC)) Q:LC=""  I $P(^AUPNVSIT(RIEN,0),"^",8)=LC D VFL(3)
+ .. I $G(VSHLOC)'="",$P(^AUPNVSIT(RIEN,0),"^",22)=VSHLOC D VFL(4)
+ .. I $D(MPARMS("VSHLOC")) S LC="" F  S LC=$O(MPARMS("VSHLOC",LC)) Q:LC=""  I $P(^AUPNVSIT(RIEN,0),"^",22)=LC D VFL(4)
+ .. I $G(VSLOC)'="",$P(^AUPNVSIT(RIEN,0),"^",6)=VSLOC D VFL(5)
+ .. I $D(MPARMS("VSLOC")) S LC="" F  S LC=$O(MPARMS("VSLOC",LC)) Q:LC=""  I $P(^AUPNVSIT(RIEN,0),"^",6)=LC D VFL(4)
+ .. I $G(VSPROV)'=""!($D(MPARMS("VSPROV"))) D VPRV(RIEN)
+ ;
+ ;what was found and put into TGLOB should be good
+ K @TGLOB
+ S VDFN="" F  S VDFN=$O(@CRIT@("VISIT",VDFN)) Q:VDFN=""  D
+ . S WIEN="" F  S WIEN=$O(@CRIT@("VISIT",VDFN,WIEN)) Q:WIEN=""  D
+ .. S NCNT=0 F I=1:1:6 S:$P(@CRIT@("VISIT",VDFN,WIEN),"^",I)=1 NCNT=NCNT+1
+ .. I NCNT'=VCNT K @CRIT@("VISIT",VDFN,WIEN)
+ ;
+ ;Check for VSNUM values
+ S VDFN="" F  S VDFN=$O(@CRIT@("VISIT",VDFN)) Q:VDFN=""  D
+ . S WIEN="" F  S WIEN=$O(@CRIT@("VISIT",VDFN,WIEN)) Q:WIEN=""  S @VSGLOB@(VDFN)=$G(@VSGLOB@(VDFN))+1
+ ;
+ D NUMVIS
+ ;
+ I $G(FGLOB)'="" D
+ . I NOVST D  Q
+ .. S VDFN=0 F  S VDFN=$O(@FGLOB@(VDFN)) Q:'VDFN  D
+ ... I $G(^AUPNPAT(VDFN,0))'="",'$D(@VSGLOB@(VDFN)) S @TGLOB@(VDFN)=""
+ .. K @VSGLOB,@CRIT@("VISIT")
+ . I 'NOVST D
+ .. S VDFN="" F  S VDFN=$O(@VSGLOB@(VDFN)) Q:VDFN=""  D
+ ... I '$D(@FGLOB@(VDFN)) K @VSGLOB@(VDFN),@CRIT@("VISIT",VDFN) Q
+ ... I '$D(MPARMS("VSNUM")) D
+ .... I @(@VSGLOB@(VDFN)_VCRIT1) S @TGLOB@(VDFN)="" Q
+ .... K @CRIT@("VISIT",VDFN),@VSGLOB@(VDFN)
+ ... I $D(MPARMS("VSNUM")) D
+ .... S VCRIT1=$O(MPARMS("VSNUM","")),VCRIT2=$O(MPARMS("VSNUM",VCRIT1))
+ .... ; If criteria includes a "not" it is inclusive and both must be true
+ .... I $E(VCRIT1)="'",@(@VSGLOB@(VDFN)_VCRIT1),@(@VSGLOB@(VDFN)_VCRIT2) S @TGLOB@(VDFN)="" Q
+ .... ; If criteria does not includes a "not" it is exclusive and one must be true
+ .... I $E(VCRIT1)'="'",@(@VSGLOB@(VDFN)_VCRIT1_"!("_(@VSGLOB@(VDFN)_VCRIT2)_")") S @TGLOB@(VDFN)="" Q
+ .... K @CRIT@("VISIT",VDFN),@VSGLOB@(VDFN)
+ ;
+ I $G(FGLOB)="" D
+ . I NOVST D  Q
+ .. S VDFN=0 F  S VDFN=$O(^AUPNPAT(VDFN)) Q:'VDFN  D
+ ... I $G(^AUPNPAT(VDFN,0))'="",'$D(@VSGLOB@(VDFN)) S @TGLOB@(VDFN)=""
+ .. K @VSGLOB,@CRIT@("VISIT")
+ . S VDFN="" F  S VDFN=$O(@VSGLOB@(VDFN)) Q:VDFN=""  D
+ .. I '$D(MPARMS("VSNUM")) D
+ ... I @(@VSGLOB@(VDFN)_VCRIT1) S @TGLOB@(VDFN)="" Q
+ ... K @CRIT@("VISIT",VDFN),@VSGLOB@(VDFN)
+ .. I $D(MPARMS("VSNUM")) D
+ ... S VCRIT1=$O(MPARMS("VSNUM","")),VCRIT2=$O(MPARMS("VSNUM",VCRIT1))
+ ... ; If criteria includes a "not" it is inclusive and both must be true
+ ... I $E(VCRIT1)="'",@(@VSGLOB@(VDFN)_VCRIT1),@(@VSGLOB@(VDFN)_VCRIT2) S @TGLOB@(VDFN)="" Q
+ ... ; If criteria does not includes a "not" it is exclusive and one must be true
+ ... I $E(VCRIT1)'="'",@(@VSGLOB@(VDFN)_VCRIT1_"!("_(@VSGLOB@(VDFN)_VCRIT2)_")") S @TGLOB@(VDFN)="" Q
+ ... K @CRIT@("VISIT",VDFN),@VSGLOB@(VDFN)
+ ;
+DONE ;
+ K NOVST,VSNUM
+ Q
+ ;
+VFL(POS) ;file record in temp global
+ NEW DA,IENS
+ I '$D(@CRIT@("VISIT",VDFN,RIEN)) S @CRIT@("VISIT",VDFN,RIEN)="0^0^0^0^0^0"
+ S $P(@CRIT@("VISIT",VDFN,RIEN),"^",POS)=1
+ Q
+ ;
+VPRV(VIEN) ;Providers on visit
+ NEW PIEN,PCT,PRV
+ S PCT=0,PIEN="" F  S PIEN=$O(^AUPNVPRV("AD",VIEN,PIEN)) Q:PIEN=""  D
+ . S PCT=PCT+1
+ . I $P(^AUPNVPRV(PIEN,0),"^",4)="P" S PPIEN=PIEN Q
+ . I PCT=1,$P(^AUPNVPRV(PIEN,0),"^",4)="" S PPIEN=PIEN
+ S PIEN="" F  S PIEN=$O(^AUPNVPRV("AD",VIEN,PIEN)) Q:PIEN=""  D
+ . I $G(VSPROV)'="",$P(^AUPNVPRV(PIEN,0),"^",1)=VSPROV S PRV=VSPROV D VTYP
+ . I $D(MPARMS("VSPROV")) D
+ .. S PRV="" F  S PRV=$O(MPARMS("VSPROV",PRV)) Q:PRV=""  D
+ ... I $P(^AUPNVPRV(PIEN,0),"^",1)=PRV D VTYP
+ Q
+ ;
+VTYP ; Type of provider, VSPR = Primary, VSPS=Secondary, VSDP=DPCP
+ I $G(VSPR)="",$G(VSPS)="",$G(VSDP)="" D VFL(6) Q
+ I $G(VSPR)="N",$G(VSPS)="N",$G(VSDP)="N" D VFL(6) Q
+ I $G(VSPR)="Y",PPIEN=PIEN D VFL(6) Q
+ I $G(VSPS)="Y",$P(^AUPNVPRV(PIEN,0),"^",4)="S",PPIEN'=PIEN D VFL(6) Q
+ I $G(VSDP)="Y",$P($$DPCP^BQIULPT(VDFN),"^",1)=PRV D VFL(6) Q
+ Q
+ ;
+NUMVIS ;
+ S NOVST=0 I $G(VSNUM)="" Q
+ I VSNUM="=0"!(VSNUM="<0")!(VSNUM="<1")!(VSNUM="'>0") S NOVST=1 Q
+ I VSNUM["~" S VCRIT1=$P(VSNUM,"~",1),VCRIT2=$P(VSNUM,"~",2)
+ I VSNUM'["~" S VCRIT1=VSNUM
+ Q

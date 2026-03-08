@@ -1,20 +1,13 @@
-%ZOSVKSE ;OAK/KAK - Automatic INTEGRIT Routine (Cache) ;5/9/07  10:46
- ;;8.0;KERNEL;**90,94,197,268,456**;Jul 26, 2004
+%ZOSVKSE ;SF/KAK - Automatic INTEGRIT Rouine (OpenM-NT) ;21 AUG 97 9:13 pm [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1005,1007**;APR 1, 2003 
+ ;;8.0;KERNEL;**90,94,197**;MaY 4, 2001
  ;
- ; Version for Cache
+ ; OpenM-NT Version for Cache 3.2
  ;
  Q
+START(KMPSTEMP) ;-- called by routine OMNT+1^KMPSGE in VAH
  ;
-START(KMPSTEMP) ;-- called by routine CVMS+2^KMPSGE/CWINNT+1^KMPSGE in VAH
- ;
- ; KMPSTEMP... ^ piece 1: SiteNumber
- ;               piece 2: SessionNumber
- ;               piece 3: XTMP Global Location
- ;               piece 4: Current Date/Time
- ;               piece 5: Production UCI
- ;
- N DIRNAM,KMPSDT,KMPSERR,KMPSERR1,KMPSERR2,KMPSERR3,KMPSERR4
- N KMPSLOC,KMPSPROD,KMPSSITE,KMPSVOL,KMPSZU,NUM,X,VERSION,ZV
+ N DIRNAM,KMPSDT,KMPSERR,KMPSERR1,KMPSERR2,KMPSERR3,KMPSERR4,KMPSLOC,KMPSPROD,KMPSSITE,KMPSVOL,KMPSZU,NUM,X
  ;
  I $$NEWERR^%ZTER N $ETRAP,$ESTACK S $ETRAP="D ERROR^%ZOSVKSE"
  E  S X="ERROR^%ZOSVKSE",@^%ZOSF("TRAP")
@@ -23,25 +16,19 @@ START(KMPSTEMP) ;-- called by routine CVMS+2^KMPSGE/CWINNT+1^KMPSGE in VAH
  S KMPSDT=$P(KMPSTEMP,U,4),KMPSPROD=$P(KMPSTEMP,U,5),KMPSVOL=$P(KMPSTEMP,U,6)
  K KMPSTEMP
  S KMPSZU=$ZU(5)_","_KMPSVOL
- S ^XTMP("KMPS","START",KMPSVOL,NUM)=$H
- S VERSION=+($TR($E($ZV,38,43)," ",""))
+ S ^XTMP("KMPS","START",KMPSVOL,NUM)=""
  ;
-UCI ;-- code from routine INTEGRIT/Integrity
+UCI ;-- code from routine INTEGRIT
  ;
  ; DIRNAM = directory name
  S DIRNAM=KMPSVOL
- ;
- S ZV=$E($ZV,1,17)
- I ZV="Cache for Windows" D UC1
- I ZV="Cache for OpenVMS" D UC1VMS
+ D UC1
 DONE ; normal exit
  C 63
  K ^XTMP("KMPS","START",KMPSVOL)
  Q
  ;
-UC1 ;-- entry point for Cache NT
- ;   code from routine INTEGRIT
- ;
+UC1 ;
  N A,BLK,CUR,DIRSTAT,ERR,G,GLOBAL,J,LEV,LINK,LNB,LNBLK,LNBYTE,LSNP,LTOTBLK,LTOTBYTE
  N N,NB,NBLK,NBYTE,NP,RET,TL,TOTBLK,TOTBYTE
  ;
@@ -115,9 +102,6 @@ EV1 ;
  ;
  S (TOTBLK,LTOTBLK,TOTBYTE,LTOTBYTE,GC)=0
 EV2 S GC=$O(GLOBAL(GC)),GS=1
- ;
- S ^XTMP("KMPS","START",KMPSVOL,NUM)=$H
- ;
  I GC=""!+$G(^XTMP("KMPS","STOP")) G EVL
 EV3 S GLO=$P(GLOBAL(GC),",",GS)
  I GLO=""!+$G(^XTMP("KMPS","STOP")) G EVL
@@ -182,7 +166,7 @@ ERROR ; ERROR - Tell all SAGG jobs to STOP collection
  C 63
  S KMPSERR="Error encountered while running SAGG collection routine for volume set "_$G(KMPSVOL)
  S KMPSERR2="Last global reference = "_$ZR
- S KMPSERR3="Error code = "_$$EC^%ZOSV
+ S KMPSERR3=$$EC^%ZOSV
  I $D(KMPSERR4) S KMPSERR4="For more information, read text at line tag "_KMPSERR4_" in routine ^%ZOSVKSS"
  ;
  S ^XTMP("KMPS","ERROR",KMPSVOL)="",^XTMP("KMPS","STOP")=1
@@ -190,134 +174,4 @@ ERROR ; ERROR - Tell all SAGG jobs to STOP collection
  ;
  D ^%ZTER,UNWIND^%ZTER
  ;
- Q
- ;
-UC1VMS ;-- entry point for Cache VMS
- ;   code from routine Integrity (Cache v4.1.16)
- ;
- N GLOARRAY,RC
- ;
- ; set up GLOARRAY array indexed by global name
- S RC=$$GETDIRGL^%ZOSVKSD(VERSION)
- ;
- I ('+RC) D ERRVMS G ERROR
- ;
- I '$D(GLOARRAY) S ^XTMP("KMPS",KMPSSITE,NUM," NO GLOBALS ",KMPSVOL)="" Q
- ;
- O 63:"^^"_DIRNAM
- ;
- D ALLGLO
- ;
- Q
- ;
-ALLGLO ;- collect global info
- ;
- N COLLATE,DATASIZE,FBLK,GLO,GLOINFO,GLOTOTBLKS,GLOPNTBLKS,GLOTOTBYTES
- N GLOPNTBYTES,GLOBIGBLKS,GLOBIGBYTES,GLOBIGSTRINGS,GRWBLK
- N I,INFO,JRNL,LEV,MSGLIST,PROT,PROTECT,PROTINFO,RC,TPTRBLK,TRY
- ;
- S GLO="",RC=1
- S PROT(0)="N",PROT(1)="R",PROT(2)="RW",PROT(3)="RWD"
- ;
- F  S GLO=$O(GLOARRAY(GLO)) Q:GLO=""!+$G(^XTMP("KMPS","STOP"))  D  Q:+$G(^XTMP("KMPS","STOP"))!('+RC)
- .;
- .S (COLLATE,FBLK,GRWBLK,JRNL,PROTECT,TPTRBLK)=""
- .S PROTINFO="^^^"
- .;
- .; return collation value for this global (GLO)
- .;S RC=$$GetCollationType^%DM(DIRNAM,GLO,.COLLATE)
- .;
- .; return protection value for this global (GLO)
- .;S RC=$$GetProtectState^%DM(DIRNAM,GLO,.PROTECT)
- .;I +RC D
- ..; protection - world ^ group ^ owner ^ network
- ..;S PROTINFO=PROT(PROTECT\16#4)_U_PROT(PROTECT\4#4)_U_PROT(PROTECT#4)_U_PROT(PROTECT\64#4)
- .;
- .; return top pointer block and first data block for this global (GLO)
- .;S RC=$$GetGlobalPointers^%DM(DIRNAM,GLO,.TPTRBLK,.FBLK)
- .;
- .;-- these extra logic ideas are from routine ^%GD
- .;   this code MUST use %utility($J) to properly work
- .;K ^%utility($J)
- .;
- .; $$Fetch^%GD is NOT a PUBLIC API
- .; <<< PUBLIC API $$GetJournalType^%DM did NOT work >>>
- .;I $$Fetch^%GD(GLO,1,0) D
- ..;S INFO=$G(^%utility($J,U_GLO))
- ..;Q:INFO=""
- ..;
- ..;S GRWBLK=$P(INFO,U,2)
- ..;S JRNL=$S($P(INFO,U,4):"Y",1:"N")
- ..;
- ..;K ^%utility($J)
- ..;-- end of extra logic ideas from routine ^%GD
- .;
- .; global info - '^' delimited
- .;         piece 1: first block
- .;         piece 2: jrnl^collate
- .;         piece 3: bits(blank)
- .;         piece 4: growth area block
- .;         piece 5: protection:system(blank)
- .;         piece 6: protection:world
- .;         piece 7: group^owner
- .;         piece 8: network^top (first) pointer block
- .S GLOINFO=FBLK_U_JRNL_U_COLLATE_"^^"_GRWBLK_"^^"_PROTINFO_U_TPTRBLK
- .;
- .S ^XTMP("KMPS",KMPSSITE,NUM,KMPSDT,GLO,KMPSZU)=GLOINFO
- .;
- .; check integrity of a single global
- .; will stop if there are more than 999 errors with this global
- .S RC=$$GLOINTEG^%ZOSVKSD(VERSION)
- .;
- .K MSGLIST
- .D DCMPST^%ZOSVKSD(VERSION)
- .;
- .S (LEV,RC)=1
- .F I=1:1:MSGLIST D
- ..S INFO=MSGLIST(I),BLK=$$BLK(INFO),EFF=$$EFF(INFO)
- ..;
- ..; more than 999 errors reported
- ..I INFO["***Further checking of this global is aborted." S RC=0 D ERRVMS1 Q
- ..;
- ..I ($P(INFO,":")["Top Pointer Level")!($P(INFO,":")["Top/Bottom Pnt Level") D  Q
- ...S ^XTMP("KMPS",KMPSSITE,NUM,GLO,KMPSZU,KMPSDT,1)=BLK_"^"_EFF_"%^Pointer"
- ..I $P(INFO,":")["Pointer Level" D  Q
- ...S LEV=LEV+1,^XTMP("KMPS",KMPSSITE,NUM,GLO,KMPSZU,KMPSDT,LEV)=BLK_"^"_EFF_"%^Pointer"
- ..I $P(INFO,":")["Bottom Pointer Level" D  Q
- ...S LEV=LEV+1,^XTMP("KMPS",KMPSSITE,NUM,GLO,KMPSZU,KMPSDT,LEV)=BLK_"^"_EFF_"%^Bottom pointer"
- ..I $P(INFO,":")["Data Level" D  Q
- ...S ^XTMP("KMPS",KMPSSITE,NUM,GLO,KMPSZU,KMPSDT,"D")=BLK_"^"_EFF_"%^Data"
- ..I $P(INFO,":")["Big Strings" D  Q
- ...S ^XTMP("KMPS",KMPSSITE,NUM,GLO,KMPSZU,KMPSDT,"L")=BLK_"^"_EFF_"%^LongString"
- ;
- I ('+RC) G ERROR
- ;
- Q
- ;
-BLK(STRNG)      ;-- function to obtain number of blocks from input string
- ;
- N BLK
- Q:$G(STRNG)="" ""
- S BLK=$$NOCOMMA($P($P(STRNG,"=",2)," "))
- Q BLK
- ;
-EFF(STRNG)      ;-- function to obtain efficiency from input string
- ;
- N EFF
- Q:$G(STRNG)="" ""
- S EFF=$P($P(STRNG,"%"),"(",2)
- Q EFF
- ;
-NOCOMMA(IN)     ;-- strip comma from input string
- ;
- Q $TR(IN,",","")
- ;
-ERRVMS ;
- S $ZE="<ERROR>UC1VMS+6^%ZOSVKSE"
- I '+RC S KMPSERR1="ERROR: Cannot find global names for "_DIRNAM
- Q
- ;
-ERRVMS1 ;
- S $ZE="<ERROR>ALLGLO+50^%ZOSVKSE"
- S KMPSERR1="ERROR: Over 999 integrity errors with ^"_GLO_" in "_DIRNAM
  Q

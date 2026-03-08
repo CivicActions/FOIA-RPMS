@@ -1,5 +1,5 @@
-XMXANSER ;ISC-SF/GMB-Answer a msg ;04/24/2002  10:08
- ;;8.0;MailMan;;Jun 28, 2002
+XMXANSER ;ISC-SF/GMB-Answer a msg ;06/14/99  09:27
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces ^XMA11A (ISC-WASH/CAP/THM)
  ; XMDUZ             DUZ of who the msg is from
  ; XMSUBJ            Subject of the msg (defaults to 'Re:' original subject)
@@ -40,29 +40,45 @@ ANSRMSG(XMDUZ,XMK,XMKZ,XMSUBJ,XMBODY,XMTO,XMINSTR,XMZR) ;
  K XMERR,^TMP("XMERR",$J)
  D CHKMSG^XMXSEC1(XMDUZ,.XMK,.XMKZ,.XMZ,.XMZREC) Q:$D(XMERR)
  Q:'$$ANSWER^XMXSEC(XMDUZ,XMZ,XMZREC)
- S:$G(XMSUBJ)="" XMSUBJ=$E($$EZBLD^DIALOG(37006)_$P(XMZREC,U,1),1,65) ; Re:
+ S:$G(XMSUBJ)="" XMSUBJ="Re: "_$P(XMZREC,U,1)
  D CRE8XMZ^XMXSEND(XMSUBJ,.XMZR) Q:$D(XMERR)
  S XMZSENDR=$P(XMZREC,U,2)
  S:XMZSENDR["@" XMZSENDR=$$REPLYTO1^XMXREPLY(XMZ)
- D COMPOSE(XMDUZ,XMZ,$P(XMZREC,U,1),XMZSENDR,$P(XMZREC,U,3),XMZR,XMBODY)
+ D COMPOSE(XMZ,$P(XMZREC,U,1),XMZSENDR,XMZR,XMBODY)
  S XMTO(XMZSENDR)=""
- S XMINSTR("EXACT")=1 ; Match on exact domain name
  D ADDRNSND^XMXSEND(XMDUZ,XMZR,.XMTO,.XMINSTR)
- K XMINSTR("EXACT")
  Q
-COMPOSE(XMDUZ,XMZ,XMZSUBJ,XMZSENDR,XMZDATE,XMZR,XMBODY) ;
- D COPY(XMZ,XMZSUBJ,XMZSENDR,XMZDATE,XMZR)
+COMPOSE(XMZ,XMZSUBJ,XMZSENDR,XMZR,XMBODY) ;
+ D COPY(XMZ,XMZSUBJ,XMZSENDR,XMZR)
  ; File XMBODY, with the "append" option
  D MOVEBODY^XMXSEND(XMZR,XMBODY,"A") ; Put the msg body in place
- D NETSIG^XMXEDIT(XMDUZ,XMZR)
+ D NETSIG(XMZR)
  Q
-COPY(XMZO,XMZOSUBJ,XMZOFROM,XMZODATE,XMZ) ; Copy the original msg, putting ">" in front of each line.
- N I,J
- D COPYHEAD^XMJMC(XMZO,XMZOSUBJ,XMZOFROM,XMZODATE,XMZ,"A",.J)
+COPY(XMZO,XMZOSUBJ,XMZOFROM,XMZ) ; Copy the original msg, putting ">" in front of each line.
+ N I,J,XMS,XMF
+ S XMS=">Original Msg: '"_XMZOSUBJ_"'"
+ S XMF="From: "_$$NAME^XMXUTIL(XMZOFROM)
+ I $L(XMS)+$L(XMF)<80 D
+ . S ^XMB(3.9,XMZ,2,1,0)=XMS_" "_XMF
+ . S J=1
+ E  D
+ . S ^XMB(3.9,XMZ,2,1,0)=XMS
+ . S ^XMB(3.9,XMZ,2,2,0)=">"_XMF
+ . S J=2
  S J=J+1,^XMB(3.9,XMZ,2,J,0)=">"
  S I=.999999
  F  S I=$O(^XMB(3.9,XMZO,2,I)) Q:I=""  S J=J+1,^XMB(3.9,XMZ,2,J,0)=$E(">"_^(I,0),1,254)
  S J=J+1,^XMB(3.9,XMZ,2,J,0)=""
  S J=J+1,^XMB(3.9,XMZ,2,J,0)=""
  S ^XMB(3.9,XMZ,2,0)="^3.92A^"_J_U_J_U_DT
+ Q
+NETSIG(XMZ) ;
+ N I,XMNSIG
+ S XMNSIG(.1)=""
+ S XMNSIG(.2)=""
+ S XMNSIG(.3)="*******************************************************************************"
+ S XMNSIG=$G(^XMB(3.7,XMDUZ,"NS1"))
+ F I=1:1:3 S:$P(XMNSIG,U,I)'="" XMNSIG(I)=$P(XMNSIG,U,I)
+ S XMNSIG(4)=XMNSIG(.3)
+ D MOVEBODY^XMXSEND(XMZ,"XMNSIG","A") ; Add the network signature
  Q

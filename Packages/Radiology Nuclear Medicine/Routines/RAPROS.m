@@ -1,6 +1,7 @@
-RAPROS ;HISC/GJC AISC/MJK,RMO-Exam Profile (sort) ;6/19/97  09:12
- ;;5.0;Radiology/Nuclear Medicine;**47**;Mar 16, 1998;Build 21
-PAT S DIC(0)="AQEM" D ^RADPA K DIC G Q:Y<0 S RADFN=+Y G Q:'$D(^DPT(RADFN,0)) S RANME=^(0),RASSN=$$SSN^RAUTL,RANME=$P(RANME,"^")
+RAPROS ;HISC/GJC AISC/MJK IHS/OIT/BT - RMO-Exam Profile (sort) ;11/11/2022 10:40AM
+ ;;5.0;Radiology/Nuclear Medicine;**47,1010**;Mar 16, 1998;Build 21
+PAT S DIC(0)="AQEM" D ^RADPA K DIC G Q:Y<0 S RADFN=+Y
+ G Q:'$D(^DPT(RADFN,0)) S RASSN=$$SSN^RAUTL,RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1)
 SORT R !!,"Sort by one of the following:",!?10,"P ==> Procedure",!?10,"D ==> Date of Exam",!?30,"Procedure// ",RAXX:DTIME
  G Q:'$T!(RAXX["^") S RAXX=$E(RAXX) S:RAXX="" RAXX="P" G SORT:RAXX="?" S RAXX=$$UP^XLFSTR(RAXX) I "PD"'[RAXX W *7," ??" G SORT
  I RAXX="D" S RASORT="RADTI" D DATE^RAUTL G Q:RAPOP S BEG=9999999-ENDDATE,END=9999999.9999-BEGDATE G ZIS
@@ -73,7 +74,9 @@ PRT3 S RASEQ=RASEQ+1,^TMP($J,"RASEQ",RASEQ)=RAY
  Q
 HD ; Generic header output
  W:$E(IOST,1,2)="C-"!(RAPAG) @IOF
- W "Profile for ",RANME,"  ",RASSN,?55,"Run Date: " S Y=DT D DT^DIO2 W !!,?20,"***** Registered Exams Profile *****"
+ W "Profile for ",RANME,"  ",RASSN
+ W:$L(RANME)<21 ?55 W:$L(RANME)>20 ! W "Run Date: " S Y=DT D DT^DIO2
+ W !!,?20,"***** Registered Exams Profile *****"
  I $$USESSAN^RAHLRU1() W !?4,"Case No.",?22,"Procedure",?49,"Exam Dt",?58,"Exam Status",?70,"Img Loc",!?4,"-----------------",?22,"-------------",?49,"--------",?58,"-----------",?70,"----------" Q
  I '$$USESSAN^RAHLRU1() W !?3,"Case No.",?13,"Procedure",?41,"Exam Date",?52,"Status of Exam",?69,"Imaging Loc",!?3,"--------",?13,"-------------",?41,"---------",?52,"------------",?69,"-----------" Q
 HLP ; Generic help

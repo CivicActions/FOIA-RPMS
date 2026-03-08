@@ -1,5 +1,5 @@
-XMXSEND ;ISC-SF/GMB-Send a msg ;06/19/2002  07:01
- ;;8.0;MailMan;;Jun 28, 2002
+XMXSEND ;ISC-SF/GMB-Send a msg ;06/01/99  14:17
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Entry points:
  ; SENDMSG  Send a message
  ; CRE8XMZ  Setup a message. (1st part of 3-part message sending process)
@@ -59,7 +59,7 @@ SENDMSG(XMDUZ,XMSUBJ,XMBODY,XMTO,XMINSTR,XMZ,XMATTACH) ;
  . I $D(XMTASK) S XMZ=XMTASK
  D CRE8XMZ(XMSUBJ,.XMZ) Q:$D(XMERR)  ; Create a place for the msg in the msg file
  D:$D(XMATTACH("IMAGE"))>9 ADDBLOB(XMZ,.XMATTACH) Q:$D(XMERR)
- D MOVEBODY(XMZ,XMBODY) ; Put the msg body in place
+ D MOVEBODY(XMZ,XMBODY)    ; Put the msg body in place
  D CHEKBODY(XMZ,$G(XMINSTR("STRIP")))
  D ADDRNSND(XMDUZ,XMZ,.XMTO,.XMINSTR)
  Q
@@ -73,11 +73,11 @@ CHEKADDR(XMDUZ,XMZ,XMTO,XMINSTR) ;
  D:$G(XMINSTR("ADDR FLAGS"))'["I" INIT^XMXADDR
  D:$G(XMINSTR("ADDR FLAGS"))'["R" CHKLINES^XMXSEC1(XMDUZ,XMZ,.XMRESTR)
  D:$G(XMINSTR("FLAGS"))["S" CHKADDR^XMXADDR(XMDUZ,XMDUZ)
- D CHKADDR^XMXADDR(XMDUZ,.XMTO,.XMINSTR,.XMRESTR) ; Address the msg
+ D CHKADDR^XMXADDR(XMDUZ,.XMTO,.XMINSTR,.XMRESTR)  ; Address the msg
  Q
 BLDNSND(XMDUZ,XMZ,XMINSTR) ;
- D MOVEPART(XMDUZ,XMZ,.XMINSTR) ; Put various parts of the msg in place
- I '$$GOTADDR^XMXADDR D ERRSET^XMXUTIL(34100) Q  ; No addressees.  Message not sent.
+ I '$D(^TMP("XMY",$J)) S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"TEXT",1)="No addressees.  Message not sent." Q
+ D MOVEPART(XMDUZ,XMZ,.XMINSTR)  ; Put various parts of the msg in place
  D SEND^XMKP(XMDUZ,XMZ,.XMINSTR) ; Send the msg
  D CHECK^XMKPL
  Q
@@ -90,46 +90,45 @@ ADDBLOB(XMZ,XMATTACH) ;
  D KILLMSG^XMXUTIL(XMZ)
  Q
 CRE8XMZ(XMSUBJ,XMZ,XMIA) ; Create a place for the msg in the msg file
- N XMFDA,XMIEN,XMMAXDIG,XMRESET
+ N XMFDA,XMIEN,XMTRIES,XMMAXDIG,XMABORT
  I XMSUBJ[U S XMSUBJ=$$ENCODEUP^XMXUTIL1(XMSUBJ)
+ S (XMABORT,XMTRIES)=0
+ F  L +^XMB(3.9,0):9 Q:$T  D  Q:XMTRIES>999!XMABORT
+ . S XMTRIES=XMTRIES+1
+ . H 0
+ . I '$G(XMIA)!$D(ZTQUEUED) Q
+ . N DIR,DIRUT,Y
+ . S DIR("A",1)="We're having trouble getting a lock on the MESSAGE file."
+ . S DIR("A")="Do you wish to "_$S(XMTRIES=1:"wait",1:"keep waiting")
+ . S DIR("?",1)="Some other process has a lock on the MESSAGE file."
+ . S DIR("?",2)="In order to maintain file integrity,"
+ . S DIR("?",3)="we must wait until the lock is released before we can continue."
+ . S DIR("?",4)="If you wish to "_$S(XMTRIES=1:"wait",1:"keep waiting")_", answer YES."
+ . S DIR("?")="If you don't wish to "_$S(XMTRIES=1:"wait",1:"keep waiting")_", answer NO."
+ . S DIR(0)="Y"
+ . S DIR("B")="YES"
+ . D ^DIR
+ . S XMABORT='Y
+ I XMTRIES>999!XMABORT D  Q
+ . S XMZ=-1
+ . I $G(XMIA),'$D(ZTQUEUED) W !!,"Please try again later." Q
+ . S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"TEXT",1)="Could not lock MESSAGE file."
  S XMMAXDIG=$P($G(^XMB(1,1,.17),8),U,1) I 'XMMAXDIG S XMMAXDIG=8
- S XMRESET=0
+ S XMTRIES=0
 TRYXMZ ;
  S XMFDA(3.9,"+1,",.01)=XMSUBJ
- S XMFDA(3.9,"+1,",31)=DT ; local create date
+ S XMFDA(3.9,"+1,",31)=DT  ; local create date
  D UPDATE^DIE("","XMFDA","XMIEN")
- I $D(DIERR) D  Q
- . S XMZ=-1
- . ; Call to UPDATE^DIE failed.  Can't get a message number.
- . ; Here's the error returned by FileMan:
- . D ERRSET^XMXUTIL(34107)
- . N I,J,K
- . S J=0
- . S I=$O(^TMP("XMERR",$J,XMERR,"TEXT",":"),-1)
- . F K=1:1:+DIERR D
- . . F  S J=$O(^TMP("DIERR",$J,K,"TEXT",J)) Q:'J  D
- . . . S I=I+1,^TMP("XMERR",$J,XMERR,"TEXT",I)=^TMP("DIERR",$J,K,"TEXT",J)
- . Q:'$G(XMIA)!$D(ZTQUEUED)
- . D SHOW^XMJERR
- . D WAIT^XMXUTIL
  S XMZ=XMIEN(1)
- Q:$L(XMZ)'>XMMAXDIG
- I XMRESET S $P(^XMB(1,1,.17),U,1)=$L(XMZ) Q
- ; Recycle message numbers, because this one's too big...
- K XMIEN
- S XMRESET=1
- I '$D(^XMB(3.9,99999,0)) D
- . ; We do this so that if message 100000 is created and then deleted,
- . ; FM will set piece 3 of ^XMB(3.9,0) to 99999.  We don't want any
- . ; message number lower than 100000 to be created, so that message
- . ; numbers can't be confused with message sequence numbers in baskets
- . S ^XMB(3.9,99999,0)="place holder"
- . S ^XMB(3.9,"B","place holder",99999)=""
- L +^XMB(3.9,0):1
- I $L($P(^XMB(3.9,0),U,3))>XMMAXDIG S $P(^XMB(3.9,0),U,3)=99999
- N DIK,DA S DIK="^XMB(3.9,",DA=XMZ D ^DIK ; Delete the message stub.
+ I $L(XMZ)>XMMAXDIG D  S XMTRIES='XMTRIES G:XMTRIES TRYXMZ
+ . I 'XMTRIES D  Q
+ . . N DIK,DA
+ . . S DIK="^XMB(3.9,",DA=XMZ D ^DIK
+ . . S $P(^XMB(3.9,0),U,3)=99999
+ . . K XMIEN
+ . S XMMAXDIG=$L(XMZ),$P(^XMB(1,1,.17),U,1)=XMMAXDIG
  L -^XMB(3.9,0)
- G TRYXMZ ; Go get another
+ Q
 MOVEBODY(XMZ,XMBODY,XMFLAG) ;
  D WP^DIE(3.9,XMZ_",",3,$G(XMFLAG),XMBODY)
  Q
@@ -175,17 +174,15 @@ MOVEPART(XMDUZ,XMZ,XMINSTR) ; Put various parts of the msg in place
  D FILE^DIE("","XMFDA")
  Q
 LATER ; TaskMan entry point to send a user's latered message
- N XMI,XMLATER,XMPREFIX,XMTO,XMV,XMPRIVAT,XMBCAST
- S XMPRIVAT=$$EZBLD^DIALOG(39135) ; " [Private Mail Group]"
- S XMBCAST=$$EZBLD^DIALOG(39006) ; "* (Broadcast to all local users)"
+ N I,XMLATER,XMPREFIX,XMTO,XMV
  D INIT^XMVVITAE
- S XMI=""
- F  S XMI=$O(^TMP("XMY0",$J,XMI)) Q:XMI=""  D
- . S XMPREFIX=$G(^TMP("XMY0",$J,XMI,1)) ; prefix (I:,C:)
- . S XMLATER=$G(^TMP("XMY0",$J,XMI,"L"))
+ S I=""
+ F  S I=$O(^TMP("XMY0",$J,I)) Q:I=""  D
+ . S XMPREFIX=$G(^TMP("XMY0",$J,I,1))  ; prefix (I:,C:)
+ . S XMLATER=$G(^TMP("XMY0",$J,I,"L"))
  . S:XMLATER'="" XMPREFIX=XMPREFIX_"L@"_XMLATER
  . S:XMPREFIX'="" XMPREFIX=XMPREFIX_":"
- . S XMTO(XMPREFIX_$S(XMI[XMPRIVAT:$P(XMI,XMPRIVAT,1),XMI=XMBCAST:"*",1:XMI))="" ; (set in ^XMXADDRG)
+ . S XMTO(XMPREFIX_I)=""
  D SENDMSG(XMDUZ,XMSUBJ,"^TMP(""XM"",$J,""BODY"")",.XMTO,.XMINSTR)
  S ZTREQ="@"
  Q
@@ -194,12 +191,12 @@ PSNDLATR(XMDUZ,XMSUBJ,XMBODY,XMTO,XMINSTR,ZTSK,XMATTACH) ; Set up a task for a p
  S ZTIO=""
  S ZTRTN="PTSKLATR^XMXSEND"
  S ZTDTH=$$FMTH^XLFDT(XMINSTR("LATER"))
- S ZTDESC=$$EZBLD^DIALOG(39310) ; MailMan: Send Message Later
+ S ZTDESC="MailMan: Send Message Later"
  S ZTSAVE($$OREF^DILF(XMBODY))=""
  F I="DUZ","XMDUZ","XMSUBJ","XMBODY","XMTO","XMTO(","XMINSTR(","XMATTACH(" S ZTSAVE(I)=""
  D ^%ZTLOAD
- ;D HOME^%ZIS call this only if preceded by call to ^%ZIS
- I '$D(ZTSK) D ERRSET^XMXUTIL(39311) ; Task creation not successful
+ D HOME^%ZIS
+ I '$D(ZTSK) S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"TEXT",1)="Task creation not successful"
  Q
 PTSKLATR ; TaskMan entry point to send a program's latered message
  K XMINSTR("LATER")

@@ -1,14 +1,13 @@
 BARPST3 ; IHS/SD/LSL - PAYMENT COMMAND PROCESSOR ; 12/29/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**3,4,6,7,10,20,21,23,24**;OCT 26, 2005;Build 69
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**3,4,6,7,10,20,21,23,24,33**;OCT 26, 2005;Build 133
  ;** 'Select Command' processor
- ; IHS/SD/PKD  1.8*21 HEAT20490 - 3/18/11
- ; Prevent Cashier from continuing to post in the same Session
- ;   if Session t
  ;
- ;
- ; IHS/SD/POTT HEAT76683 07/12 LIMIT COMMAND FORMAT & LENGTH  - BAR 1.8*23
- ; IHS/SD/POTT 04/13 CONDITIONAL DISPLAY OF TXD AND MESSSAGES   - BAR 1.8*23
- ; IHS/SD/POTT HEAT148695 01/13/2014 BLOCK INVALID ENTRY (100;200;300 AS COMMANDS)   - BAR 1.8*24
+ ;IHS/SD/PKD 1.8*21 HEAT20490 - 3/18/11 Prevent Cashier from continuing to post in the same Session if Session t
+ ;IHS/SD/POTT 1.8*23 HEAT76683 07/12 LIMIT COMMAND FORMAT & LENGTH
+ ;IHS/SD/POTT 1.8*23 04/13 CONDITIONAL DISPLAY OF TXD AND MESSSAGES
+ ;IHS/SD/POTT 1.8*24 HEAT148695 01/13/2014 BLOCK INVALID ENTRY (100;200;300 AS COMMANDS)
+ ;IHS/SD/SDR 1.8*33 ADO60817 Updated to use date/time, not date/time/counter when DINUM was removed; It looks like it doesn't
+ ;  ever get to this code anymore, but changed it just in case.
  ; ********************************************************************
  ;
 EN ;EP - command processor
@@ -246,7 +245,6 @@ ROLL ;EP - tag a bill for rollback to 3P
 ROLLE Q
  ; *********************************************************************
 CANCEL ;
- ;B "S+"
  K ^BARTMP($J)
  K BARPMT,BARADJ,BARTR,BARROLL
  Q
@@ -355,7 +353,8 @@ CKREV ; CHECK FOR PAYMENT PRECEDING REVERSAL  ;BAR*1.8*4 DD 4.1.7.3
  D EOP^BARUTL(1)
  Q
 EXCHK(BARDA,TX) ; BAR*1.8*6 DD 4.2.6
- ;     ENTERS WITH TRANSACTION DATE/TIME OF ORIGINAL PAYMENT
+ ; ENTERS WITH TRANSACTION DATE/TIME OF ORIGINAL PAYMENT
+ S TX=$P($G(^BARTR(DUZ(2),TX,0)),U,18)  ;date/time only, not date/time/counter  ;bar*1.8*33 IHS/SD/SDR ADO60817
  I BARCOL'=COLDA!(BARITM'=ITEMDA) D  Q 0  ;MUST BE IN SAME COLLECTION BATCH/ITEM
  .W !!,TX," CANNOT BE LINKED BECAUSE IT IS NOT IN SAME COLLECTION BATCH/ITEM"
  .D EOP^BARUTL(1)

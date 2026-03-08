@@ -1,5 +1,5 @@
-RAORD1 ;HISC/CAH - AISC/RMO-Request An Exam ; 20 Apr 2011  6:57 PM
- ;;5.0;Radiology/Nuclear Medicine;**10,45,41,75,86,1003**;Nov 01, 2010;Build 3
+RAORD1 ;HISC/CAH - AISC/RMO IHS/OIT/BT,NST - Request An Exam ; 10 Jan 2025  1:23 PM
+ ;;5.0;Radiology/Nuclear Medicine;**10,45,41,75,86,1003,1007,1010,1012**;Nov 01, 2010;Build 14
  ;
  ;Supported IA #10035 reference to ^DPT(
  ;Supported IA #10040 reference to ^SC(
@@ -23,7 +23,7 @@ RAORD1 ;HISC/CAH - AISC/RMO-Request An Exam ; 20 Apr 2011  6:57 PM
  ;
  I '$D(RAREGFLG),'$D(RAVSTFLG) N RAPTLOCK K RAWARD D  G:'RAPTLKUP Q
 PAT .S DIC="^DPT(",DIC(0)="AEMQ" W ! D ^DIC K DIC
- .I Y<0 S RAPTLKUP=0 Q 
+ .I Y<0 S RAPTLKUP=0 Q
  .S RAPTLOCK=$$LK^RAUTL19(+Y_";DPT(") G:'RAPTLOCK PAT
  .S (DFN,RADFN)=+Y,(VA200,RAPTLKUP)=1
  .W ! D IN5^VADPT S:VAIP(1) RAWARD=$P(VAIP(5),"^",2)
@@ -49,9 +49,16 @@ PL ;Ask for the patient location (REQ. LOCATION file: 75.1, field: #22)
  D ^DIC K DIC K:'$D(RAREGFLG) RAWARD G Q:Y<0 S RALIFN=+Y
  S DIC("A")="Person Requesting Order: "
  ;*Billing Awareness Project:
- S DIC("S")="I $$PROV^RABWORD()"
+ ;
+ ;IHS/CMI/DAY - Patch 1007 - Screen Prov for ORES key
+ ;S DIC("S")="I $$PROV^RABWORD()"
  ;Display Service Connected prompts if user is a Provider.
- S DIC="^VA(200,",DIC(0)="AEMQ",Y=DUZ S:$$PROV^RABWORD DIC("B")=$P(^VA(200,DUZ,0),"^",1)
+ ;S DIC="^VA(200,",DIC(0)="AEMQ",Y=DUZ S:$$PROV^RABWORD DIC("B")=$P(^VA(200,DUZ,0),"^",1)
+ S DIC("S")="I $$PROV^RABWORD(),$D(^XUSEC(""ORES"",Y))"
+ S DIC="^VA(200,",DIC(0)="AEMQ",Y=DUZ
+ I $$PROV^RABWORD,$$GET1^DIQ(200,DUZ,53.1)="YES" S DIC("B")=$P(^VA(200,DUZ,0),U,1)
+ ;End Patch
+ ;
  D ^DIC K DIC G Q:Y<0 S RAPIFN=+Y K DD,DO,VA200,VAERR,VAIP G ADDORD:$D(RAVSTFLG)
  ;
 ENADD ;OE/RR Entry Point for the ACTION Option
@@ -60,7 +67,8 @@ ENADD ;OE/RR Entry Point for the ACTION Option
  ; RAFOERR is used as a flag to track when a user enters this option
  ; from OE/RR (frontdoor).  If this variable exists when a request is
  ; being printed, exam information is omitted from the request.
- S RANME=^DPT(RADFN,0),RASEX=$P(RANME,"^",2),RANME=$P(RANME,"^") D EXAM^RADEM1:'$D(RAREGFLG)&($D(RAPKG)) I '$D(RAREGFLG) S VA200=1 D IN5^VADPT S:VAIP(1) RAWARD=$P(VAIP(5),"^",2)
+ S RANME=^DPT(RADFN,0),RASEX=$P(RANME,"^",2),RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1)
+ D EXAM^RADEM1:'$D(RAREGFLG)&($D(RAPKG)) I '$D(RAREGFLG) S VA200=1 D IN5^VADPT S:VAIP(1) RAWARD=$P(VAIP(5),"^",2)
  D SAVE ; save off original value of RAMDV!
  S RAL0=$S($D(^SC(RALIFN,0)):^(0),1:0)
  S RADIV=+$$SITE^VASITE(DT,+$P(RAL0,"^",15)) S:RADIV<0 RADIV=0
@@ -115,6 +123,15 @@ CREATE1 ;ask for the 'Date Desired' req'd P75
  S:'$D(RASKPREG) RAPREG=$$PREG^RAORD1A(RADFN,$G(DT)),RASKPREG="" Q:$D(RAOUT)
  ;Reason for Study (req'd) & Clinical History (optional) asked in CH^RAUTL5 P75
  D CH^RAUTL5 Q:$D(RAOUT)  ;RAOUT: defined if Reason for Study is nonexistent
+ ; IHS BRA*5.0*1012
+ N BRACLIND,BRAIMGTY,BRAMSG
+ ; e.g. BRACLIND = e.g. 503331^E66.3^^Overweight^^10^^^^1^^^^^^^3151001^^^30^^
+ S BRAIMGTY=$G(RAIMGTY)
+ I BRAIMGTY="" S BRAIMGTY=$$GET1^DIQ(79.2,+$G(RAIMGTYI),.01,,,"BRAMSG")
+ D GETCLIND^BRANCLNI(.BRACLIND,RADFN,$G(RADTE),$E(RACAT),RAPRI)    ; Get Clinical indication if it is allowed and required
+ S:BRACLIND="^" RAOUT=1 Q:$D(RAOUT)#2
+ ; end IHS BRA*5.0*1012
+ ;
 BAQUES ;*Billing Awareness Project
  ;   Ask Ordering ICD-9 Diagnosis and Related SC/EI/MST/HNC questions.
  N RADTM D NOW^%DTC S RADTM=%
@@ -129,8 +146,56 @@ BAQUES ;*Billing Awareness Project
  ;*Billing Awareness Project
  ;   If Order questions are being Re-Asked then Re-Ask ICD-9 Dx questions
  I DR="[RA ORDER EXAM]" D ASK^RABWORD(RADFN,RADTM) W !!
+ ;
+ ; IHS BRA*5.0*1012 If Order questions are being Re-Asked then Re-Ask Clinical indication
+ I DR="[RA ORDER EXAM]" D  Q:BRACLIND="^"
+ . D GETCLIND^BRANCLNI(.BRACLIND,RADFN,$G(RADTE),$E(RACAT),RAPRI) W !!    ; Get Clinical indication if it is allowed and required
+ . I BRACLIND="^" W !?3,$C(7),"Request not complete. Must Delete..." S DA=RAOIFN,DIK="^RAO(75.1," D ^DIK W "...deletion complete!" I $D(RAREGFLG)!($D(RAVSTFLG)) K RAORDS(RANUM)
+ . Q
+ ; end IHS BRA*5.0*1012
+ ;
  D ^DIE
  K DIE("NO^"),DE,DQ,DIE,DR,RADR1,RADR2
+ ;
+ ;IHS/CMI/DAY - Patch 1007 - Check if Patient registered at Img Loc
+ ;This is the exiting point for the RA QUICK EXAM ORDER and
+ ;RA ORDER EXAM templates that ask for the Imaging Location.
+ ;
+ I $D(RAFIN),$D(RAOIFN),$D(^RAO(75.1,RAOIFN,0)) D
+ .;
+ .;Get Imaging Location
+ .S BRAILOCI=$$GET1^DIQ(75.1,RAOIFN,20,"I")
+ .I BRAILOCI="" Q
+ .S BRAILOCE=$$GET1^DIQ(79.1,BRAILOCI,.01)
+ .I BRAILOCE="" Q
+ .;
+ .;Get Division for this Imaging Location
+ .S BRADIVI=$P($G(^RA(79.1,BRAILOCI,"DIV")),U)
+ .I BRADIVI="" Q
+ .S BRADIVE=$$GET1^DIQ(79,BRADIVI,.01)
+ .I BRADIVE="" Q
+ .;
+ .;Is Patient Registered at this Division
+ .I $G(RADFN)="" Q
+ .I $D(^AUPNPAT(RADFN,41,BRADIVI)) Q
+ .;
+ .;Not Registered, so warn user
+ .W !!,"WARNING: The IMAGING LOCATION: ",BRAILOCE,!
+ .W "is associated with the ",BRADIVE," Division",!
+ .W !
+ .W "The Patient is NOT Registered at this Division/Site",!!
+ .K DIR S DIR(0)="EO" D ^DIR K DIR
+ ;End Patch
+ ;
+ ; IHS BRA*5.0*1012
+ I $G(BRACLIND),$D(RAFIN),$D(^RAO(75.1,RAOIFN,0)) D
+ . N DIERR,BRAFDA,BRAMSG,BRARC
+ . S BRAFDA(75.1,RAOIFN_",",91)=+BRACLIND ; Clinical Indication ICD Dx pointer.
+ . D FILE^DIE("K","BRAFDA","BRAMSG")
+ . S:$G(DIERR) BRARC=$$DBS^RAERR("BRAMSG",-999,75.1,RAOIFN_",")
+ . Q
+ ; IHS BRA*5.0*1012
+ ;
  I $D(RAFIN),$D(^RAO(75.1,RAOIFN,0)) S RAORD0=^(0) D FILEDX^RABWORD(RADFN,RAOIFN) Q:'$D(RAFIN)  D SETORD^RAORDU D OERR^RAORDU:'$D(RAPKG) D ^RAORDQ:$D(RAPKG) K RAORD0
  I '$D(RAFIN) W !?3,$C(7),"Request not complete. Must Delete..." S DA=RAOIFN,DIK="^RAO(75.1," D ^DIK W "...deletion complete!" I $D(RAREGFLG)!($D(RAVSTFLG)) K RAORDS(RANUM)
  I '$D(RAFIN),('$D(^RAO(75.1,RAOIFN,0))#2) Q  ; record deleted!

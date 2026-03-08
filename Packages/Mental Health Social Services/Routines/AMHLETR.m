@@ -1,5 +1,5 @@
-AMHLETR ; IHS/CMI/LAB - print report of tps needing resolved ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLETR ; IHS/CMI/LAB - print report of tps needing resolved ; [ 02/21/2007  3:37 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**1,2,4,5,7,8**;JAN 27, 2003
  ;
  ;fixed potential undef
  ;
@@ -7,13 +7,12 @@ AMHLETR ; IHS/CMI/LAB - print report of tps needing resolved ;
  I '$D(IOF) D HOME^%ZIS
  W @(IOF),!!
  W "**********  LIST TREATMENT PLANS BY RESOLVED BY DATE  **********",!!
- W "This report will list all patients who have a treatment plan with an anticipated"
- W !,"completion date within a date range specified by the user."
+ W "This report will list all patients who have a treatment plan which is due",!,"to be resolved in a date range specified by the user.",!
  D DBHUSRP^AMHUTIL
 GETDATES ;
 BD ;get beginning date
  K DIR
- W !,"Please enter the desired date range.",!
+ W !,"Please enter the date range during which the treatment plan is to be resolved.",!
  W ! S DIR(0)="D^::EP",DIR("A")="Enter BEGINNING Date" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I $D(DIRUT) G XIT
  S AMHBD=Y
@@ -35,14 +34,11 @@ THER ;
  W !!,"You can limit the report output to treatment plans for one or all Providers",!
  K AMHTHER W ! S DIR(0)="S^O:One Provider;A:All Providers",DIR("A")="List treatment plans for",DIR("B")="O" K DA D ^DIR K DIR
  G:$D(DIRUT) BD
- G:Y="A" DEMO
+ G:Y="A" ZIS
  S DIC("A")="Which Designated Provider: ",DIC="^VA(200,",DIC(0)="AEMQ" D ^DIC K DIC,DA
  I X="" G THER
  I Y<0 G THER
  S AMHTHER=+Y
-DEMO ;
- D DEMOCHK^AMHUTIL1(.AMHDEMO)
- I AMHDEMO=-1 G THER
 ZIS ;
  S XBRC="PROC^AMHLETR",XBRP="PRINT^AMHLETR",XBNS="AMH",XBRX="XIT^AMHLETR"
  D ^XBDBQUE
@@ -60,8 +56,7 @@ PROC1 ;
  S X=$G(^AMHPTXP(AMHTP,0))
  Q:$P(X,U,2)=""  ;no patient
  Q:'$$ALLOWP^AMHUTIL(DUZ,$P(X,U,2))
- Q:$$DEMO^AMHUTIL1($P(X,U,2),$G(AMHDEMO))
- Q:'$$ALLOWTP^AMHLETP(DUZ,AMHTP)
+ Q:'$$ALLOWTP^AMHLETP(AMHTP)
  I $G(AMHTHER),$P(X,U,4)'=AMHTHER Q
  I AMHPROG]"",$P(X,U,17)'=AMHPROG Q
  I $P(X,U,3)]"",$P(X,U,3)'<AMHBD,$P(X,U,3)'>AMHED S ^XTMP("AMHLETR",AMHJOB,AMHBTH,AMHTP)=""
@@ -99,8 +94,7 @@ HEAD1 ;EP
  W ?20,"Date Range: ",AMHBDD," to ",AMHEDD,!
  I AMHPROG]"" S X="Program: "_$$EXTSET^XBFUNC(9002011.56,.17,AMHPROG) W $$CTR(X),!
  I $G(AMHTHER) S X="Responsible Provider:  "_$P(^VA(200,AMHTHER,0),U) W $$CTR(X),!
- W !,"PATIENT NAME",?23,"DOB",?33,"CHART #",?41,"DATE",?54,"REVIEW DATE",?68,"ANTICIPATED"
- W !?41,"ESTABLISHED",?68,"COMPLETION",!?68,"DATE"
- W !
+ W !,"PATIENT NAME",?23,"DOB",?33,"CHART #",?41,"DATE",?54,"REVIEW DATE",?68,"RESOLVE DATE"
+ W !?41,"ESTABLISHED",!
  W AMH80D,!
  Q

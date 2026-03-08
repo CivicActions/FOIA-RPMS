@@ -1,5 +1,5 @@
 LRUL ;AVAMC/REG - PATIENT UTILITY LIST ;6/14/92  11:03 [ 05/15/2003  12:32 PM ]
- ;;5.2T9;LR;*1018*;Nov 17, 2004
+ ;;5.2;LR;*1018*;Nov 18, 2004
  ;;5.2;LAB SERVICE;**247**;Sep 27, 1994
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
  D S,K

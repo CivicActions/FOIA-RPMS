@@ -1,7 +1,9 @@
-PSIVSUS ;BIR/PR-SUSPENSE LIST OPTIONS ;16 DEC 97 / 1:40 PM 
- ;;5.0; INPATIENT MEDICATIONS ;**58**;16 DEC 97
+PSIVSUS ;BIR/PR-SUSPENSE LIST OPTIONS ;02-Feb-2024 14:17;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**58,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^PS(55 is supported by DBIA 2191.
+ ;
+ ; Modified - IHS/MSC/PLS - 02/02/2024 - PRNT+1 Reference to GETHLOC FID 99318
  ;
 CHK ;Entry for individual label suspense, check if labels may be suspended.
  K JJ D NOW^%DTC S PSIVNOW=% I "EDPHN"[$P(^PS(55,DFN,"IV",+ON,0),U,17) F JJ="DISCONTINUED,","EXPIRED,","NON-VERIFIED,","or ON HOLD" W:JJ["DISC" $C(7),$C(7),!!,"YOU MAY NOT SUSPEND LABELS FOR ORDERS:" W:JJ["DISC" ?$X+1,JJ W:JJ'["DISC" !?39,JJ
@@ -46,7 +48,9 @@ DEQEN3 K DONE,PSIVFND D HDR1
 QEN3 W:'$D(PSIVFND) !,"No Data Found" W:'$D(PSIVPR)&($Y) @IOF K D,DFN,DONE,I,NODE,ON,P,PSIV,PSIVDT,PSIVFND,SDT,VAERR,Z D Q1
  Q
 PRNT D:$Y+8>IOSL HDR Q:$G(DONE)  S Y=PSIVDT X ^DD("DD") S PSIVFND=1,NODE=+^PS(55,"PSIVSUS",PSIVSN,DFN,+ON,PSIVDT)_"^"_$P(Y,"@")_" "_$P(Y,"@",2)
- D ENIV^PSJAC W !,VADM(1)," (",$S(VAIN(4):$P(VAIN(4),U,2),1:"Outpatient IV"),")",$J(+NODE_" label"_$S(+NODE>1:"s",1:"")_"   "_$P(NODE,U,2),IOM-1-$X)
+ ;IHS/MSC/PLS - 02/02/2024 - p1035
+ ;D ENIV^PSJAC W !,VADM(1)," (",$S(VAIN(4):$P(VAIN(4),U,2),1:"Outpatient IV"),")",$J(+NODE_" label"_$S(+NODE>1:"s",1:"")_"   "_$P(NODE,U,2),IOM-1-$X)
+ D ENIV^PSJAC W !,VADM(1)," (",$S(VAIN(4):$P(VAIN(4),U,2),1:$$GETHLOC^PSIVWL(.P)),")",$J(+NODE_" label"_$S(+NODE>1:"s",1:"")_"   "_$P(NODE,U,2),IOM-1-$X)
  W !,VA("BID")," [",ON,"]" S SSNF=1,PSIV=0 D ENP3^PSIVRNL Q
 HDR ;
  I $E(IOST,1,2)="C-" K DIR S DIR(0)="E" D ^DIR I $D(DUOUT)!$D(DTOUT) S DONE=1 Q

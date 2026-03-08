@@ -1,5 +1,5 @@
 BQIDCAH1 ;PRXM/HC/ALA-Ad Hoc Search continued ; 01 Aug 2007  11:27 AM
- ;;2.7;ICARE MANAGEMENT SYSTEM;;Dec 19, 2017;Build 23
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5**;Mar 01, 2021;Build 20
  Q
  ;
 ACHK(IEN) ;EP - Age check
@@ -334,6 +334,19 @@ FQTR(NUM) ;EP Range for a Fiscal quarter
  I NUM=2 S RFROM=CYR_"0101",RTHRU=CYR_"0331"
  I NUM=3 S RFROM=CYR_"0401",RTHRU=CYR_"0630"
  I NUM=4 S RFROM=CYR_"0701",RTHRU=CYR_"0930"
+ Q
+ ;
+TRIM(TEDD,NUM) ; EP Range for a Pregnancy Trimester
+ ; NUM = 1 - weeks 1 - 13, days 1 - 97
+ ; NUM = 2 - weeks 14 - 26, days 98 - 188
+ ; NUM = 3 - weeks 27 - 40, days 189 - 280
+ ; NUM = null, weeks 1 - 40, days 1 - 280
+ NEW BEDD
+ S BEDD=$$FMADD^XLFDT(TEDD,-280)
+ I NUM="" S RFROM=BEDD,RTHRU=TEDD
+ I NUM=1 S RFROM=BEDD,RTHRU=$$FMADD^XLFDT(BEDD,97)
+ I NUM=2 S RFROM=$$FMADD^XLFDT(BEDD,98),RTHRU=$$FMADD^XLFDT(BEDD,188)
+ I NUM=3 S RFROM=$$FMADD^XLFDT(BEDD,189),RTHRU=TEDD
  Q
  ;
 MQ ;

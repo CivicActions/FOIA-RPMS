@@ -1,5 +1,5 @@
 ABMKIDS ; IHS/SD/SDR - Kidscare Report ;    
- ;;2.6;IHS Third Party Billing;**1**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing;**1,10**;NOV 12, 2009;Build 43
  ;IHS/SD/SDR - abm*2.6*1 - HEAT5296 - NEW ROUTINE to report KIDSCARE
  ;
 EN ;
@@ -37,7 +37,8 @@ COMPUTE ;
  S ABMI=0
  F  S ABMI=$O(^AUPNMCD(ABMI)) Q:'ABMI  D
  .Q:($P($G(^AUPNMCD(ABMI,0)),U,10)="")
- .Q:($P($G(^AUTNINS($P($G(^AUPNMCD(ABMI,0)),U,10),2)),U)'="K")  ;Kidscare only
+ .;Q:($P($G(^AUTNINS($P($G(^AUPNMCD(ABMI,0)),U,10),2)),U)'="K")  ;Kidscare only  ;abm*2.6*10 HEAT73780
+ .Q:($$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,$P($G(^AUPNMCD(ABMI,0)),U,10),".211","I"),1,"I")'="K")  ;Kidscare only  ;abm*2.6*10 HEAT73780
  .S ABMIM=0
  .F  S ABMIM=$O(^AUPNMCD(ABMI,11,ABMIM)) Q:'ABMIM  D
  ..Q:ABMIM>ABMDT  ;start date after search date
@@ -53,7 +54,8 @@ COMPUTE ;
  .S ABMMIEN=0
  .F  S ABMMIEN=$O(^AUPNPRVT(ABMI,11,ABMMIEN)) Q:'ABMMIEN  D
  ..S ABMINS=$P($G(^AUPNPRVT(ABMI,11,ABMMIEN,0)),U)
- ..Q:($P($G(^AUTNINS(ABMINS,2)),U)'="K")
+ ..;Q:($P($G(^AUTNINS(ABMINS,2)),U)'="K")  ;abm*2.6*10 HEAT73780
+ ..Q:($$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMINS,".211","I"),1,"I")'="K")  ;abm*2.6*10 HEAT73780
  ..Q:$P($G(^AUPNPRVT(ABMI,11,ABMMIEN,0)),U,6)>ABMDT
  ..I $P($G(^AUPNPRVT(ABMI,11,ABMMIEN,0)),U,7)'="",($P($G(^AUPNPRVT(ABMI,11,ABMMIEN,0)),U,7)<ABMDT) Q
  ..S ABMAGE=$$GET1^DIQ(9000001,ABMI,1102.99,"")

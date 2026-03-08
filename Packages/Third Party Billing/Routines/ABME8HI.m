@@ -1,5 +1,5 @@
-ABME8HI ; IHS/ASDST/DMJ - 837 HI Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8HI ; IHS/ASDST/DMJ - 837 HI Segment [ 02/04/2003  11:07 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1,5**;APR 05, 2002
  ;Transaction Set Header
  ;
  ; IHS/SD/SDR 3/10/2004 - V2.5 P5
@@ -129,8 +129,10 @@ LOOP ;LOOP HERE
  .S ABMR("HI",70)=$G(ABMVA(6))
  I ABMEIC="BG" D
  .S ABMR("HI",70)=$G(ABMCD(6))
+ ; start new code IHS/SD/SDR 3/10/2004
  I ABMEIC="BZ" D
  .S ABMR("HI",70)=$G(ABMDX(6))
+ ; end new code IHS/SD/SDR 3/10/2004
  Q
 80 ;HI07 - Health Care Code Information
  S ABMR("HI",80)=""

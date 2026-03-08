@@ -1,0 +1,83 @@
+BQISUICD ;GDIT/HS/ALA-Suicidal Behavioral Mgmt ; 06 Aug 2024  2:29 PM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**7**;Mar 01, 2021;Build 14
+ ;
+DEP ; Set up Depression Education columns
+ ;Start with IEN of 200
+ S CIEN=63,DCD="SU",CCT=200,GRP="Depressive Disorders"
+ S MTPN=$O(^AUTTEDMT("B","DEPRESSIVE DISORDERS","")) Q:MTPN=""
+ S EIN="" F  S EIN=$O(^AUTTEDT("AMAJ",MTPN,EIN)) Q:EIN=""  D
+ . S EDATA=^AUTTEDT(EIN,0)
+ . S CODE="SU_"_$P(EDATA,"^",2),INAC=$P(EDATA,"^",5)
+ . S TEXT=$P(EDATA,"^",1),TEXT1=TEXT
+ . S TEXT=$P(TEXT,"DEP-",2),TCOL="DEP-"_$$LOWER^VALM1(TEXT)
+ . I '$D(^BQI(90506.5,CIEN,10,"B",CODE)) S IEN="" D FIL(CCT) Q
+ . S IEN="" F  S IEN=$O(^BQI(90506.5,CIEN,10,"B",CODE,IEN)) Q:IEN=""  D FIL(CCT)
+ Q
+ ;
+SUI ; Set up Suicidal Ideation Education columns.
+ ;Start with IEN of 100
+ S CIEN=63,DCD="SU",CCT=100,GRP="Suicidal Ideation and Gestures"
+ S MTPN=$O(^AUTTEDMT("B","SUICIDAL IDEATION AND GESTURES","")) Q:MTPN=""
+ S EIN="" F  S EIN=$O(^AUTTEDT("AMAJ",MTPN,EIN)) Q:EIN=""  D
+ . S EDATA=^AUTTEDT(EIN,0)
+ . S CODE="SU_"_$P(EDATA,"^",2),INAC=$P(EDATA,"^",5)
+ . S TEXT=$P(EDATA,"^",1),TEXT1=TEXT
+ . S TEXT=$P(TEXT,"SI-",2),TCOL="SI-"_$$LOWER^VALM1(TEXT)
+ . I '$D(^BQI(90506.5,CIEN,10,"B",CODE)) S IEN="" D FIL(CCT) Q
+ . S IEN="" F  S IEN=$O(^BQI(90506.5,CIEN,10,"B",CODE,IEN)) Q:IEN=""  D FIL(CCT)
+ Q
+ ;
+FIL(CCT) ;
+ I IEN'="" D
+ . S DA(1)=CIEN,DA=IEN,IENS=$$IENS^DILF(.DA)
+ . I INAC S BQIUPD(90506.51,IENS,.09)=1
+ . S BQIUPD(90506.51,IENS,.03)=TCOL
+ . D FILE^DIE("","BQIUPD","ERROR")
+ . S DESC(1)="Most recent "_TEXT1_" from V Pt Education is displayed."
+ . D WP^DIE(90506.51,IENS,4,"","DESC")
+ I IEN="" D
+ . S QFL=0
+ . F I=1:1:50 D  Q:QFL
+ .. S CCT=CCT+1
+ .. I $D(^BQI(90506.5,CIEN,10,CCT)) Q
+ .. S QFL=1
+ . S DA(1)=CIEN,X=CODE,DIC="^BQI(90506.5,"_DA(1)_",10,",DIC(0)="FL",DLAYGO=90506.51,DINUM=CCT
+ . K DO,DD D FILE^DICN S DA=+Y
+ . S IENS=$$IENS^DILF(.DA)
+ . S BQIUPD(90506.51,IENS,.02)=11,BQIUPD(90506.51,IENS,.03)=TCOL
+ . S BQIUPD(90506.51,IENS,.05)="R"
+ . S BQIUPD(90506.51,IENS,.06)="O"
+ . S BQIUPD(90506.51,IENS,1)="D PLAY^BQICMUT6("_""""_DCD_""""_",DFN,"_""""_CODE_""""_",.RESULT)"
+ . S BQIUPD(90506.51,IENS,5.01)=GRP
+ . S BQIUPD(90506.51,IENS,5.02)="Pt Education"
+ . D FILE^DIE("","BQIUPD","ERROR")
+ . S DESC(1)="Most recent "_TEXT1_" from V Pt Education is displayed."
+ . D WP^DIE(90506.51,IENS,4,"","DESC")
+ Q
+ ;
+GLS(DATA,FAKE) ;EP - BQI SUICIDE GLOSSARY
+ NEW UID,II,TRIEN,CAT,TIT,SORT,RMK,REMARK,CT,NXT,GLIEN,IEN
+ ;
+ S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
+ S DATA=$NA(^TMP("BQISUIGLS",UID))
+ K @DATA
+ ;
+ S II=0
+ NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BQISUICD D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
+ ;
+ S @DATA@(II)="T32767REPORT_TEXT"_$C(30)
+ S GLIEN=$O(^BQI(90508.2,"B","Suicide","")) I GLIEN="" S BMXSEC="Problem with Suicide Mgmt glossary in file 90508.2" G DONE
+ S IEN=0 F  S IEN=$O(^BQI(90508.2,GLIEN,1,IEN)) Q:'IEN  D
+ . S II=II+1,@DATA@(II)=$G(^BQI(90508.2,GLIEN,1,IEN,0))
+ I II>0 S @DATA@(II)=@DATA@(II)_$C(30)
+ ;
+DONE S II=II+1,@DATA@(II)=$C(31)
+ Q
+ ;
+ERR ;
+ D ^%ZTER
+ NEW Y,ERRDTM
+ S Y=$$NOW^XLFDT() X ^DD("DD") S ERRDTM=Y
+ S BMXSEC="Recording that an error occurred at "_ERRDTM
+ I $D(II),$D(DATA) S II=II+1,@DATA@(II)=$C(31)
+ Q

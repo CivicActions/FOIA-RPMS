@@ -1,6 +1,6 @@
-DMSQE ;SFISC/EZ-DISPLAY ERRORS ;11/26/97  13:57
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQE ;SFISC/EZ-DISPLAY ERRORS ;11/26/97  13:57 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
 MAIN ; main driver
  N DMF,DMFI,DMFE,DMFNM,DMFINM,DMQ
  S DMQ=""

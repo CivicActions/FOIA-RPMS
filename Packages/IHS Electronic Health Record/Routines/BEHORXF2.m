@@ -1,5 +1,5 @@
-BEHORXF2 ;MSC/IND/PLS -  XML Support for Pharmacy Rx Gen service ;14-Nov-2013 15:46;DU
- ;;1.1;BEH COMPONENTS;**009009,009010,009011,009012**;Sep 18, 2007
+BEHORXF2 ;MSC/IND/PLS -  XML Support for Pharmacy Rx Gen service ;01-Oct-2018 09:25;DU
+ ;;1.1;BEH COMPONENTS;**009009,009010,009011,009012,009014**;Sep 18, 2007;Build 2
  ;=================================================================
  ; RPC: BEHORXF2 DRUGTXT
  ; Returns data from 51.7 associated with drug
@@ -125,7 +125,7 @@ BLDPTADD(DFN) ;
  D ADD($$TAG^BEHORXF1("PatientZipCode",2,$$GET1^DIQ(2,DFN,.116)))
  Q
 PROV(PRVIEN,ORD) ;
- N X
+ N X,SUP
  D ADD($$TAG^BEHORXF1("ProviderDEA",2,$$DEAVAUS^APSPFUNC(PRVIEN)))
  ;D ADD($$TAG^BEHORXF1("ProvIEN",2,PRVIEN))
  D ADD($$TAG^BEHORXF1("ProviderPhone",2,$$PRVINFO(PRVIEN,.132)))
@@ -135,7 +135,12 @@ PROV(PRVIEN,ORD) ;
  D ADD($$TAG^BEHORXF1("ProviderESig",2,$S($L(X):"/ES/ "_X,1:"")))
  D ADD($$TAG^BEHORXF1("ProviderESigTitle",2,$$PRVINFO(PRVIEN,20.3)))
  D ADD($$TAG^BEHORXF1("ProviderNPI",2,$$PRVINFO(PRVIEN,41.99)))
- D ADD($$TAG^BEHORXF1("ProviderSup",2,$$GET1^DIQ(49,$$GET1^DIQ(200,PRVIEN,29,"I"),2)))
+ ;IHS/MSC/MGH add the provider's supervisor's DEA number
+ S SUP=$$GET1^DIQ(49,$$GET1^DIQ(200,PRVIEN,29,"I"),2,"I")
+ ;D ADD($$TAG^BEHORXF1("ProviderSup",2,$$GET1^DIQ(49,$$GET1^DIQ(200,PRVIEN,29,"I"),2)))
+ D ADD($$TAG^BEHORXF1("ProviderSup",2,$$GET1^DIQ(200,SUP,.01)))
+ D ADD($$TAG^BEHORXF1("SupervisorDEA",2,$$DEAVAUS^APSPFUNC(SUP)))
+ D ADD($$TAG^BEHORXF1("ProviderDetox",2,$$GET1^DIQ(200,PRVIEN,53.11)))
  Q
  ;Get patient data
 DATA(DFN) ;
@@ -153,3 +158,54 @@ ADD(VAL) ;EP-
 PRVINFO(USR,FLD,FLG) ;EP-
  S FLG=$G(FLG,"E")
  Q $$GET1^DIQ(200,USR,FLD,FLG)
+ ;New tag for EPCS
+REPRNT(RX,AUTO,PHMI,DEA) ;Check to see if this Rx is being reprinted
+ N DATA,ENTRY,ACTION,TXT,PHARM,TRANS,ELEC
+ S TXT=""
+ Q:+DEA>5 TXT
+ S PHMI=$G(PHMI)
+ I PHMI'="" S PHARM=$$GET1^DIQ(52,RX,9999999.24)
+ D ACTLOG^APSPFNC1(.DATA,RX)
+ ;If this is an in-house RX, why is it being printed?
+ I AUTO="" D  Q TXT
+ .S TXT="COPY ONLY - not valid for dispensing, only for informational purposes."
+ S ELEC=$$GET1^DIQ(52,RX,9999999.24)
+ I ELEC="" D   ;Printed prescription
+ .S ENTRY="" S ENTRY=$O(DATA(ENTRY),-1) Q:'+ENTRY  D
+ ..S ACTION=$P(DATA(ENTRY),U,8)
+ ..I ACTION="P"!(ACTION="R") S TXT="Reprint of printed prescription."
+ I ELEC'="" D    ;Electronic prescription
+ .N QUIT
+ .S QUIT=0
+ .S TRANS=$$FIRSTX(RX,.DATA)
+ .S ENTRY="" F  S ENTRY=$O(DATA(ENTRY),-1) Q:'+ENTRY!(QUIT=1)  D
+ ..S ACTION=$P(DATA(ENTRY),U,8)
+ ..I ACTION="T" D
+ ...S QUIT=1
+ ...S TXT="COPY ONLY - for informational purposes. RX was transmitted to "_PHARM_" at "_$$FMTE^XLFDT(TRANS)
+ ..I ACTION="F"&(TRANS'="") D
+ ...S QUIT=1
+ ...S TXT="Electronic prescription to "_PHARM_" failed. Transmitted at "_$$FMTE^XLFDT(TRANS)
+ ..I (ACTION="P"!(ACTION="R"))&(TRANS'="") D
+ ...S QUIT=1
+ ...S TXT="Reprint of Prescription electronically sent to "_PHARM_" Transmitted at "_$$FMTE^XLFDT(TRANS)
+ Q TXT
+FIRSTX(RX,DATA) ;Find the first activity with an X to get the transmission time
+ N AIEN,ACTION,TRANS2
+ S TRANS2=""
+ S AIEN="" F  S AIEN=$O(DATA(AIEN)) Q:'+AIEN  D
+ .S ACTION=$P(DATA(AIEN),U,3)
+ .I ACTION="X" S TRANS2=$P(DATA(AIEN),U,2)
+ Q TRANS2
+ ; Returns true if active hospital location
+ ; LOC = IEN of hospital location
+ ; DAT = optional date to check (defaults to today)
+ACTLOC(LOC,DAT) ;PEP - Is active location?
+ N D0,X
+ S DAT=$G(DAT,DT)\1
+ S X=$G(^SC(LOC,0))
+ Q:'$L(X) 0                                                            ;
+ S X=$G(^SC(LOC,"I"))
+ Q:'X 1                                                                ;
+ Q:DAT'<$P(X,U)&($P(X,U,2)=""!(DAT<$P(X,U,2))) 0                       ;
+ Q 1

@@ -1,0 +1,76 @@
+APCLVLU2 ; IHS/CMI/LAB - GEN RETR UTILITIES ; 24 May 2022  12:51 PM
+ ;;2.0;IHS PCC SUITE;**27,31**;MAY 14, 2009;Build 10
+ ;IHS/CMI/LAB  - patch 27 IMPLANTED DEVICES
+ ;
+IMPDEV(%,S) ;
+ NEW V
+ S V=$$VAL^XBDIQ1(9000091,%,3.1)
+ I V="DELETED" Q 0
+ I S="A",V'="ACTIVE" Q 0
+ I S="I",V="ACTIVE" Q 0
+ Q 1
+SELIMP(P,S) ;EP
+ NEW X,Y,Z
+ S X=0,Z=0 F  S X=$O(^AUPNPDEV("AC",P,X)) Q:X'=+X  D
+ .Q:'$$IMPDEV(X,S)
+ .S Y=$$VALI^XBDIQ1(9000091,X,.01)
+ .I '$D(^APCLVRPT(APCLRPT,11,APCLI,11,"B",Y)) Q
+ .S Z=1
+ Q Z
+PRTIMP ;EP - return IMPLANTED DEVICE
+ NEW P,X,Q,D
+ S APCLPCNT=0
+ S P=0 F  S P=$O(^AUPNPDEV("AC",DFN,P)) Q:P'=+P  D
+ .S APCLPRNT="",X=""
+ .Q:'$$IMPDEV(P,S)
+ .S Y=$$VALI^XBDIQ1(9000091,P,.01)
+ .I $D(^APCLVRPT(APCLRPT,11,APCLCRIT)),'$D(^APCLVRPT(APCLRPT,11,APCLCRIT,11,"B",Y)) Q
+ .S X=$$VAL^XBDIQ1(9000091,P,.01)
+ .S Q=$$VAL^XBDIQ1(9000091,P,2)
+ .S APCLPCNT=APCLPCNT+1
+ .I S="I" S APCLPRNM(APCLPCNT)=$S(Q'="":Q,1:X)_"-"_$E($$CURREAS(P),1,11)
+ .I S="A" S APCLPRNM(APCLPCNT)=$S(Q'="":Q,1:X)
+ .Q
+ Q
+IMPDEVI ;EP - IMPLANTED DEVICE USER PROMPT
+ W !!,"You will be prompted as to whether you want to search for any"
+ W !,"implanted device category or selected implanted device categories."
+ NEW APCLA ;,APCLIMP
+ K APCLSNL
+IMPCI1 ;
+ S DIR(0)="S^A:All Categories;S:Selected Set of Categories",DIR("A")="Which Implanted Device Categories should be included",DIR("B")="A" K DA D ^DIR K DIR
+ I $D(DIRUT) Q
+ S APCLA=Y
+ I APCLA="A" D   G IMPCSET
+ .S X=0 F  S X=$O(^AUTTIMDC(X)) Q:X'=+X  S APCLSNL(X)=""
+IMPC11 ;
+ S DIC="^AUTTIMDC(",DIC(0)="AEMQ",DIC("A")="Which Category: " D ^DIC K DIC
+ I Y=-1,'$D(APCLSNL) G IMPDEVI
+ I Y=-1,$D(APCLSNL) G IMPCSET
+ S APCLSNL(+Y)=""
+ G IMPC11
+ ;
+IMPCSET ;
+ S (X,Y)=0 F  S X=$O(APCLSNL(X)) Q:X'=+X  D
+ .S Y=Y+1
+ .S ^APCLVRPT(APCLRPT,11,APCLCRIT,0)=APCLCRIT,^APCLVRPT(APCLRPT,11,"B",APCLCRIT,APCLCRIT)=""
+ .S ^APCLVRPT(APCLRPT,11,APCLCRIT,11,Y,0)=X
+ .S ^APCLVRPT(APCLRPT,11,APCLCRIT,11,"B",X,Y)=""
+ .S ^APCLVRPT(APCLRPT,11,APCLCRIT,11,0)="^9001003.8110101A^"_Y_"^"_Y
+ K APCLSNL
+ Q
+ ;
+CURREAS(I) ;current reason 
+ I '$G(I) Q ""
+ NEW A,B,D,R
+ S (A,B,D)="" F  S D=$O(^AUPNPDEV(I,3,"B",D)) Q:D'=+D  S A=0 F  S A=$O(^AUPNPDEV(I,3,"B",D,A)) Q:A'=+A  S B=A   ;GET LAST ONE BY DATE
+ I 'B Q ""
+ S A=B_","_I
+ S R=$$GET1^DIQ(9000091.3,A,.04,"E")
+ I R]"" Q $$TX(R)
+ Q $$VAL^XBDIQ1(9000091,I,3.1)
+ ;
+TX(R) ;
+ I R="Expired/Nonfunctional" Q "Exp/Nonfunc"
+ I R="Entered in Error" Q "Error"
+ Q R

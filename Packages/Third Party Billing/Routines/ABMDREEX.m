@@ -1,14 +1,27 @@
 ABMDREEX ; IHS/SD/SDR - Re-Create batch of Selected Bills ;    
- ;;2.6;IHS Third Party Billing System;**2,3,4,6,10,14,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing System;**2,3,4,6,10,14,21,35,37,38**;NOV 12, 2009;Build 756
  ;IHS/SD/SDR 2.6*2-FIXPMS10005 New routine
  ;IHS/SD/SDR 2.6*3-RPMS10005#2 mods to make Submission date of 3P Tx status file work correctly
  ;IHS/SD/SDR 2.6*3-FIXPMS10005 mods to create 1 file for each 1000 bills
  ;IHS/SD/SDR 2.6*4-NOHEAT if create and re-export are done on same day it will have duplicates
  ;IHS/SD/SDR 2.6*6-HEAT28632 <SUBSCR>CHECKBAL+17^ABMDREEX error when parent/satellite present
- ;IHS/SD/SDR 2.6*14-HEAT136160 re-wrote to sort by ins/vloc/vtyp/expmode.  Wasn't creating enough files.  Didn't label all
+ ;IHS/SD/SDR 2.6*14-HEAT136160 re-wrote to sort by ins/vloc/vtyp/expmode. Wasn't creating enough files. Didn't label all
  ;   changes because there were so many.
- ;IHS/SD/SDR 2.6*21 - Split routine to ABMDREX1.
+ ;IHS/SD/SDR 2.6*21 Split routine to ABMDREX1.
  ;IHS/SD/SDR 2.6*21 HEAT207484 Made change to stop error <UNDEF>EXPMODE+66^ABMDREEX when no bills meet selected criteria
+ ;IHS/SD/SDR 2.6*35 ADO60707 Fix for <SUBSCR>CHECKBAL+20^ABMDREEX, fix for '??' displaying when a valid bill is selected (and
+ ;   that bill being the last (most recent) entry in the A/R Bill file); Added help text at the beginning; Removed balance check
+ ;   and replaced with message to let user know the A/R Bill CURRENT BILL AMOUNT is zero and 'ARE YOU SURE' you want to include
+ ;IHS/SD/SDR 2.6*37 ADO75923 Added .04 EXPORT DATE/TIME field to BILLSTAT
+ ;IHS/SD/SDR 2.6*38 ADO99134 Fixed programming error <SUBSCRIPT>S4+12^DICL2 when ?? was typed at Bill# prompt
+ ;
+ ;start new abm*2.6*35 IHS/SD/SDR ADO60707
+ W !!?2,"This option gives the user the ability to re-export 837 bills, either by"
+ W !?2,"selecting one bill at a time or batching bills based on the selection"
+ W !?2,"criteria that have a balance.  If selecting one bill at a time the bills"
+ W !?2,"must be for the same insurer, the same visit type, and the same export"
+ W !?2,"mode."
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60707
  ;
 EN K ABMT,ABMREX,ABMP,ABMY
  K ^TMP($J,"ABM-D"),^TMP($J,"ABM-D-DUP"),^TMP($J,"D")  ;abm*2.6*4 NOHEAT
@@ -16,12 +29,14 @@ EN K ABMT,ABMREX,ABMP,ABMY
  S ABMT("TOT")="0^0^0"
  W !!,"Re-Print Bills for:"
  K DIR
- S DIR(0)="SO^1:SELECTIVE BILL(S) (Type in the Bills to be included in this                     export.  Grouped by Insurer and Export Mode)"
+ ;S DIR(0)="SO^1:SELECTIVE BILL(S) (Type in the Bills to be included in this                     export.  Grouped by Insurer and Export Mode)"  ;abm*2.6*35 IHS/SD/SDR ADO60707
+ S DIR(0)="SO^1:SELECTIVE BILL(S) (Type in the Bills to be included in                          this export.  Grouped by Insurer and Export Mode)"  ;abm*2.6*35 IHS/SD/SDR ADO60707
  S DIR(0)=DIR(0)_";2:FOR 277 - Response of not received for insurance company                        (INACTIVE AT THIS TIME)"
  S DIR(0)=DIR(0)_";3:UNPAID BILLS for an insurer - bill should not have posted                       transactions and should be the original bill amount."
  S DIR("A")="Select Desired Option"
  D ^DIR
  K DIR
+ S ABMT=1  ;abm*2.6*35 IHS/SD/SDR ADO60707
  G XIT:$D(DIRUT)!$D(DIROUT),SEL:Y=1,UNPD:Y=3
 277 ;
  W !!!,"INACTIVE AT THIS TIME; functionality will be available in a future patch" H 2 W !
@@ -31,23 +46,48 @@ SEL ;
  K DIC
  S DIC="^ABMDBILL(DUZ(2),"
  S DIC(0)="QZEAM"
- S ABMT=$G(ABMT)+1
+ ;S ABMT=$G(ABMT)+1  ;abm*2.6*35 IHS/SD/SDR ADO60707
  S ABM("E")=$E(ABMT,$L(ABMT))
  S DIC("A")="Select "_ABMT_$S(ABMT>3&(ABMT<21):"th",ABM("E")=1:"st",ABM("E")=2:"nd",ABM("E")=3:"rd",1:"th")_" BILL to Re-Print: "
- ;start new abm*2.6*3 FIXPMS10005
- S DIC("S")="I $P(^(0),U)'=+^(0),""BTCP""[$P(^(0),""^"",4),$P(^ABMDEXP($P(^(0),""^"",6),0),U)[""837"",($$CHECKBAL^ABMDREEX(Y)=1)"
- S:ABMT>1 DIC("S")=DIC("S")_",$P(ABMT(""FORM""),""^"",1)[$P(^(0),""^"",6),($$CHECKBAL^ABMDREEX(Y)=1),(ABMT(""INS"")=$P(^(0),""^"",8)),($P(^(0),U,7)=ABMT(""VTYP""))"
- ;end new FIXPMS10005
+ ;start old abm*2.6*35 IHS/SD/SDR ADO60707
+ ;S DIC("S")="I $P(^(0),U)'=+^(0),""BTCP""[$P(^(0),""^"",4),$P(^ABMDEXP($P(^(0),""^"",6),0),U)[""837"",($$CHECKBAL^ABMDREEX(Y)=1)"
+ ;S:ABMT>1 DIC("S")=DIC("S")_",$P(ABMT(""FORM""),""^"",1)[$P(^(0),""^"",6),($$CHECKBAL^ABMDREEX(Y)=1),(ABMT(""INS"")=$P(^(0),""^"",8)),($P(^(0),U,7)=ABMT(""VTYP""))"
+ ;end old start new abm*2.6*35 IHS/SD/SDR ADO60707
+ ;S DIC("S")="I (""BTCP""[$P(^ABMDBILL(DUZ(2),Y,0),""^"",4))&($P(^ABMDEXP($P(^(0),""^"",6),0),U)[""837"")"  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ S DIC("S")="I (+$P(^(0),""^"",6)'=0) I (""BTCP""[$P(^ABMDBILL(DUZ(2),Y,0),""^"",4))&($P(^ABMDEXP($P(^(0),""^"",6),0),U)[""837"")"  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ S:ABMT>1 DIC("S")=DIC("S")_",$P(ABMT(""FORM""),""^"",1)[$P(^ABMDBILL(DUZ(2),Y,0),""^"",6),(ABMT(""INS"")=$P(^(0),""^"",8)),($P(^(0),U,7)=ABMT(""VTYP""))"
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60707
  D BENT^ABMDBDIC
  G XIT:$D(DUOUT)!$D(DTOUT)
  I '$G(ABMP("BDFN")) G ZIS:ABMT>1,XIT
  I '$G(ABMP("BDFN")) S ABMT=ABMT-1 G SEL
+ ;start new abm*2.6*35 IHS/SD/SDR ADO60707
+ S ABMARBAL=$$CHECKBAL(ABMP("BDFN"))  ;check if A/R bill has a balance
+ S ABMQ=0
+ I +$G(ABMARBAL)=0 D  I ABMQ=1 G SEL
+ .W !?2,"Bill "_$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U)_" has a zero balance in A/R."
+ .K X,Y,DIR,DIE,DIC,DA
+ .S DIR(0)="Y"
+ .S DIR("A")="ARE YOU SURE"
+ .D ^DIR
+ .I $D(DTOUT)!$D(DIROUT)!$D(DIRUT)!$D(DUOUT)!(Y<1) S ABMQ=1 W !?3,"Bill won't be included in batch" H 1
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60707
  S ABMY(ABMP("BDFN"))=""
- G SEL:ABMT>1
- S ABMT("EXP")=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,6)
- S ABMT("INS")=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8)
- S ABMT("VTYP")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,7)  ;abm*2.6*3
- S ABMT("FORM")=ABMT("EXP")_"^"_$P($G(^ABMDEXP(ABMT("EXP"),0)),U)
+ ;start old abm*2.6*35 IHS/SD/SDR ADO60707
+ ;G SEL:ABMT>1
+ ;S ABMT("EXP")=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,6)
+ ;S ABMT("INS")=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8)
+ ;S ABMT("VTYP")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,7)  ;abm*2.6*3
+ ;S ABMT("FORM")=ABMT("EXP")_"^"_$P($G(^ABMDEXP(ABMT("EXP"),0)),U)
+ ;end old start new abm*2.6*35 IHS/SD/SDR ADO60707
+ I ABMT=1 D
+ .S ABMT("EXP")=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,6)
+ .S ABMT("INS")=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8)
+ .S ABMT("VTYP")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,7)  ;abm*2.6*3
+ .S ABMT("FORM")=ABMT("EXP")_"^"_$P($G(^ABMDEXP(ABMT("EXP"),0)),U)
+ S ABMT=$G(ABMT)+1
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60707
+ ;
  G SEL
 UNPD ;UN-PAID BILLS
  W !!
@@ -63,18 +103,16 @@ BEGDT K DIR
  S DIR("A")="Select Beginning Export Date"
  D ^DIR
  K DIR
- ;G XIT:$D(DIRUT)!$D(DIROUT)  ;abm*2.6*3 NOHEAT
- I $D(DIRUT) K ABMREX("SELINS") G UNPD  ;abm*2.6*3 NOHEAT
- G XIT:$D(DIROUT)  ;abm*2.6*3 NOHEAT
+ I $D(DIRUT) K ABMREX("SELINS") G UNPD
+ G XIT:$D(DIROUT)
  S ABMREX("BEGDT")=+Y
 ENDDT K DIR
  S DIR(0)="DO"
  S DIR("A")="Select Ending Export Date"
  D ^DIR
  K DIR
- ;G XIT:$D(DIRUT)!$D(DIROUT)  ;abm*2.6*3 NOHEAT
- I $D(DIRUT) K ABMREX("BEGDT") G BEGDT  ;abm*2.6*3 NOHEAT
- G XIT:$D(DIROUT)  ;abm*2.6*3 NOHEAT
+ I $D(DIRUT) K ABMREX("BEGDT") G BEGDT
+ G XIT:$D(DIROUT)
  S ABMREX("ENDDT")=+Y
 EXPMODE D ^XBFMK
  S DIC(0)="AEBNQ"
@@ -82,9 +120,8 @@ EXPMODE D ^XBFMK
  S DIC("S")="I $P($G(^ABMDEXP(Y,0)),U)[""837"""
  S DIC("A")="Select Export Mode (leave blank for ALL): "
  D ^DIC
- ;G XIT:$D(DIRUT)!$D(DIROUT)  ;abm*2.6*3 NOHEAT
- G XIT:(X["^^")  ;abm*2.6*3 NOHEAT
- I $D(DUOUT) K ABMREX("ENDDT") G ENDDT  ;abm*2.6*3 NOHEAT
+ G XIT:(X["^^")
+ I $D(DUOUT) K ABMREX("ENDDT") G ENDDT
  S ABMREX("SELEXP")=$S(+Y>0:+Y,1:"")  ;they can select all exp modes by leaving prompt blank
  I (ABMREX("BEGDT")>(ABMREX("ENDDT"))) W !!,"Beginning Export Date must be before Ending Export Date" H 1 G UNPD
  ;
@@ -159,10 +196,10 @@ OUT ;
  D ^%ZISC
  ;
 XIT ;
- K ^TMP($J,"D"),^TMP($J,"ABM-D")  ;abm*2.6*3
+ K ^TMP($J,"D"),^TMP($J,"ABM-D")
  K ABMP,ABMY,DIQ,ABMT,ABMREX
  Q
-CHECKBAL(ABMBIEN) ;
+CHECKBAL(ABMBIEN) ;this checks if there's an open balance on the A/R Bill and returns '1' if there is, '0' if not
  S ABMBALCK=0
  S ABMHOLD=DUZ(2)
  S BARSAT=$P($G(^ABMDBILL(DUZ(2),ABMBIEN,0)),U,3)  ;Satellite=3P Visit loc
@@ -181,12 +218,18 @@ CHECKBAL(ABMBIEN) ;
  .S BARPAR=$S(BARSAT:$P($G(^BAR(90052.05,DA,BARSAT,0)),U,3),1:"")
  I 'BARPAR Q ABMBALCK  ;No parent defined for satellite
  S DUZ(2)=BARPAR
- S ABMARBIL=$O(^BARBL(DUZ(2),"B",$P($G(^ABMDBILL(ABMHOLD,ABMBIEN,0)),U)))
+ ;S ABMARBIL=$O(^BARBL(DUZ(2),"B",$P($G(^ABMDBILL(ABMHOLD,ABMBIEN,0)),U)))  ;abm*2.6*35 IHS/SD/SDR ADO60707
+ S ABMARBIL=$O(^BARBL(DUZ(2),"B",$P($P($G(^ABMDBILL(ABMHOLD,ABMBIEN,0)),U),"-")_" "))  ;abm*2.6*35 IHS/SD/SDR ADO60707
  S ABMARIEN=$O(^BARBL(DUZ(2),"B",ABMARBIL,0))
  Q:'ABMARIEN ABMBALCK
  S ABMARBAL=$$GET1^DIQ(90050.01,ABMARIEN,15)
- I ABMARBAL'=($P($G(^ABMDBILL(ABMHOLD,ABMBIEN,2)),U)) S ABMBALCK=0
- I ABMARBAL=($P($G(^ABMDBILL(ABMHOLD,ABMBIEN,2)),U)) S ABMBALCK=1
+ ;start old abm*2.6*35 IHS/SD/SDR ADO60707
+ ;I ABMARBAL'=($P($G(^ABMDBILL(ABMHOLD,ABMBIEN,2)),U)) S ABMBALCK=0
+ ;I ABMARBAL=($P($G(^ABMDBILL(ABMHOLD,ABMBIEN,2)),U)) S ABMBALCK=1
+ ;end old start new abm*2.6*35 IHS/SD/SDR ADO60707
+ S ABMBALCK=0
+ I +$G(ABMARBAL)'=0 S ABMBALCK=1
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60707
  S DUZ(2)=ABMHOLD
  Q ABMBALCK
 CREATEN ;
@@ -196,17 +239,14 @@ CREATEN ;
  S ABMLOC=$P($G(^AUTTLOC(ABMY("LOC"),0)),U,2)  ;HEAT136160
  S ABMY("INS")=$S($G(ABMREX("SELINS")):ABMREX("SELINS"),1:ABMT("INS"))
  S ABMINS("IEN")=ABMY("INS")  ;ins
- S $P(ABMER(ABMSEQ),U)=ABMINS("IEN")  ;abm*2.6*3 FIXPMS10005
- S $P(ABMER(ABMSEQ),U,2)=ABMY("VTYP")  ;abm*2.6*3 FIXPMS10005
- S $P(ABMER(ABMSEQ),U,5)=ABMY("TOT")  ;abm*2.6*3 FIXPMS10005
- ;S ABMITYP=$P($G(^AUTNINS(ABMY("INS"),2)),U)  ;ins typ  ;abm*2.6*10 HEAT73780
- S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMY("INS"),".211","I"),1,"I")  ;ins typ  ;abm*2.6*10 HEAT73780
+ S $P(ABMER(ABMSEQ),U)=ABMINS("IEN")
+ S $P(ABMER(ABMSEQ),U,2)=ABMY("VTYP")
+ S $P(ABMER(ABMSEQ),U,5)=ABMY("TOT")
+ S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMY("INS"),".211","I"),1,"I")  ;ins typ
  ;# forms & tot chgs
  I $G(ABMP("SELINS"))="" S $P(ABMER(ABMSEQ),U,4)=+$G(ABMBCNT)
  I $G(ABMP("SELINS"))'="" S $P(ABMER(ABMSEQ),U,4)=+$G(ABMREX("CNTS",ABMEXP,ABMREX("EDFN")))
- ;start new abm*2.6*3 FIXPMS10005
  D FILE^ABMECS
- ;end new abm*2.6*3 FIXPMS10005
  Q
 USEORIG ;
  S ABMP("XMIT")=ABMREX("EDFN")
@@ -244,6 +284,7 @@ BILLSTAT(ABMLOC,ABMBDFN,ABMEXP,ABMSTAT,ABMGCN) ;
  I $G(ABMREX("BATCHSELECT"))'="" S ABMSTAT="S"
  I $G(ABMREX("RECREATE"))'="" S ABMSTAT="C"
  S DIC("DR")=".02////"_ABMSTAT_";.03////"_ABMGCN
+ S DIC("DR")=DIC("DR")_";.04////"_ABMXMTDT  ;abm*2.6*37 IHS/SD/SDR ADO75923
  K DD,DO
  D FILE^DICN
  S DUZ(2)=ABMHOLD

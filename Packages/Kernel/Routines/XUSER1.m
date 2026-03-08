@@ -1,5 +1,5 @@
-XUSER1 ;ISF/RWF - User file Utilities ;09/30/09  16:38
- ;;8.0;KERNEL;**169,210,222,514**;Jul 10, 1995;Build 14
+XUSER1 ;ISF/RWF - User file Utilities ;10/24/2002  15:57 [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**169,210,222**;Jul 10, 1995
  Q
  ;
 PAGE() ;Do a page break; Return 0 if ok to continue, 1 if to abort
@@ -70,14 +70,3 @@ DIVCHG ;Allow user to change Division [DUZ(2)] value
  S DUZ(2)=+Y,CD=$$NS^XUAF4(DUZ(2))
  W !?5,"Division is now set to [ ",$P(CD,U)_"  "_$P(CD,U,2)," ]",!
  Q
- ;
-NETNM(NM,IEN) ;Check NetName, Called from input transform for field 501.1 NPF.
- ;Return 1 to abort, 0 to allow
- N NPF,OV
- S NPF(0)=$P($G(^VA(200,IEN,0)),U,1),OV=0
- I $E(NM,1,3)'="VHA" D EN^DDIOL("WARNING: Prefix not VHA.","") S OV=1
- S NPF(1)=$E($P(NPF(0),","),1,5)_$E($P(NPF(0),",",2),1)
- I $E(NM,7,6+$L(NPF(1)))'=NPF(1) D EN^DDIOL("WARNING: Missing "_NPF(1)_" from username.","") S OV=1
- I OV S OV='((DUZ(0)["@")!$D(^XUSEC("XUMGR",DUZ)))
- Q OV
- ;

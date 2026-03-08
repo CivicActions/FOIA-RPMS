@@ -1,5 +1,5 @@
 BQIUTIL ;VNGT/HS/ALA-Utility Program ; 10 Nov 2008  9:53 AM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**1,3**;Mar 01, 2021;Build 32
  ;
 MREC(PTDFN,FREF,ITEM) ;EP 
  ; Find the most recent value for a specified item
@@ -58,3 +58,21 @@ CLOC() ; EP - Current Default Location
  S ULOC=$G(DUZ(2)) I ULOC="" Q LOC
  S LOC=ULOC_$C(29)_$P(^DIC(4,ULOC,0),"^",1)
  Q LOC
+ ;
+MAXN(DATA,FAKE) ;EP - BQI GET MAX HIGH RISK COND
+ NEW UID,II
+ S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
+ S DATA=$NA(^TMP("BQIHRNM",UID))
+ K @DATA
+ ;
+ S II=0
+ NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BQISYDIV D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
+ ;
+ S @DATA@(II)="I00010MAXIMUM"_$C(30)
+ I '$D(^BQIPAT("AI")) D
+ . S DIK="^BQIPAT(",DIK(1)=".09"
+ . D ENALL^DIK
+ ;
+ S II=II+1,@DATA@(II)=$O(^BQIPAT("AI",""),-1)_$C(30)
+ S II=II+1,@DATA@(II)=$C(31)
+ Q

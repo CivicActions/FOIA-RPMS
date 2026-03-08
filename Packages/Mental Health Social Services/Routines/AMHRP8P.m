@@ -1,5 +1,5 @@
-AMHRP8P ; IHS/CMI/LAB - print active client list ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHRP8P ; IHS/CMI/LAB - print active client list ; [ 02/21/2007  3:57 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**8**;JAN 27, 2003
  ;
  ;
 PRINT ;

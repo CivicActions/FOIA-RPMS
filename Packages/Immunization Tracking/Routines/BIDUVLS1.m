@@ -1,16 +1,16 @@
-BIDUVLS1 ;IHS/CMI/MWR - VIEW DUE LIST.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+BIDUVLS1 ;IHS/CMI/MWR - VIEW DUE LIST.;FEB 23,2006
+ ;;8.1;IMMUNIZATION;**1**;SEP 21,2006
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  LIST TEMPLATE CODE FOR VIEWING PATIENTS.
  ;;  PATCH 1: Corrects Patient Group for not displaying Age Range.  HDR+21
  ;
  ;
  ;----------
-START(BIFDT,BINFO,BIPG,BIAG,BIT,BIVAL,BIDASH,BITITL,BIRPDT,BIBEN) ;EP
+START(BIFDT,BINFO,BIPG,BIAG,BIT,BIVAL,BIDASH,BITITL,BIRPDT) ;EP
  ;---> Display Immunizations Due List via Listman.
  ;---> Parameters:
  ;     1 - BIFDT  (req) Forecast/Clinic Date.
- ;     2 - BINFO  (req) Array of Additional Information elements for each patient.
+ ;     2 - BINFO  (req) Additional Information for each patient.
  ;     3 - BIPG   (req) Patient Group Data; see PGRPOUP1^BIOUTPT4 for details.
  ;     4 - BIAG   (opt) Age Range.  If 2nd ^-piece=1, display "years."
  ;     5 - BIT    (req) Total Patients retrieved.
@@ -21,7 +21,6 @@ START(BIFDT,BINFO,BIPG,BIAG,BIT,BIVAL,BIDASH,BITITL,BIRPDT,BIBEN) ;EP
  ;                      in report header.
  ;     9 - BIRPDT (opt) Report Date: Today unless passed from reports
  ;                                   (e.g., Quarterly Report).
- ;    10 - BIBEN  (req) Beneficiary Type array: either BIBEN(1) or BIBEN("ALL").
  ;
  ;----------
 MAIN ;EP
@@ -63,11 +62,15 @@ HDR ;EP
  S X=X_"        Total Patients: "_$G(BIT)
  ;
  D:$G(BIAG)]""
- .;---> For Patient Group (8=Search Template) to not display Age Range.
- .Q:(+BIPG=8)
+ .;
+ .;********** PATCH 1, APR 4,2006, IHS/CMI/MWR
+ .;---> Correct Patient Group (7=Search Template) to not display Age Range.
+ .;Q:(+BIPG=6)
+ .Q:(+BIPG=7)
+ .;**********
+ .;
  .I BIAG="ALL" S X=X_"  (All Ages)" Q
  .S X=X_" ("_$$MTHYR^BIAGE(BIAG)_")"
- I +BIPG'=8 S X=X_" *"_$S($D(BIBEN("ALL")):"All",1:"01")
  D WH^BIW(.BILINE,X)
  ;
  D
@@ -94,7 +97,7 @@ HDR ;EP
  ;---> If necessary, write a dashed line for subheader,
  ;---> otherwise write a blank line.
  N I K X
- F I="CC","CM","DPRV","MMR","MMD","HCF","LOT" D
+ F I="CC","CM","MMR","MMD","HCF","LOT" D
  .I $O(@("BI"_I_"(0)")) S X=1
  D WH^BIW(.BILINE,$S($G(X):$$SP^BIUTL5(79,"-"),1:""))
  ;
@@ -106,10 +109,6 @@ HDR ;EP
  .;
  .;---> If specific Case Managers, print Case Manager subheader.
  .D SUBH^BIOUTPT5("BICM","Case Manager",,"^VA(200,",.BILINE,.BIERR,,11)
- .I $G(BIERR) D ERRCD^BIUTL2(BIERR,.X) D WH^BIW(.BILINE,X) Q
- .;
- .;---> If specific Designated Providers, print Designated Provider subheader.
- .D SUBH^BIOUTPT5("BIDPRV","Designated Provider",,"^VA(200,",.BILINE,.BIERR,,11)
  .I $G(BIERR) D ERRCD^BIUTL2(BIERR,.X) D WH^BIW(.BILINE,X) Q
  .;
  .;---> If specific Immunizations Received, print subheader.
@@ -137,8 +136,7 @@ HDR ;EP
  D
  .I BIFDT'=DT D  Q
  ..S BICOL=BICOL_" & Age on "_$$TXDT1^BIUTL5(BIFDT)_"  Current Community"
- .;"Age Today" vvv83
- .S BICOL=BICOL_"        Age Today  Sex Current Community"
+ .S BICOL=BICOL_"         Age           Current Community"
  S BICOL=$$PAD^BIUTL5(BICOL,80)
  ;
  ;---> Set Column Headers for Listman.
@@ -163,18 +161,18 @@ INIT ;EP
  ;---> Initialize variables and list array.
  S VALM("TITLE")=$$LMVER^BILOGO
  N BILINE,BI31,X S BILINE=0,BI31=$C(31)_$C(31)
- S:'$D(BINFO) BINFO(0)=0
+ S:'$G(BINFO) BINFO=0
  I '$D(BIPG) D ERRCD^BIUTL2(620,,1) S VALMQUIT="" Q
  ;
  ;
  ;---> Loop through ^TMP("BIDUL",$J,...,BIDFN) adding patients to list.
- ;---> Seed loops with -1 to pick up entries with a subscript of 0. Imm v8.5.
  N BIDFN,N,M,P
- S N=-1
+ ;
+ S N=0
  F  S N=$O(^TMP("BIDUL",$J,N)) Q:N=""  D
- .S M=-1
+ .S M=0
  .F  S M=$O(^TMP("BIDUL",$J,N,M)) Q:M=""  D
- ..S P=-1
+ ..S P=0
  ..F  S P=$O(^TMP("BIDUL",$J,N,M,P)) Q:P=""  D
  ...N BIVAL1
  ...S BIDFN=0
@@ -183,7 +181,7 @@ INIT ;EP
  ....I $G(BIVAL) Q:BIVAL'=BIVAL1
  ....N N,M,P
  ....;---> Write line to ^TMP("BIDULV",$J,BILINE,0)=BIVAL global.
- ....D PATIENT^BIDUVLS2(.BILINE,BIDFN,.BINFO,$G(BIDASH),.BIMMRF,.BIMMLF)
+ ....D PATIENT^BIDUVLS2(.BILINE,BIDFN,BINFO,$G(BIDASH))
  ;
  ;---> If no records were found to match, report it.
  D:'$G(BIT)

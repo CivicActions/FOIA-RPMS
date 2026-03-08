@@ -1,5 +1,5 @@
 BEDDUTIF ;VNGT/HS/BEE-BEDD Report Format Utilities  ; 08 Nov 2011  12:00 PM
- ;;2.0;BEDD DASHBOARD;;Jun 04, 2014;Build 13
+ ;;1.0;IHS EMERGENCY DEPT DASHBOARD;**1**;Dec 17, 2012;Build 7
  ;
  ;Adapted from bottom of BEDDEHRRS/CNHS/RPF
  ;

@@ -1,5 +1,5 @@
 BQIDCABA ;GDIT/HS/ALA-Abnormal Lab Results ; 12 Dec 2005  1:07 PM
- ;;2.4;ICARE MANAGEMENT SYSTEM;**2**;Apr 01, 2015;Build 10
+ ;;2.8;ICARE MANAGEMENT SYSTEM;**1**;Aug 29, 2019;Build 21
  ;
  Q
  ;
@@ -56,5 +56,6 @@ VIS(DATA,PARMS,MPARMS) ;EP
  .. S VIEN=$P($G(^AUPNVLAB(IEN,0)),"^",3) I VIEN="" Q
  .. ;I $$GET1^DIQ(9000010,VIEN_",",.11,"I")=1 Q
  .. I $P($G(^AUPNVSIT(VIEN,0)),"^",11)=1 Q
- .. I ABNFL="L"!(ABNFL="L*")!(ABNFL="H")!(ABNFL="H*") S @DATA@(DFN,IEN)=VIEN_U_$P($G(^AUPNVSIT(VIEN,0)),"^",1)
+ .. ;I ABNFL="L"!(ABNFL="L*")!(ABNFL="H")!(ABNFL="H*") S @DATA@(DFN,IEN)=VIEN_U_$P($G(^AUPNVSIT(VIEN,0)),"^",1)
+ .. I ABNFL["L"!(ABNFL["H")!(ABNFL["A") S @DATA@(DFN,IEN)=VIEN_U_$P($G(^AUPNVSIT(VIEN,0)),"^",1)
  Q

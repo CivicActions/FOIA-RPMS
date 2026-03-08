@@ -1,5 +1,5 @@
 ABMDPAY2 ; IHS/ASDST/DMJ - Payment of Bill - Part 2 ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;
 CHK ;EP for Additional Payment Checks
  S ABMP("CDFN")=+ABMP("BILL")
@@ -20,7 +20,8 @@ CHK ;EP for Additional Payment Checks
  W !!,"Checking for Secondary Billing...",!,"---------------------------------"
 UNBILL W !!,"Unbilled Sources: "
  S (ABM("HIT"),ABM("CNT"))=0
- I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D CCLM G PAZ
+ ;I $P($G(^AUTNINS(ABMP("INS"),2)),U)="N" D CCLM G PAZ  ;abm*2.6*10 HEAT73780
+ I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")="N" D CCLM G PAZ  ;abm*2.6*10 HEAT73780
  S ABMVDFN=$G(ABMP("VDFN")),ABMPDFN=ABMP("PDFN"),ABMVDT=ABMP("VDT")
  D ELG^ABMDLCK(ABMVDFN,.ABML,ABMPDFN,ABMVDT)
  N I S I=0 F  S I=$O(ABML(I)) Q:'I  D
@@ -31,7 +32,8 @@ UNBILL W !!,"Unbilled Sources: "
  S ABM="" F ABM("I")=1:1 S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"C",ABM)) Q:'ABM  D
  .S ABM("X")=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"C",ABM,""))
  .I "PIFL"[$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABM("X"),0),U,3) S ABM("INSCO")=$P(^(0),U) D
- ..Q:$P($G(^AUTNINS(ABM("INSCO"),2)),U)="I"  Q:$P($G(^(1)),U,7)=4
+ ..;Q:$P($G(^AUTNINS(ABM("INSCO"),2)),U)="I"  Q:$P($G(^(1)),U,7)=4  ;abm*2.6*10 HEAT73780
+ ..Q:$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM("INSCO"),".211","I"),1,"I")="I"  Q:$P($G(^(1)),U,7)=4  ;abm*2.6*10 HEAT73780
  ..W:ABM("CNT") ! S ABM("CNT")=ABM("CNT")+1
  ..W ?18,"[",ABM("CNT"),"]  ",$P(^AUTNINS(ABM("INSCO"),0),U) S ABM(ABM("CNT"))=ABM("X")
  I ABM("CNT")=0 D  G PAZ

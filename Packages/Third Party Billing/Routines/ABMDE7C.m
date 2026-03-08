@@ -1,8 +1,10 @@
 ABMDE7C ; IHS/ASDST/DMJ - Page 7 - Inpatient Triggers ;   
- ;;2.6;IHS Third Party Billing System;**2**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**2,36**;NOV 12, 2009;Build 698
  ;
- ; IHS/ASDS/LSL - 11/01/01 - V2.4 P9  - Resolve undef error when splitting claims.
- ; IHS/SD/SDR - abm*2.6*2 - 3PMS10003A - modified to call ABMFEAPI
+ ;IHS/ASDS/LSL 11/01/01 V2.4 P9 Resolve undef error when splitting claims.
+ ;IHS/SD/SDR 2.6*2 3PMS10003A modified to call ABMFEAPI
+ ;IHS/SD/SDR 2.6*36 ADO76302 Removed auto-coding in there's no charge on 8A from the claim generator;
+ ;   we stopped all auto-coding being done in this patch; left the rev code being added for now
  ; *********************************************************************
  ;
  ; If it gets this far w/o active insurer, ABMP("FEE") is undefined
@@ -36,16 +38,21 @@ COMP ;COMP LINE TAG
  ;
 PSRO S DIE="^ABMDCLM(DUZ(2),",DA=ABMP("CDFN")
  ;
-MED Q:$D(^ABMDCLM(DUZ(2),ABMP("CDFN"),27,0))
- S ^ABMDCLM(DUZ(2),ABMP("CDFN"),27,0)="^9002274.3027P"
- S DA(1)=ABMP("CDFN")
- S DIC="^ABMDCLM(DUZ(2),"_DA(1)_",27,",DIC(0)="LE"
- S (DINUM,X)=$S($D(^ICPT(99221)):99221,1:90200)
- ;S DIC("DR")=".03////1;.04////"_$P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2)  ;abm*2.6*2 3PMS10003A
- S DIC("DR")=".03////1;.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
- K DD,DO D FILE^DICN
- ;I $P(ABM("C7"),U,3)>1 S (X,DINUM)=$S($D(^ICPT(99231)):99231,1:90240),DIC("DR")=".03////"_($P(ABM("C7"),U,3)-1)_";.04////"_$P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2) K DD,DO D FILE^DICN  ;abm*2.6*2 3PMS10003A
- I $P(ABM("C7"),U,3)>1 S (X,DINUM)=$S($D(^ICPT(99231)):99231,1:90240),DIC("DR")=".03////"_($P(ABM("C7"),U,3)-1)_";.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U) K DD,DO D FILE^DICN  ;abm*2.6*2 3PMS10003A
- ;I $P(ABM("C7"),U,2)>$P(ABM("C7"),U) S (X,DINUM)=$S($D(^ICPT(99238)):99238,1:90292),DIC("DR")=".03////1;.04////"_$P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2) K DD,DO D FILE^DICN  ;abm*2.6*2 3PMS10003A
- I $P(ABM("C7"),U,2)>$P(ABM("C7"),U) S (X,DINUM)=$S($D(^ICPT(99238)):99238,1:90292),DIC("DR")=".03////1;.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U) K DD,DO D FILE^DICN  ;abm*2.6*2 3PMS10003A
+ ;start old abm*2.6*36 IHS/SD/SDR ADO76302
+ ;MED Q:$D(^ABMDCLM(DUZ(2),ABMP("CDFN"),27,0))
+ ;S ^ABMDCLM(DUZ(2),ABMP("CDFN"),27,0)="^9002274.3027P"
+ ;S DA(1)=ABMP("CDFN")
+ ;S DIC="^ABMDCLM(DUZ(2),"_DA(1)_",27,",DIC(0)="LE"
+ ;S (DINUM,X)=$S($D(^ICPT(99221)):99221,1:90200)
+ ;;S DIC("DR")=".03////1;.04////"_$P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2)  ;abm*2.6*2 3PMS10003A
+ ;S DIC("DR")=".03////1;.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
+ ;K DD,DO D FILE^DICN
+ ;;I $P(ABM("C7"),U,3)>1 S (X,DINUM)=$S($D(^ICPT(99231)):99231,1:90240),DIC("DR")=".03////"_($P(ABM("C7"),U,3)-1)_";.04////"_$P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2) K DD,DO D FILE^DICN  ;abm*2.6*2 3PMS10003A
+ ;I $P(ABM("C7"),U,3)>1 S (X,DINUM)=$S($D(^ICPT(99231)):99231,1:90240),DIC("DR")=".03////"_($P(ABM("C7"),U,3)-1)_";.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U) K DD,DO D FILE^DICN  ;abm*2.6*2 3PMS10003A
+ ;;I $P(ABM("C7"),U,2)>$P(ABM("C7"),U) S (X,DINUM)=$S($D(^ICPT(99238)):99238,1:90292),DIC("DR")=".03////1;.04////"_$P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2) K DD,DO D FILE^DICN  ;abm*2.6*2 3PMS10003A
+ ;I $P(ABM("C7"),U,2)>$P(ABM("C7"),U) S (X,DINUM)=$S($D(^ICPT(99238)):99238,1:90292),DIC("DR")=".03////1;.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U) K DD,DO D FILE^DICN  ;abm*2.6*2 3PMS10003A
+ ;Q
+ ;end old start new abm*2.6*36 IHS/SD/SDR ADO76302
+MED ; left a tag just in case this gets called elsewhere that I couldn't find
  Q
+ ;end new abm*2.6*36 IHS/SD/SDR ADO76302

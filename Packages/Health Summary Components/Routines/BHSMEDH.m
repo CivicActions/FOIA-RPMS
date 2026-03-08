@@ -1,5 +1,5 @@
-BHSMEDH ;IHS/CIA/MGH - Encounters from PCC ;01-May-2014 11:06;DU
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,6,9**;March 17, 2006;Build 16
+BHSMEDH ;IHS/CIA/MGH - Encounters from PCC ;1-Dec-2024 11:06
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,6,9,21**;March 17, 2006;Build 45
  ;===================================================================
  ;tAKEN FROM APCHS78
  ; IHS/TUCSON/LAB - PART 7 OF BHS -- SUMMARY PRODUCTION COMPONENTS ;    [ 02/20/04  1:48 PM ]
@@ -7,6 +7,7 @@ BHSMEDH ;IHS/CIA/MGH - Encounters from PCC ;01-May-2014 11:06;DU
  ;;Patch 1 changes prescribed at to dispensed at as in IHS patch 15
  ;Patch 2 changes for patch 16
  ;Patch 6 for non-VA meds and medication review
+ ; IHS/MSC/MIR  11/18/2024  CONT+2 has been updated for "Hold" status Feature 115724 (BHS patch 21)
  ;
 MEDSNDUP ; ************* ALL, NON DUPLICATED *************
  N BHSPAT
@@ -15,7 +16,7 @@ MEDSNDUP ; ************* ALL, NON DUPLICATED *************
  ;
 CONT ; <SETUP>
  N BHSQ,BHSCC,BHSCHR,BHSCRX
- I '$D(^AUPNVMED("AC",BHSPAT)) S BHST="MEDICATION",BHSFN=50 D DISPREF^BHSRAD Q
+ I '$D(^AUPNVMED("AC",BHSPAT)),'$D(^PS(55,BHSPAT,"P","A")) S BHST="MEDICATION",BHSFN=50 D DISPREF^BHSRAD Q
  D CKP^GMTSUP Q:$D(GMTSQIT)
  ; <BUILD>
  K ^TMP($J,"BHSMED")

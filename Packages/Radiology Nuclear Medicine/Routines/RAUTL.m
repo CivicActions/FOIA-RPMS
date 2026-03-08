@@ -1,47 +1,90 @@
-RAUTL ;HISC/CAH,FPT,GJC AISC/MJK,RMO-Utility Routine ;12/4/97  14:21
- ;;5.0;Radiology/Nuclear Medicine;;Mar 16, 1998
+RAUTL ; IHS/ADC/PDW -Radiology Utility Routine 10:53 ;    [ 11/01/2001  12:04 PM ]
+ ;;4.0;RADIOLOGY;**11**;NOV 20, 1997
  ;
- ;Date range selection.  Time is allowed if RASKTIME is defined
- ;Past date assumed. BEGDATE and ENDDATE are output variables
-DATE S RAPOP=0 K BEGDATE,ENDDATE W !!,"**** Date Range Selection ****"
- W ! S %DT="APEX"_$S($D(RASKTIME):"T",1:""),%DT("A")="   Beginning DATE : ",%DT(0)=$S($D(RADDT):"0000101",1:"-NOW") D ^%DT S:Y<0 RAPOP=1 Q:Y<0  S (%DT(0),BEGDATE)=Y
-END W ! S %DT="APEX"_$S($D(RASKTIME):"T",1:""),%DT("A")="   Ending    DATE : " D ^%DT K %DT S:Y<0 RAPOP=1 Q:Y<0  S ENDDATE=Y
- Q
-DATE1 S RAPOP=0 K BEGDATE,ENDDATE W !!,"**** Date Range Selection ****"
- W ! S %DT="AEX"_$S($D(RASKTIME):"T",1:""),%DT("A")="   Beginning DATE : ",%DT(0)=$S($D(RADDT):"0000101",1:"-NOW") D ^%DT S:Y<0 RAPOP=1 Q:Y<0  S (%DT(0),BEGDATE)=Y
-END1 W ! S %DT="AEX"_$S($D(RASKTIME):"T",1:""),%DT("A")="   Ending    DATE : " D ^%DT K %DT S:Y<0 RAPOP=1 Q:Y<0  S ENDDATE=Y
+DATE ;
+ S POP=0 K BEGDATE,ENDDATE W !!,"**** Date Range Selection ****"
+ W ! S %DT="APEX"_$S($D(RASKTIME):"T",1:""),%DT("A")="   Beginning DATE : ",%DT(0)=$S($D(RADDT):"0000101",1:-DT) D ^%DT S:Y<0 POP=1 Q:Y<0  S (%DT(0),BEGDATE)=Y
+END ;
+ W ! S %DT="APEX"_$S($D(RASKTIME):"T",1:""),%DT("A")="   Ending    DATE : " D ^%DT K %DT S:Y<0 POP=1 Q:Y<0  S ENDDATE=Y
  Q
  ;
- ;Generic device/queuing selector
- ;RAPOP will be >0 if the job was queued, or if device selection failed
- ; $D(RADUPSCN)&$D(RADFLTP) stems from the 'Duplicate Flash Card' option.
-ZIS I '$D(ZTDESC) S ZTDESC="Rad/Nuc Med "_$S($D(ZTRTN):ZTRTN,1:"UNKNOWN OPTION")
- S RAMES=$S($D(RAMES):RAMES,1:"W !?5,*7,""Request Queued.""")
- W ! I $D(RASELDEV) W RASELDEV,! K RASELDEV
- S %ZIS="QMP" K:$G(IOP)="Q" %ZIS S:$D(RADUPSCN)&$D(RADFLTP) %ZIS("B")=RADFLTP D ^%ZIS S RAPOP=POP Q:RAPOP  I $D(RAZIS),$E(IOST)'="P" D ^%ZISC S IOP="Q" W *7,!?5,"You must select a printer for this output.",! G ZIS
+ZIS ;
+ I '$D(ZTDESC) S ZTDESC=$S($D(ZTRTN):ZTRTN,1:"UNKNOWN OPTION")
+ S RAMES=$S($D(RAMES):RAMES,1:"W !?5,*7,""Request Queued."",!")
+ ;
+ ;---> NEXT LINE: "Q"=QUEUABLE, "M"=ASK RIGHT MARGIN, "P"=DEFAULT  ;IHS/ANMC/MWR 06/03/92
+ ;---> CLOSEST PRINTER.                           ;IHS/ANMC/MWR 06/03/92
+ S %ZIS="QMP" D ^%ZIS Q:POP  I $D(RAZIS),$E(IOST)'="P" D ^%ZISC W *7,!?5,"You must select a printer for this output.",! G ZIS
+ ;
+ ;---> NEXT LINE: IF NOT QUEUED, GO ZIS1 AND QUIT (DON'T SET POP=1).  ;IHS/ANMC/MWR 06/03/92
  G ZIS1:'$D(IO("Q"))
- K IO("Q") S ZTIO=$S($D(ION):ION,1:"") I ZTIO]"" S ZTIO=ZTIO_$S($D(IO("DOC")):";"_IOST_";"_IO("DOC"),1:";"_IOST_";"_IOM_";"_IOSL)
- D ^%ZTLOAD
- I +$G(ZTSK("D"))>0 X:$D(ZTSK) RAMES W:$D(ZTSK) "  Task #: "_$G(ZTSK)
- K RAMES,ZTDESC,ZTSK,ZTIO,ZTSAVE,ZTRTN,RASV,ZTDTH D HOME^%ZIS S RAPOP=1 Q
-ZIS1 K RAMES,RASELDEV,ZTDESC,ZTRTN,ZTSAVE Q
  ;
-CLOSE I $D(ZTQUEUED) S ZTREQ="@" Q
+ ;---> NEXT LINE: LINE LABEL "ZISQ" ADDED FOR ENTRY WHERE DEVICE  ;IHS/ANMC/MWR 06/03/92
+ ;---> INFO HAS ALREADY BEEN ASKED AND USER QUEUED OUTPUT.   ;IHS/ANMC/MWR 06/03/92
+ZISQ ;                                                ;IHS/ANMC/MWR 06/03/92
+ ;---> NEXT LINES: JOB WAS QUEUED, THEREFORE SET POP=1 SO THAT THE  ;IHS/ANMC/MWR 06/03/92
+ ;---> CALLING ROUTINE WILL QUIT (AND LET TASKMAN FINISH THIS JOB).  ;IHS/ANMC/MWR 06/03/92
+ K IO("Q") S ZTIO=$S($D(ION):ION,1:"") I ZTIO]"" S ZTIO=ZTIO_$S($D(IO("DOC")):";"_IOST_";"_IO("DOC"),1:";"_IOST_";"_IOM_";"_IOSL)
+ ;D ^%ZTLOAD X:$D(ZTSK) RAMES K RAMES,ZTDESC,ZTSK,ZTIO,ZTSAVE,ZTRTN,RASV,ZTDTH S POP=1 Q
+ ;
+ ;Above line modified for VA patches IHS/HQW/SCR - 9/5/01 **11**
+ D ^%ZTLOAD X:$D(ZTSK) RAMES K RAMES,ZTDESC,ZTSK,ZTIO,ZTSAVE,ZTRTN,RASV,ZTDTH D HOME^%ZIS S POP=1 Q  ;IHS/HQW/SCR - 9/5/01 **11**
+ ;
+ZIS1 ;
+ K RAMES,ZTDESC,ZTRTN,ZTSAVE Q
+ ;
+CLOSE ;EP
+ ;Above entry point invoked by RAEDCN - IHS/HQW/SCR 8/27/01 **11**
+ I $D(ZTQUEUED) S ZTREQ="@" Q
  D ^%ZISC Q
  ;
-D S Y=$P("JAN^FEB^MAR^APR^MAY^JUN^JUL^AUG^SEP^OCT^NOV^DEC","^",$E(Y,4,5))_" "_$S(Y#100:$J(Y#100\1,2)_",",1:"")_(Y\10000+1700)_$S(Y#1:"  "_$E(Y_0,9,10)_":"_$E(Y_"000",11,12),1:"") Q
+EN ;EP
+ ;Above entry point invoked by RASTED - IHS/HQW/SCR - 8/27/01 **11**
+ ;Entry point to credit x-ray clinic stops
+ I '$D(RAMDIV)!'$D(RADTE)!'$D(RADFN)!'$D(RAPRIT) G NOGO
+ S SDIV=RAMDIV,SDATE=$P(RADTE,"."),DFN=RADFN,SDC="",SDMSG="S"
+ G NOGO:'$D(^RAMIS(71,RAPRIT,0)) S X=+$P(^(0),"^",9),X=$S($D(^ICPT(X,0)):$P(^(0),"^"),1:"")
+ I X S X1=$S($D(^RA(79,RAMDIV,"PC")):^("PC"),1:"") G NOGO:'X1 S SDCPT(1)="900^"_X1_"^"_X
+ I $O(^RAMIS(71,RAPRIT,2,0)) F I=0:0 S I=$O(^RAMIS(71,RAPRIT,2,I)) Q:I'>0  I $D(^RAMIS(71,RAPRIT,2,I,0)) S RAPR=+$P(^(0),"^") I $D(^RAMIS(71.1,RAPR,0)) F J=0:0 S J=$O(^RAMIS(71.1,RAPR,1,"B",J)) Q:J'>0  D CON
  ;
- ;called to do some user checks
- ;if div param set to ask user instead of auto filing DUZ, prompt for
- ;   access/verify code
- ;if RAKEY is defined, check if user owns this key and set RAPOP=1
- ;   if user doesn't own key
-USER S RADUZ=DUZ S:'$D(RAMDV) RAMDV="" I '$P(RAMDV,"^",6) S %="A",%DUZ=DUZ W ! D ^XUVERIFY G USERQ:%=-1 I %'=1 W *7," ??" G USER
-USER1 Q:'$D(RAKEY)  Q:$D(^XUSEC(RAKEY,RADUZ))  W !!?3,*7,"Must be a user with the appropriate privileges to continue!"
-USERQ S RAPOP=1 Q
  ;
-DEV ;EXECUTEABLE HELP FOR DEVICE FIELDS IN FILE 79.1 (IMAGING LOCATIONS)
- D HOME^%ZIS W @IOF,!,"The following is a list of possible devices. You must choose",!,"one of these by entering in the device's full name.",!!,"NOTE: This field is not a pointer field to file 3.5!",!
+ ;---> REQUIRES MAS 5.0                           ;IHS/ANMC/MWR 06/03/92
+ ;S SDCTYPE=$S($D(SDCPT(1)):"B",1:"S") W:'$D(ZTQUEUED) !!?5,"Attempting to credit a Radiology Clinic Stop.",! D EN3^SDACS I SDERR=1 G NOGO  ; CMT'D OUT                                                           ;IHS/ANMC/MWR 06/03/92
+ G NOGO                                           ;IHS/ANMC/MWR 06/03/92
+ ;
+ ;MAS 5.0 is in place.
+ ;Modified to include VA patches IHS/HQW/SCR - 9/5/01 **11**
+ S SDCTYPE=$S($D(SDCPT(1)):"B",1:"S") W:'$D(ZTQUEUED) !!?5,"Attempting to credit a Radiology Clinic Stop.",! D EN3^SDACS I SDERR=1 G NOGO
+ S $P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),"^",24)="Y" W:'$D(ZTQUEUED) !?5,"Radiology Clinic Stop credited." G EXIT
+CON ;
+ S K=$S($D(^DIC(40.7,+J,0)):$P(^(0),"^",2),1:"") I K S:SDC'[K SDC=K_"^"_SDC
+ Q
+ ;
+ ;---> NEXT LINE COMMENTED OUT TO INHIBIT UNNECESSARY MESSAGE.   ;IHS/ANMC/MWR 06/03/92
+NOGO ;
+ ;W:'$D(ZTQUEUED) *7,!?5,"Unable to credit a Radiology Clinic Stop!",!  ;IHS/ANMC/MWR 06/03/92
+ ;
+EXIT ;
+ K I,J,K,RAPR,SDC,SDCPT,SDCTYPE,SDERR,SDATE,SDIV,X,X1 Q
+ ;
+D ;EP
+ ;Above entry point invoked by RABTCH1 - IHS/HQW/SCR - 8/27/01 **11**
+ S Y=$P("JAN^FEB^MAR^APR^MAY^JUN^JUL^AUG^SEP^OCT^NOV^DEC","^",$E(Y,4,5))_" "_$S(Y#100:$J(Y#100\1,2)_",",1:"")_(Y\10000+1700)_$S(Y#1:"  "_$E(Y_0,9,10)_":"_$E(Y_"000",11,12),1:"") Q
+ ;
+USER ;
+ S RADUZ=DUZ S:'$D(RAMDV) RAMDV="" I '$P(RAMDV,"^",6) S %="A",%DUZ=DUZ W ! D ^XUVERIFY G USERQ:%=-1 I %'=1 W *7," ??" G USER
+USER1 ;
+ Q:'$D(RAKEY)  Q:$D(^XUSEC(RAKEY,RADUZ))  W !!?3,*7,"Must be a user with the appropriate privileges to continue!"
+USERQ ;
+ S RAPOP=1 Q
+ ;
+DEV ;EXECUTEABLE HELP FOR DEVICE FIELDS IN FILE 79.1 (RADIOLOGY LOCATIONS)
+ ;
+ ;D HOME^%ZIS W @IOF,!,"The following is a list of possible devices. You must choose",!,"one of these by entering in the device's full name.",!!,"NOTE: This field is not a pointer field to file 3.5!",!        ;IHS/ANMC/MWR 06/03/92
+ ;---> REMOVE IOF SO USER CAN SEE WHAT DEVICES ARE ALREADY THERE.  ;IHS/ANMC/MWR 06/03/92
+ D HOME^%ZIS W !,"The following is a list of possible devices. You must choose",!,"one of these by entering in the device's full name.",!!,"NOTE: This field is not a pointer field to file 3.5!",!              ;IHS/ANMC/MWR 06/03/92
+ ;
+ ;
  W !?3,"Device Name:",?25,"Device Location:",!?3,"------------",?25,"----------------"
  F I=0:0 S I=$O(^%ZIS(1,I)) Q:I'>0  I $D(^(I,0)) W !?3,$P(^(0),"^"),?25,$S($D(^(1)):^(1),1:"") I ($Y+4)>IOSL R !,"(Type ""^"" to stop)",X:DTIME Q:'$T!(X="^")  W @IOF
  Q
@@ -49,53 +92,34 @@ DEV ;EXECUTEABLE HELP FOR DEVICE FIELDS IN FILE 79.1 (IMAGING LOCATIONS)
 VERIFY ;Ask Access Code
  K RADUZ S %="A",%DUZ=DUZ W ! D ^XUVERIFY S RADUZ=DUZ Q:%=-1!(%=1)  W:%=2 *7,!,"Sorry, that's not your access code.  Try again." W:%=0 !,"Enter your access code or an uparrow to exit." G VERIFY
  ;
-A ;Create signature block name using RASIG("PER") as input IEN of file 200
- ;Write signature to node 20 of file 200
- ;(Signature is name in Firstname Lastname format)
+A ;
+ ;CREATE SIGNATURE BLOCK NAME
  S %X=$P(^VA(200,RASIG("PER"),0),"^"),%X=$P(%X,",",2)_" "_$P(%X,",")_$P(%X,",",3),$P(^VA(200,RASIG("PER"),20),"^",2)=%X K %X Q
- ;
-DUZ ;Lookup and set RASIG("PER")=New Person File IFN, set signature block
- ;text in File 200 if necessary, set RASIG("NAME")=signature block text
+DUZ ;
+ ;LOOKUP AND SET RASIG("PER")=NEW PERSON FILE IFN
  S %=1 I $D(DUZ)#2,+DUZ>0,$D(^VA(200,DUZ,0)) S RASIG("PER")=DUZ
  I '$D(RASIG("PER")) S %=0 W:'$D(%INT) !,*7,"YOU ARE NOT IN THE 'NEW PERSON' FILE. CONTACT YOUR IRM SERVICE",! K %INT Q
  I '$D(^VA(200,RASIG("PER"),20)) D A K %INT Q
  I $P(^VA(200,RASIG("PER"),20),"^",2)="" S %X=$P(^VA(200,RASIG("PER"),0),"^"),%X=$P(%X,",",2)_" "_$P(%X,",")_$P(%X,",",3),$P(^(20),"^",2)=%X K %X
  S RASIG("NAME")=$P(^VA(200,RASIG("PER"),20),"^",2) K %INT Q
  ;
-SSN(PID,BID,DOD) ;returns full Pt.ID (VA("PID")), BID=1 returns VA("BID")
+SSN(PID,BID,DOD) ;EP
+ ;Above entry point invoked by RARTVER1 - IHS/HQW/SCR - 8/27/01 **11**
+ ;returns full Pt.ID (VA("PID")), BID=1 returns VA("BID")
  ;DOD is defined to internal entry # of eligibility of desired Pt.ID
  N DFN
  I '$D(RADFN) Q "Unknown"
  S:'$D(BID) BID="" S:$D(DOD) VAPTYP=DOD
- S DFN=RADFN D PID^VADPT6 I VAERR K VAERR Q "Unknown"
+ ;
+ ;
+ ;---> CALL RA ROUTINE FOR COMPATIBLILTY WITH MAS 4.   ;IHS/ANMC/MWR 06/03/92
+ ;S DFN=RADFN D PID^VADPT6 I VAERR K VAERR Q "Unknown"   ;IHS/ANMC/MWR 06/03/92
+ ;S DFN=RADFN D PID^RAZDPT                        ;IHS/ANMC/MWR 06/03/92
+ ;
+ ;Above lines commented out for VA patches - MAS 5.0 is now required
+ ;IHS/HQW/SCR - 9/5/01 **11**
+ S DFN=RADFN D PID^VADPT6 I VAERR K VAERR Q "Unknown" ;IHS/HQW/SCR-9/5/01**11** 
+ I VAERR K VAERR Q "Unknown"                      ;IHS/ANMC/MWR 06/03/92
  S RASSN=$S(BID:VA("BID"),1:VA("PID"))
  K VA("BID"),VA("PID"),VAERR,VAPTYP
  Q RASSN
-WARNPRC ; send warning if user changes procedure within exam edit
- ; and the exam has either or both radiopharms and meds
- ; RAY (sub-rec 70.03) comes from rtns RAEDCN or RAEDPT (exam edit)
- ; RAPRIT (ien file 71) comes from rtn RASTED (status tracking)
- Q:'$D(RADFN)!('$D(RADTI))!('$D(RACNI))
- Q:$G(RAY)']""&('$D(RAPRIT))
- N RAMEDS,RADIO,RATAB,RATEXT
- S RAMEDS=0,RADIO=0
- I $G(RAY)]"",$P(RAY,U,2)=RAPRI Q  ;no change in procedure
- I $G(RAPRIT)]"",RAPRIT=RAPRI Q  ;no change in procedure
- S RADIO=$P($G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0)),U,28) ;ptr fle #70.2
- S RADIO=+$O(^RADPTN(+RADIO,"NUC",0))
- S RAMEDS=+$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"RX",0))
- S RAWHICH=0 ;first assume neither radiopharm nor meds
- I 'RAMEDS,RADIO S RAWHICH=1 ;radiopharm only
- I RAMEDS,'RADIO S RAWHICH=2 ;meds only
- I RAMEDS,RADIO S RAWHICH=3 ;both radiopharm and meds
- G:'RAWHICH WARN0
- W !!?2,"**",?21,"Since you have changed the procedure,",?76,"**"
- S RATAB=$S(RAWHICH=1:26,RAWHICH=2:34,1:21)
- W !?2,"**",?RATAB,"the",$S(RAWHICH#2:" Radiopharmaceuticals",1:""),$S(RAWHICH=3:" and",1:""),$S(RAWHICH>1:" Meds",1:"")," for",?76,"**"
- S RATEXT=$S($G(RAY)]"":$P($G(^RAMIS(71,+$P(RAY,U,2),0)),U),1:$P($G(^RAMIS(71,+$G(RAPRIT),0)),U)),RATAB=80-$L(RATEXT)/2
- W !?2,"**",?RATAB,RATEXT,?76,"**"
- W !?2,"**",?30,"will now be deleted.",?76,"**",!,*7
- Q
-WARN0 W !!?2,"**",?17,"You have changed the procedure, but there are",?76,"**"
- W !?2,"**",?14,"no data for Radiopharmaceuticals and Meds to delete.",?76,"**",*7,!
- Q

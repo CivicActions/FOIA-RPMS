@@ -1,5 +1,5 @@
 ICPTMOD ;ALB/DEK/KER - CPT MODIFIER APIS ;08/18/2007
- ;;6.0;CPT/HCPCS;**6,12,13,14,19,30,37**;May 19, 1997;Build 44
+ ;;6.0;CPT/HCPCS;**6,12,13,14,19,30,37**;May 19, 1997;Build 9
  ;             
  ; Global Variables
  ;    ^DIC(81.3

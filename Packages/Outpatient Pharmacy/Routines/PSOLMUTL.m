@@ -1,5 +1,5 @@
-PSOLMUTL ;BIR/SAB - listman utilities ;29-May-2012 14:54;PLS
- ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,1005,1006,1013,148,268,225,305,1015**;DEC 1997;Build 62
+PSOLMUTL ;BIR/SAB - listman utilities ;28-Nov-2017 12:32;DU
+ ;;7.0;OUTPATIENT PHARMACY;**19,46,84,99,131,132,1005,1006,1013,148,268,225,305,1015,1023**;DEC 1997;Build 121
  ;External reference FULL^VALM1 supported by dbia 10116
  ;External reference $$SETSTR^VALM1 supported by dbia 10116
  ;External reference EN2^GMRAPEMO supported by dbia 190
@@ -9,6 +9,7 @@ PSOLMUTL ;BIR/SAB - listman utilities ;29-May-2012 14:54;PLS
  ; Modified - IHS/CIA/PLS - 12/10/03 - Line HDR+3
  ;            IHS/MSC/PLS - 10/11/07 - Line HDR+12 and HDR+14
  ;                          09/16/2011 - Line HDR+8
+ ;            IHS/MSC/MGH - 11/28/2017 PKIACT+2 Modified for EPCS
 EN W @IOF S VALMCNT=0
  D:'$D(PSOPAR) ^PSOLSET I '$D(PSOPAR) W $C(7),!!?5,"Site parameter must be defined!",! G INITQ
  D EN^PSOLMPI
@@ -93,6 +94,13 @@ ACTIONS1() ;screen actions on pending orders
  Q 1
 PKIACT() ;screen actions on pending orders DEA/PKI proj.
  Q:$G(PKI1)=2 0
+ ;IHS/GDIT/MSC/MGH added for EPCS
+ N DIC,X,Y K DIC,Y S DIC="^ORD(101,"_DA(1)_",10,",X=DA,DIC(0)="ZN" D ^DIC Q:Y<0 0
+ S Y=Y(0,0)
+ I Y="PSO LM DISCONTINUE" Q $S(PSOACT["D":1,1:0)
+ I Y="PSO LM RENEW EDIT" Q $S(PSOACT["E":1,1:0)
+ I Y="PSO LM FLAG",'$G(PSOFDR) Q 0
+ I Y="PSO LM FLAG",$G(PSOFDR) Q $S(PSOACT["X":1,1:0)
  Q 1
 RFDSP ;screen action to toggle display of prescriptions between LAST FILL date and LAST RELEASE Date.
  S PSORFG='$G(PSORFG)

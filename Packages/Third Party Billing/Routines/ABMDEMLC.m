@@ -1,5 +1,5 @@
-ABMDEMLC ; IHS/ASDST/DMJ - Edit Utility - FOR MULTIPLES - PART 4 ;  
- ;;2.6;IHS Third Party Billing System;**2,3,6,9,10,18,21,27**;NOV 12, 2009;Build 486
+ABMDEMLC ; IHS/SD/SDR - Edit Utility - FOR MULTIPLES - PART 4 ;  
+ ;;2.6;IHS Third Party Billing System;**2,3,6,9,10,18,21,27,30,36**;NOV 12, 2009;Build 698
  ;
  ;IHS/SD/SDR 2.5 P2 5/9/02 NOIS HQW-0302-100190 Modified to display 2nd and 3rd modifiers and units
  ;IHS/SD/SDR 2.5 P3 1/22/03 QBA-0103-130075 Modified to use IEN for HCPCS for Fee Schedule lookup
@@ -16,6 +16,9 @@ ABMDEMLC ; IHS/ASDST/DMJ - Edit Utility - FOR MULTIPLES - PART 4 ;
  ;IHS/SD/SDR 2.6*18 HEAT242924 Added screen when export mode is 33 so only 4 DXs can be selected for the coord. DX.
  ;IHS/SD/SDR 2.6*21 HEAT168435 Added code to add/edit modifiers for 23 multiple (pharmacy)
  ;IHS/SD/SDR 2.6*27 CR8894 Fixed API call so charge amount will default if available
+ ;IHS/SD/SDR 2.6*30 CR8717 Updated prompt for POS to work for all HCFAs
+ ;IHS/SD/SDR 2.6*36 ADO76171 Fixed so page 8G 2nd modifier would display to edit if entered in PCC; prior to this it would default the 1st modifier
+ ;  but the 2nd would be blank like nothing was entered
  ;
 DX ;EP for selecting Corresponding Diagnosis
  I '+$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C","")) W !!,"There are no Diagnosis entered to select from." Q
@@ -93,6 +96,7 @@ MOD3 ;EP  ;abm*2.6*21 IHS/SD/SDR HEAT168435  added line tag
  F ABMX("I")=1:1:ABMX("M") D
  .S DR=$S(ABMX("I")=1:+ABMZ("MOD"),ABMX("I")=2:$P(ABMZ("MOD"),U,3),1:$P(ABMZ("MOD"),U,4))
  .S ABMX("M",ABMX("I"))=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),$P(ABMZ(ABMX("Y")),U,2),$S(+DR<.13:0,1:1))),U,$S($E(DR,$L(+DR))>4:$E(DR,$L(+DR)),1:$E(DR,2,3)))
+ .I ABMZ("SUB")=39 S ABMX("M",ABMX("I"))=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),$P(ABMZ(ABMX("Y")),U,2),0)),U,$P(DR,".",2))  ;abm*2.6*36 IHS/SD/SDR ADO76171
  .I ABMZ("SUB")=23 S ABMX("M",ABMX("I"))=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),$P(ABMZ(ABMX("Y")),U,2),2)),U,$E(DR,$L(+DR))+2)  ;abm*2.6*21 IHS/SD/SDR HEAT168435
  F ABMX("I")=1:1:ABMX("M") D  Q:$D(DUOUT)!(ABMX("I")=ABMX("M"))  I X="",$G(ABMX("M",ABMX("I")+1))="" Q
  .S ABMX("S")=$S(ABMX("I")=1:"1st",ABMX("I")=2:"2nd",1:"3rd")
@@ -161,7 +165,12 @@ SELMOD ;
  Q
 POSA ; EP - place of service
  ;I "^3^14^15^19^20^22^27"'[ABMP("EXP") Q  ;only for HCFAs and 837P  ;abm*2.6*6 5010
- I "^3^14^15^19^20^22^27^32"'[ABMP("EXP") Q  ;only for HCFAs and 837P  ;abm*2.6*6 5010
+ ;I "^3^14^15^19^20^22^27^32"'[ABMP("EXP") Q  ;only for HCFAs and 837P  ;abm*2.6*6 5010  ;abm*2.6*30 IHS/SD/SDR CR8717
+ ;start new abm*2.6*30 IHS/SD/SDR CR8717
+ Q:('$D(ABMP(ABMZ("PG"))))  ;no export mode for page (like 9D)
+ S ABMP("PGEXP")=$P($G(^ABMDEXP($G(ABMP(ABMZ("PG"))),0)),U)
+ I ((ABMP("PGEXP")'["HCFA")&(ABMP("PGEXP")'["CMS")) Q  ;only for HCFAs and 837P
+ ;end new abm*2.6*30 IHS/SD/SDR CR8717
  D POS
  I $D(ABMZ("DR")) S ABMZ("DR")=ABMZ("DR")_";.15T//"_ABMDFLT
  E  S ABMZ("DR")=";W !;.15T//"_ABMDFLT

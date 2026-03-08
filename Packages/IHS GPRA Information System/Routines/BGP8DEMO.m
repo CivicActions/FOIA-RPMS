@@ -1,5 +1,5 @@
-BGP8DEMO ; IHS/CMI/LAB - demo patient search template ;
- ;;18.1;IHS CLINICAL REPORTING;;MAY 25, 2018;Build 66
+BGP8DEMO ;IHS/CMI/LAB - demo patient search template; [ 24 Apr 2008 2:49 PM ]
+ ;;8.0;IHS CLINICAL REPORTING;**2**;MAR 12, 2008
  ;
  ;
  ;
@@ -13,8 +13,8 @@ SELECT ;
  K DIC
  S DIC(0)="AEMQL",DIC("A")="Enter DEMO PATIENT Search Template: ",DIR("B")=$$VAL^XBDIQ1(90241.01,DUZ(2),.12),DIC="^DIBT(",DIC("S")="I $P(^(0),U,4)=2!($P(^(0),U,4)=9000001)" D ^DIC
  I Y=-1 D XIT Q
- S BGPSTMP=+Y
  I $P(^DIBT(+Y,0),U,4)="" S DA=+Y,DIE="^DIBT(",DR="4////2" D ^DIE K DIE,DA,DR
+ S BGPSTMP=+Y
  ;
  ;display the existing template patients
  D EP
@@ -49,7 +49,7 @@ EOJ ;EP
  Q
  ;; ;
 EN ;EP -- main entry point for 
- D EN^VALM("BGP 18 DEMO SEARCH TEMPLATE")
+ D EN^VALM("BGP 08 DEMO SEARCH TEMPLATE")
  D CLEAR^VALM1
  D FULL^VALM1
  W:$D(IOF) @IOF

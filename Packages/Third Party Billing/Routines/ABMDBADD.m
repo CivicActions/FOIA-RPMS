@@ -1,35 +1,31 @@
 ABMDBADD ; IHS/SD/SDR - Add Bill Manually Submitted ;   
- ;;2.6;IHS Third Party Billing;**1,9,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing;**1,9,21,29,33,37**;NOV 12, 2009;Build 739
  ;
 DOC ;
- ; LSL - 12/30/97 - Modified for readability.  Changed ABM array to ABMD array as
- ;    ABMAPASS and A/R routines stomp all over ABM array.  Also, add the storage of
- ;    Approved Date and Time for A/R usage.  Will be date and time bill is manually created.
- ; LSL - 1/23/98 - Added the storage of the 13 multiple to the bill file.  Many other programs
- ;     in 3PB and A/R assume it exists.
- ; LSL - 2/2/98 - Allow duplicate bills if user ok.  Also allow multiple clinics on same visit date.
- ; LSL - 3/25/98 - Lost value of %, so set approval date variable sooner
+ ;LSL 12/30/97 Modified for readability.  Changed ABM array to ABMD array as ABMAPASS and A/R routines stomp all over
+ ;    ABM array.  Also, add the storage of Approved Date and Time for A/R usage.  Will be date and time bill is manually created.
+ ;LSL 1/23/98 Added the storage of the 13 multiple to the bill file.  Many other programs in 3PB and A/R assume it exists.
+ ;LSL 2/2/98 Allow duplicate bills if user ok.  Also allow multiple clinics on same visit date.
+ ;LSL 3/25/98 Lost value of %, so set approval date variable sooner
  ; 
- ; IHS/ASDS/SDH - 03/09/01 - V2.4 Patch 9 - NOIS LTA-0600-160017 - Modified to check if service
- ;     thru date is less than service from date
+ ;IHS/ASDS/SDH 03/09/01 2.4*9 NOIS LTA-0600-160017 Modified to check if service thru date is less than service from date
+ ;IHS/ASDS/SDH 10/16/01 2.4*9 NOIS UOB-0701-170024 Modified to use ABM utility to get claim number so manually generated
+ ;   claims will have unique numbers.  Also made gross amount the same as bill amount.
  ;
- ; IHS/ASDS/SDH - 10/16/01 - V2.4 Patch 9 - NOIS UOB-0701-170024 - Modified to use ABM utility to
- ;    get claim number so manually generated claims will have unique numbers.  Also made gross
- ;    amount the same as bill amount.
+ ;IHS/SD/SDR 9/26/2002 2.5*2 UOB-0102-170068 Modified routine to do date check for future dates of service/admission
+ ;IHS/SD/SDR 2.5*8 IM11831 Modified to prompt for visit location
+ ;IHS/SD/SDR 2.5*12 UFMS If user isn't logged into cashiering session they can't do this option.  Also added so
+ ;   if they enter a bill using this option it will add to cashiering session
  ;
- ; IHS/SD/SDR - 9/26/2002 - V2.5 P2 - UOB-0102-170068 - Modified routine to do date check for future dates of 
- ;       service/admission
- ;       
- ; IHS/SD/SDR - v2.5 p8 - IM11831 - Modified to prompt for visit location
+ ;IHS/SD/SDR 2.6*1 HEAT7431 <SUBSCR>V^DIED (vars from previous FM call still defined.
+ ;IHS/SD/SDR 2.6*21 VMBP RQMT_111 fixed insurer type code
+ ;IHS/SD/SDR 2.6*21 HEAT175003 Made change for <SUBSCR>ISET+33^ABMERUTL; occurs when trying to file elig pointer into record.
+ ;    There was no ';' to separate data
+ ;IHS/SD/SDR 2.6*29 CR10696 Added UPPER LIMIT check
+ ;IHS/SD/SDR 2.6*33 ADO60185 CR12178 Added preferred name to display
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
  ;
- ; IHS/SD/SDR - v2.5 p12 - UFMS - If user isn't logged into cashiering session they can't do
- ;   this option.  Also added so if they enter a bill using this option it will add to cashiering session
- ; IHS/SD/SDR - abm*2.6*1 - HEAT7431 - <SUBSCR>V^DIED (vars from previous FM call still defined.
- ;IHS/SD/SDR - 2.6*21 - VMBP RQMT_111 - fixed insurer type code
- ;IHS/SD/SDR - 2.6*21 - HEAT175003 - Made change for <SUBSCR>ISET+33^ABMERUTL; occurs when trying to file elig pointer into record.  There was no ';' to
- ;  separate data
- ;
- ; *********************************************************************
+ ;*********************************
  ;
 START ;EP
  K ABMD
@@ -75,7 +71,7 @@ ADD ;
  S DIC="^ABMDBILL(DUZ(2),"
  S DIC(0)="L"
  S X=ABMD("DFN")
- K DD,DO D FILE^DICN                     ; Add entry to 3P BILL 
+ K DD,DO D FILE^DICN     ;Add entry to 3P BILL 
  I +Y<1 D  G XIT
  .W *7
  .W !!,"ERROR: BILL NOT CREATED, ensure your Fileman ACCESS CODE contains a 'V'.",!!
@@ -88,17 +84,17 @@ E2 ;
  ;BYPASS LOCK
  W !
  K DIC,DIE,DA,DR,X,Y  ;abm*2.6*1 HEAT7431
- S DA=ABMD("DFN")                        ; 3P BILL ien
- S DIE="^ABMDBILL(DUZ(2),"               ; 3P BILL file
- S DR=".03////"_DUZ(2)                   ; Facility
- S DR=DR_";.05R~Patient........: "       ; Patient pointer
- S DR=DR_";.07R~Visit Type.....: "       ; Visit type
- S DR=DR_";.1R~Clinic.........: "        ; clinic
- D ^DIE                                  ; add fields to 3P BILL entry
- G KILL:$D(Y)                            ; if ^ out, kill entry
+ S DA=ABMD("DFN")                   ;3P BILL ien
+ S DIE="^ABMDBILL(DUZ(2),"          ;3P BILL file
+ S DR=".03////"_DUZ(2)              ;Facility
+ S DR=DR_";.05R~Patient........: "  ;Patient pointer
+ S DR=DR_";.07R~Visit Type.....: "  ;Visit type
+ S DR=DR_";.1R~Clinic.........: "   ;clinic
+ D ^DIE                             ;add fields to 3P BILL entry
+ G KILL:$D(Y)                       ;if ^ out, kill entry
  ;
- ; If not inpatient ask Serv date from and thru and No of 
- ; outpatient visits.
+ ;If not inpatient ask Serv date from and thru and No of 
+ ;outpatient visits.
 SVDTS ;   
  I $P(^ABMDBILL(DUZ(2),DA,0),U,7)'=111 D  G KILL:$D(Y)
  .S DR=".71R~Serv Date From.: "
@@ -126,9 +122,9 @@ SVDTS ;
  .D ^DIE
  .Q:$D(Y)
  ;
- ; If inpatient ask Adm and Dsch date, set Serv to and from dates
- ; based on Adm and Dsch dates, calc covered days, and delete
- ; No of outpatient visits.
+ ;If inpatient ask Adm and Dsch date, set Serv to and from dates
+ ;based on Adm and Dsch dates, calc covered days, and delete
+ ;No of outpatient visits.
 ADMDTS I $P(^ABMDBILL(DUZ(2),DA,0),U,7)=111 D  G KILL:$D(Y)
  .S DR=".61R~Admission Date.: "
  .D ^DIE
@@ -161,14 +157,14 @@ CHK ;
  S ABMD(0)=$G(^ABMDBILL(DUZ(2),ABMD("DFN"),0))
  S ABMD("DUP")=0
  S ABMD("R")=""
- S ABMD("P")=$P(ABMD(0),U,5)             ; Patient pointer
- S ABMD("L")=$P(ABMD(0),U,3)             ; Facility
- S ABMD("T")=$P(ABMD(0),U,7)             ; Visit type
- S ABMD("C")=$P(ABMD(0),U,10)            ; clinic IEN
- S ABMD("D")=$P(^ABMDBILL(DUZ(2),ABMD("DFN"),7),U)  ; Serv date from
- ; Check Serv date from cross-ref for duplicate bills
+ S ABMD("P")=$P(ABMD(0),U,5)     ;Patient pointer
+ S ABMD("L")=$P(ABMD(0),U,3)     ;Facility
+ S ABMD("T")=$P(ABMD(0),U,7)     ;Visit type
+ S ABMD("C")=$P(ABMD(0),U,10)    ;clinic IEN
+ S ABMD("D")=$P(^ABMDBILL(DUZ(2),ABMD("DFN"),7),U)  ;Serv date from
+ ;Check Serv date from cross-ref for duplicate bills
  F  S ABMD("R")=$O(^ABMDBILL(DUZ(2),"AD",ABMD("D"),ABMD("R"))) Q:'ABMD("R")  D
- .Q:ABMD("R")=ABMD("DFN")               ; Q if this bill number
+ .Q:ABMD("R")=ABMD("DFN")    ;Q if this bill number
  .I '$D(^ABMDBILL(DUZ(2),ABMD("R"),0)) K ^ABMDBILL(DUZ(2),"AD",ABMD("D"),ABMD("R")) Q       ;if no data, kill cross-ref,Q
  .S ABMD(0)=^ABMDBILL(DUZ(2),ABMD("R"),0)  ; 0 node of new bill found
  .I $P(ABMD(0),U,3)=ABMD("L"),$P(ABMD(0),U,7)=ABMD("T"),$P(ABMD(0),U,5)=ABMD("P") D
@@ -195,6 +191,9 @@ INS ;
  D ^DIE
  G KILL:$D(Y)
  S ABMAMT=$P($G(^ABMDBILL(DUZ(2),ABMD("DFN"),2)),U)
+ S ABMBAMT=ABMAMT  ;abm*2.6*29 IHS/SD/SDR CR10696
+ S ABMULMT=$$UPPERLMT^ABMDEOK  ;abm*2.6*29 IHS/SD/SDR CR10696
+ G KILL:(ABMULMT=1)  ;abm*2.6*29 IHS/SD/SDR CR10696
  S DR=".23////"_ABMAMT
  D ^DIE
  W !
@@ -202,10 +201,10 @@ INS ;
  I $P($G(^AUTNINS(ABMD("INS"),0)),U,11)="",($P($G(^ABMDPARM(DUZ(2),1,4)),U,15)=1) D  G KILL
  .W !,"Insurer ",$P($G(^AUTNINS(ABMD("INS"),0)),U)
  .W !,"is missing Tax Identification Number.  Please add in the Insurer file."
- D ELG^ABMDLCK("",.ABML,ABMD("P"),ABMD("D"))  ; Call Eligibility Checker
+ D ELG^ABMDLCK("",.ABML,ABMD("P"),ABMD("D"))  ;Call Eligibility Checker
  S Y=ABMD("D")
  D DD^%DT
- S ABMD("ED")=Y                               ; external visit date
+ S ABMD("ED")=Y      ;external visit date
  S ABMD("PRI")=""
  F  S ABMD("PRI")=$O(ABML(ABMD("PRI"))) Q:'ABMD("PRI")  D
  .I $D(ABML(ABMD("PRI"),ABMD("INS"))) D
@@ -215,7 +214,14 @@ INS ;
  K ABML
  I '$D(ABMD("ELG")) D
  .W !,$P(^DPT($P(^AUPNPAT(ABMD("P"),0),U),0),U)
+ .;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ .;I $$GETPREF^AUPNSOGI(ABMD("P"),"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .I $$GETPREF^AUPNSOGI(ABMD("P"),"I",1)'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ..;W $$EN^ABMVDF("RVN"),"* - ",$$GETPREF^AUPNSOGI(ABMD("P"),""),$$EN^ABMVDF("RVF")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ..W " - ",$$GETPREF^AUPNSOGI(ABMD("P"),"I",1)_"*"  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .;end new abm*2.6*33 IHS/SD/SDR ADO60185
  .W " has NO ELIGIBILITY for "
+ .W !?3  ;abm*2.6*33 IHS/SD/SDR ADO60185
  .W $P(^AUTNINS(ABMD("INS"),0),U)
  .W " on ",ABMD("ED"),!
  S DIR(0)="Y"
@@ -224,7 +230,7 @@ INS ;
  D ^DIR
  K DIR
  I Y'=1 G E2  ; If not file bill, ask info again.
- ; Insurer Type
+ ;Insurer Type
  ;S ABMD("IT")=$P($G(^AUTNINS(ABMD("INS"),2)),U,1)  ;abm*2.6*21 IHS/SD/SDR VMBP RQMT_111
  S ABMD("IT")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+ABMD("INS"),".211","I"),1,"I")  ;abm*2.6*21 IHS/SD/SDR VMBP RQMT_111
  S:"FHM"[ABMD("IT") ABMD("IT")="P"
@@ -234,12 +240,12 @@ INS ;
  ;S DIC="^ABMDBILL(DUZ(2),DA(1),13,"  ;abm*2.6*21 IHS/SD/SDR HEAT175003
  S DA(1)=ABMD("DFN")
  S DIC="^ABMDBILL(DUZ(2),"_DA(1)_",13,"  ;abm*2.6*21 IHS/SD/SDR HEAT175003
- S X=ABMD("INS")                               ; Insurer
+ S X=ABMD("INS")       ;Insurer
  S DIC(0)="LE"
  S DIC("P")=$P(^DD(9002274.4,13,0),U,2)
- S DIC("DR")=".02///1"                         ; Priority
- ;S DIC("DR")=DIC("DR")_";.03///INITIATED"      ; Status  ;abm*2.6*21 IHS/SD/SDR HEAT175003
- S DIC("DR")=DIC("DR")_";.03////I"      ; Status  ;abm*2.6*21 IHS/SD/SDR HEAT175003
+ S DIC("DR")=".02///1"         ;Priority
+ ;S DIC("DR")=DIC("DR")_";.03///INITIATED"  ;Status  ;abm*2.6*21 IHS/SD/SDR HEAT175003
+ S DIC("DR")=DIC("DR")_";.03////I"   ;Status  ;abm*2.6*21 IHS/SD/SDR HEAT175003
  I $D(ABMD("ELG")) D
  .I ABMD("ITYP")?1(1"P",1"W",1"A") S DIC("DR")=DIC("DR")_";.08///"_ABMD("ELG")
  .;start old code abm*2.6*21 IHS/SD/SDR HEAT175003
@@ -258,12 +264,12 @@ INS ;
  .I ABMD("ITYP")="V" S DIC("DR")=DIC("DR")_";.013///"_ABMD("ELG")  ;abm*2.6*21 IHS/SD/SDR VMBP RQMT_111
  K DD,DO D FILE^DICN
  S DA=ABMD("DFN")
- S DR=".14////"_DUZ                      ; Approving Official
- S DR=DR_";.15////"_ABMD("APDT")         ; Approval date and time
- S DR=DR_";.22////"_ABMD("IT")           ; Insurer Type
- S DR=DR_";.04////B"                     ; Bill Status
- S DR=DR_";.16////A"                     ; Export Status
- S ABMAPOK=1                 ; Set so .04 x-ref will call ABMAPASS
+ S DR=".14////"_DUZ                 ;Approving Official
+ S DR=DR_";.15////"_ABMD("APDT")    ;Approval date and time
+ S DR=DR_";.22////"_ABMD("IT")      ;Insurer Type
+ S DR=DR_";.04////B"                ;Bill Status
+ S DR=DR_";.16////A"                ;Export Status
+ S ABMAPOK=1                 ;Set so .04 x-ref will call ABMAPASS
  D ^DIE
  I ABMARPS S DUZ(2)=ABMUDUZ2
  W !,"Bill # ",$P(^ABMDBILL(DUZ(2),DA,0),"^",1)," Filed.",!

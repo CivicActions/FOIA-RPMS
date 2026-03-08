@@ -1,0 +1,191 @@
+AUM2108 ;IHS/SET/GTH - ICD INACTIVE FLAG AND DATE ; [ 06/28/2002   5:53 PM ]
+ ;;02.1;TABLE MAINTENANCE;**8**;SEP 28,2001
+ ;
+ I '$G(DUZ) W !,"DUZ UNDEFINED OR 0." D SORRY(2) Q
+ ;
+ I '$L($G(DUZ(0))) W !,"DUZ(0) UNDEFINED OR NULL." D SORRY(2) Q
+ ;
+ S X=$P(^VA(200,DUZ,0),U)
+ W !!,$$CJ^XLFSTR("Hello, "_$P(X,",",2)_" "_$P(X,","),IOM)
+ W !!,$$CJ^XLFSTR("Checking Environment for "_$P($T(+2),";",4)_" V "_$P($T(+2),";",3)_" Patch "_$P($T(+2),";",5)_".",IOM)
+ ;
+ I $$VCHK("AUM","2.1",2)
+ I $$VCHK("DI","21.0",2)
+ I $$VCHK("XU","8.0",2)
+ ;
+ S X=$$VERSION^XPDUTL("AUT")
+ W !,$$CJ^XLFSTR("Need at least AUT 98.1.....AUT "_X_" Present",IOM)
+ I X<98.1,+X'=1.1,+X'=2.1 D SORRY(2)
+ ;
+ NEW AUM
+ S AUM=$$INSTALLD("AVA*93.2*12")
+ W !,$$CJ^XLFSTR("Need Patch AVA*93.2*12....."_$S(AUM:"",1:"NOT ")_"Installed",IOM)
+ I 'AUM D SORRY(2)
+ ;
+ NEW DA,DIC
+ S X="AUM",DIC="^DIC(9.4,",DIC(0)="",D="C"
+ D IX^DIC
+ I Y<0,$D(^DIC(9.4,"C","AUM")) D
+ . W !!,*7,*7,$$CJ^XLFSTR("You Have More Than One Entry In The",IOM),!,$$CJ^XLFSTR("PACKAGE File with an ""AUM"" prefix.",IOM)
+ . W !,$$CJ^XLFSTR("One entry needs to be deleted.",IOM)
+ . D SORRY(2)
+ .Q
+ ;
+ I $G(XPDQUIT) W !,$$CJ^XLFSTR("FIX IT! Before Proceeding.",IOM),!!,*7,*7,*7 Q
+ ;
+ W !!,$$CJ^XLFSTR("ENVIRONMENT OK.",IOM)
+ D HELP^XBHELP("INTROE","AUM2108")
+ ;
+ I $G(XPDENV)=1 D
+ . ; The following line prevents the "Disable Options..." and "Move
+ . ; Routines..." questions from being asked during the install.
+ . S (XPDDIQ("XPZ1"),XPDDIQ("XPZ2"))=0
+ . D HELP^XBHELP("INTROI","AUM2108")
+ .Q
+ ;
+ I '$$DIR^XBDIR("E","","","","","",1) D SORRY(2)
+ Q
+ ;
+SORRY(X) ;
+ KILL DIFQ
+ S XPDQUIT=X
+ W *7,!,$$CJ^XLFSTR("Sorry....FIX IT!",IOM)
+ Q
+ ;
+VCHK(AUMPRE,AUMVER,AUMQUIT) ; Check versions needed.
+ ;  
+ NEW AUMV
+ S AUMV=$$VERSION^XPDUTL(AUMPRE)
+ W !,$$CJ^XLFSTR("Need at least "_AUMPRE_" v "_AUMVER_"....."_AUMPRE_" v "_AUMV_" Present",IOM)
+ I AUMV<AUMVER KILL DIFQ S XPDQUIT=AUMQUIT D SORRY(AUMQUIT) Q 0
+ Q 1
+ ;
+INSTALLD(AUM) ;EP - Determine if patch AUM was installed, where AUM is
+ ; the name of the INSTALL.  E.g "AVA*93.2*12".
+ ;
+ NEW DIC,X,Y
+ ;  lookup package.
+ S X=$P(AUM,"*",1)
+ S DIC="^DIC(9.4,",DIC(0)="FM",D="C"
+ D IX^DIC
+ I Y<1 Q 0
+ ;  lookup version.
+ S DIC=DIC_+Y_",22,",X=$P(AUM,"*",2)
+ D ^DIC
+ I Y<1 Q 0
+ ;  lookup patch.
+ S DIC=DIC_+Y_",""PAH"",",X=$P(AUM,"*",3)
+ D ^DIC
+ Q $S(Y<1:0,1:1)
+ ;
+ ; -----------------------------------------------------
+POST ;EP - From KIDS.
+ ;
+ NEW XMSUB,XMDUZ,XMTEXT,XMY
+ KILL ^TMP("AUM2108",$J)
+ D AUDS,START^AUM21081,AUDR
+ S XMSUB=$P($P($T(+1),";",2)," ",3,99),XMDUZ=$G(DUZ,.5),XMTEXT="^TMP(""AUM2108"",$J,",XMY(1)="",XMY(DUZ)=""
+ F %="XUPROGMODE","AG TM MENU","ABMDZ TABLE MAINTENANCE","APCCZMGR" D SINGLE(%)
+ NEW DIFROM
+ D ^XMD
+ KILL ^TMP("AUM2108",$J)
+ D BMES^XPDUTL("The results are in your MailMan 'IN' basket.")
+ I $D(ZTQUEUED) S ZTREQ="@"
+ Q:'$L($T(+1^AUMDELR))
+ S ZTRTN="DEL^AUMDELR(""AUM2108"")",ZTDESC="Delete routines in the 'AUM2108' namespace.",ZTDTH=$$HADD^XLFDT($H,0,0,30,0),ZTIO="",ZTPRI=1
+ D ^%ZTLOAD
+ I '$D(ZTSK) D BMES^XPDUTL("Q to TaskMan to delete routines in background failed (?).") Q
+ D BMES^XPDUTL("NOTE:  The routines in this update will be deleted in background"),MES^XPDUTL("30 minutes from now by Task #"_ZTSK_".")
+ Q
+ ; -----------------------------------------------------
+SINGLE(K) ; Get holders of a single key K.
+ NEW Y
+ S Y=0
+ Q:'$D(^XUSEC(K))
+ F  S Y=$O(^XUSEC(K,Y)) Q:'Y  S XMY(Y)=""
+ Q
+ ;
+ ; -----------------------------------------------------
+ ; Data auditing at the file level is indicated by a lower case "a"
+ ; in the 2nd piece of the 0th node of the global.
+ ; Data auditing at the field level is indicated by a lower case "a"
+ ; in the 2nd piece of the 0th node of the field definition in ^DD(.
+AUDS ; Save current settings, and SET data auditing 'on'.
+ S ^XTMP("AUM2108",0)=$$FMADD^XLFDT(DT,56)_"^"_DT_"^"_"2002 MAY 10 STANDARD TABLE UPDATES"
+ NEW G,P
+ F %=1:1 S G=$P($T(AUD+%),";",3) Q:G="END"  D
+ . S P=$P(@(G_"0)"),"^",2)
+ . I '$D(^XTMP("AUM2108",G)) S ^XTMP("AUM2108",G)=P
+ . S:'(P["a") $P(@(G_"0)"),"^",2)=P_"a"
+ . Q:'(G["^DD(")
+ . I '$D(^XTMP("AUM2108",G,"AUDIT")) S ^XTMP("AUM2108",G,"AUDIT")=$G(@(G_"""AUDIT"")"))
+ . S (@(G_"""AUDIT"")"))="y"
+ .Q
+ Q
+ ; -----------------------------------------------------
+AUDR ; Restore the file data audit values to their original values.
+ NEW G,P
+ F %=1:1 S G=$P($T(AUD+%),";",3) Q:G="END"  D
+ . S $P(@(G_"0)"),"^",2)=^XTMP("AUM2108",G)
+ . Q:'(G["^DD(")
+ . S (@(G_"""AUDIT"")"))=^XTMP("AUM2108",G,"AUDIT")
+ . K:@(G_"""AUDIT"")")="" @(G_"""AUDIT"")")
+ .Q
+ Q
+ ; -----------------------------------------------------
+AUD ; These are files/fields to be audited for this patch, only.
+ ;;^AUTTMSR(
+ ;;^DD(9999999.07,.01,
+ ;;^DD(9999999.07,.02,
+ ;;^DD(9999999.07,.03,
+ ;;^ICD9(
+ ;;^DD(80,.01,
+ ;;^DD(80,3,
+ ;;^DD(80,5,
+ ;;^DD(80,100,
+ ;;^DD(80,102,
+ ;;^DD(80,2100000,
+ ;;END
+ ; -----------------------------------------------------
+INTROE ; Intro text during KIDS Environment check.
+ ;;This distribution:
+ ;;(1) ICD DX code 305.1, delete INACTIVE DATE,
+ ;;(2) Approx 200 ICD DX codes, add INACTIVE DATE,
+ ;;(3) Add two MEASUREMENT TYPES.
+ ;;###
+ ;
+INTROI ; Intro text during KIDS Install.
+ ;;A standard message will be produced by this update.
+ ;;  
+ ;;If you run interactively, results will be displayed on your screen,
+ ;;as well as in the mail message and the entry in the INSTALL file.
+ ;;If you queue to TaskMan, please read the mail message for results of
+ ;;this update, and remember not to Q to the HOME device.
+ ;;###
+ ;
+GREET ;;EP - To add to mail message.
+ ;;  
+ ;;Greetings.
+ ;;  
+ ;;Standard tables on your RPMS system have been updated.
+ ;;  
+ ;;You are receiving this message because of the particular RPMS
+ ;;security keys that you hold.  This is for your information, only.
+ ;;You need do nothing in response to this message.
+ ;;  
+ ;;Requests for modifications or additions to RPMS standard tables,
+ ;;whether they are or are not reflected in the IHS Standard Code
+ ;;Book (SCB), can be submitted to your Area Information System
+ ;;Coordinator (ISC).
+ ;;  
+ ;;Sections of the IHS Standard Code Book (SCB) can be viewed, printed,
+ ;;and extracted from the NPIRS IntrAnet website at url:
+ ;;  http://dpsntweb1.hqw.ihs.gov/ciweb/main.html
+ ;;  
+ ;;Questions about this patch, which is a product of the RPMS DBA
+ ;;(George T. Huggins, 520-670-4871), can be directed to the DIR/RPMS
+ ;;Support Center, at 505-248-4371, or via e-mail to
+ ;;"hqwhd@mail.ihs.gov".  Please refer to patch "AUM*2.1*8".
+ ;;  
+ ;;###;NOTE: This line indicates the end of text in this message.
+ ;

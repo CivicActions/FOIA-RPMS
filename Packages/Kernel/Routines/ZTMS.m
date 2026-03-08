@@ -1,6 +1,5 @@
-%ZTMS ;SEA/RDS-TaskMan: Submanager, (Entry & Trap) ;09/25/08  16:07
- ;;8.0;KERNEL;**2,18,24,36,67,94,118,127,136,162,275,446**;Jul 10, 1995;Build 44
- ;Per VHA Directive 2004-038, this routine should not be modified.
+%ZTMS ;SEA/RDS-TaskMan: Submanager, (Entry & Trap) ;11/3/03  13:46
+ ;;8.0;KERNEL;**2,18,24,36,67,94,118,127,136,162,275**;Jul 10, 1995
  ;
 START ;Bottom level of submanager
  S $ETRAP="D ERROR^%ZTMS HALT"
@@ -18,13 +17,11 @@ KMPR(TAG) ;Call KMPR to log data
  N Y
  I +$G(^%ZTSCH("LOGRSRC")) S Y="" X $G(^%ZOSF("UCI")) I Y[^%ZOSF("PROD") D LOGRSRC^%ZOSV(TAG)
  Q
-QUIT ;Submanager exit
- D KMPR("$STOP ZTMS$")
+QUIT D KMPR("$STOP ZTMS$")
  I ZTPFLG("XUSCNT") D COUNT^XUSCNT(-1)
  Q
 PARAMS ;
  ;START--lookup parameters
- S U="^"
  X ^%ZOSF("PRIINQ") S %ZTMS("PRIO")=Y ;Get starting priority
  D GETENV^%ZOSV
  S ZTCPU=$P(Y,U,2),ZTNODE=$P(Y,U,3),ZTPAIR=$P(Y,U,4),ZTUCI=$P(Y,U)_$S(ZTCPU]"":","_ZTCPU,1:"") S:ZTPAIR[":" ZTNODE=$P(ZTPAIR,":",2)
@@ -36,10 +33,6 @@ PARAMS ;
  . S ZTPFLG("ZTREQ")=+$G(^%ZIS(14.7,ZTPN,3))
  . Q
  S ZTPFLG("XUSCNT")=0 I ^%ZOSF("OS")["GT.M" S ZTPFLG("XUSCNT")=$L($T(^XUSCNT))
- S (ZTPFLG("LOCKTM"),ZTLKTM)=+$G(^DD("DILOCKTM"),0) ;p446
- S ZTPFLG("BalLimit")=$G(^%ZTSCH("BALLIMIT"),100) ;p446
- S X=0 I $L($T(APFIND^XUSAP)) S X=+$$APFIND^XUSAP("TASKMAN,PROXY USER") ;p446
- S ZTPFLG("USER")=$S(X>0:X,1:.5) ;p446
  K ZTMLOG ;Set to log msg about locks
  I "FO"[ZTYPE S ZTOUT=1 Q  ;SM only run on C,P,G types
  Q
@@ -48,18 +41,18 @@ ERROR ;START--trap
  ;set backup trap, prepare to handle error.
 ERR2 S $ETRAP="D ERROR2^%ZTMS0 HALT"
  S %ZTERLGR=$$LGR^%ZOSV
- S %ZTME=$$EC^%ZOSV,%ZTMEH=$H
+ S %ZTME=$$EC^%ZOSV,ZTERROH=$H
  S %ZTMETSK=$S($D(%ZTTV)#2:$P(%ZTTV,"^",4),$G(ZTSK)>0:ZTSK,1:0)
- I %ZTMETSK L ^%ZTSK(%ZTMETSK):99 ;Unlock all other locks
- I $G(IO)]"" L +^%ZTSCH("DEV",IO):99 ;Keep other tasks from IO device.
+ I %ZTMETSK L ^%ZTSK(%ZTMETSK) ;Unlock all other locks
+ I $G(IO)]"" L +^%ZTSCH("DEV",IO) ;Keep other tasks from IO device.
  ;Check if to record error
  I '$$SCREEN^%ZTER(%ZTME) D
  . D ^%ZTER ;Kernel error file
  . ;log error and context in TaskMan Error file
- . L +^%ZTSCH("ER"):99 H 1 S %ZTMEH=$H
- . S ^%ZTSCH("ER",+%ZTMEH,$P(%ZTMEH,",",2))=%ZTME
+ . L +^%ZTSCH("ER") H 1 S ZTERROH=$H
+ . S ^%ZTSCH("ER",+ZTERROH,$P(ZTERROH,",",2))=%ZTME
  . D XREF^%ZTMS0
- . S ^%ZTSCH("ER",+%ZTMEH,$P(%ZTMEH,",",2),1)=ZTERROX1
+ . S ^%ZTSCH("ER",+ZTERROH,$P(ZTERROH,",",2),1)=ZTERROX1
  . L -^%ZTSCH("ER")
  . Q
  ;
@@ -67,6 +60,7 @@ ERR2 S $ETRAP="D ERROR2^%ZTMS0 HALT"
  ;Update Task file entry
  I $G(ZTQUEUED),%ZTMETSK,$D(^%ZTSK(%ZTMETSK)) D STATUS^%ZTMS0
  ;
+ ;D KMPR("$ETRP ZTMS$")
  I ZTPFLG("XUSCNT") D COUNT^XUSCNT(-1)
  I ZTQUEUED>.9,%ZTMETSK>0,$G(DUZ)>.9,$D(^DD(8992,.01,0)) D
  . S XQA(DUZ)="",XQAMSG="Your task #"_%ZTMETSK_" stopped because of an error",XQADATA=%ZTMETSK,XQAROU="XQA^XUTMUTL"
@@ -91,5 +85,5 @@ CLOSE ;close i/o device after error
  HALT  ;Start a new process to continue
  ;
 GTM ;Special entry point for GT.M
- S @("$ZINTERRUPT=""I $$JOBEXAM^ZU($ZPOSITION)""")
+ S $ZINTERRUPT="I $$JOBEXAM^ZU($ZPOSITION)"
  G START

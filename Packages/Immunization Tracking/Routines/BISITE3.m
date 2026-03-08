@@ -1,10 +1,11 @@
 BISITE3 ;IHS/CMI/MWR - EDIT SITE PARAMETERS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**9**;OCT 01,2014
+ ;;8.5;IMMUNIZATION;**22**;NOV 01,2021;Build 4
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT SITE PARAMETERS.
  ;   PATCH 2: Fix SET of default Low Supply Alert.  LOTREQ+21
  ;;  PATCH 8: Change to limit Pneumo prompt to 65 yrs.  PNUFLU+10
  ;;  PATCH 9: Add ability to edit IP address for TCH Forecaster.  IPTCH
+ ;;  PATCH 2x: ICE
  ;
  ;
  ;----------
@@ -291,20 +292,21 @@ IMMSVDIR ;EP
  ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
  ;---> Add ability to edit IP address for TCH Forecaster.
 IPTCH ;EP
- D TITLE^BIUTL5("INDICATE IP ADDRESS FOR TCH FORECASTER"),TEXT13
+ D TITLE^BIUTL5("INDICATE IP ADDRESS FOR ICE FORECASTER"),TEXT13
  N DIR,DIRUT,X
  S DIR(0)="FOA^7:25",DIR("A")="     "
  D
  .N Y S Y=$$IPTCH^BIUTL8(BISITE)
  .I Y]"" S DIR("B")=Y Q
  .S DIR("B")="127.0.0.1"
- S DIR("?")="       Enter the IP address of the machine hosting the TCH Forecaster."
+ S DIR("?")="       Enter the IP address of the machine hosting the ICE Forecaster."
  D ^DIR
  ;W  R ZZZ
  I X="^" D RESET^BISITE Q
  S:X="@" Y="127.0.0.1" K DIRUT
  D:'$D(DIRUT)
- .N BIFLD,BIERR S BIFLD(.30)=Y
+ .;N BIFLD,BIERR S BIFLD(.30)=Y
+ .N BIFLD,BIERR S BIFLD(3.02)=Y
  .D FDIE^BIFMAN(9002084.02,BISITE,.BIFLD,.BIERR)
  .I BIERR]"" W !!?3,BIERR D DIRZ^BIUTL3()
  D RESET^BISITE

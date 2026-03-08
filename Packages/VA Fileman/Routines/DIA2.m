@@ -1,5 +1,6 @@
-DIA2 ;SFISC/GFT-SELECT ENTRY TO EDIT, ^LOOP ;22MAR2006
- ;;22.0;VA FileMan;**147**;Mar 30, 1999
+DIA2 ;SFISC/GFT-SELECT ENTRY TO EDIT, ^LOOP ;12:57 PM  1 Jul 1996 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**24**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  K ^UTILITY("DIT",$J),DA,DRS,DW,DIAP,DI I '$D(DR(1,J(0))) S DR(1,J(0))=".01:99999999"
  I $L(DR(1,J(0)))+$L(DIA)<216,+DR(1,J(0))=.01 S DR(1,J(0))="S:DIA(9) DQ=2,X=$P("_DIA_"DA,0),U,1);"_DR(1,J(0))
@@ -10,7 +11,7 @@ DIC W !! G Q^DIB:$D(DTOUT) D L S DIA(1)=+Y,DIA(9)=$P(Y,U,3) I Y>0 D DIE,^DIA3:'$
 L K Y,I,J,F,DIC S (DIC,DIE)=DIA,DIC(0)="QEALM" G ^DIC
  ;
 DIE S DP=DIA("P"),DA=+Y,DR=DR(1,DP)
- K DIC,Y,C,DB S DIC=DIE,DILK=DIE_DA_")" D LOCK^DILF(DILK) ;**147
+ K DIC,Y,C,DB S DIC=DIE,DILK=DIE_DA_")" L @("+"_DILK_":0")
  E  W $C(7),!,"ANOTHER TERMINAL IS EDITING THIS ENTRY!" K DILK Q
  I DR?1"^".AN D @DR L @("-"_DILK) K DILK Q
  E  D GO^DIE L @("-"_DILK) K DILK Q
@@ -25,10 +26,7 @@ LOOP ;DELETE OR REPLACE POINTERS
  . S ^TMP("DIFIXPT",$J,DIFIXPTC)=" Entry:"_D0_"-"_$E(Y,1,20)_"     "
  . Q
  I '($G(DIFIXPT)=1) W Y
- S Y=D0,(DIE,DIC)=DCC,%C=0
- I X["I",'($G(DIFIXPT)=1) S %Y=0 F  S %C=$O(^DD(+X,0,"ID",%C)) Q:%C=""  S %=^(%C) D
- . N DIQUIET
- . W "  ",$E(@(DCC_"Y,0)"),0) X %
+ S Y=D0,(DIE,DIC)=DCC,%C=0 I X["I",'($G(DIFIXPT)=1) S %Y=0 F  S %C=$O(^DD(+X,0,"ID",%C)) Q:%C=""  S %=^(%C) W "  ",$E(@(DCC_"Y,0)"),0) X %
  K DO S %C=-1,DO(2)=X,Y=Y_U_DI,DIC(0)=$P("E^",U,('($G(DIFIXPT)=1))) D ACT^DICM1 S DI=99 K DO,DIY Q:Y<0
  S Y=D0 D DIE S:$G(DIFIXPT) DIFIXPTC=DIFIXPTC+1 I $D(DTOUT) K DCC,Y
  I $D(Y) K Y I '($G(DIFIXPT)=1) S %=1 W $C(7),!!,"WANT TO STOP LOOPING" D YN^DICN I %-2 K DCC

@@ -1,10 +1,12 @@
 ABMDE0X ; IHS/SD/SDR - Set Summary Display Variables ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**14**;NOV 12, 2009;Build 238
+ ;;2.6;IHS 3P BILLING SYSTEM;**14,31,37**;NOV 12, 2009;Build 739
  ;
  ;IHS/SD/SDR - v2.5 p8 - task 8 - Modified to check for replacement insurer to display
  ;
- ;IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - 2.6*14 - HEAT161263 - Made change for display of provider narrative to use DIQ call so new output transform on field will be executed.
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*14 HEAT161263 Made change for display of provider narrative to use DIQ call so new output transform on field will be executed.
+ ;IHS/SD/SDR 2.6*31 CR11832 Updated for page0 display to include PCC data
+ ;IHS/SD/SDR 2.6*37 ADO75502 Fixed spacing on display when doing Claim Error Checks
  ; *********************************************************************
 IDEN ; EP
  S ABM(1)=$P($G(^AUTTLOC(ABMP("LDFN"),0)),U,2)
@@ -25,8 +27,12 @@ INS ;
  .S ABM("I"_ABM("I"))=$P(^AUTNINS(Y,0),U)
  ;
 QUES ;
- S ABM("CNT1")=7+ABM("I")
+ ;S ABM("CNT1")=7+ABM("I")  ;abm*2.6*31 IHS/SD/SDR CR11832
+ S ABM("CNT1")=6+ABM("I")  ;abm*2.6*31 IHS/SD/SDR CR11832
+ S ABM("CNT2")=1  ;abm*2.6*31 IHS/SD/SDR CR11832
+ W !  ;abm*2.6*37 IHS/SD/SDR ADO75502
  D W1^ABMDE30
+ W !  ;abm*2.6*37 IHS/SD/SDR ADO75502
  D W2^ABMDE30
  S ABM("RELS")=$S($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),7)),U,4)="Y":"YES",1:"NO")
  S ABM("ASGN")=$S($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),7)),U,5)="Y":"YES",1:"NO")
@@ -39,19 +45,29 @@ QUES ;
  ..S ABM("X")=^ABMDCLM(DUZ(2),ABMP("CDFN"),59,ABM("X"),0)
  ..I $D(^ABMDCODE(ABM("X"),0)) D
  ...S ABM("PROG")="YES"
- ...S ABM("CNT1")=ABM("CNT1")+.5
+ ...;S ABM("CNT1")=ABM("CNT1")+.5  ;abm*2.6*31 IHS/SD/SDR CR11832
+ ...S ABM("CNT2")=ABM("CNT2")+.5  ;abm*2.6*31 IHS/SD/SDR CR11832
  S ABM("ACC")="NO"
  I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,2)]""!($P($G(^(8)),U,3)]"") D
  .S ABM("ACC")="YES"
- .S ABM("CNT1")=ABM("CNT1")+.5
- I ABM("EMRG")="YES" S ABM("CNT1")=ABM("CNT1")+.5
- I ABM("EMPL")="YES" S ABM("CNT1")=ABM("CNT1")+.5
- S ABM("CNT1")=ABM("CNT1")+.5
- S ABM("CNT1")=$P(ABM("CNT1"),".")
+ .;S ABM("CNT1")=ABM("CNT1")+.5  ;abm*2.6*31 IHS/SD/SDR CR11832
+ .S ABM("CNT2")=ABM("CNT2")+.5  ;abm*2.6*31 IHS/SD/SDR CR11832
+ ;start old abm*2.6*31 IHS/SD/SDR CR11832
+ ;I ABM("EMRG")="YES" S ABM("CNT1")=ABM("CNT1")+.5
+ ;I ABM("EMPL")="YES" S ABM("CNT1")=ABM("CNT1")+.5
+ ;S ABM("CNT1")=ABM("CNT1")+.5
+ ;S ABM("CNT1")=$P(ABM("CNT1"),".")
+ ;end old start new abm*2.6*31 IHS/SD/SDR CR11832
+ I ABM("EMRG")="YES" S ABM("CNT2")=ABM("CNT2")+.5
+ I ABM("EMPL")="YES" S ABM("CNT2")=ABM("CNT2")+.5
+ S ABM("CNT2")=ABM("CNT2")+.5
+ S ABM("CNT2")=$P(ABM("CNT2"),".")
+ ;end new abm*2.6*31 IHS/SD/SDR CR11832
  ;
 PRV ;
  K ABM("A"),ABM("O")
- S (ABM("CNT2"),ABM("CNT3"))=1
+ ;S (ABM("CNT2"),ABM("CNT3"))=1  ;abm*2.6*31 IHS/SD/SDR CR11832
+ S ABM("CNT3")=1  ;abm*2.6*31 IHS/SD/SDR CR11832
  S ABM=""
  F  S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),41,"C",ABM)) Q:ABM=""  S ABM("X")=$O(^(ABM,"")),ABM("X0")=^ABMDCLM(DUZ(2),ABMP("CDFN"),41,ABM("X"),0) Q:$P(ABM("X0"),U,2)=""  D
  .I '$D(^VA(200,+ABM("X0"),0)) D  Q
@@ -70,7 +86,7 @@ PRV ;
  .S ABM("CNT3")=ABM("CNT3")+1
  ;
 DX ;
- G DDS:ABMP("VTYP")=998&'$D(ABMP("FLAT"))
+ ;G DDS:ABMP("VTYP")=998&'$D(ABMP("FLAT"))  ;abm*2.6*31 IHS/SD/SDR CR11832
  S ABM=""
  ;F ABM("I")=1:1 S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,"C",ABM)) Q:ABM=""  S Y=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,$O(^(ABM,"")),0)),U,3) I Y]"" S ABM("D"_ABM("I"))=$E($G(^AUTNPOV(Y,0)),1,34)  ;abm*2.6*14 HEAT161263
  ;start new code abm*2.6*14 HEAT161263
@@ -82,6 +98,7 @@ DX ;
  .I Y]"" S ABM("D"_ABM("I"))=$E(Y,1,34)
  ;end new code HEAT161263
  S ABM("CNT2")=ABM("CNT2")+ABM("I")
+ G DDS:ABMP("VTYP")=998&'$D(ABMP("FLAT"))  ;abm*2.6*31 IHS/SD/SDR CR11832
  ;
  D ^ABMDE0X1
  Q

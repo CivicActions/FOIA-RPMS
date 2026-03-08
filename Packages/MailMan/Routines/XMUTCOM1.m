@@ -1,5 +1,6 @@
-XMUTCOM1 ;(WASH ISC)/CAP-XMUSRCNT.COM Count users (shareware) ;04/17/2002  12:10
- ;;8.0;MailMan;;Jun 28, 2002
+XMUTCOM1 ;(WASH ISC)/CAP-XMUSRCNT.COM / COUNT USERS ;12/4/93  11:47
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;;Jun 02, 1994
 ZZZ ;$!USERS.COM
  ;;$!            milt's special
  ;;$ set noon

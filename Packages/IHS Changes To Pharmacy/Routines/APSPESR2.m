@@ -1,12 +1,13 @@
-APSPESR2 ; IHS/MSC/MGH - EXTERNAL PHARMACY PRESCRIPTIONS REPORT ;12-May-2011 16:15;DU
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1011**;Sep 23, 2004;Build 17
- ;
+APSPESR2 ; IHS/MSC/MGH/PLS - EXTERNAL PHARMACY PRESCRIPTIONS REPORT ;09-Jul-2025 07:37;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1011,1024,1032,1036**;Sep 23, 2004;Build 17
+ ; FID 74766 Changes - 3/24/2025
+ ; FID 122888,124251,124252,125019
 EN ;EP
  N APSPBD,APSPED,APSPDIV,APSPRTYP,APSPQ,APSPDSUB,APSPDCLS,APSPSRT,APSPSRT2
- N APSPDCT,APSPDCTN,APSPDRG,APSPBDF,APSPEDF,APSPFIL,APSPGRP,APSPOUT
+ N APSPDCT,APSPDCTN,APSPDRG,APSPBDF,APSPEDF,APSPFIL,APSPGRP,APSPOUT,APSPDEMO
  S APSPDIV="",APSPDRG="",APSPQ=0,APSPDSUB=0
  W @IOF
- W !!,"Electronic Prescription failure report by Division"
+ W !!,"External Pharmacy Prescriptions Report"
  D ASKDATES^APSPUTIL(.APSPBD,.APSPED,.APSPQ,DT,DT)
  Q:APSPQ
  S APSPBDF=$P($TR($$FMTE^XLFDT(APSPBD,"5Z"),"@"," "),":",1,2)
@@ -14,6 +15,13 @@ EN ;EP
  S APSPBD=APSPBD-.01,APSPED=APSPED+.99
  S APSPDIV=$$DIR^APSPUTIL("Y","Would you like all pharmacy divisions","Yes",,.APSPQ)
  Q:APSPQ
+ S APSPDEMO=$$DIR^APSPUTIL("Y","Include Demo Patients","No",,.APSPQ)
+ Q:APSPQ
+ ;FID 74766 - Support of Drug Class
+ S APSPDCLS=$$DIR^APSPUTIL("S^1:C-II;2:C-II through C-V;3:C-III through C-V;4:Non-controlled schedules;5:All schedules","Drug Class Types",5,,.APSPQ)
+ Q:APSPQ
+ S APSPDCT=$S(APSPDCLS=1:2,APSPDCLS=2:"2345",APSPDCLS=3:"345",APSPDCLS=4:"'",APSPDCLS=5:"*")
+ S APSPDCTN(1)="C-II",APSPDCTN(2)="C-II through C-V",APSPDCTN(3)="C-III through C-V",APSPDCTN(4)="Non-controlled schedules",APSPDCTN(5)="All schedules"
  I APSPDIV D
  .S APSPDIV="*"
  E  D  Q:APSPQ
@@ -38,7 +46,7 @@ EN ;EP
  Q:APSPQ
  ;Ask about divisions
  S APSPGRP=0
- I APSPDIV="*" S APSPGRP=+$$DIR^APSPUTIL("S^1:Yes;0:No","Display by divison?",,,.APSPQ)
+ I APSPDIV="*" S APSPGRP=+$$DIR^APSPUTIL("S^1:Yes;0:No","Display by division?",,,.APSPQ)
  Q:APSPQ
  ;Ask about output
  S APSPOUT=0
@@ -73,7 +81,9 @@ FIND(APSPBD,APSPED,APSPFIL,APSPSRT,APSPSRT2) ;EP
  ..Q:'+AUTO
  ..S DIV=$$DIVVRY(RXIEN,APSPDIV)  ;check division
  ..Q:'DIV
- ..Q:'$P(^PSRX(RXIEN,0),U,6)        ;  Prescription must have a drug
+ ..Q:$$DEMOPT(RXIEN,APSPDEMO)  ;check for demo patient
+ ..Q:'$P(^PSRX(RXIEN,0),U,6)   ;Prescription must have a drug
+ ..Q:'$$DCVRY(APSPDCLS,RXIEN)  ;Quit if drug class doesn't match requirement
  ..;Now let's check the activity log of this prescription
  ..S ACT=0 F  S ACT=$O(^PSRX(RXIEN,"A",ACT)) Q:'+ACT  D
  ...S TYPE=$P($G(^PSRX(RXIEN,"A",ACT,9999999)),U,2)
@@ -89,10 +99,22 @@ FIND(APSPBD,APSPED,APSPFIL,APSPSRT,APSPSRT2) ;EP
  ....I APSPFIL="F"!(APSPFIL="A") D SET(RXIEN,ACT,TYPE)
  Q
  ;
+ ; Return boolean flag indicating prescription drug matches selected report drug class
+ ; Input:  DCLS - Drug Class based on input selected by user
+ ;         RX - Prescription IEN
+DCVRY(DCLS,RX) ;EP
+ Q:APSPDCT="*" 1  ;User requested all schedules
+ N RXRTSDT,DRGIEN,DCLSVAL
+ S DRGIEN=$P(^PSRX(RX,0),U,6)
+ Q:'$D(^PSDRUG(DRGIEN,0)) 0  ;Check for missing drug entry
+ S DCLSVAL=+$P(^PSDRUG(DRGIEN,0),U,3)
+ Q $S(APSPDCT="'":'("2345"[DCLSVAL),1:APSPDCT[DCLSVAL)
+ ;
 PRINT ;EP
- N APSPPG,DFLG
- S (APSPPG,DFLG)=0
+ N APSPPG,DFLG,APSPQ
+ S (APSPPG,DFLG,APSPQ)=0
  D HDR
+ Q:APSPQ
  D PRINT1
  W:'DFLG !,"No data found..."
  Q
@@ -106,14 +128,14 @@ PRINT1 ;EP
 PRINT2 ;Print out by division
  N DIV,SUB1,SUB2,VAL,DIVCT,TOT,NUM
  S TOT=0
- S DIV=0 F  S DIV=$O(^TMP("APSPESR",$J,DIV)) Q:'DIV  D
+ S DIV=0 F  S DIV=$O(^TMP("APSPESR",$J,DIV)) Q:DIV=""!APSPQ  D
  .S DIVCT=0
  .I APSPDIV="*" W !,"Division: "_$$GET1^DIQ(59,DIV,.01) D PRINT5
- .S SUB1=0 F  S SUB1=$O(^TMP("APSPESR",$J,DIV,SUB1)) Q:'SUB1  D
+ .S SUB1=0 F  S SUB1=$O(^TMP("APSPESR",$J,DIV,SUB1)) Q:SUB1=""!APSPQ  D
  ..D HDR1(SUB1)
- ..S SUB2=0 F  S SUB2=$O(^TMP("APSPESR",$J,DIV,SUB1,SUB2)) Q:'SUB2  D
+ ..S SUB2=0 F  S SUB2=$O(^TMP("APSPESR",$J,DIV,SUB1,SUB2)) Q:SUB2=""!APSPQ  D
  ...D HDR2(SUB2)
- ...S NUM=0 F  S NUM=$O(^TMP("APSPESR",$J,DIV,SUB1,SUB2,NUM)) Q:'NUM  D
+ ...S NUM=0 F  S NUM=$O(^TMP("APSPESR",$J,DIV,SUB1,SUB2,NUM)) Q:'NUM!APSPQ  D
  ....S VAL=$G(^TMP("APSPESR",$J,DIV,SUB1,SUB2,NUM))
  ....D PRINT4(VAL,DIV)
  ....S DFLG=1
@@ -124,12 +146,12 @@ PRINT2 ;Print out by division
 PRINT3 ;No divisional counts
  N SUB1,SUB2,VAL,TOT,DIV,NUM
  S TOT=0
- S SUB1=0 F  S SUB1=$O(^TMP("APSPESR",$J,SUB1)) Q:'SUB1  D
+ S SUB1=0 F  S SUB1=$O(^TMP("APSPESR",$J,SUB1)) Q:SUB1=""!APSPQ  D
  .D HDR1(SUB1)
- .S SUB2=0 F  S SUB2=$O(^TMP("APSPESR",$J,SUB1,SUB2)) Q:'SUB2  D
+ .S SUB2=0 F  S SUB2=$O(^TMP("APSPESR",$J,SUB1,SUB2)) Q:SUB2=""!APSPQ  D
  ..D HDR2(SUB2)
- ..S DIV=0 F  S DIV=$O(^TMP("APSPESR",$J,SUB1,SUB2,DIV)) Q:'DIV  D
- ...S NUM=0 F  S NUM=$O(^TMP("APSPESR",$J,SUB1,SUB2,DIV,NUM)) Q:'NUM  D
+ ..S DIV=0 F  S DIV=$O(^TMP("APSPESR",$J,SUB1,SUB2,DIV)) Q:DIV=""!APSPQ  D
+ ...S NUM=0 F  S NUM=$O(^TMP("APSPESR",$J,SUB1,SUB2,DIV,NUM)) Q:'NUM!APSPQ  D
  ....S DFLG=1
  ....S VAL=$G(^TMP("APSPESR",$J,SUB1,SUB2,DIV,NUM))
  ....D PRINT4(VAL,DIV)
@@ -137,11 +159,12 @@ PRINT3 ;No divisional counts
  W !,"TOTAL Count: "_TOT
  ; Print the line
 PRINT4(DATA,DIV) ;EP
+ Q:APSPQ
  N RXIEN,NODE0,NODE6,AIEN,IENS,QTY,SCH,DAYS,X,CLINIC,HRN,DRUG,DEA,CLASS,PAT,PRV,COM,USER,TYP
  S RXIEN=$P(DATA,U,1),AIEN=$P(DATA,U,3)
  S HRN=$P(DATA,U,4),DRUG=$P(DATA,U,5),DEA=$P(DATA,U,6),CLASS=$P(DATA,U,7)
  S PDAT=$P(DATA,U,8),PAT=$P(DATA,U,9),PRV=$P(DATA,U,10)
- S PDAT=$$FMTE^XLFDT(PDAT)
+ S PDAT=$TR($P($$FMTE^XLFDT(PDAT,"5Z"),":",1,2),"@"," ")
  S USER=$P(DATA,U,11),USER=$$GET1^DIQ(200,USER,.01,"E")
  S COM=$P(DATA,U,12)
  S QTY=$$GET1^DIQ(52,RXIEN,7,"E")
@@ -156,23 +179,24 @@ PRINT4(DATA,DIV) ;EP
  S PRV=$$GET1^DIQ(200,PRV,.01)
  S CLINIC=$$GET1^DIQ(44,$P(DATA,U,14),.01,"E")
  S TYPE=$P(DATA,U,13)
- S TYP=$S(TYPE="T":"Transmitted",TYPE="P":"Printed",TYPE="F":"Failed",TYPE="X":"Retransmitted",TYPE="R":"Reprinted",1:"")
+ S TYP=$S(TYPE="T":"Transmitted",TYPE="P":"Printed",TYPE="F":"Failed",TYPE="X":"Retransmitted",TYPE="R":"Reprinted",TYPE="U":"Updated",1:"")
  I APSPOUT=1 D
- .W !,?12,"RX Number: "_RXNO,?30,"Type: "_TYP,?50,"Division: "_DIV
+ .W !,?6,"RX Number: "_RXNO,?27,"Type: "_TYP,?50,"Division: "_DIV
  .D PRINT5
- .W !,?12,"Patient: "_$E(PAT,1,25),?40,"HRN: "_HRN,?55,"Location: :"_CLINIC
+ .W !,?6,"Patient: "_$E(PAT,1,25),?40,"HRN: "_HRN,?55,"Location: :"_CLINIC
  .D PRINT5
- .W !,?12,"Action Date: "_PDAT
+ .W !,?6,"Action Date: "_PDAT
  .D PRINT5
- .W !,?12,"Drug: "_$E(DRUG,1,25),?40,"CLASS: "_CLASS,?60,"DEA Class: "_DEA
+ .W !,?6,"Drug: "_$E(DRUG,1,25),?40,"CLASS: "_CLASS,?60,"DEA Class: "_DEA
  .D PRINT5
- .W !,?12,"Quantity: "_QTY,?40,"Days Supply: "_DAYS,?60,"Schedule: "_SCH
+ .W !,?6,"Quantity: "_QTY,?40,"Days Supply: "_DAYS,?60,"Schedule: "_SCH
  .D PRINT5
- .W !,?12,"Provider: "_$E(PRV,1,25),?40,"Action Person: "_$E(USER,1,25)
+ .W !,?6,"Provider: "_$E(PRV,1,25),?40,"Action Person: "_$E(USER,1,25)
  .D PRINT5
- .W !,?12,"Comment: "_$E(COM,1,65),!
+ .W !,?6,"Comment: "_$E(COM,1,65),!
  I APSPOUT=2 D
- .W !,?12,RXNO,?18,HRN,?28,$E(TYP,1,1),?32,$E(DRUG,1,15),?48,DEA,?54,$E(USER,1,15),?68,$P(PDAT,"@",1)
+ .;W !,?8,RXNO,?18,HRN,?28,$E(TYP,1,1),?32,$E(DRUG,1,15),?48,DEA,?54,$E(USER,1,14),?70,$P(PDAT,"@",1)
+ .W !,?2,RXNO,?13,HRN,?20,TYPE,?25,$E(DRUG,1,15),?42,DEA,?46,$E(USER,1,16),?63,$P(PDAT,"@",1)
  .D PRINT5 ;check page length
  I APSPOUT=3 D
  .W !
@@ -185,12 +209,14 @@ PRINT5 ;EP
  I $Y+4>IOSL D
  .K DIRUT,DFOUT,DLOUT,DTOUT,DUOUT
  .S DIR(0)="E" D ^DIR
+ .I $D(DUOUT) S APSPQ=1
  .D HDR
  Q
  ; Set data into ^TMP global for output
 SET(RX,IEN,TYPE) ;EP
  N LSTDSPDT,NODE0,NODE2,NODE3,ANODE,X,Y,IENS,PDAT,USER,COM
  N PDAT,DEACLASS,DRUG,PRV,DIV,RXNO,PRINT,DRCLASS,DRGNM
+ N DEACLS
  S NODE0=$G(^PSRX(RX,0))
  S NODE2=$G(^PSRX(RX,2))
  S NODE3=$G(^PSRX(RX,3))
@@ -198,7 +224,9 @@ SET(RX,IEN,TYPE) ;EP
  S DIV=$P(NODE2,U,9)
  S PRV=$P(NODE0,U,4),CLINIC=$P(NODE0,U,5)
  S DRUG=$P(NODE0,U,6),DRGNM=$P(^PSDRUG(DRUG,0),U)
- S DEACLASS=+$P(NODE0,U,3)
+ S DEACLASS=$P($G(^PSDRUG(DRUG,0)),U,3)
+ S DEACLS=$S($L(DEACLASS):DEACLASS_$C(1),1:"Not specified")
+ S DEACLS=$$CVTDCLS(DEACLASS)
  S PDAT=$P(ANODE,U,1)
  S DRCLASS=$$GET1^DIQ(50,DRUG,2,"E")
  S USER=$P(ANODE,U,3)
@@ -211,16 +239,16 @@ SET(RX,IEN,TYPE) ;EP
  N A,B,C
  S A=DIV
  I APSPSRT=1 D
- .I APSPSRT2=1 S B=PDAT,C=DEACLASS
+ .I APSPSRT2=1 S B=PDAT,C=DEACLS
  .I APSPSRT2=2 S B=PDAT,C=PRV
  .I APSPSRT2=3 S B=PDAT,C=USER
  I APSPSRT=2 D
- .I APSPSRT2=1 S B=DEACLASS,C=DRUG
+ .I APSPSRT2=1 S B=DEACLS,C=DRGNM_U_DRUG  ;sorts by drug name
  I APSPSRT=3 D
- .I APSPSRT2=1 S B=PRV,C=DEACLASS
+ .I APSPSRT2=1 S B=PRV,C=DEACLS
  .I APSPSRT2=2 S B=PRV,C=PDAT
  I APSPSRT=4 D
- .I APSPSRT2=1 S B=USER,C=DEACLASS
+ .I APSPSRT2=1 S B=USER,C=DEACLS
  .I APSPSRT2=2 S B=USER,C=PDAT
  S CNT=CNT+1
  I APSPDIV="*"&(APSPGRP=1) D
@@ -240,56 +268,58 @@ HDR ;EP
  W @IOF
  S APSPPG=APSPPG+1
  W !,"External Pharmacy Prescriptions Report",?40,$P($TR($$FMTE^XLFDT($$NOW^XLFDT,"5Z"),"@"," "),":",1,2),?(IOM-10),"Page: "_APSPPG
- W !,"Report Criteria: (Prescriptions which are marked as auto-finshed)"
- W !,?5,"Inclusive Dates: "_APSPBDF_" to "_APSPEDF
- W !,?5,"Filtered by: "_$S(APSPFIL=1:"Electronic",APSPFIL=2:"Printed",APSPFIL=3:"Reprinted",1:"All")
- W !,?5,"Pharmacy Division: "_$S(APSPDIV:$$GET1^DIQ(59,APSPDIV,.01),1:"All")
- W !,?5,"Primary Sort: "_$S(APSPSRT=1:"Print Date",APSPSRT=2:"DEA schedule",APSPSRT=3:"Prescriber",APSPSRT=4:"User",1:"")
+ W !,"Report Criteria: (Prescriptions which are marked as auto-finished)"
+ W !,?2,"Inclusive Dates: "_APSPBDF_" to "_APSPEDF
+ W !,?2,"Drug Class Type: "_APSPDCTN(APSPDCLS)
+ W !,?2,"Filtered by: "_$S(APSPFIL=1:"Electronic",APSPFIL=2:"Printed",APSPFIL=3:"Reprinted",1:"All")
+ W !,?2,"Pharmacy Division: "_$S(APSPDIV:$$GET1^DIQ(59,APSPDIV,.01),1:"All")
+ W !,?2,"Primary Sort: "_$S(APSPSRT=1:"Print Date",APSPSRT=2:"DEA schedule",APSPSRT=3:"Prescriber",APSPSRT=4:"User",1:"")
  W !,$TR($J("",80)," ","-")
  I APSPOUT=2 D HDR3
  Q
  ;
 HDR1(SRT1) ;EP
  N LINE
- I APSPSRT=1 S LINE="Print Date: "_$$FMTE^XLFDT(SRT1)
- I APSPSRT=2 S LINE="DEA Class: "_$$GET1^DIQ(50,SRT1,.01,"E")
+ I APSPSRT=1 S LINE="Print Date: "_$TR($P($$FMTE^XLFDT(SRT1,"5Z"),":",1,2),"@"," ")
+ I APSPSRT=2 S LINE="DEA Class: "_SRT1
  I APSPSRT=3 S LINE="Prescriber: "_$$GET1^DIQ(200,SRT1,.01,"E")
- I APSPSRT=4 S LINE="User: "_$$GET1^DIQ(200,SRT1,.02,"E")
- W !,?5,LINE
+ I APSPSRT=4 S LINE="User: "_$$GET1^DIQ(200,SRT1,.01,"E")
+ W !,LINE
  Q
 HDR2(SRT2) ;EP
  I APSPSRT=1 D
  .I APSPSRT2=1 D
- ..S LINE=$$CVTDCLS(SRT2)
- ..W !,10,"DEA Schedule: "_LINE
+ ..S LINE=SRT2
+ ..W !,?1,"DEA Schedule: "_LINE
  .I APSPSRT2=2 D
  ..S LINE=$$GET1^DIQ(200,SRT2,.01,"E")
- ..W !,?10,"Prescriber: "_LINE
+ ..W !,?1,"Prescriber: "_LINE
  .I APSPSRT2=3 D
  ..S LINE=$$GET1^DIQ(200,SRT2,.01,"E")
- ..W !,?10,"User: "_LINE
+ ..W !,?1,"User: "_LINE
  I APSPSRT=2 D
- .S LINE=$$GET1^DIQ(50,SRT2,.01,"E")
- .W !,?10,"Drug Name: "_LINE
+ .;S LINE=$$GET1^DIQ(50,SRT2,.01,"E")
+ .S LINE=$P(SRT2,U)
+ .W !,?1,"Drug Name: "_LINE
  I APSPSRT=3 D
  .I APSPSRT2=1 D
- ..S LINE=$$CVTDCLS(SRT2)
- ..W !,?10,"DEA Schedule: "_LINE
+ ..S LINE=SRT2
+ ..W !,?1,"DEA Schedule: "_LINE
  .I APSPSRT2=2 D
- ..S LINE=$$FMTE^XLFDT(SRT2)
- ..W !,?10,"Print Date: "_LINE
+ ..S LINE=$TR($P($$FMTE^XLFDT(SRT2,"5Z"),":",1,2),"@"," ")
+ ..W !,?1,"Print Date: "_LINE
  I APSPSRT=4 D
  .I APSPSRT2=1 D
- ..S LINE=$$CVTDCLS(SRT2)
- ..W !,?10,"DEA Schedule: "_LINE
+ ..S LINE=SRT2
+ ..W !,?1,"DEA Schedule: "_LINE
  .I APSPSRT2=2 D
- ..S LINE=$$FMTE^XLFDT(SRT2)
- ..W 1,?10,"Print Date: "_LINE
+ ..S LINE=$TR($P($$FMTE^XLFDT(SRT2,"5Z"),":",1,2),"@"," ")
+ ..W !,?1,"Print Date: "_LINE
  Q
 HDR3 ;PRINT OUT COLUMNS
  I APSPOUT=1 Q
  I APSPOUT=2 D
- .W !,?12,"RX",?18,"HRN",?27,"Type",?32,"Drug Name",?48,"DEA",?54,"Action by",?70,"Print Dt"
+ .W !,?2,"RX",?13,"HRN",?20,"Type",?25,"Drug Name",?42,"DEA",?46,"Action by",?63,"Print Dt"
  .D DASH
  E  D
  .W !,"RX"_U_"Division"_U_"HRN"_U_"Patient"_U_"Drug Name"_U_"Classification"_U_"DEA Class"_U_"Provider"_U_"Type"_U_"User"_U_"Print Date"_U_"Quantity"_U_"Days"_U_"Schedule"_U_"Comments"_U_"Location"
@@ -298,12 +328,22 @@ HDR3 ;PRINT OUT COLUMNS
 DASH ;EP
  N DASH
  W ! F DASH=1:1:IOM W "-"
- W !
  Q
 CVTDCLS(DCLS) ; EP
- Q:DCLS=2 "C-II"
- Q:DCLS=3 "C-III"
- Q:DCLS=4 "C-IV"
- Q:DCLS=5 "C-V"
- Q "C-UNKNOWN"
+ Q:+DCLS=2!(+DCLS=20) "C-II"
+ Q:+DCLS=3!(+DCLS=30) "C-III"
+ Q:+DCLS=4!(+DCLS=40) "C-IV"
+ Q:+DCLS=5!(+DCLS=50) "C-V"
+ Q:$L(DCLS)>0 "Non-CS"
+ Q "Not Specified"
  ;
+DEMOPT(RX,FLG) ;Quit if demo pts excluded
+ N IND,PAT,SSN,NAME,RES
+ Q:FLG 0
+ S RES=0
+ S PAT=+$P($G(^PSRX(RX,0)),U,2)
+ S IND=$$GET1^DIQ(2,PAT,.6)
+ S SSN=$$GET1^DIQ(2,PAT,.09)
+ S NAME=$$GET1^DIQ(2,PAT,.01)
+ I (IND="YES")!(SSN?5"0".E)!(NAME?1"DEMO,PATIENT".E)!(NAME?1"DEMO,GIMC".E) S RES=1
+ Q RES

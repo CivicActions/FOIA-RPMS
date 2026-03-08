@@ -1,17 +1,31 @@
 BADEEVNT ;IHS/MSC/MGH - Dentrix HL7 interface  ;30-Jun-2009 15:26;PLS
- ;;1.0;DENTAL/EDR INTERFACE;**1**;AUG 22, 2011
+ ;;1.0;DENTAL/EDR INTERFACE;**1,7,9**;FEB 22, 2010;Build 16
  ;; Modified - IHS/MSC/AMF - 11/23/10 - Updated Out of Order, alerts, removed H 2
  ;; Modified - IHS/MSC/VAC 9/2010 check for patient # in AUPNPAT
+ ;; Modified - IHS/OIT/GAB 4/2020 Patch 7 - Updated Process for New Sites to Push Patients by Location or Push All Patients
+ ;; Modified - IHS/GDIT/GAB 09/2024 **9** - Transmit DOD in outgoing ADT patient update message
  Q
 TLOADPT ;EP Taskman call to start patient load
- N STOP,ZTDTH,ZTIO,ZTDESC,ZTRTN,ZTSAVE,ZTPRI,ZTSK
+ N STOP,ZTDTH,ZTIO,ZTDESC,ZTRTN,ZTSAVE,ZTPRI,ZTSK,AGDUZ2
+ ;IHS/OIT/GAB Patch 7 - ADDED BELOW 10 LINES TO SELECT SINGLE OR MULTIPLE LOCATIONS TO PUSH
+ K ^XTMP("BADELOC")
+ S ^XTMP("BADELOC",99)=0
+ S PUSHALL=0
+ D TLOADPT2^BADEPUSH
+ Q:PUSHALL=2    ;already pushed by facility so quit
+ S (DIR(0),DIR("B"))="Y"
+ S DIR("A")="Are you sure you want to push all patient data for ALL locations y/n? "
+ D ^DIR K DIR
+ I (Y'=1)!(Y=0) W !,"Stopping the Patient Push Process now..",! Q
+ I Y=1 W !,"Starting the Patient Push for all locations...",!
+ ;;
  ;Make sure its not already running
  S STOP=$$GET^XPAR("ALL","BADE EDR PAUSE PATIENT LOAD",1,"E")
  ;Its already running and shouldn't be restarted
  I STOP="NO" D  H 3 Q
  .W !,"Process is already running",!
  I $$GET^XPAR("ALL","BADE EDR LAST DFN") D  H 3 Q
- .W !,"Upload process has already begun. Please use Restart option.",!
+ .W !,"Upload process has already begun. Please check with programmer to reset processes.",!
  S ZTIO=""
  S ZTPRI=1
  S ZTDESC="Load Patient Data to EDR"
@@ -64,6 +78,8 @@ LOOP S DFN=$S(DFN>0:DFN,1:0),CNT=0,STOP="NO",TOTAL=0
  Q
 TRESTRT ;EP Taskman call to restart patient load
  N STOP,ZTDTH,ZTIO,ZTDESC,ZTRTN,ZTSAVE,ZTPRI,ZTSK
+ ;check to ensure it's not running the push by location, if so use that routine
+ I ^XTMP("BADELOC",99)=1 G TRESTRT^BADEPUSH
  ;Make sure its not already running
  S STOP=$$GET^XPAR("ALL","BADE EDR PAUSE PATIENT LOAD",1,"E")
  ;Its already running and shouldn't be restarted
@@ -172,8 +188,9 @@ A31(DFN) ;EP Create and send one A31 message
  S EVNTTYPE="A31"
  I '$D(^DPT(DFN,0)) S ERR="No zero node for patient.  Cannot send A31." D NOTIF^BADEHL1(DFN,ERR) Q  ;IHS/MSC/AMF 11/23/10  descriptive alert
  ;Don't send if patient is deceased
- ;S DOD=$P($G(^DPT(DFN,.35)),U,1)
- ;I DOD=""
+ S DOD=$P($G(^DPT(DFN,.35)),U,1)
+ ;I DOD="" D NEWMSG^BADEHL1(DFN,EVNTTYPE)
+ ;/IHS/GDIT/GAB **9** Transmit patient Date of Death - commented above and added below line; for patient updates (A31)
  D NEWMSG^BADEHL1(DFN,EVNTTYPE)
  Q
 MSA ;EP

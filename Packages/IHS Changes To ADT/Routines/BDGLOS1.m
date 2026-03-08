@@ -1,5 +1,5 @@
 BDGLOS1 ; IHS/ANMC/LJF - LOS BY WARD BY MONTH ;  [ 09/30/2004  11:32 AM ]
- ;;5.3;PIMS;**1001,1019**;APR 26, 2002;Build 3
+ ;;5.3;PIMS;**1001,1019,1022**;MAY 28, 2004;Build 18
  ;
 EN ; -- main entry point for BDG LOS BY WARD & MONTH
  NEW VALMCNT
@@ -82,8 +82,15 @@ INIT ; -- init variables and list array
  .... ;
  .... S LINE=$$FMTE^XLFDT(MONTH_"00")           ;month - external format
  .... S LINE=$$PAD(LINE,12)_$E(WARD,1,6)        ;then ward
- .... S LINE=$$PAD(LINE,20)_$E(NAME,1,18)       ;then patient
  .... S DFN=$$GET1^DIQ(405,CA,.03,"I")
+ .... ;202307 77894 maw p1022 PPN
+ .... N PRF
+ .... S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ .... S LINE=$$PAD(LINE,20)_$G(PRF)       ;then patient
+ .... ;S LINE=$$PAD(LINE,20)_$E(NAME,1,18)       ;then patient
+ .... ;S DFN=$$GET1^DIQ(405,CA,.03,"I")
+ .... D SET(LINE,.VALMCNT)
+ .... S LINE=""
  .... S LINE=$$PAD(LINE,40)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)   ;chart #
  .... S LINE=$$PAD(LINE,50)_$P($$GET1^DIQ(405,CA,.01),"@")   ;admit date
  .... S LINE=$$PAD(LINE,65)_$J(LOS,4)                        ;# of days

@@ -1,7 +1,6 @@
-GMRAPED0 ;HIRMFO/RM,WAA-VERIFIER EDIT OF DRUG A/AR ;01-May-2012 14:23;DU
- ;;4.0;Adverse Reaction Tracking;**17,1002,1006**;Mar 29, 1996;Build 29
+GMRAPED0 ;HIRMFO/RM,WAA-VERIFIER EDIT OF DRUG A/AR ;8/1/03  09:23
+ ;;4.0;Adverse Reaction Tracking;**17**;Mar 29, 1996
 EN1 ; ENTRY TO EDIT INFO SPECIFIC TO DRUG A/AR FOR VERIFIER
- ;IHS/MSC/MGH added data to edit source Patch 1006
  K GMRAINGR,GMRACLAS
  I '$D(^XUSEC("GMRA-ALLERGY VERIFY",DUZ)) G Q1
  S GMRAPA(0)=$G(^GMR(120.8,GMRAPA,0)) G:GMRAPA(0)="" Q1
@@ -29,8 +28,6 @@ YNED W !!,"Would you like to edit any of this data" S %=0 D YN^DICN I '% W !?4,$
  S DA=GMRAPA,DIE="^GMR(120.8,",DR="2" D ^DIE S:$D(Y) GMRAOUT=1 G Q1:GMRAOUT
  S GMRAPA(0)=$G(^GMR(120.8,+GMRAPA,0))
  D DRGCLS^GMRAPED1
- ;IHS/MSC/MGH added to edit source Patch 1006
- S DA=GMRAPA,DIE="^GMR(120.8,",DR="9999999.11" D ^DIE S:$D(Y) GMRAOUT=1 G Q1:GMRAOUT
  I 'GMRAOUT F  K Y D  Q:GMRAOUT!('$D(Y))
  .S GMRAPA(0)=$S($D(^GMR(120.8,GMRAPA,0)):^(0),1:"")
  .S DR="6(O)bserved or (H)istorical Allergy/Adverse Reaction",DIE="^GMR(120.8,",DA=GMRAPA D ^DIE
@@ -44,14 +41,12 @@ YNED W !!,"Would you like to edit any of this data" S %=0 D YN^DICN I '% W !?4,$
  ..Q
  .Q
  I 'GMRAOUT D EN1^GMRAPER2(GMRAPA,"120.8",.GMRAOUT)
- ;Add the SNOMED event type IHS/MSC/MGH Patch 1006
- I 'GMRAOUT D EVENT Q:GMRAOUT
- ;I 'GMRAOUT D MECH Q:GMRAOUT
+ I 'GMRAOUT D MECH Q:GMRAOUT
  S GMRAPA(0)=$S($D(^GMR(120.8,GMRAPA,0)):^(0),1:"")
  S GMRAOUT=0 G EN1
 Q1 ;Exit
  K GMRAEN,X,GMRAAR
- K DA,DIE,DR,DIC
+ K DA,DIE,DR
  Q
 MECH ;Mechanism for ADRs
  F  W !!,?5,"Choose one of the following:",! D  Q:GMRAOUT!('$D(Y))
@@ -59,17 +54,6 @@ MECH ;Mechanism for ADRs
  .W ! S DIE="^GMR(120.8,",DA=GMRAPA,DR=17 D ^DIE
  .S:$D(Y) GMRAOUT=1
  .Q
- Q
-EVENT ;Store the event
- N DIC,DA,DR,DIE,X,Y,IEN,TXT,MECH
- S TXT=""
- S DIE="^GMR(120.8,",DA=GMRAPA,DR=9999999.13
- D ^DIE
- I X'="" S TXT=$P($G(^BEHOAR(90460.06,X,0)),U,1)
- ;Add the mechanism in here
- S MECH=$S(TXT="DRUG ALLERGY":"A",TXT="FOOD ALLERGY":"A",TXT="DRUG INTOLERANCE":"P",1:"U")
- S DIE="^GMR(120.8,",DA=GMRAPA,DR="17///^S X=MECH" D ^DIE
- S:$D(Y) GMRAOUT=1
  Q
 HELP ; HELP FOR A/AR LOOKUP
  W !!?4,"Would you like to see a list of:",!?6,"1  Local Allergies (Food/Drug/Other)",!?6,"2  Drug Classes",!?6,"3  Drug Ingredients",!?6,"4  National Drugs",!?6,"5  Local Drugs"

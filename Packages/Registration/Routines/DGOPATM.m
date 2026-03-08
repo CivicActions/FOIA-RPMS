@@ -1,5 +1,5 @@
 DGOPATM ;GLRISC/REL - Patient Movements ; [ 09/13/2001  3:55 PM ]
- ;;5.3;Registration;**93,162,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**93,162,1015,1022**;MAY 28, 2004;Build 18
  ;IHS/ANMC/LJF  5/24/2001 changed date limit to 14 days into past
  ;                        added choice of type of movement
  ;
@@ -53,8 +53,14 @@ P0 Q:'$D(^DPT(DFN,0))  S Y(0)=^(0) Q:'$D(^DGPM(ADM,0))
  I NOD="AMV1" S X1=$P(^DGPM(ADM,0),"^",18) Q:X1=40
  I NOD="AMV3" S X1=$P(^DGPM(ADM,0),"^",18) I X1=41!(X1=42)!(X1=46)!(X1=47) Q
  I $Y+6>IOSL D RT Q:DGU
- D PID^VADPT6 W !,$E($P(Y(0),"^",1),1,22),?24,VA("BID")
+ ;202307 77894 maw p1022 PPN
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ D PID^VADPT6
+ W !,$G(PRF),!,?24,VA("BID")
  W ?32,$J(+$E(NX,6,7),2),"-",$P("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec"," ",+$E(NX,4,5))
+ ;D PID^VADPT6 W !,$E($P(Y(0),"^",1),1,22),?24,VA("BID")
+ ;W ?32,$J(+$E(NX,6,7),2),"-",$P("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec"," ",+$E(NX,4,5))
  I NX#1 S I2=+$E(NX_"0",9,10) W $J($S(I2>12:I2-12,1:I2),3),":",$E(NX_"000",11,12),$S(I2>11:"pm",1:"am")
  D GET W ?48,FW,?65,TW Q
 GET S (FW,TW,FR,TR)=""

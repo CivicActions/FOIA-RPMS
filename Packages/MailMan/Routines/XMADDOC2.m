@@ -1,0 +1,2 @@
+XMADDOC2 ;(WASH ISC)/CAP - * OBSOLETE * ;01/26/98  10:39
+ ;;7.1;MailMan;**50**;Jun 02, 1994

@@ -1,5 +1,5 @@
 ABMEF33 ; IHS/SD/SDR - Electronic 837 version 5010 Dental ;      
- ;;2.6;IHS Third Party Billing System;**8**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**8,10**;NOV 12, 2009;Build 43
  ;
 START ;
  ;START HERE
@@ -16,7 +16,8 @@ START ;
  .W !,"Insurer NOT identified.",!
  .D EOP^ABMDUTL(1)
  S ABMPINS=ABMP("INS")
- S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)
+ ;S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*10 HEAT73780
+ S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  S ABMPITYP=ABMP("ITYPE")
  I ($G(ABMER("CNT"))=1) D  Q:$G(POP)
  .D OPEN

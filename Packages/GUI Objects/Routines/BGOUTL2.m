@@ -1,5 +1,5 @@
-BGOUTL2 ; IHS/BAO/TMD - Utilities (continued)  ;05-Jun-2014 08:41;DU
- ;;1.1;BGO COMPONENTS;**1,3,5,6,10,11,12,13,14**;Mar 20, 2007;Build 13
+BGOUTL2 ; IHS/BAO/TMD - Utilities (continued)  ;18-Nov-2021 10:16;DU
+ ;;1.1;BGO COMPONENTS;**1,3,5,6,10,11,12,13,14,27,30**;Mar 20, 2007;Build 13
  ; Add refusals to output stream
  ;  R ^ Refusal IEN [2] ^ Type IEN [3] ^ Type Name [4] ^ Item IEN [5] ^ Item Name [6] ^ Provider IEN [7] ^
  ;  Provider Name [8] ^ Date [9] ^ Locked [10] ^ Reason [11] ^ Comment [12]
@@ -13,7 +13,7 @@ REFGET(RET,DFN,FNUM,CNT) ;EP
  .F  S VDT=$O(^AUPNPREF("AA",DFN,FNUM,TYPE,VDT)) Q:'VDT  D
  ..S RIEN=0
  ..F  S RIEN=$O(^AUPNPREF("AA",DFN,FNUM,TYPE,VDT,RIEN)) Q:'RIEN  D
- ...S CNT=CNT+1,@RET@(CNT)=$$REFGET1(RIEN)
+ ...I $D(^AUPNPREF(RIEN)) S CNT=CNT+1,@RET@(CNT)=$$REFGET1(RIEN)  ;P27 check for existence
  Q
  ; Return data for a specified refusal
  ;  R ^ Refusal IEN [2] ^ Type IEN [3] ^ Type Name [4] ^ Item IEN [5] ^ Item Name [6] ^ Provider IEN [7] ^
@@ -25,7 +25,8 @@ REFGET1(RIEN) ;EP
  S SNTXT=""
  S TYPE=+REC
  S TYPENM=$P($G(^AUTTREFT(TYPE,0)),U)
- S DATE=$$FMTDATE^BGOUTL($P(REC,U,3))
+ S DATE=$$FMTDATE^BGOUTL($P(REC,U,3),1)   ;IHS/MSC/MGH added time to get call
+ S DATE=$TR(DATE," ","@")
  S ITEMNM=$P(REC,U,4)
  ;IHS/MSC/MGH Patch 13
  I TYPENM="SNOMED" D
@@ -66,7 +67,8 @@ REFSET(VIEN,ITEM,TYPE,RSN,CMNT,PRV,CT) ;EP
  S RIEN=""
  S X=$G(^AUPNVSIT(VIEN,0))
  ;Q $$REFSET2($P(X,U,5),X\1,ITEM,TYPE,RSN,.CMNT,.PRV,IEN,CT)
- Q $$REFSET2($P(X,U,5),X\1,ITEM,TYPE,RSN,.CMNT,.PRV,RIEN,.CT)  ;2013-10-02 DKA P13 Correct <UNDEFINED> error
+ ;Q $$REFSET2($P(X,U,5),X\1,ITEM,TYPE,RSN,.CMNT,.PRV,RIEN,.CT)  ;2013-10-02 DKA P13 Correct <UNDEFINED> error
+ Q $$REFSET2($P(X,U,5),$P(X,U,1),ITEM,TYPE,RSN,.CMNT,.PRV,RIEN,.CT)  ;2021-10-19 MGH Allow time
  ; Store a patient refusal (alternate)
 REFSET2(DFN,DAT,ITEM,TYPE,RSN,CMNT,PRV,RIEN,CT) ;EP
  N FDA,ERR,FNUM,RET,IENX,OPR,ZN,CPT,IN,OUT,X,ARR,SNO
@@ -115,6 +117,7 @@ REFSET2(DFN,DAT,ITEM,TYPE,RSN,CMNT,PRV,RIEN,CT) ;EP
  ..S @FDA@(1.02)=ARR(1,"PRE","DSC")
  .;END patch 13 mod
  S:$D(CMNT) @FDA@(1101)=CMNT
+ I CMNT="@" S @FDA@(1101)=""
  S:'$G(PRV) PRV=DUZ
  S @FDA@(1204)="`"_PRV
  ;IHS/MSC/MGH new fields patch 11

@@ -1,5 +1,5 @@
-APCLRPT ; IHS/CMI/LAB - INTERACTIVE ROUTINE FOR DATA FETCHER ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLRPT ; IHS/OHPRD/TMJ - INTERACTIVE ROUTINE FOR DATA FETCHER ;  [ 05/21/97  2:27 PM ]
+ ;;3.0;IHS PCC REPORTS;**20**;FEB 05, 1997
  ;
 CREATE ; - ENTRY POINT - from menu option to create report template
  S DIR(0)="FO^3:30",DIR("A")="ENTER THE NAME OF A NEW REPORT TEMPLATE",DIR("?",1)="Enter a name, 3-30 characters long for a report template.  This option for",DIR("?")="creation of new report templates only." D ^DIR K DIR

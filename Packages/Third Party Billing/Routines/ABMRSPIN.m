@@ -1,6 +1,9 @@
 ABMRSPIN ; IHS/SD/SDR - Claims Identified as Potential Split Billing Report; 
- ;;2.6;IHS 3P BILLING SYSTEM;**22**;NOV 12, 2009;Build 418
+ ;;2.6;IHS 3P BILLING SYSTEM;**22,32**;NOV 12, 2009;Build 621
  ;IHS/SD/SDR 2.6*22 HEAT335246 - New routine
+ ;IHS/SD/SDR 2.6*32 CR9771 Updated message to include that a backbilling limit check will be done
+ ;IHS/SD/SDR 2.6*32 CR9764 Removed Approval date option; it shouldn't split from bills the way it does; Opened CR11935 to
+ ;  correct but it needs to go to the TAG for review and input on how it should work (future patch, not this patch)
  ;
  Q
 START ;
@@ -157,8 +160,15 @@ COMPUTE ;
  Q
 INS ;EP
  K ABMY("INS")
- W !!,"Insurers selected here MUST be the active insurer in order for claims/bills"
- W !,"to display on the report!",!
+ ;start old abm*2.6*32 IHS/SD/SDR CR9771
+ ;W !!,"Insurers selected here MUST be the active insurer in order for claims/bills"
+ ;W !,"to display on the report!",!
+ ;end old start new abm*2.6*32 IHS/SD/SDR CR9771
+ W !!,"Insurers selected here MUST be the active insurer and within the backbilling"
+ W !,"limit (both insurer and site parameters) in order for claims/bills to be"
+ W !,"included!",!
+ ;end new abm*2.6*32 IHS/SD/SDR CR9771
+ ;
  F  D  Q:(+Y<0&(X=""))!$D(DUOUT)!$D(DTOUT)!$D(DIROUT)!$D(DIRUT)
  .D ^XBFMK
  .S DIC="^AUTNINS("
@@ -182,19 +192,29 @@ DT ;EP
  K ABMY("DT")
  I $G(ABM("DT"))="C" S Y=4 G DTYP
  I $D(ABM("STA")),($G(ABM("STA"))'="M") S Y=2 G DTYP
- S DIR(0)="S^1:Approval Date;2:Visit Date"
- G DDIR:$G(ABMP("TYP"))=2
- I $G(ABM("STA"))="M" G DTYP2
- ;
-DDIR ;
- S DIR("A")="Select TYPE of DATE Desired"
- D ^DIR
- Q:$D(DIROUT)!$D(DIRUT)
- I Y=3 S Y=$S(DIR(0)["Pay":5,1:3)
+ ;start old abm*2.6*32 IHS/SD/SDR CR9764
+ ;removing the choice to pick approval or visit date and defaulting to visit date for now
+ ;prompt may be added back with CR11935 after review, input from TAG on how it should work
+ ;S DIR(0)="S^1:Approval Date;2:Visit Date"
+ ;G DDIR:$G(ABMP("TYP"))=2
+ ;I $G(ABM("STA"))="M" G DTYP2
+ ;;
+ ;DDIR ;
+ ;S DIR("A")="Select TYPE of DATE Desired"
+ ;D ^DIR
+ ;Q:$D(DIROUT)!$D(DIRUT)
+ ;I Y=3 S Y=$S(DIR(0)["Pay":5,1:3)
+ ;end old abm*2.6*32 IHS/SD/SDR CR9764
  ;
 DTYP ;
- Q:$D(DIRUT)
- S ABMY("DT")=$S(Y=1:"A",1:"V")
+ ;start old abm*2.6*32 IHS/SD/SDR CR9764
+ ;Q:$D(DIRUT)
+ ;S ABMY("DT")=$S(Y=1:"A",1:"V")
+ ;end old start new abm*2.6*32 IHS/SD/SDR CR9764
+ ;this hardcodes it to do a VISIT DATE range every time for now - see CR11935 for future patch to fix
+ S ABMY("DT")="V"
+ S Y=0
+ ;end new abm*2.6*32 IHS/SD/SDR CR9764
  S Y=$S(Y=1:"APPROVAL",1:"VISIT")_" DATE"
  W !!," ============ Entry of ",Y," Range =============",!
  S DIR("A")="Enter STARTING "_Y

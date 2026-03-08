@@ -1,5 +1,5 @@
-ABME5L10 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS Third Party Billing System;**6,8,10,11,19,21,22,23**;NOV 12, 2009;Build 427
+ABME5L10 ; IHS/SD/SDR - Header 
+ ;;2.6;IHS Third Party Billing System;**6,8,10,11,19,21,22,23,32,40**;NOV 12, 2009;Build 785
  ;Header Segments
  ;IHS/SD/SDR - 2.6*19 - HEAT116949 - Include LIN segment in 837I if line item has an NDC.
  ;IHS/SD/SDR - 2.6*21 - HEAT106899 - Updated to print operating.  Fixed so it would print both
@@ -8,14 +8,19 @@ ABME5L10 ; IHS/ASDST/DMJ - Header
  ;IHS/SD/SDR - 2.6*21 - HEAT120880 - Made change for OK Medicaid to print date range in loop 2400.
  ;IHS/SD/SDR 2.6*22 HEAT335246 check new parameter for itemized but with the flat rate on first line, zeros for the rest
  ;IHS/SD/SDR 2.6*23 HEAT247169 Added checks for NDC in piece 19 of ABMRV array
+ ;IHS/SD/SDR 2.6*32 CR10210 Remove ALL INCLUSIVE PRINT NDC prompt
+ ;IHS/SD/SDR 2.6*40 ADO108243 Removed hardcoding for OKLAHOMA MEDICAID to print date range for DTP*472. Switched to use
+ ;   insurer/visit type parameter so any insurer can do it. Medi-Cal needed the same ability.
  ;
 EP ;START HERE
  S ABMLXCNT=0
  K ABM
  D FRATE^ABMDF11
  D ^ABMERGRV
- S ABMITMZ=$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),"^",12)  ;abm*2.6*22 IHS/SD/SDR HEAT335246
- I +ABMITMZ&($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")&(+$G(ABMP("FLAT"))'=0) D START^ABMERGR4  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;start old abm*2.6*32 IHS/SD/SDR CR10210
+ ;S ABMITMZ=$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),"^",12)  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;I +ABMITMZ&($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")&(+$G(ABMP("FLAT"))'=0) D START^ABMERGR4  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;end old abm*2.6*32 IHS/SD/SDR CR10210
  S ABMI=""
  F  S ABMI=$O(ABMRV(ABMI)) Q:ABMI=""  D
  .Q:ABMI=9999
@@ -41,12 +46,14 @@ LOOP ;
  ;I '$P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
  ;.D EP^ABME5DTP(472,"D8",$P(ABMB7,U))
  ;end old start new abm*2.6*21 IHS/SD/SDR HEAT120880
- I $$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")="OKLAHOMA MEDICAID" D
+ ;I $$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")="OKLAHOMA MEDICAID" D  ;abm*2.6*40 IHS/SD/SDR ADO108243
+ I $P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),0)),U,16)="R" D  ;abm*2.6*40 IHS/SD/SDR ADO108243
  .I $P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
  ..D EP^ABME5DTP("472","RD8",$P(ABMRV(ABMI,ABMJ,ABMK),U,10),$S($P(ABMRV(ABMI,ABMJ,ABMK),U,27):$P(ABMRV(ABMI,ABMJ,ABMK),U,27),1:$P(ABMRV(ABMI,ABMJ,ABMK),U,10)))
  .I '$P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
  ..D EP^ABME5DTP(472,"RD8",$P(ABMB7,U),$P(ABMB7,U,2))
- I $$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")'="OKLAHOMA MEDICAID" D	
+ ;I $$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")'="OKLAHOMA MEDICAID" D ;abm*2.6*40 IHS/SD/SDR ADO108243
+ I $P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),0)),U,16)'="R" D  ;abm*2.6*40 IHS/SD/SDR ADO108243
  .I $P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
  ..D EP^ABME5DTP("472","D8",$P(ABMRV(ABMI,ABMJ,ABMK),U,10))
  .I '$P(ABMRV(ABMI,ABMJ,ABMK),U,10) D

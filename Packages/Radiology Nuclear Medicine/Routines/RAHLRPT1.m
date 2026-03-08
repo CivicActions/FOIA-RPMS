@@ -1,10 +1,13 @@
-RAHLRPT1 ;HISC/GJC-Compiles HL7 'ORU' Message Type ; 4/26/01 10:40am
- ;;5.0;Radiology/Nuclear Medicine;**47**;Mar 16, 1998;Build 21
+RAHLRPT1 ;HISC/GJC  IHS/OIT/NST -Compiles HL7 'ORU' Message Type ;01 Oct 2024 2:43 PM
+ ;;5.0;Radiology/Nuclear Medicine;**47,144,150,1009,1012**;Mar 16, 1998;Build 13
  ;
  ;Integration Agreements
  ;----------------------
  ;$$GET1^DIQ(2056); ^DIWP(10011); 
  ;$$FMTHL7^XLFDT(10103); $$HLNAME^XLFNAME(3065)
+ ;
+ ;RA*5*150 Insert Observation Date for Electronically Filed (EF)
+ ;         Reports in OBR-22
  ;
 EN(RADFN,RADTI,RACNI,RAEID) ;Called from all RA RPT* event driver protocols whose
  ;HL7 version exceeds version 2.3.
@@ -29,6 +32,7 @@ PID ;Compile the 'PID' segment
 OBR ;Compile 'OBR' Segment
  ;get pointer value to the rad/nuc med report; needed to build the OBR
  S RAZRPT=+$P(RAZXAM,U,17)
+ I RAZRPT=0,$D(RAVAQ) S RAZRPT=RARPT ;KLM/p144 - VAQ study released
  ;get rad/nuc med report zero node & the transcriptionist (if exists)
  S RAZRPT=$G(^RARPT(RAZRPT,0)),RAZTRANS=+$G(^RARPT(+$P(RAZXAM,U,17),"T"))
  ;Set ID OBR-1
@@ -44,8 +48,16 @@ OBR ;Compile 'OBR' Segment
  ;
  S RAOBR(5)=$P(RAZCPT(0),U)_$E(HLECH)_$$ESCAPE^RAHLRU($P(RAZCPT(0),U,2))_$E(HLECH)_"C4"
  S RAOBR(5)=RAOBR(5)_$E(HLECH)_+$P(RAZXAM,U,2)_$E(HLECH)_$$ESCAPE^RAHLRU($P(RAZPROC,U))_$E(HLECH)_"99RAP"
+ ; RA*5.0*1012 - IHS/OIT/NST  Replace RAOBR(8) 
  ;Observation date/time OBR-7 (DATE REPORT ENTERED) 74;6
- S RAOBR(8)=$$FMTHL7^XLFDT($P(RAZRPT,U,6))
+ ;S RAOBR(8)=$$FMTHL7^XLFDT($P(RAZRPT,U,6))
+ ;
+ N BRADTE0
+ S BRADTE0=9999999.9999-RADTI
+ S RAOBR(8)=$$FMTHL7^XLFDT(BRADTE0)  ; Study date
+ S RAOBR(15)=$$FMTHL7^XLFDT($P(RAZRPT,U,6))  ; DATE REPORT ENTERED field (#74,6)
+ ; end RA*5.0*1012 - IHS/OIT/NST  Replace RAOBR(8)
+ ;
  ;Specimen Source OBR-15 75.1;125 PROCEDURE MODIFIERS (mult: 75.1125)
  ;(left & right only)
  S RAZPMOD=$$SPECSRC^RAHLRU1(+$P(RAZXAM,U,11))
@@ -87,11 +99,18 @@ OBR ;Compile 'OBR' Segment
  ;Results Rpt/Status Chng-date/time OBR-22
  ;verified: VERIFIED DATE 74;7
  ;unv'fied: DATE REPORT ENTERED 74;6
- S:$P(RAZRPT,U,5)="V" RAOBR(23)=$$FMTHL7^XLFDT($P(RAZRPT,U,7))
- S:$P(RAZRPT,U,5)'="V" RAOBR(23)=$$FMTHL7^XLFDT($P(RAZRPT,U,6))
+ ;
+ ;Electronically Filed - send 'Now'
+ ;RA*5*150 Commented out the next two lines
+ ;S:$P(RAZRPT,U,5)="V" RAOBR(23)=$$FMTHL7^XLFDT($P(RAZRPT,U,7))
+ ;S:$P(RAZRPT,U,5)'="V" RAOBR(23)=$$FMTHL7^XLFDT($P(RAZRPT,U,6))
+ ;RA*5*150 - Added the next line
+ S RAOBR(23)=$S($P(RAZRPT,U,5)="EF":$G(HLDT1),$P(RAZRPT,U,5)="V":$$FMTHL7^XLFDT($P(RAZRPT,U,7)),1:$$FMTHL7^XLFDT($P(RAZRPT,U,6)))
+ ;
  ;Status OBR-25 REPORT STATUS 74;5
  ;S:$D(^RARPT(+$P(RAZXAM,U,17),"ERR",1,0))#2 RAOBR(26)="C" ;corrected rt
- S:'$D(RAOBR(26))#2 RAOBR(26)=$S(($P(RAZRPT,U,5)="V")!($P(RAZRPT,U,5)="EF"):"F",1:"R")   ;"EF" reports send "F" (Final) in OBR-25
+ ;KLM/p144 - Next line send VAQ in OBR 25 for report status of X or NULL
+ S:'$D(RAOBR(26))#2 RAOBR(26)=$S(($P(RAZRPT,U,5)="V")!($P(RAZRPT,U,5)="EF"):"F",($P(RAZRPT,U,5)="X")!($P(RAZRPT,U,5)=""):"VAQ",1:"R")   ;"EF" reports send "F" (Final) in OBR-25
  ;Parent OBR-29 70.03;25 if exam/printset find ordered parent procedure
  I $P(RAZXAM,U,25) D  ;is this case part of an examset/printset
  .S RAOBR(30)=$S($P(RAZXAM,U,25)=1:"Examset: ",1:"Printset: ")_$P($G(^RAMIS(71,+$P(RAZORD,U,2),0)),U)

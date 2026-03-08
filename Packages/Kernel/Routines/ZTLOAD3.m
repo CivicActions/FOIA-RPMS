@@ -1,10 +1,11 @@
-%ZTLOAD3 ;SEA/RDS - TaskMan: Task Requeue ;07/29/08  11:46
- ;;8.0;KERNEL;**67,127,136,192,446**;JUL 10, 1995;Build 44
+%ZTLOAD3 ;SEA/RDS - TaskMan: Task Requeue ;06/14/2001  09:49 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1005,1007**;APR 1, 2003 
+ ;;8.0;KERNEL;**67,127,136,192**;JUL 10, 1995
  ;
 INPUT ;check for error conditions
  N %H,%T,X,X1,Y,ZT,ZT1,ZT2,ZT3,ZTH,ZTL,ZTOS,ZTREC,ZTREC1,ZTREC2,ZTREC25
  S ZTSK=$G(ZTSK) K ZTSK(0),ZTREQ ;Kill ZTREQ so we don't kill the entry
- L +^%ZTSK(ZTSK):9 S ZTREC=$G(^%ZTSK(ZTSK,0)) I ZTREC="" G BAD
+ L +^%ZTSK(ZTSK) S ZTREC=$G(^%ZTSK(ZTSK,0)) I ZTREC="" G BAD
  I $D(ZTDTH)#2,ZTDTH]"",ZTDTH'?1.5N1","1.5N,ZTDTH'?7N.".".N,ZTDTH'="@","SHD"'[$E(ZTDTH,$L(ZTDTH)) G BAD
  ;
 DQ ;make sure task is not pending
@@ -62,7 +63,7 @@ ZTSAVE ;See if new data to save
  K ZTDESC,ZTIO,ZTRTN
  I $D(ZTSAVE) K:$G(ZTSAVE)="KILL" ^%ZTSK(ZTSK,.3) D ZTSAVE^%ZTLOAD1
 SCHED ;schedule task, cleanup, quit
- I ZTDTH'="@" L +^%ZTSCH("SCHQ"):6 S ZT=$$H3^%ZTLOAD1(ZTDTH),^%ZTSK(ZTSK,.04)=ZT,^%ZTSCH(ZT,ZTSK)="" L -^%ZTSCH("SCHQ")
+ I ZTDTH'="@" S ZT=$$H3^%ZTLOAD1(ZTDTH),^%ZTSK(ZTSK,.04)=ZT,^%ZTSCH(ZT,ZTSK)=""
  K %X,%Y,X,X1,Y,ZT1,ZT2,ZT3,ZTDTH,ZTSAVE
  L -^%ZTSK(ZTSK) S ZTSK(0)=1
  Q
@@ -72,5 +73,5 @@ BAD L -^%ZTSK(ZTSK) S ZTSK(0)=0
 REQP(ZT1) ;Reschedule a persistent task. Called from ZTM
  N ZTSK,ZT2,ZT3,ZTDTH,ZTSAVE S ZTDTH=$H,ZTSK=ZT1
  L +^%ZTSK(ZTSK):20 Q:'$T
- I $D(^%ZTSK(ZTSK,0))[0 Q  ;Should tell someone
+ I $D(^%ZTSK(ZTSK,0))[0 Q  ;SEND ALERT TO USER
  G SCHED

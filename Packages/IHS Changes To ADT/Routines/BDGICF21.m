@@ -1,5 +1,5 @@
 BDGICF21 ; IHS/ANMC/LJF - VIEW IC SUMMARY ;  [ 08/20/2004  11:45 AM ]
- ;;5.3;PIMS;**1001**;APR 26, 2002
+ ;;5.3;PIMS;**1001,1022**;MAY 28, 2004;Build 18
  ;
 EN ; -- main entry point for BDG IC VIEW
  NEW VALMCNT
@@ -12,9 +12,15 @@ EN ; -- main entry point for BDG IC VIEW
 HDR ; -- header code
  NEW X
  S VALMHDR(1)=$$SP(15)_$$CONF^BDGF
- S X=$E($$GET1^DIQ(9009016.1,BDGN,.01),1,25)               ;pat name
- S X=$$PAD(X,30)_"#"_$$GET1^DIQ(9009016.1,BDGN,.011)       ;chart #
- S X=$$PAD(X,40)_"Coverage: "_$$GET1^DIQ(9009016.1,BDGN,.0391)
+ N PRF,PRFI
+ S PRFI=$$GET1^DIQ(9009016.1,BDGN,.01,"I")
+ S PRF=$$GETPREF^AUPNSOGI(PRFI,"E",1)
+ S X=$G(PRF)               ;pat name
+ ;S X=$E($$GET1^DIQ(9009016.1,BDGN,.01),1,25)               ;pat name
+ S X=$$PAD(X,50)_"#"_$$GET1^DIQ(9009016.1,BDGN,.011)       ;chart #
+ S X=$$PAD(X,60)_"Coverage: "_$$GET1^DIQ(9009016.1,BDGN,.0391)
+ ;S X=$$PAD(X,30)_"#"_$$GET1^DIQ(9009016.1,BDGN,.011)       ;chart #
+ ;S X=$$PAD(X,40)_"Coverage: "_$$GET1^DIQ(9009016.1,BDGN,.0391)
  S VALMHDR(2)=X
  Q
  ;

@@ -1,6 +1,7 @@
 AG2A ; IHS/ASDS/EFG - ENTER & EDIT MANDATORY DATA ;   
- ;;7.1;PATIENT REGISTRATION;**2,8,11**;AUG 25, 2005;Build 1
+ ;;7.1;PATIENT REGISTRATION;**2,8,11,15**;AUG 25, 2005;Build 1
  ;IHS/OIT/NKD AG*7.1*11 MU2 UNKNOWN SEX
+ ;IHS/OIT/NKD AG*7.1*15 BIRTH SEX
  ;
  ;IF BENEFICIARY CONTAINS NON-INDIAN THEN
  ;GUARANTOR INFORMATION MUST BE ENTERED
@@ -30,19 +31,24 @@ SEX ;EP - Sex.
  I $P(^AUPNPAT(DFN,0),U,23)]"" D
  . I $D(^AUTTSSN($P(^AUPNPAT(DFN,0),U,23),0)) D
  .. I "XV"[$P(^AUTTSSN($P(^AUPNPAT(DFN,0),U,23),0),U) D
- ... W !!,*7,"The NAME/SSN/SEX have been Verfied by the SSA do not change the SEX unless you're"
- ... W !,"certain that it is incorrect!"
+ ... ;W !!,*7,"The NAME/SSN/SEX have been Verfied by the SSA do not change the SEX unless you're"  ;IHS/OIT/NKD AG*7.1*15 BIRTH SEX
+ ... ;W !,"certain that it is incorrect!"  ;IHS/OIT/NKD AG*7.1*15 BIRTH SEX
+ ... W !!,*7,"The NAME/SSN/BIRTH SEX have been Verfied by the SSA do not change the"
+ ... W !,"BIRTH SEX unless you're certain that it is incorrect!"
  D S2
- S DR=.02
+ ;S DR=.02  ;IHS/OIT/NKD AG*7.1*15
+ S DR=".02BIRTH SEX"
  D END
  ;IHS/OIT/NKD AG*7.1*11 MU2 - CONFIRM CHANGE OF SEX TO UNKNOWN - START NEW CODE
  I AGOLD("SEX")'="U",$P(^DPT(DFN,0),U,2)="U" D
  . K DIR S DIR(0)="Y",DIR("B")="N"
- . S DIR("A",1)="You are attempting to change the Patient SEX to 'UNKNOWN'."
+ . ;S DIR("A",1)="You are attempting to change the Patient SEX to 'UNKNOWN'."  ;IHS/OIT/NKD AG*7.1*15 BIRTH SEX
+ . S DIR("A",1)="You are attempting to change the Patient BIRTH SEX to 'UNKNOWN'."
  . S DIR("A")="Please confirm this is correct (Y/N)"
  . D ^DIR K DIR
  . I Y=0 D
- . . W !,"Unconfirmed. Reverting Patient SEX to previous value."
+ . . ;W !,"Unconfirmed. Reverting Patient SEX to previous value."  ;IHS/OIT/NKD AG*7.1*15 BIRTH SEX
+ . . W !,"Unconfirmed. Reverting Patient BIRTH SEX to previous value."
  . . S DIE="^DPT("
  . . S DA=DFN
  . . S DR=".02////"_AGOLD("SEX")

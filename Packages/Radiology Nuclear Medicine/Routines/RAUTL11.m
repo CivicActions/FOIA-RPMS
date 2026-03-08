@@ -1,5 +1,5 @@
 RAUTL11 ;HISC/CAH,FPT,GJC,SS-Utility File Maintenance ;4/21/97  11:59
- ;;5.0;Radiology/Nuclear Medicine;**18,35,34**;Mar 16, 1998
+ ;;5.0;Radiology/Nuclear Medicine;**18,35,34,1009**;Mar 16, 1998;Build 21
  ;
  ;Last modification : by SS, SEP 30,2000 for P18 
 HEAD ; Header
@@ -44,6 +44,7 @@ ORDELSH ;Called by the 'List Exams with Inactive/Invalid Statuses' option.
  ..... S L=$G(^RADPT(G,"DT",H,"P",I,0))
  ..... S RAPAT=$P($G(^DPT(+$P(J,U),0)),U)
  ..... S RASSN=$P($G(^DPT(+$P(J,U),0)),U,9),RARPT=+$P(L,U,17)
+ ..... S RASSN=""  ;20220414 cmi/maw removed SSN
  ..... I RARPT D
  ...... S Y1=$P($G(^RARPT(RARPT,0)),U,5)
  ...... S Y2=$P($G(^DD(74,5,0)),U,2)

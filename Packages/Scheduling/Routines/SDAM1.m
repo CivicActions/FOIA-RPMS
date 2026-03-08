@@ -1,5 +1,5 @@
 SDAM1 ;MJK/ALB - Appt Mgt (Patient);Apr 23 1999
- ;;5.3;PIMS;**149,155,193,189,445,478,466,1003,1004,1005,1014,1015,1016**;JUN 30, 2012;Build 20
+ ;;5.3;PIMS;**149,155,193,189,445,478,466,1003,1004,1005,1014,1015,1016,1022,1023**;MAY 28, 2004;Build 24
  ;
  ;IHS/ANMC/LJF  4/11/2002 removed check for VA parameter
  ;IHS/ITSC/LJF 06/17/2005 PATCH 1003 allow appt threshold to be set to zero
@@ -7,6 +7,7 @@ SDAM1 ;MJK/ALB - Appt Mgt (Patient);Apr 23 1999
  ;IHS/OIT/LJF  12/29/2005 PATCH 1005 added "Walk In" to status display
  ;                                   removed code for status to blink if checked in by ancillary service
  ;ihs/cmi/maw 02/02/2012 patch 1014, changed set of appointment mode to silent fileman call
+ ;IHS/CMI/FBD  09/19/2024 PATCH 1023 added chart number to patient display for a clinic
  ;
 INIT ; -- get init pat appt data
  ;  input:          DFN := ifn of pat
@@ -33,8 +34,11 @@ BLD ; -- scan apts
  S $P(^TMP("SDAM",$J,0),U,4)=VALMCNT
  Q
  ;
-BLD1 ; -- build array
+BLD1 ; -- build arra
  N SDX,X,Y,Y1,SDSTAT,SDELIG
+ N HRN  ;PIMS*5.3*1023
+ ;20230809 maw 77892 p1022 PPN
+ I SDAMTYP="C" S SDNAME=$$GETPREF^AUPNSOGI(DFN,"E",1)
  S SDSTAT=$$STATUS(DFN,SDT,SDCL,SDATA,$S($D(SDDA):SDDA,1:""))
  G BLD1Q:'$$CHK(DFN,SDT,SDCL,SDATA,.SDAMLIST,SDSTAT)
  ;; Changes for GAF enhancement
@@ -60,6 +64,7 @@ BLD1 ; -- build array
  S Y1=$S($P(SDSTAT,";",5):$P(SDSTAT,";",5),1:$P(SDSTAT,";",4)),Y1=$S($P(Y1,".")=DT:$$TIME($P(Y1,".",2)),1:"")
  S:Y1]"" X=$E(X,1,TC-1)_$E(Y1_BL,1,TW)_$E(X,TC+TW+1,VALMWD)
  D SET(X)
+ I SDAMTYP="C" S HRN=$$HRCN^BDGF2(DFN,DUZ(2)) D CHGCAP^VALM("HRN","HRN") D FLDTEXT^VALM10(VALMCNT,"HRN",HRN)  ;PIMS*5.3*1023 - IHS/CMI/FBD - INCORPORATE CHART# INTO PATIENT APPTS IN CLINIC DISPLAY
  I $D(SDAMBOLD(DFN,SDT,SDCL)) D FLDCTRL^VALM10(VALMCNT,"STAT",IOINHI,IOINORM),FLDCTRL^VALM10(VALMCNT,"TIME",IOINHI,IOINORM)
  S ^TMP("SDAMIDX",$J,SDACNT)=VALMCNT_U_DFN_U_SDT_U_SDCL_U_$S($D(SDDA):SDDA,1:"")
 BLD1Q Q

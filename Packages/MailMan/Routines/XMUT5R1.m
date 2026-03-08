@@ -1,9 +1,10 @@
-XMUT5R1 ;(WASH ISC)/CAP-Mail Statistics Report ;05/28/2002  07:19
- ;;8.0;MailMan;;Jun 28, 2002
+XMUT5R1 ;(WASH ISC)/CAP - MAIL STATISTICS RPT ;05/21/98  09:28
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;**55,64**;Jun 02, 1994
  ; Entry points used by MailMan options (not covered by DBIA):
- ; STATS   XMMGR-NEWMESS/LOGON-STATS
- ; 0       XMMGR-BKFILER-LONGTERM-STATS (not part of 8.0)
-STATS ;
+ ; ^XMUT5R1  Option: XMMGR-BKFILER-LONGTERM-STATS
+ ; 0         Option: XMMGR-NEWMESS/LOGON-STATS
+ENTRY ;
 0 ;
  N XMEND,XMSTART,XMABORT
  S XMABORT=0

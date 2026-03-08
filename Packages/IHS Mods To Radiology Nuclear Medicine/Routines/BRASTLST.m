@@ -1,0 +1,68 @@
+BRASTLST ;IHS/WOIFO/JSL - MAG Utility - Patient RAD Image List report ;27 NOV 2023@14:36
+ ;;5.0;Radiology/Nuclear Medicine;**1010**;Mar 16, 1998;Build 1
+ Q
+ ;; This will provide Chickasaw Nation so that CN can query our VistA/RPMS database. 
+ ;; View the DICOM radiology data. The information we are needing to query against with PACS
+ ;; 
+ENTRY ;
+ I '$D(DUZ) U 0 W *7,"No DUZ defined, Please login with the VistA/RPMS access code first. I.e.:d ^XUP" H 1 Q
+ N IN,IO,N,CNT,HEAD,FLAGS,FROMDATE,TODATE,GIEN,MAGIEN,MAXNUM,MISCPRMS,OUT,POP,RA,TAG,X,Y
+ U 0 W *7,$S($$ISIHS^MAGSPID():"RPMS ",1:"VistA "),"Image Study report: ",!
+ D GETDT I 'Y!(Y="^") Q  ;from/to date
+ D ^%ZIS Q:POP
+ S HEAD="ACC_NUM^DOB^PAT_ID^LASTNAME, FIRSTNAME MIDDLEINIT^PATIENT SEX^STUDY_DATE,STUDY_TIME^SUID^STUDY DESCRIPTION^NUMBER OF IMAGES^MODALITY^MAGIEN"
+ S U="^",FLAGS="EG",MAXNUM=5000,MISCPRMS(2)="IXPKG^^RA" ;2010/01/01 ~ TODAY
+ U IO W HEAD,!
+ S DFN=0
+LOOP F CNT=1:1 S DFN=$O(^MAG(2005,"AC",DFN)) Q:'DFN  DO
+ . S MISCPRMS(1)="IDFN^^"_DFN  U 0 W "." I CNT#100=0 W CNT ;; !,"PID#",DFN I $$ISIHS^MAGSPID() D DEM^VADPT W " - ",$G(VA("PID"))
+ . ;IMAGEL(MAGRY,IDTYPE,ID,IMGLESS,FLAGS,FROMDATE,TODATE,MISCPRMS) ;RPC [MAGN PATIENT IMAGE LIST]
+ . DO IMAGEL^MAGNVQ04(.OUT,"DFN",DFN,1,FLAGS,FROMDATE,TODATE,.MISCPRMS) ;U 0 ZW OUT
+ . I $D(^TMP("MAGNVQ04",$J,1)) DO
+ .. S IN=1,NEW=1 F N=1:1 S IN=$O(^TMP("MAGNVQ04",$J,IN)) Q:'IN  S X=$G(^(IN)) DO
+ ... S TAG=$P(X,"|"),VALUE=$P(X,"|",2,999) ;W ".",X," ",!
+ ... I TAG="NEXT_STUDY" S NEW=1 Q
+ ... I TAG="STUDY_UID" S SUID=VALUE Q
+ ... I TAG="STUDY_INFO" S INFO=VALUE Q
+ ... I TAG="IMAGE_IEN" S MAGIEN=+VALUE ;;U 0 W "MAGIEN:",MAGIEN
+ ... I TAG="GROUP_IEN" S GIEN=VALUE I NEW S NEW=0 D DATA Q
+ ... Q
+ .. Q
+ . Q
+ D ^%ZISC K NEW
+ U 0 W !,"Total Patient Entries: ",CNT,!
+ QUIT
+ ;
+DATA ;
+ ;;Column Headers:  
+ ;;ACC_NUM^DOB^PAT_ID^LASTNAME, FIRSTNAME MIDDLEINIT^PATIENT SEX^STUDY_DATE,STUDY_TIME^SUID^STUDY DESCRIPTION^NUMBER OF IMAGES^MODALITY^MAGIEN
+ ;;
+ N P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,DATA
+ Q:'$G(DFN)  ;;U 0 W !,"IEN# ",GIEN," - ",INFO,!
+ S DATA=INFO,DPT=^DPT(DFN,0)
+ S P1=$P($P(DATA,U,7)," ") S:'+$G(P1) RA=+$P(^MAG(2005,MAGIEN,2),U,7),P1=$P($G(^RARPT(RA,0)),U) ;ACC_NUM
+ S P2=$P(DPT,U,3),P2=$$FMTE^XLFDT(P2,1) ;DOB
+ S P3=DFN I $$ISIHS^MAGSPID() D DEM^VADPT S P3=$S($G(VA("PID")):VA("PID"),1:DFN) ;PID
+ S P4=$P(DPT,U)    ;PT NAME
+ S P5=$P(DPT,U,2)  ;SEX
+ S P6=$P(DATA,U,4) S:P6="" P6=$P(^MAG(2005,MAGIEN,2),U,5),P6=$$FMTE^XLFDT(P6,1) ;STUDY DTM
+ S P7=$S($G(SUID):SUID,1:$G(^MAG(2005,MAGIEN,"SERIESUID"))) ;SUID
+ S P8=$P(DATA,U,7) ;SUTDY DESCRIPTION
+ S P9="",GIEN=$S($G(GIEN):GIEN,1:+$P(^MAG(2005,MAGIEN,0),U,10)),P9=$P($G(^MAG(2005,+GIEN,1,0)),U,4) ;NO#image
+ S P10="" I $L(P1) N OUT D RADLKUP^MAGDRPC3(.OUT,P1,"") S P10=$G(OUT(13)) ;MOD
+ U IO W P1_U_P2_U_P3_U_P4_U_P5_U_P6_U_P7_U_P8_U_P9_U_P10_U_MAGIEN W !
+ K DATA,VALUE,DPT,SUID,VA,INFO
+ Q
+GETDT ; Get from/to date
+ S FROMDATE=2890101,TODATE=$$DT^XLFDT
+ S DIR(0)="D^::EP",DIR("A")="Enter from date"
+ S DIR("?")="Enter a from date for the report."
+ D ^DIR I 'Y!(Y="^") Q
+ S FROMDATE=Y\1
+ ; Get through date
+ K X,Y
+ S DIR(0)="D^::EP",DIR("A")="Enter through date"
+ S DIR("?")="Enter a through date for the report."
+ D ^DIR I 'Y!(Y="^") Q
+ S TODATE=Y\1
+ Q

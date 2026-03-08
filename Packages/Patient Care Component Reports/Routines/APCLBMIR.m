@@ -1,5 +1,5 @@
-APCLBMIR ; IHS/CMI/LAB - print BMI reference table ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLBMIR ;IHS/CMI/LAB - print BMI reference table [ 03/20/02  2:57 PM ]
+ ;;3.0;IHS PCC REPORTS;**10**;FEB 15, 1997
  ;
  ;
  W:$D(IOF) @IOF

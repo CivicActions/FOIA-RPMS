@@ -1,5 +1,5 @@
 LROR1 ;SLC/DCM - LAB MODULE FOR OR (CONT.) ;8/11/97 [ 04/14/2003  10:59 AM ]
- ;;5.2T9;LR;**1002,1003,1018**;Nov 17, 2004
+ ;;5.2;LR;**1002,1003,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**100,121,128,230**;Sep 27, 1994
 STAT ;;Entry point for OR lab status
  I $$VER^LR7OU1>2.5 Q  ;Not valid with OE/RR 3.0

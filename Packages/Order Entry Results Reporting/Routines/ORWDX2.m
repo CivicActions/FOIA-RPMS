@@ -1,5 +1,5 @@
-ORWDX2 ; SLC/JM/AGP - Order dialog utilities ;20-Jun-2014 09:43;DU
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**246,243,1013**;Dec 17, 1997;Build 242
+ORWDX2 ; SLC/JM/AGP - Order dialog utilities ;22-Dec-2020 10:48;PLS
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**246,243,1013,1021**;Dec 17, 1997;Build 242
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;IHS/MSC/MGH Modified XROOT for ICD codes for ICD-10 Patch 1013
  ;
@@ -30,6 +30,7 @@ XROOT ; Part of LOADRSP^ORWDX - moved here because of routine size
  . S CNT=CNT+1
  . I $P($G(^ORD(101.41,DLG,0)),U)="OR GTX ADDITIVE" S ID="ADDITIVE"
  . I $E(RSPID)="C",(ID="START"),VAL Q  ; skip literal start time on copy
+ . I $E(RSPID)="C"&(RSPID["-")&((ID="SSREFREQ")!(ID="SSRREQIEN")!(ID="SSDENYRSN")) Q  ;Skip surescripts elements on a copy  ;IHS/MSC/MGH Patch 1021
  . I $P($G(^ORD(101.41,DLG,0)),U)="OR GTX CLININD2" S SAVCLIN="~"_DLG_U_INST_U_ID Q   ;IHS/MSC/MGH Patch 1013
  . S LST($$NXT)="~"_DLG_U_INST_U_ID
  . I $L(VAL) D
@@ -42,7 +43,6 @@ XROOT ; Part of LOADRSP^ORWDX - moved here because of routine size
  ... S LST($$NXT)="t"_$G(@ROOT@(I,2,J,0))
  ;IHS/MSC/MGH Patch 1013 changes
  I SAVSNO'="" D
- .S ^TMP("MGH","SNO")=SAVSNO
  .S VAL=$P($$CONC^BSTSAPI(SAVSNO_"^^^1"),U,5)
  .I SAVCLIN="" D
  ..S DLG=$O(^ORD(101.41,"B","OR GTX CLININD2",""))

@@ -1,27 +1,20 @@
-ABMUTL8 ; IHS/ASDST/DMJ - 837 UTILITIES ;      
- ;;2.6;IHS Third Party Billing;**1,4,6,8,9,10,11,13,14,16,18**;NOV 12, 2009;Build 289
+ABMUTL8 ; IHS/SD/SDR - 837 UTILITIES ;      
+ ;;2.6;IHS Third Party Billing;**1,4,6,8,9,10,11,13,14,16,18,28**;NOV 12, 2009;Build 513
  ;Original;DMJ;09/21/95 12:47 PM
- ;V2.5 P5-837 mod. Use HRN in following priority order-visit loc/parent/loop satellites
- ;v2.5 p5-put POS, TOS by line item
- ;v2.5 p6-Make OVER works correctly
- ;v2.5 p8-IM13324/IM15558-Format 0 to 0.00
- ;v2.5 p8-IM12628-Remove special delimiter for CA
- ;v2.5 p8-task 6-Check value cd before formatting; can be dollar amt or zip
- ;v2.5 p9-IM14702/IM17968-Correct HRN lookup for satellites
- ;v2.5 p9-IM17270-Changed "~" to "-" to avoid delimiter issues
- ;v2.5 p9-IM16962-If BCBS/OK add CR/LF to delimiter; they can't do streamed data
  ;
  ;IHS/SD/SDR-v2.6 CSV
- ;IHS/SD/SDR-2.6*1 -HEAT2836 -Remove Dxs when inpt Medicare/RR
- ;IHS/SD/SDR-2.6*6 -5010 -added code to pull anesthesia charges
- ;IHS/SD/SDR-2.6*13 -Added check for new export mode 35
- ;IHS/SD/SDR-2.6*14 -ICD10 002F Changes for 837 qualifier ICD9 vs ICD10
- ;IHS/SD/SDR-2.6*14 -Updated DX^ABMCVAPI calls to be numeric
- ;IHS/SD/SDR-2.6*14 -split routine to ABMUTL8A due to size
- ;IHS/SD/SDR-2.6*14 -CR4072 -made correction to ICD10 check to be '=30 instead of =1
- ;IHS/SD/SDR-2.6*16 -HEAT217211 -Made change so it won't do the E-code change in DXSET2 if ICD code is an ICD-10 code.
- ;IHS/SD/SDR-2.6*16 -HEAT231506 -Updated so 837D will print DX codes.
- ;IHS/SD/SDR-2.6*18 -HEAT239392 -Made changes so E-code will be included appropriately. Was being dropped from file.
+ ;IHS/SD/SDR-2.6*1 HEAT2836 Remove Dxs when inpt Medicare/RR
+ ;IHS/SD/SDR-2.6*6 5010 added code to pull anesthesia charges
+ ;IHS/SD/SDR-2.6*13 Added check for new export mode 35
+ ;IHS/SD/SDR-2.6*14 ICD10 002F Changes for 837 qualifier ICD9 vs ICD10
+ ;IHS/SD/SDR-2.6*14 Updated DX^ABMCVAPI calls to be numeric
+ ;IHS/SD/SDR-2.6*14 split routine to ABMUTL8A due to size
+ ;IHS/SD/SDR-2.6*14 CR4072 made correction to ICD10 check to be '=30 instead of =1
+ ;IHS/SD/SDR-2.6*16 HEAT217211 Made change so it won't do the E-code change in DXSET2 if ICD code is an ICD-10 code.
+ ;IHS/SD/SDR-2.6*16 HEAT231506 Updated so 837D will print DX codes.
+ ;IHS/SD/SDR-2.6*18 HEAT239392 Made changes so E-code will be included appropriately. Was being dropped from file.
+ ;IHS/SD/SDR 2.6*28 CR10338 When looking for HRN check all facilities after checking parent, parent/satellite; Reporting facility has two
+ ;  parents but only one registers patients.
  ;
 HRN(X) ;PEP - HRN
  ; First look at Visit Loc for HRN
@@ -30,6 +23,12 @@ HRN(X) ;PEP - HRN
  I $G(ABMP("LDFN")) S HRN=$P($G(^AUPNPAT(+X,41,ABMP("LDFN"),0)),"^",2)
  ;Q:HRN HRN  ;abm*2.6*10 HEAT61426
  Q:($G(HRN)'="") HRN  ;abm*2.6*10 HEAT61426
+ ;start new abm*2.6*28 IHS/SD/SDR CR10338
+ S ABMPAR=0
+ F  S ABMPAR=$O(^AUPNPAT(X,41,ABMPAR)) Q:'ABMPAR  D  Q:HRN
+ .S HRN=$P($G(^AUPNPAT(X,41,ABMPAR,0)),U,2)
+ Q:HRN HRN
+ ;end new IHS/SD/SDR CR10338
  S ABMPAR=""
  F  S ABMPAR=$O(^BAR(90052.05,ABMPAR)) Q:ABMPAR=""!$D(^BAR(90052.05,ABMPAR,ABMP("LDFN")))
  S ABMPAR=$P($G(^BAR(90052.05,ABMPAR,ABMP("LDFN"),0)),"^",3)

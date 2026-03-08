@@ -1,5 +1,5 @@
-XMP3 ;(WASH ISC)/AML/CAP-PackMan Build Backup Msg ;04/17/2002  11:07
- ;;8.0;MailMan;;Jun 28, 2002
+XMP3 ;(WASH ISC)/AML/CAP-BUILD UN-INSTALL MESSAGE ;03/04/98  07:46
+ ;;7.1;MailMan;**24,50**;Jun 02, 1994
 ENTER ; This routine backs up what's on disk into a packman message.
  S X=""
  Q:$D(XMPKIDS)
@@ -99,10 +99,10 @@ BINIT(XMDUZ,XMPXMZ,XMINSTR,XMABORT) ; setup for first routine
  D TOWHOM^XMJMT(XMDUZ,"Send",.XMINSTR,"",.XMABORT)
  I XMABORT D KILLMSG^XMXUTIL(XMPXMZ) Q
  W !,"Building PackMan backup message with subject ",XMSUBJ,!!
- S XMDT=$E($$NOW^XLFDT_"0000",1,12)
- S XMREC="PACKMAN BACKUP Created on "_$$DOW^XLFDT(XMDT)_", "_$$FMTE^XLFDT($P(XMDT,".",1),"2Z")_" at "_$E(XMDT,9,10)_":"_$E(XMDT,11,12)_" "
- I $D(DUZ),$D(^VA(200,DUZ,0)) S XMREC=XMREC_"by "_$$NAME^XMXUTIL(DUZ)_" "
- S:$D(^XMB("NETNAME")) XMREC=XMREC_"at "_$P(^("NETNAME"),U)_" "
+ S XMDT=$$NOW^XLFDT
+ S XMREC="PACKMAN BACKUP Created on "_$$DOW^XLFDT(XMDT)_", "_$E(XMDT,4,5)_"/"_$E(XMDT,6,7)_"/"_$E(XMDT,2,3)_" at "_$E(XMDT_"0000",9,10)_":"_$E(XMDT_"0000",11,12)_" "
+ I $D(DUZ),$D(^VA(200,DUZ,0)) S XMREC=XMREC_"by "_$P(^(0),U)_" "
+ S:$D(^XMB("NAME")) XMREC=XMREC_"at "_$P(^("NAME"),U)_" "
  S ^XMB(3.9,XMPXMZ,2,0)=""
  S ^XMB(3.9,XMPXMZ,2,1,0)="$TXT "_XMREC
  Q

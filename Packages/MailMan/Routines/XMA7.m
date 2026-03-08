@@ -1,7 +1,6 @@
-XMA7 ;ISC-SF/GMB-User Info ;04/18/2002  07:22
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/RJ/THM/CAP
+XMA7 ;(WASH ISC)/RJ/THM/CAP-User Info ;05/06/99  15:38
+ ;;7.1;MailMan;**10,47,50**;Jun 02, 1994
  Q
-EN ; This entry point is used by Kernel (XU*, XQ*)
+EN ;
  D DISPUSER^XMHIU(Y)
  Q

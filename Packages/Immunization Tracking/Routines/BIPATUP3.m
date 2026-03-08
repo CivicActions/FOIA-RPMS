@@ -1,5 +1,5 @@
-BIPATUP3 ;IHS/CMI/MWR - UPDATE PATIENT DATA 2; DEC 15, 2011
- ;;8.5;IMMUNIZATION;**14**;AUG 01,2017
+BIPATUP3 ;IHS/CMI/MWR - UPDATE PATIENT DATA 2; DEC 15, 2011 [ 07/14/2025  11:12 PM ] ; 27 Aug 2025  11:09 PM
+ ;;8.5;IMMUNIZATION;**22,26,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  IHS FORECAST. UPDATE PATIENT DATA, IMM FORECAST IN ^BIPDUE(.
  ;;  HOLDING RTN IN CASE H1N1 (OR SIMILAR) FORECASTING IS NEEDED IN THE FUTURE.
@@ -7,6 +7,8 @@ BIPATUP3 ;IHS/CMI/MWR - UPDATE PATIENT DATA 2; DEC 15, 2011
  ;;  PATCH 4, v8.5: Use newer Related Contraindications call to determine
  ;;                 contraindicaton.  IHSZOS+29
  ;;  PATCH 14: Move IHSPNEU & IHSHEPB call here from BIPATUP1 IHSPNEU+00
+ ;;  PATCH 17: Ensure and document High Risk Pneumo only satisfied by CVX 33. IHSPNEU+50
+ ;;  PATCH 22: COVID Immunocompromised forecasting.  IHSCOV
  ;
  ;
  ;
@@ -36,7 +38,7 @@ IHSPNEU(BIDFN,BIFLU,BIFFLU,BINF,BIFDT,BIAGE,BIDUZ2,BIRISKF,BIADDND) ;EP
  ;---> Quit if this patient has a contraindication to Pneumo.
  ;********** PATCH 4, v8.5, DEC 01,2012, IHS/CMI/MWR
  N BICT D CONTRA^BIUTL11(BIDFN,.BICT)
- Q:$D(BICT(33))
+ Q:$D(BICT(33))   ;suryam said to leave this alone for now per email late January
  ;**********
  ;
  ;---> Quit if this Pt Age <5 yrs or >65 yrs, regardless of risk.
@@ -49,33 +51,41 @@ IHSPNEU(BIDFN,BIFLU,BIFFLU,BINF,BIFDT,BIAGE,BIDUZ2,BIRISKF,BIADDND) ;EP
  ;---> Forecast Early Pneumo per Site Parameter.
  D
  .;---> Quit if patient has had ANY Pneumo (NOT just 33 for High Risk).
- .N A,Z S Z=0 F A=33,100,109,133,152 D
+ .N A,Z
+ .S Z=0
+ .S A=0
+ .F  S X=$O(^BIVARR("PNEU",A)) Q:'Z  D
  ..I $D(BIFLU(A)) S Z=1
- .Q:Z
+ .;Q:Z
  .;---> BIPNAGE=Site Parameter Age to forecast Pneumo ("Pneumo Age") in years.
- .N BIPNAGE S BIPNAGE=$P($$PNMAGE^BIPATUP2(BIDUZ2),U)
+ .N BIPNAGE
+ .S BIPNAGE=$P($$PNMAGE^BIPATUP2(BIDUZ2),U)
  .;---> Quit if patient is less than site parameter age.
  .Q:(BIAGE<BIPNAGE)
  .;---> Set patient due for Pneumo.
- .D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(33)_U_U_BIFDT)
- .S BIADDND=$G(BIADDND)_"|||   Pneumo added per Site Parameter #11 (early Pneumo: "
+ .D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(33)_U_BIFDT)
+ .S BIADDND=$G(BIADDND)_" | PNEUMO       Added per Site Parameter #11 (early Pneumo: "
  .S BIADDND=BIADDND_BIPNAGE_" yrs)."
  .S BIFLAG=1
+ .S BIRISKF=1,BIRPROF(+$$BIRPROF(33))=1
  ;
  Q:BIFLAG
  ;
- ;---> HIGH RISK * * *
- ;---> Forecast Pneumo if patient has high risk medical conditions and no previous 33.
+ ;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ ;---> Confirm and document High Risk Pneumo  satisfied by CVX 33, 215, 216.
+ ;---> If 33, 215, 216 is in Imm Hx, BIFLU(33), BIFLU(215), BIFLU(216), IHSPOST+70^BIPATUP1, this call is never made.
  ;
- ;---> NOTE: BIFFLU=4 "Disregard Risk Factors" checked at IHSPOST+??^BIPATUP1.
+ ;---> HIGH RISK * * *
+ ;---> Forecast Pneumo if patient has high risk medical conditions and no previous 33, 215, 216.
+ ;
+ ;---> NOTE: BIFFLU=4 "Disregard Risk Factors" checked at IHSPOST+52^BIPATUP1.
  ;---> If High Risk Pneumo or Forecast for this patient regardless of Age.
  I BIRISKF!(BIFFLU=2) D
- .D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(33)_U_U_BIFDT)
- .I BIRISKF S BIADDND=$G(BIADDND)_"|||   Pneumo added for High Risk Medical Conditions." Q
- .S BIADDND=$G(BIADDND)_"|||   Pneumo added due to manual edit of High Risk for this patient."
+ .D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(33)_U_BIFDT)
+ .I BIRISKF S BIADDND=$G(BIADDND)_" | PNEUMO       Added for High Risk Medical Conditions.|||" Q
+ .S BIADDND=$G(BIADDND)_" | PNEUMO       Added due to manual edit of High Risk for this patient.|||"
+ .S BIRISKF=1,BIRPROF(+$$BIRPROF(33))=1
  ;
- ;********** PATCH 8, v8.5, MAR 15,2014, IHS/CMI/MWR
- ;---> TCH will forecast routine Pneumo after age 65.
  Q
  ;
  ;
@@ -93,13 +103,15 @@ IHSHEPB(BIDFN,BINF,BIFDT,BIADDNT,BIADDND) ;EP
  Q:$D(BINF(4))
  ;
  ;---> Quit if this patient has a contraindication to Hep B.
- N BICT D CONTRA^BIUTL11(BIDFN,.BICT)
+ N BICT
+ D CONTRA^BIUTL11(BIDFN,.BICT)
  Q:$D(BICT(45))
  ;
- D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(45)_U_U_BIFDT)
- S BIADDND=$G(BIADDND)_"|||   Hep B added for High Risk"
- I $G(BIADDNT)=1 S BIADDND=BIADDND_" due to Diabetes."
- I $G(BIADDNT)=2 S BIADDND=BIADDND_" due to CLD/Hep C."
+ D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(45)_U_BIFDT)
+ S BIADDND=$G(BIADDND)_" | Hep B        Added for High Risk"
+ I $G(BIADDNT)=1 S BIADDND=BIADDND_" due to Diabetes.|||"
+ I $G(BIADDNT)=2 S BIADDND=BIADDND_" due to CLD/Hep C.|||"
+ S BIRISKF=1,BIRPROF(+$$BIRPROF(45))=1
  Q
  ;
  ;
@@ -113,62 +125,45 @@ IHSHEPA(BIDFN,BINF,BIFDT,BIADDNT,BIADDND) ;EP
  ;     4 - BIADDNT (opt) Addendum Note parameter: not used for Hep A at this time.
  ;     5 - BIADDND (ret) IHS forecasting addendum (to be added to TCH Report).
  ;
- ;---> Quit if Forecasting turned off for Hep B.
- Q:$D(BINF(4))
+ ;---> Quit if Forecasting turned off for Hep A.
+ Q:$D(BINF(9))
  ;
  ;---> Quit if this patient has a contraindication to Hep B.
  N BICT D CONTRA^BIUTL11(BIDFN,.BICT)
  Q:$D(BICT(85))
  ;
- D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(85)_U_U_BIFDT)
- S BIADDND=$G(BIADDND)_"|||   Hep A added for High Risk due to CLD/Hep C."
+ D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(85)_U_BIFDT)
+ S BIADDND=$G(BIADDND)_" | Hep A        Added for High Risk due to CLD/Hep C.|||"
+ S BIRISKF=1,BIRPROF(+$$BIRPROF(85))=1
  Q
  ;
- ;
- ; * * * CODE BELOW NO LONGER USED. * * *
+ ;********** PATCH 22, v8.5, OCT 24,2011, IHS/CMI/MWR
+ ;---> IHS COVID Immunocompromised forecasting.
  ;
  ;----------
-IHSZOS(BIDFN,BIFLU,BIFFLU,BIRISKP,BINF,BIFDT,BIAGE,BIDUZ2) ;EP
- ;---> IHS Zoster Forecast.
+IHSCOV(BIDFN,BINF,BIFDT,BICVX,BIADDND) ;EP
+ ;---> IHS Forecast COVID Immunocompromised.
  ;---> Parameters:
  ;     1 - BIDFN   (req) Patient IEN.
- ;     2 - BIFLU   (req) Influ and Pneumo History array: BIFLU(CVX,INVDATE).
- ;     3 - BIFFLU  (req) Value (0-4) for force Flu/Pneumo regardless of age.
- ;     4 - BIRISKP (req) 1=Patient has Risk of Pneumo; otherwise 0.
- ;     5 - BINF    (opt) Array of Vaccine Grp IEN'S that should not be forecast.
- ;     6 - BIFDT   (req) Forecast Date (date used for forecast).
- ;     7 - BIAGE   (req) Patient Age in months for this Forecast Date.
- ;     8 - BIDUZ2  (req) User's DUZ(2) indicating Immserve Forc Rules.
+ ;     2 - BINF    (opt) Array of Vaccine Grp IEN'S that should not be forecast.
+ ;     3 - BIFDT   (req) Forecast Date (date used for forecast).
+ ;     4 - BICVX   (opt) CVX of specific COVID Vaccine to be forecast (Mod or Pfz).
+ ;     5 - BIADDND (ret) IHS forecasting addendum (to be added to TCH Report).
  ;
+ ;---> Quit if Forecasting turned off for COVID.
+ Q:$D(BINF(21))
  ;
- ;---> Quit if this Pt Age <60 months (5yrs), regardless of risk.
- Q:BIAGE<720
+ ;---> Quit if this patient has a contraindication to COVID.
+ N BICT
+ D CONTRA^BIUTL11(BIDFN,.BICT)
+ Q:$D(BICT(213))
  ;
- ;---> Quit if Site Parameter 11 says NO to Zoster forecast.
- ;---> (According to Amy, shutting down Varicella Group should not disable Zoster.)
+ ;---> If COVID CVX not specified, forecast COVID,NOS.
+ S:'$G(BICVX) BICVX=213
  ;
- ;********** PATCH 1, v8.5, JAN 03,2012, IHS/CMI/MWR
- ;---> Use passed parameter BIDUZ2 to avoid <UNDEF> of BISITE.
- ;Q:('$$ZOSTER^BIPATUP2(BISITE))
- ;---> Next line commented out because SAC Checker doesn't like $$, but doesn't
- ;---> matter since this call isn't in use (TCH does Zoster).
- ;Q:('$$ZOSTER^BIPATUP2(BIDUZ2))
- ;**********
- ;
- ;---> Quit if patient has a previous Zoster.
- Q:$D(BIFLU(121))
- ;
- ;---> Quit if this patient has a contraindication to Zoster.
- ;********** PATCH 4, v8.5, DEC 01,2012, IHS/CMI/MWR
- ;---> Use newer Related Contraindications call to determine contraindication.
- ;Q:$$CONTR^BIUTL11(BIDFN,227)
- N BICT D CONTRA^BIUTL11(BIDFN,.BICT)
- Q:$D(BICT(121))
- ;**********
- ;
- ;---> Forecast Zoster.
- D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(121)_U_U_BIFDT)
- ;
+ D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(BICVX)_U_BIFDT)
+ S BIADDND=$G(BIADDND)_" | "_$$HL7TX^BIUTL2(BICVX,2)_"      Added for Immunocompromised.|||"
+ S (BIRISKF,BIRISKC)=1,BIRPROF(+$$BIRPROF(213))=1
  Q
  ;
  ;
@@ -256,4 +251,83 @@ IHSH1N1(BIDFN,BIFLU,BIFFLU,BIRISKI,BINF,BIFDT,BIAGE,BIIMMH1,BILIVE) ;EP
  N BIDUEDT S BIDUEDT=BIYEAR_0430
  ;---> Set CVX 127 due by April 30.
  D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(127)_U_U_BIYEAR_"0430")
+ S BIRISKF=1,BIRPROF(+$$BIRPROF(127))=1
  Q
+ ;
+ ;
+OUTFLU(BIFDT,BIDUZ2) ;EP
+ ;---> Return 1 if Forecast Date is outside of Flu Dates.
+ ;     1 - BIFDT  (req) Forecast Date (date used for forecast).
+ ;     2 - BIDUZ2 (req) User's DUZ(2) indicating site parameters.
+ ;
+ Q:'BIFDT 0
+ S:'$G(BIDUZ2) BIDUZ2=$G(DUZ(2))
+ Q:'BIDUZ2 0
+ ;
+ N A,B,C,D S A=$E(BIFDT,4,7),B=$$FLUDATS^BIUTL8(BIDUZ2)
+ S C=$TR($P(B,"%"),"/"),D=$TR($P(B,"%",2),"/")
+ I (A<C)&(A>(D-1)) Q 1
+ Q 0
+ ;=====
+ ;
+ ;V8.5 PATCH 31 FID-98855 RZV HR EVALUATION
+RZV(BIDFN,BIFLU,BIFFLU,BINF,BIFDT,BIYRS,BIDUZ2,BIRISKF) ;EP
+ ;---> IHS RZV Forecast.
+ ;---> Parameters:
+ ;     1 - BIDFN   (req) Patient IEN.
+ ;     2 - BIFLU   (req) RZV History array: BIFLU(CVX,INVDATE).
+ ;     3 - BIFFLU  (req) If =2, for force RZV regardless of age.
+ ;     4 - BINF    (opt) Array of Vaccine Grp IEN'S that should
+ ;                       not be forecast.
+ ;     5 - BIFDT   (req) Forecast Date (date used for forecast).
+ ;     6 - BIYRS   (req) Patient Age in years for this Forecast Date.
+ ;     7 - BIDUZ2  (req) User's DUZ(2) indicating Immserve Forc Rules.
+ ;     5 - BIRISKF (req) 1=Patient has High Risk of RZV; otherwise 0.
+ ;
+ ;---> NOTE: This call does NOT even get made if TCH has already forecast RZV
+ ;--->       (LDFORC+72^BIPATUP1).
+ ;
+ ;---> Quit if Forecasting turned off for RZV.
+ ;Q:$D(BINF(11))
+ ;
+ ;N BICT
+ ;D CONTRA^BIUTL11(BIDFN,.BICT)
+ ;Q:$D(BICT(33))   ;suryam said to leave this alone for now per email late January
+ ;**********
+ ;
+ ;---> Quit if this Pt Age <19 yrs or >49 yrs, regardless of risk.
+ Q:((BIYRS<19)!(BIYRS>49))
+ ;
+ ;---> Flag to indicate RZV already set.
+ N BIFLAG
+ S BIFLAG=0
+ ;
+ ;---> EARLY PNEUMO * * *
+ ;---> Forecast Early RZV per Site Parameter.
+ D
+ .;---> Quit if patient has had more than 1 RZV
+ .N A,Z,J
+ .S Z=0
+ .S A=0
+ .F  S A=$O(^BIVARR("ZOS",A)) Q:'A  D
+ ..I $D(BIFLU(A)) S J=J+1
+ ..S:J>1 Z=1
+ .Q:Z
+ .;---> Set patient due for RZV.
+ .D SETDUE^BIPATUP2(BIDFN_U_$$HL7TX^BIUTL2(187)_U_BIFDT)
+ .S BIRISKF=1,BIRPROF(+$$BIRPROF(187))=1
+ Q
+ ;=====
+ ;
+BIRPROF(CVX) ;EP;SET VACCINE GROUP FOR *HR*
+ N VG,VGO,VDA,I0
+ S CVX=+$G(CVX)
+ S VG=0
+ S VGO=0
+ S VDA=+$O(^AUTTIMM("C",CVX,0))
+ S I0=$G(^AUTTIMM(VDA,0))
+ S VG=+$P(I0,U,9)
+ S VGO=+$P($G(^BISERT(VG,0)),U,2)
+ Q VGO
+ ;=====
+ ;

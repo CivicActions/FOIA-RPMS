@@ -1,8 +1,10 @@
 ABMPTSMT ; IHS/SD/SDR - Non-ben patient statement ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**3,10,11,13,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,10,11,13,21,30,31**;NOV 12, 2009;Build 615
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - 2.6*p21 - HEAT116546 - shorten stmt by 5 lines to fit on 1 page
+ ;IHS/SD/SDR 2.6 CSV
+ ;IHS/SD/SDR 2.6*p21 HEAT116546 shorten stmt by 5 lines to fit on 1 page
+ ;IHS/SD/SDR 2.6*30 CR8870 Allow partial units, up to 3 decimal places
+ ;IHS/SD/SDR 2.6*31 CR11218 Made correct short description print for CPT code
  ;
 MARG ;Set left and top margins
  S (ABM("LM"),ABM("TM"),ABM("LN"))=0
@@ -70,13 +72,23 @@ HDR ;
  W !,?1
  F ABMI=1:1:78 W "="
  W !
- W ?1,"|SERVICE |SERVICE  |",?63,"|",?67,"|",?78,"|"
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;W ?1,"|SERVICE |SERVICE  |",?63,"|",?67,"|",?78,"|"
+ ;W !
+ ;W ?1,"|DATE",?10,"|CODE     |DESCRIPTION"
+ ;W ?63,"|QTY|AMOUNT    |"
+ ;W !
+ ;W ?1,"|--------|---------|------------------------------------------"
+ ;W "|---|----------|"
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ W ?1,"|SERVICE |SERVICE  |",?56,"|",?64,"|",?78,"|"
  W !
  W ?1,"|DATE",?10,"|CODE     |DESCRIPTION"
- W ?63,"|QTY|AMOUNT    |"
+ W ?56,"|  QTY  |   AMOUNT    |"
  W !
- W ?1,"|--------|---------|------------------------------------------"
- W "|---|----------|"
+ W ?1,"|--------|---------|-----------------------------------"
+ W "|-------|-------------|"
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  W !
  Q
 SLINES ;service lines
@@ -109,9 +121,18 @@ SLINES ;service lines
  ...;I ABMI=25 S ABMSCD=$P($G(ABMRV(ABMII,ABMJ,ABMK)),U)  ;Rev code  ;abm*2.6*21 IHS/SD/SDR HEAT116546
  ...I ABMII=25 S ABMSCD=$P($G(ABMRV(ABMII,ABMJ,ABMK)),U)  ;Rev code  ;abm*2.6*21 IHS/SD/SDR HEAT116546
  ...S ABMDESC=$P($G(ABMRV(ABMII,ABMJ,ABMK)),U,9)
- ...I ABMII'=23&(ABMII'=33)&(ABMII'=25),($P(ABMRV(ABMII,ABMJ,ABMK),U,2)'="") S ABMDESC=$P($$CPT^ABMCVAPI(+$P(ABMRV(ABMII,ABMJ,ABMK),U,2),ABMP("VDT")),U,3)  ;CSV-c
+ ...;I ABMII'=23&(ABMII'=33)&(ABMII'=25),($P(ABMRV(ABMII,ABMJ,ABMK),U,2)'="") S ABMDESC=$P($$CPT^ABMCVAPI(+$P(ABMRV(ABMII,ABMJ,ABMK),U,2),ABMP("VDT")),U,3)  ;CSV-c  ;abm*2.6*31 IHS/SD/SDR CR11218
  ...;I ABMI'=33&($A($E($P(ABMRV(ABMI,ABMJ,ABMK),U,2)))>64) S ABMDESC=$P($$CPT^ABMCVAPI($O(^ICPT("B",$P(ABMRV(ABMI,ABMJ,ABMK),U,2),0)),ABMP("VDT")),U,3)  ;CSV-c  ;abm*2.6*10
- ...I ABMII'=33&(ABMII'=23)&($A($E($P(ABMRV(ABMII,ABMJ,ABMK),U,2)))>64) S ABMDESC=$P($$CPT^ABMCVAPI($O(^ICPT("B",$P(ABMRV(ABMII,ABMJ,ABMK),U,2),0)),ABMP("VDT")),U,3)  ;CSV-c  ;abm*2.6*10
+ ...;I ABMII'=33&(ABMII'=23)&($A($E($P(ABMRV(ABMII,ABMJ,ABMK),U,2)))>64) S ABMDESC=$P($$CPT^ABMCVAPI($O(^ICPT("B",$P(ABMRV(ABMII,ABMJ,ABMK),U,2),0)),ABMP("VDT")),U,3)  ;CSV-c  ;abm*2.6*10  ;abm*2.6*31 IHS/SD/SDR CR11218
+ ...;start new abm*2.6*31 IHS/SD/SDR CR11218
+ ...;I ABMII'=33&(ABMII'=23)&(($A($E($P(ABMRV(ABMII,ABMJ,ABMK),U,2)))>64)!("^F^T^"[("^"_$E($P(ABMRV(ABMII,ABMJ,ABMK),U,2),5)_"^"))) D
+ ...I (ABMII'=33&(ABMII'=25)) D  ;so it should be either a CPT or HCPCS; either way, look up code, get IEN, and use that to get the description
+ ....S ABMJIEN=0,ABMJT=0
+ ....F  S ABMJT=$O(^ICPT("B",$P(ABMRV(ABMII,ABMJ,ABMK),U,2),ABMJT)) Q:'ABMJT  D  Q:(+ABMJIEN'=0)
+ .....I $P($$CPT^ABMCVAPI(ABMJT,ABMP("VDT")),U,7)=0 Q  ;inactive - skip this entry
+ .....S ABMJIEN=ABMJT
+ ....S ABMDESC=$P($$CPT^ABMCVAPI(ABMJIEN,ABMP("VDT")),U,3)
+ ...;end new abm*2.6*31 IHS/SD/SDR CR11218
  ...I ABMII=33&($A($E($P(ABMRV(ABMII,ABMJ,ABMK),U,2)))>64) S ABMDESC=$P($G(^AUTTADA($O(^AUTTADA("B",$E($P(ABMRV(ABMII,ABMJ,ABMK),U,2),2,5),0)),0)),U,2)
  ...I ABMII=25 S ABMDESC=$P($G(^AUTTREVN($P(ABMRV(ABMII,ABMJ,ABMK),U),0)),U,2)  ;rev code desc
  ...S ABMUNIT=$P($G(ABMRV(ABMII,ABMJ,ABMK)),U,5)  ;units--ok for all
@@ -125,18 +146,26 @@ SLINES ;service lines
 WLINE ;write service line
  W ?1,"|",ABMSDT,"|"
  W $$FMT^ABMERUTL(ABMSCD,"9R"),"|"
- W $$FMT^ABMERUTL(ABMDESC,"42L"),"|"
- W $$FMT^ABMERUTL(ABMUNIT,"3R"),"|"
- W $$FMT^ABMERUTL(ABMCHRG,"10R"),"|"
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;W $$FMT^ABMERUTL(ABMDESC,"42L"),"|"
+ ;W $$FMT^ABMERUTL(ABMUNIT,"3R"),"|"
+ ;W $$FMT^ABMERUTL(ABMCHRG,"10R"),"|"
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ W $$FMT^ABMERUTL(ABMDESC,"35L"),"|"
+ W $$FMT^ABMERUTL(ABMUNIT,"7R"),"|"
+ W $$FMT^ABMERUTL(ABMCHRG,"13R"),"|"
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  W !
  S ABMLNCNT=+$G(ABMLNCNT)+1
  I ABMLNCNT>17 D  ;start new page
  .W ?1,"|"
  .W ?10,"|"
  .W ?20,"|"
- .W ?50,"CONTINUED==>"
- .W ?63,"|"
- .W ?67,"|          |"
+ .;W ?50,"CONTINUED==>"  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .W ?43,"CONTINUED==>"  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .;W ?63,"|"  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .W ?56,"|"  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .W ?64,"|             |"
  .W !
  .D WCOVRG
  .S ABMPAGE=ABMPAGE+1
@@ -148,17 +177,20 @@ TOTAL ;total
  W ?1,"|"
  W ?10,"|"
  W ?20,"|"
- W ?63,"|"
- W ?67,"|==========|"
+ ;W ?63,"|"  ;abm*2.6*30 IHS/SD/SDR CR8870
+ W ?56,"|"  ;abm*2.6*30 IHS/SD/SDR CR8870
+ W ?64,"|=============|"
  W !
  W ?1,"|"
  W ?10,"|"
  W ?20,"|"
- W ?50,"TOTAL CHARGES|"
- W ?67,"|",$J($FN(ABMTCHRG,",",2),10),"|",!
+ ;W ?50,"TOTAL CHARGES|"  ;abm*2.6*30 IHS/SD/SDR CR8870
+ W ?43,"TOTAL CHARGES|"  ;abm*2.6*30 IHS/SD/SDR CR8870
+ W ?64,"|",$J($FN(ABMTCHRG,",",2),13),"|",!
  ;I ABMLNCNT<20 D  ;abm*2.6*21 IHS/SD/SDR HEAT116546
  I ABMLNCNT<15 D  ;abm*2.6*21 IHS/SD/SDR HEAT116546
- .S ABMLN=" |        |         |                                          |   |          |"
+ .;S ABMLN=" |        |         |                                          |   |          |"  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .S ABMLN=" |        |         |                                   |       |             |"  ;abm*2.6*30 IHS/SD/SDR CR8870
  .;F ABMLNCNT=ABMLNCNT:1:20 W ABMLN,!  ;abm*2.6*21 IHS/SD/SDR HEAT116546
  .F ABMLNCNT=ABMLNCNT:1:15 W ABMLN,!  ;abm*2.6*21 IHS/SD/SDR HEAT116546
  ;

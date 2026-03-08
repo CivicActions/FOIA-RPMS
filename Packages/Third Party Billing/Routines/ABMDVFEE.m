@@ -1,10 +1,14 @@
 ABMDVFEE ; IHS/SD/SDR - VIEW CPT FEES ;
- ;;2.6;IHS Third Party Billing System;**9,21,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS Third Party Billing System;**9,21,27,29,31**;NOV 12, 2009;Build 615
  ;IHS/SD/SDR 2.6*21 HEAT135354 fixed display of code when one is selected; was printing a dash, no description, and 0.00 all the time, no matter the charge.
  ;IHS/SD/SDR 2.6*27 CR8894 Fixed display to show short description for CPT if ?? entered by user
+ ;IHS/SD/SDR 2.6*29 CR10834 Fixed view so Medical charge would show up correctly
+ ;IHS/SD/SDR 2.6*31 CR10857 Fixed VWFE to display correct fees when '??' is typed at CPT prompt for a list; also fixed where it displays the short description
+ ;   and current charge when a CPT is selected.  It wasn't always accurate, the description and the charge
  ;
  S U="^" W !
-FEE K DIC
+FEE ;
+ K DIC
  S DIC="^ABMDFEE(",DIC(0)="QEAML"
  S DIC("A")="Select FEE SCHEDULE: "
  S:$P($G(^ABMDPARM(DUZ(2),1,0)),U,9)]"" DIC("B")=$P(^(0),U,9)
@@ -14,7 +18,8 @@ FEE K DIC
  G XIT:$D(DUOUT)!$D(DTOUT)
  I +Y<1 G FEE
  S ABM("FEE")=+Y
-SEL W !!,"----- FEE SCHEDULE CATEGORIES -----",!
+SEL ;
+ W !!,"----- FEE SCHEDULE CATEGORIES -----",!
  S DIR(0)="SO^1:MEDICAL FEES;2:SURGICAL FEES;3:RADIOLOGY FEES;4:LABORATORY FEES;5:ANESTHESIA FEES;6:DENTAL FEES;7:REVENUE CODE;8:HCPCS FEES;9:DRUG FEES;10:CHARGE MASTER"
  S DIR("A")="Select Desired CATEGORY"
  D ^DIR K DIR
@@ -22,7 +27,10 @@ SEL W !!,"----- FEE SCHEDULE CATEGORIES -----",!
  S ABM=+Y
  ;
  S ABM("SUB")=$S(ABM=1:19,ABM=2:11,ABM=3:15,ABM=4:17,ABM=5:23,ABM=6:21,ABM=7:31,ABM=8:13,ABM=9:25,ABM=10:32)
-EDIT K DIC
+ ;
+EDIT ;
+ ;
+ K DIC
  S DA(1)=ABM("FEE")
  S DIC="^ABMDFEE("_DA(1)_","_ABM("SUB")_","
  S:'$D(@(DIC_"0)")) @(DIC_"0)")="^9002274.01"_ABM("SUB")_"P"
@@ -33,8 +41,13 @@ EDIT K DIC
  ;I "123458"[ABM S DIC("W")="W "" - "",$P($$CPT^ABMCVAPI(Y,DT),U,3),?65,$J($FN($P($$ONE^ABMFEAPI(DA(1),ABM(""SUB""),Y,DT),U),"","",2),9)"  ;CSV-c  ;abm*2.6*21 IHS/SD/SDR HEAT135354
  ;I "123458"[ABM S DIC("W")="W "" - "",$P($$CPT^ABMCVAPI(X,DT),U,3),?65,$J($FN($P($$ONE^ABMFEAPI(DA(1),ABM(""SUB""),$P($$CPT^ABMCVAPI(X,DT),U),DT),U),"","",2),9)"  ;CSV-c  ;abm*2.6*21 IHS/SD/SDR HEAT135354  ;abm*2.6*27 IHS/SD/SDR CR8894
  ;start new abm*2.6*27 IHS/SD/SDR CR8894
- I "123458"[ABM D
- .S DIC("W")=" W "" - "",$P($$CPT^ABMCVAPI(+Y,DT),U,3),?65,$J($FN($P($$ONE^ABMFEAPI(DA(1),ABM(""SUB""),$P($$CPT^ABMCVAPI(+Y,DT),U),DT),U),"","",2),9)"
+ ;start old abm*2.6*31 IHS/SD/SDR CR10857
+ ;I "123458"[ABM D
+ ;.;S DIC("W")=" W "" - "",$P($$CPT^ABMCVAPI(+Y,DT),U,3),?65,$J($FN($P($$ONE^ABMFEAPI(DA(1),ABM(""SUB""),$P($$CPT^ABMCVAPI(+Y,DT),U),DT),U),"","",2),9)"  ;abm*2.6*29 IHS/SD/SDR CR10834
+ ;.S DIC("W")=" W "" - "",$P($$CPT^ABMCVAPI(+Y,DT),U,3),?65,$J($FN($P($$ONE^ABMFEAPI(DA(1),ABM(""SUB""),$P($$CPT^ABMCVAPI(+X,DT),U,2),DT),U),"","",2),9)"  ;abm*2.6*29 IHS/SD/SDR CR10834
+ ;end old start new abm*2.6*31 IHS/SD/SDR CR10857
+ I "123458"[ABM G EDIT2
+ ;end new abm*2.6*31 IHS/SD/SDR CR10857
  ;
  I ABM=9 S DIC("W")="W ?50,$P($G(^PSDRUG(Y,2)),U,4),?65,$J($FN($P($$ONE^ABMFEAPI(DA(1),ABM(""SUB""),Y,DT),U),"","",2),9)"
  I ABM=10 S DIC("W")="W ?65,$J($FN($P($$ONE^ABMFEAPI(DA(1),ABM(""SUB""),Y,DT),U),"","",2),9)"
@@ -42,9 +55,33 @@ EDIT K DIC
  ;
  W !!
  S DIC(0)="QEAM"
- D ^DIC K DIC
+ D ^DIC
+ K DIC
  G SEL:X=""!$D(DUOUT)!$D(DTOUT)
  I +Y<1 G EDIT
+ G EFFDT  ;abm*2.6*31 IHS/SD/SDR CR10857
+ ;
+ ;start new abm*2.6*31 IHS/SD/SDR CR10857
+EDIT2 ;
+ W !!
+ S (X,Y)=0
+ K ^TMP($J,"ABM","CPT")
+ S X=0
+ F  S X=$O(^ABMDFEE(DA(1),ABM("SUB"),X)) Q:'X  S ^TMP($J,"ABM","CPT",$P(^ICPT($P(^ABMDFEE(DA(1),ABM("SUB"),X,0),U),0),U))=$P(^ABMDFEE(DA(1),ABM("SUB"),X,0),U)
+ S TGBL="^TMP($J,"_""""_"ABM"_""""_","_""""_"CPT"_""""_",X)"
+ S DIR(0)="FO^^I '$D(@TGBL) S Y=-1 W "" ??"""
+ S DIR("A")="Select "_$P(^DD(9002274.01_ABM("SUB"),.01,0),U)  ;prompt for CPT category
+ S DIR("?")="Enter a valid "_$P(^DD(9002274.01_ABM("SUB"),.01,0),U)
+ D ^DIR
+ K DIR
+ G SEL:X=""!$D(DUOUT)!$D(DTOUT)!$D(DIRUT)!$D(DIROUT)
+ I Y=-1 G EDIT
+ W ?40,$P($$CPT^ABMCVAPI($G(^TMP($J,"ABM","CPT",X)),DT),U,3)  ;CPT short description
+ S ABMX=$$DINUM^ABMFOFS(X)
+ W ?65,$J($FN($P($$ONE^ABMFEAPI(DA(1),ABM("SUB"),ABMX,DT),U),",",2),9)  ;current charge
+ S Y=$$DINUM^ABMFOFS(X)
+ ;end new abm*2.6*31 IHS/SD/SDR CR10857
+ ;
 EFFDT ;
  S ABMCODE=+Y
  W !!,"Eff. Date",?16,"Global",?25,"Technical",?35,"Professional",?48,"Updated By",?69,"Updated on"
@@ -57,5 +94,6 @@ EFFDT ;
  ;
  G EDIT
  ;
-XIT K ABM,DIR,DIC,DIE
+XIT ;
+ K ABM,DIR,DIC,DIE
  Q

@@ -1,5 +1,5 @@
-%ZOSV ;ISF/STAFF - View commands & special functions (GT.M). ;09/15/08  14:45
- ;;8.0;KERNEL;**275,425,499**;Jul 10, 1995;Build 24
+%ZOSV ;ISF/STAFF - View commands & special functions (GT.M). ;05 Feb 2004 10:44 am
+ ;;8.0;KERNEL;**275**;Jul 10, 1995
  ; for GT.M for VMS, version 4.3
  ;
 ACTJ() ; # active jobs
@@ -14,7 +14,7 @@ ACTJ() ; # active jobs
  ;
 AVJ() ; # available jobs, Limit is in the OS.
  N V,J
- S V=^%ZOSF("VOL"),J=$O(^XTV(8989.3,1,4,"B",V,0)),J=$P($G(^XTV(8989.3,1,4,J,0),"^^1000"),"^",3)
+ S V=^%ZOSF("VOL"),J=$G(^XTV(8989.3,"AMAX",V),100)
  Q J-$$ACTJ ;Use signon Max
  ;
 PASSALL ;
@@ -25,30 +25,24 @@ NOPASS ;
 GETPEER() ;Get the IP address of a connection peer
  N PEER
  S PEER=$ZTRNLNM("VISTA$IP")
- I $G(^XTV(8989.3,1,"PEER"))[PEER S PEER="" ;p499
  Q $S($L(PEER):PEER,$L($G(IO("GTM-IP"))):IO("GTM-IP"),1:"")
  ;
 PRGMODE ;
- N X,XUCI,XUSLNT
- W ! S ZTPAC=$P($G(^VA(200,+DUZ,.1)),"^",5),XUVOL=^%ZOSF("VOL")
- S X="" X ^%ZOSF("EOFF") R:ZTPAC]"" !,"PAC: ",X:60 D LC^XUS X ^%ZOSF("EON") I X'=ZTPAC W "??",$C(7) Q
- N XMB,XMTEXT,XMY S XMB="XUPROGMODE",XMB(1)=DUZ,XMB(2)=$I D ^XMB:$L($T(^XMB)) D BYE^XUSCLEAN K ZTPAC,X,XMB
- D UCI S XUCI=Y D PRGM^ZUA
+ W ! S ZTPAC=$S($D(^VA(200,+DUZ,.1))#10:$P(^(.1),"^",5),1:""),XUVOL=^%ZOSF("VOL")
+ S X="" X ^%ZOSF("EOFF") R:ZTPAC]"" !,"PAC: ",X:60 D LC^XUS X ^%ZOSF("EON") I X'=ZTPAC W "??",*7 Q
+ K XMB,XMTEXT,XMY S XMB="XUPROGMODE",XMB(1)=DUZ,XMB(2)=$I D ^XMB:$L($T(^XMB)) D BYE^XUSCLEAN K ZTPAC,X,XMB
+ D UCI S XUCI=Y,XQZ="PRGM^ZUA[MGR]",XUSLNT=1 D DO^%XUCI
  F  BREAK
  HALT
  ;
-PROGMODE() ; In Application mode
- Q 0 ; This was used to control UCI switching, has no meaning in GT.M
+PROGMODE() ;
+ Q 1 ; until we fix this, we're never in application mode
  ;
 UCI ;
  S Y="VAH,"_^%ZOSF("VOL") Q
  ;
 UCICHECK(X) ;
  Q 1
- ;
-TEMP() ; Return path to temp directory
- ;N %TEMP S %TEMP=$P($$RTNDIR," "),%TEMP=$P(%TEMP,"/",1,$L(%TEMP,"/")-2)_"/t/"
- Q $G(^%ZOSF("TMP"),$G(^XTV(8989.3,1,"DEV"),"USER$:[TEMP]"))
  ;
 JOBPAR ;is job X valid on system, return UCI in Y.
  N $ES,$ET,J S $ET="Q:$ES>0  S Y="""" G JOBPX^%ZOSV"
@@ -79,19 +73,19 @@ EC() ; Error Code: returning $ZS in format more like $ZE from DSM
  Q %ZE
  ;
 DOLRO ;SAVE ENTIRE SYMBOL TABLE IN LOCATION SPECIFIED BY X
- ;S Y="%" F  S Y=$O(@Y) Q:Y=""  D
- ;. I $D(@Y)#2 S @(X_"Y)="_Y)
- ;. I $D(@Y)>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
- S Y="%" F  M:$D(@Y) @(X_"Y)="_Y) S Y=$O(@Y) Q:Y=""
- Q
+ S Y="%" F  S Y=$O(@Y) Q:Y=""  D
+ . I $D(@Y)#2 S @(X_"Y)="_Y)
+ . I $D(@Y)>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
+ K %X,%Y,Y Q
  ;
-ORDER ;SAVE PART OF SYMBOL TABLE IN LOCATION SPECIFIED BY X
- N %
- S (Y,%)=$P(Y,"*",1) ;I $D(@Y)=0 F  S Y=$O(@Y) Q:Y=""!(Y[Y1)
- Q:Y=""
- ;S %=$D(@Y) S:%#2 @(X_"Y)="_Y) I %>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
- ;F  S Y=$O(@Y) Q:Y=""!(Y'[Y1)  S %=$D(@Y) S:%#2 @(X_"Y)="_Y) I %>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
- F  M:$D(@Y) @(X_"Y)="_Y) S Y=$O(@Y) Q:Y=""!(Y'[%)
+ORDER ;SAVE PARTS OF SYMBOL TABLE IN LOCATION SPECIFIED BY X
+ ;PARTS INDICATED BY X1("NAMESPACE*")="" ARRAY
+ I $D(X1("*"))#2 D DOLRO Q
+ S X1="" F  S X1=$O(X1(X1)) Q:X1=""  D
+ . S (Y,Y1)=$P(X1,"*") I $D(@Y)=0 F  S Y=$O(@Y) Q:Y=""!(Y[Y1)
+ . Q:Y=""  S %=$D(@Y) S:%#2 @(X_"Y)="_Y) I %>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
+ . F  S Y=$O(@Y) Q:Y=""!(Y'[Y1)  S %=$D(@Y) S:%#2 @(X_"Y)="_Y) I %>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
+ K %,%X,%Y,Y,Y1
  Q
  ;
 PARSIZ ;
@@ -108,14 +102,8 @@ GETENV ;Get environment Return Y='UCI^VOL^NODE^BOX LOOKUP'
 VERSION(X) ;return OS version, X=1 - return OS
  Q $S($G(X):$P($ZV," V"),1:+$P($ZV," V",2))
  ;
-OS() ;
- Q "VMS"
- ;
-RTNDIR() ;primary routine source directory
- ;Assume dat1$:[gtm.o]/src=(dat1$:[gtm.r]),gtm$dist
- N % S %=$P($ZRO,",")
- I %["/SRC" S %=$P($P($P(%,"(",2),")",1),",")
- Q %
+RTNDIR() ;
+ Q $P($ZRO,",")
  ;
 SETNM(X) ;Set name, Trap dup's, Fall into SETENV
  N $ETRAP S $ETRAP="S $ECODE="""" Q"
@@ -131,15 +119,17 @@ SID() ;System ID
  S J1(2)=$ZGBLDIR
  Q "1~"_J1(1)_T_J1(2)
  ;
-PRI() ;Check if a mixed OS enviroment.
- ;Default return 1 unless we are on the secondary OS.
- ;Only Cache on a VMS/Linux mix is supported now.
- Q 1
+T0 ; start RT clock <=====
+ Q  ; we don't have $ZH on GT.M
  ;
-T0 ; start RT clock
- Q
+T1 ; store RT datum w/ZHDIF <=====
+ Q  ; we don't have $ZH on GT.M
  ;
-T1 ; store RT datum, Obsolete
+ZHDIF ;Display dif of two $ZH's <=====
+ W !," CPU=",$J($P(%ZH1,",")-$P(%ZH0,","),6,2)
+ W ?14," ET=",$J($P(%ZH1,",",2)-$P(%ZH0,",",2),6,1)
+ W ?27," DIO=",$J($P(%ZH1,",",7)-$P(%ZH0,",",7),5)
+ W ?40," BIO=",$J($P(%ZH1,",",8)-$P(%ZH0,",",8),5),! ; so far this won't be called
  Q
  ;
  ;Code moved to %ZOSVKR, Comment out if needed.

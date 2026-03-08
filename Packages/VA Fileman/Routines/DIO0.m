@@ -1,11 +1,13 @@
-DIO0 ;SFISC/GFT,TKW-BUILD SORT AND SUB-HDR ;28SEP2004
- ;;22.0;VA FileMan;**2,23,138,144**;Mar 30, 1999;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIO0 ;SFISC/GFT,TKW-BUILD SORT AND SUB-HDR ;2/19/98  10:21 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**9,21,35,41**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+ ;12370;9418636;3858;
  ;
- S C=",",Z=Z+1,DE=$P(DN,C,Z)_"=$O("_DI_$P(DN,C,1,Z)_")),DN="_(Z+1) ;22*138
+ S Z=Z+1,DE=$P(DN,C,Z)_"=$O("_DI_$P(DN,C,1,Z)_")),DN="_(Z+1)
  I Z=1,$G(DPP(DJK,"PTRIX"))]"" D
-DIOO1 . S DE="DIOO1=$O("_DPP(DJK,"PTRIX")_"DIOO1)),DN=1.5,DD00=0"
- . S DY(1.5)="S DD00=$O("_DPP(DJK,"PTRIX")_"DIOO1,DD00)),DN=2 S:'DD00 DN=1"
+ . S DE="DD0=$O("_DPP(DJK,"PTRIX")_"DD0)),DN=1.5,DD00=0"
+ . S DY(1.5)="S DD00=$O("_DPP(DJK,"PTRIX")_"DD0,DD00)),DN=2 S:'DD00 DN=1"
  . I DPP(DJK,"PTRIX")?.E1"""B""," S DY(1.5)=DY(1.5)_" S:DD00&($G(^(+DD00))!('($D(^(+DD00))=1))) DN=1"
  . Q
  I DPQ,Z=1,$D(DPP(DJK,"IX")),$O(DPP(DJK,0)) D
@@ -22,7 +24,7 @@ DIOO1 . S DE="DIOO1=$O("_DPP(DJK,"PTRIX")_"DIOO1)),DN=1.5,DD00=0"
  .I $G(DPP(0)),Z<(DPP(0)+1) S Y=$P($G(DPP(Z,"T")),U)
  .I Y]"",Y'="@",Y'="z" S X=X_"!("_$$AFT^DIOC($P(DN,C,Z),Y)_")"
  .Q
-D0 S X=X_" S DN="_$S(Z=DD&($D(DPP(DJK,"PTRIX"))):1.5,1:(Z-1)),Y=Z-1 I Z=1 S X=X_",D0=-1" I $D(DPP(DJK,"PTRIX")) S X=X_" K DD00",$P(DN,C,1)="DD00"
+ S X=X_" S DN="_$S(Z=DD&($D(DPP(DJK,"PTRIX"))):1.5,1:(Z-1)),Y=Z-1 I Z=1,$D(DPP(DJK,"PTRIX")) S X=X_" K DD00",$P(DN,C,1)="DD00"
  I 'DPQ,$D(DPP(Y)) S:$P(DPP(Y),U,4)["!" X="DRK=DRK+1,"_X_",DRK=0",DRK=0 D SUB
  S DY(Z)="S "_X
  I $D(DIBTPGM) D
@@ -44,7 +46,7 @@ SUB I $P($G(DPP(Y)),U,4)["+" S A(A)=Y,X=X_",A="_A_" D"_$S($D(DIS)<9:"",1:":$D(DI
  Q
  ;
 H S DOP=0 I $D(DNP) F W=1:1 G Q:'$D(DPP(W)) I DPP(W)["+" K DNP S DOP=1 Q
- S Y=$P(DN,",",Z),F=$P(DPP(Z),U,5),W=$P(DPP(Z),U,4),X=$P(W,"""",2),V=+$P(DPP(Z),U,2) S:W["-" Y="(-"_Y_")" I F'[""""&'$D(DPQ(+DPP(Z),V+X))&'DOP!(W["@")!(W["'")!$D(DISH) S (Y,V)="" G F:F]"",U
+ S Y=$P(DN,C,Z),F=$P(DPP(Z),U,5),W=$P(DPP(Z),U,4),X=$P(W,"""",2),V=+$P(DPP(Z),U,2) S:W["-" Y="(999999999-"_Y_")" I F'[""""&'$D(DPQ(+DPP(Z),V+X))&'DOP!(W["@")!(W["'")!$D(DISH) S (Y,V)="" G F:F]"",U
  I F[";TXT" S Y="$E("_Y_",2,$L("_Y_"))"
  S X=$S($D(^DD(+DPP(Z),V,0)):^(0),1:$P(DPP(Z),U,6,9)) I $P(X,U,2)["D" S Y=" S Y="_Y_" D DT"
  E  I $G(DPP(Z,"OUT"))]"" S DPP(Z,"OUT")=" S Y="_Y_" "_DPP(Z,"OUT"),Y=",Y"

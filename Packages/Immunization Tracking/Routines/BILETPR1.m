@@ -1,10 +1,11 @@
-BILETPR1 ;IHS/CMI/MWR - PRINT PATIENT LETTERS.; DEC 15, 2011
- ;;8.5;IMMUNIZATION;**14**;AUG 01,2017
+BILETPR1 ;IHS/CMI/MWR - PRINT PATIENT LETTERS.; ; 03 Aug 2025  8:54 PM
+ ;;8.5;IMMUNIZATION;**24,25,27,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  BUILD ^TMP WP ARRAY FOR PRINTING LETTERS.
  ;;  PATCH 10: If no skin tests on record, display explicitly. HISTORY1+190
  ;;            Display only the most recent three dates of Skin Tests. HISTORY1+209
  ;;  PATCH 14: Remove "NOS" from forecasted vaccines in letters.  FORECAST+41
+ ;;  PATCH 24: Add code for display filter.  HISTORY1+83
  ;
  ;
  ;----------
@@ -31,19 +32,23 @@ BUILD(BIDFN,BILET,BIDLOC,BIFDT) ;EP
  ;---> Get forecast string (BIFORCST) and problem dose string (BIPDSS).
  ;---> Pass BIPDSS to HISTORY to mark problem doses with asterisks.
  ;---> Pass BIFORCST to FORECAST for display.
+ ;V8.5 P31 - FID-  Include '*HR*' high risk flag
  N BIFORCST,BIPDSS S BIPDSS=""
- D IMMFORC^BIRPC(.BIFORCST,BIDFN,BIFDT,,$G(BIDUZ2),.BIPDSS)
+ D IMMFORC^BIRPC(.BIFORCST,BIDFN,BIFDT,,$G(BIDUZ2),.BIPDSS,1)
  ;---> If Forecast comes first, set BIFF=1
+ ;V8.5 PATCH 27 - FID-
  N BIFF S BIFF=$P(^BILET(BILET,0),U,6)
+ N BIDL S BIDL=$P(^BILET(BILET,0),U,7)
+ S:'BIDL BIDL=2
  ;
  ;---> Retrieve and store sections of letter in WP ^TMP global.
  D SECTION(BILET,.BILINE,1)
  D
  .I BIFF D FORECAST(BILET,.BILINE,BIFORCST,BIFDT) Q
- .D HISTORY(BILET,.BILINE,BIDFN,BIPDSS)
+ .D:BIDL=2 HISTORY(BILET,.BILINE,BIDFN,BIPDSS)
  D SECTION(BILET,.BILINE,2)
  D
- .I BIFF D HISTORY(BILET,.BILINE,BIDFN,BIPDSS) Q
+ .I BIFF D:BIDL=2 HISTORY(BILET,.BILINE,BIDFN,BIPDSS) Q
  .D FORECAST(BILET,.BILINE,BIFORCST,BIFDT)
  D SECTION(BILET,.BILINE,3)
  D DATELOC(BILET,.BILINE,BIDLOC)
@@ -59,13 +64,35 @@ SECTION(BILET,BILINE,BISEC) ;EP
  ;     2 - BILINE (ret) Last line written into ^TMP array.
  ;     3 - BISEC  (req) Section of Form Letter to retrieve.
  ;
- N N S N=0
+ N N,T S N=0
  F  S N=$O(^BILET(BILET,BISEC,N)) Q:'N  D
+ .;if this is street 2, it is blank and there is nothing before or after it, skip the line
+ .S T=$G(^BILET(BILET,BISEC,N,0))
+ .I T["|BI MAILING ADD-STREET 2|" NEW %,Q,F,S,X S Q=0 D  Q:Q
+ ..S %=$O(^DD("FUNC","B","BI MAILING ADD-STREET 2",0))
+ ..Q:'%
+ ..S X=$G(^DD("FUNC",%,1))
+ ..Q:X=""
+ ..X X
+ ..I X]"" Q  ;has address so keep going
+ ..;is there anyting before or after other than spaces or blanks
+ ..S F=$P(T,"|BI MAILING ADD-STREET 2|",1)
+ ..I $$HD(F) Q  ;has other than space/null
+ ..S F=$P(T,"|BI MAILING ADD-STREET 2|",2)
+ ..I $$HD(F) Q  ;has other than space/null
+ ..S Q=1
  .D WRITE(.BILINE,^BILET(BILET,BISEC,N,0))
  Q
+HD(Z) ;is there any character besides spaces?
+ NEW L,%,G
+ I $G(Z)="" Q 0
+ S L=$L(Z)
+ I L=0 Q 0
+ S G=0
+ F %=1:1:L I $E(Z,%)'=" " S G=1
+ Q G
  ;
  ;
- ;----------
 HISTORY(BILET,BILINE,BIDFN,BIPDSS) ;EP
  ;---> Retrieve and store Imm History in WP ^TMP global.
  ;---> Parameters:
@@ -88,8 +115,6 @@ HISTORY(BILET,BILINE,BIDFN,BIPDSS) ;EP
  D WRITE(.BILINE)
  Q
  ;
- ;
- ;----------
 HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC,BIMMRF,BIMMLF) ;EP
  ;---> Retrieve and store Imm History in WP ^TMP global.
  ;---> Parameters:
@@ -138,9 +163,11 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC,BIMMRF,BIMM
  ;---> 65 13 = Dose Override.
  ;---> 69 14 = Vaccine Component CVX Code.
  ;---> 77 15 = VFC for this immunization.
+ ;IHS/CMI/LAB - added piece 16 as date adm or visit date
+ ;---> 86 16 = Date of Event/Administer shot (1201 field of V File) in FM format (YYYMMDD).
  ;
  ;
- F I=4,8,24,26,27,33,38,39,41,44,56,65,69,77 S BIDE(I)=""
+ F I=4,8,24,26,27,33,38,39,41,44,56,65,69,77,86 S BIDE(I)=""   ;IHS/CMI/LAB PATCH 25 ADDED ITEM 86 for adm/vd
  D IMMHX^BIRPC(.BIRETVAL,BIDFN,.BIDE,1,0)
  ;
  ;---> If BIRETERR has a value, store it and quit.
@@ -170,11 +197,11 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC,BIMMRF,BIMM
  .;---> Set BIPD=1 if Immserve has a problem with this dose.
  .N BIPD S BIPD=$$PDSS^BIUTL8($P(Y,V,4),$P(Y,V,14),$G(BIPDSS))
  .;
- .;---> Quit if not displaying Invalid Doses (but will display a Forced Valid).
- .;Q:((BINVAL=1)&(($P(Y,V,13)&($P(Y,V,13)'=9))!BIPD))
- .;
  .;---> Do not display if this vaccine is not in the display filter array.
- .I $D(BIMMRF) Q:('$D(BIMMRF(+$P(Y,V,14))))
+ .;
+ .;********** PATCH 24, v8.5, APR 01,2022, ihs/cmi/maw
+ .;I $D(BIMMRF) Q:('$D(BIMMRF(+$P(Y,V,14))))
+ .I $D(BIMMRF) I '$D(BIMMRF("ALL")) Q:('$D(BIMMRF($$HL7TX^BIUTL2(+$P(Y,V,14)))))
  .;
  .;---> Do not display if this lot number is not in the display filter array.
  .I $D(BIMMLF) Q:('$D(BIMMLF(+$P(Y,V,7))))
@@ -220,7 +247,8 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC,BIMMRF,BIMM
  .;
  .;---> Set this Immunization in the array:
  .;---> BIAR(VisitDate,VaccineName,VisitIEN)=VaccineName (Lot#)--Problem Dose
- .S BIAR($P(Y,V,12),$P(Y,V,2),$P(Y,V,4))=X
+ .;S BIAR($P(Y,V,12),$P(Y,V,2),$P(Y,V,4))=X  ;IHS/CMI/LAB - PATCH 25 CHANGED TO ADMIN/VD
+ .S BIAR($P(Y,V,16),$P(Y,V,2),$P(Y,V,4))=X
  ;
  ;---> Build Imm History lines for History Section of Form Letter.
  N N S N=0
@@ -296,7 +324,6 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC,BIMMRF,BIMM
  ;
  ;---> Build Skin Test History lines for History Section of Form Letter.
  ;
- ;********** PATCH 10, v8.5, MAY 30,2015, IHS/CMI/MWR
  ;---> Display only the most recent three dates of Skin Tests.
  ;
  N BIZTEMP
@@ -328,47 +355,7 @@ HISTORY1(BILINE,BIDFN,BIFORM,BINVAL,BIGBL,BIPDSS,BIHDRS,BINOSK,BILOC,BIMMRF,BIMM
  ;
  ;----------
 CONTRAS(BILINE,BIDFN,BIGBL) ;EP
- ;---> Retrieve and store Contraindications in WP ^TMP global.
- ;---> Parameters:
- ;     1 - BILINE (ret) Last line written into ^TMP array.
- ;     2 - BIDFN  (req) Patient's IEN in VA PATIENT File #2.
- ;     3 - BIGBL  (opt) ^TMP global node to write to (def="BILET").
- ;
- S:$G(BIGBL)="" BIGBL="BILET"
- N BIRETVAL,BIRETERR,I S BIRETVAL=""
- ;
- ;---> RPC to retrieve Contraindications.
- D CONTRAS^BIRPC5(.BIRETVAL,BIDFN)
- ;
- ;---> If BIRETERR has a value, display it and quit.
- S BIRETERR=$P(BIRETVAL,BI31,2)
- I BIRETERR]"" D  Q
- .D WRITE(.BILINE,"     "_BIRETERR,BIGBL)
- .D WRITE(.BILINE,,BIGBL)
- ;
- ;---> Set BICONT=to a string of Contraindications for this patient.
- N BICONT S BICONT=$P(BIRETVAL,BI31,1)
- Q:BICONT=""
- ;
- ;---> Build Listmanager array from BICONT string.
- ;
- N J S J=1
- F I=1:1 S Y=$P(BICONT,U,I) Q:Y=""  D
- .;---> Build display line for this Contraindication.
- .N V S V="|",X="     "
- .S:J X=X_"* Contraindications:",J=0 S X=$$PAD^BIUTL5(X,28)
- .;
- .;---> Display "Vaccine:  Date  Reason"
- .;---> Quit if Reason is a "Refusal."  Also, if it's the first line of Contras
- .;---> reset J so that "Contraindications:" header displays on the next one.
- .I Y["Refusal" D  Q
- ..I I=1 S J=1
- .S X=X_$P(Y,V,2)_":",X=$$PAD^BIUTL5(X,40)_$P(Y,V,4)
- .S X=$$PAD^BIUTL5(X,53)_$P(Y,V,3)
- .;---> Set formatted Contraindication line and index in ^TMP.
- .D WRITE(.BILINE,X,BIGBL)
- Q
- ;
+ G CONTRAS^BILETPR4
  ;
  ;----------
 FORECAST(BILET,BILINE,BIFORCST,BIFDT) ;EP

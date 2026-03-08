@@ -1,6 +1,9 @@
 AGSEENLY ; IHS/ASDS/EFG - PATIENT DATA VIEW ; MAR 19, 2010 
- ;;7.1;PATIENT REGISTRATION;**7**;AUG 25,2005
+ ;;7.1;PATIENT REGISTRATION;**7,15**;AUG 25,2005;Build 1
  ;This routine is called from the CONTRACT HEALTH system.
+ ;IHS/OIT/NKD AG*7.1*15 ADDED PAGE 11
+ ;IHS/OIT/NKD AG*7.1*15 PAGING LOGIC
+ ;
  D ^AGVAR
 L1 D ^AG W !!!?27,"Patient Data View System",!!
  D PTLK^AG
@@ -11,11 +14,13 @@ L2 ;PEP - CREATED ON 9/14/04 FOR VIEW PATIENT RECORD (VPR)
  Q
 L5 ;
  D @($P($T(@AGPAGE),";;",2)) W !,AGLINE("EQ")
- I AGPAGE<11 S DIR("A")="                               Press RETURN " D READ
+ ;I AGPAGE<11 S DIR("A")="                               Press RETURN " D READ  ;IHS/OIT/NKD AG*7.1*15 PAGING LOGIC
+ I AGPAGE<12 S DIR("A")="                               Press RETURN " D READ
  G L1:$D(DTOUT)!$D(DFOUT)
  I $D(DUOUT) S AGPAGE=AGPAGE-1 G L5:AGPAGE>0,L1
  I $D(AG("ED")) S AGPAGE=AG("ED") G L5
- S AGPAGE=AGPAGE+1 G L5:AGPAGE<11,L1
+ ;S AGPAGE=AGPAGE+1 G L5:AGPAGE<11,L1  ;IHS/OIT/NKD AG*7.1*15 PAGING LOGIC
+ S AGPAGE=AGPAGE+1 G L5:AGPAGE<12,L1
 READ ;
  K DFOUT,DTOUT,DUOUT,DQOUT,DLOUT,AG("ED"),AG("ERR"),DIROUT
  S DIR(0)="FO^1:3"
@@ -27,14 +32,17 @@ READ ;
  S:Y?1"?".E!(Y["^") (DQOUT,Y)=""
  I $E(Y,1)="P" D
  . S AG("ED")=+$E(Y,2,99)
- . I AG("ED")<1!(AG("ED")>10) D  ;AG*7.1*7
- .. W *7,!!,"Use only pages 1 through 10."  ;AG*7.1*7
+ . ;I AG("ED")<1!(AG("ED")>10) D  ;AG*7.1*7  ;IHS/OIT/NKD AG*7.1*15 PAGING LOGIC
+ . I AG("ED")<1!(AG("ED")>11) D
+ .. ;W *7,!!,"Use only pages 1 through 10."  ;AG*7.1*7  ;IHS/OIT/NKD AG*7.1*15 PAGING LOGIC
+ .. W *7,!!,"Use only pages 1 through 11."
  .. H 2
  .. K AG("ED")
  .. S AG("ERR")=""
  Q
  ;CHANGED OPTION 5 TO POINT TO BENEFIT COORDINATOR SCREEN
  ;AG*7.1*7;ADDED PAGE 10
+ ;IHS/OIT/NKD AG*7.1*15 ADDED PAGE 11
 1 ;;^AGED1
 2 ;;DRAW^AGED2
 3 ;;DRAW^AGED3
@@ -45,3 +53,4 @@ READ ;
 8 ;;^AGED11
 9 ;;^AGED11A
 10 ;;^AGED10A
+11 ;;^AGED14

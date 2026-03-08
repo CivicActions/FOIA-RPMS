@@ -1,6 +1,7 @@
 ABMPTPOP ; IHS/SD/SDR - Patient Population Report ;  
- ;;2.6;IHS Third Party Billing System;**21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing System;**21,30**;NOV 12, 2009;Build 585
  ;IHS/SD/SDR 2.6*21 - New routine
+ ;IHS/SD/SDR 2.6*30 CR9457 Fixed reference to ^AUPNRRE (were ^AUPNRR)
  ;
  K ABMY
  D PROMPTS
@@ -166,9 +167,15 @@ MCR ;EP
 RR ;EP
  Q:ABMMCR'=""  ;already found in MCR
  S ABMI=0
- F  S ABMI=$O(^AUPNRR(ABMPDFN,11,ABMI)) Q:'ABMI  D  Q:(ABMMCR="A")
- .S ABMISDT=$P($G(^AUPNRR(ABMPDFN,11,ABMI,0)),U)
- .S ABMIEDT=$P($G(^AUPNRR(ABMPDFN,11,ABMI,0)),U,2)
+ ;start old abm*2.6*30 IHS/SD/SDR CR9457
+ ;F  S ABMI=$O(^AUPNRR(ABMPDFN,11,ABMI)) Q:'ABMI  D  Q:(ABMMCR="A")
+ ;.S ABMISDT=$P($G(^AUPNRR(ABMPDFN,11,ABMI,0)),U)
+ ;.S ABMIEDT=$P($G(^AUPNRR(ABMPDFN,11,ABMI,0)),U,2)
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR9457
+ F  S ABMI=$O(^AUPNRRE(ABMPDFN,11,ABMI)) Q:'ABMI  D  Q:(ABMMCR="A")
+ .S ABMISDT=$P($G(^AUPNRRE(ABMPDFN,11,ABMI,0)),U)
+ .S ABMIEDT=$P($G(^AUPNRRE(ABMPDFN,11,ABMI,0)),U,2)
+ .;end new abm*2.6*30 IHS/SD/SDR CR9457
  .I ABMISDT=ABMIEDT Q  ;zero days coverage - skip
  .I ABMISDT>ABMY("DT",2) Q  ;elig started after end date
  .I (ABMIEDT'="")&(ABMIEDT>ABMY("DT",1))&(ABMIEDT<ABMY("DT",2)) S ABMRR="T" Q  ;elig terminated during date range

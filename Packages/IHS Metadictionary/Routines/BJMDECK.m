@@ -1,5 +1,5 @@
 BJMDECK ;VNGT/HS/AM-Pre Install ENVIRONMENT CHECK; 18 Nov 2009  12:51 PM
- ;;1.0;CDA/C32;**1**;May 27, 2011
+ ;;1.0;CDA/C32;**1,3**;May 27, 2011
  ;
  ; Run pre-install checks
  ;W !,"Build Name XPDNM = ",XPDNM
@@ -19,10 +19,11 @@ BJMDECK ;VNGT/HS/AM-Pre Install ENVIRONMENT CHECK; 18 Nov 2009  12:51 PM
  E  I '$P($G(^BJMDS(90607,CMSG,0)),U,10) W !,"Cannot load the C Messaging (BJMD) software until the BFMC post-installation",!,"job has finished running. Please try later." S XPDQUIT=2 I XPDENV Q
  ;
  ; Verify Version
- ;
- S VERSION=$$VERSION^%ZOSV
- I VERSION<2009!($E(VERSION,1,4)>2010)!(VERSION?1"2010.1.".E) D
- . W !,"Ensemble 2009.1 or 2010.2 is required!"
+ ; 6/15/12 GCD SCCB-P04852 Made 2009 and 2010 checks more specific. Added check for 2012.1.
+ ; 9/20/12 GCD SCCB-P05164 Changed check to 2012.2.
+ S VERSION=$TR($$VERSION^%ZOSV," ")
+ I VERSION'="2009.1.6",VERSION'="2010.2.3",VERSION'?1."2012.2".E D
+ . W !,"Ensemble 2009.1.6, 2010.2.3, or 2012.2 is required!"
  . S XPDQUIT=2
  ;
  ; Verify that installer has proper roles
@@ -32,15 +33,7 @@ BJMDECK ;VNGT/HS/AM-Pre Install ENVIRONMENT CHECK; 18 Nov 2009  12:51 PM
  I ROLES'[",%All," D
  . W !,"Your Ensemble account MUST have ""%All"" role to proceed!" S XPDQUIT=2
  ;
- ; Verify that station numbers are assigned
- ;
- S FAC=0
- F  D  Q:'FAC
- . S FAC=$O(^AGFAC(FAC)) Q:'FAC
- . I $P($G(^AGFAC(FAC,0)),U,21)'="Y" Q
- . S STAT=$P($G(^DIC(4,FAC,99)),U)
- . I STAT="" W !,"Station Number is not assigned for Facility ",FAC," ",$P($G(^DIC(4,FAC,0)),U) S XPDQUIT=2 Q
- . I STAT<8000!(STAT>9000) W !,"Station Number ",STAT," is not in the 8000-9000 range for Facility ",FAC," ",$P($G(^DIC(4,FAC,0)),U) S XPDQUIT=2
+ ; 6/11/12 GCD SCCB-P03680, SCCB-P03758 Removed station number checks.
  ; 
  ; Verify the presence of two packages
  ;
@@ -56,17 +49,24 @@ BJMDECK ;VNGT/HS/AM-Pre Install ENVIRONMENT CHECK; 18 Nov 2009  12:51 PM
  ;
  ; %Installer Change
  ; 
- I '$D(LIST("C32"_NS)),XPDENV=1 D  I $G(XPDQUIT) S EXEC="S:$G(MET)'="""" TSC=MET.Shutdown()" X EXEC G Q
+ ; 6/13/12 GCD SCCB-P03312 Changed DEFEDEST logic to work with Ensemble 2012
+ D  I $G(XPDQUIT) S EXEC="S:$G(MET)'="""" TSC=MET.Shutdown()" X EXEC G Q
  . K ARG
  . S ARG("NAMESPACE")=NS
  . S EXEC="S DIR=##class(%SYS.Namespace).GetGlobalDest(NS),DIR=$P(DIR,""^"",2,99)" X EXEC
  . S EXEC="Set MET=##class(%Monitor.System.Freespace).%New()" X EXEC
  . S EXEC="S TSC=MET.Initialize()" X EXEC
  . I $G(TSC)'=1 W !,"Space check monitor failed to initialize" S XPDQUIT=2 Q
- . S DBNAME=""
- . S EXEC="F  S TSC=MET.GetSample() Q:'TSC  I MET.Directory=DIR S DBNAME=MET.DBName" X EXEC
+ . S DBNAME="",DEFEDEST=""
+ . S EXEC="F  S TSC=MET.GetSample() Q:'TSC  S:MET.DBName=""ENSLIB"" DEFEDEST=MET.Directory I MET.Directory=DIR S DBNAME=MET.DBName" X EXEC
  . S EXEC="S TSC=MET.Shutdown()" X EXEC
  . K MET
+ . ;
+ . ; Check that Ensemble globals are mapped to the default namespace of ENSLIB
+ . S EXEC="S EDEST=##class(%SYS.Namespace).GetGlobalDest(NS,""^EnsDICOM.Dictionary"")" X EXEC
+ . I $P(EDEST,"^",2,999)'=DEFEDEST W !,"Ensemble is not properly mapped in ",NS,!!,"Please contact support before proceeding." S XPDQUIT=2 Q
+ . I $D(LIST("C32"_NS))!(XPDENV'=1) Q
+ . ;
  . I DBNAME="" W !,"Space check monitor failed to find Database" S XPDQUIT=2 Q
  . S ARG("DATABASE")=DBNAME
  . K DIR S DIR("A")="Specify Full Directory path for the database for new namespace C32"_NS,DIR(0)="F^1:200"
@@ -116,11 +116,6 @@ BJMDECK ;VNGT/HS/AM-Pre Install ENVIRONMENT CHECK; 18 Nov 2009  12:51 PM
  . S EXEC="S C32DEST=##class(%SYS.Namespace).GetGlobalDest(""C32""_NS,""^BJMDS"")" X EXEC
  . I DEFDEST'=C32DEST W !,"Global mapping for ^BJMDS is not correct" S XPDQUIT=2
  . ;
- . ; Check that Ensemble globals are mapped to the default namespace of ENSLIB
- . ;
- . S EXEC="S DEFEDEST=##class(%SYS.Namespace).GetGlobalDest(""ENSLIB"")" X EXEC
- . S EXEC="S EDEST=##class(%SYS.Namespace).GetGlobalDest(NS,""^EnsDICOM.Dictionary"")" X EXEC
- . I EDEST'=DEFEDEST W !,"Ensemble is not properly mapped in ",NS S XPDQUIT=2
 Q ;
  I $G(MET)'="" S EXEC="S TSC=MET.Shutdown()" X EXEC
  Q

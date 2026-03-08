@@ -1,5 +1,5 @@
 BSTSAPIB ;GDIT/HS/BEE-Standard Terminology API Program ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;1.0;IHS STANDARD TERMINOLOGY;**2,3,6**;Sep 10, 2014;Build 20
  ;
  Q
  ;

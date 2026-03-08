@@ -1,8 +1,9 @@
 BIELIG1 ;IHS/CMI/MWR - EDIT ELIGIBILITY CODES.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**3**;SEP 10,2012
+ ;;8.5;IMMUNIZATION;**3,25**;OCT 24, 2011;Build 22
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT ELIG CODE FIELDS: ACTIVE, LOCAL LABEL/TEXT, REPORT ABBREV.
  ;;  PATCH 3: This entire routine to edit Eligibility Codes is new.
+ ;;  PATCH 25:  83097-Add HL7 Code and HL7 Description
  ;
  ;
  ;----------
@@ -56,6 +57,15 @@ INIT ;EP
  ..;
  ..;---> Forecast On/Off.
  ..S X=X_$P(BI0,U,5)
+ ..S X=$$PAD^BIUTL5(X,89,".")
+ ..;
+ ..;---> HL7 Code.
+ ..S X=X_$P(BI0,U,6)
+ ..S X=$$PAD^BIUTL5(X,104,".")
+ ..;
+ ..;---> HL7 Description.
+ ..S X=X_$E($P(BI0,U,7),1,25)
+ ..S X=$$PAD^BIUTL5(X,132,".")
  ..;
  ..;---> Set this Vaccine display row and index in ^TMP.
  ..D WRITE(.BILINE,X,,BIENT)
@@ -118,9 +128,11 @@ EDITFM(BIELIG) ;EP
  W !?5,"    Code Label/Text: ",$P(Y,U,2)
  W !?5,"      Active Status: ",$S($P(Y,U,3):"Inactive",1:"Active")
  W !?5,"         Local Text: ",$P(Y,U,4)
- W !?5,"Report Abbreviation: ",$P(Y,U,5),!!!
+ W !?5,"Report Abbreviation: ",$P(Y,U,5)
+ W !?5,"           HL7 Code: ",$P(Y,U,6)
+ W !?5,"    HL7 Description: ",$P(Y,U,7),!!!
  ;
- S DR=".03;.04;.05"
+ S DR=".03;.04;.05;.06;.07"
  D DIE^BIFMAN(9002084.83,DR,+BIELIG,.BIPOP)
  Q
  ;

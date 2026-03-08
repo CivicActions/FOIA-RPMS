@@ -1,5 +1,5 @@
 ACHSDNL3 ; IHS/ITSC/PMF - DENIAL LTR/FS (LTR2) (4/6) ;7/23/10  15:32
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**3,4,5,6,12,18,21,27**;JUNE 11, 2001;Build 43
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**3,4,5,6,12,18,21,27,30**;JUNE 11, 2001;Build 39
  ;ACHS*3.1*3 prt alt ins, chg chart no display,fx opt prt, allow for a third sig
  ;ACHS*3.1*4 include effective dates on alt ins and fx left margin
  ;ACHS*3.1*5 12/06/2002 display of Medicare dt
@@ -7,6 +7,7 @@ ACHSDNL3 ; IHS/ITSC/PMF - DENIAL LTR/FS (LTR2) (4/6) ;7/23/10  15:32
  ;ACHS*3.1*18 6.11.10 IHS/SET/ABK Top, Lft Mar par BC name and phone no
  ;ACHS*3.1*18 9.31.10 IHS.OIT.FCJ MULT Chng FOR NEW DEN REA AND OPT, EDIT OPT is calling this rtn-ACHSDN4
  ;ACHS*3.1*27 11.14.17 IHS.OIT.FCJ CHANGE FOR NEW MEDICARE NUMBER
+ ;ACHS*3.1*30 5.20.2022 IHS.OIT.FCJ MOD FOR ESIG
 BODY ;EP - Print body of Den let
  ;CHECK 'PRT DEN AMOUNT ON LETTERS?' PAR
  ;ACHS*3.1*6 3.27.03 IHS/SET/FCJ ADD COUNT TEST
@@ -161,6 +162,23 @@ SIGTXT ;
  D PG:$Y>ACHSBM
  Q:$G(ACHSQUIT)
  W !!
+ ;ACHS*3.1*30 ST OF CHANGE
+ I (ACHDLTYP=3)!(ACHDLTYP=4) D
+ .I $$DN^ACHS(0,9) D
+ ..S X=$P($G(^VA(200,$$DN^ACHS(0,9),0)),U),ACHDSGN=$P(X,",",2)_" "_$P(X,",")
+ ..S X=$P($G(^VA(200,$$DN^ACHS(0,9),0)),U,9) I X S ACHDSGN=ACHDSGN_", "_$P(^DIC(3.1,X,0),U)
+ .W "Electronically signed by: "_ACHDSGN_" on "_$$FMTE^XLFDT($$DN^ACHS(0,11)),!!  ;ACHS*3.1*30
+ .Q:'$D(^ACHSDEN("AP",DUZ(2),"QP",ACHSA))
+ .Q:ACHDLTYP=4
+ .S DA=ACHSA,DA(1)=DUZ(2),DIE="^ACHSDEN("_DUZ(2)_",""D"","
+ .S DR=".12////P;.13////"_DT
+ .D ^DIE
+ .K DIC,DIE,DA,DR,D
+ .S DIE="^ACHSDENR(",DA=DUZ(2),ACHSSGCT=$P(^ACHSDENR(DUZ(2),0),U,15)-1
+ .S DR=".15////"_ACHSSGCT
+ .D ^DIE
+ .K DIC,DIE,DA,DR,D,ACHDSGN
+ ;ACHS*3.1*30 ST OF CHANGE
  ;
  ;sig person ;PRINT SUD INFO
  I $D(^ACHSDENR(DUZ(2),300)) D  I 1

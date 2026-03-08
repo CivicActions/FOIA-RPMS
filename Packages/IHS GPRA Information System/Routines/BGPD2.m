@@ -1,5 +1,5 @@
-BGPD2 ; IHS/CMI/LAB - indicator 2 ;
- ;;7.0;IHS CLINICAL REPORTING;;JAN 24, 2007
+BGPD2 ; IHS/CMI/LAB - indicator 2 ;   [ 08/15/02  11:28 AM ]
+ ;;1.0;IHS GPRA REPORTING;**1**;JUN 12, 2002
  ;
 I2A ;EP ;EP - indicator 2a
  ;Q:'$D(BGPIND(3))

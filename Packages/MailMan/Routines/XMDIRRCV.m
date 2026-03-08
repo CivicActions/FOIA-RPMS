@@ -1,13 +1,12 @@
-XMDIRRCV ;(WASH ISC)/CWU-Receive Email Directory ;04/18/2002  07:32
- ;;8.0;MailMan;;Jun 28, 2002
+XMDIRRCV ;(WASH ISC)/CWU - EMAIL DIRECTORY RECEIVER; 3/22/93 ;06/07/99  09:48
+ ;;7.1;MailMan;**37,50**;Jun 02, 1994
  ; Entry points used by MailMan options (not covered by DBIA):
- ; RECEIVE  XMMGR-DIRECTORY-RECV
-RECEIVE ;
+ ; ^XMDIRRCV  XMMGR-DIRECTORY-RECV
  S XMA=0
  ;
  ;Get pointer to domain data is coming from
  S %=$P($P($P(^XMB(3.9,XMZ,0),U,2),"@",2),">")
- S XMDIR1A("CODE")=$S(%="":^XMB("NETNAME"),1:%)
+ S XMDIR1A("CODE")=$S(%="":^XMB("NAME"),1:%)
  N DIK S DA=0,DIK="^XMD(4.2997,"
  F  S DA=$O(^XMD(4.2997,"E",XMDIR1A("CODE"),DA)) Q:+DA'=DA  D ^DIK
  ;

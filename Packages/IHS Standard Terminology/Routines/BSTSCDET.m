@@ -1,5 +1,5 @@
 BSTSCDET ;GDIT/HS/BEE-Get Concept Detail ; 15 Nov 2012  4:26 PM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3,4**;Dec 01, 2016;Build 10
  Q
  ;
 DETAIL(OUT,BSTSWS,RESULT) ;EP - Return Details for each Concept/Term
@@ -38,7 +38,7 @@ DETAIL(OUT,BSTSWS,RESULT) ;EP - Return Details for each Concept/Term
  . ;
  . N CONC,DESC,CIEN,ADT,RDT,PRB,PRBIEN,ICNT,ISIEN,EQMND
  . N BCNT,SBIEN,ICIEN,SCNT,TIEN,DTSID,ACNT,PDESC,CHIEN,EQ
- . N ASCNT,ASIEN,ARCNT,ARIEN,AUCNT,AUIEN,IARCNT,IASIEN,TTCNT,TTIEN
+ . N ASCNT,ASIEN,ARCNT,ARIEN,AUCNT,AUIEN,IARCNT,IASIEN,TTCNT,TTIEN,CSTS,TSTS
  . ;
  . S CONC=$P(RESULT(CNT),U)
  . S DTSID=$P(RESULT(CNT),U,2)
@@ -283,18 +283,34 @@ DETAIL(OUT,BSTSWS,RESULT) ;EP - Return Details for each Concept/Term
  .... S @OUT@(NCNT,"ICD",1,"COD")=".9999"
  .... S @OUT@(NCNT,"ICD",1,"TYP")="IC9"
  . ;
+ . ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Inactive concepts
+ . S @OUT@(NCNT,"INACTIVE")=+$$GET1^DIQ(9002318.4,CIEN_",",.16,"I")
+ . ;
  . ;Set up FSN, Synonyms, Preferred
  . S SCNT=0,TIEN="" F  S TIEN=$O(^BSTS(9002318.3,"C",XNMID,CIEN,TIEN),-1) Q:TIEN=""  D
- .. N TRM,TYP,ADT,RDT,DSC
+ .. N TRM,TYP,ADT,RDT,DSC,CTM,TACT
  .. ;
  .. S TYP=$$GET1^DIQ(9002318.3,TIEN_",",.09,"I") Q:TYP=""
  .. S TRM=$$GET1^DIQ(9002318.3,TIEN_",",1) Q:TRM=""
  .. S DSC=$$GET1^DIQ(9002318.3,TIEN_",",.02,"I") Q:DSC=""
  .. S ADT=$$GET1^DIQ(9002318.3,TIEN_",",.06,"I")
  .. S RDT=$$GET1^DIQ(9002318.3,TIEN_",",.07,"I")
+ .. S CTM=$$GET1^DIQ(9002318.3,TIEN_",",.12,"I")
+ .. S TACT=+$$GET1^DIQ(9002318.3,TIEN_",",.13,"I")
  .. ;
+ .. ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle preferred that was inactive
  .. ;Handle multiple preferred terms - switch to synonym
- .. I $D(@OUT@(NCNT,"PRE")),TYP="P" S TYP="S"
+ .. I $D(@OUT@(NCNT,"PRE")),TYP="P" D
+ ... I '$G(@OUT@(NCNT,"PRE","INACTIVE")) S TYP="S" Q  ;Current preferred active
+ ... ;Current inactive, make it synonym
+ ... I RET'["S" Q
+ ... S SCNT=SCNT+1,@OUT@(NCNT,"SYN",SCNT,"TRM")=TRM
+ ... S @OUT@(NCNT,"SYN",SCNT,"DSC")=DSC
+ ... Q:DAT  ;Exclude ADT/RDT
+ ... S @OUT@(NCNT,"SYN",SCNT,"XADT")=ADT
+ ... S @OUT@(NCNT,"SYN",SCNT,"XRDT")=RDT
+ ... S @OUT@(NCNT,"SYN",SCNT,"INACTIVE")=TACT
+ ... K @OUT@(NCNT,"PRE") ;Remove existing PRE
  .. ;
  .. ;Synonyms
  .. I RET["S",TYP="S" D
@@ -303,6 +319,8 @@ DETAIL(OUT,BSTSWS,RESULT) ;EP - Return Details for each Concept/Term
  ... Q:DAT  ;Exclude ADT/RDT
  ... S @OUT@(NCNT,"SYN",SCNT,"XADT")=ADT
  ... S @OUT@(NCNT,"SYN",SCNT,"XRDT")=RDT
+ ... ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Inactive terms
+ ... S @OUT@(NCNT,"SYN",SCNT,"INACTIVE")=TACT
  .. ;
  .. ;Fully specified name
  .. I TYP="F"!((XNMID=1552)&(TYP="P")) D
@@ -311,6 +329,8 @@ DETAIL(OUT,BSTSWS,RESULT) ;EP - Return Details for each Concept/Term
  ... Q:DAT  ;Exclude ADT/RDt
  ... S @OUT@(NCNT,"FSN","XADT")=ADT
  ... S @OUT@(NCNT,"FSN","XRDT")=RDT
+ ... ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Inactive terms
+ ... S @OUT@(NCNT,"FSN","INACTIVE")=TACT
  .. ;
  .. ;Preferred term
  .. I RET["P",TYP="P" D
@@ -319,10 +339,18 @@ DETAIL(OUT,BSTSWS,RESULT) ;EP - Return Details for each Concept/Term
  ... Q:DAT  ;Exclude ADT/RDT
  ... S @OUT@(NCNT,"PRE","XADT")=ADT
  ... S @OUT@(NCNT,"PRE","XRDT")=RDT
+ ... ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Inactive terms
+ ... S @OUT@(NCNT,"PRE","INACTIVE")=TACT
  ... ;
  ... ;If STYPE="F" switch problem to preferred values
  .. I TYP="P",STYPE="F" D
  ... S @OUT@(NCNT,"PRB","TRM")=TRM
  ... S @OUT@(NCNT,"PRB","DSC")=DSC
+ .. ;
+ .. ;Interface Term
+ .. ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Don't return inactive interface terms
+ .. I CTM=1,'TACT D
+ ... S @OUT@(NCNT,"CTM","TRM")=TRM
+ ... S @OUT@(NCNT,"CTM","DSC")=DSC
  ;
  Q NCNT

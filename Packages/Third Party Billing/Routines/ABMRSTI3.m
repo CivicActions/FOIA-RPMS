@@ -1,6 +1,7 @@
 ABMRSTI3 ; IHS/SD/SDR - Split Claim Billing - split report (part 3); 
- ;;2.6;IHS 3P BILLING SYSTEM;**22**;NOV 12, 2009;Build 418
+ ;;2.6;IHS 3P BILLING SYSTEM;**22,32**;NOV 12, 2009;Build 621
  ;IHS/SD/SDR 2.6*22 HEAT335246 - New routine
+ ;IHS/SD/SDR 2.6*32 CR9764 Added message if there are no claims to split
  ;
 PRINT ;EP
  S ABM("HD",1)="with "_$S(ABMY("DT")="V":"Visit",1:"Approval")_" Dates from "_$$SDT^ABMDUTL(ABMY("DT",1))_" to "_$$SDT^ABMDUTL(ABMY("DT",2))
@@ -46,7 +47,10 @@ PRINT2 ;EP
  ....W ?26,ABMCODE  ;Ref#
  ....W ?37,$E(ABMDESC,1,40)  ;description
  ....I $G(ABMY("SPLITHOW"))'=1 W !
- I $G(ABMY("SPLIT"))="A" W !!,"<End of Report>"
+ I +$O(^TMP("ABM-STIN",$J,"NEWCLMLST",0))=0 W !!,"NO DATA EXISTS OR SPLIT CLAIMS IDENTIFIED"  ;abm*2.6*32 IHS/SD/SDR CR9764
+ I +$O(^TMP("ABM-STIN",$J,"NEWCLMLST",0))'=0 W !!,"Split complete."  ;abm*2.6*32 IHS/SD/SDR CR9764
+ ;I $G(ABMY("SPLIT"))="A" W !!,"<End of Report>"  ;abm*2.6*32 IHS/SD/SDR CR9764
+ W !!,"(REPORT COMPLETE)"  ;abm*2.6*32 IHS/SD/SDR CR9764
  Q
 HD ;
  D PAZ^ABMDRUTL Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)

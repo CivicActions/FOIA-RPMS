@@ -1,0 +1,103 @@
+APSEPPID ;IHS/ASDS/ENM - Print a PPI SHEET FOR 1 DRUG W/O DEMO [ 08/26/2003  1:27 PM ]
+ ;;6.1;IHS PHARMACY MODIFICATIONS;**1,3,4**;03/16/01
+ ;TAKES ADVANTAGE OF PRINTING PMI USING MARGINS IHS/OKCAO/POC 11/11/2002
+ ;BIR/DMA-print a medication instruction sheet ;15 Jan 97 / 2:19 PM
+ ;
+PICK ;select a drug from file 50
+ S NUM=1,PG=1,PPI=0
+ ;I $D(PSNDRUG) Q
+ I '$D(^APSAPPI) W !,"Patient Medication Instruction Sheets data has not been installed",!! Q
+ S DIC=50,DIC(0)="AEQMZ",DIC("S")="D DICS^APSEPPID" D ^DIC K DIC Q:Y<0  S DRG=+Y
+ ;IHS/DSD/POC/lwj 8/2/01 - nxt line rmkd out - following lines added
+ ;S X=$P($G(^PSDRUG(DRG,2)),U,4) Q:X=""  D ^APSPMDD S NDC=X D ECK I PPI=""!(PPI=0) S PPI=.5,P2=1 ;GET NDC AND REMOVE DASHES
+ ;I XNDC="" S PPI=.5,P2=1
+ S X=$P($G(^PSDRUG(DRG,2)),U,4)        ;IHS/DSD/POC/lwj 8/2/01
+ I X'="" D ^APSPMDD S NDC=X D ECK      ;IHS/DSD/POC/lwj 8/2/01
+ I PPI=0 S PPI=.5,P2=1                 ;IHS/DSD/POC/lwj 8/2/01
+QUE ;
+ S %ZIS="QM",%ZIS("A")="Select Printer: "
+ D ^%ZIS K %ZIS
+ I POP G QUIT
+ I $D(IO("Q")),IO=IO(0) W !!,"Sorry, you cannot queue to your screen or to a slave printer.",! K IO("Q") G QUE
+ ;IHS/OKCAO/POC  START OF POC PRINT MODS 1/16/2002
+ ;I IO=IO(0)!('$D(IO("Q"))) G EP2
+ I IO=IO(0)!('$D(IO("Q"))) D EP1^APSAPPIP D ^%ZISC Q
+ ;S ZTRTN="EP2^APSEPPID"
+ S ZTRTN="EP1^APSAPPIP"
+ ;END OF POC CHANGES
+ S ZTDESC="MEDICATION INSTRUCTION PRINT" F X="NUM","PG","NDC","DRG","PPI","P2","XNDC","RN" S ZTSAVE(X)=""
+ D ^%ZTLOAD
+ Q
+EP2 ;EP FROM APSEPPIM
+ U IO
+ I PPI=.5 S P2=1 D NOSH Q
+ S NUM=1 D PRINT1
+ D QUIT
+ Q
+ECK ;
+ ;IHS/DSD/POC/lwj  08/02/01 "FOR" loop removed - chged to direct lookup
+ ;S RN=0,PPI=0,XNDC=0 F  S XNDC=$O(^APSAMDF("B",XNDC)) Q:XNDC=""  I XNDC=NDC  D  Q  ;
+ S (RN,PPI)=0              ;IHS/DSD/POC/lwj 08/02/01 set initial values
+ S RN=$O(^APSAMDF("B",NDC,RN))   ;IHS/DSD/POC/lwj 08/02/01 lookup
+ I RN'="" D                ;IHS/DSD/POC/lwj 08/02/01 test for value
+ . ;S RN=$O(^APSAMDF("B",XNDC,RN))  ;IHS/DSD/POC/lwj 08/02/01 not needed
+ .S PPI=^APSAMDF(RN,3)
+ .I $G(^APSAPPI(PPI,0))="" S PPI=.5
+ Q
+PRINT1 ;
+ K DRUG I $G(PSNTRADE)'="" S DRUG=PSNTRADE
+ I '$D(DRUG) S DRUG=$P(^PSDRUG(DRG,0),"^"),X=$G(^("ND")),J=+X,K=+$P(X,"^",3),X=$P($G(^PSNDF(J,5,K,2)),"^") I X]"" S DRUG=X
+ S QUIT=0 F J=1:1:NUM Q:QUIT  S PG=1 D HEAD F K=0:0 S K=$O(^APSAPPI(PPI,1,K)) Q:'K  D WRITE I $Y+4>IOSL D HEAD Q:QUIT
+ D DISC
+ K DRUG
+ Q
+WRITE ;
+ S TXT=^APSAPPI(PPI,1,K,0)
+ I TXT[":  " W !!,?8,TXT Q
+ W !,?8,TXT
+ Q
+NOSH ;IF NO MONOGRAPH, PRINT A GENERIC SHEET
+ ;S PPI=.5,P2=1
+ K DRUG I $G(PSNTRADE)'="" S DRUG=PSNTRADE
+ I '$D(DRUG) S DRUG=$P(^PSDRUG(DRG,0),"^"),X=$G(^("ND")),J=+X,K=+$P(X,"^",3),X=$P($G(^PSNDF(J,5,K,2)),"^") I X]"" S DRUG=X
+ S QUIT=0 F J=1:1:NUM Q:QUIT  S PG=1 D HEAD F K=0:0 S K=$O(^APSAPPI(PPI,P2,K)) Q:'K  D WRITE1 I $Y+4>IOSL D HEAD Q:QUIT
+ D DISC
+ D QUIT
+ Q
+WRITE1 ;
+ ;S TXT=^APSAPPI(.5,1,K,0)
+ S TXT=^APSAPPI(PPI,P2,K,0)
+ I TXT[":  " W !!,?8,TXT Q
+ W !,?8,TXT
+ Q
+DISC ;PRINT TRAILER COPYRIGHT AND DISCLAIMER ON MONOGRAPH
+ S CR=$P(^APSAPPI(.5,0),U),ED=$P(^APSAPPI(.5,0),U,5),ED1=$E(ED,1,4),ED2=$E(ED,5,6)
+ S ED3=$S(ED2="01":"JANUARY",ED2="02":"FEBRUARY",ED2="03":"MARCH",ED2="04":"APRIL",ED2="05":"MAY",ED2="06":"JUNE",ED2="07":"JULY",ED2="08":"AUGUST",ED2="09":"SEPTEMBER",ED2="10":"OCTOBER",ED2="11":"NOVEMBER",ED2="12":"DECEMBER",1:"")
+ S PPI=.5,P2=2
+ W !!,?12,CR I $Y+4>IOSL D HEAD Q:QUIT
+ W !,?16,"Expires ",ED3_" "_ED1,! I $Y+4>IOSL D HEAD Q:QUIT
+ ;add line to print copyright
+ F K=0:0 S K=$O(^APSAPPI(PPI,2,K)) Q:'K  D WRITE1 I $Y+4>IOSL D HEAD Q:QUIT
+ S ACK=$P(^APSAPPI(.5,3,1,0),"  ",1) W !!,?16,ACK ;ACKNOWLEDGMENT PRINT
+ ;I $Y+4>IOSL D HEAD Q:QUIT
+ Q
+ ;
+QUIT D ^%ZISC
+ K DRUG,DRG,NAM,NUM,PG,P2,PPI,RN,TXT,XNDC,ED,ED1,ED2,ED3,NDC,APSPNDC,POP,PPI,RM,QUIT,ZTDESC,ZTRTN,ZTSAVE Q
+ ;
+ Q
+PRINT ;
+ ;I $D(PSNDFN) S DFN=PSNDFN,NAM=$P(^DPT(DFN,0),"^") D DEM^VADPT
+ S QUIT=0 F J=1:1:NUM Q:QUIT  S PG=1 D HEAD Q:QUIT  F K=1:1 Q:'$D(^TMP($J,"W",K))  W ^(K),! I $Y+4>IOSL D HEAD Q:QUIT
+ S:$D(ZTQUEUED) ZTREQ="@" D ^%ZISC Q
+HEAD ;
+ ;I $D(PSNDFN) S DFN=PSNDFN,NAM=$P(^DPT(DFN,0),"^") D DEM^VADPT
+ I PG>1,$E(IOST,1,2)="C-" S DIR(0)="E" D ^DIR K DIR I 'Y S QUIT=1 Q
+ W:$Y @IOF W "DRUG NAME: ",DRUG,?70,"Page ",PG S PG=PG+1
+ W !,?64,$$HTE^XLFDT(+$H)
+ ;W !,?2,"DOCTOR: ",?15,APSDNAM,!!
+ Q
+DICS ;
+ ; screen out inactives DRUG entries in file 50
+ I $S('$G(^PSDRUG(+Y,"I")):1,DT'>^("I"):1,1:0)
+ Q

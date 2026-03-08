@@ -1,5 +1,5 @@
-APSPUTIL ;IHS/BAO/DMH - Utilites to Support OP v7.0 -;01-Oct-2012 12:40;PLS
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1006,1007,1009,1011,1015**;Sep 23, 2004;Build 62
+APSPUTIL ;IHS/BAO/DMH - Utilites to Support OP v7.0 -;21-Jun-2018 10:04;MGH
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1006,1007,1009,1011,1015,1023**;Sep 23, 2004;Build 121
  ;
 PMS ; EP  ; called from PSORXL before go in to print the label  3/1/2002
  S DIR("A")="Do you want to print a Patient Med Sheet"
@@ -144,3 +144,13 @@ CHECK(FIL,VAL,ENT) ;
  W !,ENT," ",VAL," was not found.",!
  D DIRZ
  Q 0
+TESTPT(ORDER) ;find if testpt
+ N TEST,DFN,IND,SSN,NAME
+ S TEST=0
+ S DFN=+$P($G(^OR(100,ORDER,0)),U,2)
+ Q:'+DFN 0
+ S IND=$$GET1^DIQ(2,DFN,.6)
+ S SSN=$$GET1^DIQ(2,DFN,.09)
+ S NAME=$$GET1^DIQ(2,DFN,.01)
+ I (IND="YES")!(SSN?5"0".E)!(NAME?1"DEMO,PATIENT".E)!(NAME?1"DEMO,GIMC".E) S TEST=1
+ Q TEST

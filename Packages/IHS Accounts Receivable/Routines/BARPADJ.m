@@ -1,9 +1,9 @@
 BARPADJ ; IHS/SD/LSL - Standard Adjustment Reason Codes Inquiry ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**31**;OCT 26, 2005;Build 90
  ;
  ; IHS/SD/LSL - 02/13/04 - V1.7 Patch 5
  ;     Routine created.  Inquiry to A/R EDI STND CLAIM ADJ REASONS
- ;
+ ;BAR*1.8*31 IHS.OIT.FCJ CR#10412 fix for display provided by CPC
  Q
  ; ********************************************************************
  ;
@@ -45,7 +45,8 @@ LOOKUP ;
  ; Ask for code user wants to see
  K DIC,DR,DA,X,Y
  S DIC="^BARADJ("
- S DIC(0)="AEMQZ"
+ ;S DIC(0)="AEMQZ"  ;BAR*1.8*31 IHS.OIT.FCJ
+ S DIC(0)="AEQZ"    ;BAR*1.8*31 IHS.OIT.FCJ CR#10412 fix for display provided by CPC
  S DIC("A")="Standard Adjustment Reason Code: "
  K DD,DO
  D ^DIC

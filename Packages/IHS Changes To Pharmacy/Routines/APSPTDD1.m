@@ -1,7 +1,8 @@
-APSPTDD1 ; IHS/DSD/ENM/CIA/PLS - TOTAL DRUGS DISPENSED PRINT ;14-Oct-2009 14:39;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1008**;Sep 23, 2004
+APSPTDD1 ; IHS/DSD/ENM/CIA/PLS - TOTAL DRUGS DISPENSED PRINT ;19-May-2022 17:10;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1008,1030**;Sep 23, 2004;Build 7
  ; Modified - IHS/CIA/PLS - 02/16/04
  ;            IHS/MSC/PLS - 01/05/09 - Routine updated
+ ;            IHS/MSC/MIR - 03/08/22 - HDR+9 added for feature 75642
  ;THIS ROUTINE PRINTS THE PHARMACY DUR TOTAL # DRUGS DISPENSED LISTING
  ;IT IS CALLED BY APSPTDD
 EN ;ENTRY POINT
@@ -44,6 +45,7 @@ HDR ;
  I APSPCLS D
  .W ?31,"By: VA Drug Class - "_$$GET1^DIQ(50.605,APSPCLS,.01)
  E  W ?31,"By: Drug"
+ W !?31,"CMOP prescriptions "_$S(APSPCMEX:"excluded",1:"included")   ; added by MIR for feature 75642
  W !,"Outpatient Drugs dispensed from "
  W APSPBDF," through ",APSPEDF,!
  W "Total Number of Days = "_($$FMDIFF^XLFDT(APSPED,APSPBD)),!

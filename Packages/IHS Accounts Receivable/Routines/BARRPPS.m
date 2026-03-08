@@ -1,6 +1,7 @@
 BARRPPS ; IHS/SD/SDR - Patient Payment Summary ;08/20/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**28**;OCT 26, 2005;Build 92
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**28,35**;OCT 26, 2005;Build 187
  ;IHS/SD/SDR 1.8*28 CR9580 HEAT303780 Routine created
+ ;IHS/SD/SDR 1.8*35 ADO60910 Updated to display PPN preferred name
  Q
  ; ***************************************
 EN ;EP
@@ -33,9 +34,11 @@ ACCTS ;EP
  S DIC="^BARAC(DUZ(2),"
  S DIC(0)="AEMQ"
  S DIC("S")="I $P(^BARAC(DUZ(2),Y,0),U)[""AUPNPAT"""
+ S DIC("W")="D DICWACCT^BARUTL0(Y)"  ;bar*1.8*35 IHS/SD/SDR ADO60910
  S DIC("A")="Select A/R Account: "
  F  D  Q:+Y<0
  .I $D(BARY("ACCT")) S DIC("A")="Select Another A/R Account: "
+ .S DIC("W")="D DICWACCT^BARUTL0(Y)"  ;bar*1.8*35 IHS/SD/SDR ADO60910
  .D ^DIC
  .I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) S BAREND=1 Q
  .Q:+Y<0

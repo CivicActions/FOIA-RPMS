@@ -1,5 +1,5 @@
-BARPRMK ; IHS/SD/LSL - Remark Codes Inquiry ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+BARPRMK ; IHS/SD/LSL - Remark Codes Inquiry [ 02/13/2004  4:16 PM ]
+ ;;1.7;IHS ACCOUNTS RECEIVABLE;**5**;MAY 2, 2003
  ;
  ; IHS/SD/LSL - 02/13/04 - V1.7 Patch 5
  ;     Routine created.  Inquiry to A/R EDI REMARK CODES

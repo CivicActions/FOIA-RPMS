@@ -1,8 +1,16 @@
-LAPRE ; IHS/DIR/FJE - AUTO INSTRUMENTS PRE INIT 11:15 ; [ 5/10/90 ]
- ;;5.2;LA;;NOV 01, 1997
+LAPRE ; IHS/MSC/MKK - AUTO INSTRUMENTS PRE INIT ; 03-Jan-2023 @ 1052 ; MKK
+ ;;5.2;LA;**1052**;NOV 01, 1997;Build 17
+ ;
+ ; IHS/MSC/MKK - LR*5.2*1052 - 03-Jan-2023 - Item 91401 - Dictionaries 3, 6, & 16 - Remove Remaining References
+ ; 
  ;;5.1;LAB;;04/11/91 11:06
+ ;; Original Line 1: IHS/DIR/FJE - AUTO INSTRUMENTS PRE INIT 11:15 ; [ 5/10/90 ]
+ ;
+ ; 
+ ;
 EN ;
- S U="^" I $S('$D(DUZ):1,'$D(^DIC(3,+DUZ)):1,'$D(IO):1,1:0) G DUZ
+ ; S U="^" I $S('$D(DUZ):1,'$D(^DIC(3,+DUZ)):1,'$D(IO):1,1:0) G DUZ
+ S U="^" I $S('$D(DUZ):1,'$D(^VA(200,+DUZ)):1,'$D(IO):1,1:0) G DUZ  ; IHS/MSC/MKK - LR*5.2*1052
  I $S('$D(DUZ(0)):1,DUZ(0)'="@":1,1:0) G DUZ0
  I DUZ(0)'="@" G DUZ0
 BEGIN D ASK

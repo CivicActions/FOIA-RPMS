@@ -1,10 +1,11 @@
 BMCRCHS1 ; IHS/PHXAO/TMJ - LIST PAID CHS REFERRALS ; 15 Mar 2013  9:02 AM
- ;;4.0;REFERRED CARE INFO SYSTEM;**8,9**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**8,9,*16**;JAN 09, 2006;Build 168
  ;IHS/ITSC/FCJ ADDED BEG-END DATE REQ FOR REPORT AND RESORT OF DATA
  ; ADDED AMT PAID AND RMVD PRIM PRV
  ;
  ; This routine lists active CHS referrals where all CHS AUTHORIZATIONS
  ; have been paid.
+ ;4.0*16 12.15.2023 IHS.OIT.FCJ ADD "C1" SUFFIX FOR CALLIN
  ;
 START ;
  W !!,"This report prints out a list of all active CHS referrals for which all",!,"authorizations have already been paid.",!!
@@ -88,7 +89,8 @@ PRINT ;print one referral
  I $Y>(IOSL-5) D HEAD Q:$D(BMCQUIT)
  W $$FMTE^XLFDT($P(BMCRREC,U),"2D")
  W ?10,$E(BMCREC("PAT NAME"),1,20)
- W ?32,$P(BMCRREC,U,2) W:$G(^BMCREF(BMCRIEN,1)) $P(^BMCREF(BMCRIEN,1),U)
+ ;W ?32,$P(BMCRREC,U,2) W:$G(^BMCREF(BMCRIEN,1)) $P(^BMCREF(BMCRIEN,1),U)         ;BMC*4.0*16
+ W ?32,$P(BMCRREC,U,2)_$P($G(^BMCREF(BMCRIEN,1)),U) W:$P($G(^BMCREF(BMCREF,1)),U)="" $$CALLIN^BMCRLU(BMCRIEN)         ;BMC*4.0*16
  W ?48,$E($$TOFAC^BMC(BMCRIEN),1,20)
  S I=0 F  S I=$O(^BMCREF(BMCRIEN,41,I)) Q:I'?1N.N  W ?69,$J($P(^BMCREF(BMCRIEN,41,I,0),U,3),9,2),!
  W !

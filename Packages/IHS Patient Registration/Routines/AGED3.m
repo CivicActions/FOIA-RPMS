@@ -1,17 +1,23 @@
 AGED3 ; IHS/ASDS/EFG - EDIT PG 3 - EMERGENCY CONTACT/NEXT OF KIN ;  
- ;;7.1;PATIENT REGISTRATION;;AUG 25,2005
+ ;;7.1;PATIENT REGISTRATION;**15**;AUG 25,2005;Build 1
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC
+ ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
+ ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
  ;
  S AG("N")=14
 VAR D DRAW
  W !,AGLINE("EQ")
  K DIR
  S DIR("A")="CHANGE which item? (1-"_AG("N")_") NONE// "
- S DIR("?")=""
- S DIR("?",1)="You may enter the item number of the field you wish to edit,"
- S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
- S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
- S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
- D READ^AGED1
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC - START OLD CODE
+ ;S DIR("?")=""
+ ;S DIR("?",1)="You may enter the item number of the field you wish to edit,"
+ ;S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
+ ;S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
+ ;S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
+ ;D READ^AGED1
+ ;IHS/OIT/NKD AG*7.1*15 - END OLD CODE
+ D EDREAD^AGUTL2  ;IHS/OIT/NKD AG*7.1*15
  I $D(MYERRS("C","E")),(Y'?1N.N),(Y'=AGOPT("ESCAPE")) W !,"ERRORS ON THIS PAGE. PLEASE FIX BEFORE EXITING!!" H 3 G VAR
  Q:Y=AGOPT("ESCAPE")
  G:$D(AG("ED"))&'$D(AGXTERN) @("^AGED"_AG("ED"))
@@ -43,11 +49,14 @@ DRAW ;EP
  . I AG=8 W !,"--- Next of Kin Data " F A=1:1:59 W "-"
  . W !,AG,".",?(29-$L($P($G(^DD(DIC,DR,0)),U))),$P($G(^DD(DIC,DR,0)),U)," :  "
  . W $$GET1^DIQ(DIC,DFN,DR)
- W !,AGLINE("-")
+ ;W !,AGLINE("-") ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ W !,AGLINE("EQ")
  K MYERRS,MYVARS
  D FETCHERR^AGEDERR(AG("PG"),.MYERRS)
  S MYVARS("DFN")=DFN,MYVARS("FINDCALL")="",MYVARS("SELECTION")=$G(AGSELECT),MYVARS("SITE")=DUZ(2)
  D EDITCHEK^AGEDERR(.MYERRS,.MYVARS,1)
+ W !,AGLINE("-")  ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
+ D VERIF^AGUTILS  ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
  Q
  ; ****************************************************************
  ; ON LINES BELOW:

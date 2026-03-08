@@ -1,7 +1,5 @@
-XMA11A ;ISC-SF/GMB-Send/Answer a Message API ;04/18/2002  07:24
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CAP/THM
- ;
+XMA11A ;(WASH ISC)/CAP/THM-Send a Message/Answer ;05/26/99  10:01
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Entry points (DBIA 1233):
  ; WRITE  Send a message or Answer a message
  ;
@@ -11,7 +9,7 @@ WRITE ; Send a message or Answer a message
  ; X      if $E(X)="A", then send an answer, else send a message
  ; XMZ    original message number, if we are sending an answer
  N XMV
- D INITAPI^XMVVITAE
+ D INIT^XMVVITAE
  I $E(X)'="A" D SEND^XMJMS Q
  N XMZREC
  S XMZREC=^XMB(3.9,XMZ,0)

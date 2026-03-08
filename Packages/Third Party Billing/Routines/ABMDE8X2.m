@@ -1,9 +1,17 @@
 ABMDE8X2 ; IHS/SD/SDR - Page 8 - ERROR CHECKS ; 
- ;;2.6;IHS Third Party Billing System;**13,19**;NOV 12, 2009;Build 300
- ;IHS/SD/SDR - 2.6*19 - HEAT173117 - Split from ABMDE8X due to size.
+ ;;2.6;IHS Third Party Billing System;**13,19,28,31**;NOV 12, 2009;Build 615
+ ;IHS/SD/SDR 2.6*19 HEAT173117 Split from ABMDE8X due to size.
+ ;IHS/SD/SDR 2.6*28 CR10648 Added check for 35 exp mode to warning 241
+ ;IHS/SD/SDR 2.6*31 CR10857 Add warning 258 if CPT is inactive thru part/all of visit date span
  ;
 B1 ;
  S ABMX("X0")=^ABMDCLM(DUZ(2),ABMP("CDFN"),21,ABMX(1),0)
+ ;start new abm*2.6*31 IHS/SD/SDR CR10857
+ S ABMCPTF=0
+ I $P($$CPT^ABMCVAPI(+ABMX("X0"),$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),7)),U)),U,7)=0 S ABMCPTF=1
+ I $P($$CPT^ABMCVAPI(+ABMX("X0"),$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),7)),U,2)),U,7)=0 S ABMCPTF=1
+ I ABMCPTF=1 S ABME(258)=""
+ ;end new abm*2.6*31 IHS/SD/SDR CR10857
  I $P($$IHSCPT^ABMCVAPI(+ABMX("X0"),ABMP("VDT")),U,2) S ABME(171)=$S('$D(ABME(171)):+ABMX("X0"),1:ABME(171)_","_+ABMX("X0"))  ;CSV-c
  I ^ABMDEXP(ABMMODE(2),0)["UB" D
  .I $P(ABMX("X0"),U,3)="" S ABME(121)=""
@@ -25,7 +33,8 @@ B1 ;
  I $P(ABMX("X0"),U,5)]"",$P(ABMX("X0"),U,5)<ABMP("VDT") S ABME(127)=""
  I $G(ABMP("DDT")),$P(ABMX("X0"),U,5)]"",($P(ABMX("X0"),U,5)\1)>ABMP("DDT") S ABME(130)=""
  I $D(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,"B",+ABMX("X0")))&($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),21,ABMX,2)),U,2)="") D  ;abm*2.6*9 NARR
- .Q:$P($G(^ABMDEXP(ABMP("EXP"),0)),U)'["5010"  ;abm*2.6*9 NARR
+ .;Q:$P($G(^ABMDEXP(ABMP("EXP"),0)),U)'["5010"  ;abm*2.6*9 NARR  ;abm*2.6*28 IHS/SD/SDR CR10648
+ .I ($P($G(^ABMDEXP(ABMP("EXP"),0)),U)'["5010")&(ABMP("EXP")'=35) Q  ;abm*2.6*28 IHS/SD/SDR CR10648
  .K ABMP("CPTNT") S ABMP("CPTNT")=$O(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,"B",+ABMX("X0"),0))  ;abm*2.6*9 NARR
  .Q:($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,ABMP("CPTNT"),0)),U,2)'="Y")  ;abm*2.6*9 NARR
  .S ABME(241)=$S('$D(ABME(241)):ABMX("I"),1:ABME(241)_","_ABMX("I"))  ;abm*2.6*9 NARR

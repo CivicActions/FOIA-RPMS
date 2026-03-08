@@ -1,5 +1,5 @@
-APCLDMTX ; IHS/CMI/LAB - display audit logic ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLDMTX ;IHS/CMI/LAB - display audit logic [ 08/23/01  3:14 PM ]
+ ;;3.0;IHS PCC REPORTS;**8,10,17**;FEB 05, 1997
  ;
  ;
 EP ;EP - CALLED FROM OPTION

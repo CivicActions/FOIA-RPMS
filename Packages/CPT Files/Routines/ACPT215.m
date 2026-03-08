@@ -1,0 +1,176 @@
+ACPT215 ;IHS/OIT/NKD - ACPT V2.15 CPT ENVIRONMENT CHECKER 12/11/14 ;
+ ;;2.15;CPT FILES;**3**;DEC 11, 2014;Build 1
+ ; 12/05/13 - Enhanced version/patch checking utility
+ ;          - Updated to new ACPTUTL calls
+ ;          - Added file 81.1 to REINDEX
+ ;          - Combined Annual and Incremental drivers into 1 routine
+ ;          - Updated Annual CPT Consistency report
+ ;          - Removed ICPT control character cleanup
+ ;
+ I '$G(DUZ) W !,"DUZ UNDEFINED OR 0." D SORRY(2) Q
+ ;
+ I '$L($G(DUZ(0))) W !,"DUZ(0) UNDEFINED OR NULL." D SORRY(2) Q
+ ;
+ S X=$P(^VA(200,DUZ,0),U)
+ W !!,$$CJ^XLFSTR("Hello, "_$P(X,",",2)_" "_$P(X,","),IOM)
+ N ACPTV,ACPTP
+ S ACPTV=$P($T(+2),";",3),ACPTP=$P($T(+2),";",5),ACPTP=$S($L(ACPTP)>4:$P(ACPTP,"**",2),1:""),ACPTP=$S(ACPTP]"":$P(ACPTP,",",$L(ACPTP,",")),1:"")
+ W !!,$$CJ^XLFSTR("Checking Environment for "_$P($T(+2),";",4)_" V "_ACPTV_$S(ACPTP]"":" Patch "_ACPTP,1:"")_".",IOM),!
+ ;
+ S:'$$VCHK("XU","8.0") XPDQUIT=2
+ S:'$$VCHK("DI","22.0") XPDQUIT=2
+ S:'$$VCHK("XT","7.3") XPDQUIT=2
+ S:'$$VCHK("ACPT","2.15","2") XPDQUIT=2
+ S:'$$VCHK("BCSV","1.0","3") XPDQUIT=2
+ ;
+ S:'$$GCHK() XPDQUIT=2
+ ;
+ I $G(XPDQUIT) W !,$$CJ^XLFSTR("FIX IT! Before Proceeding.",IOM),!!,*7,*7,*7 Q
+ ;
+ W !!,$$CJ^XLFSTR("ENVIRONMENT OK.",IOM)
+ ;
+ Q
+GCHK() ; Check transport global version
+ Q:'$D(XPDENV) 1
+ N ACPTG,ACPTV S ACPTG="ACPT GLOBAL"_$P($G(XPDNM),"ACPT",2),ACPTV=$G(^ACPT(0,"BUILD"))
+ I '$L(ACPTV) W !,$$CJ^XLFSTR("Transport global not installed or lacks version number! ***FIX IT***",IOM) Q 0
+ W !,$$CJ^XLFSTR("Need at least "_ACPTG_"....."_ACPTV_" Present"_$S(ACPTV'=ACPTG:" ***FIX IT***",1:""),IOM)
+ Q $S(ACPTV=ACPTG:1,1:0)
+SORRY(X) ;
+ KILL DIFQ
+ S XPDQUIT=X
+ W *7,!,$$CJ^XLFSTR("Sorry....FIX IT!",IOM)
+ Q
+ ;
+VCHK(ACPTPRE,ACPTVER,ACPTPAT) ; Check patch level
+ N ACPTV,ACPTP
+ S ACPTV=$$VERSION^XPDUTL(ACPTPRE)
+ I (ACPTV<ACPTVER) K DIFQ D DISP(ACPTPRE,ACPTVER,$G(ACPTPAT),ACPTV,$G(ACPTP),0) Q 0
+ I '$D(ACPTPAT) D DISP(ACPTPRE,ACPTVER,$G(ACPTPAT),ACPTV,$G(ACPTP),1) Q 1
+ S ACPTP=+$$LAST(ACPTPRE,ACPTVER)
+ I (ACPTP<ACPTPAT) K DIFQ D DISP(ACPTPRE,ACPTVER,$G(ACPTPAT),ACPTVER,$G(ACPTP),0) Q 0
+ D DISP(ACPTPRE,ACPTVER,$G(ACPTPAT),ACPTVER,$G(ACPTP),1)
+ Q 1
+DISP(ACPTPRE,ACPTVER,ACPTPAT,ACPTV,ACPTP,ACPTR) ; Display requirement checking results
+ ;
+ N ACPTS
+ S ACPTS="Need at least "_$G(ACPTPRE)_" v"_$G(ACPTVER)_$S($G(ACPTPAT)]"":" p"_$G(ACPTPAT),1:"")_"....."
+ S ACPTS=ACPTS_$G(ACPTPRE)_" v"_$G(ACPTV)_$S($G(ACPTP)]"":" p"_$G(ACPTP),1:"")_" Present"
+ S ACPTS=ACPTS_$S('ACPTR:" ***FIX IT***",1:"")
+ W !,$$CJ^XLFSTR(ACPTS,IOM)
+ Q
+LAST(PKG,VER) ; EP - returns last patch applied for a Package, PATCH^DATE
+ ;        Patch includes Seq # if Released
+ N PKGIEN,VERIEN,LATEST,PATCH,SUBIEN
+ I $G(VER)="" S VER=$$VERSION^XPDUTL(PKG) Q:'VER -1
+ S PKGIEN=$O(^DIC(9.4,"C",PKG,"")) Q:'PKGIEN -1
+ S VERIEN=$O(^DIC(9.4,PKGIEN,22,"B",VER,"")) Q:'VERIEN -1
+ S LATEST=-1,PATCH=-1,SUBIEN=0
+ F  S SUBIEN=$O(^DIC(9.4,PKGIEN,22,VERIEN,"PAH",SUBIEN)) Q:SUBIEN'>0  D
+ . I $P(^DIC(9.4,PKGIEN,22,VERIEN,"PAH",SUBIEN,0),U,2)>LATEST S LATEST=$P(^(0),U,2),PATCH=$P(^(0),U)
+ . I $P(^DIC(9.4,PKGIEN,22,VERIEN,"PAH",SUBIEN,0),U,2)=LATEST,$P(^(0),U)>PATCH S PATCH=$P(^(0),U)
+ Q PATCH_U_LATEST
+ ;
+PRE ; EP - PRE-INSTALL
+ ; IF ANNUAL UPDATE, RUN PRE-INSTALL UTILITIES
+ I $L($P($T(+2),";",5))<5 D
+ . D REINDEX
+ . D CPTCINA
+ Q
+ ;
+POST ; EP - POST-INSTALL
+ N ACPTYR
+ S ACPTYR="3150101"
+ D UPDATE^ACPT215D  ; THEN RUN CPT/HCPCS/CAT UPDATE
+ ;
+ I $L($P($T(+2),";",5))<5 D CRPT  ; IF ANNUAL UPDATE, RUN CPT CONSISTENCY REPORT
+ E  I $P($P($T(+2),";",5),"**",2)=1 D HRPT  ; IF PATCH 1 UPDATE, RUN HCPCS CONSISTENCY REPORT
+ ;
+ ;D CPTMASG^ACPTUTL  ; ASSIGN CPT MODIFIER RANGES FOR EHR
+ ;D CATUPD^ACPTUTL  ; ASSIGN/UPDATE CPT CATEGORIES ;IHS/OIT/NKD ACPT*2.14*3 - CHANGED TO RUN ONLY IF CATEGORIES WERE UPDATED
+ I $D(^ACPT("CAT")) D CATUPD^ACPTUTL  ; ASSIGN/UPDATE CPT CATEGORIES
+ K ^ACPT(0),^ACPT("CPT"),^ACPT("HCPCS"),^ACPT("CAT") ; DELETE TRANSPORT GLOBAL AFTER UPDATE
+ Q
+ ;
+REINDEX ; COMPLETE RE-INDEX OF FILES 81, 81.3, AND 81.1
+ N IND,DA,DIK
+ D RSLT^ACPTUTL(""),RSLT^ACPTUTL("Reindexing CPT file (81); this will take awhile.")
+ K DA,DIK
+ F IND="ACT","ADS","AST","B","BA","C","D","E","F","I" K ^ICPT(IND)
+ S DIK="^ICPT("
+ D IXALL^DIK
+ D RSLT^ACPTUTL(""),RSLT^ACPTUTL("Reindexing CPT MODIFIER file (81.3); this will take awhile.")
+ K DA,DIK
+ F IND="ACT","ADS","AST","B","BA","C","D","M" K ^DIC(81.3,IND)
+ S DIK="^DIC(81.3,"
+ D IXALL^DIK
+ D RSLT^ACPTUTL(""),RSLT^ACPTUTL("Reindexing CPT Category file (81.1); this will take awhile.")
+ K DA,DIK
+ F IND="ACPT","B","C","M","R" K ^DIC(81.1,IND)
+ S DIK="^DIC(81.1,"
+ D IXALL^DIK
+ Q
+ ;
+CPTCINA ; CORRECT IMPROPERLY INACTIVATED CPT CODES
+ ; Examines the CPT file and inactivates any code that has an Active Date (8) < Inactive Date (7) without an Inactive Flag (5)
+ D RSLT^ACPTUTL(""),RSLT^ACPTUTL("Fixing improperly inactivated CPT codes")
+ N ACPTC,ACPTI,ACPTCNT,FDA
+ S (ACPTC,ACPTCNT)=0 F  S ACPTC=$O(^ICPT("BA",ACPTC)) Q:ACPTC']""  D
+ . Q:ACPTC="00099 "
+ . S ACPTI=0 F  S ACPTI=$O(^ICPT("BA",ACPTC,ACPTI)) Q:ACPTI']""  D
+ . . Q:'$D(^ICPT(ACPTI,0))
+ . . Q:$P(^ICPT(ACPTI,0),U,4)=1
+ . . Q:$P(^ICPT(ACPTI,0),U,7)']""
+ . . Q:+$P(^ICPT(ACPTI,0),U,8)>+$P(^ICPT(ACPTI,0),U,7)
+ . . K FDA
+ . . S FDA(81,ACPTI_",",5)="1" ; Inactive Flag (5)
+ . . D UPDATE^DIE(,"FDA",)
+ . . S ACPTCNT=ACPTCNT+1
+ . . I '(ACPTCNT#1000) W "."
+ Q
+ ;
+CRPT ; CPT CONSISTENCY REPORT
+ D RSLT^ACPTUTL(""),RSLT^ACPTUTL("The following reports display potential inconsistencies in the local CPT file.")
+ ; DISPLAY DUPLICATE ACTIVE CODES
+ D RSLT^ACPTUTL(""),RSLT^ACPTUTL("Report #1: Active duplicate CPT/HCPCS codes")
+ N ACPTC,ACPTI,ACPTRES
+ S ACPTC=0 F  S ACPTC=$O(^ICPT("BA",ACPTC)) Q:ACPTC']""  D
+ . S ACPTI=0,ACPTRES="" F  S ACPTI=$O(^ICPT("BA",ACPTC,ACPTI)) Q:ACPTI']""  D
+ . . Q:'$D(^ICPT(ACPTI,0))
+ . . Q:$P(^ICPT(ACPTI,0),U,4)=1
+ . . S ACPTRES=ACPTRES_ACPTI_U
+ . S:$E(ACPTRES,$L(ACPTRES))=U ACPTRES=$E(ACPTRES,1,$L(ACPTRES)-1)
+ . I $L(ACPTRES,U)>1 D RSLT^ACPTUTL("CODE: "_ACPTC_$J("",4)_"IENS: "_ACPTRES)
+ ; DISPLAY ACTIVE CODES NOT PRESENT IN ANNUAL CPT DATA FILE
+ D RSLT^ACPTUTL(""),RSLT^ACPTUTL("Report #2: Active CPT codes that are not present in the annual data file")
+ N ACPTC,ACPTI,ACPTRES
+ S ACPTI=0 F  S ACPTI=$O(^ACPT("CPT","A",ACPTI)) Q:'ACPTI  S ACPTC=$P(^ACPT("CPT","A",ACPTI),U,1)_" ",^ACPT("CPT","A","BA",ACPTC,ACPTI)=""
+ S ACPTI=0 F  S ACPTI=$O(^ACPT("CPT","C",ACPTI)) Q:'ACPTI  S ACPTC=$P(^ACPT("CPT","C",ACPTI),U,1)_" ",^ACPT("CPT","C","BA",ACPTC,ACPTI)=""
+ S ACPTC=0,ACPTRES="" F  S ACPTC=$O(^ICPT("BA",ACPTC)) Q:ACPTC']""  D
+ . Q:$D(^ACPT("CPT","A","BA",ACPTC))
+ . Q:$D(^ACPT("CPT","C","BA",ACPTC))
+ . S ACPTI=0 F  S ACPTI=$O(^ICPT("BA",ACPTC,ACPTI)) Q:ACPTI']""  D
+ . . Q:'$D(^ICPT(ACPTI,0))
+ . . Q:$P(^ICPT(ACPTI,0),U,4)=1
+ . . Q:$P(^ICPT(ACPTI,0),U,6)'="C"
+ . . S ACPTRES=ACPTRES_$E(ACPTC,1,$L(ACPTC)-1)_$J("",3)
+ . . I $L(ACPTRES)>79 D RSLT^ACPTUTL(ACPTRES) S ACPTRES=""
+ I $L(ACPTRES)>0 D RSLT^ACPTUTL(ACPTRES)
+ Q
+ ;
+HRPT ; HCPCS CONSISTENCY REPORT
+ ; DISPLAY ACTIVE CODES NOT PRESENT IN ANNUAL HCPCS DATA FILE
+ D RSLT^ACPTUTL(""),RSLT^ACPTUTL("Report #1: Active HCPCS codes that are not present in the annual data file")
+ N ACPTC,ACPTI,ACPTRES
+ S ACPTI=0 F  S ACPTI=$O(^ACPT("HCPCS","A",ACPTI)) Q:'ACPTI  S ACPTC=$P(^ACPT("HCPCS","A",ACPTI),U,1)_" ",^ACPT("HCPCS","C","BA",ACPTC,ACPTI)=""
+ S ACPTI=0 F  S ACPTI=$O(^ACPT("HCPCS","C",ACPTI)) Q:'ACPTI  S ACPTC=$P(^ACPT("HCPCS","C",ACPTI),U,1)_" ",^ACPT("HCPCS","C","BA",ACPTC,ACPTI)=""
+ S ACPTC=0,ACPTRES="" F  S ACPTC=$O(^ICPT("BA",ACPTC)) Q:ACPTC']""  D
+ . Q:$D(^ACPT("HCPCS","C","BA",ACPTC))
+ . S ACPTI=0 F  S ACPTI=$O(^ICPT("BA",ACPTC,ACPTI)) Q:ACPTI']""  D
+ . . Q:'$D(^ICPT(ACPTI,0))
+ . . Q:$P(^ICPT(ACPTI,0),U,4)=1
+ . . Q:$P(^ICPT(ACPTI,0),U,6)'="H"
+ . . S ACPTRES=ACPTRES_$E(ACPTC,1,$L(ACPTC)-1)_$J("",3)
+ . . I $L(ACPTRES)>79 D RSLT^ACPTUTL(ACPTRES) S ACPTRES=""
+ I $L(ACPTRES)>0 D RSLT^ACPTUTL(ACPTRES)
+ Q

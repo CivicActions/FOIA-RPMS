@@ -1,5 +1,7 @@
-LRWRKLS1 ;DALOI/CJS/DRH - LRWRKLST, CONT. ; 13-Oct-2017 14:04 ; MKK
- ;;5.2;LAB SERVICE;**1003,1004,121,153,185,268,1018,1025,1027,1041**;NOV 01, 1997;Build 23
+LRWRKLS1 ;DALOI/CJS/DRH - LRWRKLST, CONT. ; 08/05/2022 ; MKK
+ ;;5.2;LAB SERVICE;**1003,1004,121,153,185,268,1018,1025,1027,1041,1052**;NOV 01, 1997;Build 17
+ ;
+ ; MSC/MKK - LR*5.2*1052 - Item 75771 - Add Specimen Number to Look-up Accession
  ;
 LST1 ;from LRWRKLST
  D CHKPAGE
@@ -27,15 +29,35 @@ LST1 ;from LRWRKLST
  W !,"ACCESSION: ",LRACC,?40,"PATIENT: ",PNM
  ;W !,"  ORDER #: ",LRCE,?41,"SSN/ID: ",SSN,!
  ;----- BEGIN IHS MODIFICATIONS LR*5.2*1018
- W !,"  ORDER #: ",LRCE,?43,"HRCN: ",HRCN,!
+ ; W !,"  ORDER #: ",LRCE,?43,"HRCN: ",HRCN,!
  ;----- END IHS MODIFICATIONS - NOTE- COULD NOT COPY DIRECT FROM IHS RTN
  S X=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,.3)),"^")
+ W !
  W:X'="" ?6,"UID: ",X
  W ?44,"DOB: ",$$FMTE^XLFDT(DOB,"5MZ")
  W !," LOCATION: ",$E($P(LRDX,"^",7),1,19)
  ; W:$L(LRDTO) ?35,"DATE ORDERED: ",LRDTO,!
+ ;
  ; ----- BEGIN IHS LR*5.2*1025 MODIFICATION
  ; I $D(LRCE)>0 D                                            ; Does Order exist
+ ; I +$G(LRCE)>0 D                            ; Does Order exist -- LR*5.2*1027
+ ; . NEW DTTORD,FMDTORD,LRORDIEN
+ ; . S FMDTORD=+$O(^LRO(69,"C",LRCE,""))                     ; Date Ordred
+ ; . I FMDTORD<1 Q                                           ; If null, skip
+ ; . S LRORDIEN=+$O(^LRO(69,"C",LRCE,FMDTORD,""))            ; LRAN of Order
+ ; . I LRORDIEN<1 Q                                          ; If null, skip
+ ; . S DTTORD=+$P($G(^LRO(69,FMDTORD,1,LRORDIEN,0)),"^",5)   ; Date/Time of Order
+ ; . I $D(DTTORD)<1 Q                                        ; If null, skip
+ ; . ;
+ ; . W ?40,"ORDERED: ",$$FMTE^XLFDT(DTTORD,"5MZ"),!
+ ; ----- END IHS LR*5.2*1025 MODIFICATION
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1052
+ W ?43,"HRCN: ",HRCN
+ W !,"  ORDER #: ",LRCE
+ ;
+ D SHOSPECN
+ ;
  I +$G(LRCE)>0 D                            ; Does Order exist -- LR*5.2*1027
  . NEW DTTORD,FMDTORD,LRORDIEN
  . S FMDTORD=+$O(^LRO(69,"C",LRCE,""))                     ; Date Ordred
@@ -45,10 +67,12 @@ LST1 ;from LRWRKLST
  . S DTTORD=+$P($G(^LRO(69,FMDTORD,1,LRORDIEN,0)),"^",5)   ; Date/Time of Order
  . I $D(DTTORD)<1 Q                                        ; If null, skip
  . ;
- . W ?40,"ORDERED: ",$$FMTE^XLFDT(DTTORD,"5MZ"),!
- ; ----- END IHS LR*5.2*1025 MODIFICATION
- W:$P(LRDX,U,6) "    IDENTITY: ",$P(LRDX,U,6)
+ . W ?2,"ORDERED: ",$$FMTE^XLFDT(DTTORD,"5MZ")
+ ;
  W:$L(LRDLC) ?38,"COLLECTED: ",LRDLC
+ W:$P(LRDX,U,6) !," IDENTITY: ",$P(LRDX,U,6)
+ ; ----- END IHS/MSC/MKK - LR*5.2*1052
+ ;
  ;
  S (LRPRAC,LRX)=$P(LRDX,"^",8)
  I LRPRAC S LRX=$$GET1^DIQ(200,LRPRAC_",",.01)
@@ -79,8 +103,6 @@ LST1 ;from LRWRKLST
  . W !,"  Order Comment:" S LN=LN+1
  . S I=0
  . F  S I=$O(^LRO(69,X1,1,X2,6,I)) Q:I<1  W !?11,^(I,0) S LN=LN+1 D CHKPAGE Q:$G(LRSTOP)
- ;
- ;
 TSTCOM ; Display test comments
  ;
  N LRI,LRX,LRY
@@ -144,3 +166,23 @@ LEDI ; print LEDI information
  . S LN=LN+1
  ;
  Q
+ ;
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1052
+SHOSPECN ; EP - Show Specimen #
+ NEW FOUNDIT,LRODT,LROT,LROTE,LRSP
+ ;
+ S LRODT=0
+ F  S LRODT=$O(^LRO(69,"C",+LRCE,LRODT))  Q:LRODT<1  D
+ . S (FOUNDIT,LRSP)=0
+ . F  S LRSP=$O(^LRO(69,"C",LRCE,LRODT,LRSP))  Q:LRSP<1!(FOUNDIT)  D
+ .. S LROTE=0
+ .. F  S LROTE=$O(LRTST(LROTE))  Q:LROTE<1!(FOUNDIT)  D
+ ... S LROT=$O(^LRO(69,LRODT,1,LRSP,2,"B",LROTE,0))
+ ... S:LROT FOUNDIT=LRSP
+ . W:FOUNDIT ?37,"SPECIMEN #: ",FOUNDIT
+ . W !
+ Q
+ ;
+ ; ----- END IHS/MSC/MKK - LR*5.2*1052
+ ;

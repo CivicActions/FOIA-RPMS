@@ -1,5 +1,5 @@
-ABMFCPT ; IHS/ASDST/DMJ - FILE CPT CODE ;   
- ;;2.6;IHS Third Party Billing System;**2,11,27**;NOV 12, 2009;Build 486
+ABMFCPT ; IHS/SD/SDR - FILE CPT CODE ;   
+ ;;2.6;IHS Third Party Billing System;**2,11,27,32,35,36**;NOV 12, 2009;Build 698
  ;
  ;IHS/ASDS/JLG 01/23/01 2.4*3 NOIS NEA-0600-18022 Modified routine to fix problem with provider narrative not showing up.
  ;IHS/ASDS/SDH 04/26/01 2.4*9 NOIS DXX-0400-140004 Allow quantity to pass from PCC to 3PB when the CPT mnuemonic is used.
@@ -12,7 +12,11 @@ ABMFCPT ; IHS/ASDST/DMJ - FILE CPT CODE ;
  ;
  ;IHS/SD/SDR v2.6 CSV
  ;IHS/SD/SDR 2.6*2 3PMS10003A modified to call ABMFEAPI
- ;IHS/SD/SDR 2.8*27 CR8894 Made correction to ABMFEAPI call to use CPT (not IEN); API does cross reference look up on CPT code
+ ;IHS/SD/SDR 2.6*27 CR8894 Made correction to ABMFEAPI call to use CPT (not IEN); API does cross reference look up on CPT code
+ ;IHS/SD/SDR 2.6*32 CR8942 Changed surgical default rev code from 960 to 510
+ ;IHS/SD/SDR 2.6*35 ADO60701 Made change so if clinic is NOT ambulance any A-codes will show up on page 8H of the claim editor
+ ;IHS/SD/SDR 2.6*36 ADO76171 Updated to include 3rd modifier; also fixed to stop error <UNDEF>ANES+20^ABMFCPT when using RBCL
+ ;   and there's no start/end date for the anesthesia
  ; *********************************************************************
  ;
 START ;FILE ONE CPT CODE
@@ -52,8 +56,15 @@ ANES ;ANESTHESIA CODE
  S DR=DR_";.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),23,ABMCPT,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A  ;abm*2.6*27 IHS/SD/SDR CR8894
  S DR=DR_";.05////"_ABMSDT
  S DR=DR_";.06////"_ABMMOD1
- S DR=DR_";.07////"_ABMAST  ;Anes. start dt/tm abm*2.6*11 HEAT83923
- S DR=DR_";.08////"_ABMAET  ;Anes. end dt/tm abm*2.6*11 HEAT83923
+ S DR=DR_";.14////"_ABMMOD2  ;abm*2.6*36 IHS/SD/SDR ADO76171
+ S DR=DR_";.19////"_$G(ABMMOD3)  ;abm*2.6*36 IHS/SD/SDR ADO76171
+ ;start old abm*2.6*36 IHS/SD/SDR ADO76171
+ ;S DR=DR_";.07////"_ABMAST  ;Anes. start dt/tm abm*2.6*11 HEAT83923
+ ;S DR=DR_";.08////"_ABMAET  ;Anes. end dt/tm abm*2.6*11 HEAT83923
+ ;end old start new abm*2.6*36 IHS/SD/SDR ADO76171
+ S DR=DR_";.07////"_$G(ABMAST)  ;Anes. start dt/tm
+ S DR=DR_";.08////"_$G(ABMAET)  ;Anes. end dt/tm
+ ;end new abm*2.6*36 IHS/SD/SDR ADO76171
  ;Next line set correspond diagnosis if only 1 POV
  I $D(ABMP("CORRSDIAG")) S DR=DR_";.1////1"
  S DR=DR_";.17////"_ABMSRC
@@ -62,7 +73,8 @@ ANES ;ANESTHESIA CODE
 SURG ;SURGICAL CODE
  S ABMCTG=21 D EDIT Q:+Y<0
  S ABMSRGPR=$G(ABMSRGPR)+1
- S:'ABMRVN ABMRVN=960
+ ;S:'ABMRVN ABMRVN=960  ;abm*2.6*32 IHS/SD/SDR CR8942
+ S:'ABMRVN ABMRVN=510  ;abm*2.6*32 IHS/SD/SDR CR8942
  N ABMPNARR,ABMINDXP
  S ABMPNARR=$$GET1^DIQ($P(AUPNCPT(N),U,4),ABMDA_",",.04,"I")
  I 'ABMPNARR S ABMPNARR=$P(AUPNCPT(N),U,2)
@@ -78,6 +90,7 @@ SURG ;SURGICAL CODE
  I +ABMUNIT=0 S ABMUNIT=1
  S DR=DR_";.09////"_ABMMOD1
  S DR=DR_";.11////"_ABMMOD2
+ S DR=DR_";.12////"_$G(ABMMOD3)  ;abm*2.6*36 IHS/SD/SDR ADO76171
  S DR=DR_";.13////"_ABMUNIT
  S DR=DR_";.17////"_ABMSRC
  I $D(ABMCORDI(ABMCPT)) D
@@ -101,6 +114,7 @@ RAD ;RADIOLOGY
  S DR=DR_";.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),15,ABMCPT,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
  S DR=DR_";.05////"_ABMMOD1
  S DR=DR_";.06////"_ABMMOD2
+ S DR=DR_";.07////"_$G(ABMMOD3)  ;abm*2.6*36 IHS/SD/SDR ADO76171
  ;Next line set correspond diagnosis if only 1 POV
  I $D(ABMP("CORRSDIAG")) S DR=DR_";.08////1"
  S DR=DR_";.09////"_ABMSDT
@@ -119,6 +133,7 @@ MED ;MEDICAL CODE
  S DR=DR_";.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,ABMCPT,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
  S DR=DR_";.05////"_ABMMOD1
  S DR=DR_";.08////"_ABMMOD2
+ S DR=DR_";.09////"_$G(ABMMOD3)  ;abm*2.6*36 IHS/SD/SDR ADO76171
  ;Next line set correspond diagnosis if only 1 POV
  I $D(ABMP("CORRSDIAG")) S DR=DR_";.06////1"
  S DR=DR_";.07////"_ABMSDT
@@ -128,7 +143,8 @@ MED ;MEDICAL CODE
  ;
 HCPCS ;HCPCS CODE
  S XTLKUT=""
- S ABMCTG=$S(ABMCPT]]"A0000"&(ABMCPT']]"A0999"):47,1:43) D EDIT Q:+Y<0
+ ;S ABMCTG=$S(ABMCPT]]"A0000"&(ABMCPT']]"A0999"):47,1:43) D EDIT Q:+Y<0  ;abm*2.6*35 IHS/SD/SDR ADO60701
+ S ABMCTG=$S((ABMCPT]]"A0000"&(ABMCPT']]"A0999")&($P($G(^DIC(40.7,ABMP("CLN"),0)),U,2)="A3")):47,1:43) D EDIT Q:+Y<0  ;abm*2.6*35 IHS/SD/SDR ADO60701
  I ABMRVN="" D
  .I $E(ABMCPT,1,2)="A0" S ABMRVN=540 Q
  .I $E(ABMCPT)="E" S ABMRVN=290 Q
@@ -149,6 +165,7 @@ HCPCS ;HCPCS CODE
  I $D(ABMP("CORRSDIAG")) S DR=DR_";.06////1"
  S DR=DR_";.07////"_ABMSDT
  S DR=DR_";.08////"_ABMMOD2
+ S DR=DR_";.09////"_$G(ABMMOD3)  ;abm*2.6*36 IHS/SD/SDR ADO76171
  S DR=DR_";.17////"_ABMSRC
  D ^DIE
  K XTLKUT
@@ -166,13 +183,13 @@ LAB ;
  Q:'ABMOK
  S ABMFILE=$P(AUPNCPT(N),U,4)
  S ABMIENS=ABMDA_","
- I ABMFILE=9000010.18 D
+ I ABMFILE=9000010.18 D  ;V CPT
  .S ABMFLD1=.08
  .S ABMFLD2=.09
- E  I ABMFILE=9000010.08 D
+ E  I ABMFILE=9000010.08 D  ;V PROCEDURE
  .S ABMFLD1=.17
  .S ABMFLD2=.18
- E  I ABMFILE=9000010.22 D
+ E  I ABMFILE=9000010.22 D  ;V RADIOLOGY
  .S ABMFLD1=.07
  .S ABMFLD2=.08
  E  K ABMFLD1,ABMFLD2
@@ -202,6 +219,7 @@ LAB ;
  S DIC("DR")=DIC("DR")_";.05////"_ABMCOLDT
  S DIC("DR")=DIC("DR")_";.06////"_ABMMOD1
  S DIC("DR")=DIC("DR")_";.07////"_ABMMOD2
+ S DIC("DR")=DIC("DR")_";.08////"_$G(ABMMOD3)  ;abm*2.6*36 IHS/SD/SDR ADO76171
  S DIC("DR")=DIC("DR")_";.17////"_ABMSRC
  I $D(ABMP("CORRSDIAG")) S DIC("DR")=DIC("DR")_";.09////1"
  I $D(ABMMOD) F J=1:1:2 Q:'$D(ABMMOD(J))  D

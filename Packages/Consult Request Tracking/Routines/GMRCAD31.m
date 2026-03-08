@@ -1,5 +1,7 @@
-GMRCAD31 ;SLC/JFR - admin corrections on cons. activities; 2/19/03 14:09
- ;;3.0;CONSULT/REQUEST TRACKING;**32**;DEC 27, 1997
+GMRCAD31 ;SLC/JFR - admin corrections on cons. activities; 10/25/22 14:09
+ ;;3.0;CONSULT/REQUEST TRACKING;**32,1006**;DEC 27, 1997;Build 3
+ ; Modified for Patch 1006 - IHS/MSC/MIR - 07/15/2022 
+ ;              Line BLDLST+9 -  Modified to print HRCN instead of SSN
 EN ;Start prompting and prepare to build a list
  N GMRCIEN
  S GMRCIEN=$$GETCSLT
@@ -63,7 +65,7 @@ BLDLST(GMRCDA) ;build the list for LM
  S ^TMP("GMRCADM",$J,"CSLT")=GMRCDA
  S GMRCCT=1,TAB=$$REPEAT^XLFSTR(" ",29)
  S PTNM="Patient name: "_$$GET1^DIQ(123,GMRCDA,.02,"E")
- S PTSSN="SSN: "_$$GET1^DIQ(2,$P(^GMR(123,GMRCDA,0),U,2),.09)
+ S PTSSN="HRN: "_$$HRCN^GMRCMP($P(^GMR(123,GMRCDA,0),U,2),+$G(DUZ(2)))  ;$$GET1^DIQ(2,$P(^GMR(123,GMRCDA,0),U,2),.09)
  S REMSIT="Receiving Site: "
  S REMSIT=REMSIT_$$GET1^DIQ(4,$P(^GMR(123,GMRCDA,0),U,23),.01)
  S REMNUM="Remote Consult #: "_$P(^GMR(123,GMRCDA,0),U,22)

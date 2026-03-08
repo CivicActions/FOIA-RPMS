@@ -1,5 +1,5 @@
 BSDU3 ; IHS/ANMC/LJF - TEAM INFO UTILITIES ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
 PROV(TEAM,DATES,LIST) ;EP; returns array in LIST of providers tied to team
  ;Only called if PCMM is used!!!!!!!!!!!!!
@@ -37,3 +37,11 @@ CLINICS(PROV,LIST) ;EP; returns array of clinics for this provider
  . Q:$G(^SC("AIHSDPR",PROV,X,Y))'=1      ;quit if not default provider
  . S LIST(X)=""
  Q
+ ;
+DTS(VAL) ;-- change date time to / format
+ N RDT,TM
+ I $L(VAL)>7 S TM=$E($P($$FMTE^XLFDT(VAL),"@",2),1,5)
+ S RDT=$E(VAL,4,5)_"/"_$E(VAL,6,7)_"/"_$E(VAL,2,3)
+ I $G(TM)]"" S RDT=RDT_"@"_TM
+ Q $G(RDT)
+ ;

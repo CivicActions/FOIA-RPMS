@@ -1,5 +1,5 @@
-RASTEXT1 ;HISC/CAH,FPT,GJC AISC/TMP,TAC-Selection of patient for status tracking ;9/4/97  15:10
- ;;5.0;Radiology/Nuclear Medicine;;Mar 16, 1998
+RASTEXT1 ;HISC/CAH,FPT,GJC AISC/TMP,TAC-Selection of patient for status tracking ; 05 Dec 2016  9:12 AM
+ ;;5.0;Radiology/Nuclear Medicine;1007;Mar 16, 1998;Build 14
 SELECT ;
  S RACONTIN=0 ;ft
  I RADTI,(($O(^TMP($J,"RASTEXT",RADTI))>0)!($O(^TMP($J,"RASTEXT",RADTI,I1))>0)) S RACONTIN=1
@@ -25,7 +25,12 @@ SEL1 I "Cc"[RAX,RADTI,($O(^TMP($J,"RASTEXT",RADTI))>0!($O(^(RADTI,I1))>0)) Q
  I $P(Y(0),"^",3)>0,$D(^RADPT("AS",+Y)) K ^TMP($J,"RASTEXT") S RASTAT=+Y,RAORD=$P(Y(0),"^",3) D START^RASTEXT S (RADTI,RACTR)=0 Q
  W *7,!,"No data exists for status ",$P(Y(0),"^") G SELECT
  ;
-CASE S X=RAX D ^RASTED Q:RAXIT  K ^TMP($J,"RASTEXT") D START^RASTEXT S (RADFN,RACTR,RADTI)=0 Q
+ ;IHS/CMI/DAY - Patch 1007 - Disable Status Tracking 'Change Status'
+CASE ;S X=RAX D ^RASTED Q:RAXIT  K ^TMP($J,"RASTEXT") D START^RASTEXT S (RADFN,RACTR,RADTI)=0 Q
+ W !!,"This function is disabled.  Please use Edit Exam to change Status!"
+ G SELECT
+ ;End Patch
+ ;
  ;
 NEXT I $O(RASEQARR(RAORD))=""!($O(RASEQARR(RAORD))>8) W *7,!,"Last status - Do you want to start over? YES// " R RAX:DTIME S:'$T RAQ=1 S RAX=$E(RAX) D  Q:RAQ  G:'$D(RAX) NEXT S RAORD=""
  .I RAX="?" W !!,"Answer YES or NO",! K RAX Q

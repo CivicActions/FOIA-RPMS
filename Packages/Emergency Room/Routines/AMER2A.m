@@ -1,18 +1,20 @@
 AMER2A ; IHS/ANMC/GIS -ISC - OVERFLOW FROM AMER2 ;  
- ;;3.0;ER VISIT SYSTEM;**6,10**;MAR 03, 2009;Build 23
+ ;;3.0;ER VISIT SYSTEM;**6,10,13,14**;MAR 03, 2009;Build 4
  ;
 QD20 ; CLINIC TYPE
  N AMERLINE,%
  I '$D(AMERMAND),'$D(AMEREFLG),'$D(^TMP("AMER",$J,2,20)),'$D(AMERBCH) D
  .S %="",$P(%,"~",80)="",AMERLINE=%
- .W @IOF,"ER ADMISSION FOR ",$P(^DPT(AMERDFN,0),U),"    ^ = back up    ^^ = quit"
+ .;GDIT/HS/BEE;AMER*3.0*14;FEATURE#89183;08/04/2023;Display PPN
+ .;W @IOF,"ER ADMISSION FOR ",$P(^DPT(AMERDFN,0),U),"    ^ = back up    ^^ = quit"
+ .W @IOF,"ER ADMISSION FOR ",$E($$PPN^AMERUTIL(AMERDFN,0),1,44)," ^=back up ^^=quit"
  .W !,"Questions preceded by a '*' are MANDATORY.  Enter '??' to see choices."
  .W !,AMERLINE,!
  .Q
 QD20A ;
  N AMERPCC,AMERLOC,AMERCLN,AMERTYP,ERR
  S X=""
- ;GDIT/HS/BEE 05/10/2018;CR#10213 - AMER*3.0*10 - Pull default clinic and use
+ ;GDIT/HS/BEE 05/10/2018;CR#10213;AMER*3.0*10;Pull default clinic and use
  ;S DIC("A")="*Clinic type (EMERGENCY or URGENT): " K DIC("B")
  S DIC("A")="*Clinic type: " K DIC("B")
  ;S DIC("B")="EMERGENCY MEDICINE"
@@ -26,7 +28,7 @@ QD20A ;
  .Q
  I AMERLOC'="" D
  .;
- .;GDIT/HS/BEE 05/10/2018;CR#10213 - AMER*3.0*10 - Pull default clinic and use
+ .;GDIT/HS/BEE 05/10/2018;CR#10213;AMER*3.0*10;Pull default clinic and use
  .S DIC("B")=""
  .S AMERCLN=$$GET1^DIQ(9009082.5,AMERLOC_",",.06,"I") I AMERCLN]"" D
  ..S DIC("B")=$$GET1^DIQ(9009083,AMERCLN,.01,"E")
@@ -46,7 +48,7 @@ QD20A ;
  ..I AMERCLN]"" S DIC("B")=$$GET1^DIQ(9009083,AMERCLN,.01,"E")  ;Get AMER clinic text
  ..I $D(^TMP("AMER",$J,2,20)) S %=+^(20),DIC("B")=$P(^AMER(3,%,0),U)  ;clinic code
  ..S DIC="^AMER(3,"
- ..;GDIT/HS/BEE 05/10/2018;CR#10213 - AMER*3.0*10 - Filter out inactive
+ ..;GDIT/HS/BEE 05/10/2018;CR#10213;AMER*3.0*10;Filter out inactive
  ..;S DIC("S")="I $P(^(0),U,2)="_$$CAT^AMER0("CLINIC TYPE")
  ..S DIC("S")="I '$P(^(0),U,5),$P(^(0),U,2)="_$$CAT^AMER0("CLINIC TYPE")
  ..S DIC(0)="AEQ"
@@ -57,58 +59,101 @@ QD20A ;
  ..Q
  .Q
  ;
- ;GDIT/HS/BEE 05/10/2018;CR#10213/10423 - AMER*3.0*10 - Save updated clinic and hospital location
+ ;GDIT/HS/BEE 05/10/2018;CR#10213/10423;AMER*3.0*10;Save updated clinic and hospital location
  ;Need to update clinic and hospital location if overrides on file and possibly create new appt
  I +Y,AMERPCC>0 S ERR=$$CKHLOC^AMERBSD(AMERPCC,+Y)
  ;
+ S AMERRUN=21
  D OUT^AMER I $D(AMERQUIT) Q
  Q
  ;
 QD21 ; PROVIDER
- ;IHS/OIT/SCR 10/31/08 don't ask if we are in TRIAGE
- ;IHS/OIT/SCR 01/06/09 WHERE OH WHERE DOES THIS Y COME FROM?
- ;Q:$G(AMERTRG)=1
  I $G(AMERTRG)=1 D  Q
  .S Y=-1
  .Q
- ;S DIC("A")="*Admitting physician: " K DIC("B")
- ;IHS/OIT/SCR 01/20/09 - removed asterik since this is no longer considered mandatory
- S DIC("A")="ED Provider: " K DIC("B")
- S DIC("?")="Only active providers can be selected"
- ;I $D(^TMP("AMER",$J,2,21)) S %=+^(21),DIC("B")=$P(^VA(200,%,0),U)
- I $D(^TMP("AMER",$J,2,21))&($G(^TMP("AMER",$J,2,21))>1) S %=+^(21),DIC("B")=$P(^VA(200,%,0),U)
- S DIC="^VA(200,",DIC(0)="AEQM"
- ;screening so that only valid PCC providers identified
- S DIC("S")="I $D(^VA(200,""AK.PROVIDER"",$P($G(^VA(200,+Y,0)),U),+Y))"
- D ^DIC K DIC
- I $G(Y)'>0 K ^TMP("AMER",$J,2,24)
+ ;
+ ;GDIT/HS/BEE;Feature#73115/75284;AMER*3.0*13;Multiple nurse/provider handling
+ ;Make call to new multi-nurse handler
+ NEW AMERV,II
+ S AMERV=$$NPRC^AMERMPRV(AMERDFN,"","ED PROVIDER","",0)
+ ;
+ ;Retrieve latest data from V file and save in ^TMP
+ S Y=""
+ I +AMERV D
+ . S (Y,^TMP("AMER",$J,2,21))=$P(AMERV,U)  ;ED Provider
+ . S ^TMP("AMER",$J,2,51)=$P(AMERV,U,2)  ;ED Provider time
+ ;
+ I $G(AMERV)="" F II=1,2 D
+ . K ^TMP("AMER",$J,II,21)
+ . K ^TMP("AMER",$J,II,51)
+ ;
+ S X=$S(AMERV="^":"^",AMERV="^^":"^^",1:"")
+ S AMERRUN=24
+ I $G(^TMP("AMER",$J,2,21))="" S AMERRUN=27 F II=1,2 K ^TMP("AMER",$J,II,25)
+ ;
  D OUT^AMER I $D(AMERQUIT) Q
  Q
  ;
 QD22 ; TRIAGE NURSE
- S DIC("A")="*Triage nurse: " K DIC("B")
- I $D(^TMP("AMER",$J,2,22)) S %=+^(22),DIC("B")=$P(^VA(200,%,0),U)
- S DIC("?")="Only active providers can be selected"
- S DIC="^VA(200,",DIC(0)="AEQM"
- ;screening so that only valid PCC providers identified
- S DIC("S")="I $D(^VA(200,""AK.PROVIDER"",$P($G(^VA(200,+Y,0)),U),+Y))"
- D ^DIC K DIC
- I $G(Y)'>0 K ^TMP("AMER",$J,2,25)
+ ;
+ ;GDIT/HS/BEE;Feature#73115/75284;AMER*3.0*13;Multiple nurse/provider handling
+ ;Make call to new multi-nurse handler
+ NEW AMERV,II,AMERLOC,AMERTRG
+ ;
+ S AMERLOC=$G(DUZ(2))
+ I '$D(^AMER(2.5,AMERLOC,0)) D  D OUT^AMER S AMERQUIT="" Q
+ .W !,"SITE PARAMETERS have not been set up in the ERS PARAMETER option"
+ .W !,"Please contact your ERS Supervisors to complete this option before using the EMERGENCY ROOM system"
+ .S X="^^"
+ ;
+QD22A ;Prompt for triage nurse
+ ;See if using triage provider
+ S AMERTRG=+$$GET1^DIQ(9009082.5,AMERLOC_",",.08,"I")
+ I $G(^TMP("AMER",$J,2,26))]"" S AMERTRG=0  ;Not required if they have entered a triage provider
+ ;
+ S AMERV=$$NPRC^AMERMPRV(AMERDFN,"","TRIAGE NURSE",AMERTRG,0)
+ ;
+ ;Retrieve latest data from V file and save in ^TMP
+ S Y=""
+ I +AMERV D
+ . S (Y,^TMP("AMER",$J,2,22))=$P(AMERV,U)  ;triage nurse
+ . S ^TMP("AMER",$J,2,24)=$P(AMERV,U,2)  ;triage nurse time
+ ;
+ I $G(AMERV)="" F II=1,2 D
+ . K ^TMP("AMER",$J,II,22)
+ . K ^TMP("AMER",$J,II,24)
+ ;
+ S X=$S(AMERV="^":"^",AMERV="^^":"^^",1:"")
+ S AMERRUN=25
+ ;
+ ;Required - if not using triage provider (though it could have been entered in BEDD)
+ I X="",'$D(^TMP("AMER",$J,2,22)),'$D(^TMP("AMER",$J,2,26)),AMERTRG D  G QD22A
+ . W !!,"<The triage nurse must be entered>" H 3
+ ;
  D OUT^AMER I $D(AMERQUIT) Q
+ ;
+ ;Skip triage provider if not enabled and one not on file (from BEDD)
+ I AMERTRG,'$D(^TMP("AMER",$J,2,26)) S AMERRUN=22
  Q
  ;
 QD23 ; INITIAL TRIAGE
  S DIR("B")=$G(^TMP("AMER",$J,2,23))
  S DIR("?")="Enter a number from 1 to 5"
  S DIR("?",1)="This is a site-specified value that indicates severity of visit"
- S DIR(0)="N^1:5:0",DIR("A")="*Enter initial triage assessment from RN" KILL DA D ^DIR KILL DIR
+ S DIR(0)="N^1:5:0",DIR("A")="*Enter the Emergency Severity Index assessment" KILL DA D ^DIR KILL DIR
+ S AMERRUN=51
  D OUT^AMER I X=U Q
- I '$D(^TMP("AMER",$J,2,21)),'$D(^(22)),'$G(^TMP("AMER",$J,1,21)),'$D(AMEREFLG) S AMERSTRT=1,AMERFIN=27,AMERRUN=$S('$D(AMERTRG):1,$D(AMERTRG):30) Q
- I '$D(^TMP("AMER",$J,2,22)),$D(^(21)) S AMERRUN=24 Q
- I '$D(^TMP("AMER",$J,2,22)) S AMERRUN=25
+ ;
+ ;Save now
+ I Y D
+ . NEW AUPDT,ERR
+ . S AUPDT(9009081,AMERDFN_",",20)=Y
+ . D FILE^DIE("","AUPDT","ERR")
  Q
  ;
 QD24 ; TRIAGE TIME
+ ;GDIT/HS/BEE;Feature#73115/75284;AMER*3.0*13;Code no longer used
+ Q
  I $D(^TMP("AMER",$J,2,24)) S Y=^(24) X ^DD("DD") S DIR("B")=Y
  ;IHS/OIT/SCR 01/20/09 field no longer manditory
  ;S DIR(0)="DO^::ER",DIR("A")="What time did the patient see the triage nurse",DIR("?")="Enter an exact date and time in Fileman format (e.g. T@1PM)" D ^DIR K DIR
@@ -117,28 +162,78 @@ QD24 ; TRIAGE TIME
  I Y,$$TVAL($G(^TMP("AMER",$J,1,2)),Y,2) K Y G QD24
  I Y="" S Y=-1
  D OUT^AMER I X?1."^" Q
+ ;
+ I $G(AMERTRG) S AMERRUN=25,AMERFIN=27 Q
+ ;
  I '$D(^TMP("AMER",$J,2,21)),'$G(^TMP("AMER",$J,1,21)),'$D(AMEREFLG) S AMERFIN=28,AMERSTRT=1,AMERRUN=27 Q
  I '$D(^TMP("AMER",$J,2,21)) S AMERRUN=25 Q
  Q
  ;
-QD25 ; DOC TIME
+QD25 ;Medical Screening Exam Time
+ NEW TRIDT,AMERP,DIR
+ ;
+QD25A ;
  ;IHS/OIT/SCR 10/31/08 DON'T ASK DOC TIME IF WE ARE USING TRIAGE OPTION
- ;Q:$G(AMERTRG)=1
  I $G(AMERTRG)=1 D  Q
  .S Y=-1
  .Q
+ ;
+ ;Retrieve triage info
+ S AMERP=$$TRIAGE^AMERMPRV(.AMERP,AMERDFN,"")
+ S TRIDT=$P(AMERP,U)
  ;IHS/OIT/SCR 11/21/08 don't default the doc time in OUT
  ;I $D(^TMP("AMER",$J,2,25)) S Y=^(25) X ^DD("DD") S DIR("B")=Y
- S DIR(0)="D^::ER",DIR("A")="*What was the ED Provider Medical Screening Exam Time",DIR("?")="Enter an exact date and time in Fileman format (e.g. T@1PM)" D ^DIR K DIR
- I Y,$$TCK($G(^TMP("AMER",$J,1,2)),Y,1,"admission") K Y G QD25
- I Y,$$TCK($G(^TMP("AMER",$J,2,24)),Y,1,"triage") K Y G QD25
- I Y,$$TVAL($G(^TMP("AMER",$J,1,2)),Y,4) K Y G QD25
+ S DIR(0)="D^::ER",DIR("A")="*Enter Medical Screening Exam Time"
+ S DIR("?")="Enter an exact date and time in Fileman format (e.g. T@1PM)"
+ I $G(^TMP("AMER",$J,2,25))]"" S DIR("B")=$$FMTE^XLFDT(^TMP("AMER",$J,2,25),"2ZM")
+ E  I $O(AMERP("ED PROVIDER",""))]"" S DIR("B")=$$FMTE^XLFDT($O(AMERP("ED PROVIDER","")),"2ZM")
+ E  S DIR("B")=""
+ D ^DIR
+ I Y,$$TCK($G(^TMP("AMER",$J,1,2)),Y,1,"admission") K Y G QD25A
+ I Y,$$TCK(TRIDT,Y,1,"triage") K Y G QD25A
+ I Y,$$TVAL($G(^TMP("AMER",$J,1,2)),Y,4) K Y G QD25A
  I Y="" S Y=-1
  Q:Y=-1
+ ;
+ ;Save into ER ADMISSION
+ I Y D
+ . NEW AUPD,ERR
+ . S AUPD(9009081,AMERDFN_",",22)=Y
+ . D FILE^DIE("","AUPD","ERR")
+ ;
+ S AMERRUN=27
  D OUT^AMER I X?1."^" Q
- S AMERFIN=28,AMERRUN=27 Q
- ;I '$D(AMERTRG) S AMERRUN=1
- ;I $D(AMEREFLG) S AMERRUN=30
+ Q
+ ;
+ ;GDIT/HS/BEE;Feature#73115/75284;AMER*3.0*13;Multiple nurse/provider handling
+QD26 ; Triage Provider
+ ;
+ ;Make call to new multi provider/nurse handler
+ NEW AMERV,II
+ S AMERV=$$NPRC^AMERMPRV(AMERDFN,"","TRIAGE PROVIDER","",0)
+ ;
+ ;Retrieve latest data from V file and save in ^TMP
+ S Y=""
+ I +AMERV D
+ . S (Y,^TMP("AMER",$J,2,26))=$P(AMERV,U)  ;triage nurse
+ . S ^TMP("AMER",$J,2,27)=$P(AMERV,U,2)  ;triage nurse time
+ ;
+ I $G(AMERV)="" F II=1,2 D
+ . K ^TMP("AMER",$J,II,26)
+ . K ^TMP("AMER",$J,II,27)
+ ;
+ S X=$S(AMERV="^":"^",AMERV="^^":"^^",1:"")
+ ;
+ ;Check for either triage nurse or provider
+ S AMERRUN=22
+ I X="",$G(^TMP("AMER",$J,2,22))="",$G(^TMP("AMER",$J,2,26))="" D
+ . S AMERRUN=21
+ . W !!,"<Either a triage nurse or triage provider must be entered>" H 3
+ ;
+ D OUT^AMER I $D(AMERQUIT) Q
+ Q
+ ;
+QD27 ; Triage Provider Time
  Q
  ;
 QD28(AMERPCC) ; Decision to admit date/time - AMER*3.0*6
@@ -168,7 +263,6 @@ QD28E ;Pull current date/time from PCC
  ;
  I '$G(^TMP("AMER",$J,1,21)),'$D(AMEREFLG) S AMERFIN=28,AMERSTRT=1,AMERRUN=$S('$D(AMERTRG):1,$D(AMERTRG):30,1:1) Q
  I '$D(AMERTRG) S AMERRUN=1
- S AMERRUN=1
  Q
  ;
 TCK(Z,T,X,A) ; ENTRY POINT FROM AMER2
@@ -193,7 +287,7 @@ TVAL(Z,T,H) ; ENTRY POINT FROM AMER2 and multiple editing routines
  I %=1 Q 0
  Q 1
  ;
- ;GDIT/HS/BEE 05/10/2018;CR#10213 - AMER*3.0*10 - Save updated clinic and hospital location
+ ;GDIT/HS/BEE 05/10/2018;CR#10213;AMER*3.0*10;Save updated clinic and hospital location
 SYNCCL(AMERDA,AMERPCC) ;Sync the ER VISIT clinic with the PCC clinic
  ;
  ;Original code from SYNCHPCC^AMERPCC - Copied here to address routine size issue
@@ -249,7 +343,7 @@ SYNCCL(AMERDA,AMERPCC) ;Sync the ER VISIT clinic with the PCC clinic
  ;
  Q
  ;
- ;GDIT/HS/BEE 07/12/2018;CR#10423 - AMER*3.0*10
+ ;GDIT/HS/BEE 07/12/2018;CR#10423;AMER*3.0*10
 GETCLN(AUPNVSIT) ;Return the ER Clinic for the PCC hospital location
  ;
  I $G(AUPNVSIT)="" Q ""
@@ -278,3 +372,17 @@ GETCLN(AUPNVSIT) ;Return the ER Clinic for the PCC hospital location
  . I CLINIC]"" S CLN=$O(^AMER(3,"B",CLINIC,""))
  ;
  Q CLN
+ ;
+ACT(PRV) ;Return if a provider is active and has PROVIDER key
+ NEW TERM
+ S TERM=$$GET1^DIQ(200,PRV_",","9.2","I")
+ I TERM]"",TERM<DT Q 0  ;Terminated user
+ I $$GET1^DIQ(200,PRV_",",7,"I")=1 Q 0  ;Disuser
+ ;
+ ;Are they a provider?
+ I '$D(^XUSEC("PROVIDER",PRV)) Q 0
+ Q 1
+ ;
+NEW ;Initialize variables
+ NEW AMEROPT
+ Q

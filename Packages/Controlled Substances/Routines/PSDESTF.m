@@ -1,9 +1,10 @@
-PSDESTF ;BIR/BJW-Add Non-CS Drug to Holding file ;29-May-2012 14:24;PLS
- ;;3.0; CONTROLLED SUBSTANCES ;**8,66,1015**;13 Feb 97;Build 62
+PSDESTF ;BIR/BJW-Add Non-CS Drug to Holding file ; 26 Feb 98
+ ;;3.0; CONTROLLED SUBSTANCES ;**8,66,69**;13 Feb 97;Build 13
  ;**Y2K compliance**;display 4 digit year on va forms
- ; Modified - IHS/CIA/PLS - 01/28/04 - Removed references to VA FORM
+ ;References to ^PSD(58.86, supported by DBIA4472
+ ;
  I '$D(PSDSITE) D ^PSDSET Q:'$D(PSDSITE)
- I '$D(^XUSEC("PSJ RPHARM",DUZ)) W !!,"Please contact your Pharmacy Coordinator for access to",!,"destroy Controlled Substances.",!!,"PSJ RPHARM security key required.",! G END
+ I '$D(^XUSEC("PSJ RPHARM",DUZ)),'$D(^XUSEC("PSD TECH ADV",DUZ)) W !!,"Please contact your Pharmacy Coordinator for access to",!,"destroy Controlled Substances.",!!,"PSJ RPHARM or PSD TECH ADV security key required.",! G END
  S PSDUZ=DUZ,PSDOUT=0 D NOW^%DTC S PSDT=+$E(%,1,12)
  W !!,?5,"NOTE: This Holding for Destruction transaction WILL NOT update your",!,?5,"Controlled Substances inventory balance.",!!
 ASKD ;ask disp location
@@ -50,9 +51,7 @@ FIND S PSDHLD=$P(^PSD(58.86,0),"^",3)+1 I $D(^PSD(58.86,PSDHLD)) S $P(^PSD(58.86
  S RQTY=$P($G(^PSD(58.86,PSDHLD,0)),"^",3),PSDRN=$P($G(^(1)),"^")
  S PSDOK=1
 PRINT ;print 2321
- ; IHS/CIA/PLS - 01/28/04 - Remove reference to VA FORM #
- ;W !!,"Number of copies of VA FORM 10-2321? " R NUM:DTIME I '$T!(NUM="^")!(NUM="") W !!,"No copies printed!!",!! Q
- W !!,"Number of copies of form? " R NUM:DTIME I '$T!(NUM="^")!(NUM="") W !!,"No copies printed!!",!! Q
+ W !!,"Number of copies of VA FORM 10-2321? " R NUM:DTIME I '$T!(NUM="^")!(NUM="") W !!,"No copies printed!!",!! Q
  I NUM'?1N!(NUM=0)  W !!,"Enter a whole number between 1 and 9",! G PRINT
  S Y=PSDT X ^DD("DD") S PSDYR=$P(Y,",",2),PSDYR=$E(PSDYR,1,4)
  S PG=0,RECDT=$E(PSDT,4,5)_"/"_$E(PSDT,6,7)_"/"_PSDYR I EXP S (EXP1,EXPD)=$$FMTE^XLFDT(EXP,"5D") S:'$P(EXP1,"/",2) EXPD=$P(EXP1,"/")_"/"_$P(EXP1,"/",3)

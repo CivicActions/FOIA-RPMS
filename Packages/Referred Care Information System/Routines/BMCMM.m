@@ -1,5 +1,5 @@
 BMCMM ; IHS/OIT/FCJ - RCIS - SEND MAILMAN MESSAGE ;     [ 09/12/2006  11:50 AM ]
- ;;4.0;REFERRED CARE INFO SYSTEM;**2**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**2,15**;JAN 09, 2006;Build 168
  ;
  ;IHS/ITSC/FCJ SEND MESSAGE TO GROUPS OR 
  ;     REF PROVIDER AND PROVIDER ONLY
@@ -12,6 +12,8 @@ BMCMM ; IHS/OIT/FCJ - RCIS - SEND MAILMAN MESSAGE ;     [ 09/12/2006  11:50 AM ]
  ;BMC*4.0*2 8/2/05 IHS/OIT/FCJ ADDED TST;CALLING FROM API AND EP
  ;     Added Case Com to message;Added type of referral and parameter
  ;     to identify patient to subject line
+ ;BMC*4.0*15 5.8.23 IHS.OIT.FCJ Spelling error
+ ;BMC*4.0*15 5.23.2023 IHS.OIT.FCJ CHG BO/CHS COM TO REFERRAL NOTES
  ;
  ;
 ENMM ;EP;MESSAGE for NEW REF AND MODIFICATIONS
@@ -56,7 +58,7 @@ MPER ;SETS PRIM PROV AND REF PROV TO AUTO SEND MESSAGE TO
  S BMCPPRV=$P(^AUPNPAT(BMCDFN,0),U,14)
  S BMCRPRV=$P(^BMCREF(BMCRIEN,0),U,6)
  K XMB,XMY
- I 'BMCPPRV,'BMCRPRV W !,"Primary Care Provider and Referring Provider are not definned.",!?5,"***MESSAGE WAS NOT SENT***" G EXT
+ I 'BMCPPRV,'BMCRPRV W !,"Primary Care Provider and Referring Provider are not defined.",!?5,"***MESSAGE WAS NOT SENT***" G EXT  ;BMC*4.0*15
  F BMCPER=BMCPPRV,BMCRPRV I BMCPER D
  .S XMY(BMCPER)=""
  Q
@@ -106,7 +108,8 @@ COMMENTS ;IHS/ITSC/FCJ ADDED BO COM FR RCIS COMMENTS FILE,LIFO DISPLAY
  ..I BMCMODE="M",BMCDTYPE=14 Q:(BMCCTYP="M")!(BMCCTYP="D")
  ..I BMCMODE="A" Q:BMCCTYP'="B"
  ..I $D(^BMCCOM(BMCL,1)) D
- ...S I=$S(BMCCTYP="C":"Case Review",BMCCTYP="D":"Discharge",BMCCTYP="M":"Medical HX/Findings",1:"Business/CHS")
+ ...;S I=$S(BMCCTYP="C":"Case Review",BMCCTYP="D":"Discharge",BMCCTYP="M":"Medical HX/Findings",1:"Business/CHS")   ;BMC*4.0*15
+ ...S I=$S(BMCCTYP="C":"Case Review",BMCCTYP="D":"Discharge",BMCCTYP="M":"Medical HX/Findings",1:"Referral Notes")   ;BMC*4.0*15
  ...S ^XTMP("BMCMSG",$J,BMCL2)=I_" Comments  Date: "_$$FMTE^XLFDT($P(^BMCCOM(BMCL,0),U),"5D")_"  By: "_$$VAL^XBDIQ1(90001.03,BMCL,.04)
  ...S BMCL1=0
  ...F  S BMCL1=$O(^BMCCOM(BMCL,1,BMCL1)) Q:BMCL1'?1N.N  D

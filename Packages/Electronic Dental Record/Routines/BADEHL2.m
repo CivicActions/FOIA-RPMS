@@ -1,6 +1,7 @@
 BADEHL2 ;IHS/MSC/MGH/PLS/VAC - Dentrix HL7 interface  ;16-Jul-2009 10:54;PLS
- ;;1.0;DENTAL/EDR INTERFACE;**1**;AUG 22, 2011
+ ;;1.0;DENTAL/EDR INTERFACE;**1,9**;FEB 22, 2010;Build 16
  ;; Modified - IHS/MSC/AMF - 11/23/10 - More descriptive alert messages
+ ;; Modified - IHS/GDIT/GAB **9** 09/2024 - Check Termination/Inactivate date to fix Prov Type Issue
  Q
  ; Build Outbound Master File Updates for the provider file
 NEWMSG(IEN,MFNTYP) ;EP
@@ -185,6 +186,7 @@ NOTIF(IEN,MSG) ;EP ------- IHS/MSC/AMF 11/23/10 More descriptive alert
  Q
 FINDTYP(IEN) ;Find out if a new or update message should be sent
  ;If MFNTYP exists, no need to do the lookup
+ ;/IHS/GDIT/GAB **9** Provider Type "MDC" inactivates Dentist; compare Term/Inactive Date with Today's date
  N TD,ENTER,ACTIVE,RES
  Q:$D(MFNTYP) MFNTYP
  S TD=$$DT^XLFDT()
@@ -193,5 +195,12 @@ FINDTYP(IEN) ;Find out if a new or update message should be sent
  I ENTER=TD D
  .I $P($G(^VA(200,IEN,1.1)),U,1)'="" S RES="MUP1"
  .I $P($G(^VA(200,IEN,1.1)),U,1)="" S RES="MAD"
- I $P($G(^VA(200,IEN,0)),U,11)!($P($G(^VA(200,IEN,"PS")),U,4)) S RES="MDC"
+ ;I $P($G(^VA(200,IEN,0)),U,11)!($P($G(^VA(200,IEN,"PS")),U,4)) S RES="MDC"
+ ;/IHS/GDIT/GAB **9** Comment above line, added below 6 lines: send "MDC" if currently inactived/terminated
+ K TERMDT S TERMDT=$P($G(^VA(200,IEN,0)),U,11)  ; Termination date
+ K INACT S INACT=$P($G(^VA(200,IEN,"PS")),U,4)  ; Inactivation date
+ I TERMDT'="" D
+ .I (TERMDT<TD)!(TERMDT=TD) S RES="MDC"  ;if Terminated
+ I INACT'="" D
+ .I (INACT<TD)!(INACT=TD) S RES="MDC"   ;if Inactivated
  Q RES

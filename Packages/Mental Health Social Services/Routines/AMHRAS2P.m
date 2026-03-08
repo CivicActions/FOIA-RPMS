@@ -1,5 +1,5 @@
 AMHRAS2P ; IHS/CMI/LAB - list refusals ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**5**;JUN 02, 2010;Build 18
+ ;;4.0;IHS BEHAVIORAL HEALTH;**5,11,12**;JUN 02, 2010;Build 46
  ;
  ;
 PRINT ;EP - called from xbdbque
@@ -36,6 +36,10 @@ PRINT1 ;
  D SS
  Q:$$END
  D CD
+ Q:$$END
+ D RACE
+ Q:$$END
+ D ETHN
  Q:$$END
  K ^TMP($J)
  I AMHRLIST D LIST
@@ -168,6 +172,33 @@ DATE ;
  .S Y=$L($$FMTE^XLFDT(AMHRX)),Y=38-Y W !?Y,$$FMTE^XLFDT(AMHRX),?40,$J($$COM($G(^TMP($J,AMHRX)),0),8),?55,$$PER(^TMP($J,AMHRX),AMHRTOT) K ^TMP($J,AMHRX)
  Q
  ;
+RACE ;
+ Q:'$D(AMHRTALL(2))
+ ;TALLY BYRACE OF PATIENT1
+ K AMHRRES S X=0 F  S X=$O(^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",X)) Q:X'=+X  D
+ .S AMHRY=^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",X)
+ .S R=$P(AMHRY,U,25) S AMHRRES(R)=$G(AMHRRES(R))+1
+ W !
+ W !,"                               By Race",!
+ S AMHRX="" F  S AMHRX=$O(AMHRRES(AMHRX)) Q:AMHRX=""!($D(AMHRQUIT))  D
+ .Q:$$END
+ .S Y=$L(AMHRX),Y=38-Y W !?Y,AMHRX,?40,$J($$COM($G(AMHRRES(AMHRX)),0),8),?55,$$PER(AMHRRES(AMHRX),AMHRTOT) K AMHRRES(AMHRX)
+ .Q
+ Q
+ ;
+ETHN ;
+ Q:'$D(AMHRTALL(2))
+ ;TALLY BY ETHN OF PATIENT1
+ K AMHRRES S X=0 F  S X=$O(^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",X)) Q:X'=+X  D
+ .S AMHRY=^XTMP("AMHRAS2",AMHRJ,AMHRH,"VSTS",X)
+ .S R=$P(AMHRY,U,26) S AMHRRES(R)=$G(AMHRRES(R))+1
+ W !
+ W !,"                            By Ethnicity",!
+ S AMHRX="" F  S AMHRX=$O(AMHRRES(AMHRX)) Q:AMHRX=""!($D(AMHRQUIT))  D
+ .Q:$$END
+ .S Y=$L(AMHRX),Y=38-Y W !?Y,AMHRX,?40,$J($$COM($G(AMHRRES(AMHRX)),0),8),?55,$$PER(AMHRRES(AMHRX),AMHRTOT) K AMHRRES(AMHRX)
+ .Q
+ Q
 PER(N,D) ;return % of n/d
  I 'D Q "0%"
  NEW Z
@@ -265,6 +296,8 @@ LIST ;EP - called from xbdbque
  ....W:AMHRC'=1 ! W ?8,$$VAL^XBDIQ1(9002011.01,AMHRX,.01),?17,$E($$VAL^XBDIQ1(9002011.01,AMHRX,.04),1,60)
  ..W !?3,"Primary Provider on Visit: ",?31,$P(AMHRY,U,7)
  ..W !?3,"    Provider who screened: ",?31,$P(AMHRY,U,5)
+ ..W !?3,"                     Race: ",?31,$P(AMHRY,U,25)
+ ..W !?3,"                Ethnicity: ",?31,$P(AMHRY,U,26)
  Q
 H ;
  S AMHRSORV=$$HRN^AUPNPAT(DFN,DUZ(2))
@@ -293,6 +326,12 @@ T ;
  S %=$$HRN^AUPNPAT(DFN,DUZ(2))
  S %=%+10000000,%=$E(%,7,8)_"-"_+$E(%,2,8)
  S AMHRSORV=%
+ Q
+Q ;
+ S AMHRSORV=$$RACE^AMHUTIL2(DFN)
+ Q
+E ;
+ S AMHRSORV=$$ETHN^AMHUTIL2(DFN)
  Q
 DT(D) ;EP
  I D="" Q ""

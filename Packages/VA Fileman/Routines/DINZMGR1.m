@@ -1,5 +1,6 @@
-DINZMGR1 ;SFISC/MKO-TO SET UP THE MGR ACCOUNT FOR THE SYSTEM ;3:02 PM  1 Oct 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINZMGR1 ;SFISC/MKO-TO SET UP THE MGR ACCOUNT FOR THE SYSTEM ;9/8/94  13:00 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 INTRO ;Print introductory text
  W !!!,"HELLO!"
@@ -20,7 +21,7 @@ OS ;Prompt for operating system
  S Y=0
  I $D(^%ZOSF("OS"))#2 D
  . S X1=$P(^%ZOSF("OS"),U),Y=$P(^("OS"),U,2)
- . ;S:Y=7 X1="M\SQL",Y=18
+ . S:Y=7 X1="M\SQL",Y=18
  . I X1=""!'Y S (X1,Y)="" Q
  . W !!,"I think you are using "_X1
  . S Y=$S(Y=1:1,Y=13:2,Y=18:3,Y=2:4,Y=16:5,Y=8:6,Y=9:7,Y=17:8,1:0)
@@ -54,9 +55,9 @@ OS1 W !!,"Which MUMPS system are you using?",!
  ;
 1 ;;M/11;*
 2 ;;M/SQL-PDP;*
-3 ;;CACHE/OpenM
+3 ;;M/SQL
 4 ;;DSM-4;*
 5 ;;DSM for OpenVMS
 6 ;;MSM
 7 ;;DTM-PC
-8 ;;GT.M(VAX);*
+8 ;;GT.M(VAX)

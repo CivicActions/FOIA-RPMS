@@ -1,9 +1,10 @@
 DGPMGL ;ALB/MRL/LM/MJK - G&L ENTRY POINT; 29 APR 2003
- ;;5.3;Registration;**85,515,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**85,515,1015**;Aug 13, 1993;Build 24
  ;IHS/ANMC/LJF  3/30/2001 replaced VA header with IHS one
  ;                        checked IHS census files for data
  ;                        commented out code we don't need
  ;              9/05/2001 added read so errors don't scroll off screen
+ ;IHS/CMI/FBD   PIMS*5.3*1023: 
  ;
  ;W !!,"<<<GAINS & LOSSES SHEET/BED STATUS REPORT/TREATING SPECIALTY REPORT>>>",!  ;IHS/ANMC/LJF 3/30/2001
  W !!,"<<< ADMISSIONS & DISCHARGES SHEET >>>"    ;IHS/ANMC/LJF 3/30/2001
@@ -21,12 +22,25 @@ PCHK ;  Parameter Check
  Q
  ;
 PAR ; -- display params
- S L="",$P(L,".",50)="",Y=+DGPM("G") X ^DD("DD")
- W !,$E("Earliest Date for G&L"_L,1,58),Y
- S Y=$P(DGPM("G"),"^",11) X ^DD("DD")
- W !,$E("Earliest Date for Treating Specialty Report"_L,1,58),Y I Y']"" W "NOT DEFINED"
- S Y=$S($P(DGPM("G"),"^",7)']"":+DGPM("G"),$P(DGPM("G"),"^",7)<+DGPM("G"):+DGPM("G"),1:$P(DGPM("G"),"^",7)) X ^DD("DD")
- W !,$E("Earliest Date to Recalculate"_L,1,58),Y
+ ;
+ ;PIMS*5.3*1023 - start of mods
+ ;
+ N Y
+ S Y=$$CRECMAX^BDGPAR(DT)
+ I +Y D  ;FOLLOW THIS FORK IF MAX BACKTRACK VALUE SPECIFIED - OVERRIDES INDIVIDUAL CALC'ED VALUES
+ . S L="",$P(L,".",50)="" X ^DD("DD")
+ . W !,$E("Earliest Date for G&L"_L,1,58),Y
+ . W !,$E("Earliest Date for Treating Specialty Report"_L,1,58),Y
+ . W !,$E("Earliest Date to Recalculate"_L,1,58),Y
+ E  D  ;FOLLOW THIS FORK IF NO MAX BACKTRACK VALUE SPECIFIED
+ . S L="",$P(L,".",50)="",Y=+DGPM("G") X ^DD("DD")
+ . W !,$E("Earliest Date for G&L"_L,1,58),Y
+ . S Y=$P(DGPM("G"),"^",11) X ^DD("DD")
+ . W !,$E("Earliest Date for Treating Specialty Report"_L,1,58),Y I Y']"" W "NOT DEFINED"
+ . S Y=$S($P(DGPM("G"),"^",7)']"":+DGPM("G"),$P(DGPM("G"),"^",7)<+DGPM("G"):+DGPM("G"),1:$P(DGPM("G"),"^",7)) X ^DD("DD")
+ . W !,$E("Earliest Date to Recalculate"_L,1,58),Y
+ ;
+ ;PIMS*5.3*1023 - end of mods
  ;
  Q  ;IHS/ANMC/LJF 3/30/2001
  ;

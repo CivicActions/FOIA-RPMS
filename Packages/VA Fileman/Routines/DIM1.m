@@ -1,6 +1,6 @@
-DIM1 ;SFISC/JFW,GFT,TOAD-FileMan: M Syntax Checker, Exprs ;1:55 PM  19 Jul 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**6**;Mar 30, 1999
+DIM1 ;SFISC/JFW,GFT,TOAD-FileMan: M Syntax Checker, Exprs ;5/6/97  09:08 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**28**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;12276;6135531;3766;
  ;
@@ -81,4 +81,4 @@ EXT ; extrinsic functions and variables (FUNC)
  S %C=$P(%C,"^") I %C]"",%C'?1U.7AN,%C'?1"%".7AN,%C'?1.8N G E
  I $E(%,%I)="(",$E(%,%I+1)'=")" S %(%N,0)="P^",(%(%N,1),%(%N,2),%(%N,3))=0,%N=%N+1 G GG
  S %I=%I+$S($E(%,%I,%I+1)="()":1,1:-1)
- G GG:"[],)><=_&#!'+-*/\?:"[$E(%,%I+1),E
+ G GG:"[],)><=_&#!'+-*/\?"[$E(%,%I+1),E

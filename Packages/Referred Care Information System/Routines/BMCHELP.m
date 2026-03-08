@@ -1,5 +1,6 @@
 BMCHELP ; IHS/PHXAO/TMJ - REFERRED CARE INFORMATION SYSTEM ;
- ;;4.0;REFERRED CARE INFO SYSTEM;;JAN 09, 2006
+ ;;4.0;REFERRED CARE INFO SYSTEM;**16**;JAN 09, 2006;Build 168
+ ;BMC*4.0*16 2.9.2024 IHS.OIT.FCJ ADDED NEW PRIORITY TEXT
  ;
 EN1 ; EP - SHOW PAYOR ELIGIBILITY (SCREENMAN)
  Q:'$G(BMCDFN)
@@ -39,12 +40,25 @@ EN3 ; EP - chs warning if no chs eligibility
  D HLP^DDSUTL(.BMCMSG)
  D HLP^DDSUTL("$$EOP")
  Q
+CSV ;EP -CSV HELP ;BMC*4.0*16
+ W !?3,"Enter C to write to an Excel format file. File must be named with the CSV",!?3,"extension and saved to a directory with write permissions."
+ W !!?5,"Example:"
+ W !?5,"Do you wish to: P// C <RETURN> CSV Output "
+ W !?5,"DEVICE: HOME// HFS <RETURN>  HOST FILE SERVER"
+ W !?5,"HOST FILE NAME: C:\pub\CHSREF.CSV//(NAME THE PATH AND REQUIRED FILE",!?5,"EXTENTION OF CSV)<RETURN> ADDRESS/PARAMETERS: ""WNS""//<RETURN>"
+ W !
+ Q
 PRIORITY ;EP executable help from priority field in rcis referral
  NEW BMCMSG,J,K,T
- I '$O(^BMCPARM(DUZ(2),1,0)) D  I 1
- .S T="TEXTDEF"
- .F J=1:1 S K=$T(@T+J),K=$P(K,";;",2) Q:K="END"!(K="")  S BMCMSG(J)=K
- .Q
+ ;BMC*4.0*16 Modified for new Med Pri codes now  stored in RCIS MEDICAL PRIORITY file
+ ;I '$O(^BMCPARM(DUZ(2),1,0)) D  I 1
+ ;.S T="TEXTDEF"
+ ;.F J=1:1 S K=$T(@T+J),K=$P(K,";;",2) Q:K="END"!(K="")  S BMCMSG(J)=K
+ ;.Q
+ I '$O(^BMCPARM(DUZ(2),1,0)) D
+ .S J=0 F  S J=$O(^BMCMPRI(J)) Q:J'?1N.N  D
+ ..I $P(^BMCMPRI(J,0),U,2)'="",$P(^BMCMPRI(J,0),U,2)<DT+1 Q
+ ..S BMCMSG(J)=$P(^BMCMPRI(J,0),U)_"-"_$P(^BMCMPRI(J,0),U,3)
  E  D
  .S J=0 F  S J=$O(^BMCPARM(DUZ(2),1,J)) Q:J'=+J  S BMCMSG(J)=^BMCPARM(DUZ(2),1,J,0)
  .Q
@@ -53,7 +67,7 @@ PRIORITY ;EP executable help from priority field in rcis referral
 SETDEF ;set default message into BMCMSG
 SETMSG ;set site configured help prompt in BMCMSG
  Q
-TEXTDEF ;default ihs standard help text for priority
+TEXTDEF ;default ihs standard help text for priority;BMC*4.0*16 NO LONGER USED
  ;;1 - LEVEL I.  EMERGENT/ACUTELY URGENT CARE SERVICES
  ;; DEFINITION: Diagnostic/therapeutic services that are necessary to prevent the
  ;; immediate death/serious impairment of the health of the individual, and if

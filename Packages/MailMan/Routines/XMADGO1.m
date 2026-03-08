@@ -1,0 +1,3 @@
+XMADGO1 ;(WASH ISC)/CAP- * OBSOLETE * ;01/07/98  14:56
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+ Q

@@ -1,22 +1,31 @@
 ABMRSUBN ; IHS/SD/SDR - Resubmission Number Entry ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**33,37**;NOV 12, 2009;Build 739
  ;
- ; For data entry of resubmission number for claims.  Claim doesn't
- ; need to be cancelled but number will be entered and then claim
- ; reprinted in order for it to show up.
+ ;For data entry of resubmission number for claims.  Claim doesn't
+ ;need to be cancelled but number will be entered and then claim
+ ;reprinted in order for it to show up.
  ;
- ; IHS/SD/SDR - v2.5 p13 - IM25920
- ;   Changed field to free-text with length of 29
+ ;IHS/SD/SDR 2.5*13 IM25920 Changed field to free-text with length of 29
+ ;
+ ;IHS/SD/SDR 2.6*33 ADO60185 CR12178 Added preferred name to display; also fixed so if you answered NO
+ ;  at bill? prompt it will exit
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
  ;
  ;pick bill/patient; display info and confirm selection
  K DIR,DIE,DIC
  K ABMP
  D BILL^ABMDBDIC  ;returns ABMP("BDFN") and ABMP("PDFN")
  Q:$G(ABMP("BDFN"))=""
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ S ABMP("PDFN")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,5)
+ ;I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;.W !?3,"Preferred Name: ",$$EN^ABMVDF("RVN"),$$GETPREF^AUPNSOGI(ABMP("PDFN"),""),$$EN^ABMVDF("RVF")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  S DIR(0)="YO"
  S DIR("A")="Bill "_$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U)
  S DIR("B")="Y"
  D ^DIR
+ Q:Y<1  ;abm*2.6*33 IHS/SD/SDR ADO60185
  Q:$D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT)
  ;
  ;prompt for changes

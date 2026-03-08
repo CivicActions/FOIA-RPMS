@@ -1,5 +1,5 @@
-BIPATVW1 ;IHS/CMI/MWR - BUILD LIST ARRAY OF IMM DATA; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**8**;MAR 15,2014
+BIPATVW1 ;IHS/CMI/MWR - BUILD LIST ARRAY OF IMM DATA; MAY 10, 2010 ; 27 Aug 2025  11:10 PM
+ ;;8.5;IMMUNIZATION;**8,25,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  BUILD LISTMANAGER ARRAY FOR DISPLAY AND EDIT OF
  ;;  PATIENT'S IMMUNIZATION DATA.
@@ -24,7 +24,8 @@ MAIN(BIPRT) ;EP
  ;---> Get forecast string (BIFORCST) and problem dose string (BIPDSS).
  ;---> Pass BIPDSS to HISTORY to mark problem doses with asterisks.
  ;---> Pass BIFORCST to FORECAST for display.
- D IMMFORC^BIRPC(.BIFORCST,BIDFN,BIFDT,,$G(BIDUZ2),.BIPDSS)
+ ;V8.5 P31 - FID-  Include '*RB*' high risk flag
+ D IMMFORC^BIRPC(.BIFORCST,BIDFN,BIFDT,,$G(BIDUZ2),.BIPDSS,1)
  D HISTORY(BIDFN,$G(BIPDSS),.BILMAX,.BIENT)
  D FORECAST(BIFORCST,.BIRMAX)
  D LASTLET^BIPATVW3(BIDFN,.BIRMAX,.BIENT)
@@ -111,7 +112,8 @@ HISTORY(BIDFN,BIPDSS,BILMAX,BIENT) ;EP
  ..;
  ..S BIENT=BIENT+1
  ..;---> Set display line for this immunization.
- ..S X=$S(BIENT>9:" ",1:"  ")_BIENT_"  "_$P(Y,V,17)
+ ..;S X=$S(BIENT>9:" ",1:"  ")_BIENT_"  "_$P(Y,V,17)
+ ..S X=$S(BIENT>9:" ",1:"  ")_BIENT_"  "_$P(Y,V,24)    ;IHS/CMI/LAB - changed 17th piece to 24th piece for date administered or visit date
  ..;
  ..;---> Next line: Prepend asterisk if this Dose has a User Override
  ..;---> or is an ImmServe Problem Dose (flag stored in BIPDSSA).

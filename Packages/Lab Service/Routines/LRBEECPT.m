@@ -1,7 +1,7 @@
-LRBEECPT ;VA/DALOI/JAH - Edit CPT associated with CIDC; 3/29/05
- ;;5.2;LAB SERVICE;**1031**;NOV 1, 1997;Build 188
+LRBEECPT ;VA/DALOI/JAH - Edit CPT associated with CIDC ; 26-Apr-2023 11:30 ; MKK
+ ;;5.2;LAB SERVICE;**291,315,1031,1054**;NOV 1, 1997;Build 20
  ;
- ;;VA LR Patche(s): 291,315
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
  ;
  ; To be able to provide a clean claim to the billing application, there
  ; needs be an association between the test, the specimen, and the 
@@ -26,7 +26,8 @@ STRT ; Start the routine
  .D KLL
  Q
 TST ; Ask the user for the test to work on.
- S DIC="^LAB(60,",DIC(0)="AEMQZ" D ^DIC
+ ; S DIC="^LAB(60,",DIC(0)="AEMQZ" D ^DIC
+ K DIC  S DIC="^LAB(60,",DIC(0)="AEMQZ",DIC("S")="I +$G(^(.3))=0" D ^DIC  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  I Y=-1 K DIC Q  ;quit if look-up fails
  S LRBEPNL=0
  I $P(Y(0),"^",5)="" S LRBEPNL=1  ;Selected test is a panel

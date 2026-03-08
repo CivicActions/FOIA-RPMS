@@ -1,5 +1,5 @@
 BSTSAPIC ;GDIT/HS/BEE-Standard Terminology API Program ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3,4,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
@@ -90,6 +90,8 @@ MPADVICE(OUT,IN) ;EP - Returns ICD-10 mapping information for a specified Concep
  S BSTSD=""
  I $D(RESULT)>1 D
  . S BSTSD=$$ICDMAP(OUT,.BSTSWS,.RESULT)
+ . ;I OUT]"",$O(@OUT@(""))="" S BSTSD=$$GICDMAP^BSTSDTSM(OUT,.BSTSWS,.RESULT)
+ . S BSTSD=$$GICDMAP^BSTSDTSM(OUT,.BSTSWS,.RESULT)
  S $P(BSTSR,U)=$S(BSTSD=0:0,(+BSTSR)>0:+BSTSR,1:1)
  Q BSTSR
  ;
@@ -118,7 +120,7 @@ ICDMAP(OUT,BSTSWS,RESULT) ;EP - Set up mapping output information
  ;Pull return request
  S INMID=$O(^BSTS(9002318.1,"B",XNMID,""))
  ;
- S MCNT=0,CNT="" F  S CNT=$O(RESULT(CNT)) Q:CNT=""  D
+ S (MCNT,CNT)="" F  S CNT=$O(RESULT(CNT)) Q:CNT=""  D
  . ;
  . N CONC,CIEN,MIEN
  . ;
@@ -127,10 +129,10 @@ ICDMAP(OUT,BSTSWS,RESULT) ;EP - Set up mapping output information
  . S CIEN=$O(^BSTS(9002318.4,"C",NMID,CONC,"")) Q:CIEN=""
  . ;
  . ;Pull Mapping Information
- . S (MCNT,MIEN)=0 F  S MIEN=$O(^BSTS(9002318.4,CIEN,2,MIEN)) Q:'MIEN  D
+ . S MCNT=$O(@OUT@(""),-1),MIEN=0 F  S MIEN=$O(^BSTS(9002318.4,CIEN,2,MIEN)) Q:'MIEN  D
  .. ;
  .. NEW MG,MGRIN,MGROUT,DA,IENS,MP,MPRIN,MPROUT
- .. NEW MT,MTRIN,MTROUT
+ .. NEW MT,MTRIN,MTROUT,MTGN
  .. ;
  .. S DA(1)=CIEN,DA=MIEN,IENS=$$IENS^DILF(.DA)
  .. ;
@@ -139,6 +141,7 @@ ICDMAP(OUT,BSTSWS,RESULT) ;EP - Set up mapping output information
  .. S MGRIN=$$GET1^DIQ(9002318.42,IENS,.03,"I")
  .. S MGROUT=$$GET1^DIQ(9002318.42,IENS,.04,"I")
  .. S MCNT=MCNT+1
+ .. S @OUT@(MCNT,"MTYPE","VAL")="IHS"
  .. S @OUT@(MCNT,"MPGRP","VAL")=MG
  .. I 'DFLD S @OUT@(MCNT,"MPGRP","XADT")=MGRIN
  .. I 'DFLD S @OUT@(MCNT,"MPGRP","XRDT")=MGROUT
@@ -155,7 +158,9 @@ ICDMAP(OUT,BSTSWS,RESULT) ;EP - Set up mapping output information
  .. S MT=$$GET1^DIQ(9002318.42,IENS,.08,"I")
  .. S MTRIN=$$GET1^DIQ(9002318.42,IENS,.09,"I")
  .. S MTROUT=$$GET1^DIQ(9002318.42,IENS,.1,"I")
+ .. S MTGN=$$GET1^DIQ(9002318.42,IENS,.11,"I")
  .. S @OUT@(MCNT,"MPTGT","VAL")=MT
+ .. S @OUT@(MCNT,"MPTGTN","VAL")=MTGN
  .. I 'DFLD S @OUT@(MCNT,"MPTGT","XADT")=MTRIN
  .. I 'DFLD S @OUT@(MCNT,"MPTGT","XRDT")=MTROUT
  .. ;
@@ -222,6 +227,7 @@ SUBLST(OUT,IN) ;EP - Retrieve a subset listing
  ;     - P3 (Optional) - LOCAL - Pass 1 or blank to perform local listing,
  ;                       Pass 2 for remote DTS listing
  ;     - P4 (Optional) - DEBUG - Pass 1 to display debug information
+ ;     - P5 (Optional) - 1 - Returned Interface Term instead of preferred term
  ;
  ; BSTSBPRC - If 1, this was called from a background subset refresh
  ;
@@ -236,7 +242,7 @@ SUBLST(OUT,IN) ;EP - Retrieve a subset listing
  ;
  NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BSTSAPIC D UNWIND^%ZTER" ; SAC 2009 2.2.3.17
  ;
- N SUB,LOCAL,DEBUG,BSTSWS,BSTSR,DLIST,SBCNT,SBNCNT,SLIST,%D,MFAIL,FWAIT,ABORT
+ N SUB,LOCAL,DEBUG,BSTSWS,BSTSR,DLIST,SBCNT,SBNCNT,SLIST,%D,MFAIL,FWAIT,ABORT,ITRM
  ;
  K @OUT
  ;
@@ -246,6 +252,7 @@ SUBLST(OUT,IN) ;EP - Retrieve a subset listing
  S NMID=$P(IN,U,2) S:NMID="" NMID=36 S:NMID=30 NMID=36
  S LOCAL=$P(IN,U,3),LOCAL=$S(LOCAL=2:"",1:"1")
  S DEBUG=$P(IN,U,4),DEBUG=$S(DEBUG=1:"1",1:"")
+ S ITRM=+$P(IN,U,5)
  ;
  S BSTSWS("NAMESPACEID")=NMID
  S BSTSWS("SUBSET")=SUB
@@ -291,7 +298,7 @@ SUBLST(OUT,IN) ;EP - Retrieve a subset listing
  ;
  ;Loop through results and retrieve info
  S (ABORT,SBCNT)=0,SBNCNT=0 F  S SBCNT=$O(@SLIST@(SBCNT)) Q:'SBCNT  D  Q:ABORT=1
- . NEW CONC,DESC,DTSID,CIEN,PRE,OOD,PRDATA,TERM
+ . NEW CONC,DESC,DTSID,CIEN,PRE,OOD,PRDATA,TERM,ROUT
  . S DTSID=$G(@SLIST@(SBCNT)) Q:DTSID=""
  . ;
  . ;Pull the concept IEN
@@ -305,6 +312,7 @@ SUBLST(OUT,IN) ;EP - Retrieve a subset listing
  . ;
  . ;See if the concept has already been updated
  . S OOD=0 I CIEN]"" D
+ .. I LOCAL=1 Q
  .. NEW LMOD
  .. S LMOD=$$GET1^DIQ(9002318.4,CIEN_",",".12","I")
  .. I LMOD="" S OOD=1 Q
@@ -331,15 +339,53 @@ SUBLST(OUT,IN) ;EP - Retrieve a subset listing
  . ;Look again
  . I CIEN="" S CIEN=$O(^BSTS(9002318.4,"D",NMID,DTSID,"")) Q:CIEN=""
  . ;
+ . ;BSTS*2.0*3;Filter out inactive terms
+ . S ROUT=$$GET1^DIQ(9002318.4,CIEN_",",.06,"I")
+ . I ROUT]"",DT>ROUT Q
+ . ;
  . ;Pull concept id and preferred term description id
  . S CONC=$$GET1^DIQ(9002318.4,CIEN_",",".02","E") Q:CONC=""
  . S PRDATA=$$PDESC^BSTSSRCH(CIEN)
  . S PRE=$P(PRDATA,U) Q:PRE=""
  . S TERM=$P(PRDATA,U,2) Q:TERM=""
+ . I ITRM=1 D
+ .. NEW ITERM
+ .. S ITERM=$$ITRM(CIEN,NMID)
+ .. I ($P(ITERM,U)="")!($P(ITERM,U,2)="") Q
+ .. S PRE=$P(ITERM,U)
+ .. S TERM=$P(ITERM,U,2)
  . S SBNCNT=SBNCNT+1,@OUT@(SBNCNT)=CONC_U_PRE_U_TERM
  ;
  S $P(BSTSR,U)=$S(SBNCNT=0:0,(+BSTSR)>0:+BSTSR,1:1)
  Q BSTSR
+ ;
+ITRM(CIEN,NMID) ;Return the interface term if defined
+ ;
+ NEW TIEN,FOUND
+ ;
+ I $G(CIEN)="" Q ""
+ S:$G(NMID)="" NMID=36
+ ;
+ ;Loop through terms looking for an Interface Term
+ S (FOUND,TIEN)="" F  S TIEN=$O(^BSTS(9002318.3,"C",NMID,CIEN,TIEN)) Q:TIEN=""  D  Q:FOUND]""
+ . NEW ITERM
+ . ;
+ . ;Look for Interface Term
+ . S ITERM=$$GET1^DIQ(9002318.3,TIEN_",",.12,"I") I ITERM="" Q
+ . ;
+ . ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives - quit if inactive
+ . ;Quit if inactive
+ . I $$GET1^DIQ(9002318.3,TIEN_",",.13,"I") Q
+ . ;
+ . S FOUND=TIEN
+ ;
+ I FOUND]"" D
+ . NEW DSC,TRM
+ . S DSC=$$GET1^DIQ(9002318.3,FOUND_",",.02,"I") I DSC="" S FOUND="" Q
+ . S TRM=$$GET1^DIQ(9002318.3,FOUND_",",1,"I") I TRM="" S FOUND="" Q
+ . S FOUND=DSC_U_TRM
+ ;
+ Q FOUND
  ;
 ERR ;
  D ^%ZTER

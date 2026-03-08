@@ -1,5 +1,5 @@
-ABMUCAPI ; IHS/SD/SDR - 3PB/UFMS CAN crosswalk API   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMUCAPI ; IHS/SD/SDR - 3PB/UFMS CAN crosswalk API   [ 05/24/2007  11:50 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**12,13**;MAY 24, 2007
  ;
  ; New routine - v2.5 p12 SDD item 4.2
  ; Budget activity and Cost Center will be used along with the
@@ -45,7 +45,8 @@ EP(W,X,Y,Z) ;PEP - Returns BUDGET ACTIVITY^COST CENTER or -1 for ea. if
  .S ABMENDDT=$P(ABMREC,U,4)
  .I (ABMEFDT=ABMDT!(ABMEFDT<ABMDT)),((ABMENDDT="")!(ABMENDDT>ABMDT)) D
  ..S ABMAFLG=1
- S ABMRTURN=ABMRTURN_$$FMT^ABMERUTL($S(+ABMTIEN'=0:$P($G(^ABMUITBA(ABMTIEN,0)),U,2),1:""),"10R")
+ ..;S ABMRTURN=ABMRTURN_$$FMT^ABMERUTL($P($G(^ABMUITBA(ABMTIEN,0)),U,2),"10NR")  ;abm*2.5*13 NO IM
+ S ABMRTURN=ABMRTURN_$$FMT^ABMERUTL($S(+ABMTIEN'=0:$P($G(^ABMUITBA(ABMTIEN,0)),U,2),1:""),"10R")  ;abm*2.5*13 NO IM
  ;
  ;cost center
  S ABMAFLG=0
@@ -57,10 +58,12 @@ EP(W,X,Y,Z) ;PEP - Returns BUDGET ACTIVITY^COST CENTER or -1 for ea. if
  .S ABMENDDT=$P(ABMREC,U,5)
  .I (ABMEFDT=ABMDT!(ABMEFDT<ABMDT)),((ABMENDDT="")!(ABMENDDT>ABMDT)) D
  ..S ABMAFLG=1
- S ABMRTURN=ABMRTURN_$$FMT^ABMERUTL($S(+ABMTIEN'=0:$P($G(^ABMUCTCC(ABMTIEN,0)),U,3),1:""),"3R")
+ ..;S ABMRTURN=ABMRTURN_$$FMT^ABMERUTL($P($G(^ABMUCTCC(ABMTIEN,0)),U,3),"3NR")  ;abm*2.5*13 NO IM
+ S ABMRTURN=ABMRTURN_$$FMT^ABMERUTL($S(+ABMTIEN'=0:$P($G(^ABMUCTCC(ABMTIEN,0)),U,3),1:""),"3R")  ;abm*2.5*13 NO IM
  ;
  Q ABMRTURN
  ;
+ ;start new code abm*2.5*13 NO IM
 COSTCENT(X,Y) ;PEP - return cost center and cost center desc. only
  ;x=clinic ptr
  ;y=date/time approved (FM format)
@@ -78,3 +81,4 @@ COSTCENT(X,Y) ;PEP - return cost center and cost center desc. only
  ..S ABMAFLG=1
  S:+ABMTIEN'=0 ABMRTURN=$P($G(^ABMUCTCC(ABMTIEN,0)),U,3)_"^"_$P($G(^ABMUCTCC(ABMTIEN,0)),U,6)
  Q ABMRTURN
+ ;end new code abm*2.5*13 NO IM

@@ -1,5 +1,5 @@
 ABMURREC ; IHS/SD/SDR - 3PB/UFMS Resend transaction (bill) Option   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;
  ; New routine - v2.5 p12 SDD item 4.9.2.5
  Q
@@ -29,7 +29,8 @@ CKMULT ; check 69 mult. if bill has been transmitted all ready (msg/don't send i
  .W !!?3,"This bill has not been transmitted before so it can't be resent!"
  .W !?3,"Please select another bill for retransmission."
  .S ABMPINS=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,8)
- .S ABMPITYP=$P($G(^AUTNINS(ABMPINS,2)),U)
+ .;S ABMPITYP=$P($G(^AUTNINS(ABMPINS,2)),U)  ;abm*2.6*10 HEAT73780
+ .S ABMPITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMPINS,".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  .I ABMPITYP="I"!(ABMPITYP="T") W !!?3,"Also note Beneficiary/Third Party Liability claims will NOT be sent to UFMS."
  .K ABMP("BDFN"),ABMPINS,ABMPITYP
  Q

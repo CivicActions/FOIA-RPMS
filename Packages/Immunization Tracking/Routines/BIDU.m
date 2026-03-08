@@ -1,5 +1,5 @@
 BIDU ;IHS/CMI/MWR - DUE LIST/LETTERS, MAIN DRIVER; AUG 10,2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.4;IMMUNIZATION;**1**;MAY 10,2010
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  LIST TEMPLATE CODE FOR DUE LISTS, VIEWING & PRINTING LETTERS.
  ;;  PATCH 1: Fix so that user's DUZ(0) is not always included  INIT+86
@@ -58,7 +58,6 @@ INIT ;EP
  ;    14 - BIT    (ret) Total Patients retrieved (not set here).
  ;    15 - BIMD   (req) Minimum Interval days since last letter.
  ;    16 - BIDPRV (req) Designated Provider array.
- ;    17 - BIBEN  (req) Beneficiary Type array: either BIBEN(1) or BIBEN("ALL").
  ;
  ;---> NOTE: For programming work in any of the BIDU* routines,
  ;--->       it is helpful to printscreen the comments (from INIT here)
@@ -89,9 +88,7 @@ INIT ;EP
  N BIHEAD,BIPG1 S:'$G(BIPG) BIPG=3
  D PGRP(BIPG,.BIPG1)
  ;
- ;---> If Beneficiary is undefined, default to Am Indian/AK Native.
- S:'$D(BIBEN) BIBEN(1)=""
- S BIHEAD="   3 - Patient Group ("_$S($D(BIBEN("ALL")):"all)",1:"01).")_"......: "
+ S BIHEAD="   3 - Patient Group............: "
  D
  .I $L(BIHEAD_BIPG1)<46 S X=BIHEAD_BIPG1 D WRITE(.BILINE,X) Q
  .N I,N,V,Z S N=1,V=",",X=""
@@ -119,7 +116,7 @@ INIT ;EP
  I $G(BIRDT) S C=$$DATE(BIRDT,1)
  D DISP^BIREP(.BILINE,"BIDU",.BIMMR,A,7,6,0,2,32,B,$G(C)) K A,B,C
  ;
- ;---> Immunization Due.
+ ;---> Immunization Due.   vvv83
  N A,B S A="Immunizations"_$S($P(BIPG,U)[2:" Past",1:"")_" Due",B="Immunizations"
  D DISP^BIREP(.BILINE,"BIDU",.BIMMD,A,8,6,0,2,32,B) K A,B
  ;

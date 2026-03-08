@@ -1,5 +1,5 @@
 BIPATE ;IHS/CMI/MWR - PATIENT CASE DATA EDIT; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT PATIENT CASE DATA.
  ;
@@ -104,7 +104,8 @@ AUTOADD(BIDFN,BISITE,BIERR,BINACT) ;PEP - Automatically add a Patient to the Imm
  .I $G(BINACT) S BINACTR="n" Q
  .;---> Under 36 mths and in GPRA, this patient will be Active.
  .;I $$AGE^BIUTL1(BIDFN,2)<36,$$ISGPRA^BIUTL11(BIDFN,BISITE) Q
- .N BIAGE S BIAGE=$$AGE^BIUTL1(BIDFN,2)
+ .;V8.5 PATCH 29 - FID-107546 Tdap age check
+ .N BIAGE S BIAGE=$P($$AGE^BIUTL1(BIDFN,2),U,2)
  .;---> Request by Amy Groom:
  .;---> If under 36 mths and patient has NO Cur Community, add as Active.
  .I BIAGE<36,'$$CURCOM^BIUTL11(BIDFN) Q

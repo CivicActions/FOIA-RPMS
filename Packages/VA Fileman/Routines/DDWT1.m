@@ -1,8 +1,8 @@
-DDWT1 ;SFISC/PD KELTZ,MKO-READ AND PROCESS ;11:35 AM  25 Aug 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**18**;Mar 30, 1999
+DDWT1 ;SFISC/PD KELTZ,MKO-READ AND PROCESS ;02:14 PM  12 Feb 1996 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**4,11**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
- D LOAD^DDW1 K DUOUT ;GFT
+ D LOAD^DDW1
  F  D GETIN Q:$D(DDWFIN)
  Q
  ;
@@ -11,29 +11,25 @@ GETIN ;Get input
  . N DDWANS
  . D PREAD($$MIN(DDWRMAR,IOM-1+DDWOFS)-DDWC+1,DDWTO,.DDWANS,.DDWQ)
  . I DDWANS]"" D
- .. S DDWED=1
- .. I DDWSTAT,DDWQ="TO",DDWTO<DTIME S DDWQ=""
+ .. S:DDWQ="TO" DDWQ=""
  .. S $E(DDWN,DDWC,DDWC+$L(DDWANS)-1)=DDWANS,DDWL(DDWRW)=DDWN
  .. S DDWC=DDWC+$L(DDWANS)
  E  D
  . D READ(DDWTO,.DDWQ)
  . D:$L(DDWQ)=1 DISPL
  ;
- I DDWSTAT D
- . I DDWQ="TO" D
- .. I $G(DDWTC) S:$$HDIFF(DDWTC,$H)+1<DTIME DDWQ=""
- .. E  S DDWTC=$H,DDWQ="" D:DDWSTAT STATUS
- . E  K DDWTC
+ I DDWQ'="TO" K DDWTC
+ E  D
+ . S DDWTC=$G(DDWTC)+1
+ . S:DDWTC<(DTIME\DDWTO) DDWQ=""
+ . I DDWSTAT,DDWTC=1,$L(DDWQ)'>1 D STATUS
  ;
- I $G(DDWAUTO),DDWQ'="TO",$$HDIFF(DDWAUTO("H"),$H)'<DDWAUTO("S") D AUTOSV^DDW1
- ;
- I $L(DDWQ)>1 D @DDWQ D:DDWSTAT STATUS
+ I $L(DDWQ)>1 D @DDWQ I DDWSTAT D STATUS S DDWTC=1
  Q
  ;
 DISPL ;Display char
  I DDWC>245 W $C(7) Q
  ;
- S DDWED=1
  I $D(DDWMARK),DDWRW+DDWA'>$P(DDWMARK,U,3) D UNMARK^DDW7
  S:DDWC-1>$L(DDWN) DDWN=DDWN_$J("",DDWC-$L(DDWN)-1)
  S (DDWN,DDWL(DDWRW))=$E(DDWN,1,DDWC-1)_DDWQ_$E(DDWN,DDWC+DDWREP,999)
@@ -48,7 +44,6 @@ DISPL ;Display char
  Q
  ;
 RUB N DDWX
- S DDWED=1
  I $D(DDWMARK) D CHKDEL^DDW9(.DDWX) Q:DDWX
  ;
  I DDWC=1 D
@@ -69,15 +64,11 @@ RUB N DDWX
  Q
  ;
 DEL N DDWX
- S DDWED=1
  I $D(DDWMARK) D CHKDEL^DDW9(.DDWX) Q:DDWX
  ;
  I DDWC>$L(DDWN) D  Q
  . I DDWN?." " D
- .. N DDWLAST
- .. S DDWLAST=DDWRW+DDWA=DDWCNT
  .. D XLINE^DDW5()
- .. D:DDWLAST POS(DDWRW,"E","R")
  . E  D
  .. N DDWY,DDWX
  .. S DDWY=DDWRW+DDWA,DDWX=DDWC
@@ -127,16 +118,14 @@ LT I DDWC=1 D
  E  D POS(DDWRW,DDWC-1,"R")
  Q
  ;
-SV K DDWED G SV^DDW1
+SV G SV^DDW1
 SW D SAVE^DDW1 S DDWFIN="",DIWESW=1 Q
 EX D SAVE^DDW1 S DDWFIN="" Q
-QT S DUOUT=1 G QUIT^DDW1 ;GFT
+QT S DDWFIN="" Q
 TO D SAVE^DDW1 S DTOUT=1,DDWFIN="" W $C(7) Q
 HLP D HLP^DDWH,POS(DDWRW,DDWC) Q
-AUT G AUTOTM^DDW1
  ;
 TST G TSET^DDW2
-TSALL G TSALL^DDW2
 LST G LSET^DDW2
 RST G RSET^DDW2
 WRM G WRAPM^DDW2
@@ -155,14 +144,13 @@ LB G LBEG^DDW4
 LE G LEND^DDW4
 WRT G WORDR^DDW4
 WLT G WORDL^DDW4
-DLW S DDWED=1 G DELW^DDW4
-DEOL S DDWED=1 G DEOL^DDW4
+DLW G DELW^DDW4
+DEOL G DEOL^DDW4
  ;
-BRK S DDWED=1 D BREAK^DDW5() Q
-XLN S DDWED=1 D XLINE^DDW5() D:DDWC'=1 POS(DDWRW,1,"R") Q
- ;
-JN S DDWED=1 G JOIN^DDW6
-RFT S DDWED=1 G REFMT^DDW6
+BRK D BREAK^DDW5() Q
+XLN D XLINE^DDW5() D:DDWC'=1 POS(DDWRW,1,"R") Q
+JN G JOIN^DDW6
+RFT G REFMT^DDW6
  ;
 MRK G MARK^DDW7
 UMK G UNMARK^DDW7
@@ -172,13 +160,11 @@ CUT D CUT^DDW8() Q
 PST D PASTE^DDW8() Q
  ;
 FND G FIND^DDWF
- ;
 NXT G NEXT^DDWF
 GTO G GOTO^DDWG
 CHG G CHG^DDWC
- Q
  ;
-READ(DDWTO,Y) ;Out: Y = Char or mnemonic
+READ(DDWTO,Y) ;Out: Y=Char or mnem
  F  D  Q:Y'=-1
  . R *Y:DDWTO
  . I Y>127 D HS(.Y)
@@ -188,9 +174,9 @@ READ(DDWTO,Y) ;Out: Y = Char or mnemonic
  Q
  ;
 PREAD(DDWLEN,DDWTO,DDWST,Y) ;
- ;In:  DDWLEN = # chars to read
- ;Out:  DDWST = String
- ;          Y = Mnemonic, Null if DDWLEN chars read or invalid
+ ;In:  DDWLEN=# chars to read
+ ;Out:  DDWST=String
+ ;          Y=Mnem, "" if DDWLEN chars read or invalid
  X DDGLZOSF("EON")
  R DDWST#DDWLEN:DDWTO E  S Y="TO" Q
  X DDGLZOSF("EOFF"),DDGLZOSF("TRMRD")
@@ -204,41 +190,26 @@ PREAD(DDWLEN,DDWTO,DDWST,Y) ;
  E  S Y=""
  Q
  ;
-MNE(Y) ;In:  Y = Ascii value of first character
- ;Out: Y = Mnemonic, or -1 if invalid
- N S,F,T
+MNE(Y) ;Out: Y=Mnem, -1 if invalid
+ N S,F
  I Y=13 S DDWHLOG=$P($H,",",2)
  E  I Y=10,$D(DDWHLOG)#2,$P($H,",",2)-DDWHLOG<1 K DDWHLOG S Y=-1 Q
  E  K DDWHLOG
- S S="",F=0,T="DDW(""IN"")"
- F  D MNELOOP(.S,.Y,.T,.F) Q:F
+ S S="",F=0
+ F  D MNELOOP Q:F
  Q
  ;
-MNELOOP(S,Y,T,F) ;Read more
- ;In/Out:
- ;  S = string of input chars
- ;  Y = ascii of current char
- ;  T = table under consideration
- ;Out:
- ;  Y = mnemonic, or -1
- ;  F = 1 : done
- ;
- N E
+MNELOOP ;Read more
  S S=S_$C(Y)
- I @T'[(U_S) D
- . I $C(Y)?1L D
- .. S $E(S,$L(S))=$C(Y-32)
- .. S:@T'[(U_S_U) E=1
- . E  S E=1
- I $T,$G(E) D  Q
- . S T=$Q(@T)
- . I T]"" S $E(S,$L(S))=""
- . E  D FLUSH S F=1,Y=-1
+ I DDW("IN")'[(U_S) D  I Y=-1 D FLUSH Q
+ . I $C(Y)'?1L S Y=-1 Q
+ . S S=$E(S,1,$L(S)-1)_$C(Y-32)
+ . S:DDW("IN")'[(U_S_U) Y=-1
  ;
- I @T[(U_S_U),S'=$C(27) D  Q
- . S Y=$P(@$TR(T,"IN","OT"),U,$L($P(@T,U_S_U),U)),F=1
+ I DDW("IN")[(U_S_U),S'=$C(27) D  Q
+ . S Y=$P(DDW("OUT"),U,$L($P(DDW("IN"),U_S_U),U)),F=1
  ;
- R *Y:5 I Y=-1 D FLUSH S F=1
+ R *Y:5 D:Y=-1 FLUSH
  Q
  ;
 H(DDWST) ;
@@ -259,14 +230,14 @@ HS(Y) ;
  ;
 FLUSH ;
  N DDWX
- W $C(7) F  R *DDWX:0 E  Q
+ S F=1 W $C(7) F  R *DDWX:0 E  Q
  Q
  ;
 CUP(Y,X) ;
  S DY=IOTM+Y-2,DX=X-1 X IOXY
  Q
  ;
-POS(R,C,F) ;Pos cursor based on char pos C
+POS(R,C,F) ;Pos cursor
  N DDWX
  S:$G(C)="E" C=$L($G(DDWL(R)))+1
  S:$G(F)["N" DDWN=$G(DDWL(R))
@@ -279,6 +250,3 @@ POS(R,C,F) ;Pos cursor based on char pos C
  ;
 MIN(X,Y) ;
  Q $S(X<Y:X,1:Y)
- ;
-HDIFF(H1,H2) ;# seconds between two $H's
- Q (H2-H1)*86400+$P(H2,",",2)-$P(H1,",",2)

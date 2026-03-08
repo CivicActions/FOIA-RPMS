@@ -1,5 +1,5 @@
 AMHLEFP1 ; IHS/CMI/LAB - print form ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**1**;JUN 18, 2010;Build 8
+ ;;4.0;IHS BEHAVIORAL HEALTH;**1,11**;JUN 02, 2010;Build 27
  ;CMI/TUCSON/LAB - 07/06/98 changed line check from 9 to 10 DEMO+1
  ;CMI/TUCSON/LAB - 07/06/98 check $G on 11 node of AUPNPAT DEMO+8
 DEMO ;EP  demographics
@@ -11,11 +11,12 @@ DEMO ;EP  demographics
  S X="",$E(X,3)="HR#:  "_AMHHRN
  ;NEW %,C,Y S (%,C)=0 F  S %=$O(^AUPNPAT(DFN,41,%)) Q:%'=+%!(C>4)  I %'=DUZ(2) S X=X_"  "_$$HRN^AUPNPAT(DFN,%,2) S C=C+1 PER WENDY AND BJ 7/23/09
  D S(X)
- S X="",$E(X,3)="NAME:  "_$P(^DPT(DFN,0),U) S $E(X,42)="SSN:  "_$$SSN^AMHUTIL(DFN) D S(X)
+ S X="",$E(X,3)="NAME:  "_$P(^DPT(DFN,0),U) D S(X) ;S $E(X,42)="SSN:  "_$$SSN^AMHUTIL(DFN) D S(X) IHS/CMI/LAB REMOVED SSN P11
+ S X="",N=$$GETPREF^AUPNSOGI(DFN,"I",1) I N]"" S $E(X,3)="PREFERRED NAME:  "_N D S(X)
  S X="",$E(X,3)="SEX: "_$$EXTSET^XBFUNC(2,.02,$P(^DPT(DFN,0),U,2)),$E(X,30)="TRIBE: " S:$P($G(^AUPNPAT(DFN,11)),U,8)]"" X=X_$P(^AUTTTRI($P(^AUPNPAT(DFN,11),U,8),0),U) D S(X)
  S X="",$E(X,3)="DOB:  "_$$FMTE^XLFDT($P(^DPT(DFN,0),U,3)) D S(X)
  S X="",$E(X,3)="RESIDENCE:  "_$P($G(^AUPNPAT(DFN,11)),U,18) D S(X)
- S X="",$E(X,3)="FACILITY: "_$E($P(^DIC(4,DUZ(2),0),U),1,25),$E(X,38)="LOCATION: " S:$P(AMHR0,U,4) X=X_$P(^DIC(4,$P(AMHR0,U,4),0),U) D S(X)
+ S X="",$E(X,3)="FACILITY: "_$E($P(^DIC(4,DUZ(2),0),U),1,30) D S(X) S X="",$E(X,3)="LOCATION: " S:$P(AMHR0,U,4) X=X_$P(^DIC(4,$P(AMHR0,U,4),0),U) D S(X)
  ;
  I $P($G(^AMHREC(AMHR,11)),U,12)="" D
  .S X="",$E(X,20)="PROVIDER SIGNATURE:  " D S(X,1)

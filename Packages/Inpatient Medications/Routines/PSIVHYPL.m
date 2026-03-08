@@ -1,5 +1,5 @@
-PSIVHYPL ;BIR/PR-PRINT OUT LABELS ;05-May-2014 19:00;DU
- ;;5.0; INPATIENT MEDICATIONS ;**58,96,128,178,184,1010,1015,1018**;16 DEC 97;Build 21
+PSIVHYPL ;BIR/PR-PRINT OUT LABELS ;05-Feb-2025 09:50;NIC
+ ;;5.0; INPATIENT MEDICATIONS ;**58,96,128,178,184,1010,1015,1018,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^%ZIS(2 is supported by DBIA 3435.
  ; Reference to ^PS(52.6 is supported by DBIA 1231.
@@ -17,13 +17,18 @@ PSIVHYPL ;BIR/PR-PRINT OUT LABELS ;05-May-2014 19:00;DU
  ;          - IHS/MSC/PB - 2/13/13 modified line RE+7 to set the TEXT1 variable to "_________" if the offset is '>0
  ;          - IHS/MSC/PB - 3/1/13 modified to incorporate changes made by VA for BCMA project
  ;            IHS/MSC/PLS - 05/05/14 - Removed modifications at BARCODE+1
+ ;                        - 02/01/2024 - Added reference to GETHLOC FID 99318
 SSWARD ;Get patient SS# and ward location
  N X0,PSJIO,I
  S I=0 F  S I=$O(^%ZIS(2,IOST(0),55,I)) Q:'I  S X0=^(I,0),PSJIO($P(X0,"^"))=^(1)
  S PSJIO=$S('$D(PSJIO):0,1:1)
  ; IHS/CIA/PLS - 03/31/04 - Change SSN to HRN
  ;D ENIV^PSJAC S VADM(2)=$E(VADM(2),6,9),PSIVWD=$S(+VAIN(4):$P(VAIN(4),U,2),1:"Opt. IV")
- D ENIV^PSJAC S VADM(2)=$G(VA("BID")),PSIVWD=$S(+VAIN(4):$P(VAIN(4),U,2),1:"Opt. IV")
+ ;IHS/MSC/PLS - 02/01/2024
+ ;D ENIV^PSJAC S VADM(2)=$G(VA("BID")),PSIVWD=$S(+VAIN(4):$P(VAIN(4),U,2),1:"Opt. IV")
+ D ENIV^PSJAC S VADM(2)=$G(VA("BID"))
+ D SETP  ;P1035
+ S PSIVWD=$S(+VAIN(4):$P(VAIN(4),U,2),1:$$GETHLOC^PSIVLABR(.P))  ;p1035
  G:PSIVNOL<1 Q D SETP,^PSIVHYP S PSIVRM=$P(PSIVSITE,U,13),P16=$P($G(^PS(55,DFN,"IV",+ON,9)),U,3) S:PSIVRM<1 PSIVRM=30 I $D(PSIVCT),PSIVCT'=1 K PSIVCT
  I PSJIO,$G(PSJIO("FI"))]"" X PSJIO("FI")
  I $P(PSIVSITE,U,7) D

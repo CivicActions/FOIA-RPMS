@@ -1,5 +1,5 @@
 ATXTAXT ; IHS/CMI/LAB - DISPLAY TAX ;
- ;;5.1;TAXONOMY;**11**;FEB 04, 1997;Build 48
+ ;;5.1;TAXONOMY;**11,61**;FEB 04, 1997;Build 133
  ;; ;
 EP ;EP - CALLED FROM OPTION
  D EN
@@ -106,7 +106,7 @@ ADDNEW ;EP  add new taxonomy of this type
  NEW ATXT,ATXNC
  S ATXT=$O(^ATXTYPE("C",ATXFILE,0)),ATXNC=$P(^ATXTYPE(ATXT,0),U,4)
  S DA=ATXTAXI,DIE="^ATXAX("
- S DR=".05////"_DUZ_";.09////"_DT_";.12////"_$P(^ATXTYPE(ATXTAXT,0),U,3)_";.13////"_ATXNC_";.15////"_$P(^ATXTYPE(ATXTAXT,0),U,2)
+ S DR=".05////"_DUZ_";.09////"_DT_";.12////"_$P(^ATXTYPE(ATXTAXT,0),U,3)_";.13////"_ATXNC_";.15////"_$P(^ATXTYPE(ATXTAXT,0),U,2)_";.04;.22"
  D ^DIE K DIE,DA,DR
  I $D(Y) W !!,"error creating taxonomy........" S DA=ATXTAXI,DIK="^ATXAX(" D ^DIK K DIK,DA D PAUSE G ADDNEWX
  S ATXTAXN=$P(^ATXAX(ATXTAXI,0),U)

@@ -1,7 +1,5 @@
-XMA1C ;ISC-SF/GMB-Server Basket APIs ;04/17/2002  07:10
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/ACC/IHS
- ;
+XMA1C ;(WASH ISC)/ACC/IHS-Server Basket Control ;05/06/99  15:29
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Entry points (DBIA 10072):
  ; REMSBMSG  Remove a message from a server basket
  ; SETSB     Put a message in a server basket

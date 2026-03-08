@@ -1,10 +1,12 @@
-PSOORED4 ;BIR/SAB - Edit front door dosing ;07/13/00
- ;;7.0;OUTPATIENT PHARMACY;**46,91,78,99,111,117,133,159,148**;DEC 1997
+PSOORED4 ;BIR/SAB - Edit front door dosing ;29-May-2024 07:26;DU
+ ;;7.0;OUTPATIENT PHARMACY;**46,91,78,99,111,117,133,159,148,1023,1035**;DEC 1997;Build 39
  ;External reference ^PS(51 supported by DBIA 2224
  ;External reference to PS(51.2 supported by DBIA 2226
  ;External reference to PS(51.1 supported by DBIA 2225
  ;called from psoornew
  ;
+ ;Modified - IHS/MSC/MGH - 05/17/2017 CON+8 changes for EPCS
+ ;           IHS/MSC/PLS - 05/14/2024 - SCHLP+1 and X - FID 103810
 DOSE(PSORXED) ;
  I '$G(PSODRUG("IEN")) W !,"DRUG NAME REQUIRED!" D 2^PSOORNW1 I '$G(PSODRUG("IEN")) S VALMSG="No Dispense Drug Selected" Q
  K ROU,STRE,UNITN,PSODOSE M PSODOSE=PSORXED
@@ -66,7 +68,13 @@ CON D CON^PSOOREDX I X[U,$L(X)>1 S FIELD="CON" G JUMP
  I $G(PSORXED("CONJUNCTION",ENT))]"" S ENT=ENT+1 K DIR G ASK
  S X=$G(PSORXED("INS")) D SIG^PSOHELP S:$G(INS1)]"" PSORXED("SIG")=$E(INS1,2,9999999)
  D EN^PSOFSIG(.PSORXED),VERI I $G(CKX),'$G(PSOSIGFL) D MP1 K CKX
- I $G(PSOSIGFL)=1 S PSORXED("ENT")=ENT,SIGOK=1,VALMSG="This change will create a new prescription!",NCPDPFLG=1
+ ;IHS/MSC/MGH - changes for EPCS
+ ;I $G(PSOSIGFL)=1 S PSORXED("ENT")=ENT,SIGOK=1,VALMSG="This change will create a new prescription!",NCPDPFLG=1
+ I $G(PSOSIGFL)=1 D  I '$G(PSOSIGFL) Q
+ .I $D(OR0),$P(OR0,"^",24)=1 S VALMSG="Digitally Signed Order - No such changes allowed." K PSORXED,PSOSIGFL M PSORXED=PSODOSE D EN^PSOFSIG(.PSORXED) D  Q
+ ..I $D(PSOBDR) K PSODRUG M PSODRUG=PSOBDR K PSOBDR,PSOBDRG
+ .S PSORXED("ENT")=ENT,SIGOK=1,VALMSG="This change will create a new prescription!",NCPDPFLG=1
+ ;end change
  K QTYHLD S:$G(PSORXED("QTY")) QTYHLD=PSORXED("QTY") D QTY^PSOSIG(.PSORXED) I $G(PSORXED("QTY")) S QTY=1
  I $G(QTYHLD),'$G(PSORXED("QTY")) S PSORXED("QTY")=QTYHLD
  K QTYHLD
@@ -108,8 +116,9 @@ HLP ;help text for med route
  S DIC=51.2,X="??",DIC(0)="M",DIC("S")="I $P(^PS(51.2,+Y,0),""^"",4)" D ^DIC K DIC,X,Y
  Q
 SCHLP ;
+ ;IHS/MSC/PLS - P35 - FID 103810
  D FULL^VALM1 W !,"You can choose an entry from the Administration Schedule File (#51.1),",!,"Medication Instruction File (#51) or enter free text."
- W !,"The free text entry cannot contain more than 2 spaces or be greater than 20",!,"characters in length."
+ W !,"The free text entry cannot be greater than 24",!,"characters in length."  ;remove spaces reference and changed 20 to 24
  W ! S DIR(0)="S^A:Administration Schedule File;M:Medication Instruction File;B:Both;F:Free Text",DIR("B")="Both"
  S DIR("A")="Do you want to list from" D ^DIR I Y="F"!($G(DIRUT)) K X,Y G X
  S LBL=Y G @LBL
@@ -119,7 +128,7 @@ B K X,Y,DIC S X="??",DIC="^PS(51.1,",DIC(0)="QES",DIC("W")="D DICW^PSOORED4",D="
  I Y=-1!($G(DUOUT)) K DIR,DTOUT,DUOUT S DIR(0)="Y",DIR("B")="No",DIR("A")="Do you want to continue with the Medication Instruction File"
  D ^DIR I 'Y!($G(DTOUT)) K DIR,X,Y G X
 M K X,Y,DIC S DIC=51,X="??",DIC(0)="M" D ^DIC K DIC,X,Y,DTOUT,DUOUT,LBL
-X S DIR("?")="^D SCHLP^PSOORED4",DIR("A")="Schedule: ",DIR(0)="FA^1:20^I X[""""""""!(X?.E1C.E)!($A(X)=45)!($L(X,"" "")>3)!($L(X)>20)!($L(X)<1) K X"
+X S DIR("?")="^D SCHLP^PSOORED4",DIR("A")="Schedule: ",DIR(0)="FA^1:24^I X[""""""""!(X?.E1C.E)!($A(X)=45)!($L(X)>24)!($L(X)<1) K X"  ;P35 CHANGE FROM 3/20 to no check/24
  S DIR("B")=$S($D(PSOSCH)&('$D(PSORXED("SCHEDULE",ENT))):PSOSCH,$G(PSORXED("SCHEDULE",ENT))]"":PSORXED("SCHEDULE",ENT),1:"") K:DIR("B")="" DIR("B")
  Q
 DICW ;

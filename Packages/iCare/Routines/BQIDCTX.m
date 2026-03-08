@@ -1,5 +1,5 @@
 BQIDCTX ;VNGT/HS/ALA-Taxonomy Search ; 01 Feb 2007  6:29 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;2.0;ICARE MANAGEMENT SYSTEM;**2**;May 29, 2009
  ;
  Q
  ;
@@ -78,11 +78,9 @@ FND ;
  . S DFN=$P($G(@GREF@(IEN,0)),U,2) I DFN="" Q
  . ; User may now select Living, Deceased or both as a filter so
  . ; if no filters defined assume living patients otherwise let filter decide
- . ;I $O(^BQICARE(OWNR,1,PLIEN,15,0))="",$P($G(^DPT(DFN,.35)),U,1)'="" Q
+ . I $O(^BQICARE(OWNR,1,PLIEN,15,0))="",$P($G(^DPT(DFN,.35)),U,1)'="" Q
  . ; If patient has no active HRNs, quit
- . I '$$HRN^BQIUL1(DFN) Q
- . ; If patient has no visit in last 3 years, quit
- . ;I '$$VTHR^BQIUL1(DFN) Q
+ . I '$$HRN^BQIUL1(DFN),'$$VTHR^BQIUL1(DFN) Q
  . ;
  . S VISIT=$P($G(@GREF@(IEN,0)),U,3) I VISIT="" Q
  . ; If visit has been deleted, quit

@@ -1,5 +1,5 @@
 ABSPOSAS ; IHS/FCS/DRS - Low-level SEND claim ;   [ 08/21/2002  9:13 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**2**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**2,53**;JUN 01, 2001;Build 131
  Q
  ;
  ;  Modem - low-level message send
@@ -19,7 +19,9 @@ ABSPOSAS ; IHS/FCS/DRS - Low-level SEND claim ;   [ 08/21/2002  9:13 AM ]
  ;
 SENDREQ(DIALOUT,MSG) ;EP -
  ; (Don't modify MSG; caller may have called with .MSG)
- N IO S IO=$$IO^ABSPOSA(DIALOUT) U IO
+ I '$$HTTPPOST^ABSPOSA(DIALOUT) N IO S IO=$$IO^ABSPOSA(DIALOUT) U IO ; /IHS/OIT/RAM ; 21 MAR 24 ; NO NEED TO OPEN IF WE'RE USING THE NEW HTTP POST METHOD.
+ I $$HTTPPOST^ABSPOSA(DIALOUT) D
+ . ; / / / come back later to finish...
  I $$T1DIRECT^ABSPOSA(DIALOUT) D
  . W $TR($J($L(MSG),4)," ","0"),MSG ; write message length, then msg
  . ;I ^%ZOSF("OS")["OpenM" W !  ;IHS/SD/lwj  6/7/02 LF for Cache

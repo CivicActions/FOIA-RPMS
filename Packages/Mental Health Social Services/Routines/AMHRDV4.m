@@ -1,5 +1,5 @@
 AMHRDV4 ; IHS/CMI/LAB - list refusals ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**5**;JUN 02, 2010;Build 18
+ ;;4.0;IHS BEHAVIORAL HEALTH;**5,11**;JUN 02, 2010;Build 27
  ;
  ;
 INFORM ;
@@ -49,13 +49,14 @@ STMP ;
 TALLY ;which items to tally
  K AMHRTALL
  W !!,"Please select which items you wish to tally on this report:",!
- W !?3,"0)  Do not include any Tallies",?40,"6)  Date of Screening"
- W !?3,"1)  Result of Screening",?40,"7)  Primary Provider on Visit"
- W !?3,"2)  Gender",?40,"8)  Designated MH Provider"
- W !?3,"3)  Age of Patient",?40,"9)  Designated SS Provider"
- W !?3,"4)  Provider who Screened",?40,"10) Designated ASA/CD Provider"
- W !?3,"5)  Clinic",?40,"11) Designated Primary Care Provider"
- K DIR S DIR(0)="L^0:11",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
+ W !?3,"0)  Do not include any Tallies",?40,"7)  Primary Provider on Visit"
+ W !?3,"1)  Result of Screening",?40,"8)  Designated MH Provider"
+ W !?3,"2)  Gender",?40,"9)  Designated SS Provider"
+ W !?3,"3)  Age of Patient",?40,"10) Designated ASA/CD Provider"
+ W !?3,"4)  Provider who Screened",?40,"11) Designated Primary Care Provider"
+ W !?3,"5)  Clinic",?40,"12) Race"
+ W !?3,"6)  Date of Screening",?40,"13) Ethnicity"
+ K DIR S DIR(0)="L^0:13",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G DATES
  I Y="" G DATES
  S AMHRTALL=Y
@@ -76,7 +77,7 @@ LIST ;
 LIST1 ;
  S AMHRSORT=""
  W !
- S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN"
+ S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN;Q:Race;E:Ethnicity"
  S DIR("A")="How would you like the list to be sorted",DIR("B")="H"
  KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G LIST
@@ -91,9 +92,16 @@ DEMO ;
  D DEMOCHK^AMHUTIL1(.AMHDEMO)
  I AMHDEMO=-1 G LIST
 ZIS ;
- S XBRP="PRINT^AMHRDV4P",XBRC="PROC^AMHRDV4",XBRX="XIT^AMHRDV4",XBNS="AMHR"
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
+ I $D(DIRUT) G XIT
+ I $G(Y)="B" D BROWSE,XIT Q
+ S XBRP="PRINT^AMHRDV4P",XBRC="PROC^AMHRDV4",XBRX="XIT^AMHRDV4",XBNS="AMH"
  D ^XBDBQUE
  D XIT
+ Q
+BROWSE ;
+ S XBRP="VIEWR^XBLM(""^AMHRDV4P"")"
+ S XBNS="AMH",XBRC="PROC^AMHRDV4",XBRX="XIT^AMHRDV4",XBIOP=0 D ^XBDBQUE
  Q
 XIT ;
  D EN^XBVK("AMHR")
@@ -126,6 +134,8 @@ PROC ;
  ..S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,15)=AMHRBIEN
  ..S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,16)=$$VAL^XBDIQ1(9002011,AMHRBIEN,1402)
  ..S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,17)=$$VAL^XBDIQ1(9000001,DFN,.14)
+ ..S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,25)=$$RACE^AMHUTIL2(DFN)
+ ..S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,26)=$$ETHN^AMHUTIL2(DFN)
  ;go through exam IPV, then through AUPNPREF for refusals
  Q:'AMHREXPC  ;not if user doesn't want to
  S AMHREIEN=0 F  S AMHREIEN=$O(^AUPNVXAM("B",AMHREXC,AMHREIEN)) Q:AMHREIEN'=+AMHREIEN  D
@@ -150,6 +160,8 @@ PROC ;
  .S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,15)=AMHRVIEN
  .S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,16)=$$SPRV(AMHREIEN)
  .S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,17)=$$VAL^XBDIQ1(9000001,DFN,.14)
+ .S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,25)=$$RACE^AMHUTIL2(DFN)
+ .S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,26)=$$ETHN^AMHUTIL2(DFN)
  ;now go through refusals in pcc
  S AMHRRIEN=0 F  S AMHRRIEN=$O(^AUPNPREF(AMHRRIEN)) Q:AMHRRIEN'=+AMHRRIEN  D
  .Q:'$D(^AUPNPREF(AMHRRIEN,0))
@@ -167,6 +179,8 @@ PROC ;
  .S ^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)="REF"_U_"UNKNOWN"_U_AMHRRES_U_$$VAL^XBDIQ1(9000022,AMHRRIEN,1101)_U_$$AGE^AUPNPAT(DFN,AMHRDATE)_U_$$VAL^XBDIQ1(2,DFN,.02)_U_AMHRDATE_U_AMHRRIEN_U
  .S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,16)=$$PRVREF(AMHRRIEN)
  .S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,17)=$$VAL^XBDIQ1(9000001,DFN,.14)
+ .S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,25)=$$RACE^AMHUTIL2(DFN)
+ .S $P(^XTMP("AMHRDV4",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE),U,26)=$$ETHN^AMHUTIL2(DFN)
  Q
  ;
 BHPPNAME(R) ;EP primary provider internal # from 200

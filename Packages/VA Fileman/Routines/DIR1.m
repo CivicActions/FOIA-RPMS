@@ -1,36 +1,27 @@
-DIR1 ;SFISC/XAK-READER-MAID (PROCESS DATATYPE) ;11:41 AM  8 Jun 2007
- ;;22.0;VA FileMan;**1,5,73,156**;Mar 30, 1999;Build 1
+DIR1 ;SFISC/XAK-READER-MAID (PROCESS DATATYPE) ;10/31/97  13:18 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**6,13,19,41**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
- S %E=0 D @%T S:X?.E1C.E %E=1 Q:'%E!(X'?.E1L.E)!(%A["S")!(%A["Y")!((%T=1)&(%B["P"))!(%A["P")
+ ;12355;4004;7982983;
+ ;
+ S %E=0 D @%T I '%E!(X?.UNP)!(%A["S")!(%A["Y") Q
  F %Y=1:1:$L(X) I $E(X,%Y)?1L S X=$E(X,1,%Y-1)_$C($A(X,%Y)-32)_$E(X,%Y+1,999)
  G DIR1
 Y ; YES/NO
 S ; SET
  N %BU,%K,%M,%J,DDH
- I $L(X)>245 S %E=1,Y="" Q  ;DI*156
+ I $L(X)>245 S %E=1 Q
  I %T="S",$D(DIR("S"))#2 S DIC("S")=DIR("S")
  S %BA=$S($D(DIC("S")):DIC("S"),1:"I 1")
- S (%J,%K,DDH)=0
- I %B'[":",$O(DIR("C",""))]"" D
- . ;Look for match on internal code
- . S %I="" F  S %I=$O(DIR("C",%I)) Q:%I=""  S %J=DIR("C",%I) I X=$P(%J,":") S Y=X,Y(0)=$P(%J,":",2) X %BA S:'$T %I="" Q
- . ;If not found, look for match on external code
- . I %I="" F  S %I=$O(DIR("C",%I)) Q:%I=""  S %J=DIR("C",%I) I $F(%J,":"_X) S Y=$P(%J,":") X %BA I  S %K=%K+1,%K(%K)=%J Q:%A["o"  I $D(DIQUIET),X=$P(%J,":",2) Q
- . ;If still no match, convert X and choices to uppercase, search again
- . I %I="",%A'["X",'%K D
- .. S %M=X N X S X=$$UP^DILIBF(%M)
- .. F  S %I=$O(DIR("C",%I)) Q:%I=""  S %J1=DIR("C",%I),%J=$$UP^DILIBF(%J1) I X=$P(%J,":") S Y=$P(%J1,":"),Y(0)=$P(%J1,":",2) X %BA S:'$T %I="" Q
- .. I %I="" F  S %I=$O(DIR("C",%I)) Q:%I=""  S %J1=DIR("C",%I),%J=$$UP^DILIBF(%J1) I $F(%J,":"_X) S Y=$P(%J1,":") X %BA I  S %K=%K+1,%K(%K)=%J1 Q:%A["o"  I $D(DIQUIET),X=$P(%J,":",2) Q
- . S %J=%I
- E  D
- . S Y(0)=$P($P(";"_%B,";"_X_":",2),";") I Y(0)]"" S Y=X X %BA I  S %J=1
- . I '%J F %I=1:1 S %J=$P(%B,";",%I) Q:%J=""  S Y=$F(%J,":"_X) I Y S Y=$P(%J,":") X %BA I  S %K=%K+1,%K(%K)=%J Q:%A["o"  I $D(DIQUIET),X=$P(%J,":",2) Q
- . I %J="",%A'["X",'%K D
- .. S %BU=$$UP^DILIBF(%B),%M=X N X S X=$$UP^DILIBF(%M)
- .. S Y=$F(";"_%BU,";"_X_":") I Y D  X %BA I  S %J=1 Q
- ... S Y(0)=$P($E(";"_%B,Y,999),";")
- ... S Y=$L($E(";"_%B,1,Y-1),";"),Y=$P($P(";"_%B,";",Y),":")
- .. F %I=1:1 S %J=$P(%BU,";",%I),%J1=$P(%B,";",%I) Q:%J=""  S Y=$F(%J,":"_X) I Y S Y=$P(%J1,":") X %BA I  S %K=%K+1,%K(%K)=%J1 Q:%A["o"  I $D(DIQUIET),X=$P(%J,":",2) Q
+ S (%J,%K,DDH)=0,Y(0)=$P($P(";"_%B,";"_X_":",2),";") I Y(0)]"" S Y=X X %BA I  S %J=1
+ I '%J F %I=1:1 S %J=$P(%B,";",%I) Q:%J=""  S Y=$F(%J,":"_X) I Y S Y=$P(%J,":") X %BA I  S %K=%K+1,%K(%K)=%J Q:%A["o"
+ I %J="",%A'["X",'%K D
+ . S %BU=$$UP^DILIBF(%B),%M=X N X S X=$$UP^DILIBF(%M)
+ . S Y(0)=$P($P(";"_%BU,";"_X_":",2),";") I Y(0)]"" D  X %BA I  S %J=1 Q
+ . . N %F S %F=$F(%BU,Y(0)) N %L S %L=$L(Y(0))
+ . . S Y(0)=$E(%B,%F-%L,%F-1)
+ . . S Y=X
+ . F %I=1:1 S %J=$P(%BU,";",%I),%J1=$P(%B,";",%I) Q:%J=""  S Y=$F(%J,":"_X) I Y S Y=$P(%J1,":") X %BA I  S %K=%K+1,%K(%K)=%J1 Q:%A["o"
  I %K=1 S Y=$P(%K(1),":"),Y(0)=$P(%K(1),":",2)
  I %K>1,$G(DIQUIET) S %E=1 Q
  I %K>1 D CH Q:%E=1  I '$D(%K(%I)) S X=%I G S
@@ -60,8 +51,8 @@ L ; LIST OR RANGE
 D ; DATE
  D ^%DT I Y<0 S %E=1 Q
  I %D1["NOW"!(%D2["NOW")&($P("NOW",$$UP^DILIBF(X))="") S:%D1["NOW" %B1=Y S:%D2["NOW" %B2=Y
- I %B1,Y<%B1 S %E=1 S:'%N %W="Response must not precede "_+$E(%B1,4,5)_"/"_+$E(%B1,6,7)_"/"_(1700+$E(%B1,1,3)) Q
- I Y>%B2 S %E=1 S:'%N %W="Response must not follow "_+$E(%B2,4,5)_"/"_+$E(%B2,6,7)_"/"_(1700+$E(%B2,1,3))
+ I %B1,Y<%B1 S %E=1 S:'%N %W="Response must not be previous to "_+$E(%B1,4,5)_"/"_+$E(%B1,6,7)_"/"_$E(%B1,2,3) Q
+ I Y>%B2 S %E=1 S:'%N %W="Response must not be following "_+$E(%B2,4,5)_"/"_+$E(%B2,6,7)_"/"_$E(%B2,2,3)
  S Y(1)=Y X ^DD("DD") S Y(0)=Y,Y=Y(1) K Y(1)
  Q
  ;
@@ -108,7 +99,7 @@ P1 N %A,%B,%C,%N,%P,%T,%W D ^DIC
 R D IT:'%E S X=%C
  Q
 IT D
- . N %A,%B,%C,%N,%P,%T,%W N:'$G(DIRDINUM) DINUM
+ . N %A,%B,%C,%N,%P,%T,%W
  . I $P(%B3,U,2)["N",$P(%B3,U,5,99)'["$",X?.1"-".N.1".".N,$P(%B3,U,5,99)["+X'=X" S X=+X
  . X $P(%B3,U,5,99)
  S %E='$D(X)

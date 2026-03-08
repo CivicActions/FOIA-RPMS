@@ -1,13 +1,30 @@
 DGPMBSAR ;ALB/LM/MJK - RECALC ENTRY POINTS; [ 09/13/2001  3:55 PM ]
- ;;5.3;Registration;**85,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**85,1015,1023**;Aug 13, 1993;Build 24
  ;IHS/ANMC/LJF  4/18/2001 removed check for VA only parameters
  ;                        bypassed auto queuing of recalc
+ ;OIT/CMS/FBD  11/07/2024 calculate default 'FROM' date from
+ ;                        parameter in IHS ADT PARAMETERS file
  ;
 A D PCHK^DGPMGL I E G ERR^DGPMGL ;  Parameter check
  D RCCK G:'$D(RCCK) Q ;  Check for ReCalc already running
  D PAR^DGPMGL ;  Display parameters
  ;
-ASK W ! S %DT("A")="RECALCULATE TOTALS FROM WHICH DATE: ",%DT="APE",%DT(0)=-(DT-1) D ^%DT K %DT G Q:Y'>0
+ASK ;W ! S %DT("A")="RECALCULATE TOTALS FROM WHICH DATE: ",%DT="APE",%DT(0)=-(DT-1) D ^%DT K %DT G Q:Y'>0  ;PIMS*5.3*1023 - ORIGINAL LINE, COMMENTED OUT
+ ;
+ ;PIMS*5.3*1023 - start of mods
+ ;
+ N X
+ S X=$$CRECMAX^BDGPAR(DT)
+ I +X D  ;FOLLOW THIS FORK IF MAX BACKTRACK VALUE SPECIFIED
+ . S %DT(0)=X
+ . S %DT("B")=$E(X,4,5)_"/"_$E(X,6,7)_"/"_(1700+$E(X,1,3))
+ . W ! S %DT("A")="RECALCULATE TOTALS FROM: ",%DT="APE" D ^%DT K %DT Q:Y'>0
+ E  D  ;IF NO MAX BACKTRACK VALUE SPECIFIED, FOLLOW THIS FORK INSTEAD
+ . W ! S %DT("A")="RECALCULATE TOTALS FROM: ",%DT="APE",%DT(0)=-(DT-1) D ^%DT K %DT Q:Y'>0
+ G Q:Y'>0
+ ;
+ ;PIMS*5.3*1023 - end of mods
+ ;
  S RC=+Y,X=$S($P(DGPM("G"),"^",7):$P(DGPM("G"),"^",7),1:+DGPM("G")) ; X=Earliest date ReCalc can be run ;
  I RC<X S Y=X X ^DD("DD") W !!?4,*7,"Can't Recalculate data prior to ",Y,"!" G ASK
  D DEFS

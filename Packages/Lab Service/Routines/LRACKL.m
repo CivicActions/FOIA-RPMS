@@ -1,5 +1,5 @@
 LRACKL ;DALOI/DCM/JMC/RLM-CHUTES & LADDERS; 2/16/88 16:15 [ 04/24/2003  6:55 AM ]
- ;;5.2T9;LR;*1018*;Nov 17, 2004
+ ;;5.2;LR;*1018*;Nov 18, 2004
  ;;5.2;LAB SERVICE;**272**;Sep 27, 1994
  ; Reference to ^%DTC supported by IA # 10000
  ; Reference to H^%DTC supported by IA # 10000

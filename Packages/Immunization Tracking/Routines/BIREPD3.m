@@ -1,9 +1,10 @@
 BIREPD3 ;IHS/CMI/MWR - REPORT, ADOLESCENT RATES; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**5**;JUL 01,2013
+ ;;8.5;IMMUNIZATION;**17,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW ADOLESCENT IMMUNIZATION RATES REPORT.
  ;;  PATCH 3: Include new "1-Td 1-Men 3-HPV" lines. VCOMB+14
  ;;  PATCH 5: Correct Male HPV percentage denominator.  VGRP+60
+ ;;  PATCH 17: Extensive changes to enhance Adol HPV & Tdap Reporting. VGRP+29
  ;
  ;
  ;----------
@@ -59,16 +60,31 @@ VGRP(BILINE,BIVGRP,BIAGRPS,BITMP,BISEX,BIERR) ;EP
  ;
  F BIDOSE=1:1:BIMAXD D
  .;---> BIX=text of the line to write.
+ .;---> For all Sex Tally lines (e.g., "F2") write on one line.
+ .I $E($G(BISEX),2) Q:BIDOSE'=1
  .;
  .;---> First, write the Dose#-Vaccine Group in left margin.
  .N BIX D
  ..;---> Include exception here for Tdap.
- ..I BIVGRP=132 S BIX=" Hx of Chickenpox" Q
- ..I BIVGRP=221 S BIX="    1-Tdap" Q
- ..I BIVGRP=8 S BIX="    1-Tdap/Td" Q
- ..S BIX="    "_BIDOSE_"-"_$$VGROUP^BIUTL2(BIVGRP,5)
+ ..I BIVGRP=132 S BIX=$S(BISPD'="CSV":" Hx of Chickenpox",1:"Hx of Chickenpox (Immune) #") Q
+ ..;
+ ..;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ ..;---> All Tentanus Volume Group=8 have been filtered for only Tdap CVX=221.
+ ..;I BIVGRP=221 S BIX="    1-Tdap" Q
+ ..;I BIVGRP=8 S BIX="    1-Tdap/Td" Q
+ ..I BIVGRP=8 S BIX=$S(BISPD'="CSV":"    1-Tdap",1:"1-Tdap #") Q
+ ..;
+ ..I $E($G(BISEX),2),BISPD'="CSV" S BIX="    Fully Vac'd" D  Q
+ ...;I $E($G(BISEX))="B" S BIX="F+M"_$E(BIX,4,15) Q
+ ..I BISPD'="CSV" S BIX="    "_BIDOSE_"-"_$$VGROUP^BIUTL2(BIVGRP,5)
+ ..I $E($G(BISEX),2),BISPD="CSV" D  Q
+ ...I $E($G(BISEX),2)=2 S BIX="Fully Vac'd HPV 2 Doses #" Q
+ ...I $E($G(BISEX),2)=3 S BIX="Fully Vac'd HPV 3 Doses %" Q
+ ...I $E($G(BISEX),2)=5 S BIX="Fully Vac'd 2&3 combined %" Q  ;S BIX="Fully Vac'd "_BIDOSE_"-"_$$VGROUP^BIUTL2(BIVGRP,5)_" #" Q
+ ..I BISPD="CSV",'$E($G(BISEX),2) S BIX=BIDOSE_"-"_$$VGROUP^BIUTL2(BIVGRP,5)_" #"
  .;
- .S BIX=$$PAD^BIUTL5(BIX,17)_"|"
+ .I BISPD'="CSV" S BIX=$$PAD^BIUTL5(BIX,17)_"|"
+ .I BISPD="CSV" S BIX=BIX_","
  .;
  .;---> Write actual totals line for this dose for each Age Group
  .;---> (loop through the age groups, concating the totals horizontally).
@@ -76,55 +92,77 @@ VGRP(BILINE,BIVGRP,BIAGRPS,BITMP,BISEX,BIERR) ;EP
  .F K=1:1 S BIAGRP=$P(BIAGRPS,",",K) Q:'BIAGRP  D
  ..N Y D
  ...;---> If HPV (17), append sex to age group to retrieve HPV stats.
- ...I BIVGRP=17 S Y=+$G(BITMP("STATS",BIVGRP,BIDOSE,BIAGRP_BISEX)) Q
+ ...I BIVGRP=17 D  Q
+ ....N N S N=$E($G(BISEX),2)
+ ....I N S Y=+$G(BITMP("STATS",BIVGRP,N,BIAGRP_BISEX)) Q
+ ....S Y=+$G(BITMP("STATS",BIVGRP,BIDOSE,BIAGRP_BISEX)) Q
+ ...;
  ...S Y=+$G(BITMP("STATS",BIVGRP,BIDOSE,BIAGRP))
  ..;
- ..S BIX=BIX_$J(Y,12)_" "
+ ..I BISPD'="CSV" S BIX=BIX_$J(Y,12)_" "
+ ..I BISPD="CSV" S BIX=BIX_+Y_","
  .D WRITE(.BILINE,BIX)
  .D MARK^BIW(BILINE,3,"BIREPD1")
  .;
  .;
- .;---> Now write Percentages line for each Age Group (under the actual totals).
- .S BIX="" S:BIVGRP=132 BIX="    (Immune)"
- .S BIX=$$PAD^BIUTL5(BIX,17)_"|"
+ .;---> Now write PERCENTAGES line for each Age Group (under the actual totals).
+ .;---> Write custom row label if necessary.
+ .D
+ ..S BIX="" I BIVGRP=132,BISPD'="CSV" S BIX="    (Immune)" Q
+ ..I $E($G(BISEX),2)=2 S BIX=$S(BISPD'="CSV":"    HPV 2 Doses",1:"Fully Vac'd HPV 2 Doses %,") Q
+ ..I $E($G(BISEX),2)=3 S BIX=$S(BISPD'="CSV":"    HPV 3 Doses",1:"Fully Vac'd HPV 3 Doses %,") Q
+ ..I $E($G(BISEX),2)=5 S BIX=$S(BISPD'="CSV":" 2 & 3 combined",1:"Fully Vac'd 2&3 combined %,") Q
+ .;
+ .I BISPD'="CSV" S BIX=$$PAD^BIUTL5(BIX,17)_"|"
+ .I BISPD="CSV" D
+ ..I BIVGRP=132 S BIX="Hx of Chickenpox (Immune) %," Q
+ ..I BIVGRP=8 S BIX="1-Tdap %," Q
+ ..I BIX="" S BIX=BIDOSE_"-"_$$VGROUP^BIUTL2(BIVGRP,5)_" %,"
  .F K=1:1 S BIAGRP=$P(BIAGRPS,",",K) Q:'BIAGRP  D
  ..;N Y S Y=$G(BITMP("STATS",BIVGRP,BIDOSE,BIAGRP))
  ..N Y D
  ...;---> If HPV (17), append sex to age group to retrieve HPV stats.
- ...I BIVGRP=17 S Y=+$G(BITMP("STATS",BIVGRP,BIDOSE,BIAGRP_BISEX)) Q
+ ...I BIVGRP=17 D  Q
+ ....N N S N=$E($G(BISEX),2)
+ ....I N S Y=+$G(BITMP("STATS",BIVGRP,N,BIAGRP_BISEX)) Q
+ ....S Y=+$G(BITMP("STATS",BIVGRP,BIDOSE,BIAGRP_BISEX)) Q
+ ...;
  ...S Y=+$G(BITMP("STATS",BIVGRP,BIDOSE,BIAGRP))
  ..;
- ..I 'Y S BIX=BIX_$J("",12)_" " Q
+ ..I 'Y S:BISPD'="CSV" BIX=BIX_$J("",12)_" " S:BISPD="CSV" BIX=BIX_"0," Q
  ..;
- ..;---> If Vaccine Group is HPV-17, use female denominators.
- ..;
- ..;********** PATCH 5, v8.5, JUL 01,2013, IHS/CMI/MWR
- ..;---> Correct Male HPV percentage denominator.
- ..;N Z S Z=$G(BITMP("STATS",$S(BIVGRP=17:"TOTLFPTS",1:"TOTLPTS"),BIAGRP))
- ..;
+ ..;---> If Vaccine Group is HPV-17, use female and male denominators.
  ..N BIDENOM D
- ...I (BIVGRP=17)&($G(BISEX)="F") S BIDENOM="TOTLFPTS" Q
- ...I (BIVGRP=17)&($G(BISEX)="M") S BIDENOM="TOTLMPTS" Q
+ ...I (BIVGRP=17)&($G(BISEX)["F") S BIDENOM="TOTLFPTS" Q
+ ...I (BIVGRP=17)&($G(BISEX)["M") S BIDENOM="TOTLMPTS" Q
  ...S BIDENOM="TOTLPTS" Q
  ..N Z S Z=$G(BITMP("STATS",BIDENOM,BIAGRP))
- ..;**********
  ..;
  ..;---> To avoid bomb if Z=0/null.
  ..S:'Z Y=0,Z=1 S Y=(Y*100)/Z
- ..S BIX=BIX_$J(Y,12,0)_"%"
- ..;S BIX=BIX_$J(Y,$S(K=1:9,1:12),0)_"%"
+ ..I BISPD'="CSV" S BIX=BIX_$J(Y,12,0)_"%"
+ ..I BISPD="CSV" S BIX=BIX_$$STRIP^XLFSTR($J(Y,12,0)," ")_","
  .D WRITE(.BILINE,BIX)
- .Q:BIDOSE=BIMAXD
  .;
  .;---> Write a dashed line to close off this Dose.
- .S BIX=$$SP^BIUTL5(17)_"|"_$$SP^BIUTL5(62,"-")
- .D WRITE(.BILINE,BIX)
+ .Q:BIDOSE=BIMAXD
+ .Q:($E($G(BISEX),2)=5)
+ .I BISPD'="CSV" S BIX=$$SP^BIUTL5(17)_"|"_$$SP^BIUTL5(61,"-") D WRITE(.BILINE,BIX)
  ;
  ;---> Write a final dashed line to close off this Vaccine Group (unless Tdap).
+ Q:(($E($G(BISEX),2)=2)!($E($G(BISEX),2)=3))
+ ;
+ ;---> Write intermediate dashed HPV line, when sex is F5 or M5.
+ I BIVGRP=17,$E($G(BISEX),2)'=5,BISPD'="CSV" D  Q
+ .D WRITE(.BILINE,"    "_$$SP^BIUTL5(75,"-"))
+ ;
  D
- .I BIVGRP=221 S BIX=$$SP^BIUTL5(17)_"|"_$$SP^BIUTL5(62,"-") Q
- .S BIX=$$SP^BIUTL5(79,"-")
- D WRITE(.BILINE,BIX)
+ .;---> Write Post-Tdap dashed line.
+ .I BIVGRP=221,BISPD'="CSV" S BIX=$$SP^BIUTL5(17)_"|"_$$SP^BIUTL5(61,"-") Q
+ .;
+ .;---> Write dashed line full full width of screen.
+ .I BISPD'="CSV" S BIX=$$SP^BIUTL5(79,"-")
+ I BISPD'="CSV" D WRITE(.BILINE,BIX)
  Q
  ;
  ;
@@ -153,14 +191,24 @@ VCOMB(BILINE,BICOMB,BIAGRPS,BITMP,BISEX,BIERR) ;EP
  .;**********
  .S:(X="") X=$S(BISEX="F":"(females)",BISEX="M":"(males)",1:"???"),Q=1
  .S:'Q X=$P(X,"|",2)_"-"_$$VGROUP^BIUTL2($P(X,"|"),5)
+ .;
+ .;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ .;---> Change to reflect HPV Fully Vac'd (can be either 2 or 3 dose).
+ .S:(X="3-HPV") X="HPV-fv"
+ .;---> Change to reflect Tdap instead of Td Vaccine Group.
+ .S:(X="1-TD_B") X="1-Tdap"
+ .;
+ .I BISPD="CSV" S BIX(1)=BIX(1)_" "_X Q
  .I I<3 S BIX(1)=BIX(1)_" "_X Q
  .I I<5 S BIX(2)=BIX(2)_" "_X Q
  .I I<7 S BIX(3)=BIX(3)_" "_X Q
  .S BIX(4)=BIX(4)_" "_X
  ;
+ ; add # to end of csv lable
+ I BISPD="CSV" S BIX(1)=BIX(1)_" #,"
  ;---> Write actual totals line for this Combo for each Age Group
  ;---> (loop through the Age Groups.
- S BIX=BIX(1),BIX=$$PAD^BIUTL5(BIX,17)_"|"
+ S BIX=BIX(1) I BISPD'="CSV" S BIX=$$PAD^BIUTL5(BIX,17)_"|"
  N BIAGRP,K
  F K=1:1 S BIAGRP=$P(BIAGRPS,",",K) Q:'BIAGRP  D
  .N Y D
@@ -169,13 +217,15 @@ VCOMB(BILINE,BICOMB,BIAGRPS,BITMP,BISEX,BIERR) ;EP
  ..I $G(BISEX)="M" S Y=+$G(BITMP("STATS",BICOMB,BIAGRP_"M")) Q
  ..S Y=+$G(BITMP("STATS",BICOMB,BIAGRP))
  .;
- .S BIX=BIX_$J(Y,12)_" "
+ .I BISPD'="CSV" S BIX=BIX_$J(Y,12)_" "
+ .I BISPD="CSV" S BIX=BIX_+Y_","
  D WRITE(.BILINE,BIX)
  S I=3 S:BIX(3)]"" I=4 S:BIX(4)]"" I=5
  D MARK^BIW(BILINE,I,"BIREPD1")
  ;
  ;---> Now write percentages line.
- S BIX=BIX(2),BIX=$$PAD^BIUTL5(BIX,17)_"|"
+ I BISPD'="CSV" S BIX=BIX(2),BIX=$$PAD^BIUTL5(BIX,17)_"|"
+ I BISPD="CSV" S BIX=$P(BIX(1),"#")_"%,"
  F K=1:1 S BIAGRP=$P(BIAGRPS,",",K) Q:'BIAGRP  D
  .N Y D
  ..;---> If HPV (17), append sex to age group to retrieve HPV stats.
@@ -183,7 +233,8 @@ VCOMB(BILINE,BICOMB,BIAGRPS,BITMP,BISEX,BIERR) ;EP
  ..I $G(BISEX)="M" S Y=$G(BITMP("STATS",BICOMB,BIAGRP_"M")) Q
  ..S Y=$G(BITMP("STATS",BICOMB,BIAGRP))
  .;
- .I 'Y S BIX=BIX_$J("",12)_" " Q
+ .I BISPD'="CSV" I 'Y S BIX=BIX_$J("",12)_" " Q
+ .I BISPD="CSV" I 'Y S BIX=BIX_"0," Q
  .I '$G(BITMP("STATS","TOTLPTS")) S BIX=BIX_$J(Y,7)_"  " Q
  .;
  .;********** PATCH 3, v8.5, SEP 10,2012, IHS/CMI/MWR
@@ -198,7 +249,8 @@ VCOMB(BILINE,BICOMB,BIAGRPS,BITMP,BISEX,BIERR) ;EP
  .;
  .;---> To avoid bomb if Z=0/null.
  .S:'Z Y=0,Z=1 S Y=(Y*100)/Z
- .S BIX=BIX_$J(Y,12,0)_"%"
+ .I BISPD'="CSV" S BIX=BIX_$J(Y,12,0)_"%"
+ .I BISPD="CSV" S BIX=BIX_$$STRIP^XLFSTR($J(Y,12,0)," ")_","
  .;S BIX=BIX_$J(Y,$S(K=1:9,1:12),0)_"%"
  D WRITE(.BILINE,BIX)
  ;
@@ -206,7 +258,7 @@ VCOMB(BILINE,BICOMB,BIAGRPS,BITMP,BISEX,BIERR) ;EP
  .S BIX=BIX(I),BIX=$$PAD^BIUTL5(BIX,17)_"|"
  .D WRITE(.BILINE,BIX)
  ;
- D WRITE(.BILINE,$$SP^BIUTL5(79,"-"))
+ I BISPD'="CSV" D WRITE(.BILINE,$$SP^BIUTL5(79,"-"))
  Q
  ;
  ;

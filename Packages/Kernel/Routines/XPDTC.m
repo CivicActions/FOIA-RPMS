@@ -1,6 +1,6 @@
-XPDTC ;SFISC/RSD - Transport calls ;10/15/2008
- ;;8.0;KERNEL;**10,15,21,39,41,44,58,83,92,95,100,108,124,131,463,511,517,559**;Jul 10, 1995;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+XPDTC ;SFISC/RSD - Transport calls ;11/09/99  14:43 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**10,15,21,39,41,44,58,83,92,95,100,108,124,131**;Jul 10, 1995
  Q
  ;^XTMP("XPDT",XPDA,data type,file #,
  ;XPDA=ien of File 9.6, XPDNM=.01 field
@@ -25,9 +25,7 @@ KRN ;build Kernel Files
  F XPDFILE=1:1 S Y0=$P($T(FILES+XPDFILE^XPDE),";;",2,99) Q:Y0=""  S XPDI(+Y0)=Y0
  ;XPDI(XPDFILE)=file;order;x-ref;fact;eact;fpre;epre;fpos;epos;fdel
  S XPDFILE=0
- ;check we are sending something and have the executes
- F  S XPDFILE=$O(^XPD(9.6,XPDA,"KRN",XPDFILE)) Q:'XPDFILE  S XPDI=$G(XPDI(XPDFILE)) I $O(^(XPDFILE,"NM",0)),XPDI D  Q:$D(XPDERR)  D:FACT]"" ACT(FACT)
- .S FACT=$P(XPDI,";",4),EACT=$P(XPDI,";",5)
+ F  S XPDFILE=$O(^XPD(9.6,XPDA,"KRN",XPDFILE)) Q:'XPDFILE  S XPDI=$G(XPDI(XPDFILE)) I XPDI S FACT=$P(XPDI,";",4),EACT=$P(XPDI,";",5) D  Q:$D(XPDERR)  D:FACT]"" ACT(FACT)
  .;need to add code to check if File and data is already being sent in the File
  .;mult. If it is, don't bother sending it again.  DTL(XPDFILE)
  .S XPDOLDA=0,FGR=$$FILE^XPDV(XPDFILE) I FGR="" S XPDERR=1 Q
@@ -56,7 +54,7 @@ KRN ;build Kernel Files
  .Q
  Q
 QUES ;build from Install Questions multiple
- N I,J,K,X,%
+ N I,J,X,%
  S X=""
  ;the "B" x-ref will give me the order of the questions
  F  S X=$O(^XPD(9.6,XPDA,"QUES","B",X)) Q:X=""  S I=$$QUES^XPDV(X) S:'I XPDERR=1 D:I
@@ -66,17 +64,15 @@ QUES ;build from Install Questions multiple
  ..;set the word processing fields into DIR("?",#) structure
  ..F %=1:1 Q:'$D(^XPD(9.6,XPDA,"QUES",I,J,%,0))  S ^XTMP("XPDT",XPDA,"QUES",X,$TR(J,"AQ10","A?"),%)=^(0)
  ;send the File questions
- S K=$G(^XPD(9.6,XPDA,"QDEF")) ;Developer Defaults for Questions
  F I=1:2 S X=$P($T(QUESTION+I),";;",2,99) Q:X=""  S Y=$P($T(QUESTION+I+1),";;",2) D
- .S ^XTMP("XPDT",XPDA,"QUES",$P(X,";"),0)=$P(X,";",2),^("A")=$P(X,";",3),^("B")=$S($L($P(K,U,I)):$P(K,U,I),1:$P(X,";",4)),^("??")=$P(X,";",5) S:Y]"" ^("M")=Y
+ .S ^XTMP("XPDT",XPDA,"QUES",$P(X,";"),0)=$P(X,";",2),^("A")=$P(X,";",3),^("B")=$P(X,";",4),^("??")=$P(X,";",5) S:Y]"" ^("M")=Y
  Q
 INT ;build pre,post, & enviroment init routines
- N %,I,R,X,Z
+ N %,I,X
  F I="PRE","INI","INIT" I $G(^XPD(9.6,XPDA,I))]"" S X=^(I) D
- .;remove parameters and seperate routine name from tag^routine
- .S ^XTMP("XPDT",XPDA,I)=X,X=$P(X,"("),R=$P(X,U,$L(X,U)) Q:$D(^("RTN",R))
- .I '$$RTN^XPDV(X,.Z) W !,"Routine ",X,Z S XPDERR=1 Q
- .S %=$$LOAD^XPDTA(R,"0^")
+ .S ^XTMP("XPDT",XPDA,I)=X,X=$P(X,U,$L(X,U)) Q:$D(^("RTN",X))
+ .I '$$RTN^XPDV(X) W !,"Routine ",X," **NOT FOUND**" S XPDERR=1 Q
+ .S %=$$LOAD^XPDTA(X,"0^")
  Q
 BLD ;build Build file, Package file and Order Parameter file
  N %,DIC,X,XPD,XPDI,XPDV,Y
@@ -107,18 +103,14 @@ BLD ;build Build file, Package file and Order Parameter file
  .F %=1,5,7,20,"DEV","VERSION" M ^XTMP("XPDT",XPDA,"PKG",XPDI,%)=^DIC(9.4,XPDI,%)
  .;XPDV=ien of Version Multiple
  .I $D(^DIC(9.4,XPDI,22,XPDV))'>9 W !!,"**Version multiple in Package file wasn't updated**",!! S XPDERR=1 Q
- .;get just the current version multiple and make it the first entry in version multiple
  .M ^XTMP("XPDT",XPDA,"PKG",XPDI,22,1)=^DIC(9.4,XPDI,22,XPDV)
- .;check if SEND PATCH HISTORY is NO, kill PAH
- .I $P(XPDT(XPDT),U,5) K ^XTMP("XPDT",XPDA,"PKG",XPDI,22,1,"PAH")
  ;this is a patch, %=version number, $P(XPD,U)=patch number
  E  D
  .S %=$P(XPD,U),$P(XPD,U)=$P(XPDNM,"*",3),XPDV=$$PKGPAT^XPDIP(XPDI,%,.XPD)
  .S ^XTMP("XPDT",XPDA,"PKG",XPDI,22,1,0)=^DIC(9.4,XPDI,22,+XPDV,0)
  .I $D(^DIC(9.4,XPDI,22,+XPDV,"PAH",+$P(XPDV,U,2)))'>9 W !!,"**Patch multiple in Package file wasn't updated**",!! S XPDERR=1 Q
  .M ^XTMP("XPDT",XPDA,"PKG",XPDI,22,1,"PAH",1)=^DIC(9.4,XPDI,22,+XPDV,"PAH",+$P(XPDV,U,2))
- .;if CURRENT VERSION was updated in $$PKGPAT, save to TG
- .I $P(XPDV,U,3) S ^XTMP("XPDT",XPDA,"PKG",XPDI,"VERSION")=$P(XPDV,U,3)
+ ;M ^XTMP("XPDT",XPDA,"PKG",XPDI)=^DIC(9.4,XPDI)
  ;save the version ien^patch ien on -1 node
  S ^XTMP("XPDT",XPDA,"PKG",XPDI,-1)="1^1"
  ;resolve Primary Help Frame (0;4)
@@ -142,13 +134,13 @@ QUESTION ;package install questions
  ;;D XPF1^XPDIQ
  ;;XPF2;Y;Want my data |FLAG| yours;YES;^D DTA^XPDH
  ;;D XPF2^XPDIQ
- ;;XPI1;YO;Want KIDS to INHIBIT LOGONs during the install;NO;^D INHIBIT^XPDH
+ ;;XPI1;YO;Want KIDS to INHIBIT LOGONs during the install;YES;^D INHIBIT^XPDH
  ;;D XPI1^XPDIQ
  ;;XPM1;PO^VA(200,:EM;Enter the Coordinator for Mail Group '|FLAG|';;^D MG^XPDH
  ;;D XPM1^XPDIQ
- ;;XPO1;Y;Want KIDS to Rebuild Menu Trees Upon Completion of Install;NO;^D MENU^XPDH
+ ;;XPO1;Y;Want KIDS to Rebuild Menu Trees Upon Completion of Install;YES;^D MENU^XPDH
  ;;D XPO1^XPDIQ
- ;;XPZ1;Y;Want to DISABLE Scheduled Options, Menu Options, and Protocols;NO;^D OPT^XPDH
+ ;;XPZ1;Y;Want to DISABLE Scheduled Options, Menu Options, and Protocols;YES;^D OPT^XPDH
  ;;D XPZ1^XPDIQ
  ;;XPZ2;Y;Want to MOVE routines to other CPUs;NO;^D RTN^XPDH
  ;;D XPZ2^XPDIQ

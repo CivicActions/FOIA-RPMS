@@ -1,5 +1,5 @@
 BQIPLDSC ;PRXM/HC/ALA-Panel Description Utility ; 19 Jan 2006  1:28 PM
- ;;2.3;ICARE MANAGEMENT SYSTEM;**3,4**;Apr 18, 2012;Build 66
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**6,7**;Mar 01, 2021;Build 14
  ;
  Q
  ;
@@ -55,12 +55,12 @@ BEN ; Format FPARMS("BEN") or FMPARMS("BEN")
  Q
  ;
 REG ; Format FPARMS("REG")
- N REGIEN,REGNMSP
- I '$D(PARMS("REG")) Q
- S REGIEN=$O(^BQI(90507,"B",PARMS("REG"),""))
- I REGIEN="" Q
- S REGNMSP=$$GET1^DIQ(90507,REGIEN_",",.13,"E")
- I REGNMSP'="" S PARMS("NMSP")=REGNMSP
+ NEW REGIEN,REGNMSP
+ I $D(PARMS("REG")) D
+ . S REGIEN=$O(^BQI(90507,"B",PARMS("REG"),""))
+ . I REGIEN="" Q
+ . S REGNMSP=$$GET1^DIQ(90507,REGIEN_",",.13,"E")
+ . I REGNMSP'="" S PARMS("NMSP")=REGNMSP
  I $G(PARMS("SUBREG"))'="" D
  . N SBIEN,SBREG
  . S SBIEN=0 F  S SBIEN=$O(^BQI(90507,SBIEN)) Q:'SBIEN  D
@@ -68,14 +68,20 @@ REG ; Format FPARMS("REG")
  .. I SBREG=PARMS("SUBREG") D
  ... S REGNMSP=$$GET1^DIQ(90507,SBIEN_",",.13,"E")
  ... I REGNMSP'="" S PARMS("NMSP")=REGNMSP
+ I $G(PARMS("STAT"))'="" D
+ . NEW STAT
+ . S STAT=PARMS("STAT")
+ . I STAT'[", " S PARMS("STAT")=$$STC^BQIUL2(9002241,1,STAT) Q
+ . I STAT[", " D
+ .. NEW BSTT,BST,BI
+ .. S BSTT="" F BI=1:1:$L(STAT,", ") D
+ ... S BST=$P(STAT,", ",BI),BSTT=BSTT_$$STC^BQIUL2(9002241,1,BST)_", "
+ .. S PARMS("STAT")=$$TKO^BQIUL1(BSTT,", ")
  ;S PARMS("REG")=REGNMSP_PARMS("REG")
  Q
  ;
 STAT(STAT) ;EP - Register Status
- I $G(STAT)="" Q
- I '$D(PARMS("STATUS")) S PARMS("STATUS")="  Status: "
- I PARMS("STATUS")'="  Status: " S PARMS("STATUS")=PARMS("STATUS")_", "
- S PARMS("STATUS")=PARMS("STATUS")_STAT
+ S PARMS("STAT")=$$STCC^BQIUL2(9002241,1,STAT)
  Q
  ;
 SCH ;EP - Scheduled Appointments
@@ -109,8 +115,18 @@ SCHTP(STATUS) ;EP - Convert appointment status code to appointment type
  .. I TPIEN'="" S VAL=$P($G(^BQI(90506,PPIEN,3,APTYPE,3,TPIEN,0)),U) S:VAL="" VAL=STATUS
  Q VAL
  ;
-DXCAT ;EP - Diagnosis Category
+DXCAT(FVAL,VALUE) ;EP - Diagnosis Category
  ; Only reformat description with designated operand
+ S VALUE=""
+ I FNAME="DXCAT" D
+ . I $G(FPORDN("DXOP"))'="" S QFL=0 D  Q:QFL
+ .. S ON=FPORDN("DXOP")
+ .. I $G(FPARMS(ON,"DXOP"))'="" S VALUE=FPARMS(ON,"DXOP"),QFL=1 K FPARMS(ON,"DXOP"),ON
+ . I $D(FPARMS(PORD,FNAME))>9 D
+ .. S CVAL="" F  S CVAL=$O(FPARMS(PORD,FNAME,CVAL)) Q:CVAL=""  D
+ ... S VALUE=VALUE_FPARMS(PORD,FNAME,CVAL)_", "
+ . I $D(FPARMS(PORD,FNAME))'>9 S VALUE=FPARMS(PORD,FNAME,CVAL)_", "
+ Q
  I $G(FPARMS("DXOP"))="" Q
  ; If only a single Dx Category was identified operand is meaningless
  I '$D(FMPARMS("DXCAT")) Q
@@ -350,7 +366,7 @@ MEN(OWNR,PREF) ;EP -- Format my patients preferences generated description
  .... S BQFIL=$$FILN^BQIDCDF(SOURCE,NAME) Q:BQFIL=""
  .... S VALUE=$$GET1^DIQ(BQFIL,VALUE,.01,"E")
  ... I PTYP'="T" S VALUE=$$GET1^DIQ(90505.81,IENS,.01,"E")
- ... I NAME="SPEC",VALUE'="" D  Q:VALUE=""
+ ... I NAME="SPEC",VALUE="" D  Q:VALUE=""
  .... N SPECNM
  .... S SPECNM=$$GET1^DIQ(90360.3,VALUE,.01,"I") ;Mnemonic
  .... S VALUE=SPECNM

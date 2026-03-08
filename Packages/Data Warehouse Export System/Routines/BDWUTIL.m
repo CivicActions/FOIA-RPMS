@@ -1,9 +1,9 @@
-BDWUTIL ; IHS/CMI/LAB - DW UTILITIES ;
- ;;1.0;IHS DATA WAREHOUSE;**4**;JAN 23, 2006;Build 24
+BDWUTIL ; IHS/CMI/LAB - DW UTILITIES ; 05 Dec 2022  5:32 PM
+ ;;1.0;IHS DATA WAREHOUSE;**4,8,10**;JAN 24, 2006;Build 9
  ;
  ;
 POVS(RETVAL,BDWV) ;EP
- NEW BDWP,BDWS,BDWC,BDWY
+ NEW BDWP,BDWS,BDWC,BDWY,BDWI
  K RETVAL
  I '$D(^AUPNVPOV("AD",BDWV)) Q
  S BDWP="",BDWY=0
@@ -25,6 +25,7 @@ POVS(RETVAL,BDWV) ;EP
  . S $P(RETVAL(BDWC),"^",10)=$G(CS)  ;coding system
  . S $P(RETVAL(BDWC),"^",11)=$G(CSE)  ;coding system
  . S $P(RETVAL(BDWC),"^",12)=$TR($G(PN),"|","")  ;provider narrative p5 ALPMR
+ . S BDWI=BDWP D P8  ;ADD IN SNOMED PATCH 8
  S BDWS=0 F  S BDWS=$O(^AUPNVPOV("AD",BDWV,BDWS)) Q:BDWS'=+BDWS  D
  . Q:BDWS=BDWP
  . ;ihs/cmi/maw 10/17/2012 patch 4 added coding system for icd10
@@ -41,6 +42,32 @@ POVS(RETVAL,BDWV) ;EP
  . S $P(RETVAL(BDWC),"^",10)=$G(CS)  ;coding system
  . S $P(RETVAL(BDWC),"^",11)=$G(CSE)  ;coding system
  . S $P(RETVAL(BDWC),"^",12)=$TR($G(PN),"|","")  ;provider narrative p5 ALPMR
+ . S BDWI=BDWS D P8
+ Q
+P8 ;
+ S $P(RETVAL(BDWC),U,13)=$$VALI^XBDIQ1(9000010.07,BDWI,1101)  ;SNOMED CONCEPT ID
+ S $P(RETVAL(BDWC),U,14)=$$VALI^XBDIQ1(9000010.07,BDWI,1106)  ;FX HEALING
+ S $P(RETVAL(BDWC),U,15)=$TR($$VALI^XBDIQ1(9000010.07,BDWI,1104),"|","*")  ;LATERALITY
+ S $P(RETVAL(BDWC),U,19)=$$VALI^XBDIQ1(9000010.07,BDWI,1103)  ;PRIMARY SNOMED
+ NEW I,V,Y
+ ;SEVERITY
+ S I=0,V="" F  S I=$O(^AUPNVPOV(BDWI,13,I)) Q:I'=+I  D
+ .S Y=$P($G(^AUPNVPOV(BDWI,13,I,0)),U,1)
+ .I V]"" S V=V_"~"
+ .S V=V_Y
+ S $P(RETVAL(BDWC),U,16)=V
+ ;CLINICAL COURSE
+ S I=0,V="" F  S I=$O(^AUPNVPOV(BDWI,18,I)) Q:I'=+I  D
+ .S Y=$P($G(^AUPNVPOV(BDWI,18,I,0)),U,1)
+ .I V]"" S V=V_"~"
+ .S V=V_Y
+ S $P(RETVAL(BDWC),U,17)=V
+ ;EPISODICITY
+ S I=0,V="" F  S I=$O(^AUPNVPOV(BDWI,14,I)) Q:I'=+I  D
+ .S Y=$P($G(^AUPNVPOV(BDWI,14,I,0)),U,1)
+ .I V]"" S V=V_"~"
+ .S V=V_Y
+ S $P(RETVAL(BDWC),U,18)=V
  Q
 DATE(D) ;EP - return YYYYMMDD from internal fm format
  I $G(D)="" Q ""
@@ -177,6 +204,7 @@ MEAS(RETVAL,BDWV) ;EP -
  I '$D(^AUPNVMSR("AD",BDWV)) Q
  NEW BDWC,BDWI,BDWM
  S (BDWI,BDWC)=0 F  S BDWI=$O(^AUPNVMSR("AD",BDWV,BDWI)) Q:BDWI'=+BDWI  D
+ .I $P($G(^AUPNVMSR(BDWI,2)),U,1) Q  ;SKIP DELETED MEASUREMENTS PATCH 8
  .S BDWM=$$VAL^XBDIQ1(9000010.01,BDWI,.01)
  .;ihs/cmi/maw 06/05/2014 p5 ALPMR don't screen any measurement types
  .;I BDWM'="BP",BDWM'="HT",BDWM'="WT" Q
@@ -196,7 +224,7 @@ EXAM(RETVAL,BDWV) ;EP - return nth v exam on this visit
  .S BDWE=$P(^AUPNVXAM(BDWI,0),"^")
  .I '$D(^AUTTEXAM(BDWE,0)) Q
  .S BDWE=$P(^AUTTEXAM(BDWE,0),"^",2)
- .S BDWC=BDWC+1,RETVAL(BDWC)=BDWE
+ .S BDWC=BDWC+1,RETVAL(BDWC)=BDWE_"^"_$$VAL^XBDIQ1(9000010.13,BDWI,.04)   ;IHS/CMI/LAB - ADD 2ND PIECE TO EXAM RESULT EXTERNAL
  .Q
  Q
  ;
@@ -214,6 +242,7 @@ PED(RETVAL,BDWV) ;EP - return nth v patient ed on this visit
  .S BDWC=BDWC+1,RETVAL(BDWC)=BDWE
  .I $P($G(^BDWSITE(1,11)),U,1) Q
  .S RETVAL(BDWC)=RETVAL(BDWC)_"^"_$P(^AUPNVPED(BDWI,0),"^",6)_"^"_$P(^AUPNVPED(BDWI,0),"^",8)
+ .S $P(RETVAL(BDWC),U,4)=$$VAL^XBDIQ1(9000010.16,BDWI,.13)   ;IHS/CMI/LAB GOAL CODE PATCH 8
  .Q
  Q
  ;
@@ -246,7 +275,7 @@ DENTSSN(V) ;EP - if a provider is a 52 get SSN
  .I D=52 S S=$$SSN(Y)
  .Q
  Q S
-CLS(P) ;return ihs class code for provider P
+CLS(P) ;EP return ihs class code for provider P
  I '$G(P) Q ""
  NEW % S %=""
  I $P(^DD(9000010.06,.01,0),"^",2)[200 D  Q %
@@ -255,15 +284,11 @@ CLS(P) ;return ihs class code for provider P
  .I '%1 Q
  .S %=$P($G(^DIC(7,%1,9999999)),"^")
  .Q
- I '$D(^DIC(6,P,0)) Q ""
- NEW %1 S %1=$P(^DIC(6,P,0),"^",4)
- I '%1 Q ""
- Q $P($G(^DIC(7,%1,9999999)),"^",1)
  ;
 SSN(P) ;return provider's ssn
  I '$G(P) Q ""
  I $P(^DD(9000010.06,.01,0),"^",2)[200 Q $P($G(^VA(200,P,1)),"^",9)
- I $P(^DD(9000010.06,.01,0),"^",2)[6 Q $P($G(^DIC(16,P,0)),"^",9)
+ Q ""
  ;
 DMNUTR(V) ;EP - was dm nutrition educ done on this visit, Y or N
  I '$G(V) Q "N"

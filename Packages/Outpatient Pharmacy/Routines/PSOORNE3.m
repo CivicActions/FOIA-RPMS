@@ -1,5 +1,5 @@
-PSOORNE3 ;ISC-BHAM/SAB - display pending orders from backdoor ;15-Jul-2013 10:29;DU
- ;;7.0;OUTPATIENT PHARMACY;**11,9,39,59,46,103,124,139,152,1005,1006,1008,1013,194,1015,1017**;DEC 1997;Build 40
+PSOORNE3 ;ISC-BHAM/SAB - display pending orders from backdoor ;26-Feb-2025 10:47;DU
+ ;;7.0;OUTPATIENT PHARMACY;**11,9,39,59,46,103,124,139,152,1005,1006,1008,1013,194,1015,1017,1023,1029,1036**;DEC 1997;Build 17
  ;Ext ref to ^SC (File #44) (DBIA 10040),^PSXOPUTL (DBIA 2200)
  ;^PS(50.606 (DBIA 2174),^PS(50.7 DBIA 2223),^PS(55,DBIA 2228)
  ;^PSDRUG (DBIA 221)
@@ -8,6 +8,9 @@ PSOORNE3 ;ISC-BHAM/SAB - display pending orders from backdoor ;15-Jul-2013 10:29
  ;                          01/23/09 - Added line PSOORNE3+54 and DSP+25
  ;                          02/13/12 - Line PST+6
  ;                          06/04/13 - Added Discharge Medication
+ ;            IHS/MSC/MGH   05/17/17 - DSP+11 Changed for EPCS
+ ;            IHS/MSC/PLS   12/01/21 - Line PST+11
+ ;                          02/26/2025 - Line PST+13 - p1036 FID 114104
  K ^TMP("PSOPO",$J) S ORD=$P(PSOLST(ORN),"^",2) D ORD^PSOORFIN Q
  S PSODRUG("OI")=$P(OR0,"^",8),PSODRUG("OIN")=$P(^PS(50.7,$P(OR0,"^",8),0),"^")
  I $P($G(OR0),"^",9) S DREN=$P(OR0,"^",9) S POERR=1 D DRG^PSOORDRG K POERR ;D POST^PSODRG
@@ -81,7 +84,9 @@ PST S:$G(PSODRUG("TRADE NAME"))]"" IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="          T
  ;I X2<30 D
  ;. N % S %=$P($G(PSORX("PATIENT STATUS")),"^"),X2=30
  ;. S:%?.N %=$P($G(^PS(53,+%,0)),"^") I %["AUTH ABS" S X2=5
- S X2=$S(+$G(PSOX("CS")):184,1:366)
+ ;IHS/MSC/PLS - 12/01/2021
+ ;S X2=$S(+$G(PSOX("CS")):184,1:366)
+ S X2=$$EXPDATE^PSOUTLA2($G(PSOX("CS")),X1) ;p1036 - changed +$G to $G
  D C^%DTC I PSONEW("FILL DATE")>X S PSONEW("FILL DATE")=PSONEW("ISSUE DATE")
  S Y=PSONEW("FILL DATE") X ^DD("DD") S ^TMP("PSOPO",$J,IEN,0)=^TMP("PSOPO",$J,IEN,0)_"             (4) Fill Date: "_Y
  D DOSE^PSOBKDED
@@ -104,6 +109,8 @@ DSP S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="  (7)    Days Supply: "_PSONEW("DAYS SUP
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="  (9)   # of Refills: "_PSONEW("# OF REFILLS")_$S($L(PSONEW("# OF REFILLS"))=1:" ",1:"")_"                     (10)  Routing: "_$S($G(PSONEW("MAIL/WINDOW"))="M":"MAIL",1:"WINDOW")
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=" (11)         Clinic: "_$S($G(PSONEW("CLINIC")):$P(^SC(PSONEW("CLINIC"),0),"^"),1:"")
  S $P(RN," ",31)=" ",IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=" (12)       Provider: "_PSONEW("PROVIDER NAME")_$E(RN,$L(PSONEW("PROVIDER NAME"))+1,31)_"(13)   Copies: "_$S($G(PSONEW("COPIES")):PSONEW("COPIES"),1:1) K RN
+ ;IHS/MSC/MGH  changed for EPCS
+ I $G(PKI),+$G(PSODRUG("DEA"))>1,+$G(PSODRUG("DEA"))<6 D PRV^PSOORFI5($G(PSONEW("PROVIDER")),$G(PSODRUG("IEN")),$P(OR0,"^"))
  I $G(PSONEW("COSIGNING PROVIDER"))]"" S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="        Cos-Provider: "_$P(^VA(200,PSONEW("COSIGNING PROVIDER"),0),"^")
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)=" (14)        Remarks:"
  I $G(PSONEW("REMARKS"))]"" D

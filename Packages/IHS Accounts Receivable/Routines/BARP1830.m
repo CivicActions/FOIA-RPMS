@@ -1,0 +1,84 @@
+BARP1830 ; IHS/SD/CPC - Post init for V1.8 Patch 30;02/01/2020
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**30**;OCT 26,2005;Build 55;Build 22
+ ;
+ ;IHS/SD/CPC BAR*1.8*30 Pre/Post install routine.
+ Q
+ ; ********************************************************************
+ ;
+PRE ; EP
+ N %,BARABORT,XPDABORT,BARMSG,DIC,DIE,D0,DA
+ S %=$$NEWCP^XPDUTL("BAR1830A","PRE1^BARP1830")
+ I $G(XPDABORT)=1 S XPDQUIT=2 Q
+ S %=$$NEWCP^XPDUTL("BAR1830B","PRE2^BARP1830",0)
+ I $G(XPDABORT)=1 S XPDQUIT=2 Q
+ Q
+ ;
+PRE1 ;
+ S %=$$UPCP^XPDUTL("BAR1830A")
+ I '($D(^BARTMP("BARMKCDA","M1",0)))!('($D(^BARTMP("BARMKCDA","N99",1,3,0)))) D  Q:$G(XPDABORT)=1
+ .S BARMSG="The codes for the A/R EDI Remark Code updates are not loaded."
+ .S BARMSG=BARMSG_$C(13)_$C(10)_" Please ensure the bar_0180.30b has been loaded and"
+ .S BARMSG=BARMSG_$C(13)_$C(10)_"restart the bar*1.8*30 install."
+ .D BMES^XPDUTL(BARMSG)
+ .S XPDABORT=1
+ Q
+PRE2  ;PREPARE FOR CHECK NUMBER FIELD EXPANSION
+ LOCK +^BARCOL:10
+ I $T D
+ .N CNTR
+ .S CNTR=0
+ .S BARDUZ=""
+ .S BARDUZ=$$PARCP^XPDUTL("BAR1830B")
+ .F  S BARDUZ=$O(^BARCOL(BARDUZ)) Q:'+BARDUZ  D
+ ..S %=$$UPCP^XPDUTL("BAR1830B",BARDUZ)
+ ..K ^BARCOL(BARDUZ,"D")
+ ..S BARBTCH=0
+ ..F  S BARBTCH=$O(^BARCOL(BARDUZ,BARBTCH)) Q:'+BARBTCH  D
+ ...S BARITM=0
+ ...F  S BARITM=$O(^BARCOL(BARDUZ,BARBTCH,BARITM)) Q:'+BARITM  D
+ ....S BARLN=0
+ ....F  S BARLN=$O(^BARCOL(BARDUZ,BARBTCH,BARITM,BARLN)) Q:'+BARLN  D
+ .....S CNTR=CNTR+1
+ .....I $P($G(^BARCOL(BARDUZ,BARBTCH,BARITM,BARLN,8)),U,1)']"" D
+ ......S $P(^BARCOL(BARDUZ,BARBTCH,BARITM,BARLN,8),U,1)=$P($G(^BARCOL(BARDUZ,BARBTCH,BARITM,BARLN,0)),U,11)
+ .....S BARNDX=$E($P(^BARCOL(BARDUZ,BARBTCH,BARITM,BARLN,8),U,1),1,50)
+ .....S:BARNDX']"" BARNDX="_"
+ .....;S BARNDX=$$PRTFMTEX^BARCHKU1(BARNDX,51)
+ .....;S:BARNDX=+BARNDX BARNDX=$C(34)_BARNDX_$C(34)
+ .....;S BARNDX=$C(34)_BARNDX_$C(34)
+ .....S ^BARCOL(BARDUZ,"D",BARNDX,BARBTCH,BARITM)=""
+ .....I 'CNTR#100 D BMES^XPDUTL(".")
+ E  D
+ .S BARMSG="Unable to acquire a lock.  Please ensure that no process is using the "
+ .S BARMSG=BARMSG_$C(13)_$C(10)_"A/R COLLECTION BATCH/IHS file then re-install BAR*1.8*30."
+ .D BMES^XPDUTL(BARMSG)
+ .S XPDABORT=1
+ L -^BARCOL
+ Q
+ ; 
+POST ;EP
+ N %,BARABORT,XPDABORT,BARMSG,DIC,DIE,D0,DA
+ S %=$$NEWCP^XPDUTL("BARP1830C","POST1^BARP1830")
+ Q
+ ;
+POST1   ;Update Standard Adjustment Reason Codes
+ D EN^BARADJRM
+ ;UPDATE A/R EDI REMARK CODES
+ LOCK +^BARMKCD:10
+ I $T D
+ .I $D(^BARTMP("BARMKCDA","M1",0)),($D(^BARTMP("BARMKCDA","N99",1,3,0))) D
+ ..D MERGE^BARRMKU1
+ ..K ^BARTMP("BARMKCDA"),^BARTMP("BARMKCD")
+ .E   D
+ ..S BARMSG="The codes for the A/R EDI Remark Code updates are not loaded."
+ ..S BARMSG=BARMSG_$C(13)_$C(10)_" Please ensure the bar_0180.30b has been loaded and"
+ ..S BARMSG=BARMSG_$C(13)_$C(10)_"restart the bar*1.8*30 install."
+ ..D BMES^XPDUTL(BARMSG)
+ ..S XPDABORT=1
+ E  D
+ .S BARMSG="Unable to acquire a lock.  Please ensure that no process is using the "
+ .S BARMSG=BARMSG_$C(13)_$C(10)_"A/R EDI REMARK CODES file then re-start BAR*1.8*30."
+ .D BMES^XPDUTL(BARMSG)
+ .S XPDABORT=1
+ L -^BARMKCD
+ Q

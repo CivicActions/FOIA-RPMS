@@ -1,9 +1,11 @@
 ACHSAC ; IHS/ITSC/PMF - CANCEL CHS DOCUMENTS ;    [ 02/18/2004  8:49 AM ]
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**4,7,8**;JUN 11, 2001
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**4,7,8,28,31,32**;JUN 11, 2001;Build 39
  ;ACHS*3.1*4  correct spelling of Cancellation
  ;ACHS*3.1*7 Cancel a document and remove it from E-Sig queue
  ;ACHS*3.1*8 Cancel a document and remove it from E-Sig queue
- ;
+ ;ACHS*3.1*28 03.05.2020 IHS.OIT.FCJ ADDED COMMENT OPTION
+ ;ACHS*3.1*31 6.20.2023 IHS.OIT.FCJ Fileman hard error when ";" used in comment
+ ;ACHS*3.1*32 6.20.24 IHS.OIT.FCJ TEST FOR ACTIVE EXPORT/EOBR JOBS
  ;
 A1 ;
  ;I HATE doing this, but for right now, it's the only answer.
@@ -11,6 +13,7 @@ A1 ;
  ;vars don't get set.  So we will check for the current fiscal
  ;year and if it is not set, we gonna set it along with the
  ;financial code.   4/13/01   pmf
+ I $$MENU^ACHSJCHK() Q  ;ACHS*3.1*32 TEST FOR ACTIVE EXPORT/EOBR JOBS
  I '$D(ACHSCFY) D FY^ACHSUF,FC^ACHSUF
  ;
  D ^ACHSUSC                             ;DISPLAY DOC. CANCEL/SUPP. INFO.
@@ -21,7 +24,7 @@ A1 ;
  S ACHSX=+$$DOC^ACHS(0,14)               ;FISCAL YEAR DIGIT
  D FYCVT^ACHSFU                          ;COMPUTE FISCAL YEAR
  S ACHSACFY=ACHSY
- S ACHSACWK=+ACHSFYWK(DUZ(2),ACHSACFY)
+ S ACHSACWK=+ACHSFYWK(DUZ(2),ACHSACFY),ACHSCANC=""   ;ACHS*3.1*28 ADDED ACHSCANC
  ;
  D CKB^ACHSUUP                           ;CHECK BALANCES
  ;
@@ -55,6 +58,11 @@ C1 ;
  S ACHSESDO=$J(ACHSBAL,1,2),ACHSFULP="F"
  S ACHSCANR=$$DIR^XBDIR("9002080.01,63","","UNKNOWN")
  I $D(DIRUT) D ENDC Q
+ I ACHSCANR="O" D     ;ACHS*3.1*28 NEW SECTION FOR COMMENTS
+ .S DIR("A")="Cancellation Comments",DIR(0)="F^1:50"
+ .D ^DIR
+ .S:'$D(DUOUT) ACHSCANC=Y
+ .S ACHSCANC=$TR(ACHSCANC,";",",")  ;ACHS*3.1*31 FILEMAN HARD ERROR WHEN ";" USED
  G B1:$D(DUOUT)
 OK ;
  S Y=$$DIR^XBDIR("Y","Is everything correct","NO","","","",2)
@@ -69,7 +77,7 @@ D1 ;
  D SB1                                  ;SET THE NEW TRANSACTION RECORD
  ;
  W !!," *** Document Updated  ***"
- D ACT^ACHSACT(ACHSDIEN,$$NOW^XLFDT,"<CANCELATION>")
+ D ACT^ACHSACT(ACHSDIEN,$$NOW^XLFDT,"<CANCELATION>",ACHSCANC)  ;ACHS*3.1*28
  I $$DOC^ACHS(2,7) S ACHSREF=$$DOC^ACHS(2,7) D AUTH^ACHSBMC K ACHSREF
 ENDC ;
  I $$LOCK^ACHS("^ACHSF(DUZ(2),""D"",ACHSDIEN)","-")

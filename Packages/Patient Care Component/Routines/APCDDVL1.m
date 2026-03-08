@@ -1,5 +1,5 @@
-APCDDVL1 ; IHS/CMI/LAB - report on checked in visits with no pov ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDDVL1 ; IHS/CMI/TUCSON - report on checked in visits with no pov ;
+ ;;2.0;IHS RPMS/PCC Data Entry;**9**;MAR 09, 1999
  ;
  ;
 START ;
@@ -34,9 +34,6 @@ SORT ;
  S DIR(0)="S^T:Terminal Digit Order;H:Health Record Number Order;D:Visit Date Order;C:Clinic Code Order",DIR("A")="Sort the report by",DIR("B")="T" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I $D(DIRUT) G BD
  S APCDCSRT=Y
-DEMO ;
- D DEMOCHK^APCLUTL(.APCDDEMO)
- I APCDDEMO=-1 G BD
 ZIS ;call to XBDBQUE
  S XBRP="PRINT^APCDDVL1",XBRC="PROCESS^APCDDVL1",XBRX="EOJ^APCDDVL1",XBNS="APCD"
  D ^XBDBQUE
@@ -58,7 +55,6 @@ PROCESS ;EP - called from XBDBQUE
  . S APCDV=0
  . F  S APCDV=$O(^AUPNVSIT("B",APCDT,APCDV)) Q:'APCDV  D
  .. I $$VAL^XBDIQ1(9000010,APCDV,.24)'="SD IHS PCC LINK" Q  ;not created by check in
- .. Q:$$DEMO^APCLUTL($P(^AUPNVSIT(APCDV,0),U,5),APCDDEMO)
  .. I $P(^AUPNVSIT(APCDV,0),U,6)'=DUZ(2) Q  ;another facilities visit
  .. Q:$D(^AUPNVPOV("AD",APCDV))  ;already been coded
  .. Q:$P(^AUPNVSIT(APCDV,0),U,11)  ;deleted

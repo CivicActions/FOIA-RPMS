@@ -1,0 +1,30 @@
+RA4P8PST ; IHS/HQW/SCR - POSTINIT ; [ 07/25/2001  4:23 PM ]
+ ;;4.0;RADIOLOGY;**PATCH 8 **;JULY 17,2001
+ ;
+ ;This routine compiles the input template RA EXAM EDIT after
+ ;installation of Radiology patch 8
+ ;
+ N IEN,ROUTINE,DMAX
+ ;
+ S IEN=0,IEN=$O(^DIE("B","RA EXAM EDIT",IEN))
+ I IEN'>0 D CLN Q
+ ;
+ S ROUTINE=$G(^DIE(IEN,"ROU"))
+ I $E(ROUTINE)="^" S ROUTINE=$E(ROUTINE,2,999)
+ I ROUTINE="" D CLN Q
+ ;
+ S DMAX=$$ROUSIZE^DILF
+ D COMPILE(ROUTINE,IEN,DMAX)
+ ; 
+CLN ;
+ K IEN,ROUTINE,DMAX
+ Q
+ ;
+COMPILE(X,Y,DMAX) ;
+ ; 
+ ;  X    = ROUTINE NAME
+ ;  Y    = TEMPLATE IEN
+ ;  DMAX = COMPILED ROUTINE SIZE
+ ;
+ D EN^DIEZ
+ Q

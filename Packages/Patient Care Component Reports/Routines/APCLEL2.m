@@ -1,5 +1,5 @@
-APCLEL2 ; IHS/CMI/LAB - patients with elder care assessment ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLEL2 ;IHS/CMI/LAB - patients with elder care assessment [ 03/22/01  8:47 PM ]
+ ;;3.0;IHS PCC REPORTS;**8,9,16**;FEB 05, 1997
  ;
  ;
 START ;
@@ -50,7 +50,6 @@ PROC ;EP - called from XBDBQUE
  ;set list of patients for optional report
  S DFN=0 F  S DFN=$O(^AUPNPAT(DFN)) Q:DFN'=+DFN  D
  .Q:$$DOD^AUPNPAT(DFN)]""
- .Q:$$DEMO^APCLUTL(DFN,$G(APCLDEMO))
  .S AGE=$$AGE^AUPNPAT(DFN,APCLBD)
  .I AGE<$P(APCLAGET,"-")!(AGE>$P(APCLAGET,"-",2)) Q
  .;has pt had functional assessment

@@ -1,12 +1,14 @@
 ABSPOS6N ; IHS/OIT/SCR - Functions to Close and Re-open a claim ;   
- ;;1.0;PHARMACY POINT OF SALE;**37,40**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**37,40,54,55**;JUN 01, 2001;Build 131
+ ;IHS/SD/SDR 1.0*55 ADO115915 Changed U 0 back to U $P because the display was cut off/incomplete
  Q
 CLOSECLM(ABSP59)         ;EP - from ABSPOS6D
  ;
  ;  parameters: ABSP59 ien to Transaction Log where claim information is located
  ;
  ;IHS/OIT/CASSEVERN/RAN - 12/16/2010 - Patch 40 Following line added to Allow us to use full screen not 
- U $P D:IO=$P FULL^VALM1 U IO
+ ;U 0 D:IO=0 FULL^VALM1 U IO   ;ABSP*1.0*54  ;absp*1.0*55 IHS/SD/SDR ADO115915
+ U $P D:IO=$P FULL^VALM1 U IO   ;ABSP*1.0*54  ;absp*1.0*55 IHS/SD/SDR ADO115915
  W "You have selected to close the following claim",!
  N ABSPRFL,ABSPNAM,ABSPDFN,ABSPRSLT,DIR,Y,ABSPANS,ABSPCLSD
  S ABSPANS=0
@@ -18,7 +20,8 @@ CLOSECLM(ABSP59)         ;EP - from ABSPOS6D
  W "Patient: "
  ;S X=$P(REC(0),U,6) I X]"" S X=$P($G(^DPT(X,0)),U) W X
  S ABSPDFN=$P($G(^ABSPT(ABSP59,0)),U,6)
- I ABSPDFN>0 S ABSPNAM=$P($G(^DPT(ABSPDFN,0)),U) W ABSPNAM
+ ;I ABSPDFN>0 S ABSPNAM=$P($G(^DPT(ABSPDFN,0)),U) W ABSPNAM
+ I ABSPDFN>0 S ABSPNAM=$P($G(^DPT(ABSPDFN,0)),U)_$$PPN1^ABSPUTL(ABSPDFN) W ABSPNAM   ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  ;
  ;NOW...find out if this claim was rejected - if not, it can't be closed
  S ABSPRSLT=$$CATEG^ABSPOSUC(ABSP59,1)
@@ -131,11 +134,11 @@ UPDTOPN(ABSP59)  ;UPDATE ^ABSPT WITH OPEN STATUS, USER INFO, DATE
 CLSDPAT()  ;display patients that have POS transaction
  N DIC,ABSPDUZ2
  S ABSPDUZ2=DUZ(2)
- S DUZ(2)=0  ;TO ALLOW USERS TO SELECT FROM ALL LOCATIONS
+ I $D(ABSPDUZ2) S DUZ(2)=0  ;TO ALLOW USERS TO SELECT FROM ALL LOCATIONS  ;ABSP*1.0*54
  S DIC=2,DIC(0)="AEMQZ",DIC("A")="Select Closed Claims for which patient? "
  S DIC("S")="I $D(^ABSPT(""AC"",Y))"
  D ^DIC W !
- S DUZ(2)=ABSPDUZ2 ; Restore original DUZ(2) ; ABSP*1.0T7*7
+ I $G(ABSPDUZ2) S DUZ(2)=ABSPDUZ2 ; Restore original DUZ(2) ; ABSP*1.0T7*7;ABSP*1.0*54
  S ABSPDFN=+Y
  Q ABSPDFN
  ;

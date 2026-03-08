@@ -1,5 +1,5 @@
-APCLOR1 ; IHS/CMI/LAB - ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLOR1 ; IHS/CMI/LAB -  [ 02/11/02  10:19 AM ]
+ ;;3.0;IHS PCC REPORTS;**11,16,19**;FEB 05, 1997
  ;
 START ;
  D XIT
@@ -31,9 +31,6 @@ FAC ;
  D @APCLLOCT
  G:$D(APCLQ) FAC
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G FAC
  S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
  I $D(DIRUT) G XIT
  I $G(Y)="B" D BROWSE,XIT Q
@@ -60,7 +57,6 @@ PROC ;EP - called from xbdbque
 PROC1 ;
  I $P(^AUPNVSIT(APCLV,0),U,6)="" Q
  I $P(^AUPNVSIT(APCLV,0),U,5)="" Q
- Q:$$DEMO^APCLUTL($P(^AUPNVSIT(APCLV,0),U,5),$G(APCLDEMO))
  I $P(^AUPNVSIT(APCLV,0),U,7)="E" Q  ;exclude events
  I $D(^AUPNVPOV("AD",APCLV)),$D(^AUPNVPRV("AD",APCLV)) Q  ;coded, not orphaned
  I $P(^AUPNVSIT(APCLV,0),U,7)="I",$P(^AUPNVSIT(APCLV,0),U,12)]"" Q  ;PER VINA 10-20-04

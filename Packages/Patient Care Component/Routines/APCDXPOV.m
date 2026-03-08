@@ -1,5 +1,5 @@
 APCDXPOV ; IHS/CMI/LAB - POV LOOKUP ;
- ;;2.0;IHS PCC SUITE;**11,20**;MAY 14, 2009;Build 25
+ ;;2.0;IHS PCC SUITE;**11,20,25**;MAY 14, 2009;Build 37
  ;
 START ;
  S (APCDLOOK,APCDTNQP)=""
@@ -8,7 +8,7 @@ START ;
 START1 ;EP
  S APCDTPCC="",APCDINPE=1,APCDD=""
  ;FOR NOW IF ICD9 CALL LEX, AFTER VA SENDS OUT ICD10 LEX JUST D LEX Q
- NEW %,D
+ NEW APCDVAL,D
  S D=""
  I $G(APCDVSIT),$D(^AUPNVSIT(APCDVSIT)) D
  .;I $P(^AUPNVSIT(APCDVSIT,0),U,7)="H",$$DSCHDATE^APCLV(APCDVSIT)]"" S APCDD=$$DSCHDATE^APCLV(APCDVSIT) Q
@@ -38,50 +38,67 @@ LEX ;EP - called from input template
  I APCDIMP=1 D CONFIG^LEXSET("ICD","ICD",$P(APCDD,"."))
  I APCDIMP=30 D CONFIG^LEXSET("10D","10D",$P(APCDD,"."))
  S X=APCDUINP
- S %=""
+ S APCDVAL=""
  I X="@" W !!,"Admitting Diagnosis is Required." G LEX
- I APCDUINP=".9999" S %=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
- I APCDIMP=30,APCDUINP="ZZZ.999" S %=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
- I APCDIMP=30,$E(APCDUINP,1,4)="ZZZ." S %=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
- I $E(APCDUINP,1,7)="UNCODED" S %=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
- I APCDUINP["UNCODED D" S %=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
+ I APCDUINP=".9999" S APCDVAL=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
+ I APCDIMP=30,APCDUINP="ZZZ.999" S APCDVAL=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
+ I APCDIMP=30,$E(APCDUINP,1,4)="ZZZ." S APCDVAL=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
+ I $E(APCDUINP,1,7)="UNCODED" S APCDVAL=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
+ I APCDUINP["UNCODED D" S APCDVAL=+$$ICDDX^ICDEX($S(APCDIMP=1:".9999",1:"ZZZ.999")) G LEXN
  I APCDIMP=1 S DIC("S")="I $$ICDONE9^APCDXPOV(+Y,LEXVDT)"
  I APCDIMP=30 S DIC("S")="I $$ICDONE1^APCDXPOV(+Y,LEXVDT)"
  S DIC("A")=$S($G(APCDTDIA)]"":APCDTDIA_": ",1:"Enter Admitting Diagnosis: ")
  I APCDIMP=1 D LOOK^LEXA(X,"ICD",999,"ICD",$P(APCDD,"."))
  I APCDIMP=30 D LOOK^LEXA(X,"10D",999,"10D",$P(APCDD,"."))
- I 'LEX D  G:%="" LEX G:% LEXN
+ I 'LEX D  G:APCDVAL="" LEX G:APCDVAL LEXN
  .S X=0 F  S X=$O(LEX("HLP",X)) Q:X'=+X  W !,LEX("HLP",X)
  .;now check fileman V2.0 PATCH 20 CR#554
  .W !!,"now trying secondary fileman lookup..."
- .S %="" S X=APCDUINP,DIC="^ICD9(",DIC(0)="MEQ",DIC("S")="D ^AUPNSICD" D ^DIC K DIC
- .S %="" I $P(Y,U)'=-1 S %=+Y
+ .S APCDVAL="" S X=APCDUINP,DIC="^ICD9(",DIC(0)="MEQ",DIC("S")="D ^AUPNSICD" D ^DIC K DIC
+ .S APCDVAL="" I $P(Y,U)'=-1 S APCDVAL=$$ICDDX^ICDEX(+Y,APCDD)
  ;display all codes and call reader
  S APCDANS=""
  D GETANS^APCDAPOV
- I APCDY="^" W ! D  G:%="" LEX G:% LEXN
+ I APCDY="^" W ! D  G:APCDVAL="" LEX G:APCDVAL LEXN
  .;now check fileman
  .;W !!,"now trying fileman lookup..."
- .S %="" ;S X=APCDUINP,DIC="^ICD9(",DIC(0)="QME" D ^DIC K DIC
- .;S %="" I $P(Y,U)'=-1 S %=+Y
- I APCDY="" W ! D  G:%="" LEX G:% LEXN
+ .S APCDVAL="" ;S X=APCDUINP,DIC="^ICD9(",DIC(0)="QME" D ^DIC K DIC
+ .;S APCDVAL="" I $P(Y,U)'=-1 S APCDVAL=+Y
+ I APCDY="" W ! D  G:APCDVAL="" LEX G:APCDVAL LEXN
  .;now check fileman
  .;W !!,"now trying fileman lookup..."
- .S %="" ;S X=APCDUINP,DIC="^ICD9(",DIC(0)="MEQ" D ^DIC K DIC
- .;S %="" I $P(Y,U)'=-1 S %=+Y
- I '$G(APCDY) W ! D  G:%="" LEX G:% LEXN
+ .S APCDVAL="" ;S X=APCDUINP,DIC="^ICD9(",DIC(0)="MEQ" D ^DIC K DIC
+ .;S APCDVAL="" I $P(Y,U)'=-1 S APCDVAL=+Y
+ I '$G(APCDY) W ! D  G:APCDVAL="" LEX G:APCDVAL LEXN
  .;now check fileman
  .;W !!,"now trying fileman lookup..."
- .S %="" ;S X=APCDUINP,DIC="^ICD9(",DIC(0)="MEQ" D ^DIC K DIC
- .;S %="" I $P(Y,U)'=-1 S %=+Y
+ .S APCDVAL="" ;S X=APCDUINP,DIC="^ICD9(",DIC(0)="MEQ" D ^DIC K DIC
+ .;S APCDVAL="" I $P(Y,U)'=-1 S APCDVAL=+Y
  I APCDIMP=1 S Y=$$ICDONE^LEXU($P(^TMP("LEXHIT",$J,APCDY),U,1),$P(APCDD,"."))
  I APCDIMP=30 S Y=$$ONE^LEXU($P(^TMP("LEXHIT",$J,APCDY),U,1),$P(APCDD,"."),"10D")
  K DO,^TMP("LEXSCH",$J)
  I $G(Y)="" W !!,"lexicon isn't passing back an ICD code." S APCDTERR=1,APCDLOOK="" G XITL
- S %=$$ICDDX^ICDEX(Y,$P(APCDD,"."),APCDIMP,"E")
- I $P(%,U,1)="-1" W !!,"lexicon isn't passing back an ICD code." S APCDTERR=1,APCDLOOK="" G XITL
+ S APCDVAL=$$ICDDX^ICDEX(Y,$P(APCDD,"."),APCDIMP,"E")
+ I $P(APCDVAL,U,1)="-1" W !!,"lexicon isn't passing back an ICD code." S APCDTERR=1,APCDLOOK="" G XITL
 LEXN ;
- S APCDLOOK="`"_+%,APCDTNQP=APCDUINP
+ S Q=""
+ I $G(DFN),$P(APCDVAL,U,11)]]"",$P(APCDVAL,U,11)'=$P(^DPT(DFN,0),U,2) D  I Q W ! S APCDTERR=1,APCDLOOK="" G XITL
+ .S Q=""
+ .W !,"This diagnosis code is to be used for ",$S($P(APCDVAL,U,11)="F":"FEMALES",1:"MALES"),". This patient is ",$$VAL^XBDIQ1(2,DFN,.02),"."
+ .S DIR(0)="Y",DIR("A")="Do you still want to use this code",DIR("B")="NO" KILL DA D ^DIR KILL DIR
+ .I $D(DIRUT) S Q=1 Q
+ .I 'Y S Q=1 Q
+ S Q=""
+ I $G(DFN),$P(APCDVAL,U,15)]""!($P(APCDVAL,U,16))]"" D  I Q W ! S APCDTERR=1,APCDLOOK="" G XITL
+ .S A=$$AGE^APCDUTL(DFN,$$VD^APCLV(APCDVSIT))
+ .I $$AGECHECK^APCDCAF3(A,APCDVAL) D  I Q Q
+ ..W !!,"WARNING: The AGE RANGE for diagnosis ",$P(APCDVAL,U,2)," is ",+$P(APCDVAL,U,15),"-",$P(APCDVAL,U,16)," years of age."
+ ..W !,"This patient is ",A," years old."
+ ..S DIR(0)="Y",DIR("A")="Do you still want to use this code",DIR("B")="NO" KILL DA D ^DIR KILL DIR
+ ..I $D(DIRUT) S Q=1 Q
+ ..I 'Y S Q=1 Q
+ ..W !
+ S APCDLOOK="`"_+APCDVAL,APCDTNQP=APCDUINP
  W !
 XITL K Y,X,DO,D,DD,DIPGM,APCDTPCC
  Q

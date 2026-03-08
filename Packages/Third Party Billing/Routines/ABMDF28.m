@@ -1,12 +1,17 @@
-ABMDF28 ; IHS/ASDST/DMJ - Set UB-04 Print Array ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
- ;  INPUT:  ABMY(active insurer IEN, 3P BILL IEN)="" ;
+ABMDF28 ; IHS/SD/SDR - Set UB-04 Print Array ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,35**;NOV 12, 2009;Build 659
+ ;  INPUT:  ABMY(active insurer IEN, 3P BILL IEN)=""
+ ;
+ ;IHS/SD/SDR 2.6*35 ADO60704 fixed to use TXST^ABMDFUTL for creating the 3P TX Status entry so it is consistent with
+ ;  all the other export modes
+ ;
  K ABMP
  S U="^"
  S ABMP("XMIT")=0        ; initialize transmittal flag
  S ABMP("EXP")=28        ; set mode of export to 28 (UB-04)
  S ABMY("TOT")="0^0^0"   ; # bills ^ $ amt ^ # insurers
  S ABMP("NOFMT")=1       ; format flag used for EMC
+ D TXST^ABMDFUTL  ;abm*2.6*35 IHS/SD/SDR ADO60704
  ;
 BDFN ;
  ; Loop ABMY array to print bills grouped by insurer
@@ -26,15 +31,17 @@ BDFN ;
  ....I $D(ABMY("INS")),$P(^ABMDTXST(DUZ(2),ABM("XM"),0),U,4)=ABMY("INS") S ABMP("XMIT")=ABM("XM")  ;Insurer
  ....Q
  ...Q
- ..; Create entry in 3P TX STATUS
- ..I '+ABMP("XMIT") D
- ...S DIC="^ABMDTXST(DUZ(2),"
- ...S DIC(0)="L"
- ...S X=DT
- ...S DIC("DR")=".02////28;.07////1;.08////1;"_$S($D(ABMY("TYP")):".03////"_ABMY("TYP"),$D(ABMY("INS")):".04////"_$P(ABMY("INS"),U),1:".03////A")_";.05////"_DUZ
- ...K DD,DO,DINUM D FILE^DICN
- ...S ABMP("XMIT")=+Y
- ...Q
+ ..;start old abm*2.6*35 IHS/SD/SDR ADO60704
+ ..;; Create entry in 3P TX STATUS
+ ..;I '+ABMP("XMIT") D
+ ..;.S DIC="^ABMDTXST(DUZ(2),"
+ ..;.S DIC(0)="L"
+ ..;.S X=DT
+ ..;S DIC("DR")=".02////28;.07////1;.08////1;"_$S($D(ABMY("TYP")):".03////"_ABMY("TYP"),$D(ABMY("INS")):".04////"_$P(ABMY("INS"),U),1:".03////A")_";.05////"_DUZ
+ ..;.K DD,DO,DINUM D FILE^DICN
+ ..;.S ABMP("XMIT")=+Y
+ ..;.Q
+ ..;end old abm*2.6*35 IHS/SD/SDR ADO60704
  ..S DIE="^ABMDBILL(DUZ(2),"
  ..S DA=ABMP("BDFN")
  ..S DR=".04////B;.16////A;.17////"_ABMP("XMIT")
@@ -47,6 +54,7 @@ BDFN ;
  ..S ABMP("XMIT")=ABM("L")
  ..S ABMP("BDFN")=ABM
  K ABM,ABMF
+ D TXUPDT^ABMDFUTL  ;abm*2.6*35 IHS/SD/SDR ADO60704
  Q
  ;
 ENT ;EP for setting up export array and printing form
@@ -54,7 +62,8 @@ ENT ;EP for setting up export array and printing form
  S ABMP("B0")=^ABMDBILL(DUZ(2),ABMP("BDFN"),0)  ; 3P BILL 0 node
  S ABMP("INS")=$P(ABMP("B0"),U,8)     ; Active insurer
  Q:'ABMP("INS")                       ; Q:no active insurer
- S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ; type of insur
+ ;S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ; type of insur  ;abm*2.6*10 HEAT73780
+ S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ; type of insur  ;abm*2.6*10 HEAT73780
  S ABMP("PDFN")=$P(ABMP("B0"),U,5)    ; IEN to patient
  S ABMP("CDFN")=+$P(ABMP("B0"),U)      ; IEN to 3P CLAIM
  S ABMP("LDFN")=$P(ABMP("B0"),U,3)    ; IEN to location (visit location)

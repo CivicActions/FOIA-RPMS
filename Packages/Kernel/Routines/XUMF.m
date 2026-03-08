@@ -1,11 +1,9 @@
 XUMF ;OIFO-OAK/RAM - XUMF API's;04/15/02
- ;;8.0;KERNEL;**218,335,416,555**;Jul 10, 1995;Build 6
+ ;;8.0;KERNEL;**218,335**;Jul 10, 1995
  ;
  Q
  ;
 IEN(IFN,CDSYS,ID) ; -- Internal Entry Number
- ;
- I IFN=4 N X S X=$O(^DIC(4,"D",ID,0)) Q $S(X:X,1:"0^not found")
  ;
  N IEN,ROOT
  ;
@@ -337,54 +335,6 @@ EXIT ; -- cleanup and quit
  K ^TMP("XUMF MFS",$J),^TMP("DIERR",$J)
  ;
  S ZTREQ="@"
- ;
- Q
- ;
-NPI ; -- NPI
- ;
- N COL,X,FDA,NPIDT,NPISTAT,NPI,TAX,TAXPC,TAXSTAT,ERR
- ;
- D SEGPRSE^XUMFXHL7("HLNODE","COL")
- ;
- S NPIDT=$$FMDATE^HLFNC(COL(17))
- S NPISTAT=COL(18)
- S NPI=COL(19)
- S TAX=COL(20)
- S TAXPC=COL(21)
- S TAXSTAT=COL(22)
- ;
- S X=$$NPI^XUSNPI("Organization_ID",IEN,NPIDT)
- I $S(X=0:1,$$UP^XLFSTR($P(X,U,3))'=NPISTAT:1,NPI'=+X:1,1:0) D
- .S X=$$ADDNPI^XUSNPI("Organization_ID",IEN,NPI,NPIDT,$S(NPISTAT="ACTIVE":1,1:0))
- ;
- S IENS="?+1,"_IEN_","
- K FDA
- S FDA(4.9999,IENS,.01)="NPI"
- S FDA(4.9999,IENS,.02)=NPI
- D UPDATE^DIE("E","FDA",,"ERR")
- ;
- K FDA
- S IENS="?+1,"_IEN_","
- S FDA(4.043,IENS,.01)=TAX
- S FDA(4.043,IENS,.02)=TAXPC
- S FDA(4.043,IENS,.03)=TAXSTAT
- D UPDATE^DIE("E","FDA",,"ERR")
- ;
- S SEQ=22
- ;
- Q
- ;
-CDSYS(CDSYS,ID,IEN) ; udpate coding system / ID
- ;
- N IENS,FDA
- ;
- S IENS="?+1,"_IEN_","
- K FDA
- S FDA(4.9999,IENS,.01)=CDSYS
- S FDA(4.9999,IENS,.02)=ID
- D
- .N IEN,VALUE
- .D UPDATE^DIE("E","FDA")
  ;
  Q
  ;

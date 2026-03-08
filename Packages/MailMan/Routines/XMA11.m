@@ -1,6 +1,5 @@
-XMA11 ;(WASH ISC)/CAP/THM-Edit message info only ;04/17/2002  07:09
- ;;8.0;MailMan;;Jun 28, 2002
- ;
+XMA11 ;(WASH ISC)/CAP/THM-Edit message info only ;05/12/99  08:38
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Entry point (DBIA ?):
  ; INFO   Interactive change a message's 'information only' field.
 INFO(DA) ; Change Information Only Status

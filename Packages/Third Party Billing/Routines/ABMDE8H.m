@@ -1,16 +1,20 @@
-ABMDE8H ; IHS/ASDST/DMJ - Page 8 - MISC INFO ; 
- ;;2.6;IHS 3P BILLING SYSTEM;**6,23**;NOV 12, 2009;Build 427
+ABMDE8H ; IHS/SD/SDR - Page 8 - MISC INFO ; 
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,23,30,32,37**;NOV 12, 2009;Build 739
  ;
- ;IHS/SD/SDR - V2.5 P2 - 5/9/02 - NOIS HQW-0302-100190
- ;     Modified to display 2nd and 3rd modifiers and units
- ;IHS/SD/SDR - V2.5 P8 - IM16018/IM11164 - Prompt/display provider
- ;IHS/SD/SDR - v2.5 p9 - IM16660 - 4-digit revenue codes
- ;IHS/SD/SDR - v2.5 p9 - task 1 - Use new service line provider multiple
- ;IHS/SD/SDR - v2.5 p10 - IM20454 - Fixed so 2nd and 3rd modifiers would be prompted for
- ;IHS/SD/SDR - v2.5 p10 - IM19843 - Added new prompt SERVICE TO DATE/TIME
- ;IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - abm*2.6*6 - 5010 - Added prompts for DME billing fields
+ ;IHS/SD/SDR 2.5*2 5/9/02 NOIS HQW-0302-100190 Modified to display 2nd and 3rd modifiers and units
+ ;IHS/SD/SDR 2.5*8 IM16018/IM11164 - Prompt/display provider
+ ;IHS/SD/SDR 2.5*9 IM16660 4-digit revenue codes
+ ;IHS/SD/SDR 2.5*9 task 1 Use new service line provider multiple
+ ;IHS/SD/SDR 2.5*10 IM20454 Fixed so 2nd and 3rd modifiers would be prompted for
+ ;IHS/SD/SDR 2.5*10 IM19843 Added new prompt SERVICE TO DATE/TIME
+ ;
+ ;IHS/SD/SDR 2.6 CSV
+ ;IHS/SD/SDR 2.6*6 5010 Added prompts for DME billing fields
  ;IHS/SD/AML 2.6*23 HEAT247169 Added NDC to list of fields to prompt for, and to display on page8H
+ ;IHS/SD/SDR 2.6*30 CR8870 Updated display so it won't wrap if units are maxed out, including 3 decimal places
+ ;IHS/SD/SDR 2.6*32 CR8942 Changed rev code is added to editable fields so it will pick up the CPT default if there is one
+ ;  in ABMDEML when adding a CPT that has a DEFAULT REVENUE CODE
+ ;IHS/SD/SDR 2.6*37 ADO89299 Added DEA# to display if populated
  ;
 DISP K ABMZ S ABMZ("TITL")="MISC. SERVICES",ABMZ("PG")="8H"
  I $D(ABMP("DDL")),$Y>(IOSL-9) D PAUSE^ABMDE1 G:$D(DUOUT)!$D(DTOUT)!$D(DIROUT) XIT I 1
@@ -27,17 +31,25 @@ MS ; Misc. Services
  S ABMZ("ITEM")="Misc. Services (HCPCS Code)"
  S ABMZ("DIC")="^ICPT(",ABMZ("X")="X",ABMZ("MAX")=10,ABMZ("TOTL")=0
  S ABMZ("NDC")=";.19"  ;abm*2.6*23 IHS/SD/AML HEAT247169
- I ^ABMDEXP(ABMMODE(8),0)["UB" S ABMZ("DR")=";W !;.02"_ABMZ("DR")
+ ;I ^ABMDEXP(ABMMODE(8),0)["UB" S ABMZ("DR")=";W !;.02"_ABMZ("DR")  ;abm*2.6*32 IHS/SD/SDR CR8942
+ I ^ABMDEXP(ABMMODE(8),0)["UB" S ABMZ("REVN")=";W !;.02"  ;abm*2.6*32 IHS/SD/SDR CR8942
  D H^ABMDE8X
  D HD G LOOP
 HD ;
- W !?5,"REVN",?60,"UNIT",?71,"TOTAL"
- W !?5,"CODE",?10,"        HCPCS - MISC. SERVICES",?59,"CHARGE",?66,"QTY",?71,"CHARGE"
- W !?5,"====",?10,"===============================================",?59,"======",?66,"===",?70,"========="
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;W !?5,"REVN",?60,"UNIT",?71,"TOTAL"
+ ;W !?5,"CODE",?10,"        HCPCS - MISC. SERVICES",?59,"CHARGE",?66,"QTY",?71,"CHARGE"
+ ;W !?5,"====",?10,"===============================================",?59,"======",?66,"===",?70,"========="
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ W !?5,"REVN",?52,"UNIT",?71,"TOTAL"
+ W !?5,"CODE",?10,"      HCPCS - MISC. SERVICES",?51,"CHARGE",?61,"QTY",?71,"CHARGE"
+ W !?5,"====",?10,"=======================================",?50,"========",?59,"=======",?68,"============"
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  Q
 LOOP S (ABMZ("LNUM"),ABMZ("NUM"),ABMZ(1),ABM)=0 F ABM("I")=1:1 S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABM)) Q:'ABM  S ABM("X")=ABM,ABMZ("NUM")=ABM("I") D PC1
  S ABMZ("MOD")=.05_U_5_U_.08_U_.09
- I ABMZ("NUM")>0 W !?69,"==========",!?69,$J("$"_($FN(ABMZ("TOTL"),",",2)),10)
+ ;I ABMZ("NUM")>0 W !?69,"==========",!?69,$J("$"_($FN(ABMZ("TOTL"),",",2)),10)  ;abm*2.6*30 IHS/SD/SDR CR8870
+ I ABMZ("NUM")>0 W !?65,"===============",!?65,$J("$"_($FN(ABMZ("TOTL"),",",2)),15)  ;abm*2.6*30 IHS/SD/SDR CR8870
  I +$O(ABME(0)) S ABME("CONT")="" D ^ABMDERR K ABME("CONT")
  G XIT
  ;
@@ -55,6 +67,7 @@ EOP I $Y>(IOSL-5) D PAUSE^ABMDE1,HD
  .S:ABMRPRV="" ABMRPRV=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABM,"P","C","R",0))
  .I ABMRPRV'="" D  ;rendering provider on line item
  ..W " ("_$P($G(^VA(200,$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABM,"P",ABMRPRV,0),U),0)),U)_"-"_$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABM,"P",ABMRPRV,0)),U,2)_")"
+ ..I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABM,2)),U,6)'="" W " DEA# "_$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,ABM,2)),U,6)  ;abm*2.6*37 IHS/SD/SDR ADO89299
  .I $P(ABM("X0"),U,19)'="" W !,?13,"NDC: "_$P(ABM("X0"),U,19)  ;abm*2.6*23 IHS/SD/AML HEAT247169
  .W !
  W ?5,$$GETREV^ABMDUTL($P(ABM("X0"),"^",2))
@@ -62,9 +75,15 @@ EOP I $Y>(IOSL-5) D PAUSE^ABMDE1,HD
  S ABMZ("MOD")=""
  F ABM("M")=5,8,9 S:$P(ABM("X0"),U,ABM("M"))]"" ABMZ("MOD")=ABMZ("MOD")_"-"_$P(ABM("X0"),U,ABM("M"))
  W ?10 W:ABMZ("MOD")]"" ABMZ("MOD")_" "
- K ABMU S ABMU(1)="?59"_U_$J($P(ABM("X0"),U,4),6,2)
- S ABMU(2)="?66"_U_$J(ABMZ("UNIT"),2)
- S ABMU(3)="?70"_U_$J($FN((ABMZ("UNIT")*$P(ABM("X0"),U,4)),",",2),9)
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;K ABMU S ABMU(1)="?59"_U_$J($P(ABM("X0"),U,4),6,2)
+ ;S ABMU(2)="?66"_U_$J(ABMZ("UNIT"),2)
+ ;S ABMU(3)="?70"_U_$J($FN((ABMZ("UNIT")*$P(ABM("X0"),U,4)),",",2),9)
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ K ABMU S ABMU(1)="?49"_U_$J($FN($P(ABM("X0"),U,4),",",2),"9R")  ;unit charge
+ S ABMU(2)="?60"_U_$$FMT^ABMERUTL(ABMZ("UNIT"),"6R")  ;units
+ S ABMU(3)="?67"_U_$J($FN((ABMZ("UNIT")*$P(ABM("X0"),U,4)),",",2),13)  ;total charge
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  S ABMZ("TOTL")=(ABMZ("UNIT")*$P(ABM("X0"),U,4))+ABMZ("TOTL")
  I $P(^ABMDPARM(DUZ(2),1,0),U,14)'="Y" S ABMU("TXT")=$P($$CPT^ABMCVAPI($P(ABM("X0"),U),ABMP("VDT")),U,3)  ;CSV-c
  ;start CSV-c
@@ -77,7 +96,8 @@ EOP I $Y>(IOSL-5) D PAUSE^ABMDE1,HD
  ..Q:($G(ABMZCPTD(ABM("CP")))="")
  ..S ABMU("TXT")=ABMU("TXT")_ABMZCPTD(ABM("CP"))_" "
  ;end CSV-c
- I ABMU("TXT")]"" S ABMU("RM")=59,ABMU("LM")=16 D ^ABMDWRAP I 1
+ ;I ABMU("TXT")]"" S ABMU("RM")=59,ABMU("LM")=16 D ^ABMDWRAP I 1  ;abm*2.6*30 IHS/SD/SDR CR8870
+ I ABMU("TXT")]"" S ABMU("RM")=41,ABMU("LM")=16 D ^ABMDWRAP I 1  ;abm*2.6*30 IHS/SD/SDR CR8870
  E  W ?17,$P($$CPT^ABMCVAPI($P(ABM("X0"),U),ABMP("VDT")),U,3)  ;CSV-c
  Q
  ;

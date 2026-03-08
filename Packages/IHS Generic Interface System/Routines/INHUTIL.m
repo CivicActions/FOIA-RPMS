@@ -1,5 +1,5 @@
-INHUTIL ;JSH; 6 Mar 96 13:04;Function library part 1 - VA version
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHUTIL ;ihs/cmi/maw - Function library part 1 - VA version
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  ;
 SOC(P1,P2,SOC,T) ;Set of Codes front end to readers
@@ -79,7 +79,7 @@ JUST(S,W,T,P) ;returns string S in a field of width W
  Q:T="L" $E(S,1,W)_%P Q %P_$E(S,1,W)
  ;
 ENV ;Set up user environment
- I '$G(DUZ) S DIC="^DIC(3,",DIC(0)="QAEM" D ^DIC Q:Y<0  S DUZ=+Y
+ I '$G(DUZ) S DIC="^VA(200,",DIC(0)="QAEM" D ^DIC Q:Y<0  S DUZ=+Y
  X $G(^INRHSITE(1,1)) Q
  ;
 ACTV(BIT) ;activate/inactivate all active messages in Script Generator

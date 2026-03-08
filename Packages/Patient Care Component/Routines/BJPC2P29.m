@@ -1,0 +1,68 @@
+BJPC2P29 ; IHS/CMI/LAB - PCC Suite v2.0 PATCH 29 PRE/POST INIT
+ ;;2.0;IHS PCC SUITE;**29**;MAY 14, 2009;Build 20
+ ;
+ ;
+ ; The following line prevents the "Disable Options..." and "Move Routines..." questions from being asked during the install.
+ I $G(XPDENV)=1 S (XPDDIQ("XPZ1"),XPDDIQ("XPZ2"))=0
+ F X="XPO1","XPZ1","XPZ2","XPI1" S XPDDIQ(X)=0
+ ;KERNEL
+ I '$$INSTALLD("XU*8.0*1018") D SORRY(2)
+ I '$$INSTALLD("DI*22.0*1018") D SORRY(2)
+ I '$$INSTALLD("BJPC*2.0*28") D MES^XPDUTL($$CJ^XLFSTR("Requires BJPC V2.0 patch 28.  Not installed.",80)) D SORRY(2)
+ ;I '$$INSTALLD("AUM*24.0*1") D MES^XPDUTL($$CJ^XLFSTR("Requires AUM v24.0 patch 1.  Not installed.",80)) D SORRY(2)
+ ;
+ Q
+ ;
+PRE ;
+ ;S BJPCDA=0 F  S BJPCDA=$O(^AUPNREP(BJPCDA)) Q:BJPCDA'=+BJPCDA  D
+ ;.S DA=BJPCDA
+ ;.S DR="1201///@;1202///@;1203///@;1204///@"
+ ;.S DIE="^AUPNREP("
+ ;.D ^DIE
+ S DIU=9000017,DIU(0)="" D EN^DIU2
+ K DIU
+ Q
+POST ;
+ NEW DIK,BJPCX
+ S DIK="^AUPNREP(",DIK(1)="1103^2" D ENALL^DIK
+ S DIK="^AUPNREP(",DIK(1)="1107^2^3" D ENALL^DIK
+ S DIK="^AUPNREP(",DIK(1)="1109^2^3" D ENALL^DIK
+ S DIK="^AUPNREP(",DIK(1)="1302^3" D ENALL^DIK
+ S DIK="^AUPNREP(",DIK(1)="1305^3" D ENALL^DIK
+ S DIK="^AUPNREP(",DIK(1)="1308^3" D ENALL^DIK
+ S DIK="^AUPNREP(",DIK(1)="1311^3" D ENALL^DIK
+ S DIK="^AUPNREP(",DIK(1)="1314^3" D ENALL^DIK
+ S DIK="^AUPNVDLV(" D IXALL^DIK
+ S DIK="^AUPNPDEV(",DIK(1)=".1^1^2" D ENALL^DIK
+ S DIK="^AUPNPDEV(",DIK(1)="6.02^1" D ENALL^DIK
+ F BJPCX="REF","PRD","UAS","NMI" D
+ .S DA=$O(^APCDTKW("B",BJPCX,0))
+ .Q:'DA
+ .S DR=".03////9000010;.08////1",DIE="^APCDTKW(" D ^DIE K DA,DR,DIE
+ .Q
+ ;
+ Q
+INSTALLD(BJPCSTAL) ;EP - Determine if patch BJPCSTAL was installed, where
+ ; APCLSTAL is the name of the INSTALL.  E.g "AG*6.0*11".
+ ;
+ NEW BJPCY,DIC,X,Y
+ S X=$P(BJPCSTAL,"*",1)
+ S DIC="^DIC(9.4,",DIC(0)="FM",D="C"
+ D IX^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",22,",X=$P(BJPCSTAL,"*",2)
+ D ^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",""PAH"",",X=$P(BJPCSTAL,"*",3)
+ D ^DIC
+ S BJPCY=Y
+ D IMES
+ Q $S(BJPCY<1:0,1:1)
+IMES ;
+ D MES^XPDUTL($$CJ^XLFSTR("Patch """_BJPCSTAL_""" is"_$S(Y<1:" *NOT*",1:"")_" installed.",IOM))
+ Q
+SORRY(X) ;
+ KILL DIFQ
+ I X=3 S XPDQUIT=2 Q
+ S XPDQUIT=X
+ Q

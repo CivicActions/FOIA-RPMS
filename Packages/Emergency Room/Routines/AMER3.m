@@ -1,5 +1,5 @@
 AMER3 ; IHS/ANMC/GIS - MORE DISCHARGE QUESTIONS ;  
- ;;3.0;ER VISIT SYSTEM;**6**;MAR 03, 2009;Build 30
+ ;;3.0;ER VISIT SYSTEM;**6,13**;MAR 03, 2009;Build 36
  ;
 QD10 ; ER PROCEDURES
  N AMERNONE S AMERNONE=$$OPT^AMER0("NONE","ER PROCEDURES")
@@ -118,26 +118,83 @@ QD16 ; DISCHARGE INSTRUCTIONS
  Q
  ;
 QD17 ; DISCHARGE PHYSICIAN
- S DIC("A")="*(PRIMARY)Provider who signed PCC form: " K DIC("B")
+ NEW DIR,AMERP,DPDT,DIEN,DFDPV,DEPDT,NAMERP
+ ;
+ ;Get current entries for visit
+ S AMERP=$$GPROV^AMERMPV1(.AMERP,$G(AMERDFN),"")
+ ;
+ ;Get the departure date/time
+ S DEPDT=$$GDEPDT($G(AMERDFN))
+ ;
+ ;Get current (could have entered and ^^)
+ S (DFDPV,DPDT)="" F  S DPDT=$O(AMERP("DISCHARGE PROVIDER",DPDT)) Q:DPDT=""  D
+ . S DIEN="" F  S DIEN=$O(AMERP("DISCHARGE PROVIDER",DPDT,DIEN)) Q:DIEN=""  D
+ .. S DFDPV=DIEN
+ ;
+ S DIR("A")="*(PRIMARY)Provider who signed PCC form: " K DIR("B")
+ I DFDPV]"" S ^TMP("AMER",$J,2,17)=DFDPV
  I '$D(^TMP("AMER",$J,2,17)) S %=$G(^TMP("AMER",$J,2,21)) I %]"" S ^TMP("AMER",$J,2,17)=%
- I $D(^TMP("AMER",$J,2,17)) S %=+^(17),DIC("B")=$P(^VA(200,%,0),U)
- S DIC="^VA(200,",DIC(0)="AEMQ"
- ; Screening so that only valid PCC providers identified
- S DIC("?")="Only active providers can be selected"
- S DIC("S")="I $D(^VA(200,""AK.PROVIDER"",$P($G(^VA(200,+Y,0)),U),+Y))"
- D ^DIC K DIC
+ I $D(^TMP("AMER",$J,2,17)) S %=+^(17),DIR("B")=$P($G(^VA(200,%,0)),U)
+ S DIR("?")="^D NHELP^AMERMPV1(""P"")"
+ S DIR="^VA(200,",DIR(0)="PO^200:AEQM"
+ S DIR("S")="I $D(^VA(200,""AK.PROVIDER"",$P($G(^VA(200,+Y,0)),U),+Y))"
+ D ^DIR
+ ;
+ ;If one entered and we have departure time update V EVR
+ I +Y>0,DEPDT]"" D
+ . ;
+ . NEW PROV,NURSE,NAMERP
+ . ;
+ . ;Clear out current
+ . D DRESET(AMERDFN,"P")
+ . ;
+ . ;Discharge provider
+ . S NAMERP("DISCHARGE PROVIDER",DEPDT,+Y)=""
+ . ;
+ . ;Update V EVR
+ . D SYNC^AMERMPRV(AMERDFN,"",.PROV,.NURSE,.NAMERP)
+ ;
  D OUT^AMER
  Q
  ;
 QD18 ; DISCHARGE NURSE
+ NEW AMERP,DNDT,DIEN,DFDNR,DEPDT,NAMERP
+ ;
+ ;Get current entries for visit
+ S AMERP=$$GPROV^AMERMPV1(.AMERP,$G(AMERDFN),"")
+ ;
+ ;Get the departure date/time
+ S DEPDT=$$GDEPDT($G(AMERDFN))
+ ;
+ ;Get current (could have entered and ^^)
+ S (DFDNR,DNDT)="" F  S DNDT=$O(AMERP("DISCHARGE NURSE",DNDT)) Q:DNDT=""  D
+ . S DIEN="" F  S DIEN=$O(AMERP("DISCHARGE NURSE",DNDT,DIEN)) Q:DIEN=""  D
+ .. S DFDNR=DIEN
+ ; 
  S DIC("A")="*Discharge nurse: " K DIC("B")
- I $D(^TMP("AMER",$J,2,18)) S %=+^(18),DIC("B")=$P(^VA(200,%,0),U)
+ I DFDNR]"" S ^TMP("AMER",$J,2,18)=DFDNR
+ I $D(^TMP("AMER",$J,2,18)) S %=+^(18),DIC("B")=$P($G(^VA(200,%,0)),U)
  S DIC="^VA(200,",DIC(0)="AEQM"
  ; Screening so that only valid PCC providers identified
- S DIC("?")="Only active providers can be selected"
+ S DIC("?")="^D NHELP^AMERMPV1(""N"")"
  S DIC("S")="I $D(^VA(200,""AK.PROVIDER"",$P($G(^VA(200,+Y,0)),U),+Y))"
  D ^DIC K DIC
  D OUT^AMER
+ ;
+ ;If one entered and we have departure time update V EVR
+ I +Y>0,DEPDT]"" D
+ . ;
+ . NEW NAMERP,PROV,NURSE
+ . ;
+ . ;Clear out current
+ . D DRESET(AMERDFN,"N")
+ . ;
+ . ;Discharge provider
+ . S NAMERP("DISCHARGE NURSE",DEPDT,+Y)=""
+ . ;
+ . ;Update V EVR
+ . D SYNC^AMERMPRV(AMERDFN,"",.PROV,.NURSE,.NAMERP)
+ ;
  I $D(AMERDOA) D
  .S %=$$OPT^AMER0("NONE","ER PROCEDURES"),^TMP("AMER",$J,2,10,%)=%_U_"NONE"
  .S ^TMP("AMER",$J,1,6)=^TMP("AMER",$J,2,17)
@@ -148,6 +205,13 @@ QD18 ; DISCHARGE NURSE
  Q
  ;
 QD19 ; TIME OF DEPARTURE
+ ;
+ NEW DIR,DEPDT
+ ;
+ ;Get the departure date/time
+ S DEPDT=$$GDEPDT($G(AMERDFN))
+ ;
+ I DEPDT]"" S ^TMP("AMER",$J,2,19)=DEPDT
  I $D(^TMP("AMER",$J,2,19)) S Y=^(19) X ^DD("DD") S DIR("B")=Y
  I '$T S DIR("B")="NOW"
  ;IHS/OIT/SCR 10/10/08 - Mark question mandatory
@@ -159,9 +223,96 @@ QD19 ; TIME OF DEPARTURE
  I Y,$$TCK^AMER2A($G(^TMP("AMER",$J,2,25)),Y,1,"the provider visit") K Y G QD19
  I Y,$$TVAL^AMER2A($G(^TMP("AMER",$J,1,2)),Y,6) K Y G QD19
  I Y="" S Y=-1
+ ;GDIT/HS/BEE 10/05/22;AMER*3.0*13;CR#5100;Save DP and DN to V EVR
+ I +Y>0 D
+ . NEW DPTIME
+ . S DPTIME=+Y
+ . ;
+ . NEW Y,PROV,NURSE,NAMERP
+ . ;
+ . ;Remove existing from V EVR
+ . D DRESET(AMERDFN,"NP")
+ . ;
+ . ;Add new entries
+ . ;
+ . ;Discharge provider
+ . I $P($G(^TMP("AMER",$J,2,17)),U) S NAMERP("DISCHARGE PROVIDER",+DPTIME,+$P($G(^TMP("AMER",$J,2,17)),U))=""
+ . ;
+ . ;Discharge nurse
+ . I $P($G(^TMP("AMER",$J,2,18)),U) S NAMERP("DISCHARGE NURSE",+DPTIME,+$P($G(^TMP("AMER",$J,2,18)),U))=""
+ . ;
+ . ;Update V EVR
+ . I $O(NAMERP(""))]"" D SYNC^AMERMPRV(AMERDFN,"",.PROV,.NURSE,.NAMERP)
+ . ;
+ . ;Update V EVR Departure Date/Time
+ . D SDEPDT(AMERDFN,DPTIME)
+ ;
  D OUT^AMER
  S AMERRUN=99
  Q
  ;
 SCHEDULE ; APPOINTMENT STUB
+ Q
+ ;
+DRESET(AMERDFN,NP,VIEN) ;Clear DP and DN
+ ;
+ I '$G(AMERDFN) Q
+ I '$D(^AMERADM(AMERDFN)),$G(VIEN)="" Q
+ ;
+ NEW ERIEN,PTYP,PDTM,PIEN,Y
+ ;
+ ;Get the VIEN
+ S:$G(VIEN)="" VIEN=$$GET1^DIQ(9009081,AMERDFN_",",1.1,"I") Q:'VIEN
+ ;
+ ;Locate existing entry
+ S ERIEN=$O(^AUPNVER("AD",VIEN,"")) Q:ERIEN=""
+ ;
+ ;Providers
+ I NP["P" S PDTM="" F  S PDTM=$O(^AUPNVER(ERIEN,13,"ATT","DC",PDTM)) Q:'PDTM  D
+ . S PIEN=0 F  S PIEN=$O(^AUPNVER(ERIEN,13,"ATT","DC",PDTM,PIEN)) Q:'PIEN  D
+ .. NEW DA,DIK
+ .. S DA(1)=ERIEN,DA=PIEN,DIK="^AUPNVER("_DA(1)_",13," D ^DIK
+ ;
+ ;Nurse
+ I NP["N" S PDTM="" F  S PDTM=$O(^AUPNVER(ERIEN,14,"ANT","DC",PDTM)) Q:'PDTM  D
+ . S PIEN=0 F  S PIEN=$O(^AUPNVER(ERIEN,14,"ANT","DC",PDTM,PIEN)) Q:'PIEN  D
+ .. NEW DA,DIK
+ .. S DA(1)=ERIEN,DA=PIEN,DIK="^AUPNVER("_DA(1)_",14," D ^DIK
+ ;
+ Q
+ ;
+GDEPDT(AMERDFN) ;Return the departure date/time from V EVR
+ ;
+ I '$G(AMERDFN) Q
+ I '$D(^AMERADM(AMERDFN)) Q
+ ;
+ NEW VIEN,ERIEN,PTYP,PDTM,PIEN,Y
+ ;
+ ;Get the VIEN
+ S VIEN=$$GET1^DIQ(9009081,AMERDFN_",",1.1,"I") Q:'VIEN
+ ;
+ ;Locate existing entry
+ S ERIEN=$O(^AUPNVER("AD",VIEN,"")) Q:ERIEN=""
+ ;
+ ;Return the departure date/time
+ Q $$GET1^DIQ(9000010.29,ERIEN_",",.13,"I")
+ ;
+ ;
+SDEPDT(AMERDFN,DEPDT) ;Return the departure date/time from V EVR, VISIT
+ ;
+ I '$G(AMERDFN) Q
+ I '$D(^AMERADM(AMERDFN)) Q
+ ;
+ NEW VIEN,ERIEN,UPVEVR,UERR,Y
+ ;
+ ;Get the VIEN
+ S VIEN=$$GET1^DIQ(9009081,AMERDFN_",",1.1,"I") Q:'VIEN
+ ;
+ ;Locate existing entry
+ S ERIEN=$O(^AUPNVER("AD",VIEN,"")) Q:ERIEN=""
+ ;
+ ;Update the departure date/time in V EVR
+ S UPVEVR(9000010.29,ERIEN_",",.13)=$S($G(DEPDT)]"":DEPDT,1:"@")
+ S UPVEVR(9000010,VIEN_",",.18)=$S($G(DEPDT)]"":DEPDT,1:"@")
+ D FILE^DIE("","UPVEVR","UERR")
  Q

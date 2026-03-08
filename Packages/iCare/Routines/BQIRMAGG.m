@@ -1,5 +1,5 @@
 BQIRMAGG ;PRXM/HC/ALA-Reminders Aggregate ; 16 Mar 2007  4:11 PM
- ;;2.2;ICARE MANAGEMENT SYSTEM;;Jul 28, 2011;Build 37
+ ;;2.7;ICARE MANAGEMENT SYSTEM;**2**;Dec 19, 2017;Build 10
  ;
  Q
  ;
@@ -61,24 +61,26 @@ RPT ;
  . ; If it's inactive reminder, quit
  . I $P(^BQI(90506.1,DIEN,0),U,10)=1 Q
  . ; If it's a register reminder, quit
- . ;I $$GET1^DIQ(90506.1,DIEN_",",2.03,"E")="CARE MANAGEMENT" Q
  . I $$GET1^DIQ(90506.1,DIEN_",",3.03,"E")="CARE MANAGEMENT" Q
  . S REMNM=$P(^BQI(90506.1,DIEN,0),U,3)
  . ; NDA patients have no data so CT should be 0
  . F I=2:1:4 S:$P(RDATA,U,I)'="" CT=CT+1
  . I CT=0 Q
- . ; EHR reminders return a N/A
+ . ; If reminder returns a N/A
  . I $P(RDATA,U,3)="N/A" Q
+ . ; eligible record for denominator
  . S PELIG=PELIG+1
  . I CT'=0 D
  .. S DUE=$P(RDATA,U,4),LAST=$P(RDATA,U,2)
- .. I LAST="",DUE="" Q
- .. ;I LAST'="",DUE'="" D
+ .. ; if the reminder has been done, count as eligible and current
+ .. I $P(RDATA,U,3)="DONE" S PCUR=PCUR+1 Q
+ .. I LAST="",DUE="",$P(RDATA,U,3)="DUE NOW" S DUE=DT
  .. I DUE'="" D
- ... I DUE<GRDT S POVR=POVR+1 Q
- ... ;E  S PCUR=PCUR+1
- ... I DUE>DT S PCUR=PCUR+1
- .. ;I LAST'="",DUE="",LAST<GRDT S POVR=POVR+1
+ ... ;If due date is greater than today, it is current
+ ... I DUE>DT S PCUR=PCUR+1 Q
+ ... ; otherwise it is overdue
+ ... ;I DUE<GRDT S POVR=POVR+1 Q
+ ... S POVR=POVR+1
  . S $P(AGGREG(REMNM,RMCODE),U,1)=$P($G(AGGREG(REMNM,RMCODE)),U,1)+PELIG
  . S $P(AGGREG(REMNM,RMCODE),U,2)=$P($G(AGGREG(REMNM,RMCODE)),U,2)+PCUR
  . S $P(AGGREG(REMNM,RMCODE),U,3)=$P($G(AGGREG(REMNM,RMCODE)),U,3)+POVR

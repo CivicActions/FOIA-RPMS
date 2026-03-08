@@ -1,10 +1,10 @@
-AMHRPPD ; IHS/CMI/LAB - ACTIVE CLIENT LIST ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHRPPD ; IHS/CMI/LAB - ACTIVE CLIENT LIST ; [ 02/21/2007  3:58 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4,7,8**;JAN 27, 2003
  ;
  I '$D(IOF) D HOME^%ZIS
  W @(IOF),!!
  W "**********  PLACEMENTS IN PAST YEAR BY SITE/PATIENT  **********",!!
- W "This report will produce a list of patients who have had a placement disposition",!,"recorded in a date range specified by the user.",!
+ W "This report will produce a list of patients who have had a placement disposition",!,"recorded in the past year.",!
  D DBHUSRP^AMHUTIL,DBHUSR^AMHUTIL
 GETDATES ;
 BD ;get beginning date
@@ -23,9 +23,6 @@ SORT ;
  S DIR(0)="S^P:Alphabetically by Patient Name;S:Alphabetically by Site Referred to",DIR("A")="How would you like this report sorted",DIR("B")="P" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G BD
  S AMHSORT=Y
-DEMO ;
- D DEMOCHK^AMHUTIL1(.AMHDEMO)
- I AMHDEMO=-1 G SORT
 ZIS ;
  S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
  I $D(DIRUT) G XIT
@@ -56,7 +53,6 @@ PROC1 ;
 SET ;
  I $P(^AMHREC(AMHR,0),U,17)=""&($P(^AMHREC(AMHR,0),U,18)="") Q
  Q:'$$ALLOWVI^AMHUTIL(DUZ,AMHR)
- I $P(^AMHREC(AMHR,0),U,8) Q:$$DEMO^AMHUTIL1($P(^AMHREC(AMHR,0),U,8),$G(AMHDEMO))
  S S=$S($P(^AMHREC(AMHR,0),U,17)]"":$$VAL^XBDIQ1(9002011,AMHR,.17),1:"???")
  S S1=$S($P(^AMHREC(AMHR,0),U,18)]"":$P(^AMHREC(AMHR,0),U,18),1:"???")
  S P=$$VAL^XBDIQ1(9002011,AMHR,.08)

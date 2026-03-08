@@ -1,5 +1,6 @@
-LEXQHL3 ;ISL/KER - Query History - CPT/HCPCS Extract ;04/21/2014
- ;;2.0;LEXICON UTILITY;**62,80**;Sep 23, 1996;Build 10
+LEXQHL3 ;ISL/KER - Query History - CPT/HCPCS Extract ;10/30/2008
+ ;;2.0;LEXICON UTILITY;**62**;Sep 23, 1996;Build 15
+ ;;
  ;               
  ; Global Variables
  ;    ^ICPT(              ICR   4489

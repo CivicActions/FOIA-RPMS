@@ -1,5 +1,5 @@
-BTIULO5 ; IHS/ITSC/LJF - STILL MORE OBJECTS FOR EHR ;27-Apr-2016 12:26;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1001,1002,1004,1005,1006,1009,1012,1013,1016**;NOV 04, 2004;Build 10
+BTIULO5 ; IHS/ITSC/LJF - STILL MORE OBJECTS FOR EHR ;04-Aug-2020 11:02;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1001,1002,1004,1005,1006,1009,1012,1013,1016,1020,1022**;NOV 04, 2004;Build 11
  ;IHS/ITSC/LJF 12/10/2004 PATCH 1001 V Orders object was not displaying a modified order
  ;             04/08/2005 PATCH 1002 Indented display of medication sig
  ;                        PATCH 1004 Changed to EHR 1.1 visit selection
@@ -8,6 +8,7 @@ BTIULO5 ; IHS/ITSC/LJF - STILL MORE OBJECTS FOR EHR ;27-Apr-2016 12:26;DU
  ;                        Patch 1012 for SNOMEd
  ;                        Patch 1013 for ICD-10
  ;IHS/MSC/MGH Patch 1016 added normal/abnormal qualifier
+ ;IHS/GDIT/MSC/MGH Patch 1020 fixed primary issue
 VORD(TARGET) ; returns orders for current vuecentric visit context
  I $T(GETVAR^CIAVMEVT)="" S @TARGET@(1,0)="Invalid context variables" Q "~@"_$NA(@TARGET)
  NEW X,I,VST,CNT,RESULT
@@ -86,6 +87,7 @@ GETPOV(RETURN,VIEN,MULTI) ;return every diagnosis for current visit
  . S NARR=$$GET1^DIQ(9000010.07,IEN,.04)
  . I $P(NARR,"|",1)["*" S NARR=$P(NARR,"|",2)
  . I $P(NARR,"|",2)=" " S NARR=$P(NARR,"|",1)
+ . S NARR=$TR(NARR,"|","-")
  . I NARR'="" S ARRAY(NARR,IEN)=""
  S NARR="",IEN=0
  F  S NARR=$O(ARRAY(NARR)) Q:NARR=""  D
@@ -108,6 +110,8 @@ GETPOV(RETURN,VIEN,MULTI) ;return every diagnosis for current visit
  ..S NARR=BTIU(.04)
  ..I $P(NARR,"|",1)["*" S NARR=$P(NARR,"|",2)
  ..I $P(NARR,"|",2)=" " S NARR=$P(NARR,"|",1)
+ ..S NARR=$TR(NARR,"|","-")
+ ..I $P(NARR,"-",2)="" S NARR=$P(NARR,"-",1)
  ..S RETURN(CNT)=$J(PCNT,2)_") "_NARR_LINE
  .. ;Return qualifiers
  ..F X=13,17,18,14 D

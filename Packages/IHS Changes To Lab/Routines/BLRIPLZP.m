@@ -1,5 +1,7 @@
-BLRIPLZP ; IHS/OIT/MKK - INTERMEC IPL ACCESSION NUMBER Barcode 39 Lab Label Print ; [ 04/04/2009  8:30 AM ]
- ;;5.2;IHS LABORATORY;**1030**;NOV 01, 1997
+BLRIPLZP ; IHS/OIT/MKK - INTERMEC IPL ACCESSION NUMBER Barcode 39 Lab Label Print ; 23-Aug-2023 13:03 ; MKK
+ ;;5.2;IHS LABORATORY;**1030,1054**;NOV 01, 1997;Build 20
+ ;
+ ; IHS/MSC/MKK - LR*5.2*1054 - Item 76305 - Preferred Name & Legal Sex Controlled by XPAR
  ;
  ; Total Rewrite
  ; For IPL capable printers only.  NO BINARY CODE VERSION.
@@ -56,7 +58,8 @@ BAR ; EP - Barcode label; Accession # Barcoded
  W "<STX><CR>"_$G(HRCN)_"<ETX>"                         ; Health Record Number (09)
  W "<STX><CR>"_$$DOBSTR($G(DOB))_"<ETX>"                ; Date of Birth        (10)
  W "<STX><CR>"_$$BLRURG($G(LRURG0))_"<ETX>"             ; Urgency              (11)
- W "<STX><CR>"_$E($G(PNM),1,27)_"<ETX>"                 ; Patient Name         (12)
+ ; W "<STX><CR>"_$E($G(PNM),1,27)_"<ETX>"                  ; Patient Name         (12)
+ W "<STX><CR>"_$E($$GETPREF^BLRUTILD(LRDFN),1,27)_"<ETX>"  ; Patient Name         (12)  ; LR*5.2*1054
  W "<STX><CR>Sex:"_$G(SEX)_"<ETX>"                      ; Sex                  (13)
  ;
  ; W "<STX><ETB><SI>S30<FF><ETX>"                         ; Ending WITH Form Feed
@@ -82,7 +85,8 @@ PRT ; EP - plain label..no barcode
  W "<STX><CR>"_$$BLRURG(LRURG0)_"<ETX>"                 ; Urgency              (09)
  W "<STX><CR>"_$G(HRCN)_"<ETX>"                         ; Health Record Number (10)
  W "<STX><CR>"_$$DOBSTR($G(DOB))_"<ETX>"                ; Date of Birth        (11)
- W "<STX><CR>"_$E($G(PNM),1,32)_"<ETX>"                 ; Patient Name         (12)
+ ; W "<STX><CR>"_$E($G(PNM),1,32)_"<ETX>"                  ; Patient Name         (12)
+ W "<STX><CR>"_$E($$GETPREF^BLRUTILD(LRDFN),1,32)_"<ETX>"  ; Patient Name         (12)  ; LR*5.2*1054
  ;
  ; W "<STX><ETB><SI>S30<FF><ETX>"                         ; Ending WITH Form Feed
  W "<STX><ETB><SI>S30<ETX>"                             ; Ending WITHOUT Form Feed

@@ -1,6 +1,8 @@
 ABMDRPT ; IHS/ASDST/DMJ - Bill Listing ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**37**;NOV 12, 2009;Build 739
  ;Original;TMD;
+ ;IHS/SD/SDR 2.6*37 ADO75981 Fixed date range so it will be inclusive of the start/end dates; for example, if you
+ ;  just ran it for one day it wouldn't report anything
  ;
  K ABM,ABMY S ABM("PAY")="",ABMP("TYP")=3
  S ABM("PRIVACY")=1,ABM("COST")=""
@@ -13,6 +15,13 @@ SEL S DIC="^AUPNPAT(",DIC(0)="QEAM" D ^DIC G XIT:X=""!$D(DTOUT)!$D(DUOUT),SEL:+Y
  S ABM("RTYP")=1,ABM("RTYP","NM")="BRIEF LISTING (80 Width)" D ^ABMDRSEL G XIT:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
 HD S ABM("HD",0)="BILLING ACTIVITY of "_$P(^DPT(ABM("PAT"),0),U)
  D ^ABMDRHD
+ ;
+ ;start new abm*2.6*37 IHS/SD/SDR ADO75981
+ I $G(ABMY("DT"))'="" D
+ .S ABMY("DT",1)=ABMY("DT",1)-.000001
+ .S ABMY("DT",2)=ABMY("DT",2)+.999999
+ ;end new abm*2.6*37 IHS/SD/SDR ADO75981
+ ;
  S ABMQ("RC")="COMPUTE^ABMDRPT",ABMQ("RX")="POUT^ABMDRUTL",ABMQ("NS")="ABM"
  I ABM("RTYP")<3 S ABMQ("RP")="PRINT^ABMDRPT"_ABM("RTYP")
  E  S ABMQ("RP")="PRINT^ABMDRAL"_ABM("RTYP")

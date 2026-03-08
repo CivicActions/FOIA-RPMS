@@ -1,187 +1,190 @@
-ICDCODE ;DLS/DEK/KER/FJF - ICD CODE APIS ;04/21/2014
- ;;18.0;DRG Grouper;**6,12,14,29,57**;Oct 20, 2000;Build 7
- ;               
- ; Global Variables
- ;    ^TMP("ICDD")        SACC 2.3.2.5.1
- ;               
+ICDCODE ;DLS/DEK - ICD CODE APIS ; 04/28/2003
+ ;;18.0;DRG Grouper;**6**;Oct 20, 2000
+ ;
  ; External References
- ;    $$DT^XLFDT          ICR  10103
- ;               
-EN ; Main Entry Point
-HELP ; Developer Help for an API
- D HLP^ICDEXH("LEG") Q
+ ;   DBIA 10103  $$DT^XLFDT
  ;
-ICDDX(CODE,CDT,DFN,SRC) ; Return ICD Dx Code Info
- ;
+ICDDX(CODE,CDT,DFN,SRC) ; return info on ICD Diagnosis code
  ; Input:
- ;
- ;     CODE  Code/IEN (required)
- ;     CDT   Date (default = TODAY)
- ;     DFN   Not in use
- ;     SRC   Source
- ;             0 = exclude local codes
- ;             1 = include local codes
- ;
+ ;    CODE - ICD code, ien or .01 format, REQUIRED
+ ;    CDT - date to screen against, default = today (FileMan format)
+ ;          If CDT < 10/1/1978, use 10/1/1978
+ ;          If CDT > DT, validate with newest In/Activation Dates
+ ;          If CDT is year only, use first of the year
+ ;          If CDT is year and month only, use first of the month
+ ;    DFN - not in use, included in anticipation of future need
+ ;    SRC - SCREEN SOURCE
+ ;          If '$G(SRC), level 1, Level 2 only.
+ ;          If $G(SRC), include level 3.
  ; Output:
+ ;    ien^CODE NUMBER^IDENTIFIER^DIAGNOSIS^UNACCEPTABLE AS PRINCIPAL DX^MAJOR DIAGNOSTIC CATEGORY 
+ ;       ien^MDC13^COMPLICATION/COMORBIDITY^ICD EXPANDED^STATUS^SEX^INACTIVE DATE^MDC24^MDC25^AGE 
+ ;       LOW^AGE HIGH^ACTIVATION DATE^MSG
+ ; -or-
+ ;    -1^error description
  ;
- ;     Returns an 19 piece string delimited by ^
- ;  
- ;      1  IEN of code in file 80
- ;      2  ICD-9 Dx Code (#.01)
- ;      3  Id (#2)
- ;      4  Versioned Dx (67 multiple)
- ;      5  Unacceptable as Principal Dx (#101)
- ;      6  Major Dx Cat (#5)
- ;      7  MDC13 (5.5)
- ;      8  Compl/Comorb (#70)
- ;      9  ICD Expanded (#8) 1:Yes 0:No
- ;     10  Status (66 multiple)
- ;     11  Sex (#9.5)
- ;     12  Inactive Date (66 multiple)
- ;     13  MDC24 (#5.7)
- ;     14  MDC25 (#5.9)
- ;     15  Age Low (#14)
- ;     16  Age High (#15)
- ;     17  Activation Date (.01 of 66 multiple)
- ;     18  Message
- ;     19  Versioned Complication/Comorbidity (#103)
+ ;    STATUS = 0 if inactive, 1 if active
+ ;    SEX = M if Male, F if Female, null if non-specific
+ ;    Activation Date = date code became active
+ ;    Inactivation Date = date code became inactive
+ ;    AGE Low = minimum age for code, null if non-specific
+ ;    AGE High = maximum age for code, null if non-specific
+ ;    MSG = User Alert
  ;
- ;       or
+ ; Variables:
+ ;    DATA = 0-node for ICD code
+ ;    EFF = effective date
  ;
- ;     -1^Error Description
+ N DATA,EFF,INV
+ I $G(CODE)="" Q "-1^NO CODE SELECTED"
+ S INV="-1^INVALID CODE",CODE=+$$CODEN(CODE,80) ;find ien for code
+ I CODE<1 Q INV ;if no code, return error
+ I '$D(^ICD9(CODE)) Q INV ;if no code, return error
+ I '$G(SRC),$P(^ICD9(CODE,0),"^",8) Q "-1^VA LOCAL CODE SELECTED"
+ ;move 0-node into string
+ S DATA=$G(^ICD9(CODE,0)) I '$L(DATA) Q "-1^NO DATA"
+ S CDT=$S($G(CDT)="":$$DT^XLFDT,1:$$DTBR^ICDAPIU(CDT))
+ S EFF=$$EFF^ICDSUPT(80,CODE,CDT)
+ S $P(DATA,"^",9)=$S(EFF<1:0,1:$P(EFF,"^"))
+ S $P(DATA,"^",11)=$P(EFF,"^",2),$P(DATA,"^",16)=$P(EFF,"^",3)
+ Q CODE_"^"_DATA_"^"_$$MSG^ICDAPIU(CDT)
  ;
- N X S X=$$ICDDX^ICDEX($S($G(CODE)?1N.N:$$CODEC^ICDEX(80,$G(CODE)),1:$G(CODE)),$G(CDT),1,,$G(SRC))
- S $P(X,"^",3)=$TR($P(X,"^",3),";","")
- Q X
-ICDOP(CODE,CDT,DFN,SRC) ; Return ICD Operation/Procedure Code Info
- ;
+ICDOP(CODE,CDT,DFN,SRC) ; return info on ICD Operation/Procedure code
  ; Input:
- ; 
- ;     CODE  ICD code or IEN format, (required)
- ;      CDT  Date (default = TODAY)
- ;      DFN  Not in use
- ;      SRC  Source
- ;             0 = exclude local codes
- ;             1 = include local codes
- ;
+ ;    CODE - ICD code, ien or .01 format, REQUIRED
+ ;    CDT - date to screen against, default = today (FileMan format)
+ ;          If CDT < 10/1/1978, use 10/1/1978
+ ;          If CDT > DT, validate with newest In/Activation Dates
+ ;          If CDT is year only, use first of the year
+ ;          If CDT is year and month only, use first of the month
+ ;    DFN - not in use, included in anticipation of future need
+ ;    SRC - SCREEN SOURCE
+ ;          If '$G(SRC), level 1, Level 2 only.
+ ;          If $G(SRC), include level 3.
  ; Output:
- ; 
- ;     Returns an 14 piece string delimited by ^
- ;     
- ;      1  IEN of code in file 80.1
- ;      2  ICD-9 code (#.01)
- ;      3  Id (#2)
- ;      4  MDC24 (#5)
- ;      5  Versioned Oper/Proc (67 multiple)
- ;      6  <null>
- ;      7  <null>
- ;      8  <null>
- ;      9  ICD Expanded (#8) 1:Yes 0:No
- ;     10  Status (66 multiple)
- ;     11  Use with Sex (#9.5)
- ;     12  Inactive Date (66 multiple)
- ;     13  Activation Date (66 multiple)
- ;     14  Message
+ ;       ien^CODE NUMBER^IDENTIFIER^MDC24^OPERATION/PROCEDURE^^^^ICD EXPANDED^STATUS^SEX^INACTIVE 
+ ;         DATE^ACTIVATION DATE^MSG
+ ;  -or-
+ ;       -1^error description
  ;
- ;       or
+ ;    STATUS = 0 if inactive, 1 if active
+ ;    SEX = M if Male, F if Female, null if non-specific
+ ;    Activation Date = date code became active
+ ;    Inactivation Date = date code became inactive
+ ;    MSG = User alert
  ;
- ;     -1^Error Description
+ ; Variables:
+ ;    DATA = 0-node for ICD code
+ ;    EFF = effective date
  ;
- N X S X=$$ICDOP^ICDEX($S($G(CODE)?1N.N:$$CODEC^ICDEX(80.1,$G(CODE)),1:$G(CODE)),$G(CDT),2,,$G(SRC))
- S $P(X,"^",3)=$TR($P(X,"^",3),";","")
- Q X
+ N DATA,EFF,STR,INV
+ I $G(CODE)="" Q "-1^NO CODE SELECTED"
+ S INV="-1^INVALID CODE",CODE=+$$CODEN(CODE,80.1) ; find ien for code
+ I CODE<1 Q INV ; if no code, return error
+ I '$D(^ICD0(CODE)) Q INV ; if no code, return error
+ I '$G(SRC),$P(^ICD0(CODE,0),"^",8) Q "-1^VA LOCAL CODE SELECTED"
+ ;move 0-node into string
+ S DATA=$G(^ICD0(CODE,0)) I '$L(DATA) Q "-1^NO DATA"
+ S CDT=$S($G(CDT)="":$$DT^XLFDT,1:$$DTBR^ICDAPIU(CDT))
+ S EFF=$$EFF^ICDSUPT(80.1,CODE,CDT)
+ S $P(DATA,"^",9)=$S(EFF<1:0,1:$P(EFF,"^"))
+ S $P(DATA,"^",11,12)=$P(EFF,"^",2,3)
+ Q CODE_"^"_DATA_"^"_$$MSG^ICDAPIU(CDT)
+ ;
 ICDD(CODE,OUTARR,CDT) ; returns ICD description in array
- ;
  ; Input:
- ;
- ;     CODE   ICD Code (required)
- ;     ARY    Array Name for description
- ;            e.g. "ABC" or "ABC("TEST")"
- ;            Default = ^TMP("ICDD",$J)
- ;     CDT    Date (default = TODAY)
- ;
+ ;    CODE - ICD code  REQUIRED
+ ;    OUTARR - array to store description
+ ;             name of array - e.g. "ABC" or "ABC("TEST")"
+ ;             or temp arr.   Default = ^TMP("ICDD",$J)
+ ;    CDT - date to screen against, default = today (FileMan format)
+ ;          If CDT < 10/1/1978, use 10/1/1978
+ ;          If CDT > DT, use DT
+ ;          If CDT is year only, use first of the year
+ ;          If CDT is year and month only, use first of the month
  ; Output:
+ ;    # of lines
+ ;    @OUTARR(1-n) = lines of description
+ ;    @OUTARR(n) = User Alert
+ ; -or-
+ ;    -1^error message
  ;
- ;     #   Number of lines in array
+ ; **NOTE - USER MUST INITIALIZE ^TMP("ICDD",$J), IF USED**
  ;
- ;     @ARY(1:n) - Versioned Description (68 multiple)
- ;     @ARY(n+1) - blank
- ;     @ARY(n+1) - message: CODE TEXT MAY BE INACCURATE
- ;
- ;       or
- ;
- ;     -1^Error Description
- ;
- ;     ** NOTE - USER MUST INITIALIZE ^TMP("ICDD",$J), IF USED **
- ;
- N ICDDXOUT,ICDDXARY,END,ICDDXI,ICDDXC
- S ICDDXOUT=$$ICDD^ICDEX($G(CODE),.ICDDXARY,$G(CDT))
- Q:ICDDXOUT["-1^Invalid" "-1^Invalid code"
- Q:ICDDXOUT["-1^" ICDDXOUT
+ N ARR,END,I,N,GLOB,INV
+ I $G(CODE)="" Q "-1^NO CODE SELECTED"
+ S INV="-1^INVALID CODE"
+ I CODE?1.9N Q "-1^"_INV
+ S CODE=$$CODEN(CODE),GLOB=$P(CODE,"~",2),CODE=+CODE
+ I CODE<1!(GLOB["INVALID") Q INV ;if no code, return error
+ I '$D(@(GLOB_CODE_")")) Q INV ;if no code, return error
  I $G(OUTARR)="" S OUTARR="^TMP(""ICDD"",$J,"
+ ;ensure OUTARR is proper format
  I OUTARR'["(" S OUTARR=OUTARR_"("
  I OUTARR[")" S OUTARR=$P(OUTARR,")")
  S END=$E(OUTARR,$L(OUTARR)) I END'="("&(END'=",") S OUTARR=OUTARR_","
+ ;clear ^TMP("ICDD",$J - if used
  I OUTARR="^TMP(""ICDD"",$J," K ^TMP("ICDD",$J)
- S (ICDDXI,ICDDXC)=0 F  S ICDDXI=$O(ICDDXARY(ICDDXI)) Q:+ICDDXI'>0  D
- . N ARR S ARR=OUTARR_ICDDXI_")",@ARR=$G(ICDDXARY(ICDDXI)),ICDDXC=ICDDXC+1
- Q ICDDXC
+ S I=0,N=0,CDT=$S($G(CDT)="":$$DT^XLFDT,1:$$DTBR^ICDAPIU(CDT))
+ S N=N+1,ARR=OUTARR_N_")",@ARR=$G(@(GLOB_CODE_",1)"))
+ S N=N+1,ARR=OUTARR_N_")",@ARR=" "
+ S N=N+1,ARR=OUTARR_N_")",@ARR=$$MSG^ICDAPIU(CDT)
+ Q N
+ ;
 CODEN(CODE,FILE) ; return ien of ICD code
- ;
  ; Input:
- ; 
- ;     CODE   ICD code (required)
- ;     FILE   File Number to search for code
- ;               80 = ICD Dx file
- ;               80.1 = ICD Oper/Proc file
+ ;    CODE - ICD code  REQUIRED
+ ;    FILE - File Number to search for code
+ ;           80 = ICD Diagnosis file
+ ;           80.1 = ICD Opereration/Procedure file
  ;
- ; Output:
- ; 
- ;     IEN~global root
- ;       or
- ;     -1~error message
+ ; Output: ien~global root
+ ;    where global root is:
+ ;           "^ICD9(" - File 80
+ ;           "^ICD0(" - File 80.1
+ ;    -or-
+ ;         -1~error message
  ;
- N X S X=$$CODEN^ICDEX($G(CODE),$G(FILE))
- Q:X["-1~Invalid" "-1~Invalid code"
- Q X
-CODEC(IEN,FILE) ;return the ICD code of an ien
- ;Input:
- ;  IEN    IEN of ICD code    REQUIRED
- ;  FILE   File Number to search for code
- ;         80 = ICD Dx file
- ;         80.1 = ICD Oper/Proc file
+ I $G(CODE)="" Q "-1~NO CODE SELECTED"
+ N Y,GLOB,INV
+ S INV="INVALID ",CODE=$P(CODE," ")
+ ;use FILE if passed
+ I $G(FILE) D  Q Y_"~"_GLOB
+ . S GLOB=$S(FILE=80:"^ICD9(",FILE=80.1:"^ICD0(",1:INV_"FILE")
+ . I $E(GLOB)'="^" S Y=-1,GLOB=INV_"FILE" Q
+ . S Y=$S(CODE?1.9N:$$CODEZ(CODE,GLOB),1:$$CODEBA(CODE,GLOB))
+ ;FILE not passed - report where found
+ I CODE?1.9N S GLOB="^ICD9(",Y=$$CODEZ(CODE,GLOB) D  G CODENQ
+ . I Y<1 S GLOB="^ICD0(",Y=$$CODEZ(CODE,GLOB)
+ S GLOB=$S(CODE?2N1"."1.3N:"^ICD0(",CODE?3N1".".3N!(CODE?1U2.3N1".".2N):"^ICD9(",1:-1)
+ S Y=$S('GLOB:$$CODEBA(CODE,GLOB),1:-1)
+CODENQ I Y<1 S GLOB=INV_"CODE"
+ Q Y_"~"_GLOB
  ;
- ;Output: ICD code, -1 if not found
+CODEC(CODE,FILE) ;return the ICD code of an ien
+ ;  Input:
+ ;    CODE - ien of ICD code    REQUIRED
+ ;    FILE - File Number to search for code
+ ;           80 = ICD Diagnosis file
+ ;           80.1 = ICD Opereration/Procedure file
+ ; Output: ICD code, -1 if not found
  ;
- S:+($G(FILE))'>0 FILE=80
- Q $$CODEC^ICDEX($G(FILE),$G(IEN))
-CODEZ(CODE,ROOT,FLG) ; Based on IEN/root:
+ S CODE=$G(CODE) Q:CODE'?1.9N -1
+ N Y,GLOB
+ I $G(FILE) D  Q Y
+ . S GLOB=$S(FILE=80:"^ICD9(",FILE=80.1:"^ICD0(",1:-1)
+ . S Y=$S(GLOB<0:-1,1:$$CODEZ(CODE,GLOB))
+ ;FILE not passed - Search for 1st match
+ S Y=$$CODEZ(CODE,"^ICD9(",1)
+ Q $S(+Y<0:$$CODEZ(CODE,"^ICD0(",1),1:Y)
+ ;
+CODEZ(CODE,ROOT,FLG) ; based on code ien and root:
  N Y,ICDL            ; if 'FLG return code existence, else zero node - piece 1
- S Y=$P($G(@(ROOT_CODE_",0)")),U),ICDL=$L(Y) I ICDL,'$G(FLG) Q CODE
+ S Y=$P($G(@(ROOT_CODE_",0)")),"^"),ICDL=$L(Y) I ICDL,'$G(FLG) Q CODE
  Q $S('ICDL:-1,1:Y)
-CODEBA(CODE,ROOT) ; Return IEN based on code/root
  ;
- ; Input:
+CODEBA(CODE,ROOT) ;return ien based on code and root
+ N IEN
+ S IEN=$O(@(ROOT_"""BA"","""_CODE_" "","""")"),-1)
+ Q $S('IEN:-1,1:IEN)
  ;
- ;   CODE  ICD Code, either ICD-9 or ICD-10 (required)
- ;   ROOT  File Root or Number (required)
- ;
- ; Output:
- ; 
- ;   IEN   IEN for CODE in ROOT or -1 if not found
- ;   
- Q $$CODEBA^ICDEX($G(CODE),$G(ROOT))
-COMCOM(IEN,VDT) ; Return versioned complication/comorbidity
- Q $$VCC^ICDEX($G(IEN),$G(CDT))
-VST(IEN,VDT,FILE)     ; Versioned Short Text
- Q $$VST^ICDEX($G(FILE),$G(IEN),$G(CDT))
-VSTD(IEN,VDT)  ; Versioned Short Text (Dx)
- Q $$VSTD^ICDEX($G(IEN),$G(CDT))
-VSTP(IEN,VDT) ; Versioned Short Text (Proc)
- Q $$VSTP^ICDEX($G(IEN),$G(CDT))
-VLT(IEN,VDT,FILE) ; Version Description - Long Text
- Q $$VLT^ICDEX($G(FILE),$G(IEN),$G(CDT))
-VLTD(IEN,VDT) ; Versioned Description - Long Text (Dx)
- Q $$VLTD^ICDEX($G(IEN),$G(CDT))
-VLTP(IEN,VDT) ; Versioned Description - Long Text (Proc)
- Q $$VLTP^ICDEX($G(IEN),$G(CDT))

@@ -1,5 +1,6 @@
-ZOSV1VXD ;SFISC/AC - View commands & special functions(continued). ;1:05 PM  30 Sep 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+%ZOSV1 ;SFISC/AC-View commands & special functions(continued). ;03:11 PM  21 Dec 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 DEVOPN ;List devices opened.
  N %,%B,%I,%L,%X,%X1,%X2,%Y
@@ -27,14 +28,14 @@ DV2 S Y=$ZC(%PARSE,X) I Y="" S Y=-1 Q
  Q
 DVOPN S $ZT="DVERR",Y=0 Q:$D(%ZTIO)
  L:$D(%ZISLOCK) +@%ZISLOCK:60
- O X::$S($D(%ZISTO):%ZISTO,1:0) E  S Y=999 L:$D(%ZISLOCK) -@%ZISLOCK:60 Q
+ O X::$S($D(%ZISTO):%ZISTO,1:0) E  S Y=999 L:$D(%ZISLOCK) -@%ZISLOCK Q
  L:$D(%ZISLOCK) -@%ZISLOCK
  S Y=0 I '$D(%ZISCHK)!$S($D(%ZIS)#2:(%ZIS["T"),1:0) C X Q
  S:X]"" IO(1,X)="" Q
 DVERR I $ZE["OPENERR" S Y=-1 Q
  ZQ
 RES S Y=0,%ZISD0=$O(^%ZISL(3.54,"B",X,0))
- I '%ZISD0 S Y=-1,%ZISD0=$O(^%ZIS(1,"C",X)) Q:'%ZISD0  Q:'$D(^%ZIS(1,+%ZISD0,0))  Q:$P(^(0),"^")'=X  Q:'$D(^("TYPE"))  Q:^("TYPE")'="RES"  S Y=0 Q
+ I '%ZISD0 S Y=-1,%ZISD0=%O(^%ZIS(1,"C",X)) Q:'%ZISD0  Q:'$D(^%ZIS(1,+%ZISD0,0))  Q:$P(^(0),"^")'=X  Q:'$D(^("TYPE"))  Q:^("TYPE")'="RES"  S Y=0 Q
  S X1=$S($D(^%ZISL(3.54,+%ZISD0,0)):^(0),1:"")
  I $P(X1,"^",2)&(X=$P(X1,"^")) S Y=0 Q
  S Y=999 F %ZISD1=0:0 S %ZISD1=$O(^%ZISL(3.54,%ZISD0,1,%ZISD1)) Q:%ZISD1'>0  I $D(^(%ZISD1,0)) S Y=$P(^(0),"^",3) Q

@@ -1,19 +1,75 @@
 BEDDPLKP ;GDIT/HCSD/BEE-Patient Lookup ; 29 Oct 2005  6:51 PM
- ;;2.0;BEDD DASHBOARD;**2,3**;Jun 04, 2014;Build 12
+ ;;2.0;BEDD DASHBOARD;**2,3,8**;Jun 04, 2014;Build 5
  ;
  ;Adapted from BQIPTLKP
  ;
  Q
  ;
-FND(BEDD,TEXT,MAX) ; EP -- LOOKUP PATIENTS
+FND(BEDD,TEXT,MAX,SHOWPPN) ; EP -- LOOKUP PATIENTS
  ;
  ;Description - Find a list of patients based on search criteria
  ;Input
  ;  TEXT - Search text which can include name, SSN, HRN, etc.
  ;   MAX - Maximum results to return
+ ; SHOWPPN - Show patient preferred name (1-Yes, 0-No)
+ ;
  ;Output
  ;  BEDD - Array of patients
  ;
+ ;GDIT/HS/BEE;BEDD*2.0*8;BEDD*2.0*8;Feature 75969, change to use AUPLK, display PPN
+ NEW DIC,AUPX,AUPQF,AUPS,TMP,DFN,RCNT,NODE,X
+ NEW AUPDIC,AUPDICW,AUPL
+ ;
+ K BEDD
+ ;
+ S SHOWPPN=$G(SHOWPPN)
+ S MAX=+$G(MAX) S:MAX=0 MAX=50
+ S TEXT=$$UP^XLFSTR($G(TEXT)) I (TEXT="?")!(TEXT="??") Q
+ ;
+ S DIC(0)="M",AUPX=$G(TEXT),AUPQF=0
+ ;
+ S DIC="^DPT("
+ S AUPX=$G(TEXT)
+ D CHKPAT^AUPNLK
+ ;
+ ;Loop through and sort results
+ S DFN="" F  S DFN=$O(AUPS(DFN)) Q:DFN=""  D
+ . ;
+ . NEW ONAME,NAME,SEX,HRN,DOB,DOD,AL,ALFLG,ALIAS,DISP,PREF
+ . ;Get original name
+ . S ONAME=$$GET1^DIQ(2,DFN_",",.01,"E")
+ . ;
+ . ;Always show preferred name
+ . S NAME=$$GETPREF^AUPNSOGI(DFN,"E")
+ . I NAME="" S NAME=ONAME
+ . Q:NAME=""
+ . ;
+ . ;Filter results on location
+ . Q:'$D(^AUPNPAT(DFN,41,DUZ(2),0))
+ . ;
+ . S SEX=$$GET1^DIQ(2,DFN_",",.02,"I")
+ . S HRN=$$HRNL(DFN) Q:HRN=""
+ . S DOB=$$FMTE^BEDDUTIL($$GET1^DIQ(2,DFN_",",.03,"I"))
+ . S DOD=$$FMTE^BEDDUTIL($$GET1^DIQ(2,DFN_",",.351,"I"))
+ . ;
+ . ;Look if preferred
+ . S PREF=$$PREF(DFN,TEXT)
+ . ;
+ . S AL=0,ALFLG="N" D
+ .. S AL=$O(^DPT(DFN,.01,AL)) Q:'AL  S ALFLG="Y"
+ . S ALIAS="" I 'PREF,TEXT?1A.E,$E(NAME,1,$L(TEXT))'=TEXT S ALIAS=$$ALIAS(DFN,TEXT) I 'ALIAS Q
+ . I ALIAS S DISP=$P(ALIAS,U,2)_" ["_NAME_"] "
+ . E  S DISP=NAME
+ . S NODE=DISP_"^"_DFN
+ . S DISP=DISP_" ("_SEX_") - DOB: "_DOB_" "_$S(HRN]"":"HRN: ",1:"")
+ . F I=1:1:$L(HRN,";") S H=$P(HRN,";",I) I H]"" Q:($L(DISP_H)>85)  S DISP=DISP_$S(I>1:";",1:"")_H
+ . S TMP(NODE)=DFN_U_DISP
+ ;
+ ;Limit Results to Maximum Requested
+ S RCNT=0,NODE="" F  S NODE=$O(TMP(NODE)) Q:(NODE="")!(RCNT'<MAX)  S RCNT=RCNT+1,BEDD(RCNT)=TMP(NODE)
+ Q
+ ;
+ ;GDIT/HS/BEE;BEDD*2.0*8;BEDD*2.0*8;Feature 75969 - Old code - replaced by above logic
  NEW UID,I,H,FILE,FIELD,XREF,FLAGS,NUMB,SCREEN,BN,DFN,NAME,HRN
  NEW DOB,DOD,AL,ALFLG,X,ALIAS,NODE,RCNT,TYPE,X,SEX,DISP,TMP
  ;
@@ -96,6 +152,15 @@ LKUP ;
  S:FIELD]"" FIELD=FIELD_";@"
  D FIND^DIC(FILE,"",FIELD,FLAGS,TEXT,"",XREF,$G(SCREEN),"","","ERROR")
  Q
+ ;
+ ;GDIT/HS/BEE;BEDD*2.0*8;BEDD*2.0*8;Feature 75969, Check for preferred name
+PREF(PTIEN,TEXT) ;EP
+ ;
+ N PNAME
+ S PNAME=$$GET1^DIQ(9000001,PTIEN_",",9001,"E")
+ I PNAME]"" S PNAME=$P(TEXT,",")_","_PNAME
+ I PNAME]"",$E(PNAME,1,$L(TEXT))=TEXT Q 1
+ Q 0
  ;
 ALIAS(PTIEN,TEXT) ;EP
  ; Does this patient's alias match the TEXT?

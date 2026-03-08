@@ -1,7 +1,5 @@
-XMA03 ;ISC-SF/GMB-Resequence messages API ;04/17/2002  07:08
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CAP/THM
- ;
+XMA03 ;(WASH ISC)/CAP/THM-Resequence messages ;05/06/99  15:23
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Entry points (DBIA 1150):
  ; $$REN  Resequence messages in a user's basket
  ;

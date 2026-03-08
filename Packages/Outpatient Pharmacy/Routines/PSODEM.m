@@ -1,36 +1,57 @@
-PSODEM ;BHAM ISC/SAB - PATIENT DEMOGRAPHICS ;30-Oct-2013 23:38;PLS
- ;;7.0;OUTPATIENT PHARMACY;**5,19,233,258,326,1015,1016**;DEC 1997;Build 74
- ; Modified - IHS/CIA/PLS - 12/23/03 - Line RE
- ;            IHS/MSC/PLS - 10/31/13 - Added ID# back after patch 326
-GET S DFN=DA D 6^VADPT,PID^VADPT U IO W @IOF,!,VADM(1),?40,"ID#:   "_VA("PID")
- I +VAPA(9) W !?5,"(TEMP ADDRESS from "_$P(VAPA(9),"^",2)_" till "_$S($P(VAPA(10),"^",2)]"":$P(VAPA(10),"^",2),1:"(no end date)")_")"
+PSODEM ;BHAM/ISC/SAB - PATIENT DEMOGRAPHICS  [ 07/09/2003  3:43 PM ]
+ ;;6.0;OUTPATIENT PHARMACY;**3,4**;11/11/2002
+ ;;6.0;OUTPATIENT PHARMACY;**25,35,74,100,119**;09/03/97
+ ;GRACE PERIOD INFO CHANGED ON DEMOGRAPHICS IHS/OKCAO/POC 11/11/2002
+GET ;S DFN=DA D 6^VADPT,PID^VADPT U IO W @IOF,!,VADM(1),?40,"ID#:   "_VA("PID")
+ S APSPHR=$P($G(^AUPNPAT(DA,41,DUZ(2),0)),"^",2)
+ S DFN=DA D 6^VADPT,PID^VADPT U IO W @IOF,!,VADM(1),?40,"ID#:   "_APSPHR
+ I +VAPA(9),+VAPA(10) W !?5,"(TEMP ADDRESS from "_$P(VAPA(9),"^",2)_" till "_$P(VAPA(10),"^",2)_")"
  W !,VAPA(1),?40,"DOB:   ",$S(+VADM(3):$P(VADM(3),"^",2),1:"UNKNOWN") W:VAPA(2)]"" !,VAPA(2) W:VAPA(3)]"" !,VAPA(3)
- W !,VAPA(4),?40,"PHONE: "_VAPA(8),!,$P(VAPA(5),"^",2)_"  "_$S(VAPA(11)]"":$P(VAPA(11),"^",2),1:VAPA(6)),?40,"ELIG:  "_$P(VAEL(1),"^",2) W:+VAEL(3) !?40,"SC%:   "_$P(VAEL(3),"^",2)
+ ;IHS/DSD/ENM 11/95 next line $G(VAPA(11)) added
+ W !,VAPA(4),?40,"PHONE: "_VAPA(8),!,$P(VAPA(5),"^",2)_"  "_$S($G(VAPA(11))]"":$P($G(VAPA(11)),"^",2),1:$G(VAPA(6))),?40,"ELIG:  "_$P(VAEL(1),"^",2) W:+VAEL(3) !?40,"SC%:   "_$P(VAEL(3),"^",2)
  I $D(^PS(55,DFN,0)) W:$P(^(0),"^",2) !,"CANNOT USE SAFETY CAPS." I +$P(^(0),"^",4) W ?40,"DIALYSIS PATIENT."
- I $G(^PS(55,DFN,1))]"" S X=^(1) W !!?5,"Pharmacy Narrative: " F I=1:1 Q:$P(X," ",I,99)=""  W:$X+$L($P(X," ",I))+$L(" ")>IOM ! W $P(X," ",I)," "
-RE ; IHS/CIA/PLS - 12/11/03 - Changed to call PCC Vitals
- S (WT,HT)=""   ;,X="GMRVUTL" X ^%ZOSF("TEST") I $T D
- ;.F GMRVSTR="WT","HT" S VM=GMRVSTR D EN6^GMRVUTL S @VM=X,$P(@VM,"^")=$E($P(@VM,"^"),4,5)_"/"_$E($P(@VM,"^"),6,7)_"/"_($E($P(@VM,"^"),1,3)+1700)
- ;.S X=$P(WT,"^",8),Y=$J(X/2.2,0,2),$P(WT,"^",9)=Y,X=$P(HT,"^",8),Y=$J(2.54*X,0,2),$P(HT,"^",9)=Y
- S WT=$$VITALF^APSPFUNC(DFN,"WT"),$P(WT,U,9)=$$VITCWT^APSPFUNC($P(WT,U,8))
- S HT=$$VITALF^APSPFUNC(DFN,"HT"),$P(HT,U,9)=$$VITCHT^APSPFUNC($P(HT,U,8))
- Q:$G(POERR)
- W !!,"WEIGHT(Kg): " W:+$P(WT,"^",8) $P(WT,"^",9)_" ("_$P(WT,"^")_")" W ?41,"HEIGHT(cm): " W:$P(HT,"^",8) $P(HT,"^",9)_" ("_$P(HT,"^")_")" K VM,WT,HT
+ I $G(^PS(55,DFN,1))]"" S X=^(1) W !!?5,"Pharmacy narrative: " F I=1:1 Q:$P(X," ",I,99)=""  W:$X>75 ! W $P(X," ",I)," "
+RE S (WT,HT)="",X="GMRVUTL" X ^%ZOSF("TEST") I $T D
+ ;Next three lines disabled  ; Nursing ref IHS/DSD/ENM 03/18/94
+ ;.F GMRVSTR="WT","HT" S VM=GMRVSTR D EN6^GMRVUTL S @VM=X,$P(@VM,"^")=$E($P(@VM,"^"),4,5)_"/"_$E($P(@VM,"^"),6,7)_"/"_$E($P(@VM,"^"),2,3)
+ ;.S X=$P(WT,"^",8) D EN3^GMRVUTL S WT=WT_"^"_Y,X=$P(HT,"^",8) D EN2^GMRVUTL S HT=HT_"^"_Y
+ ;W !!,"WEIGHT(Kg): " W:+$P(WT,"^",8) $P(WT,"^",9)_" ("_$P(WT,"^")_")" W ?41,"HEIGHT(cm): " W:$P(HT,"^",8) $P(HT,"^",9)_" ("_$P(HT,"^")_")" K VM,WT,HT
  S PSLC=0 G MA:$P($G(^DPT(DFN,.17)),"^",2)'="I"
- I '$D(VAEL(1)) D ELIG^VADPT W !!,"ELIGIBILITY: ",$P(VAEL(1),"^",2) W:+VAEL(3) ?$X+5,"SC%: "_$P(VAEL(3),"^",2) S PSLC=PSLC+2
-MA K SC W !,"DISABILITIES: " S PSLC=PSLC+2
- F I=0:0 S I=$O(^DPT(DFN,.372,I)) Q:'I  S I1=$S($D(^DPT(DFN,.372,I,0)):^(0),1:"") D:+I1
- .S PSDIS=$S($P($G(^DIC(31,+I1,0)),"^")]""&($P($G(^(0)),"^",4)']""):$P(^(0),"^"),$P($G(^DIC(31,+I1,0)),"^",4)]"":$P(^(0),"^",4),1:""),PSCNT=$P(I1,"^",2)
- .X:($X+$L(PSDIS)+7)>(IOM-8) "W !?14 S PSLC=PSLC+1" W PSDIS,"-",PSCNT,"% (",$S($P(I1,"^",3):"SC",1:"NSC"),"), "
- .I $E(IOST)="C",$Y+4>IOSL,$D(PSTYPE) K DIR S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR K DIR,DTOUT W @IOF,?13
+ I '$D(VAEL(1)) D ELIG^VADPT W !!,"ELIGIBILITY: ",$P(VAEL(1),"^",2) W:+VAEL(3) ?$X+5,"SC%:   "_$P(VAEL(3),"^",2) S PSLC=PSLC+2
+MA ;K SC W !,"DISABILITIES: " S PSLC=PSLC+2
+ K SC S PSLC=PSLC+2  ;IHS/DSD/ENM 9/27/94 REMOVE DISABILITIES PROMPT
+ ;IHS/DSD/ENM 9/27/94 Next three lines (disabilities lookup) disabled
+ ;F I=0:0 S I=$O(^DPT(DFN,.372,I)) Q:'I  S I1=$S($D(^DPT(DFN,.372,I,0)):^(0),1:"") D:+I1
+ ;.S PSDIS=$S($P($G(^DIC(31,+I1,0)),"^")]""&($P($G(^(0)),"^",4)']""):$P(^(0),"^"),$P($G(^DIC(31,+I1,0)),"^",4)]"":$P(^(0),"^",4),1:""),PSCNT=$P(I1,"^",2)
+ ;.X:($X+$L(PSDIS)+7)>(IOM-8) "W !?10 S PSLC=PSLC+1" W PSDIS,"-",PSCNT,"% (",$S($P(I1,"^",3):"SC",1:"NSC"),"), "
  X "N X S X=""GMRADPT"" X ^%ZOSF(""TEST"") Q" I $T D:'$D(PSOPTPST) GMRA
 Q K SC,I1,VAROOT,Y,AL,I,X,Y,PSCNT,PSLC,PSDIS D:$G(PSTYPE)']"" KVA^VADPT Q
-GMRA K ^TMP($J,"AL") S GMRA="0^0^111" D ^GMRADPT I GMRAL D
- .F DR=0:0 S DR=$O(GMRAL(DR)) Q:'DR  S ^TMP($J,"AL",$S('$P(GMRAL(DR),"^",5):1,1:2),$P(GMRAL(DR),"^",7),$P(GMRAL(DR),"^",2))=""
- .W !!,"ALLERGIES: " S (DR,TY)="" F I=0:0 S TY=$O(^TMP($J,"AL",1,TY)) Q:TY=""  F D=0:0 S DR=$O(^TMP($J,"AL",1,TY,DR)) Q:DR=""  W:$X+$L(DR)+$L(", ")>IOM !?11 W DR_", " D
- ..I $E(IOST)="C",$Y+4>IOSL,$D(PSTYPE) W ! K DIR S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR K DIR,DTOUT W @IOF,?18
- .W !!,"ADVERSE REACTIONS: " S (DR,TY)="" F I=0:0 S TY=$O(^TMP($J,"AL",2,TY)) Q:TY=""  F D=0:0 S DR=$O(^TMP($J,"AL",2,TY,DR)) Q:DR=""  W:$X+$L(DR)+$L(", ")>IOM !?19 W DR_", " D
- ..I $E(IOST)="C",$Y+4>IOSL,$D(PSTYPE) W ! K DIR S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR K DIR,DTOUT W @IOF,?18
+GMRA ;ADD A LINE HERE TO INDICATE 3RD PARTY PATIENT
+ ;MOVE TO PSOPSPST RTN NOW THE INSURANCE INFO IHS/OKCAO/POC 5/7/2003
+ ;IHS/OKCAO/POC/lwj  05/03/01  change blink & reverse to kernal commands
+ S X="IORVON;IORVOFF;IOBON;IOBOFF" D ENDR^%ZISS  ;IHS/OKCAO/POC/lwj 05/26/2003 put it back
+ ;I $$MCD^AUPNPAT($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT) W !,?30,IORVON,IOBON,"MEDICAID PATIENT",IORVOFF,IOBOFF F I=1:1:2 W *7," " ;IHS/OKCAO/POC 10/30/98 8/18/2000 5/3/2001
+ ;I $$MCD^APSQPINS($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT) W !,?30,IORVON,IOBON,"MEDICAID PATIENT"_"*"_$$GP^APSQPINS($$MCD^APSQPINS($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT))_"*"_IORVOFF,IOBOFF F I=1:1:2 W *7," "  ;IHS/OKCAO/POC 11/23/2001
+ ;I $$MCR^AUPNPAT($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT) W !,?30,IORVON,IOBON,"MEDICARE PATIENT",IORVOFF,IOBOFF F I=1:1:2 W *7," " ;IHS/OKCAO/POC 10/30/98 8/18/2000 5/3/2001
+ ;I $$MCR^APSQPINS($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT) W !,?30,IORVON,IOBON,"MEDICARE PATIENT"_"*"_$$GP^APSQPINS($$MCR^APSQPINS($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT))_"*",IORVOFF,IOBOFF F I=1:1:2 W *7," "  ;IHS/OKCAO/POC 5/3/2001
+ ;
+ ;IHS/DSD/lwj  05/03/01 problem with line length and rev/blnk  
+ ; force CR/LF (problem spotted at Siletz) (old line rmkd out-nxt added)
+ ;I $$PIN^APSQPINS($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT,"E")]"" W !,?30,$C(27)_"[7m"_$C(27)_"[5m"_$$PIN^APSQPINS($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT,"E")_$C(27)_"[m" F I=1:1:2 W *7," "  ;IHS/OKCAO/POC 10/30/98 8/18/2000
+ ;I $$PIN^APSQPINS($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT,"E")]"" W !,?30,IORVON,IOBON,$$PIN^APSQPINS($S($D(PSODFN):PSODFN,$D(DFN):DFN,1:""),DT,"E"),!,IORVOFF,IOBOFF F I=1:1:2 W *7," "  ;IHS/OKCAO/POC 10/30/98 8/18/2000 5/3/2001
+ ;IHS/DSD/lwj  end of 5/3/01 changes
+ ;
+ K ^TMP($J,"AL") S GMRA="0^1^111" D ^GMRADPT
+ I GMRAL,IOST["C-" D  ;IHS/DSD/ENM 01/22/96
+ .F DR=0:0 S DR=$O(GMRAL(DR)) Q:'DR  S ^TMP($J,"AL",$S('$P($P(GMRAL(DR),"^",6),";",2):1,1:2),$P(GMRAL(DR),"^",3),$P(GMRAL(DR),"^",2))=""
+ .;IHS/DSD/ENM 3/9/95 ESCAPE CODES ADDED TO NEXT LINE
+ .W !!,IORVON,IOBON,"ALLERGIES: ",IORVOFF,IOBOFF S (DR,TY)="" F I=0:0 S TY=$O(^TMP($J,"AL",1,TY)) Q:TY=""  F D=0:0 S DR=$O(^TMP($J,"AL",1,TY,DR)) Q:DR=""  W:$X+$L(DR)+$L(", ")>IOM !?11 W DR_", "    ;IHS/OKCAO/POC/lwj 5/3/2001
+ .W !!,IORVON,IOBON,"ADVERSE REACTIONS: ",IORVOFF,IOBOFF S (DR,TY)="" F I=0:0 S TY=$O(^TMP($J,"AL",2,TY)) Q:TY=""  F D=0:0 S DR=$O(^TMP($J,"AL",2,TY,DR)) Q:DR=""  W:$X+$L(DR)+$L(", ")>IOM !?19 W DR_", "  ;IHS/OKCAO/POC/lwj  5/3/2001
+ZPT ;IHS/DSD/ENM 01/22/96 PRINT ALGY INFO W/O ESC CODES     
+ I GMRAL,IOST["P-" D  ;IHS/DSD/ENM 01/22/96
+ .F DR=0:0 S DR=$O(GMRAL(DR)) Q:'DR  S ^TMP($J,"AL",$S('$P($P(GMRAL(DR),"^",6),";",2):1,1:2),$P(GMRAL(DR),"^",3),$P(GMRAL(DR),"^",2))=""
+ .W !!,"ALLERGIES: " S (DR,TY)="" F I=0:0 S TY=$O(^TMP($J,"AL",1,TY)) Q:TY=""  F D=0:0 S DR=$O(^TMP($J,"AL",1,TY,DR)) Q:DR=""  W:$X+$L(DR)+$L(", ")>IOM !?11 W DR_", "
+ .W !!,"ADVERSE REACTIONS: " S (DR,TY)="" F I=0:0 S TY=$O(^TMP($J,"AL",2,TY)) Q:TY=""  F D=0:0 S DR=$O(^TMP($J,"AL",2,TY,DR)) Q:DR=""  W:$X+$L(DR)+$L(", ")>IOM !?19 W DR_", "
  I $G(GMRAL)']"" F AD="ALLERGIES:","ADVERSE REACTIONS:" W !!,AD I $G(PSOFROM)="" F ADL=1:1:IOM-($L(AD)+5) W "_"
  I GMRAL=0 W !!,"ALLERGIES: NKA",!!,"ADVERSE REACTIONS:"
  W ! K TY,D,I,GMRA,GMRAL,DR,AD,ADL,^TMP($J,"AL") Q

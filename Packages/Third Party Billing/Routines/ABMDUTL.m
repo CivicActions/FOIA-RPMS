@@ -1,5 +1,5 @@
 ABMDUTL ; IHS/SD/SDR - UTILITY FOR 3P BILLING PACKAGE ;     
- ;;2.6;IHS 3P BILLING SYSTEM;**6,15,21,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,15,21,27,33,37,38**;NOV 12, 2009;Build 756
  ;IHS/SD/SDR v2.5 p9 IM12408 - Added code for inactive CPTs to check visit date
  ;IHS/SD/SDR v2.5 p9 IM16660 - Coded for 4-digit revenue codes
  ;IHS/SD/SDR v2.5 p10 IM20454 - Fix xref on .03 field
@@ -12,6 +12,9 @@ ABMDUTL ; IHS/SD/SDR - UTILITY FOR 3P BILLING PACKAGE ;
  ;IHS/SD/SDR 2.6*21 HEAT139641 Changed 3P Insurer references from DUZ(2) to ABMP("LDFN")
  ;IHS/SD/SDR 2.6*27 CR8894 NEW ABMZCPT array so it won't hang around and create <STORE> error if user types ?? at CPT prompt
  ;  and then just scrolls the list of codes
+ ;IHS/SD/SDR 2.6*33 ADO60185/CR11502 SOGI Made SSN only display last 4.  Added preferred name.
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
+ ;IHS/SD/SDR 2.6*38 ADO99134 Removed SSN from display
  ;
 SDT(X) ;EP - Y is set to the printable date ##/##/#### from X (fileman date)
  N Y
@@ -52,7 +55,7 @@ BDT(X) ;EP - Y= date/time ##/##/####@##:##:## from X (fm date) for display in cl
  .F A=1:1:(6-ABMTEST) S ABMTIME=ABMTIME_"0"
  ;end new HEAT188548
  I $L(ABMTIME<6) D
- S Y=Y_"@"_$E(ABMTIME,1,2)_":"_$E(ABMTIME,3,4)_":"_$E(ABMTIME,5,6)
+ .S Y=Y_"@"_$E(ABMTIME,1,2)_":"_$E(ABMTIME,3,4)_":"_$E(ABMTIME,5,6)
  Q Y
  ;end new code 5010
 MDT(X) ;EP - printable date and time in menu header format
@@ -119,13 +122,27 @@ PAT(X) ;EP - DISPLAY PATIENT HEADER WITH IDENTIFIERS - X=DFN
  Q:'$D(^DPT(+X,0))
  S $P(ABM("="),"=",80)=""
  W $$EN^ABMVDF("IOF")
- W !,$$EN^ABMVDF("RVN"),"PATIENT:",$$EN^ABMVDF("RVF"),"  "
+ ;W !,$$EN^ABMVDF("RVN"),"PATIENT:",$$EN^ABMVDF("RVF"),"  "  ;abm*2.6*33 IHS/SD/SDR ADO60185
  S ABM("P0")=^DPT(X,0)
- W $P(ABM("P0"),U),"     ",$P(ABM("P0"),"^",2)
- S ABM("DOB")=$P(ABM("P0"),"^",3) W "  ",$E(ABM("DOB"),4,5),"/",$E(ABM("DOB"),6,7),"/",($E(ABM("DOB"),1,3)+1700)
  S ABM("SSN")=$P(ABM("P0"),"^",9)
- W "  ",$E(ABM("SSN"),1,3),"-",$E(ABM("SSN"),4,5),"-",$E(ABM("SSN"),6,9)
- W "  ","HRN: ",$P($G(^AUPNPAT(X,41,DUZ(2),0)),"^",2)
+ ;start old abm*2.6*33 IHS/SD/SDR ADO60185
+ ;W $P(ABM("P0"),U),"     ",$P(ABM("P0"),"^",2)
+ ;S ABM("DOB")=$P(ABM("P0"),"^",3) W "  ",$E(ABM("DOB"),4,5),"/",$E(ABM("DOB"),6,7),"/",($E(ABM("DOB"),1,3)+1700)
+ ;W "  ",$E(ABM("SSN"),1,3),"-",$E(ABM("SSN"),4,5),"-",$E(ABM("SSN"),6,9)  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;W "  ","HRN: ",$P($G(^AUPNPAT(X,41,DUZ(2),0)),"^",2)  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;end old start new abm*2.6*33 IHS/SD/SDR ADO60185
+ W !,$$EN^ABMVDF("RVN"),"PATIENT:",$$EN^ABMVDF("RVF"),"  "  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ W $P(ABM("P0"),U)
+ I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"I",1)'="" W "-"_$$GETPREF^AUPNSOGI(ABMP("PDFN"),"I",1)_"*"  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;W ?40,$P(ABM("P0"),"^",2)  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ W ?50,$P(ABM("P0"),"^",2)  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ ;S ABM("DOB")=$P(ABM("P0"),"^",3) W ?42,$E(ABM("DOB"),4,5),"/",$E(ABM("DOB"),6,7),"/",($E(ABM("DOB"),1,3)+1700)  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ S ABM("DOB")=$P(ABM("P0"),"^",3) W ?52,$E(ABM("DOB"),4,5),"/",$E(ABM("DOB"),6,7),"/",($E(ABM("DOB"),1,3)+1700)  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ ;W ?54,"***-**-",$E(ABM("SSN"),6,9)  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ W ?67,"HRN: ",$P($G(^AUPNPAT(X,41,DUZ(2),0)),"^",2)
+ ;I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;.W !?3,"Preferred Name: ",$$EN^ABMVDF("RVN"),$$GETPREF^AUPNSOGI(ABMP("PDFN"),""),$$EN^ABMVDF("RVF")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  W !,ABM("=")
  Q
 FLAT(X,Y,Z)          ;EP - DETERMINE FLAT RATE

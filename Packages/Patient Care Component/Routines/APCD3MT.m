@@ -1,5 +1,5 @@
-APCD3MT ; IHS/CMI/LAB - PCC TO 3M CODER TEST ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCD3MT ;IHS/CIM/EDE - PCC TO 3M CODER TEST [ 01/16/01  1:43 PM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**4,8**;MAR 09, 1999
  ;;2.0
  ;
  ; This routine asks the user for a visit and tests the PCC

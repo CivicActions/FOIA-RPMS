@@ -1,6 +1,7 @@
-DID2 ;SFISC/GFT-MODIFIED DD ;6SEP2011
- ;;22.0;VA FileMan;**7,105,168**;Mar 30, 1999;Build 27
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DID2 ;SFISC/GFT-MODIFIED DD ;12/30/93  13:55 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  I $D(DINM) G DZ:X'["C"!(X["X")!'$D(^DD(F(Z),DJ(Z),9.1)) S %Y=X,X=^(9.1),W=" --  "_X D ^DIM,W1^DIDH1:'$D(X) S X=%Y G Q:M=U G DZ
  F I=9.2:.1 Q:'$D(^(I))#2  W ! S W=I_" = "_^(I) D W G Q:M=U
  I $D(^(9.1))#2 S W=^(9.1),%Y="9.1 = " S:X["C" %Y="ALGORITHM:  " W !,?DDL1,%Y D W S W=$P("  (ALWAYS "_$E(N,$L(N)-1)_" DECIMAL DIGITS)",U,N?.E1" S X=$J(X,0,"1N1")") D W G Q:M=U
@@ -12,24 +13,7 @@ SC ;
  I $D(^DD(F(Z),DJ(Z),12.1)),'$D(DINM) I X["P"!(X["S") W !?DDL1,"SCREEN:" S W=^(12.1) D W I $D(^(12)) W !?DDL1,"EXPLANATION:" S W=^(12) D W G Q:M=U
  I '$D(DINM),$D(^DD(F(Z),DJ(Z),4)),^(4)]"" W !?DDL1,"EXECUTABLE HELP:" S W=^(4) D W G Q:M=U
  I $D(^(9.02))#2 W !?DDL1,"SUM:" S W=^(9.02) D W G Q:M=U
-AUD S W=$G(^DD(F(Z),DJ(Z),"AUDIT")) I "n"'[W D  G:M=U Q
- . W !?DDL1,"AUDIT: "
- . S W=$S(W="y":"YES, ALWAYS",W="e":"EDITED OR DELETED",1:W) D W Q:M=U
- . S W=$G(^DD(F(Z),DJ(Z),"AX"))
- . I '$D(DINM),W]"" W !?DDL1,"AUDIT CONDITION: " D W
-PRELKUP I '$D(DINM),DJ(Z)=.01,$G(^DD(F(Z),DJ(Z),7.5))]"" W !?DDL1,"PRE-LOOKUP: " S W=^(7.5) D W G:M=U Q
-DEL N DIDND
- I '$D(DINM) S DIDND=$O(^DD(F(Z),DJ(Z),"DEL","")) I DIDND]"" D  G:M=U Q W !
- . W !?DDL1,"DELETE TEST: "
- . F  D  S DIDND=$O(^DD(F(Z),DJ(Z),"DEL",DIDND)) Q:DIDND=""!(M=U)  W !!
- .. W ?DDL2,$$QT(DIDND)_",0)= "
- .. S W=$G(^DD(F(Z),DJ(Z),"DEL",DIDND,0)) D W
-LAYGO I '$D(DINM),DJ(Z)=.01 S DIDND=$O(^DD(F(Z),DJ(Z),"LAYGO","")) I DIDND]"" D  G:M=U Q W !
- . W !?DDL1,"LAYGO TEST: "
- . F  D  S DIDND=$O(^DD(F(Z),DJ(Z),"LAYGO",DIDND)) Q:DIDND=""!(M=U)  W !!
- .. W ?DDL2,$$QT(DIDND)_",0)= "
- .. S W=$G(^DD(F(Z),DJ(Z),"LAYGO",DIDND,0)) D W
-D I $D(^DD(F(Z),DJ(Z),8.5)) W !?DDL1,"DELETE AUTHORITY: " S W=^(8.5) D W G Q:M=U
+D I $D(^(8.5)) W !?DDL1,"DELETE AUTHORITY: " S W=^(8.5) D W G Q:M=U
  I X'["C",$D(^(9))#2,^(9)]"" W !?DDL1,"WRITE AUTHORITY:" S W=^(9) D W G Q:M=U
 RD I $D(^(8))#2,^(8)]"" W !?DDL1,"READ AUTHORITY:" S W=^(8) D W G Q:M=U
  I $D(^(10))#2,^(10)]"" W !?DDL1,"SOURCE OF DATA:" S W=^(10) D W G Q:M=U
@@ -39,7 +23,7 @@ RD I $D(^(8))#2,^(8)]"" W !?DDL1,"READ AUTHORITY:" S W=^(8) D W G Q:M=U
  I  S I=-1 D W
  Q
  ;
-W F K=0:0 S:(($L(W)+DDL2)>IOM) DDL2=32 W ?DDL2 S %Y=$E(W,IOM-$X,999) W $E(W,1,IOM-$X-1) Q:%Y=""  S W=%Y W !
+W F K=0:0 W ?DDL2 S %Y=$E(W,IOM-$X,999) W $E(W,1,IOM-$X-1) Q:%Y=""  S W=%Y W !
  I $Y+6>IOSL S DC=DC+1 D ^DIDH
  I $D(^DD(F(Z),DJ(Z),0))
  Q
@@ -56,8 +40,3 @@ G R "Include GROUP: ",X:DTIME S:'$T X=U,DTOUT=1 I X[""""!($L(X)>30)!(X'?.ANP) W 
  W !?5,"To list only those fields which have a particular 'GROUP'",!?5,"(or several 'GROUPS') associated with them, Enter the GROUP NAME",!
  W ?5,"To screen out a group, Type ""'"" in front of its name.",!
  G G
- ;
-QT(X) ;Quote X if noncanonic
- Q:X=+$P(X,"E") X
- S X=$NA(X(X)),X=$E(X,3,$L(X)-1)
- Q X

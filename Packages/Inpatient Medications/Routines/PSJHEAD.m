@@ -1,9 +1,11 @@
-PSJHEAD ;BIR/KKA-PROFILE HEADER ; 4/1/08 4:29pm
- ;;5.0; INPATIENT MEDICATIONS ;**8,20,85,95,203**;16 DEC 97;Build 13
+PSJHEAD ;BIR/KKA-PROFILE HEADER ;17-Apr-2023 13:31;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**8,20,85,95,203,1034**;16 DEC 97;Build 37
  ;
  ; Reference to ^PS(55 supported by DBIA #2191.
  ;
-ENTRY(DFN,PSJOPC,PG,PSJNARC,PSJTEAM,PSJY2K)   ;
+ ; Modified - IHS/MSC/PLS - 04/17/2023 - Line ENHEAD+9
+ ;
+ENTRY(DFN,PSJOPC,PG,PSJNARC,PSJTEAM,PSJY2K) ;
  ;DFN=patient internal entry number
  ;PSJOPC=a code showing what type of option is printing the header
  ;PG=page number
@@ -35,7 +37,9 @@ ENHEAD ; print new page, name, ssn, dob, and ward
  . W ! W:PSJOPC="ALL" ?16,"I N P A T I E N T   M E D I C A T I O N S" W:PSJOPC="UD" ?19,"U N I T   D O S E   P R O F I L E" W:PSJOPC="IV" !,?19,"I V  P A T I E N T  P R O F I L E" W ?64,HDT
  . NEW X S X=$$SITE^PSGMMAR2(80)
  . W !?+X,$P(X,U,2),!,SLS,SLS,$E(SLS,1,24),!
- W ?1,$P(PSGP(0),"^"),?34,"  ",$S('PSJPDD:"",$G(PSJIVOF):"",1:"Last "),"Ward: ",$S(PSJPDD&($G(PSJIVOF)):"OUTPATIENT",PSJPWDN]"":PSJPWDN,1:"* NF *") W:$D(PSJPR) ?75-$L(PG),"Pg: ",PG-$D(PSGVWA)
+ ;IHS/MSC/PLS - p1034
+ ;W ?1,$P(PSGP(0),"^"),?34,"  ",$S('PSJPDD:"",$G(PSJIVOF):"",1:"Last "),"Ward: ",$S(PSJPDD&($G(PSJIVOF)):"OUTPATIENT",PSJPWDN]"":PSJPWDN,1:"* NF *") W:$D(PSJPR) ?75-$L(PG),"Pg: ",PG-$D(PSGVWA)
+ W ?1,$$GETPREF^AUPNSOGI(DFN,"E",1),?34,"  ",$S('PSJPDD:"",$G(PSJIVOF):"",1:"Last "),"Ward: ",$S(PSJPDD&($G(PSJIVOF)):"OUTPATIENT",PSJPWDN]"":PSJPWDN,1:"* NF *") W:$D(PSJPR) ?75-$L(PG),"Pg: ",PG-$D(PSGVWA)  ;04/17/2023 - p1034
  W !?4,"PID: ",PSJPPID W:'PSJPDD ?26 W:PSJPDD ?21,"Last " W "Room-Bed: ",$S(RB="":"* NF *",1:RB),?53,"Ht(cm): ",?61 W:PSJPHT["_" PSJPHT W:PSJPHT'["_" $J(PSJPHT,6,2) W ?68,PSJPHTD
  W !?4,"DOB: ",$S($D(PSJY2K):$E($P(PSJPDOB,"^",2),1,10),1:$E($P(PSJPDOB,"^",2),1,8))_"  ("_PSJPAGE_")"
  I (PSJTEAM=1)&(RB]"") S TEAM=$S($O(^PS(57.7,"AWRT",$G(PSJPWD),$G(RB),0)):$O(^(0)),1:"") S:TEAM]"" TEAM=$G(^PS(57.7,$G(PSJPWD),1,TEAM,0))

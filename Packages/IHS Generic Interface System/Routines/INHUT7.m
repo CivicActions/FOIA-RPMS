@@ -1,5 +1,5 @@
-INHUT7 ; KAC ; 8 Jan 98 17:16; HL7 Utilities 
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHUT7 ;ihs/cmi/maw - HL7 Utilities 
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  Q
  ;
@@ -163,14 +163,15 @@ SETENV ;Set environment for GIS with DUZ postmaster array
  ;IHS logic
  I '$$SC^INHUTIL1 D SETDT^UTDT K Z Q
  ;CHCS logic
- I '$P(^DIC(3,DUZ,0),U,16) D SETDIV
+ I '$P(^VA(200,DUZ,0),U,16) D SETDIV
  D SETDT^UTDT
- D DUZAG^XUS1   ; set up agency codes, no user prompts
+ ;D DUZAG^XUS1   ; set up agency codes, no user prompts
  D ^XUDIV   ; set up division. No user prompts since default div is set
  K Z
  Q
  ;
 SETDIV ;Called from SETENV if needed to stuff the postmaster default division.
+ Q
  N INDEF,INDIV
  S (INDEF,INDIV)=0 F  S INDIV=$O(^DG(40.8,INDIV)) Q:'INDIV!INDEF  D
  .;Set as default if a) an inpatient facility and b) not inactive
@@ -180,6 +181,6 @@ SETDIV ;Called from SETENV if needed to stuff the postmaster default division.
  .I '$G(^DG(40.8,INDIV,28)) S INDEF=INDIV
  ;If still no INDEFault, set default to first entry in 40.8
  S:'INDEF INDEF=$O(^DG(40.8,0))
- S DIE="^DIC(3,",DA=.5,DR="28.2///`"_INDEF D ^DIE
+ S DIE="^VA(200,",DA=.5,DR="28.2///`"_INDEF D ^DIE
  Q
  ;

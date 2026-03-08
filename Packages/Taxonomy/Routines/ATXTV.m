@@ -1,5 +1,5 @@
 ATXTV ; IHS/CMI/LAB - DISPLAY IND LISTS 15 Dec 2010 9:42 AM ;
- ;;5.1;TAXONOMY;**11**;FEB 4, 1997;Build 48
+ ;;5.1;TAXONOMY;**11,51,61**;FEB 4, 1997;Build 133
  ;; ;
 EP ;EP - CALLED FROM OPTION
  D EN
@@ -25,6 +25,11 @@ INIT ;EP -- init variables and list array
  S ATXT=""
  F  S ATXT=$O(^ATXAX("B",ATXT)) Q:ATXT=""  D
  .S ATXY=0 F  S ATXY=$O(^ATXAX("B",ATXT,ATXY)) Q:ATXY'=+ATXY  D
+ ..Q:'$D(^ATXAX(ATXY,0))
+ ..I $P(^ATXAX(ATXY,0),U)'["RXNORM" Q:$P(^ATXAX(ATXY,0),U,15)=""  ;P60
+ ..Q:$P(^ATXAX(ATXY,0),U,15)=6
+ ..Q:$P(^ATXAX(ATXY,0),U,15)=16
+ ..Q:$P(^ATXAX(ATXY,0),U,15)=9999999.88
  ..S ATXALL(ATXT,ATXY)=1
  S ATXT=""
  F  S ATXT=$O(^ATXLAB("B",ATXT)) Q:ATXT=""  D
@@ -41,6 +46,7 @@ INIT ;EP -- init variables and list array
  ..S ATXTAX("IDX",J,J)=ATXY_U_$S(Z'=2:"T",1:"L")_U_ATXY
  ..S C=C+1
  .Q
+ K ATXALL
  S (VALMCNT,ATXHIGH)=C
  Q
  ;

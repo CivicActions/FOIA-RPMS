@@ -1,8 +1,9 @@
-DIARR ;SFISC/DCM-ARCHIVING FUNCTION, RETRIEVAL OF ARCHIVED RECORD ;8/11/98  13:19
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIARR ;SFISC/DCM-ARCHIVING FUNCTION, RETRIEVAL OF ARCHIVED RECORD ;3/24/93  3:20 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 START W !!,"This option will scan your archived file and will attempt to retrieve entries"
- W !,"that match the name (.01) field and",!,"either Primary KEY or identifier field(s) of the archived file."
+ W !,"that match the name (.01) field and/or the identifier field(s) of the archived",!,"file."
  W !!,"Magnetic tapes should be opened with variable length records."
  ;
 INIT S DIARX="F  U DIARIO R DIARL Q:DIARL]""""&($A(DIARL)'=13)  "
@@ -16,7 +17,7 @@ SEQDEV S %ZIS("A")="SEQUENTIAL ARCHIVE DEVICE: ",%ZIS("HFSMODE")="R" D ^%ZIS G E
  I IOT["MT",IOPAR'["V" D ^%ZISC W !,$C(7),"Open this device with variable length records." G SEQDEV
  S DIARIO=IO
  ;
-RC X DIARX I $E(DIARL,1,4)'["$IND",$E(DIARL,1,4)'["$DAT" D ^%ZISC W !,$C(7),"Archive information is not in filegram format" G SEQDEV
+RC X DIARX I $E(DIARL,1,4)'["$IND"&($E(DIARL,1,4)'["$DAT") D ^%ZISC W !,$C(7),"Archive information is not in filegram format" G SEQDEV
  I $E(DIARL,1,6)="$INDEX" S DIARIDX=1 D ^DIARR6 G RC3
  U IO(0) W !!,"Sampling archived file...",!
 RC2 I $P(DIARL,U)="$DAT" S DIARFILE=$P(DIARL,U,2),DIARFN=+$P(DIARL,U,3)

@@ -1,26 +1,20 @@
 BARROLL ; IHS/SD/LSL - ROLLOVER AFTER POSTING - DEC 4,1996 ; [ 02/15/2006  5:57 PM ]
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**20**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**20,35**;OCT 26, 2005;Build 187
  ;;
- ; IHS/ASDS/LSL - 06/21/2001 - V1.5 Patch 1 - NOIS NDA-0601-180067
- ;     Allow rollback to function properly
+ ;IHS/ASDS/LSL 06/21/2001 1.5*1 NOIS NDA-0601-180067 Allow rollback to function properly
  ;
- ; IHS/ASDS/LSL - 11/26/2001 - V1.6 Patch 1 - NOIS BXX-0501-150094
- ;     Resolve <UNDEF>INS2+16^ABMDLCK1
- ;
- ; IHS/ASDS/LSL - 12/04/2001 - V1.6 Patch 1 - NOIS NEA-1201-180002
- ;     Find the proper 3PB bill if 3P bill IEN matches but not bill
- ;     name or DOS.
- ;
- ; IHS/SD/LSL - 04/04/2002 - V1.6 Patch 2 - NOIS XJG-0302-16095
- ;     Modified to look all possible locations in 3P for bill during
+ ;IHS/ASDS/LSL 11/26/2001 1.6*1 NOIS BXX-0501-150094 Resolve <UNDEF>INS2+16^ABMDLCK1
+ ;IHS/ASDS/LSL 12/04/2001 1.6*1 NOIS NEA-1201-180002 Find the proper 3PB bill if 3P bill IEN matches but not bill
+ ;   name or DOS.
+ ;IHS/SD/LSL 04/04/2002 1.6*2 NOIS XJG-0302-16095 Modified to look all possible locations in 3P for bill during
  ;     the rollback process.
  ;
- ; IHS/SD/LSL - 09/22/03 - V1.7 Patch 4 - IM11532
- ;      Resolve UNDEF error when rollback occurs at time of posting
- ;      when more than 50 bills have been flagged.  This error should
- ;      not ocur when rolling back from ROL.
+ ;IHS/SD/LSL 09/22/03 1.7*4 IM11532 Resolve UNDEF error when rollback occurs at time of posting
+ ;   when more than 50 bills have been flagged.  This error should not occur when rolling back from ROL.
  ;
- ; *********************************************************************
+ ;IHS/SD/SDR 1.8*35 ADO60910 Added preferred name to display PPN
+ ;
+ ;***************************************************
  Q
  ;
 EN ;EP - rollover posted bills
@@ -34,7 +28,7 @@ EN ;EP - rollover posted bills
  .D BILL
  K BARROLL,BARBLDA,BAR3PNM,BAR3PDA,BARCNT
  Q
- ; *********************************************************************
+ ;***************************************************
  ;
 SET ;set rollback status
  K BAR3PDA
@@ -48,9 +42,9 @@ SET ;set rollback status
  S BAR3PNM=$P(BAR3PNM,"-")
  S BAR("3P BILL LOC")=$$FIND3PB^BARUTL(DUZ(2),BARBLDA)
  I BAR("3P BILL LOC")="" D  Q
- . D SETBLRL
- . W *7," ",BAR3PNM," not found in the 3P System"
- . D EOP^BARUTL(0)
+ .D SETBLRL
+ .W *7," ",BAR3PNM," not found in the 3P System"
+ .D EOP^BARUTL(0)
  S BAR3PDA=$$GET1^DIQ(90050.01,BARBLDA,17,"I")
  I $P(BAR("3P BILL LOC"),U,2)'=BAR3PDA D
  .S DIE="^BARBL(DUZ(2),"
@@ -63,9 +57,9 @@ SET ;set rollback status
  ;
 SETE ;
  Q
- ; *********************************************************************
+ ;***************************************************
  ;
- ;** MENU ENTRY -------------------
+ ;** MENU ENTRY -----------
 MENU ;** EP FOR MENU ROLLOVER TO 3-PARTY
  S BARBLDA=""
  S BARQUIT=0,BARCNT=0
@@ -73,7 +67,7 @@ MENU ;** EP FOR MENU ROLLOVER TO 3-PARTY
  I $G(BARCNT)<1 W !!!!!?14,"*** There are no bills to process for rollover. ***",!!!!!
  K BARCNT
  Q
- ; *********************************************************************
+ ;***************************************************
  ;
 BILL ;
  ; needs BARBLDA  builds tr amounts by category
@@ -87,15 +81,15 @@ BILL ;
  W !,"CHECKING A/R BILL ",BARBL(.01)
  ;
  I $L(BARBL(214)) D  Q
- . W !,"This bill was already rolled over by ",BARBL(214)
- . D SETBLRL
+ .W !,"This bill was already rolled over by ",BARBL(214)
+ .D SETBLRL
  ;
  S BAR3PDA=BARBL(17)
  I BAR3PDA'>0 D  Q
- . W !,BARBL(.01),"   NOT 3P BILL"
- . D EOP^BARUTL(0)
- . K ^TMP($J,"BARRL",BARBLDA)
- . D SETBLRL
+ .W !,BARBL(.01),"   NOT 3P BILL"
+ .D EOP^BARUTL(0)
+ .K ^TMP($J,"BARRL",BARBLDA)
+ .D SETBLRL
  ;
  I BARBL(15) D  Q
  .;amt not zero rm P status
@@ -111,7 +105,7 @@ BILL ;
  D DSP Q:$G(BARQUIT)
  D ROLL
  Q
- ; *********************************************************************
+ ;***************************************************
  ;
 SETVAR ; EP
  ; ** PAY = PAY - GROUPER + WRITE OFF - REFUND
@@ -140,14 +134,14 @@ LOOP ;
  S BARSUM=BARPCAL
  ;
  ; array rollback to 3P
- ; IHS/SD/PKD 1.8*20 Include Sent to Collection in ADJUSTMENTS
+ ;IHS/SD/PKD 1.8*20 Include Sent to Collection in ADJUSTMENTS
  ;adjustments= Non-Pay + Deductable + Co-Pay + Penalty
  ;S BARADJ=BARNP+BARDED+BARCOP+BARPEN
  S BARADJ=BARNP+BARDED+BARCOP+BARPEN+BARSTC
  S BARROLL=BARBILL-BARPCAL
  S BARCBAL=BARBILL-BARPCAL-BARADJ
  Q
- ; *********************************************************************
+ ;***************************************************
  ;
 DSP ;
  S BAR3PNM=$$VAL^XBDIQ1(90050.01,BARBLDA,.01)
@@ -169,8 +163,12 @@ DSP ;
  ;END 1.8*20
  W !,"ROLLOVER",?10,$J(BARROLL,10,2)
  W ?25,"TOTAL PAY*",?35,$J(BARPCAL,10,2),!
- W !,"Pat:",?10,BARBL(101),?40,"Visit Type.: "_$G(BARBL(114))
- W !,?40,"Bill Status: "_$G(BARBL(17.2))
+ ;W !,"Pat:",?10,BARBL(101),?40,"Visit Type.: "_$G(BARBL(114))  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ W !,"Pat: ",?2,BARBL(101)  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ I $$GETPREF^AUPNSOGI(BARBL(101,"I"),"I",1)'="" W " - "_$$GETPREF^AUPNSOGI(BARBL(101,"I"),"I",1)_"*"  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ W !?40,"Visit Type: "_$G(BARBL(114))  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ ;W !,?40,"Bill Status: "_$G(BARBL(17.2))  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ W !,?40,"Bill Status: "_$G(BARBL(17.2))  ;bar*1.8*35 IHS/SD/SDR ADO60910
  W !!,?2,"Original bill approved with the following:"
  W !!,?5,"P: ",BARBL(205),!,?5,"S: ",BARBL(206),!,?5,"T: ",BARBL(207)
  I $L(BARBL(214)) W !!,"This bill was already rolled over by ",BARBL(214)
@@ -179,7 +177,7 @@ DSP ;
  ;
 DSPE ;
  Q
- ; *********************************************************************
+ ;***************************************************
  ;
 ROLL ;** ROLL
  K DIE,DA,DR
@@ -192,19 +190,19 @@ ROLL ;** ROLL
  S:DUZ(2)="" DUZ(2)=$P($G(^BARBL(DUZO2,BARBLDA,1)),U,8)
  S Y=Y_"^"_DUZ(2)
  S BARGBL=DIC_+Y_")"
- I '$D(@BARGBL) S DUZ(2)=$P($G(^BARBL(DUZO2,BARBLDA,0)),U,8)  ; Parent
+ I '$D(@BARGBL) S DUZ(2)=$P($G(^BARBL(DUZO2,BARBLDA,0)),U,8)  ;Parent
  I $D(@BARGBL) D
- . S BARTMP1=$P($G(^ABMDBILL(DUZ(2),+Y,0)),U)    ; 3P bill
- . S BARTMP2=$P($G(^ABMDBILL(DUZ(2),+Y,7)),U)    ; 3P Service date from
- . S BARDOS=$P($G(^BARBL(DUZO2,BARBLDA,1)),U,2)  ; A/R bill DOS Begin
- . I BARTMP1'=BAR3PNM!(BARTMP2'=BARDOS) D
- . . S DUZ(2)=$P($G(^BARBL(DUZO2,BARBLDA,1)),U,8)  ; Use parent 
+ .S BARTMP1=$P($G(^ABMDBILL(DUZ(2),+Y,0)),U)    ;3P bill
+ .S BARTMP2=$P($G(^ABMDBILL(DUZ(2),+Y,7)),U)    ;3P Service date from
+ .S BARDOS=$P($G(^BARBL(DUZO2,BARBLDA,1)),U,2)  ;A/R bill DOS Begin
+ .I BARTMP1'=BAR3PNM!(BARTMP2'=BARDOS) D
+ ..S DUZ(2)=$P($G(^BARBL(DUZO2,BARBLDA,1)),U,8)  ; Use parent 
  I $D(@BARGBL) D EN^XBNEW("START^ABMAROLL(Y,.BARSUM,BAR3PNM)","Y,BARPCAL,BAR3PNM,BARSUM")
- ; array rollback to 3P
+ ;array rollback to 3P
  S DUZ(2)=DUZO2
  D SETBLRL
  Q
- ; *********************************************************************
+ ;***************************************************
  ;
 SETBLRL ; EP **set bill as rolled
  K DIC,DR,DA
@@ -215,7 +213,7 @@ SETBLRL ; EP **set bill as rolled
  D ^DIE
  K DIDEL
  Q
- ; *********************************************************************
+ ;***************************************************
  ;
 SUM(BARBLDA)       ;EP display bill summary
  D SETVAR,DSP

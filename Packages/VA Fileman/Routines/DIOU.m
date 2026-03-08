@@ -1,5 +1,6 @@
-DIOU ;SFISC/TKW-GENERIC FILEMAN CODE GENERATION UTILITIES ;03:57 PM  5 Dec 2001 [ 12/09/2003  4:33 PM ]
- ;;22.0;VA FileMan;**76,1002**;Mar 30, 1999
+DIOU ;SFISC/TKW-GENERIC FILEMAN CODE GENERATION UTILITIES ;3/5/96  10:13 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**8,29**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 BIJ(S,F,I,J) ;BUILD I & J ARRAY.  S=(SUB)FILE#, F=FIELD#
  N X,Y,% S X=0,(Y,J(0))=S F  Q:'$D(^DD(Y,0,"UP"))  S X=X+1,Y=^("UP")
@@ -39,9 +40,7 @@ GET(S,F,X,Y,DIFLAG) ;BUILD CODE TO EXTRACT FIELD.  S=FILE/SUBFILE#, F=FIELD#, X=
  I %(2)]"",$P(%,U,2)["O",$P(%,U,2)'["D" S Y=Y_",Y="_X_" "_%(2)_" S "_X_"=Y"
  Q
  ;
-CAL S Y=$P(%,U,5,99),E=$P($P(%,U,2),"p",2)
- I E,$D(^DIC(+E,0,"GL")) S E=" S "_X_"=$S(X="""":X,$D("_^("GL")_"X,0))#2:$P(^(0),U),1:X)" S:$L(Y)+$L(E)>225 Y="X $P(^DD("_S_","_F_",0),U,5,99)" S Y=Y_E Q  ;computed pointer
- S Y=Y_" S "_X_"=X" Q
+CAL S Y=$P(%,U,5,99)_" S "_X_"=X" Q
  ;
 DTYP(S,F,Y) ;RETURN DATA TYPES(S) FOR A FIELD
  K Y S Y=""
@@ -57,7 +56,7 @@ D2 Q:$G(^DD(+$G(S),+$G(F),0))=""  N %,%X,%Y,X,I,J,DITYP
  I DITYP=1 S Y("D")="",%(4)=$P($P(%(4),"%DT=",2),"""",2) S:%(4)["T"!(%(4)["R")!(%(4)="") Y("D")=Y("D")_"T" S:%(4)["S" Y("D")=Y("D")_"S" G QD
  I DITYP,"2,4,5,9"[DITYP G QD
  Q:Y=""
- I DITYP=6 S Y("T")=$S(%["D":1,%["B":2,%?.E1"J".N1","1N.E:2,%["p":7,1:4) Q
+ I DITYP=6 S Y("T")=$S(%["D":1,%["B":2,%?.E1"J".N1","1N.E:2,1:4) Q
 P I DITYP=7 S I=+$P(%,"P",2),%(2)="Y(" D Y S S=I,F=.01 K % G D2
 V I DITYP=8 S X=0 D V2 Q
 S I DITYP=3 F I=1:1 S X=$P(%(1),";",I),X(1)=$P(X,":"),X=$P(X,":",2) Q:X=""!(X(1)="")  S Y("S","I",X(1))=X,Y("S","E",X)=X(1)

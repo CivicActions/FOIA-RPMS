@@ -1,5 +1,5 @@
 AMHVRL ; IHS/CMI/LAB - VIEW PT RECORD LT ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**4**;JUN 18, 2010;Build 28
+ ;;4.0;IHS BEHAVIORAL HEALTH;**4,11**;JUN 02, 2010;Build 27
  ;
  ;
  ;This routine calls a list template to view a patient's record.
@@ -59,23 +59,24 @@ HDR1 ;EP - no hs view
  S VALMSG="        Select the appropriate action   Q for QUIT"
  Q
 INIT1 ;EP - no hs view
- K ^TMP("AMHVR",$J) S AMHC=8
- S ^TMP("AMHVR",$J,1,0)="Patient: "_$P(^DPT(DFN,0),U)_"   HRN: "_$$HRN^AUPNPAT(DFN,DUZ(2))
- S ^TMP("AMHVR",$J,2,0)="         "_$$VAL^XBDIQ1(2,DFN,.02)_"  DOB: "_$$FMTE^XLFDT($P(^DPT(DFN,0),U,3))_"   AGE: "_$$AGE^AUPNPAT(DFN,DT,"E")_"   SSN: "_$$SSN^AMHUTIL(DFN)
- S ^TMP("AMHVR",$J,3,0)=IORVON_"Designated Providers:"_IORVOFF
- S ^TMP("AMHVR",$J,4,0)=" Mental Health: "_$E($$VAL^XBDIQ1(9002011.55,DFN,.02),1,22),$E(^TMP("AMHVR",$J,4,0),40)="Social Services: "_$E($$VAL^XBDIQ1(9002011.55,DFN,.03),1,22)
+ K ^TMP("AMHVR",$J) S AMHC=1
+ S X=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S ^TMP("AMHVR",$J,AMHC,0)="Patient: "_X_"   HRN: "_$$HRN^AUPNPAT(DFN,DUZ(2)),AMHC=AMHC+1
+ S ^TMP("AMHVR",$J,AMHC,0)="         "_$$VAL^XBDIQ1(2,DFN,.02)_"  DOB: "_$$FMTE^XLFDT($P(^DPT(DFN,0),U,3))_"   AGE: "_$$AGE^AUPNPAT(DFN,DT,"E"),AMHC=AMHC+1 ;_"   SSN: "_$$SSN^AMHUTIL(DFN)  IHS/CMI/LAB REMOVED SSN P11
+ S ^TMP("AMHVR",$J,AMHC,0)=IORVON_"Designated Providers:"_IORVOFF,AMHC=AMHC+1
+ S ^TMP("AMHVR",$J,AMHC,0)=" Mental Health: "_$E($$VAL^XBDIQ1(9002011.55,DFN,.02),1,22),$E(^TMP("AMHVR",$J,4,0),40)="Social Services: "_$E($$VAL^XBDIQ1(9002011.55,DFN,.03),1,22),AMHC=AMHC+1
  ;S ^TMP("AMHVR",$J,4,0)="Designated Social Services Provider: "_$$VAL^XBDIQ1(9002011.55,DFN,.03)
  ;S ^TMP("AMHVR",$J,5,0)="    A/SA/CD: "_$E($$VAL^XBDIQ1(9002011.55,DFN,.04)),1,22)
- S ^TMP("AMHVR",$J,5,0)="          A/SA: "_$E($$VAL^XBDIQ1(9002011.55,DFN,.04),1,22),$E(^TMP("AMHVR",$J,5,0),40)="          Other: "_$E($$VAL^XBDIQ1(9002011.55,DFN,.12),1,22)
+ S ^TMP("AMHVR",$J,AMHC,0)="          A/SA: "_$E($$VAL^XBDIQ1(9002011.55,DFN,.04),1,22),$E(^TMP("AMHVR",$J,5,0),40)="          Other: "_$E($$VAL^XBDIQ1(9002011.55,DFN,.12),1,22),AMHC=AMHC+1
  ;S ^TMP("AMHVR",$J,6,0)="          Designated OTHER Provider: "_$$VAL^XBDIQ1(9002011.55,DFN,.12)
- S ^TMP("AMHVR",$J,6,0)="     Other (2): "_$E($$VAL^XBDIQ1(9002011.55,DFN,.13),1,22),$E(^TMP("AMHVR",$J,6,0),40)="   Primary Care: "_$E($$VAL^XBDIQ1(9000001,DFN,.14),1,22)
+ S ^TMP("AMHVR",$J,AMHC,0)="     Other (2): "_$E($$VAL^XBDIQ1(9002011.55,DFN,.13),1,22),$E(^TMP("AMHVR",$J,6,0),40)="   Primary Care: "_$E($$VAL^XBDIQ1(9000001,DFN,.14),1,22),AMHC=AMHC+1
  ;S ^TMP("AMHVR",$J,7,0)="      Designated OTHER (2) Provider: "_$$VAL^XBDIQ1(9002011.55,DFN,.13)
  ;S ^TMP("AMHVR",$J,8,0)="              Primary Care Provider: "_$$VAL^XBDIQ1(9000001,DFN,.14)
- S ^TMP("AMHVR",$J,7,0)=""
+ S ^TMP("AMHVR",$J,AMHC,0)="",AMHC=AMHC+1
  S R=$$LVD^AMHDPEE(DFN,"I")
- I 'R S ^TMP("AMHVR",$J,8,0)="No BH Visits on File" S AMHC=AMHC+1
+ I 'R S ^TMP("AMHVR",$J,AMHC,0)="No BH Visits on File" S AMHC=AMHC+1
  I R D
- .S ^TMP("AMHVR",$J,8,0)="Last Visit (excl no shows): "_$$FMTE^XLFDT($P($P(^AMHREC(R,0),U),"."))_"  "_$$PPNAME^AMHUTIL(R)_"  "
+ .S ^TMP("AMHVR",$J,AMHC,0)="Last Visit (excl no shows): "_$$FMTE^XLFDT($P($P(^AMHREC(R,0),U),"."))_"  "_$$PPNAME^AMHUTIL(R)_"  "
  .NEW D S D=0 F  S D=$O(^AMHRPRO("AD",R,D)) Q:D'=+D  D
  ..S AMHC=AMHC+1 S ^TMP("AMHVR",$J,AMHC,0)="       "_$$VAL^XBDIQ1(9002011.01,D,.01),$E(^TMP("AMHVR",$J,AMHC,0),18)=$$VAL^XBDIQ1(9002011.01,D,.04)
  ..Q
@@ -156,7 +157,8 @@ RESET2 ;EP -- update partition without recreating display array
 GETPAT ;EP -- ask user to select patient
  K DIC,DFN,AMHPAT S DIC=9000001,DIC(0)="AEMQZ" D ^DIC I Y>0 S (AMHPAT,DFN)=+Y
  Q:Y=-1
- I $G(AUPNDOD)]"" W !!?10,"***** PATIENT'S DATE OF DEATH IS ",$$FMTE^XLFDT(AUPNDOD),!! H 2 D
+ D PFLAG^AMHUTIL(DFN)
+ I $G(AUPNDOD)]"" W !!?10,"***** PATIENT'S DATE OF DEATH IS ",$$FMTE^XLFDT(AUPNDOD),!! H 2 D  Q:'AMHPAT
  .W !?25,"Ok" S %=1 D YN^DICN I %'=1 S AMHPAT="",DFN="" Q
  I DFN,'$$ALLOWP^AMHUTIL(DUZ,DFN) D NALLOWP^AMHUTIL G GETPAT
  W !?25,"Ok" S %=1 D YN^DICN I %'=1 S AMHPAT="",DFN="" G GETPAT

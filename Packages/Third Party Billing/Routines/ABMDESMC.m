@@ -1,22 +1,35 @@
-ABMDESMC ; IHS/ASDST/DMJ - Ambulatory Surg Claim Info ;
- ;;2.6;IHS Third Party Billing System;**2**;NOV 12, 2009
- ; IHS/SD/SDR - abm*2.6*2 - 3PMS10003A - modified to call ABMFEAPI
+ABMDESMC ; IHS/SD/SDR - Ambulatory Surg Claim Info ;
+ ;;2.6;IHS Third Party Billing System;**2,10,28,29**;NOV 12, 2009;Build 562
+ ;
+ ;IHS/SD/SDR 2.6*2 3PMS10003A modified to call ABMFEAPI
+ ;IHS/SD/SDR 2.6*28 CR10648 Put CPT Narrative in array
+ ;IHS/SD/SDR 2.6*29 CR10410 Added Medicare non-covered check
  ;
  K ABMS("CPT"),ABMS("TMP")
  S ABMCAT=21 D PCK^ABMDESM1 Q:$G(ABMQUIT)
- I $P($G(^AUTNINS(ABMP("INS"),2)),U)'="R" S ABMS("TOT")=0
+ ;I $P($G(^AUTNINS(ABMP("INS"),2)),U)'="R" S ABMS("TOT")=0  ;abm*2.6*10 HEAT73780
+ I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")'="R" S ABMS("TOT")=0  ;abm*2.6*10 HEAT73780
 MS S ABMX="""""" F ABMS=1:1 S ABMX=$O(@(ABMP("GL")_"21,""C"","_ABMX_")")) Q:'ABMX  S ABMX("X")=$O(^(ABMX,"")) D MS1
  G XIT
  ;
-MS1 S ABMX(0)=@(ABMP("GL")_"21,"_ABMX("X")_",0)")
+MS1 ;
+ S ABMX(0)=@(ABMP("GL")_"21,"_ABMX("X")_",0)")
+ S ABMX(2)=$G(@(ABMP("GL")_"21,"_ABMX("X")_",2)"))  ;abm*2.6*28 IHS/SD/SDR CR10648
  ;Q:'$P($G(^ABMDFEE(ABMP("FEE"),11,+ABMX(0),0)),U,2)  ;abm*2.6*2 3PMS10003A
  Q:'$P($$ONE^ABMFEAPI(ABMP("FEE"),11,+ABMX(0),ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
  I $D(ABMS("TMP",+ABMX(0))) S $P(ABMS("CPT",ABMS("TMP",+ABMX(0))),U,4)=$P(ABMS("CPT",ABMS("TMP",+ABMX(0))),U,4)+1,ABMS=ABMS-1 Q
  S ABMS("CPT",ABMS)=U_$P(ABMX(0),U)_U_$P(ABMP("FLAT"),U,2)_U_1
  S ABMS("TMP",$P(ABMX(0),U))=ABMS
- I $P($G(^AUTNINS(ABMP("INS"),2)),U)="R" G MCR
+ ;I $P($G(^AUTNINS(ABMP("INS"),2)),U)="R" G MCR  ;abm*2.6*10 HEAT73780
+ I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")="R" G MCR  ;abm*2.6*10 HEAT73780
  ;S $P(ABMS("CPT",ABMS),U,5)=$P(^ABMDFEE(ABMP("FEE"),11,+ABMX(0),0),U,2),ABMS("TOT")=ABMS("TOT")+$P(^(0),U,2)  ;abm*2.6*2 3PMS10003A
  S $P(ABMS("CPT",ABMS),U,5)=$P($$ONE^ABMFEAPI(ABMP("FEE"),11,+ABMX(0),ABMP("VDT")),U),ABMS("TOT")=ABMS("TOT")+$P($$ONE^ABMFEAPI(ABMP("FEE"),11,+ABMX(0),ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
+ ;start new abm*2.6*29 IHS/SD/SDR CR10410
+ S ABMX("SUB")=+$P($$ONE^ABMFEAPI(ABMP("FEE"),11,+ABMX(0),ABMP("VDT")),U)
+ S ABMCNDCK=U_$P(ABMX(0),U,9)_U_$P(ABMX(0),U,11)_U_$P(ABMX(0),U,12)
+ D CNCD21CK^ABMDESM1
+ ;end new abm*2.6*29 IHS/SD/SDR CR10410
+ I "^35^"[("^"_ABMP("EXP")_"^") S $P(ABMS(ABMS("I")),U,12)=$P(ABMX(2),U,2)  ;abm*2.6*28 IHS/SD/SDR CR10648
  Q
 MCR S $P(ABMS("CPT",ABMS),U,5)=$S(ABMS=1:ABMS("TOT"),1:0)
  Q

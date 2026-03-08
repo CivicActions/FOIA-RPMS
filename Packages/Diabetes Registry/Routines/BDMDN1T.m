@@ -1,0 +1,251 @@
+BDMDN1T ; IHS/CMI/LAB - 2024 DIABETES AUDIT ;
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**17**;JUN 14, 2007;Build 138
+ ;
+ ;
+TOBACCO(P,BDATE,EDATE) ;EP
+ I '$G(P) Q ""
+ NEW BDMTOB,BDMSDX,BDMUDX,BDMSMDX,BDMSLDX,BDMXPHD,BDM1320,BDMSCPT,BDMRET
+ S BDMRET=""  ;return value screened^user text
+ S BDMTOB=$$TOBHF(P,BDATE,EDATE)  ;get last HF from the 4 categories
+ S BDMSDX=$$DX(P,BDATE,EDATE)
+ S BDMUDX=$$DXU(P,BDATE,EDATE)
+ S BDMSMDX=$$DXS(P,BDATE,EDATE)
+ S BDMSLDX=$$DXSL(P,BDATE,EDATE)
+ S BDMXPHD=$$PED(P,BDATE,EDATE)
+ S BDM1320=$$DENT(P,BDATE,EDATE)
+ S BDMSCPT=$$CPTSM(P,BDATE,EDATE)
+ S BDMRET=$S(BDMTOB]"":1,1:0)
+ I BDMSDX]"" S BDMRET=1
+ I BDMSLDX]"" S BDMRET=1
+ I BDMXPHD]"" S BDMRET=1
+ I BDM1320]"" S BDMRET=1
+ I BDMSCPT]"" S BDMRET=1
+ I BDMUDX]"" S BDMRET=1
+ I BDMSMDX]"" S BDMRET=1
+ I 'BDMRET Q "2^2  No"   ;not screened
+ S F=BDMTOB
+ D
+ .I $P(F,U,4)="F108"!($P(F,U,4)="F109")!($P(F,U,4)="F002")!($P(F,U,4)="F122")!($P(F,U,4)="F121")!($P(F,U,4)="F030") S $P(BDMRET,U,2)="1  Yes "_$P(F,U,1)_"  "_$P(F,U,2)_U_$P(F,U,3) Q  ;SMOKELESS CATEGORY  ;SMOKING CATEGORY
+ .I $P(F,U,8)="F030"!($P(F,U,8)="F003") S $P(BDMRET,U,2)="1  Yes "_$P(F,U,1)_"  "_$P(F,U,2)_U_$P(F,U,3) Q  ;SMOKELESS CATEGORY
+ .I BDMUDX]"" S $P(BDMRET,U,2)="1  Yes DX: "_$P(BDMUDX,U,1)_"  "_$$DATE^BDMS9B1($P(BDMUDX,U,2))_U_$P(BDMUDX,U,2) Q  ;DX USER
+ .I BDMSMDX]"" S $P(BDMRET,U,2)="1  Yes DX: "_$P(BDMSMDX,U,1)_"  "_$$DATE^BDMS9B1($P(BDMSMDX,U,2))_U_$P(BDMSMDX,U,2) Q
+ .I BDMSLDX]"" S $P(BDMRET,U,2)="1  Yes DX: "_$P(BDMSLDX,U,1)_"  "_$$DATE^BDMS9B1($P(BDMSLDX,U,2))_U_$P(BDMSLDX,U,2) Q
+ .I ($P(BDMSCPT,U)="1034F")!($P(BDMSCPT,U)="1035F")!($P(BDMSCPT,U)=99407)!($P(BDMSCPT,U)="G9276")!($P(BDMSCPT,U)="G9016")!($P(BDMSCPT,U)="4000F")!($P(BDMSCPT,U)="4001F")  D  Q
+ ..S $P(BDMRET,U,2)="1  Yes CPT: "_$P(BDMSCPT,U,1)_"  "_$$DATE^BDMS9B1($P(BDMSCPT,U,2))_U_$P(BDMSCPT,U,2) Q
+ .I $P(BDMSCPT,U)=99406!($P(BDMSCPT,U)="G9458") D
+ ..S $P(BDMRET,U,2)="1  Yes DX: "_$P(BDMSCPT,U,1)_"  "_$$DATE^BDMS9B1($P(BDMSCPT,U,2))_U_$P(BDMSCPT,U,2) Q
+ I $P(BDMRET,U,2)]"" Q BDMRET
+ Q "1^2  No"
+ ;
+TOBHF(P,BDATE,EDATE) ;EP - return DATE^SMOKER CAT^DATE^SMOKELESS CAT^DATE^ETS CATEGORY
+ NEW SM,SL,EX,EN,BDMTOB,ENN
+ S BDMTOB=""
+ S SM=$$LASTHF(P,"C017",BDATE,EDATE) K O,D,H
+ S SL=$$LASTHF(P,"C016",BDATE,EDATE) K O,D,H
+ S EX=$$LASTHF(P,"C015",BDATE,EDATE) K O,D,H
+ I SM]""!(SL]"")!(EX]"") D TOBHFS Q BDMTOB
+ Q BDMTOB
+TOBHFS ;
+ I SM]"" S BDMTOB=SM
+ I SL]"" S $P(BDMTOB,U,5)=SL
+ I EX]"" S $P(BDMTOB,U,9)=EX
+ Q
+ ;
+DENT(P,BDATE,EDATE) ;EP
+ K ^TMP($J,"A")
+ S A="^TMP($J,""A"",",B=P_"^ALL VISITS;DURING "_$$FMTE^XLFDT(BDATE)_"-"_$$FMTE^XLFDT(EDATE),E=$$START1^APCLDF(B,A)
+ I '$D(^TMP($J,"A",1)) Q ""
+ S (X,G)=0 F  S X=$O(^TMP($J,"A",X)) Q:X'=+X!(G)  S V=$P(^TMP($J,"A",X),U,5) D
+ .Q:V']""
+ .Q:'$D(^AUPNVSIT(V,0))
+ .Q:'$P(^AUPNVSIT(V,0),U,9)
+ .Q:$P(^AUPNVSIT(V,0),U,11)
+ .S Z=0 F  S Z=$O(^AUPNVDEN("AD",V,Z)) Q:Z'=+Z!(G)  S B=$P($G(^AUPNVDEN(Z,0)),U) I B S B=$P($G(^AUTTADA(B,0)),U) I B=1320!(B="D1320") S G=1_U_$P($P(^AUPNVSIT(V,0),U),".")
+ .Q
+ I G=0 Q ""
+ Q "ADA "_B_U_$P(G,U,2)
+PED(P,BDATE,EDATE) ;EP
+ NEW BDMG,S,SN,Y,E,X,D,T
+ K BDMG
+ S Y="BDMG("
+ S X=P_"^ALL EDUC;DURING "_$$FMTE^XLFDT(BDATE)_"-"_$$FMTE^XLFDT(EDATE) S E=$$START1^APCLDF(X,Y)
+ I '$D(BDMG) Q ""
+ S SN="PXRM BGP TOBACCO SCREENED"
+ S (X,D)=0,%="",T="" F  S X=$O(BDMG(X)) Q:X'=+X!(%]"")  D
+ .S T=$P(^AUPNVPED(+$P(BDMG(X),U,4),0),U)
+ .Q:'T
+ .Q:'$D(^AUTTEDT(T,0))
+ .S T=$P(^AUTTEDT(T,0),U,2)
+ .I $P(T,"-")="TO" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-",2)="TO" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-",2)="SHS" S %=T_U_$P(BDMG(X),U) Q
+ .S S=$P(T,"-",1)
+ .S S=$$ICDDX^ICDEX(S)
+ .I $P(S,U,1)'="-1",$$ICD^ATXCHK($P(S,U,1),$O(^ATXAX("B","BGP TOBACCO DXS",0)),9) S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="D1320" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="99406" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="99407" S %=T_U_$P(BDMG(X),U) Q
+ .;I $P(T,"-")="G0375" S %=T_U_$P(BDMG(X),U) Q
+ .;I $P(T,"-")="G0376" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="1034F" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="1035F" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="1036F" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="1000F" S %=T_U_$P(BDMG(X),U) Q
+ .;I $P(T,"-")="G8455" S %=T_U_$P(BDMG(X),U) Q
+ .;I $P(T,"-")="G8456" S %=T_U_$P(BDMG(X),U) Q
+ .;I $P(T,"-")="G8457" S %=T_U_$P(BDMG(X),U) Q
+ .;I $P(T,"-")="G8402" S %=T_U_$P(BDMG(X),U) Q
+ .;I $P(T,"-")="G8453" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="G9276" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="G9275" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="4000F" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="4001F" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="G9016" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="G9458" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")="G0030" S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")]"",$$SNOMED^BDMUTL(2024,"PXRM BGP TOBACCO SCREENED",$P(T,"-")) S I=1 S %=T_U_$P(BDMG(X),U) Q
+ .I $P(T,"-")=408939007 S %=T_U_$P(BDMG(X),U) Q
+ Q %
+DX(P,BDATE,EDATE) ;EP  - WAS THERE SCREENING?
+ K BDMG
+ S BDMG(1)=$$LASTDX^BDMAPIU(P,"BGP TOBACCO DXS",BDATE,EDATE)
+ I BDMG(1)]"" Q $P($$ICDDX^ICDEX($P(BDMG(1),U,4),$P(BDMG(1),U,1)),U,2)_U_$P(BDMG(1),U,3)_U_$P(BDMG(1),U,4)
+ S T=$O(^ATXAX("B","BGP TOBACCO DXS",0))
+ S X=0,G="" F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(G]"")  D
+ .Q:$P(^AUPNPROB(X,0),U,12)="I"
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"
+ .Q:$P(^AUPNPROB(X,0),U,3)>EDATE
+ .Q:$P(^AUPNPROB(X,0),U,3)<BDATE
+ .S Y=$P(^AUPNPROB(X,0),U)
+ .Q:'$$ICD^ATXCHK(Y,T,9)
+ .S G=$P($$ICDDX^ICDEX(Y),U,2)_U_$P(^AUPNPROB(X,0),U,3)_U_Y
+ .Q
+ I G]"" Q G
+ S G=$$IPLSNOID^BDMDNDU(P,"PXRM BGP TOBACCO SCREENED",BDATE,EDATE) I G S G=$P(G,U,2)_U_$P(G,U,3) Q G
+ Q G
+DXSL(P,BDATE,EDATE) ;EP - WAS THERE A SMOKELESS USER DX?
+ K BDMG
+ S BDMG(1)=$$LASTDX^BDMAPIU(P,"BGP GPRA SMOKELESS DXS",BDATE,EDATE)
+ I BDMG(1)]"" Q $P($$ICDDX^ICDEX($P(BDMG(1),U,4),$P(BDMG(1),U,1)),U,2)_U_$P(BDMG(1),U,3)_U_$P(BDMG(1),U,4)
+ S T=$O(^ATXAX("B","BGP GPRA SMOKELESS DXS",0))
+ S X=0,G="" F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(G]"")  D
+ .Q:$P(^AUPNPROB(X,0),U,12)="I"
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"
+ .Q:$P(^AUPNPROB(X,0),U,3)>EDATE
+ .Q:$P(^AUPNPROB(X,0),U,3)<BDATE
+ .S Y=$P(^AUPNPROB(X,0),U)
+ .Q:'$$ICD^ATXCHK(Y,T,9)
+ .S G=$P($$ICDDX^ICDEX(Y),U,2)_U_$P(^AUPNPROB(X,0),U,3)_U_Y
+ .Q
+ I G]"" Q G
+ S G=$$IPLSNOID^BDMDNDU(P,"PXRM BGP TOBACCO SMOKELESS",BDATE,EDATE) I G S G=$P(G,U,2)_U_$P(G,U,3) Q G
+ Q G
+ ;
+DXU(P,BDATE,EDATE) ;EP - WAS THERE A USER DX?
+ K BDMG
+ S BDMG(1)=$$LASTDX^BDMAPIU(P,"BGP TOBACCO USER DXS",BDATE,EDATE)
+ I BDMG(1)]"" Q $P($$ICDDX^ICDEX($P(BDMG(1),U,4),$P(BDMG(1),U,1)),U,2)_U_$P(BDMG(1),U,3)_U_$P(BDMG(1),U,4)
+ S T=$O(^ATXAX("B","BGP TOBACCO USER DXS",0))
+ S X=0,G="" F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(G]"")  D
+ .Q:$P(^AUPNPROB(X,0),U,12)="I"
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"
+ .Q:$P(^AUPNPROB(X,0),U,3)>EDATE
+ .Q:$P(^AUPNPROB(X,0),U,3)<BDATE
+ .S Y=$P(^AUPNPROB(X,0),U)
+ .Q:'$$ICD^ATXCHK(Y,T,9)
+ .S G=$P($$ICDDX^ICDEX(Y),U,2)_U_$P(^AUPNPROB(X,0),U,3)_U_Y
+ .Q
+ I G]"" Q G
+ S G=$$IPLSNOID^BDMDNDU(P,"PXRM BGP CURRENT TOBACCO",BDATE,EDATE) I G S G=$P(G,U,2)_U_$P(G,U,3) Q G
+ Q G
+DXS(P,BDATE,EDATE) ;EP - WAS THERE A SMOKING USER DX?
+ K BDMG
+ S BDMG(1)=$$LASTDX^BDMAPIU(P,"BGP GPRA SMOKING DXS",BDATE,EDATE)
+ I BDMG(1)]"" Q $P($$ICDDX^ICDEX($P(BDMG(1),U,4),$P(BDMG(1),U,1)),U,2)_U_$P(BDMG(1),U,3)_U_$P(BDMG(1),U,4)
+ S T=$O(^ATXAX("B","BGP GPRA SMOKING DXS",0))
+ S X=0,G="" F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(G]"")  D
+ .Q:$P(^AUPNPROB(X,0),U,12)="I"
+ .Q:$P(^AUPNPROB(X,0),U,12)="D"
+ .Q:$P(^AUPNPROB(X,0),U,3)>EDATE
+ .Q:$P(^AUPNPROB(X,0),U,3)<BDATE
+ .S Y=$P(^AUPNPROB(X,0),U)
+ .Q:'$$ICD^ATXCHK(Y,T,9)
+ .S G=$P($$ICDDX^ICDEX(Y),U,2)_U_$P(^AUPNPROB(X,0),U,3)_U_Y
+ .Q
+ I G]"" Q G
+ S G=$$IPLSNOID^BDMDNDU(P,"PXRM BGP TOBACCO SMOKER",BDATE,EDATE) I G S G=$P(G,U,2)_U_$P(G,U,3) Q G
+ Q G
+ ;
+LASTHF(P,C,BDATE,EDATE) ;EP - get last factor in category C for patient P
+ NEW N,D,O,H
+ S N=$G(C)
+ I N="" Q ""
+ S C=$O(^AUTTHF("B",N,0)) ;ien of category passed
+ I 'C S C=$O(^AUTTHF("C",N,0))
+ I 'C Q ""
+ S (H,D)=0 K O
+ F  S H=$O(^AUTTHF("AC",C,H))  Q:'+H  D
+ .Q:'$D(^AUPNVHF("AA",P,H))
+ .S D="" F  S D=$O(^AUPNVHF("AA",P,H,D)) Q:D'=+D  D
+ ..Q:(9999999-D)>EDATE  ;after time frame
+ ..Q:(9999999-D)<BDATE  ;before time frame
+ ..S O(D)=$O(^AUPNVHF("AA",P,H,D,""))
+ .Q
+ S D=$O(O(0))
+ I D="" Q D
+ Q $$VAL^XBDIQ1(9000010.23,O(D),.01)_"^"_$$DATE^BDMS9B1(9999999-D)_"^"_(9999999-D)_"^"_$$VAL^XBDIQ1(9999999.64,$$VALI^XBDIQ1(9000010.23,O(D),.01),.02)
+ ;
+LOINC(A,B) ;
+ NEW %
+ S %=$P($G(^LAB(95.3,A,9999999)),U,2)
+ I %]"",$D(^ATXAX(B,21,"B",%)) Q 1
+ S %=$P($G(^LAB(95.3,A,0)),U)_"-"_$P($G(^LAB(95.3,A,0)),U,15)
+ I $D(^ATXAX(B,21,"B",%)) Q 1
+ Q ""
+ ;
+CPTSM(P,BDATE,EDATE) ;EP - did pat have TOBACCO SCREENING cpt?
+ NEW X
+ S X=$$CPT^BDMDNDU(P,BDATE,EDATE,$O(^ATXAX("B","BGP TOBACCO SCREEN CPTS",0)),5)
+ I X]"" Q $P(X,U,2)_U_$P(X,U,1)
+ Q ""
+ENDS(P,BD,ED) ;EP
+ I $G(P)="" Q ""
+ NEW X
+ S X=$$LASTHF^BDMSMU(P,"C019","A",BD,ED)
+ I X="" Q "2  No"
+ Q "1  Yes "_$$DATE^BDMS9B1($P(X,U,3))_" "_$P(X,U,2)
+LASTENDS(P,BD,ED) ;EP - DON'T COUNT NON NICOTINE ONE
+ I $G(P)="" Q ""
+ I $G(BD)="" S BD=$$DOB^AUPNPAT(P)
+ NEW X,CIG,D,G
+ I $E($$ENDS^BDMDN1T(P,BD,ED))'=1 Q ""
+ ;I $G(BD)="" S BD=$$DOB^AUPNPAT(P)
+ D ALLHF(P,BD,ED,"C019","CIG")
+ ;FIND LAST ONE THAT IS NOT THE OTHER SUBSTANCES ONE
+ S D=0,X=0,G=""
+ F  S D=$O(CIG(D)) Q:D'=+D!(G)  D
+ .S C=0 F  S C=$O(CIG(D,C)) Q:C'=+C!(G)  D
+ ..Q:$P(CIG(D,C),U,3)="F155"
+ ..S Y=$P(CIG(D,C),U,3)  ;code
+ ..I Y="F124" S G="1  Current user "_$$DATE^BDMS9B1(9999999-D) Q
+ ..S G="2  Not a current user "_$$DATE^BDMS9B1(9999999-D) Q
+ I G]"" Q G
+ S D=$O(CIG(0))
+ Q "2  Not a current user "_$$DATE^BDMS9B1(9999999-D)
+ALLHF(P,BD,ED,CAT,BDMRET) ;
+ NEW H,D,C,N
+ S (H,D,C)=0
+ S N=CAT
+ I N="" Q ""
+ S CAT=$O(^AUTTHF("B",CAT,0))
+ I 'CAT S CAT=$O(^AUTTHF("C",N,0))
+ I 'CAT Q ""
+ F  S H=$O(^AUTTHF("AC",CAT,H))  Q:'+H  D
+ .Q:'$D(^AUPNVHF("AA",P,H))
+ .S D="" F  S D=$O(^AUPNVHF("AA",P,H,D)) Q:D'=+D  D
+ ..Q:(9999999-D)>ED  ;after time frame
+ ..Q:(9999999-D)<BD  ;before time frame
+ ..S C=C+1
+ ..S @BDMRET@(D,C)=(9999999-$P(D,"."))_"^"_$P(^AUTTHF(H,0),U,1)_"^"_$P(^AUTTHF(H,0),U,2)
+ .Q
+ Q

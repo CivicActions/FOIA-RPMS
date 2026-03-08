@@ -1,5 +1,6 @@
-DICRW ;SFISC/XAK-SELECT A FILE ;8/11/06  05:51
- ;;22.0;VA FileMan;**149**;Mar 30, 1999;Build 2
+DICRW ;SFISC/XAK-SELECT A FILE ;11:24 AM  15 Nov 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 R D DT S D="OUTPUT FROM",DIC(0)="QEI",DIA=$S($D(^DISV(DUZ,"^DIC(")):^("^DIC("),1:"")
  D R1,DIC K DIAC,DIFILE,DIC("S") Q:$D(DTOUT)  G R:'$T,AU:+Y=1.1,A:+Y=.6
@@ -29,10 +30,8 @@ R1 S DIC("S")="S DIFILE=+Y,DIAC=""RD"" D ^DIAC I %"
 DT ;
  I $D(IO)#2,$D(IO(0))#2,IO=IO(0),IO=""
  E  W:'$G(DIQUIET) !
-DTNOLF ; DT entry point without doing a line feed.
  S:$D(DUZ)#2-1 DUZ=0 S:$D(DUZ(0))#2-1 DUZ(0)="" S X=DUZ(0)="@" D 1
  I '$D(DTIME) S DTIME=300
- I '$D(DILOCKTM) S DILOCKTM=+$G(^DD("DILOCKTM"),1) ;DI*146
  K %DT,DT S:$D(IO(0))[0 IO(0)=$I D NOW^%DTC S DT=X,U="^"
  K DIK,DIC,%I,DICS Q
  ;
@@ -41,7 +40,7 @@ DTNOLF ; DT entry point without doing a line feed.
  Q
 W D DT S D=$S('$D(DDS1):"INPUT TO",1:DDS1),DIC(0)=$E("L",$D(DLAYGO)>0)_"EQI"
  D W1,DIC Q:$T!($D(DTOUT))  G W:'$P(Y,U,3) K DIC Q
-W1 S DIC("S")="I Y>.19,Y-1,Y-1.1,Y-.6,Y-.403,Y-.404,Y-.31 S DIFILE=+Y,DIAC=""WR"" D ^DIAC I %"
+W1 S DIC("S")="I Y>.19,Y-1,Y-1.1,Y-.6,Y-.403,Y-.404 S DIFILE=+Y,DIAC=""WR"" D ^DIAC I %"
  Q
 DIC W ! S U="^",D=D_" WHAT FILE: ",DIC="^DIC("
  I DUZ(0)'="@",DIC(0)'["L",$S($D(^VA(200,"AFOF")):1,1:$D(^DIC(3,"AFOF"))) S DIC=$S($D(^VA(200,"AFOF")):"^VA(200,",1:DIC_"3,")_"DUZ,""FOF"","

@@ -1,5 +1,5 @@
 BSDAMEP ; IHS/ANMC/LJF - Extended Display; 
- ;;5.3;PIMS;**1012**;APR 26, 2002
+ ;;5.3;PIMS;**1012,1022**;MAY 28, 2004;Build 18
  ;
 EN ;EP; Selection of appointment
  ; requires DFN, SDT, SDCL, and SDW be set
@@ -15,7 +15,9 @@ HDR ; Header
  ;S VALMHDR(1)=$$SP^BDGF(15)_$$CONF^BDGF  cmi/maw 5/14/2010 PATCH 1012 RQMT148 orig line
  S VALMHDR(1)=$S($$GET1^DIQ(44,SDCL,3.5)]"":$$GET1^DIQ(44,SDCL,3.5),$$GET1^DIQ(44,SDCL,3)]"":$$GET1^DIQ(44,SDCL,3),1:"")_$$SP^BDGF(5)_$$CONF^BDGF  ;cmi/maw 5/14/2010 PATCH 1012 RQMT148 mod line
  D PID^VADPT
- S VALMHDR(2)=$E($P("Patient: "_$G(^DPT(DFN,0)),"^",1),1,30)_" ("_VA("BID")_")"_" Phone: "_$$GET1^DIQ(2,DFN,.131)
+ ;202307 77892 maw p1022 PPN
+ S VALMHDR(2)=$E($$GETPREF^AUPNSOGI(DFN,"E",1),1,45)_" ("_VA("BID")_")"_" Phone: "_$$GET1^DIQ(2,DFN,.131)
+ ;S VALMHDR(2)=$E($P("Patient: "_$G(^DPT(DFN,0)),"^",1),1,30)_" ("_VA("BID")_")"_" Phone: "_$$GET1^DIQ(2,DFN,.131)
  I $$DEAD^BDGF2(DFN) S X=$G(IORVON)_"Died on "_$$DOD^BDGF2(DFN)_$G(IORVOFF),VALMHDR(2)=$$SETSTR^VALM1(X,VALMHDR(2),40,60)
  S X=$S($D(^DPT(DFN,.1)):"Ward: "_^(.1),1:"Outpatient")
  S VALMHDR(2)=$$SETSTR^VALM1(X,VALMHDR(2),81-$L(X),$L(X))

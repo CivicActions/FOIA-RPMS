@@ -1,6 +1,6 @@
-DDW1 ;SFISC/PD KELTZ-LOAD, SAVE ;1:31 PM  16 Aug 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**18**;Mar 30, 1999
+DDW1 ;SFISC/PD KELTZ-LOAD, SAVE ;1:03 PM  22 Sep 1995 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**11**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 LOAD ;Put up "box" and load document
@@ -15,31 +15,19 @@ LOAD ;Put up "box" and load document
  D:DDWCNT>1 MSG^DDW("Loading text ...")
  F DDWI=DDWCNT:-1:DDWMR+1 D
  . S DDWSTB=DDWSTB+1
- . S DDWX=$S('$E(DDWBF,4):$G(@DDWDIC@(DDWI,0)),1:$G(@DDWDIC@(DDWI)))
- . D:DDWX?.E1C.E CTRL
- . S ^TMP("DDW1",$J,DDWSTB)=DDWX
+ . S ^TMP("DDW1",$J,DDWSTB)=$S('$E(DDWBF,4):$G(@DDWDIC@(DDWI,0)),1:$G(@DDWDIC@(DDWI)))
  ;
  F DDWI=1:1:DDWMR D
  . S DDWX=$S(DDWI>DDWCNT:"",'$E(DDWBF,4):$G(@DDWDIC@(DDWI,0)),1:$G(@DDWDIC@(DDWI)))
- . D:DDWX?.E1C.E CTRL
  . S DDWL(DDWI)=DDWX
  . I DDWC'>IOM,DDWRW'>DDWMR,DDWI'>DDWCNT,DDWX'?." " D
  .. D CUP(DDWI,1) W $E(DDWX,1,IOM)
  ;
  I DDWCNT=1,DDWL(1)?1." " S DDWL(1)=""
  D:DDWCNT>1 MSG^DDW()
- ;
- D:$G(DDWED) MSG^DDW($C(7)_$P(DDGLVID,DDGLDEL,6)_"WARNING: Control characters in the text have been replaced with spaces."_$P(DDGLVID,DDGLDEL,10))
- ;
  I DDWRW="B" D
  . D BOT^DDW3
  E  D LINE^DDWG(DDWRW,DDWC)
- Q
- ;
-CTRL ;Strip control characters from DDWX
- N I
- S DDWED=1
- F I=1:1:$L(DDWX) S:$E(DDWX,I)?1C $E(DDWX,I)=" "
  Q
  ;
 BOX ;Draw box
@@ -50,6 +38,9 @@ BOX ;Draw box
  . W $P(DDGLVID,DDGLDEL)_$E(DIWETXT,1,IOM)_$P(DDGLVID,DDGLDEL,10)
  ;
  I $D(DIWESUB) S DDWX=DIWESUB
+ E  I $D(XMSUB),DIC["^XMB" D
+ . S DDWX=XMSUB
+ . F  Q:DDWX'["~U~"  S DDWX=$P(DDWX,"~U~")_U_$P(DDWX,"~U~",2,999)
  E  I $D(DH)#2,$D(DIE) S DDWX=DH
  S DDWX=$E($G(DDWX),1,30)
  ;
@@ -66,38 +57,7 @@ BOX ;Draw box
  . S DX=DDWRMAR-DDWOFS-1 X IOXY W ">"
  Q
  ;
-AUTOTM ;Prompt for autosave time
- N DDWHLP,DDWANS,DDWCOD
- S DDWHLP(1)="  Enter the interval in MINUTES you wish to have the Screen Editor"
- S DDWHLP(2)="  automatically save the text. Enter a number between 0 and 120."
- S DDWHLP(3)="  A value of 0 means text is NOT automatically saved."
- D ASK^DDWG(5,"Interval in MINUTES to automatically save text: ",15,+$G(DDWAUTO),"D AUTOVAL^DDW1",.DDWHLP,.DDWANS,.DDWCOD)
- ;
- Q:DDWCOD="TO"!(DDWANS=U)
- I $G(DDWANS) D
- . S DDWAUTO=DDWANS
- . S DDWAUTO("H")=$H
- . S DDWAUTO("S")=DDWAUTO*60
- E  K DDWAUTO
- Q
- ;
-AUTOVAL ;Validate autosave time
- K DDWERR
- I DDWX?."^"!($P($G(DDWCOD),U)="TO") S DDWX=U Q
- I $L(DDWX)>15 D
- . S DDWERR="  Response must not be more than 15 characters in length."
- I DDWX'=+$P(DDWX,"E") D
- . S DDWERR="  Response must be numeric."
- I DDWX>120!(DDWX<0) D
- . S DDWERR="  Response must be between 0 and 120."
- Q
- ;
-AUTOSV ;Autosave
- I $D(DDWED) K DDWED D SV
- S DDWAUTO("H")=$H
- Q
- ;
-SV ;Called from DDWT1 and AUTOSV
+SV ;Called from DDWT1
  D SAVE
  S:DDWCNT<1 DDWCNT=1
  I DDWRW+DDWA>DDWCNT D
@@ -136,34 +96,6 @@ SAVE ;Save document
  S DWLC=DDWCNT,DWHD=U
  I DDWCNT,'$E(DDWBF,4) S @DDWDIC@(0)=U_U_DWLC_U_DWLC_U_DT_U
  D MSG^DDW()
- Q
- ;
-QUIT ;If any edits were made, issue confirmation prompt.
- S DDWFIN=""
- Q:$G(DDWFLAGS)["Q"!'$D(DDWED)
- ;
- N DDWHLP,DDWANS,DDWCOD
- S DDWHLP(1)="  Enter 'Yes' to save changes and quit."
- S DDWHLP(2)="  Enter 'No' to discard changes and quit."
- S DDWHLP(3)="  Enter '^' to return to the editor without saving or quitting."
- ;
- D ASK^DDWG(5,"Do you want to save changes? ",3,"","D QUITVAL^DDW1",.DDWHLP,.DDWANS,.DDWCOD)
- ;
- I DDWCOD="TO"!(DDWANS=U) K DDWFIN
- E  I DDWANS="Y" D SAVE K DUOUT ;GFT
- Q
- ;
-QUITVAL ;Validate responses to the confirmation prompt
- K DDWERR
- I DDWX[U!($P(DDWCOD,U)="TO") S DDWX=U Q
- I DDWX="" S DDWERR="  Response is required.  Enter ? for help." Q
- ;
- S:DDWX?.E1L.E DDWX=$TR(DDWX,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
- ;
- I $P("YES",DDWX)]"",$P("NO",DDWX)]"" D  Q
- . S DDWERR="  Not a valid response.  Enter ? for help."
- ;
- S DDWX=$E(DDWX)
  Q
  ;
 POS(R,C,F) ;Pos cursor based on char pos C

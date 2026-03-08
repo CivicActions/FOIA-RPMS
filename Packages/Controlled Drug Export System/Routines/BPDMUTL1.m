@@ -1,0 +1,261 @@
+BPDMUTL1 ;IHS/CMI/LAB - PDM UTILITY; ; 27 Dec 2011  8:46 AM
+ ;;2.0;CONTROLLED DRUG EXPORT SYSTEM;**5,7**;NOV 15, 2011;Build 51
+ ;(c) Cimarron Medical Informatics, 2008
+ ;
+ ;This routine will perform some repetitive utility functions
+ ;
+ Q
+ ;
+REQ42B(T,I,S) ;EP  T segment ID, I is field ID, S is State ien
+ NEW J,K,R
+ S J=$O(^BPDMRECC("B",T,0))
+ I 'J Q ""
+ S K=$O(^BPDMRECC(J,11,"B",I,0))
+ I 'K Q ""
+ S R=$P($G(^BPDMRECC(J,11,K,12,S,0)),U,2)
+ I R="N" Q 0
+ I R="RWA" Q 2
+ Q 1
+ ;
+PRE10(P,S) ;-- get the licensing state
+ N IS,ISS
+ S ISS=""
+ S ISS=$O(^VA(200,P,"PS1","B",S,0))
+ I $G(ISS) S ISS=S
+ I '$G(ISS) S ISS=$O(^VA(200,P,"PS1","B",0))
+ Q $$GET1^DIQ(5,ISS,1)
+ ;
+FNDFILL(PX,RF) ;-- find the refill date based on last log entry
+ N LDT,LG,MDA,LRF,NZ,LPX,LGDT
+ S LDT=0 F  S LDT=$O(^BPDMLOG("APE",PX,LDT)) Q:'LDT  D
+ . S LG=0 F  S LG=$O(^BPDMLOG("APE",PX,LDT,LG)) Q:'LG  D
+ .. S MDA=0 F  S MDA=$O(^BPDMLOG("APE",PX,LDT,LG,MDA)) Q:'MDA  D
+ ... S NZ=$G(^BPDMLOG(LG,31,MDA,0))
+ ... S LPX=$P(NZ,U)
+ ... Q:LPX'=PX
+ ... S LRF=$P(NZ,U,3)
+ ... Q:LRF'=RF
+ ... S LGDT=$P(NZ,U,6)
+ I $G(LGDT) Q $G(LGDT)
+ Q $$DATE^BPDMUTL($P($G(^PSRX(PX,2)),U,2))  ;last resort get original fill date
+ ;
+AIRE(RX,RF) ;-- get the correct activity log entry
+ I $G(BPDMRTYP)=1,$G(BPDMREDO) D
+ . S BPDM("RUN BEGIN")=$P($G(^BPDMLOG(BPDM("RUN LOG"),0)),U,2)
+ . S BPDM("RUN END")=$P($G(^BPDMLOG(BPDM("RUN LOG"),0)),U,3)
+ ;I $G(BPDMAIEN) Q $G(BPDMAIEN)
+ I $G(BPDMPULG) S BPDMAIEN=BPDMPULG Q $G(BPDMPULG)  ;20240124 p7 pulog entry
+ S ADA=$$GETAIEN(RX,RF)
+ I '$G(BPDMPULG) S (BPDMAIEN,BPDMPULG)=ADA  ;20240126 p7
+ Q +$G(ADA)
+ ;
+GETAIEN(R,F) ;-- get the correct entry for pickup
+ N PDA,PDAA,AIEN,PDRF
+ S PDA=0 F  S PDA=$O(^BPDMLOG("AIR",R,PDA)) Q:'PDA  D
+ .S PDAA=0 F  S PDAA=$O(^BPDMLOG("AIR",R,PDA,PDAA)) Q:'PDAA  D
+ ..I PDAA,PDAA<BPDM("RUN BEGIN") Q
+ ..S PDRF=$P($G(^PSRX(R,"ZPAL",PDA,0)),U,2)
+ ..Q:PDRF'=F  ;20231116 maw don't do pickup if not current refill
+ ..S AIEN=PDA
+ Q $G(AIEN)
+ ;
+DSP17(RXI,RFI) ;-- get DSP17
+ N PUD
+ S PUD=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),0)),U)
+ I $G(PUD) Q $$DATE^BPDMUTL(PUD)
+ I $G(BPDMSTAT)="02" Q $G(BPDMOFD)  ;20241010 if RTS return orig fill dt
+ I $G(RFI)>0 S PUD=$P($G(^PSRX(RXI,1,RFI,0)),U)  ;refill date
+ I $G(RFI)>0,'$G(PUD),$G(BPDMOFD) Q $G(BPDMOFD)  ;20240715 refill date from log
+ I $G(PUD)="" S PUD=$P($G(^PSRX(RXI,2)),U,2)  ;fill date
+ I $G(PUD)="" Q $G(BPDMOFD)
+ Q $$DATE^BPDMUTL(PUD)
+ ;
+AIR03(RXI,RFI) ;-- get AIR03
+ N AIR03
+ S AIR03=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),0)),U,6)
+ I $G(AIR03) S AIR03=$P($G(^APSPJUR(AIR03,0)),U,2)
+ Q $G(AIR03)
+ ;
+AIR04(RXI,RFI) ;-- get AIR04
+ N AIR04
+ K BPDMA04
+ S AIR04=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),0)),U,7)
+ I $G(AIR04)]"" D  Q $G(BPDMA04)
+ . K BPDMA04
+ . S BPDMA04=$P($G(^APSPIDQ(AIR04,0)),U,3)
+ . I $L(BPDMA04)=1 S BPDMA04="0"_BPDMA04
+ Q ""
+ ;
+AIR05(RXI,RFI) ;-- get AIR05
+ N AIR05
+ S AIR05=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),0)),U,8)
+ Q $G(AIR05)
+ ;
+AIR06(RXI,RFI) ;-- get AIR06
+ N AIR06I,AIR06,PUT
+ S PUT=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),0)),U,4)
+ I $G(PUT)="P" D  Q $G(AIR06)
+ . S AIR06="01"
+ S AIR06I=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),0)),U,5)
+ I $G(AIR06I) S AIR06=$P($G(^APSPREL(AIR06I,0)),U,3)
+ I $L($G(AIR06))=1 S AIR06="0"_AIR06
+ Q $G(AIR06)
+ ;
+AIR07(RXI,RFI) ;-- get AIR07
+ N AIR07,PUT,PATI,PATL
+ S PUT=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),0)),U,4)
+ I $G(PUT)="P" D  Q $G(AIR07)
+ .S PATI=$P($G(^PSRX(RXI,0)),U,2)
+ .S PATL=$P($P($G(^DPT(PATI,0)),U),",")
+ .S AIR07=PATL
+ S AIR07=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),2)),U)
+ Q $G(AIR07)
+ ;
+AIR08(RXI,RFI) ;-- get AIR08
+ N AIR08,PUT,PATI,PATF
+ S PUT=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),0)),U,4)
+ I $G(PUT)="P" D  Q $G(AIR08)
+ .S PATI=$P($G(^PSRX(RXI,0)),U,2)
+ .S PATF=$P($P($P($G(^DPT(PATI,0)),U),",",2)," ")
+ .S AIR08=PATF
+ S AIR08=$P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),2)),U,2)
+ Q $G(AIR08)
+ ;
+AIR11(RXI,RFI) ;-- get AIR11
+ N AIR11
+ S AIR11=""
+ I $P($G(^PSRX(RXI,"ZPAL",$$AIRE(RXI,RFI),0)),U) D
+ .S AIR11="02"
+ Q $G(AIR11)
+ ;
+PU(RXI,RXII) ;-- setup pickup data node for AIR elements
+ S ^BPDMLOG("AIR",RXI,RXII,$$NOW^XLFDT())=""
+ ;S ^MAW("AIR",RXI,RXII,$$NOW^XLFDT())=""
+ Q
+ ;
+EDITED() ;-- was this edited?
+ N EDDT
+ I $G(BPDMREDO) Q 0
+ I '$D(^PSRX(BPDMR,"A")) Q 0
+ S BPDMACTL=""
+ ;S BPDMSTAT="00"  ;20250304 p7 maw added
+ S G="",D="" S X=0 F  S X=$O(^PSRX(BPDMR,"A",X)) Q:X'=+X!(G)  D
+ .I $P(^PSRX(BPDMR,"A",X,0),U,2)'="E" Q
+ .I $G(BPDMRF),$P(^PSRX(BPDMR,"A",X,0),U,4)'=BPDMRF Q
+ .S D=$P($P(^PSRX(BPDMR,"A",X,0),U,1),".")
+ .S EDDT=$P(BPDM("CONTROL DATE"),".")
+ .I D,D<EDDT Q
+ .S BPDMACTL=X  ;20231204 maw p7 activity log entry
+ .;I BPDMR=673252 B
+ .;Q:$$EXPORTED(BPDM("CONTROL DATE"),BPDMR,$G(BPDMRF),"01",$G(BPDMACTL))  ;20231129 was this already exported today?
+ .Q:$$EXPORTED(BPDM("EDIT CHECK"),BPDMR,$G(BPDMRF),"01",$G(BPDMACTL))  ;20231129 was this already exported today?
+ .S BPDMSTAT="01"
+ .S G=1
+ Q G
+ ;
+EXPORTED(CDT,MDR,MDRF,MDRS,MDRA) ;-- 20230609 maw p7 was this already exported
+ N PDMD,BPDMEXP,PDMR,PDMIEN,PDMIENI,PDMNODE,PDMF,PDMFI,PDMEXP,PDMSTA,PDMACT,PDMOFD,PDMOFDF,PDMLECK
+ S BPDMEXP=0
+ S PDMD=CDT
+ F  S PDMD=$O(^BPDMLOG("AEXP",PDMD)) Q:PDMD'=+PDMD!$G(PDMEXP)  D
+ .S PDMR=0 F  S PDMR=$O(^BPDMLOG("AEXP",PDMD,PDMR)) Q:PDMR'=+PDMR!$G(PDMEXP)  D
+ ..S PDMIEN=0 F  S PDMIEN=$O(^BPDMLOG("AEXP",PDMD,PDMR,PDMIEN)) Q:PDMIEN'=+PDMIEN!$G(PDMEXP)  D
+ ...;Q:$P(^BPDMLOG(BPDMIEN,0),U,9)="T"  ;don't bother with "test" exports
+ ...Q:$P(^BPDMLOG(PDMIEN,0),U,10)'=BPDMOSIT  ;that is another site's log entry
+ ...S PDMIENI=0 F  S PDMIENI=$O(^BPDMLOG("AEXP",PDMD,PDMR,PDMIEN,PDMIENI)) Q:PDMIENI'=+PDMIENI  D
+ ....Q:'$D(^BPDMLOG(PDMIEN,31,PDMIENI,0))  ;ihs/cmi/maw 06/29/2014 p3 for existing xref but no data
+ ....S PDMNODE=^BPDMLOG(PDMIEN,31,PDMIENI,0)
+ ....S PDMRF=+$P(PDMNODE,U,3)
+ ....S PDMPFI=+$P(PDMNODE,U,4)
+ ....S PDMSTA=$P(PDMNODE,U,5)
+ ....S PDMOFD=$P(PDMNODE,U,6)
+ ....S PDMOFDF=$$HL7TFM^XLFDT(PDMOFD)
+ ....S PDMACT=$P(PDMNODE,U,10)
+ ....S PDMLECK=$P(PDMNODE,U,11)
+ ....;Q:'$$LAST^BPDMRDRN(PDMD,PDMR,PDMIEN,PDMIENI,PDMRF,$G(PDMPFI))
+ ....;I MDR,BPDMR=673208,PDMIEN=2497 B
+ ....Q:MDR'=PDMR
+ ....Q:MDRF'=PDMRF
+ ....Q:$G(MDRS)'=$G(PDMSTA)  ;20250327 is a string
+ ....I $G(MDRA) Q:MDRA'=PDMACT
+ ....;I $G(MDRA),MDRA'=PDMACT,PDMLECK<PDMD Q  ;20230109
+ ....I $G(MDRF),'$G(MDRA),$P($G(^PSRX(MDR,1,MDRF,0)),U)'=PDMOFDF Q
+ ....I $G(MDRF),'$G(MDRA),$P($G(^PSRX(MDR,1,MDRF,0)),U,18)>$G(BPDM("RUN BEGIN")) Q
+ ....S PDMEXP=1
+ I $G(PDMEXP) Q 1
+ Q 0
+ ;
+CMOP(CD) ;-- check to see if CMOP active
+ N CMOPL,CMODCD
+ S CMOPL=$O(^PSX(550.2,"D",""),-1)
+ S X1=CD
+ S X2=-7
+ D C^%DTC
+ S CMOPCD=X
+ ;Q 0
+ I CMOPL>CMOPCD Q 1
+ Q 0
+ ;
+ISCMOP(R,RF) ;-- check 52 to see if this is a CMOP RX
+ N CDA,OK,CRX,CRDT,SDT
+ ;20241205 maw p7 96246
+ ;commented out second matching
+ ;I '$G(RF) S SDT=$P($G(^PSRX(R,2)),U,13)
+ ;I $G(RF) S SDT=$P($G(^PSRX(R,1,RF,0)),U,18)
+ I '$G(RF) S RF=0
+ S OK=0
+ S CDA=0 F  S CDA=$O(^PSRX(R,4,CDA)) Q:'CDA  D
+ . S CRX=$P($G(^PSRX(R,4,CDA,0)),U,3)
+ . ;S CRDT=$P($G(^PSRX(R,4,CDA,1)),U,2)
+ . Q:CRX'=RF
+ . ;Q:CRDT'=SDT
+ . S OK=1
+ I $G(OK) Q 1
+ Q 0
+ ;
+CMOPL ;-- loop the CMOP files
+ ;maw todo NOT GOING TO BE USED REMOVE IN PATCH 8
+ N BPDMCBD,BPDMCDA,BPDMCPDA,BPDMCPIN,BPDMCREC,BPDMCDFN
+ S BPDMPFI=0
+ S BPDMCBD=BPDM("RUN BEGIN")
+ F  S BPDMCBD=$O(^PSX(550.2,"D",BPDMCBD)) Q:'BPDMCBD!($G(BPDMCBD)>BPDM("RUN END"))  D
+ . S BPDMCDA=0 F  S BPDMCDA=$O(^PSX(550.2,"D",BPDMCBD,BPDMCDA)) Q:'BPDMCDA  D
+ .. S BPDMCPDA=0 F  S BPDMCPDA=$O(^PSX(550.2,BPDMCDA,15,"B",BPDMCPDA)) Q:'BPDMCPDA  D
+ ... S BPDMCPIN=$O(^PSX(550.2,BPDMCDA,15,"B",BPDMCPDA,0))
+ ... S BPDMRF=$P($G(^PSX(550.2,BPDMCDA,15,BPDMCPIN,0)),U,2)
+ ... S BPDMR=BPDMCPDA
+ ... S BPDMREC=^PSRX(BPDMR,0)
+ ... S BPDMCDFN=$P(BPDMREC,U,2)
+ ... Q:$D(^TMP($J,"EXPORT",BPDMCDFN,BPDMR,BPDMRF))
+ ... ;D PROCESS3
+ Q
+ ;
+EDITCHK ;
+ ;check activity log for "EDIT"
+ S BPDMACTL=""
+ S BPDMPULG=""
+ N RXRF,EX
+ S D=""
+ I '$G(BPDMPD) S BPDMPD=$G(BPDM("EDIT CHECK"))  ;20250411 maw for edit check on original
+ S EX=0 F  S EX=$O(^PSRX(BPDMR,"A",EX)) Q:'EX  D
+ .I $P(^PSRX(BPDMR,"A",EX,0),U,2)'="E" Q
+ .S D=$P($P(^PSRX(BPDMR,"A",EX,0),U,1),".")
+ .I D,D<$P(BPDMPD,".") Q  ;20231205 maw mod
+ .S RXRF=$P($G(^PSRX(BPDMR,"A",EX,0)),U,4)
+ .I $G(BPDMRF) Q:RXRF'=BPDMRF
+ .S BPDMACTL=EX
+ .Q:$$EXPORTED(BPDM("EDIT CHECK"),BPDMR,$G(BPDMRF),"01",$G(BPDMACTL))  ;20231129 was this already exported today?
+ .S BPDMSTAT="01"
+ .I BPDMVER="4.2B" D ^BPDMDR4B  ;20250411 for processing
+ Q
+ ;
+REISS(BPDMD) ;-- check to see if this is a reissue
+ ;20250522 maw 96246 patch 7 changed code to check for reissue
+ S G="",D="" S X=0 F  S X=$O(^PSRX(BPDMR,"A",X)) Q:X'=+X!(G)  D
+ .Q:$P(^PSRX(BPDMR,"A",X,0),U,2)'="Z"
+ .S D=$P(^PSRX(BPDMR,"A",X,0),U,1)
+ .I D,D<BPDMD Q
+ .I $G(BPDMRF),$P(^PSRX(BPDMR,"A",X,0),U,4)'=BPDMRF Q
+ .S G=1
+ Q $G(G)
+ ;

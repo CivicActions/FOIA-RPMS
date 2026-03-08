@@ -1,8 +1,8 @@
 ABMASPLT ; IHS/SD/SDR - Auto-Split check ;     
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**35**;NOV 12, 2009;Build 659
  ;
- ; IHS/SD/SDR - V2.5 P8 - task 8
- ;   new routine for auto-splitting of claims
+ ;IHS/SD/SDR V2.5 P8 task 8 new routine for auto-splitting of claims
+ ;IHS/SD/SDR 2.6*35 ADO60700 Added counter for claims created for CG report
  ;
 MAIN(ABMCDFN) ;EP - Check if replacement and auto-split
  Q:+$G(ABMAINS)=0
@@ -79,6 +79,7 @@ SPLIT ;
  ..D FILE^DICN
  ..Q:+Y<0
  ..S ABMC2=+Y
+ ..S ABMVCC=$S(+$G(ABMVCC)'=0:+$G(ABMVCC)_"/",1:"")_+$G(ABMC2)  ;abm*2.6*35 IHS/SD/SDR ADO60700
  ..; standard data for all claims
  ..M ^ABMDCLM(DUZ(2),ABMC2,0)=^ABMDCLM(DUZ(2),ABMCDFN,0)
  ..M ^ABMDCLM(DUZ(2),ABMC2,4)=^ABMDCLM(DUZ(2),ABMCDFN,4)

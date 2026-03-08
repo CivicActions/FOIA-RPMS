@@ -1,5 +1,5 @@
 BIREPL ;IHS/CMI/MWR - REPORT, ADULT IMM; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**26,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW ADULT IMMUNIZATION REPORT: PARAMETERS VIEW MENU
  ;
@@ -122,86 +122,28 @@ HELP1 ;EP
  ;----------
 TEXT1(BITEXT) ;EP
  ;;
- ;;This report will provide statistics on Adult Immunizations.
- ;;The population of patients reviewed are those 19 years and older.
  ;;
- ;;Criteria:
- ;;Tetanus:  The patient must have had a tetanus immunization documented
- ;;in the past 10 years.  This includes any of the following CVX Codes:
- ;;1, 9, 20, 22, 28, 50, 106, 107, 110, 113, 115.
- ;;If parameter 5 "Include CPT Coded Visits" is set to "yes", then any
- ;;of the following codes will count: 90701,90718,90700,90720,90702,
- ;;90703,90721,90723.
- ;;
- ;;Pneumovax:  Adults 65 years and older must have had a pneumococcal
- ;;immunization documented at or after age 65 years.  This includes any
- ;;of the following CVX Codes: 33, 100, 109.
- ;;
- ;;When VIEWING the report on-screen, you will be able to view the
- ;;lists of patients who were "Current" or "Not Current."
- ;;In this context, the list of "Current" adults includes those who
- ;;are current for Td/Tdap (within the last 10 years) and for pneumo
- ;;vaccines on the date of the report.
- ;;
- ;;The IMMUNIZATION ADULT REPORT screen allows you to adjust the
- ;;report to your needs.
- ;;
- ;;There are 6 items or "parameters" on the screen that you may
- ;;change in order to select for a specific group of patients.
- ;;To change an item, enter its left column number (1-6) at the
- ;;prompt on the bottom of the screen.  Use "?" at any prompt where
- ;;you would like more information on the parameter you are changing.
- ;;
- ;;Once you have the parameters set to retrieve the group of patients
- ;;you want, select V to View the Adult Report or P to print it.
- ;;
- ;;If it customarily takes a long time for your computer to prepare
- ;;this report, it may be preferable to Print and Queue the report
- ;;to a printer, rather than Viewing it on screen.  (This would avoid
- ;;tying up your screen while the report is being prepared.)
- ;;
- ;;QUARTER ENDING DATE: The report will compile immunization rates
- ;;as of the date entered.  Typically, this date would be the end
- ;;of a Quarter.
- ;;
- ;;COMMUNITIES: If you select for specific Communities, only patients
- ;;whose Current Community matches one of the Communities selected will
- ;;be included in the report.  "Current Community" is refers to Item 6
- ;;on Page 1 of the RPMS Patient Registration.
- ;;NOTE: You may want to select the GPRA set of Communities, in order
- ;;to more closely match the GPRA report produced by the CRS module
- ;;(RPMS Clinical Reporting System).
- ;;
- ;;HEALTH CARE FACILITIES: If you select for specific Health Care
- ;;Facilities, only Patients who have active Chart#'s at one or more
- ;;of the selected Facilities will be included in the report.
- ;;
- ;;BENEFICIARY TYPES: If you select for specific Beneficiary Types,
- ;;only patients whose Beneficiary Type is one of those you select
- ;;will be included in the report.  "Beneficiary Type" refers to
- ;;Item 3 on Page 2 of the RPMS Patient Registration.
- ;;
- ;;INCLUDE CPT CODED VISITS: If you answer "YES" to this question
- ;;the report will search for any immunizations that were only entered
- ;;as CPT Codes, and it will include those immunizations in the
- ;;statistical results of this report.
- ;;
- ;;PATIENT POPULATION GROUP: You may select one of four patient groups
- ;;to be considered in the report: Registered Patients (All),
- ;;Immunization Register Patients (Active), User Population (1+ visits
- ;;in 3 yrs), or Active Clinical Users (2+ visits in 3 yrs).
- ;;Active Clinical Users is the default.
- ;;
- ;;
- D LOADTX("TEXT1",,.BITEXT)
+ D LOADTX("ADULT REPORT",,.BITEXT)
  Q
  ;
  ;
  ;----------
 LOADTX(BILINL,BITAB,BITEXT) ;EP
  Q:$G(BILINL)=""
- N I,T,X S T="" S:'$D(BITAB) BITAB=5 F I=1:1:BITAB S T=T_" "
- F I=1:1 S X=$T(@BILINL+I) Q:X'[";;"  S BITEXT(I)=T_$P(X,";;",2)
+ ;N I,T,X S T="" S:'$D(BITAB) BITAB=5 F I=1:1:BITAB S T=T_" "
+ ;F I=1:1 S X=$T(@BILINL+I) Q:X'[";;"  S BITEXT(I)=T_$P(X,";;",2)
+ NEW I,T,X,DIWR,Z,J,BIZ,BII,BIR
+ S T="" S:'$D(BITAB) BITAB=5
+ S BII=$O(^BIRPHTXT("B",BILINL,0))
+ I 'BII S BITEXT(1)="Help text not available, notify IT." Q
+ S BIR=80
+ I BITAB S R=BITAB-1
+ F J=1:1:BITAB S T=T_" "
+ K ^UTILITY($J,"W")
+ S BIZ=0 F  S BIZ=$O(^BIRPHTXT(BII,11,BIZ)) Q:BIZ'=+BIZ  S X=T_^BIRPHTXT(BII,11,BIZ,0)  D
+ .S DIWL=0,DIWR=BIR D ^DIWP
+ S J=0 S X=0 F  S X=$O(^UTILITY($J,"W",0,X)) Q:X'=+X  S J=J+1,BITEXT(J)=^UTILITY($J,"W",0,X,0)
+ K ^UTILITY($J,"W")
  Q
  ;
  ;
@@ -213,3 +155,4 @@ EXIT ;EP
  D CLEAR^VALM1
  D FULL^VALM1
  Q
+ ;

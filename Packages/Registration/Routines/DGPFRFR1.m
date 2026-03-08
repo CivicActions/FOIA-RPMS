@@ -1,5 +1,5 @@
 DGPFRFR1 ;ALB/RBS - PRF ASSIGNMENTS DUE REVIEW REPORT CONT. ; 5/21/03 4:40pm
- ;;5.3;Registration;**425,1007,1008,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**425,1007,1008,1015,1022**;MAY 28, 2004;Build 18
  ;
  ;This routine will create the ASSIGNMENTS DUE FOR REVIEW REPORT.
  ;This routine will be used to display or print all of the patient
@@ -120,7 +120,12 @@ PRINT(DGSORT,DGLIST) ;output report
  .... D:$Y>(IOSL-4) HEAD
  .... Q:DGQ
  .... S DGSTR=$G(@DGLIST@(DGCAT,DGFG,DGNAM,DGDFN))
- .... W !,$E(DGNAM,1,20),?22,$P(DGSTR,U),?33,$P(DGSTR,U,2),?43,$P(DGSTR,U,3),?60,$P(DGSTR,U,4)
+ .... ;202307 97197 maw p1022 PPN
+ .... N PRF
+ .... S PRF=$$GETPREF^AUPNSOGI(DGDFN,"E",1)
+ .... W !,$G(PRF)
+ .... W !,?22,$TR($P(DGSTR,U),"-",""),?33,$P(DGSTR,U,2),?43,$P(DGSTR,U,3),?60,$P(DGSTR,U,4)
+ .... ;W !,$E(DGNAM,1,20),?22,$P(DGSTR,U),?33,$P(DGSTR,U,2),?43,$P(DGSTR,U,3),?60,$P(DGSTR,U,4)
  . Q:DGQ
  . I DGCNT D
  .. D SUB(.DGCNT,1)

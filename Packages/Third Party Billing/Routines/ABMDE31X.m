@@ -1,14 +1,23 @@
 ABMDE31X ; IHS/SD/SDR - ERROR CHECKING - PAGE 3A ;      
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**35**;NOV 12, 2009;Build 659
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 6
- ;   New routine to do error checking on page 3A
- ; IHS/SD/SDR - v2.6 CSV
+ ;IHS/SD/SDR 2.5*8 task 6 New routine to do error checking on page 3A
+ ;
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*35 ADO60702 Updated error 206 to check for new freetext field for Destination
  ;
  S ABMAREC=$G(^ABMDCLM(DUZ(2),ABMP("CDFN"),12))  ;ambulance info
  I $P(ABMAREC,U,2)="" S ABME(204)=""
  I $P(ABMAREC,U,6)="" S ABME(205)=""
- I $P(ABMAREC,U,7)="" S ABME(206)=""
+ ;I $P(ABMAREC,U,7)="" S ABME(206)=""  ;abm*2.6*35 IHS/SD/SDR ADO60702
+ ;start new abm*2.6*35 IHS/SD/SDR ADO60702
+ S ABMAMBF=1
+ I $P(ABMAREC,U,7)'="" S ABMAMBF=0
+ S ABM16=$G(^ABMDCLM(DUZ(2),ABMP("CDFN"),16))
+ I ($P(ABM16,U,3)'="")&($P(ABM16,U,4)'="") S ABMAMBF=0
+ I ABMAMBF=1 S ABME(206)=""
+ K ABM16,ABMAMBF
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60702
  I $P(ABMAREC,U,15)="" S ABME(207)=""
  I $P(ABMAREC,U,11)="" D
  .S ABMCIEN=0

@@ -1,33 +1,41 @@
-XMJMRO ;ISC-SF/GMB-Options at 'reply' transmit prompt ;12/05/2001  15:40
- ;;8.0;MailMan;;Jun 28, 2002
+XMJMRO ;ISC-SF/GMB-Options at 'reply' transmit prompt ;04/29/99  12:28
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces ^XMA22 (ISC-WASH/CAP/THM)
 REPLYMSG(XMDUZ,XMK,XMKN,XMZO,XMZ,XMSUBJ,XMRESTR,XMPTR,XMRESPSO,XMRESP,XMABORT) ;
- N XMFINISH,XMLINE,XMDIR,XMY,XMOPT,XMOX
+ N XMFINISH,XMLINE
  S XMFINISH=0
  F  D  Q:XMFINISH!XMABORT
- . N XMNAME
- . I XMPTR D CHKRESP^XMJMP(XMDUZ,XMZO,XMRESPSO,XMRESP)
- . D REPLYSET(XMDUZ,.XMOPT,.XMOX,.XMDIR)
- . D XMDIR^XMJDIR(.XMDIR,.XMOPT,.XMOX,.XMY,.XMABORT) Q:XMABORT
- . K XMDIR,XMOPT,XMOX
- . D @XMY
+ . N DIR,Y,X,XMNAME
+ . D CHKRESP^XMJMP(XMDUZ,XMZO,XMRESPSO,XMRESP)
+ . D REPLYSET(XMDUZ,.DIR)
+ . D ^DIR I $D(DIRUT) S XMABORT=$S($D(DTOUT):DTIME,1:1) Q
+ . D @Y
  Q
-REPLYSET(XMDUZ,XMOPT,XMOX,XMDIR) ;
- D SET^XMXSEC2("B",37331,.XMOPT,.XMOX) ; Backup to review message
- D SET^XMXSEC2("E",37341,.XMOPT,.XMOX) ; Edit Reply
- D SET^XMXSEC2("I",37342,.XMOPT,.XMOX) ; Include previous responses in reply
- D SET^XMXSEC2("Q",37417,.XMOPT,.XMOX) ; Query
- D SET^XMXSEC2("Q xxx",37420.1,.XMOPT,.XMOX) ; Query recipient(s) xxx
- D SET^XMXSEC2("QD",37418,.XMOPT,.XMOX) ; Query Detailed
- D SET^XMXSEC2("QN",37419,.XMOPT,.XMOX) ; Query Network
- D SET^XMXSEC2("QC",37431,.XMOPT,.XMOX) ; Query Current
- D SET^XMXSEC2("QNC",37432,.XMOPT,.XMOX) ; Query Not Current
- D SET^XMXSEC2("QT",37433,.XMOPT,.XMOX) ; Query Terminated
- D SET^XMXSEC2("T",37334,.XMOPT,.XMOX) ; Transmit now
- S XMDIR("A")=$$EZBLD^DIALOG(34067) ; Select Message option:
- S XMDIR("B")=XMOX("O","T")_":"_XMOPT("T")
- S XMDIR("PRE")="I XMX?1(1"""_XMOX("O","Q")_" "",1"""_$$LOW^XLFSTR(XMOX("O","Q"))_" "",1"""_XMOX("O","QD")_" "",1"""_$$LOW^XLFSTR(XMOX("O","QD"))_" "").E S XMNAME=$P(XMX,"" "",2,99),XMX="""_XMOX("O","QD")_""""
- S XMDIR("??")="XM-U-MO-REPLY"
+REPLYSET(XMDUZ,DIR) ;
+ S DIR(0)="",XMLINE=0
+ K DIR("L")
+ D SET("B","Backup to review message")
+ D SET("E","Edit reply")
+ D SET("I","Include previous responses in reply")
+ D SET("Q","Query")
+ D SETHELP("Q xxx","Query recipient(s) xxx")
+ D SET("QD","Query Detailed")
+ D SET("QN","Query Network")
+ D SET("T","Transmit now")
+ S DIR("L")=DIR("L",XMLINE) K DIR("L",XMLINE)
+ S DIR("A")="Select Message option:  "
+ S DIR("B")="Transmit now"
+ S DIR("PRE")="I X?1(1""Q "",1""q "",1""QD "",1""qd "").E S XMNAME=$P(X,"" "",2,99),X=""Query Detailed"""
+ S DIR("??")="XM-U-MO-REPLY"
+ S DIR(0)="SAM^"_$E(DIR(0),2,999)
+ Q
+SET(XMABBR,XMEXT) ;
+ S DIR(0)=DIR(0)_";"_XMABBR_":"_XMEXT
+ D SETHELP(XMABBR,XMEXT)
+ Q
+SETHELP(XMABBR,XMEXT) ;
+ S XMLINE=XMLINE+1
+ S DIR("L",XMLINE)=$E(XMABBR_"          ",1,10)_XMEXT
  Q
 B ; Backup to review message
  D BACKUP^XMJMP(XMDUZ,XMK,XMKN,XMZO)
@@ -36,22 +44,16 @@ B ; Backup to review message
 E ; Edit msg
  D BODY^XMJMS(XMDUZ,XMZ,XMSUBJ,.XMRESTR,.XMABORT)
  Q
-I ; Include responses from this or another message in reply
- D INCL(XMDUZ,XMZO,XMZ,XMSUBJ,.XMRESTR,1,.XMABORT)
- Q
-INCL(XMDUZ,XMZO,XMZ,XMSUBJ,XMRESTR,XMINCL,XMABORT) ; Include responses in a message
- N XMWHICH,XMNONE,XMZI
- S XMNONE=0
- D WHICH^XMJMR1(XMDUZ,XMZO,XMINCL,.XMZI,.XMWHICH,.XMNONE) Q:XMNONE
+I ; Include previous response in reply
+ N XMWHICH,XMNO
+ S XMNO=0
+ D WHICH^XMJMC(XMZO,"include",.XMWHICH,.XMNO) Q:XMNO
  Q:'$D(XMWHICH)
- D COPYTEXT^XMJMR1(XMZI,XMZ,XMWHICH,(XMZI'=XMZO))
+ D COPYTEXT^XMJMR(XMZO,XMZ,XMWHICH)
  D BODY^XMJMS(XMDUZ,XMZ,XMSUBJ,.XMRESTR,.XMABORT)
  Q
 Q ; Query
  D Q^XMJMQ(XMDUZ,XMK,XMKN,XMZO)
- Q
-QC ; Query Current
- D QX^XMJMQ(XMDUZ,XMK,XMKN,XMZO,"QC")
  Q
 QD ; Query Detailed
  I $D(XMNAME) D QNAMEX^XMJMQ(XMDUZ,XMK,XMKN,XMZO,XMNAME) Q
@@ -60,16 +62,9 @@ QD ; Query Detailed
 QN ; Query Network
  D QN^XMJMQ(XMDUZ,XMK,XMKN,XMZO)
  Q
-QNC ; Query Not Current
- D QX^XMJMQ(XMDUZ,XMK,XMKN,XMZO,"QNC")
- Q
-QT ; Query Terminated
- D QX^XMJMQ(XMDUZ,XMK,XMKN,XMZO,"QT")
- Q
 T ; Transmit now
- N XMIA
- S (XMFINISH,XMIA)=1
- W $$EZBLD^DIALOG(34216) ; Sending local reply...
+ S XMFINISH=1
+ W "  Sending local reply... "
  D DOREPLY^XMXREPLY(XMDUZ,XMZO,XMZ)
- W !,$$EZBLD^DIALOG(34213) ;   Sent
+ W !,"  Sent"
  Q

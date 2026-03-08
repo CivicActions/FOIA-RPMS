@@ -1,0 +1,98 @@
+CACHE FORMAT
+ZWR
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="", where TYPE=Vital Type (.01) field
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="",
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", and
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="", where TYPE=Vital Type (.01) field
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="",
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", and
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="", where TYPE=Vital Type (.01) field
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="",
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", and
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="", where TYPE=Vital Type (.01) field
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="",
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", and
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="", where TYPE=Vital Type (.01) field
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="",
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", and
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.52,"AA",TYP,CAT,CHAR,DA(1),DA)="",
+^GMRD(120.52,"BB",TYP,CAT,CHAR,DA(1),DA)="", where TYP=Vital Type (.01)
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="", where TYPE=Vital Type (.01) field
+^GMRD(120.53,"AA",TYPE,CAT,DA(1),DA)="",
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", and
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"APRINT",TYPE,PORD,DA(1),DA)="", where TYPE=Vital Type (.01)
+^GMRD(120.53,"AEDIT",TYPE,EORD,DA(1),DA)="", where TYPE=Vital Type (.01)

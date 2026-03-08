@@ -1,5 +1,6 @@
-DIVU ;SFISC/DCM-VERIFY FIELDS UTILITIES ;8/1/95  1:02 PM
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIVU ;SFISC/DCM-VERIFY FIELDS UTILITIES ;8/1/95  1:02 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**8**;Aug 01, 1995
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q
 DE(FI,FD,N,G,S) ;

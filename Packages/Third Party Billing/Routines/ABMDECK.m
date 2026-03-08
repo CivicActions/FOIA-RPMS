@@ -1,5 +1,5 @@
 ABMDECK ; IHS/ASDST/DMJ - Check Claim Data for Errors ; 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**8,10**;APR 05, 2002
  ;
  ;IHS/SD/EFG - V2.5 P8 - IM16385
  ;   Modified to display page 8H for visit type 998
@@ -49,12 +49,16 @@ LOOP ;LOOP
  I $D(DUOUT)!$D(DIROUT)!$D(DTOUT) G DONE
  K ABME
  S ABMC=$P(ABMP("PAGE"),",",ABMC("I")) G DONE:ABMC="" I $D(ABMC("E0")),ABMC("CTR")>0 G DONE
+ ;I ABMC=0 S ABMC("I")=ABMC("I")+1 G LOOP  ;abm*2.5*10
+ ;start new code abm*2.5*10
  I ABMC=0 D  G LOOP
  .S ABMC("I")=ABMC("I")+1
  .D ^ABMDE0X
  .I +$O(ABME(0)) S ABME("CHK")="",ABMC("DO")=$S($D(ABMC("QUE")):"QUE^ABMDERR",$G(ABMQUIET):"QUE^ABMDERR",1:"^ABMDERR") D @ABMC("DO")
+ ;end new code abm*2.5*10
  I ABMC=5 S ABMC("K")=$P("A,B",",",ABMC("J"))
- I ABMC=8 S ABMC("K")=$P("A,B,C,D,E,F,G,H",",",ABMC("J")) G INCR:ABMP("BTYP")=831&$D(ABMP("FLAT"))&(ABMC("K")'="B"),INCR:ABMP("VTYP")=998&("DEFH"'[ABMC("K"))
+ ;I ABMC=8 S ABMC("K")=$P("A,B,C,D,E,F,G,H",",",ABMC("J")) G INCR:ABMP("BTYP")=831&$D(ABMP("FLAT"))&(ABMC("K")'="B"),INCR:ABMP("VTYP")=998&("DEF"'[ABMC("K"))  ;IHS/SD/EFG V2.5 P8 IM16385
+ I ABMC=8 S ABMC("K")=$P("A,B,C,D,E,F,G,H",",",ABMC("J")) G INCR:ABMP("BTYP")=831&$D(ABMP("FLAT"))&(ABMC("K")'="B"),INCR:ABMP("VTYP")=998&("DEFH"'[ABMC("K"))  ;IHS/SD/EFG V2.5 P8 IM16385
  I ABMC=9 S ABMC("K")=$P("A,B,C,D,E,F",",",ABMC("J"))
  D @(ABMC("K")_"^ABMDE"_ABMC_"X")
 INCR I ABMC=5 S ABMC("J")=$S(ABMC("K")="B":1,1:ABMC("J")+1),ABMC("I")=$S(ABMC("K")="B":ABMC("I")+1,1:ABMC("I")) S:ABMC("J")=1 ABMC("K")="ERR" G CHK

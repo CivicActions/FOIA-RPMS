@@ -1,8 +1,9 @@
 BARPMUP1 ; IHS/SD/LSL - MANUAL UPLOAD PROCESS JAN 15,1997 ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**34**;OCT 26, 2005;Build 139
  ;
- ; IHS/SD/LSL - 12/12/02 - V1.7 - NHA-0601-180049
- ;      Find the right bill in 3PB.
+ ;IHS/SD/LSL 12/12/02 V1.7 - NHA-0601-180049 Find the right bill in 3PB.
+ ;
+ ;IHS/SD/SDR 1.8*34 ADO76207 Updated so bill number can be 2-11 characters (instead of 2-8)
  ;
  ; *********************************************************************
  ;** Manual upload process for a single 3p bill
@@ -32,7 +33,11 @@ SELSATE ;
  W !!
  K DIR
  S DIR("A")="Select 3P Bill: "
- S DIR(0)="FA^2:8"
+ ;S DIR(0)="FA^2:8"  ;bar*1.8*34 IHS/SD/SDR ADO76207
+ ;start new bar*1.8*34 IHS/SD/SDR ADO76207
+ S DIR(0)="FA^2:11"
+ S DIR("?")="This response must be a valid 3P Bill Number and must contain at least 2 characters and no more than 11 characters, and must not contain embedded up-arrow."
+ ;end new bar*1.8*34 IHS/SD/SDR ADO76207
  D ^DIR
  Q:$D(DIRUT)
  S BAR3PBIL=Y

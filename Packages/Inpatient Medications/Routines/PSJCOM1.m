@@ -1,5 +1,5 @@
-PSJCOM1 ;BIR/CML3-DISPLAY COMPLEX ORDERS FOR DISCONTINUE ;02 Feb 2001  12:20 PM
- ;;5.0; INPATIENT MEDICATIONS ;**110,127**;16 DEC 97
+PSJCOM1 ;BIR/CML3-DISPLAY COMPLEX ORDERS FOR DISCONTINUE ;12-Jan-2022  12:20 PM
+ ;;5.0; INPATIENT MEDICATIONS ;**110,127,1029**;16 DEC 97;Build 50
  ;
  ; Reference to ^VALM1 is supported by DBIA 10116.
  ; Reference to ^PS(55 is supported by DBIA 2191.
@@ -7,6 +7,8 @@ PSJCOM1 ;BIR/CML3-DISPLAY COMPLEX ORDERS FOR DISCONTINUE ;02 Feb 2001  12:20 PM
  ; Reference to ^PS(51.2 is supported by DBIA 2178.
  ; Reference to ^DIE is supported by DBIA 10018.
  ; Reference to ^DIR is supported by DBIA 10026.
+ ;
+ ; Modified - IHS/MSC/MIR-01/12/2022 - NEW+8 - Patch 1029
  ;
 CMPLX(PSGP,ON,PSGORD) ;
  D PAUSE K PSJCM
@@ -96,6 +98,7 @@ NEW ;
  S $P(^TMP("PSJCOM",$J,+PSGORD,0),"^",27)="E",$P(^(0),"^",9)="DE"
  W:'$D(PSGOEE)&'$D(PSGOES) !!,"...transcribing this ",$S($D(PSGOES):"",'PSGOEAV:"non-verified ",1:"active "),"order..." S PSGOETOF=1 S:PSGSM="" PSGSM=0
  ;I PSGPR'=PSGOEPR D:'$D(^PS(55,PSGP,0)) ENSET0^PSGNE3(PSGP) S $P(^PS(55,PSGP,5.1),U,2)=PSGPR,PSGOEPR=PSGPR
+ I PSGOEAV D:$$PATCH^XPDUTL("BOP*1.0*4") CALLBOP^PSGOEV  ;IHS/MSC/MIR - Call to Automated Dispensing System
  K ND4,DA D NOW^%DTC S PSGDT=+$E(%,1,12),DA=+PSGORD
  S PSJOWALL=+$G(^PS(55,PSGP,5.1))
  I $D(^PS(51.2,+PSGMR,0)),$P(^(0),U,3)]"" S PSGMRN=$P(^(0),U,3)

@@ -1,5 +1,5 @@
 LRUCN ;AVAMC/REG/CYM - LAB CONSULTS ;2/18/98  12:34 ; [ 05/15/2003  12:31 PM ]
- ;;5.2T9;LR;**1006,1018**;Nov 17, 2004
+ ;;5.2;LR;**1006,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**203,247**;Sep 27, 1994
  ;Per VHA Directive 97-033 this routine should not be modified.  Medical Device # BK970021
  D END W !!?20,"CONSULTATION REPORT"

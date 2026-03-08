@@ -1,26 +1,22 @@
 ABMDLCK1 ; IHS/ASDST/DMJ - check visit for elig - CONT'D ;    
- ;;2.6;IHS 3P BILLING SYSTEM;**11,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**11,21,42**;NOV 12, 2009;Build 789
  ;;Y2K/OK - IHS/ADC/JLG 12-18-97
  ;Original;TMD;
- ; Code has been added to use the billing limit from the parameters file
- ; if no back billing limit has been set for the insurer.  ;JLG 4/8/98
+ ;Code has been added to use the billing limit from the parameters file
+ ;if no back billing limit has been set for the insurer.  ;JLG 4/8/98
  ;
- ; IHS/DSD/JLG - 6/29/1999 - NOIS HQW-0798-100082 Patch 3 #4
- ;    Modified to capture reason for ineligibility, for programmers use
+ ;IHS/DSD/JLG 6/29/1999 NOIS HQW-0798-100082 Patch 3 #4 Modified to capture reason for ineligibility, for programmers use
+ ;IHS/DSD/MRS 8/27/1999 NOIS XAA-0899-200058 Patch 3 #13
+ ;    Modified to prevent generating out-patient claims for Medicare with Part A only
+ ;IHS/ASDS/LSL 2.4*9 06/26/2001 NOIS HQW-0798-100082 Modified to expand no eligibility found.
+ ;  Reasons 42-58 can be found in this routine. Changes are not documented inside routine.
+ ;  I will take responsibility for the entire routine for patch 9.
  ;
- ; IHS/DSD/MRS - 8/27/1999 - NOIS XAA-0899-200058 Patch 3 #13
- ;    Modified to prevent generating out-patient claims for Medicare
- ;    with Part A only
+ ;IHS/SD/SDR 2.5*10 IM19802 Fixed check for error 56 (user would get error if any provider met criteria
+ ;IHS/SD/SDR 2.5*10 IM20771 Added check for outpatient visit and patient has MCR Part A only
  ;
- ; IHS/ASDS/LSL - 06/26/2001 - V2.4 Patch 9 - NOIS HQW-0798-100082
- ;    Modified to expand no eligibility found.  Reasons 42-58 can be
- ;    found in this routine. Changes are not documented inside routine.
- ;    I will take responsibility for the entire routine for patch 9.
- ;
- ; IHS/SD/SDR - v2.5 p10 - IM19802 - Fixed check for error 56 (user would get error if any provider met criteria
- ; IHS/SD/SDR - v2.5 p10 - IM20771 - Added check for outpatient visit and patient has MCR Part A only
- ;
- ;IHS/SD/SDR - 2.6*21 - HEAT127079 - Made change to show error 58 for POV correctly
+ ;IHS/SD/SDR 2.6*21 HEAT127079 Made change to show error 58 for POV correctly
+ ;IHS/SD/SDR 2.6*42 ADO88241 Made unbillable reasons stick around for Medicare; was killing list too soon
  ;
  ; *********************************************************************
  ;
@@ -165,7 +161,8 @@ CHK2 ;
  .I $$PRVX^ABMDLCK3(P) D
  ..I $D(^AUTTPIC(ABM("COV"),15,ABM("PRV"))) D
  ...S BUB=$P(^AUTTPIC(ABM("COV"),15,ABM("PRV"),0),U,2)
- ...I BUB="" S ABM("FLG")=1,$P(ABML(99,ABM("INS")),U,6)=55 Q
+ ...;I BUB="" S ABM("FLG")=1,$P(ABML(99,ABM("INS")),U,6)=55 Q  ;abm*2.6*42 IHS/SD/SDR ADO88241
+ ...I BUB="U" S ABM("FLG")=1,$P(ABML(99,ABM("INS")),U,6)=55 Q  ;abm*2.6*42 IHS/SD/SDR ADO88241
  ...S ABM("FLG")=$$PROVSPEC^ABMDLCK3(ABM("COV"),ABM("PRV"),BUB)
  ...I ABM("FLG")=1 S $P(ABML(99,ABM("INS")),U,6)=51 Q
  ..E  D

@@ -1,5 +1,5 @@
-PSJLIFN ;BIR/MV-IV FINISH USING LM ;13 Jan 98 / 11:32 AM
- ;;5.0; INPATIENT MEDICATIONS ;**1,29,34,37,42,47,50,56,94,80,116,110**;16 DEC 97
+PSJLIFN ;BIR/MV-IV FINISH USING LM ;27-Jan-2025 09:15;NIC
+ ;;5.0; INPATIENT MEDICATIONS ;**1,29,34,37,42,47,50,56,94,80,116,110,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^PS(51.2 is supported by DBIA #2178.
  ; Reference to ^PS(52.6 supported by DBIA #1231.
@@ -11,6 +11,8 @@ PSJLIFN ;BIR/MV-IV FINISH USING LM ;13 Jan 98 / 11:32 AM
  ; Reference to ^VALM1 is supported by DBIA #10116.
  ; Reference to RE^VALM4 is supported by DBIA #10120.
  ;
+ ; Modified -  MIR 02/22/2024 - FINISH+21:+36 feature 103811
+ ;            IHS/MSC/PLS - 01/27/2025 - Added calls to new EP ADJSTDT and ADJSTPDT - FID 105235
 EN ; Display order with numbers.
  L +^PS(53.1,+PSJORD):1 I '$T W !,$C(7),$C(7),"This order is being edited by another user. Try later." D PAUSE^VALM1 Q
  D PENDING K PSJREN
@@ -21,11 +23,12 @@ PENDING ; Process pending order.
  ;* instead of go to the "IS this O.K." prompt
  ;* PSIVACEP only when accept the order. Original screen won't redisp.
  ;* PSJLMX is defined in WRTDRG^PSIVUTL and it was being call in PSJLIVMD & PSJLIVFD
- ;*        to count # of AD/SOL 
+ ;*        to count # of AD/SOL
  NEW PSIVFN1,PSIVACEP,PSJLMX,PSIVOI
  S PSIVAC="CF" S (P("PON"),ON)=+PSJORD_"P",DFN=PSGP
  S PSIVUP=+$$GTPCI^PSIVUTL D GT531^PSIVORFA(DFN,ON)
  D:'$D(P("OT")) GTOT^PSIVUTL(P(4))
+ D ADJSTDT,ADJSTPDT  ;p1035 FID 105235
  NEW PSJL
  N PSIVNUM,PSJSTAR S PSIVNUM=1
  Q:ON'=PSJORD
@@ -76,6 +79,18 @@ FINISH ; Prompt for missing data
  ;I $E(P("OT"))="I" D GTDATA Q:P(4)=""
  ;I $E(P("OT"))="I",'$D(DRG("AD")),('$D(DRG("SOL"))) D
  I $G(P("RES"))'="R" D 53^PSIVORC1
+ N PSJORDBL S PSJORDBL=+$G(P("PD")) I PSJORDBL D
+ .N PSIVOI D GTIVDRG Q:'$D(PSIVOI)
+ .N DIR,I,N,X,Y,STRENGTH,LN,DRGT,N,FIL S DIR(0)="SO^",DRGT=$G(PSIVOI)
+ .S FIL=$S(DRGT="AD":52.6,DRGT="SOL":52.7,1:"") Q:FIL=""
+ .F N=1:1:PSIVOI("DILIST",0) S LN=PSIVOI("DILIST",N,0) D
+ ..N DISP S DISP=$$GET1^DIQ(FIL,+LN,1)
+ ..S DIR(0)=DIR(0)_N_":"_$P(LN,U,2)_$C(13,10)_$J("",26)_DISP_";"
+ .S DIR("A")=" Choose a"_$S(DRGT="AD":"n Additive",1:" Solution") D ^DIR
+ .I Y N DA,DR,DIE,ND,STRENGTH S DRG=+PSIVOI("DILIST",Y,0),ND=$G(^PS(FIL,DRG,0)) D
+ ..S STRENGTH=$P(PSIVOI("DILIST",Y,0),U,4) I 'STRENGTH,DRGT="SOL" S STRENGTH=$P(ND,U,3)
+ ..S DNE=1,DRG(DRGT,0)=1,DRG(DRGT,1)=DRG_U_$P(ND,U)_U_STRENGTH_U_U_$P(ND,U,13)_U_$P(ND,U,11)
+ ..S DA=1,DA(1)=+PSJORD,DR=".01////"_DRG,DIE="^PS(53.1,"_+PSJORD_","""_DRGT_"""," D ^DIE
  I $G(P(4))]"",$G(P(15))]"",$G(P(9))]"",$$SCHREQ^PSJLIVFD(.P) D
  . N PSGS0XT,X,PSJNSS S PSJNSS=1,X=P(9),PSGS0XT=P(15) D Q2^PSGS0
  I P(4)="" D RE^VALM4 Q
@@ -96,7 +111,7 @@ ORDCHK ;* Do order check for Inpatient Meds IV.
  ; PSGORQF is defined (CONT^PSGSICHK) if not log an intervention
  K PSGORQF
  NEW DRGOC
- D OCORD Q:$G(PSGORQF) 
+ D OCORD Q:$G(PSGORQF)
  ;D GTIVDRG^PSIVORC2 S P(3)="" D ENSTOP^PSIVCAL
 ORDCHKA ;* Do order check agaist existing orders on the profile
  F PSIVAS="AD","SOL" Q:$G(PSGORQF)  S FIL=$S(PSIVAS="AD":52.6,1:52.7) D
@@ -137,4 +152,32 @@ OCORD ;* Do order check for each drug against the drugs within the order.
  . NEW TYPE F TYPE="DI" D ORDCHK^PSJLIFNI(PSJDFN,TYPE)
  S DFN=PSJDFN
  D SAVEDRG^PSIVEDRG(.DRG,.TMPDRG)
+ Q
+ ;
+GTIVDRG ; Try to find an IV drug from the Orderable Item.
+ ; If there is only 1 match to OI then stuff in DRG
+ ; otherwise prompt user to select which ad/sol matched to OI
+ K PSIVOI NEW FIL,ND,SCR,PSJNOW,STRENGTH
+ D NOW^%DTC S PSJNOW=%,STRENGTH=""
+ S SCR("S")="S ND=$P($G(^(""I"")),U) I ND=""""!(ND>PSJNOW)"
+ F FIL=52.6,52.7 D FIND^DIC(FIL,,"@;.01;2","QXP",+P("PD"),,"AOI",SCR("S"),,"PSIVOI") I +PSIVOI("DILIST",0)>0 D  Q
+ .S DRGT=$S(FIL=52.6:"AD",1:"SOL"),PSIVOI=DRGT,NUM=+PSIVOI("DILIST",0)
+ .N LNN S LNN=0 F  S LNN=$O(^PS(53.1,+PSJORD,DRGT,LNN)) Q:'LNN  N NM S NM=+^(LNN,0) I $P($G(^PS(FIL,NM,0)),U,11)=+P("PD") Q
+ .I LNN S STRENGTH=$P($G(^PS(53.1,+PSJORD,DRGT,LNN,0)),U,2)
+ .N LN F LN=1:1:NUM S $P(PSIVOI("DILIST",LN,0),U,4)=STRENGTH
+ .I NUM=1 S DRG=+PSIVOI("DILIST",1,0) D
+ ..S DNE=1,DRG(DRGT,0)=1,ND=$G(^PS(FIL,+DRG,0)),DRG(DRGT,1)=+DRG_U_$P(ND,U)_U_STRENGTH_U_U_$P(ND,U,13)_U_$P(ND,U,11)
+ K:PSIVOI("DILIST",0)<2 PSIVOI
+ Q
+ ;
+ADJSTDT() ;-Adjust start date if not defined
+ I '$G(P(2)),$L($G(P("APPT"))) S P(2)=$E($$NOW^XLFDT(),1,12)
+ Q
+ADJSTPDT() ;-Adjust stop date if not defined
+ N CDIEN
+ I '$G(P(3)),$L($G(P("APPT"))) D
+ .S CDIEN=$O(^PS(53.46,"B",+$G(P("CLIN")),""))
+ .I CDIEN D
+ ..S X2=$P(^PS(53.46,CDIEN,0),U,2)
+ ..S P(3)=$$FMADD^XLFDT(P(2),X2)
  Q

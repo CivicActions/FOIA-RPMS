@@ -1,10 +1,11 @@
-BMCOUTR ; IHS/PHXAO/TMJ - Outside Facilities - No IHS  Providers   
- ;;4.0;REFERRED CARE INFO SYSTEM;;JAN 09, 2006
+BMCOUTR ; IHS/PHXAO/TMJ - Outside Facilities - No IHS  Providers  [ 03/25/03  12:20 PM ]
+ ;;2.0;REFERRED CARE INFO SYSTEM;**1**;JUN 05, 2002
  ;
+ ;Patch #1 Includes new Routine in place of Fileman Display
  ;Driver - BMCOUTR , PROCESS - BMCOUTR1 , PRINT - BMCOUTRP
  ;
  W !?10,"********  OUTSIDE FACILITY REFERRALS BY DATE OF RECORDING  ********",!
- W !!,"This report will list all Primary Referrals which were initiated at an Outside",!,"Facility.  These include call in NOTIFICATION by the outside Provider or the",!,"Patient or the patient representative.",!
+ W !!,"This report will list all Referrals which were initiated at an Outside Facility.",!,"These include call in NOTIFICATION by the outside Provider or the Patient",!,"or the patient representative.",!
  W !,"This report allows User to Select and report for a INDIVIDUAL FACILITY Only!!",!
 ASK ;
  W ! S DIC="^AUTTLOC(",DIC("A")="Enter Facility Name: ",DIC(0)="AEMQ" D ^DIC K DIC

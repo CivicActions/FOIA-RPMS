@@ -1,5 +1,5 @@
-APCHMT2 ; IHS/CMI/LAB -- health summary create/modify ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHMT2 ; IHS/CMI/LAB -- health summary create/modify ;  
+ ;;1.0;IHS PCC SUITE;**1**;MAR 14, 2008
  ;; ;
  ;routine to create/modify a health summary type
  ;

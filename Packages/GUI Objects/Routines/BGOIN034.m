@@ -1,0 +1,138 @@
+BGOIN034 ; IHS/MSC/PLS - BGO*1.1*34 ;13-Oct-2023 15:18;PLS
+ ;;1.1;BGO COMPONENTS;**34**;Mar 20, 2007
+EC Q
+ ; Preinit
+PRE ;
+ Q
+ ; Postinit
+POST ;
+ ; Register RPCs
+ D REGNMSP^CIAURPC("BGO","CIAV VUECENTRIC")
+ ; Update BGO component versions
+ N VER,FDA,PID,IEN,X
+ D BMES^XPDUTL("Updating version numbers...")
+ F VER=0:1 S X=$P($T(VER+VER),";;",2) Q:'$L(X)  D
+ .S PID=$$PRGID^CIAVMCFG($P(X,";"))
+ .S:PID FDA(19930.2,PID_",",2)=$P(X,";",2),FDA(19930.2,PID_",",7)=$P(X,";",3)
+ D:$D(FDA) FILE^DIE(,"FDA")
+ D UPDCHM
+ D FIXVIMM
+ Q
+ ;
+UPDCHM ;EP-
+ N CHM,PID
+ F CHM=0:1 S X=$P($T(CHM+CHM),";;",2) Q:'$L(X)  D
+ .S PID=$$PRGID^CIAVMCFG($P(X,";"))
+ .D AECHM(PID,$P(X,";",2,99))
+ W !!
+ Q
+UPDBUSA ;EP-
+ N RPC,RPCIEN,FDA,VAL
+ S VAL="S X=$P(X,U)"
+ F RPC=0:1 S X=$P($T(BUSARPC+RPC),";;",2) Q:'$L(X)  D
+ .S RPCIEN=$$FIND1^DIC(9002319.03,"","MX",X)
+ .Q:'RPCIEN
+ .S FDA(9002319.03,RPCIEN_",",2.02)=VAL
+ I $D(FDA) D
+ .D FILE^DIE(,"FDA")
+ Q
+ ;Set prohibit editing field of parameter
+LOCK(PARAM,VAL) ;EP-
+ N IEN
+ S IEN=$O(^XTV(8989.51,"B",PARAM,0))
+ Q:'IEN
+ S $P(^XTV(8989.51,IEN,0),U,6)=VAL
+ Q
+ ; Set DISABLED field of OBJ to VAL
+DISABLED(OBJ,VAL) ;
+ N PID,FDA
+ S VAL=$G(VAL,0)
+ S PID=$$PRGID^CIAVMCFG($G(OBJ))
+ Q:'PID
+ S FDA(19930.2,PID_",",13)=VAL
+ D FILE^DIE(,"FDA")
+ Q
+FIXVIMM ;-Replace CRLF in Admin Notes field with a space
+ D BMES^XPDUTL("  Checking VIMM Admin Notes for control characters (a '.' represents 100 records)")
+ N LP
+ S LP=0 F  S LP=$O(^AUPNVIMM(LP)) Q:'LP  D
+ .D FIXVIMM1(LP)
+ .W:'(LP#100) "."
+ Q
+FIXVIMM1(IEN) ;-
+ I $G(^AUPNVIMM(IEN,1))[$C(10) D
+ .S ^AUPNVIMM(IEN,1)=$TR(^AUPNVIMM(IEN,1),$C(13,10),"  ")
+ .W !,IEN
+ Q
+PICK ;Install the national pick lists
+ D UPDATE^BGOSNLK
+ Q
+ N LP,NAME,SNO,BSTS,RET
+ F LP=0:1 S NAME=$P($T(LIST+LP),";;",2) Q:'$L(NAME)  D
+ .S BSTS=$P(NAME,"^",1)
+ .S SNO=$P(NAME,"^",2)
+ .D IMPORT^BGOSNLK(.RET,BSTS,SNO)
+ Q
+ ;National pick lists
+LIST ;;PICK ABNORMAL FINDINGS^ABNORMAL FINDINGS
+ ;;PICK CQM Problems^CQM PROBLEMS
+ ;;PICK Case Management^CASE MANAGEMENT
+ ;;PICK Diabetic Retinopathy^DIABETIC RETINOPATHY
+ ;;PICK Eye General^EYE GENERAL
+ ;;PICK Immunizations^IMMUNIZATIONS
+ ;;PICK NIST Problems^NIST PROBLEMS
+ ;;PICK Nutrition^NUTRITION
+ ;;PICK Prenatal - Care^PRENATAL CARE
+ ;;PICK Prenatal - Problem Fetus^PRENATAL PROBLEM FETUS
+ ;;PICK Prenatal - Problem Pregnancy^PRENATAL PROBLEM PREGNANCY
+ ;;PICK Prenatal - Risk^PRENATAL RISK
+ ;;PICK Public Health Nursing^PUBLIC HEALTH NURSING
+ ;;PICK Womens Health^WOMENS HEALTH
+ ;;
+AECHM(PID,VAL) ;EP-
+ N LN,FN,IDX,TXT,ARY,CNT,IENS
+ S FN=$P(VAL,";"),CNT=0
+ S LN=0 F  S LN=$O(^CIAVOBJ(19930.2,PID,6,LN)) Q:'LN  D  Q:$G(IDX)
+ .S TXT=^CIAVOBJ(19930.2,PID,6,LN,0)
+ .S ARY(LN,0)=TXT,CNT=CNT+1
+ .I $$UP^XLFSTR(TXT)[$$UP^XLFSTR($P(VAL,";")) S IDX=LN
+ I $G(IDX) D
+ .S ^CIAVOBJ(19930.2,PID,6,IDX,0)=VAL
+ E  D
+ .S ARY($S('CNT:1,1:CNT+1),0)=VAL
+ .S IENS=PID_","
+ .S FDA(19930.2,IENS,10)="ARY"
+ .D FILE^DIE(,"FDA")
+ Q
+ ;
+CLNMNU ;
+ ; Remove option from menu
+ N OPTION,MENU,DA,DIK,PAR,ERR,X
+ S (OPTION,MENU)=""
+ S OPTION="BGO IMM STOP ADDING CPT CODES"
+ S MENU="BGOIMM MAIN"
+ S X=$$DELETE^XPDMENU(MENU,OPTION)
+ Q:'+X
+ ;Inactivate the option
+ D OUT^XPDMENU(OPTION,"No longer used")
+ ;Clean out the parameter
+ S PAR=""
+ S PAR=$O(^XTV(8989.51,"B","BGO IMM STOP ADDING CPT CODES",PAR))
+ Q:'+PAR
+ S ERR=0
+ D NDEL^XPAR("USR",PAR,.ERR)
+ Q:ERR>0
+ D NDEL^XPAR("DIV",PAR,.ERR)
+ Q:ERR>0
+ D NDEL^XPAR("PKG",PAR,.ERR)
+ Q:ERR>0
+ ;Delete the parameter
+ S DA=PAR,DIK="^XTV(8989.51," D ^DIK
+ Q
+VER ;;BEHIPL.IPL;1.1.25.3;6321322075D6E4206FA97015EC908962
+ ;;IHSBGOIMMUNIZATION.IMMUNIZATION;1.0.8676.38207;C05A2FA0D1980E476248F23CAE41C07F
+ ;;IHSBGOSUPERBILL.BGOSUPERBILL;1.1.1.1;B07128A2C4E774454709A8330C93009C
+CHM ;;
+ ;;
+BUSARPC ;;
+ ;;

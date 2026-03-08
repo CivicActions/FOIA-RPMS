@@ -1,5 +1,5 @@
 BIPATUP ;IHS/CMI/MWR - UPDATE PATIENT FORECAST; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**14**;AUG 01,2017
+ ;;8.5;IMMUNIZATION;**22,25,26,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UPDATE PATIENT FORECAST DATA, IMM PROFILE IN ^BIP(DFN,
  ;;  AND IMM FORECAST IN ^BIPDUE(.
@@ -7,6 +7,8 @@ BIPATUP ;IHS/CMI/MWR - UPDATE PATIENT FORECAST; MAY 10, 2010
  ;;  PATCH 9: Insert patient name and DOB at top of Report Text (for EHR).  LDPROF+28
  ;;           Add DUZ2 so that BIXTCH can retrieve IP address for TCH.
  ;;  PATCH 14: Add IHS Addendum to TCH Report.  UPDATE+118
+ ;;  PATCH 18: Changes to for ICE Forecaster.
+ ;;  PATCH 19: Add timeout to Patient Lock command. UPDATE+41
  ;
  ;
  ;----------
@@ -22,7 +24,16 @@ UPDATE(BIDFN,BIFDT,BIERR,BINOP,BIDUZ2,BIPDSS) ;EP
  ;     6 - BIPDSS (ret) Returned string of Visit IEN's that are
  ;                      Problem Doses, according to TCH.
  ;
+ N BIERRC,BIICE,BITEST
+ ;---> Set BITEST here to leave sending and return XML files on the HFS.
+ ;S BITEST=1
  S BIERR=""
+ ;
+ S:'$G(BIDUZ2) BIDUZ2=$G(DUZ(2))
+ ;
+ ;---> Pull forecaster to use from BI SITE PARAMETER -> 0/""=ICE, 1=TCH
+ ;S BIICE='+$P($G(^BISITE(BIDUZ2,0)),U,34)
+ S BIICE=1
  ;
  ;---> If Vaccine global (^AUTTIMM) is not standard, set Error Text
  ;---> in patient's Profile global, return Error Text and quit.
@@ -35,19 +46,20 @@ UPDATE(BIDFN,BIFDT,BIERR,BINOP,BIDUZ2,BIPDSS) ;EP
  I '$G(BIDFN) D ERRCD^BIUTL2(201,.BIERR) Q
  ;
  ;---> Return 1 if Forecasting is enabled.
- I '$$FORECAS^BIUTL2(DUZ(2)) D ERRCD^BIUTL2(314,.BIERR) Q
+ I '$$FORECAS^BIUTL2(BIDUZ2) D ERRCD^BIUTL2(314,.BIERR) Q
  ;
  ;---> If no Forecast Date passed, set it equal to today.
  S:'$G(BIFDT) BIFDT=DT
  ;
- ;---> If no BIDUZ2, try DUZ(2); otherwise, defaults will be used.
- S:'$G(BIDUZ2) BIDUZ2=$G(DUZ(2))
- ;
  ;---> If BINOP not specified, retrieve and store Imm Profile.
  S:'$G(BINOP) BINOP=0
  ;
+ ;
+ ;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ ;---> Add 10-second timeout to lock command.
  ;---> Quit if this patient is Locked (being edited by another user).
- L +^BIP(BIDFN):0 I '$T D ERRCD^BIUTL2(212,.BIERR) Q
+ L +^BIP(BIDFN):10 I '$T D ERRCD^BIUTL2(212,.BIERR) Q
+ ;**********
  ;
  ;---> Set required variables, kill ^BITMP($J).
  D SETVARS^BIUTL5 K ^BITMP($J)
@@ -67,15 +79,22 @@ UPDATE(BIDFN,BIFDT,BIERR,BINOP,BIDUZ2,BIPDSS) ;EP
  ;     7 - BINF   (opt) Array of Vaccines that should not be forecast.
  ;
  ;
- ;---> Build local array of Vaccines (by HL7 Code) that should not
- ;---> be forecast, according to this machine's Immunization File.
- N BINF D NOFORC(.BINF)
+ ;---> Build local array of Vaccines Group IEN's that should not be forecast,
+ ;---> according to this site's BI TABLE VACCINE GROUP (SERIES TYPE) File.
+ N BINF
+ D NOFORC(.BINF)
  ;
- N BIDE S BIDE="" D BIDE(.BIDE)
- N BIMM S BIMM("ALL")=""
+ N BIDE
+ S BIDE=""
+ D BIDE(.BIDE) N BIMM
+ S BIMM("ALL")=""
  ;
  ;---> Gather Patient Imm History in ^BITMP.
+ ;********** PATCH 18, v8.5, JUL 01,2019, IHS/CMI/MWR
+ ;---> Only call BIEXPRT3 for TCH.
+ ;---> For now continue to call Imm Hx here for IHSPOST^BIPATUP1
  D HISTORY^BIEXPRT3(3,.BIDE,.BIMM,BIFDT,,BIDUZ2,.BINF)
+ ;**********
  ;
  ;---> Retrieve data for this patient from ^BITMP, return in BIHX.
  ;---> Parameters:
@@ -85,60 +104,58 @@ UPDATE(BIDFN,BIFDT,BIERR,BINOP,BIDUZ2,BIPDSS) ;EP
  ;     4 - BIPATH   (opt) BI Path name for host files
  ;     5 - BIHX     (ret) Immunization History in "^"-delimited string
  ;
- N BIHX S BIHX=""
+ N BIHX
+ S BIHX=""
+ ;********** PATCH 18, v8.5, JUL 01,2019, IHS/CMI/MWR
+ ;---> Only call BIEXPRT4 for TCH.
+ ;---> For now continue to call Imm Hx here for IHSPOST^BIPATUP1
  D WRITE^BIEXPRT4(2,3,,,.BIHX)
- ;
- ;---> Check for precise Date of Birth.
- N X S X=$P(BIHX,U,8)
- ;
- ;********** PATCH 8, v8.5, MAR 15,2014, IHS/CMI/MWR
- ;---> Change error check to accommodate new TCH date format.
- ;I ('$E(X,1,2))!('$E(X,3,4))!('$E(X,5,8)) D ERRCD^BIUTL2(215,.BIERR) Q
- I ('$E(X,1,4))!('$E(X,5,6))!('$E(X,7,8)) D ERRCD^BIUTL2(215,.BIERR) Q
  ;**********
  ;
+ ;********** PATCH 18, v8.5, AUG 01,2019, IHS/CMI/MWR
+ ;---> Build array of contraindicated CVX Codes for this Patient: BICT(CVX).
+ ;---> (Previously at TCHHIST+59^BIEXPRT6 in setting No Forecast fields for TCH.)
+ N BICT
+ D CONTRA^BIUTL11(BIDFN,.BICT)
+ ;**********
+ ;
+ ;---> Check for precise Date of Birth.
+ I 'BIICE N X S X=$P(BIHX,U,8) I ('$E(X,1,4))!('$E(X,5,6))!('$E(X,7,8)) D ERRCD^BIUTL2(215,.BIERR) Q
  ;
  ;---> Use Immunization History (in BIHX) to obtain Immserve Forecast.
  ;---> Parameters:
  ;     1 - BIHX   (req) String contain Patient's Immunization History.
- ;     2 - BIPROF (ret) String returning text version of profile.
+ ;     2 - BIPROF (ret) String returning text version of Report/Profile.
  ;     3 - BIFORC (ret) String returning data version of forecast.
  ;     4 - BIERR  (ret) String returning text of error code.
  ;
- N BIPROF,BIFORC S (BIPROF,BIFORC)=""
+ N BIPROF,BIFORC
+ S (BIPROF,BIFORC)=""
  ;
- ;---> Call ImmServe and get Forecast and Profile.
+ ;---> Call Forcaster to get Forecast and Profile.
  ;
- ;********** PATCH 8, v8.5, MAR 15,2014, IHS/CMI/MWR
- ;---> Call new TCH Forecaster.
- ;D RUN^BIXCALL(BIHX,.BIPROF,.BIFORC,.BIERR)
- ;
- ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
- ;---> Add DUZ2 so that BIXTCH can retrieve IP address for TCH.
- ;D RUN^BIXTCH(BIHX,.BIPROF,.BIFORC,.BIERR)
- D RUN^BIXTCH(BIHX,BIDUZ2,.BIPROF,.BIFORC,.BIERR)
+ ;********** PATCH 18, v8.5, JUL 01,2019, IHS/CMI/MWR
+ ;---> Call ICE or TCH Forecaster.  TCH to be removed.
+ ;---> Leave XML files on HFS.
+ D RUN^BIVWXICE(BIDFN,BIFDT,BIDUZ2,.BINF,.BICT,.BIFORC,.BIPROF,,.BIERR)
  ;**********
- ;
- ;---> For diagnostic purposes.
- ;D DISPLAY
  ;
  I BIERR]"" D UNLOCK(BIDFN) Q
  ;
  ;---> Load Forecast into BI PATIENT IMMUNIZATIONS DUE File (^BIPDUE).
  ;---> Pass BIHX (history) and BIFDT to check for >65yrs need for Pneumo.
- ;---> need for Influenza and Pneumo.
  ;
  ;********** PATCH 14, v8.5, AUG 01,2017, IHS/CMI/MWR
  ;---> Add IHS Addendum to TCH Report.
  N BIADDND
- D LDFORC^BIPATUP1(BIDFN,BIFORC,BIHX,BIFDT,BIDUZ2,.BINF,.BIPDSS,.BIADDND)
- ;W !,BIPROF R ZZZ
- D
+ D LDFORC^BIPATUP1(BIDFN,BIFORC,BIHX,BIFDT,BIDUZ2,.BINF,.BIPDSS,.BIADDND,.BIPROF)
+ ;
+ D:'BIICE
  .;---> Below preserves some ending character on TCH Report String.
- .N X,Y S X=$L(BIPROF) S Y=$E(BIPROF,X) S BIPROF=$E(BIPROF,1,(X-1))
+ .N X,Y
  .I $G(BIADDND)="" D  Q
- ..S BIPROF=BIPROF_"|||---------------------------|||No IHS Addendum|||"_Y
- .S BIPROF=BIPROF_"|||---------------------------|||IHS Addendum: "_BIADDND_"|||"_Y
+ ..S BIPROF=BIPROF_"|||---------------------------|||No IHS Addendum|||"_$G(Y)
+ .S BIPROF=BIPROF_"|||---------------------------|||IHS Addendum: |||"_BIADDND_"|||"_$G(Y)
  ;
  ;**********
  ;
@@ -159,7 +176,6 @@ LDPROF(BIDFN,BIPROF,BIERR) ;EP
  ;     3 - BIERR  (ret) String returning text of error code.
  ;
  S BIERR=""
- ;
  I '$G(BIDFN) D ERRCD^BIUTL2(201,.BIERR) Q
  ;
  ;---> Quit if Patient does not exist in Immunization Register.
@@ -169,23 +185,14 @@ LDPROF(BIDFN,BIPROF,BIERR) ;EP
  D SETVARS^BIUTL5
  K ^BIP(BIDFN,1)
  ;
- ;********** PATCH 8, v8.5, MAR 15,2014, IHS/CMI/MWR
- ;---> Switch to $C(13,10)) to accommodate new TCH Report.
- ;S X=$L(BIPROF,$C(13))
- ;F I=1:1:X S ^BIP(BIDFN,1,I,0)=$P(BIPROF,$C(13),I)
- ;N X S X=$L(BIPROF,$C(13,10))
- ;F I=1:1:X S ^BIP(BIDFN,1,I,0)=$P(BIPROF,$C(13,10),I)
- N X S X=$L(BIPROF,"|||")
+ N X
+ S X=$L(BIPROF,"|||")
  ;
- ;
- ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
  ;---> Insert patient name and DOB at top of Report Text (for EHR).
- ;F I=1:1:X S ^BIP(BIDFN,1,I,0)=$P(BIPROF,"|||",I)
  S ^BIP(BIDFN,1,1,0)=" "
  S ^BIP(BIDFN,1,2,0)="Patient: "_$$NAME^BIUTL1(BIDFN)_"    DOB: "_$$DOBF^BIUTL1(BIDFN,$G(BIFDT))
  S ^BIP(BIDFN,1,3,0)=" "
  F I=1:1:X S ^BIP(BIDFN,1,(I+3),0)=$P(BIPROF,"|||",I)
- ;**********
  ;
  S ^BIP(BIDFN,1,0)=U_U_X_U_X_U_DT
  Q
@@ -201,7 +208,8 @@ BIDE(BIDE) ;EP
  ;********** PATCH 8, v8.5, MAR 15,2014, IHS/CMI/MWR
  ;---> Pull TCH date format instead of Immserve.
  ;N I F I=23,25,65 S BIDE(I)=""
- N I F I=25,65,88 S BIDE(I)=""
+ ;N I F I=25,65,88 S BIDE(I)=""  ;IHS/CMI/LAB - pull vis/admin in tch format
+ N I F I=25,65,94 S BIDE(I)=""
  ;**********
  Q
  ;
@@ -213,7 +221,7 @@ UNLOCK(BIDFN) ;EP
  ;     1 - BIDFN (req) Patient DFN to unlock.
  ;
  Q:'$G(BIDFN)
- L -^BIP(BIDFN)
+ N I F I=1:1:5 L -^BIP(BIDFN)
  Q
  ;
  ;
@@ -227,31 +235,4 @@ NOFORC(BINF) ;EP
  N N S N=0
  F  S N=$O(^BISERT(N)) Q:'N  D
  .I '$P(^BISERT(N,0),U,5) S BINF(N)=""
- Q
- ;
- ;
-DISPLAY ;EP
- ;---> Display Input and Output Data Strings.
- ;---> Uncomment any of the next lines to see History or ImmServe data:
- ;W !!,"BIHX Out: ",BIHX R ZZZ
- ;W !!,"BIFORC Full: ",BIFORC R ZZZ
- ;
- D  R ZZZ:600
- .W #!," RPMS INPUT String, Patient Data: "
- .W !,"   ",$P(BIHX,"~~~",1)
- .;
- .W !!," RPMS INPUT String, Dose History Input doses: "
- .N BIDOSE,BIDOSES,I S BIDOSES=$P(BIHX,"~~~",2)
- .F I=1:1 S BIDOSE=$P(BIDOSES,"|||",I) Q:(BIDOSE="")  W !,"   ",BIDOSE
- ;
- D  R ZZZ:600
- .W !!!," TCH OUTPUT String, Input doses: "
- .N BIDOSE,BIDOSES,I S BIDOSES=$P(BIFORC,"~~~",2)
- .F I=1:1 S BIDOSE=$P(BIDOSES,"|||",I) Q:(BIDOSE="")  W !,"   ",BIDOSE
- ;
- D  R ZZZ:600
- .W !!!," TCH OUTPUT String, Doses Due: "
- .N BIDOSE,BIDOSES,I S BIDOSES=$P(BIFORC,"~~~",3)
- .F I=1:1 S BIDOSE=$P(BIDOSES,"|||",I) Q:(BIDOSE="")  W !,"   ",BIDOSE
- ;
  Q

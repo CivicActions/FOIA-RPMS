@@ -1,5 +1,5 @@
 APCLAP71 ; IHS/CMI/LAB - APC REPORT PROCESS ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;*26*;MAY 14, 2009;Build 48
  ;To tally average number of visits per day of week by clinic
  ;
 START ;
@@ -16,7 +16,7 @@ END ;
  Q
 V1 ;
  ;count only visits with service category of A, O, R, S
- S APCLVDFN="" F  S APCLVDFN=$O(^AUPNVSIT("B",APCLODAT,APCLVDFN)) Q:APCLVDFN'=+APCLVDFN  I $D(^AUPNVSIT(APCLVDFN,0)),$P(^(0),U,9),'$P(^(0),U,11),"AORS"[$P(^(0),U,7) S APCLVREC=^(0) D PROC,EOJ
+ S APCLVDFN="" F  S APCLVDFN=$O(^AUPNVSIT("B",APCLODAT,APCLVDFN)) Q:APCLVDFN'=+APCLVDFN  I $D(^AUPNVSIT(APCLVDFN,0)),$P(^(0),U,9),'$P(^(0),U,11),"AORSM"[$P(^(0),U,7) S APCLVREC=^(0) D PROC,EOJ
  Q
 PROC ;
  ;K APCLSKIP

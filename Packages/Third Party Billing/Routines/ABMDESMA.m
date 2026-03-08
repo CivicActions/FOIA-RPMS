@@ -1,19 +1,22 @@
-ABMDESMA ; IHS/ASDST/DMJ - Summarized Claim ANESTHESIA charges ;
- ;;2.6;IHS Third Party Billing;**1,3,13**;NOV 12, 2009;Build 213
+ABMDESMA ; IHS/SD/SDR - Summarized Claim ANESTHESIA charges ;
+ ;;2.6;IHS Third Party Billing;**1,3,13,28,29**;NOV 12, 2009;Build 562
  ;
- ;IHS/SD/SDR - V2.5 P8 - IM10618/IM11164 - Prompt/display provider
- ;IHS/SD/SDR - v2.5 p9 - IM17729 - Added code to calculate anesthesia minutes
- ;IHS/SD/SDR - v2.5 p9 - task 1 - Use new service line provider multiple
- ;IHS/SD/SDR - v2.5 p10 - IM21539 - Fixed summary screen to display correct anes amt
- ;IHS/SD/SDR - v2.5 p11 - NPI 
- ;IHS/SD/SDR - 2.5 p12 - IM25331 - Add provider taxonomy to CMS-1500 block 24K
- ;IHS/SD/SDR - v2.5 p12 - IM24277 - Added code for 2nd and 3rd modifiers
- ;IHS/SD/SDR,AML - v2.5 p13 - IM25899 - Alignment changes
+ ;IHS/SD/SDR 2.5 P8 IM10618/IM11164 Prompt/display provider
+ ;IHS/SD/SDR 2.5 p9 IM17729 Added code to calculate anesthesia minutes
+ ;IHS/SD/SDR 2.5 p9 task 1 Use new service line provider multiple
+ ;IHS/SD/SDR 2.5 p10 IM21539 Fixed summary screen to display correct anes amt
+ ;IHS/SD/SDR 2.5 p11 NPI 
+ ;IHS/SD/SDR 2.5 p12 IM25331 Add provider taxonomy to CMS-1500 block 24K
+ ;IHS/SD/SDR 2.5 p12 IM24277 Added code for 2nd and 3rd modifiers
+ ;IHS/SD/SDR,AML v2.5 p13 IM25899 Alignment changes
  ;
- ;IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - abm*2.6*1 - HEAT6566 - Populate anes based on MCR vs non-MCR
- ;IHS/SD/SDR - abm*2.6*3 - HEAT12742 - Corrections to MCR/non-MCR; removed all HEAT6566 changes
- ;IHS/SD/SDR - 2.6*13 - Added check for new export mode 35
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*1 HEAT6566 Populate anes based on MCR vs non-MCR
+ ;IHS/SD/SDR 2.6*3 HEAT12742 Corrections to MCR/non-MCR; removed all HEAT6566 changes
+ ;IHS/SD/SDR 2.6*13 Added check for new export mode 35
+ ;IHS/SD/SDR 2.6*28 CR10648 Added CPT Narrative for exp mode 35
+ ;IHS/SD/SDR 2.6*29 CR10410 Added check for Medicare non-covered
+ ;IHS/SD/SDR 2.6*29 CR10888 made correction for summary to display units(minutes)
  ;
 ANS ;EP for Anesthesia Charges
  I $G(ABMP("VTYP",992)),'$G(ABMPRINT) Q:ABMP("VTYP",992)'=ABMP("EXP")
@@ -22,12 +25,19 @@ ANS ;EP for Anesthesia Charges
  Q
 ANS1 ;
  S ABMX(0)=@(ABMP("GL")_"39,"_ABMX("X")_",0)")
+ S ABMX(2)=$G(@(ABMP("GL")_"39,"_ABMX("X")_",2)"))  ;abm*2.6*28 IHS/SD/SDR CR10648
  I $P(^ABMDEXP(ABMP("EXP"),0),U)["UB" S ABMX("R")=$P(ABMX(0),U,2)
  S (ABMX("C"),ABMX("SUB"))=$P(ABMX(0),U,4)  ;abm*2.6*1 HEAT6566
  ;I ($G(ABMP("ITYP"))="R")!($G(ABMP("ITYPE"))="R") S (ABMX("C"),ABMX("SUB"))=$P(ABMX(0),U,4)  ;abm*2.6*1 HEAT6566
  ;I ($G(ABMP("ITYP"))'="R")!($G(ABMP("ITYPE"))'="R") S ABMX("C")=$P(ABMX(0),U,3),ABMX("SUB")=ABMX("C")+$P(ABMX(0),U,4)  ;abm*2.6*1 HEAT6566  ;IHS/SD/SDR 4/27/10 HEAT12742
  ;I ($G(ABMP("ITYP"))'="R")!($G(ABMP("ITYPE"))'="R") S (ABMX("C"),ABMX("SUB"))=+$P(ABMX(0),U,4)  ;abm*2.6*1 HEAT6566  ;IHS/SD/SDR 4/27/10 HEAT12742
  S ABMS("TOT")=ABMS("TOT")+ABMX("SUB")
+ ;start new abm*2.6*29 IHS/SD/SDR CR10410
+ S ABMCNDCK=U_$P(ABMX(0),U,6)_U_$P(ABMX(0),U,14)_U_$P(ABMX(0),U,19)
+ D CNCD21CK^ABMDESM1
+ S ABMMTS=$$FMDIFF^XLFDT($P(ABMX(0),U,8),$P(ABMX(0),U,7),2)
+ S ABMMTS=ABMMTS\60
+ ;end new abm*2.6*29 IHS/SD/SDR CR10410
  I $P(^ABMDEXP(ABMP("EXP"),0),U)'["UB" G ANSH
 ANSU Q:ABMX("R")=""  D REVN
  Q
@@ -45,8 +55,11 @@ ANSH S ABMS(ABMS("I"))=ABMX("SUB")
  .S:$P(ABMX(0),U,19)'="" $P(ABMS(ABMS("I")),U,4)=$P(ABMS(ABMS("I")),U,4)_" "_$P(ABMX(0),U,19)
  S $P(ABMS(ABMS("I")),"^",5)=$P(ABMX(0),"^",10)
  S $P(ABMS(ABMS("I")),U,10)=$P(ABMX(0),U,15)
- S ABMMTS=$$FMDIFF^XLFDT($P(ABMX(0),U,8),$P(ABMX(0),U,7),2)
- S ABMMTS=ABMMTS\60
+ S ABMANESF(ABMS("I"))=1  ;abm*2.6*29 IHS/SD/SDR CR10888
+ ;start old abm*2.6*29 IHS/SD/SDR CR10888
+ ;S ABMMTS=$$FMDIFF^XLFDT($P(ABMX(0),U,8),$P(ABMX(0),U,7),2)
+ ;S ABMMTS=ABMMTS\60
+ ;end old abm*2.6*29 IHS/SD/SDR CR10888
  S $P(ABMS(ABMS("I")),U,6)=ABMMTS
  S:$P(ABMS(ABMS("I")),"^",6)="" $P(ABMS(ABMS("I")),"^",6)=1
  S $P(ABMS(ABMS("I")),U,7)=7
@@ -65,6 +78,7 @@ ANSH S ABMS(ABMS("I"))=ABMX("SUB")
  I ABMP("EXP")=27!(ABMP("EXP")=35) D  ;abm*2.6*13 export mode 35
  .S $P(ABMS(ABMS("I")),U,2)=$P(ABMS(ABMS("I")),U,2)_"@"_$P($$MDT^ABMDUTL($P(ABMX(0),U,7))," ",2)
  .S $P(ABMS(ABMS("I")),U,3)=$P(ABMS(ABMS("I")),U,3)_"@"_$P($$MDT^ABMDUTL($P(ABMX(0),U,8))," ",2)
+ .S $P(ABMS(ABMS("I")),U,12)=$P(ABMX(2),U,2)  ;abm*2.6*28 IHS/SD/SDR CR10648
  Q
  ;
 CPT I ABMX("C")]"" S ABMX("C")=$P($$CPT^ABMCVAPI(ABMX("C"),ABMP("VDT")),U,2)  ;CSV-c
@@ -72,6 +86,8 @@ CPT I ABMX("C")]"" S ABMX("C")=$P($$CPT^ABMCVAPI(ABMX("C"),ABMP("VDT")),U,2)  ;C
 ICD I ABMX("D")]"" S ABMX("D")=$P($$DX^ABMCVAPI(ABMX("D"),ABMP("VDT")),U,2)  ;CSV-c
  Q
  ;
-REVN I $D(ABMS(ABMX("R"))) S $P(ABMS(ABMX("R")),U)=$P(ABMS(ABMX("R")),U)+ABMX("SUB")
+REVN ;
+ I $D(ABMS(ABMX("R"))) S $P(ABMS(ABMX("R")),U)=$P(ABMS(ABMX("R")),U)+ABMX("SUB")
  E  S ABMS(ABMX("R"))=ABMX("SUB")
+ S $P(ABMS(ABMX("R")),"^",2)=+$P(ABMS(ABMX("R")),"^",2)+ABMMTS,ABMANESF(ABMX("R"))=1  ;abm*2.6*29 IHS/SD/SDR CR10888
  Q

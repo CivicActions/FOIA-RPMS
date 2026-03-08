@@ -1,8 +1,9 @@
-DDS ;SFISC/MLH,MKO-MAIN ROUTINE ;21SEP2006
- ;;22.0;VA FileMan;**151**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DDS ;SFISC/MLH,MKO-MAIN ROUTINE ;01:33 PM  25 Sep 1995 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**4,13,14**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  N DIE,DX,DY,X,Y
- K DDSCTRL ;DI*151
  I '$D(DIFM) N DIFM S DIFM=1 D INIZE^DIEFU
  ;
  D EN^DDS0(.DDSFILE,DR,.DA)
@@ -23,30 +24,9 @@ PROC ;Main loop
  F  D PG Q:DDACT="Q"
  Q
  ;
-PG ;Load page
- S DDACT="N"
- D ^DDS1(DDSPG)
- I $G(DIERR) D  Q
- . N P S P(1)=$P($G(^DIST(.403,+DDS,40,DDSPG,0)),U),P(2)=$P($G(^(1)),U)
- . S:P(2)="" P(2)="unnamed"
- . D BLD^DIALOG(3041,.P),ERR^DDSMSG H 2
- . S DDACT="Q"
- ;
- ;Pre-action, save old and get next page
- S DDSOPB=DDSPG
- I $G(^DIST(.403,+DDS,40,DDSPG,11))'?."^" D PA(^(11)) Q:DDACT="NP"
- S DDSNP=$$NP^DDS5(.Y) S:'Y DDSNP=""
- ;
- ;Get DDO and DDSBK
- I $S($D(DDSBR)[0:1,1:$D(@DDSREFS@(DDSPG,$S(DDO:+DDSBK,1:0),DDO,"N"))[0) D
- . S DDO=+$G(@DDSREFS@(DDSPG,"FIRST")),DDSBK=$P($G(^("FIRST")),",",2)
- I 'DDSBK D  Q
- . D BLD^DIALOG(3055,"number "_$P($G(^DIST(.403,+DDS,40,DDSPG,0)),U)_$S($G(^(1))]"":" ("_$P($G(^(1)),U)_")",1:""))
- . D ERR^DDSMSG H 2
- . S DDACT="Q"
- ;
- ;Get DDSPOP and update DDSSC array
+PG ;Get DDSPOP and update DDSSC array
  ;If we're going to another page
+ S DDACT="N"
  I '$D(DDSPGUP) D
  . S DDSLN=^DIST(.403,+DDS,40,DDSPG,0),DDSPOP=$P(DDSLN,U,6)
  . K:'DDSPOP DDSSC
@@ -72,12 +52,32 @@ PG ;Load page
  ;If we've moving up from a pop-up page
  E  K DDSPGUP
  ;
+ ;Pre-action, save old and get next page
+ S DDSOPB=DDSPG
+ I $G(^DIST(.403,+DDS,40,DDSPG,11))'?."^" D PA(^(11)) Q:DDACT="NP"
+ S DDSNP=$$NP^DDS5(.Y) S:'Y DDSNP=""
+ ;
+ ;Load page
+ D ^DDS1(DDSPG)
+ I $G(DIERR) D  Q
+ . N P S P(1)=$P($G(^DIST(.403,+DDS,40,DDSPG,0)),U),P(2)=$P($G(^(1)),U)
+ . S:P(2)="" P(2)="unnamed"
+ . D BLD^DIALOG(3041,.P),ERR^DDSMSG
+ . S DDACT="Q"
+ ;
+ ;Get DDO and DDSBK
+ I $S($D(DDSBR)[0:1,1:$D(@DDSREFS@(DDSPG,$S(DDO:+DDSBK,1:0),DDO,"N"))[0) D
+ . S DDO=+@DDSREFS@(DDSPG,"FIRST"),DDSBK=$P(^("FIRST"),",",2)
+ I 'DDSBK D  Q
+ . D BLD^DIALOG(3055,"number "_$P($G(^DIST(.403,+DDS,40,DDSPG,0)),U)_$S($G(^(1))]"":" ("_$P($G(^(1)),U)_")",1:""))
+ . S DDACT="Q"
+ ;
  ;Paint the page
  D RP^DDSR(DDSSC(DDSSC),DDSSC=1)
  ;
 P1 F  D BLK Q:"^Q^NP^"[(U_DDACT_U)
  ;
- ;PAGE Post action, print any help
+ ;Post action, print any help
  D:$G(^DIST(.403,+DDS,40,+DDSOPB,12))'?."^" PA(^(12))
  D:$G(@DDSREFT@("HLP"))>0 HLP^DDSMSG()
  G:"^NB^N^"[(U_DDACT_U) P1
@@ -153,7 +153,6 @@ D0(DL) ;Given DL, return string D0,D1,...,Dn
  Q S
  ;
 CLRMSG ;
- I $G(DDSKM) H 2 K DDSKM ;GFT  ** IF WE WERE KEEPING SOMETHING IN HELP AREA, HOLD UP 2 SECONDS  ISB-0603-31054
  K DDQ S DDSH=1,(DDM,DX)=0,DY=DDSHBX+1 X DDXY W $P(DDGLCLR,DDGLDEL,3)
  Q
  ;

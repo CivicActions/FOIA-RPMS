@@ -1,13 +1,16 @@
 BARBLSUM ; IHS/SD/LSL - DISPLAY A BILL SUMMARY ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,23**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,23,32**;OCT 26, 2005;Build 94
  ;P.OTTIS APR 2013 CONDITIONAL DISPLAY OF TXD AND MESSSAGES
+ ;IHS/SD/SDR 1.8*32 ADO76300 Fixed so lookup will only be done on bill# and other bill identifier xrefs
  ;;
 SEL ;EP
  S DIC=$$DIC^XBDIQ1(90050.01)
  S DIC(0)="AEQM"
  ; IHS/SD/PKD 10/22/10 More info on the Selection display
  S DIC("W")="D DISP^BARPUTL"
- D ^DIC
+ ;D ^DIC  ;bar*1.8*32 IHS/SD/SDR ADO76300
+ S D="B^G"  ;bar*1.8*32 IHS/SD/SDR ADO76300
+ D MIX^DIC1 ;bar*1.8*32 IHS/SD/SDR ADO76300
  Q:Y'>0
  S BARBLDA=+Y
  ; -------------------------------

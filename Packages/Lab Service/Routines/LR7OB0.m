@@ -1,5 +1,5 @@
 LR7OB0 ;slc/dcm - Build message, backdoor from Lab ;8/11/97
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**121,187**;Sep 27, 1994
  ;
 NEW(ORD,CONTROL,NAT) ;Create OE/RR order from Lab order #

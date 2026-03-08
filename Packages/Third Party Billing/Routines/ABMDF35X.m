@@ -1,12 +1,14 @@
 ABMDF35X ; IHS/SD/SDR - New HCFA-1500 (02/12) Format ;   
- ;;2.6;IHS Third Party Billing;**13,14,17,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing;**13,14,17,21,29,30**;NOV 12, 2009;Build 585
  ;
- ; Objective: Print designated form using data contained in the
- ;            ABMF array.
- ;IHS/SD/SDR - 2.6*14 - HEAT164158 - fixed format of lines 31, 32, and 33; had extra '^' that was throwing things off
- ;IHS/SD/SDR - 2.6*17 - HEAT238640 - Expanded DX fields from 7 to 8 characters
- ;IHS/SD/SDR - 2.6*21 - HEAT172278 - Removed 'c' from box 23 formatting and removed extra '^' at beginning of field length
- ;IHS/SD/SDR - 2.6*21 - HEAT205579 - Made T1015 print first if ARBOR HEALTH PLAN
+ ;Objective: Print designated form using data contained in the ABMF array.
+ ;IHS/SD/SDR 2.6*14 HEAT164158 fixed format of lines 31, 32, and 33; had extra '^' that was throwing things off
+ ;IHS/SD/SDR 2.6*17 HEAT238640 Expanded DX fields from 7 to 8 characters
+ ;IHS/SD/SDR 2.6*21 HEAT172278 Removed 'c' from box 23 formatting and removed extra '^' at beginning of field length
+ ;IHS/SD/SDR 2.6*21 HEAT205579 Made T1015 print first if ARBOR HEALTH PLAN
+ ;IHS/SD/SDR 2.6*29 CR10875 Call ABMDF35Y if Medicare is secondary
+ ;IHS/SD/SDR 2.6*30 CR9375 Fixed <UNDEF>LOOP+29^ABMDF35X and <UNDEF>MARG+7^ABMDF35X when doing test print
+ ;IHS/SD/SDR 2.6*30 CR8870 After adding decimal sometimes a decimal would be the last character to print; removed the decimal point in this case
  ;
 MARG ;Set left and top margins
  S (ABM("LM"),ABM("TM"),ABM("LN"))=0
@@ -14,6 +16,9 @@ MARG ;Set left and top margins
  W $$EN^ABMVDF("IOF")
  I +ABM("TM") F ABM("I")=1:1:ABM("TM") W !
  D:$G(ABMP("INS")) OVER
+ ;
+ ;I ((($G(ABMP("ITYP"))="R")!($G(ABMP("ITYPE"))="R"))&($P(ABMP("INS",1),U,2)'="R")) D ^ABMDF35Y  ;if Medicare is secondary  ;abm*2.6*29 IHS/SD/SDR CR10875  ;abm*2.6*30 IHS/SD/SDR CR9375
+ I ((($G(ABMP("ITYP"))="R")!($G(ABMP("ITYPE"))="R"))&($P($G(ABMP("INS",1)),U,2)'="R")) D ^ABMDF35Y  ;if Medicare is secondary  ;abm*2.6*29 IHS/SD/SDR CR10875  ;abm*2.6*30 IHS/SD/SDR CR9375
  ;
 LOOP ;Loop thru line number array
  S ABM("LN")=$O(ABMF(ABM("LN"))) I +ABM("LN")=0!(ABM("LN")>56) G XIT
@@ -44,7 +49,8 @@ LOOP ;Loop thru line number array
  K ABMLOOP,ABMCHK,ABMF("TMP")
  ;
  ;I $P(ABMF(17),U,4)["IOWA MEDICAID" D  ;abm*2.6*13 remove box 9C  ;abm*2.6*21 IHS/SD/SDR HEAT205579
- I $G(ABMP("ITYPE"))="D"!($P($G(^AUTNINS(ABMP("INS"),0)),U)="ARBOR HEALTH PLAN") D  ;abm*2.6*13  ;abm*2.6*21 IHS/SD/SDR HEAT205579 
+ ;I $G(ABMP("ITYPE"))="D"!($P($G(^AUTNINS(ABMP("INS"),0)),U)="ARBOR HEALTH PLAN") D ;abm*2.6*13 ;abm*2.6*21 IHS/SD/SDR HEAT205579 ;abm*2.6*30 IHS/SD/SDR CR9375
+ I (($G(ABMP("ITYPE"))="D")!(($P($G(^AUTNINS(+$G(ABMP("INS")),0)),U)="ARBOR HEALTH PLAN"))) D  ;abm*2.6*13 ;abm*2.6*21 IHS/SD/SDR HEAT205579 ;abm*2.6*30 IHS/SD/SDR CR9375
  .F ABMLOOP=37:2:47 D
  ..Q:'$D(ABMF(ABMLOOP))
  ..S ABMCHK=$TR($P(ABMF(ABMLOOP),U,5)," ","")
@@ -105,6 +111,10 @@ FRMT S ABM("LTH")=$P(ABM("FMAT"),U,ABM("I")) I +ABM("LTH")=0 S ABM("LTH")=99
  I ABM("LTH")["L" S ABM("LTH")=$P(ABM("LTH"),"L") F  Q:$L(ABM("FLD"))=ABM("LTH")!($L(ABM("FLD"))>ABM("LTH"))  S ABM("FLD")="0"_ABM("FLD")
  I ABM("LTH")["C" S ABM("LTH")=$P(ABM("LTH"),"C") S ABM("FLD")=$J("",ABM("LTH")-$L(ABM("FLD"))\2)_ABM("FLD")
  I ABM("LTH")["R" S ABM("LTH")=$P(ABM("LTH"),"R") S ABM("RT")=ABM("LTH")-$L(ABM("FLD"))+1 I ABM("RT")>1 S ABM("BLNK")="",$P(ABM("BLNK")," ",ABM("RT"))="",ABM("FLD")=ABM("BLNK")_ABM("FLD")
+ ;start new abm*2.6*30 IHS/SD/SDR CR8870
+ I ((ABM("FL")=37)&(ABM("FLD")[".")) D
+ .I +$P($E(ABM("FLD"),1,ABM("LTH")),".",2)=0 S ABM("FLD")=$E(ABM("FLD"),1,ABM("LTH")-1)
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  W $E(ABM("FLD"),1,ABM("LTH"))
  Q
  ;

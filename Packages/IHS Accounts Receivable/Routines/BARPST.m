@@ -1,21 +1,17 @@
 BARPST ; IHS/SD/LSL - PAYMENT BATCH POSTING JAN 15,1997 ; 07/14/2010
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,7,13,15,19,21,22,23**;OCT 26, 2005;Build 38
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,7,13,15,19,21,22,23,30,31,37**;OCT 26, 2005;Build 210
  ;;
- ; IHS/SD/LSL - 07/31/2002 - V1.7 - NOIS HQW-0302-100213
- ;     Modified BATW to also display batch name.
+ ;IHS/SD/LSL v1.7 07/31/2002 NOIS HQW-0302-100213 Modified BATW to also display batch name.
  ; 
- ; IHS/SD/SDR 6/4/09 HEAT5219 BAR*1.8*13
- ;     Restrict sites from posting batches prior to 01/01/09, 
- ;     (effective at sites 07/01/09)
- ;
- ; IHS/SD/TMM 12/21/09 M3  HEAT9506 BAR*1.8*15
- ;                         Restrict sites from posting batches prior to 2 quarters 
- ;                         ago.  (effective 1/1/10) 
- ;
- ; IHS/SD/TMM 12/21/09 M4  BAR*1.8*19
- ;                         Lockdown date not working correctly for batches in 12/2009.
- ; P.OTT SEP 2012 HEAT#83479 FIXING BUG IF DATA IS MISSING IN I $D(^BAREDI("I",DUZ(2),BAR,0))
- ; *********************************************************************
+ ;IHS/SD/SDR 1.8*13 6/4/09 HEAT5219 Restrict sites from posting batches prior to 01/01/09 (effective at sites 07/01/09)
+ ;IHS/SD/TMM 1.8*15 12/21/09 M3 HEAT9506 Restrict sites from posting batches prior to 2 quarters 
+ ;     ago.  (effective 1/1/10) 
+ ;IHS/SD/TMM 1.8*19 12/21/09 M4 Lockdown date not working correctly for batches in 12/2009.
+ ;IHS/SD/POT SEP 2012 HEAT#83479 FIXING BUG IF DATA IS MISSING IN I $D(^BAREDI("I",DUZ(2),BAR,0))
+ ;IHS/SD/CPC 1.8*30 05/14/20 CR9409, CR10550
+ ;IHS/SD/FCJ 1.8*31 11.4.2020 CR#6156 MODIFIED TO SORT/DISPLAY BY CLINIC OR VISIT
+ ;IHS/SD/SDR 1.8*37 ADO60825 Added logic to tag that option is being used so don't close cashiering session
+ ;*********************************************************************
  ;
 EN ;EP -  lookup collection id
  D ^BARVKL0
@@ -23,7 +19,9 @@ EN ;EP -  lookup collection id
  D SIG^XUSESIG
  Q:X1=""  ;elec signature test
  S BARESIG=1
+ S ^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID)=+$G(^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID))+1 ;bar*1.8*37 IHS/SD/SDR ADO60825
  D RAYGO
+ G:$D(DUOUT)!($D(DTOUT))!($D(DIROUT))!(Y="") FINISH
  ; -------------------------------
  ;
 ENTRY ;
@@ -52,16 +50,45 @@ ITEM ;
  I $$NOTOPEN^BARUFUT(.DUZ,$G(UFMSESID)) G FINISH  ;IS SESSION STILL OPEN
  W !!
  K BARITM
+ ;BAR*1.8*30 CR10550 START
+ K DIR,DIC,V,X,Y,Z,TEST
+ W "Select Batch Item: "
+ I $G(DTIME)>0 R X#50:DTIME   ;Direct read to alleviate problem with DIC read of all numeric check number > 25 characters
+ E  R X#50:300   ;Direct read to alleviate problem with DIC read of all numeric check number > 25 characters
+ I X=U!(X="") K X G ENTRY
+ I (X?.N)&($L(X)>20) D
+ .S DIR(0)=""
+ .S TEST=X,X="",Z=0
+ .F  S X=$O(^BARCOL(DUZ(2),BARCOL,1,"C",X)) Q:X']""  I $E(X,1,$L(TEST))=TEST D
+ ..S V=""
+ ..S V=$O(^BARCOL(DUZ(2),BARCOL,1,"C",X,V))
+ ..S Z=Z+1,TEST(Z)=X_U_V
+ ..S DIR("L",Z)=Z_": "_X
+ ..S DIR(0)=DIR(0)_Z_": "_X_";"
+ .I Z<1 W !,X_" Not Found ??",! K DIR,X,Y,Z,TEST G ITEM
+ .I Z>1 D
+ ..S DIR("L")=DIR("L",Z) K DIR("L",Z)
+ ..S DIR("A")="Enter the line number representing the correct item"
+ ..S DIR(0)="SO^"_$E(DIR(0),1,$L(DIR(0))-1)_"^K:X>Z X"
+ ..D ^DIR
+ ..I Y<1,(Z'=1) S X=TEST Q
+ ..I Y>0 S (Y,X)=$P(TEST(Y),U,2)
+ .I Z=1 S (Y,X)=$P(TEST(1),U,2)
+ G:$D(DUOUT)!($D(DTOUT))!($D(DIROUT)) ENTRY
+ K DIR
+ S DIR(0)=""
  S DA(1)=BARCOL
  S DIC="^BARCOL(DUZ(2),"_DA(1)_",1,"
- S DIC(0)="AEMQZ"
+ S DIC(0)="EMNQZ"
+ ;BAR*1.8*30 CR10550 END
  S DIC("W")="D DICW^BARPST"
  S DIC("A")="Select Batch Item: "
  S DIC("S")="I $P(^(0),U,17)'=""C""&($P(^(0),U,17)'=""R"")"
  K DD,DO
  D ^DIC
  K DIC
- I +Y<1 G ENTRY
+ I $D(DUOUT)!($D(DTOUT))!($D(DIROUT)) K DUOUT,DTOUT,DIROUT G ENTRY
+ I +Y<1 G ITEM
  S BARITM=+Y
  S BARITM(0)=Y(0)
  D IBAL(BARITM)
@@ -88,6 +115,7 @@ GETSUB ;
  .S Y=BARCOL
  .D BATW1,BBAL(BARCOL)
  .Q
+ G:$D(DUOUT)!($D(DTOUT))!($D(DIROUT))!(Y="") ENTRY
  S BAREOB=+Y
  S BAREOB(0)=Y(0)
  D EBAL(BAREOB)
@@ -95,8 +123,10 @@ GETSUB ;
  ;
 GETPAT ;
  ; ** get patient and dos range
+ K BARSRT,BARSRTA,BARSRT2  ;BAR*1.8*31 10.29.2020 IHS.OIT.FCJ CR#6156
  ;IHS/SD/TPF BAR*1.8*21 8/3/2011 HEAT20490
  I $$NOTOPEN^BARUFUT(.DUZ,$G(UFMSESID)) G FINISH  ;IS SESSION STILL OPEN
+ S BARSRT1=1    ;BAR*1.8*31 10.29.2020 IHS.OIT.FCJ CR#6156
  S BARPASS=$$EN^BARPST1()
  I +BARPASS=0 D  G ITEM
  .I +$G(^BARVSIT(4))>0!(+$G(BARCLIT(19))>0) D
@@ -118,6 +148,7 @@ GETPAT ;
  .W "No bills found in this date range!"
  .D EOP^BARUTL(1)
  .D TOP^BARPST1(0)
+ G:$D(DUOUT)!($D(DTOUT))!($D(DIROUT))!(Y="") ENTRY
  D EN^BARPST3
  D TOP^BARPST1(0)
  G GETPAT
@@ -183,7 +214,8 @@ IBAL(BARITM) ;EP
  S DA(1)=+BARCOL
  S DIC=90051.1101
  S DIQ="BARCLIT("
- S DR="18;19;101"
+ ;S DR="18;19;101"    ;BAR*1.8*30 CR10550 DEBUG
+ S DR="11;18;19;101"  ;BAR*1.8*30 CR10550 DEBUG
  D EN^XBDIQ1
  W !?3,"===> Item Total Posted: $ "_$J(BARCLIT(18),0,2)
  W ?42,"===> Item Remaining Balance: $ "_$J(BARCLIT(19),0,2)
@@ -207,6 +239,7 @@ EBAL(BAREOB) ;EP
  ; *********************************************************************
  ;
 FINISH ;
+ S ^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID)=+$G(^BARTMP("UFMSPST",DUZ(2),DUZ,UFMSESID))-1 ;bar*1.8*37 IHS/SD/SDR ADO60825
  D ^BARVKL0
  Q
  ; *********************************************************************
@@ -224,6 +257,7 @@ RAYGO ;EP
  W !
  D ^DIR
  K DIR
+ Q:$D(DUOUT)!($D(DTOUT))!($D(DIROUT))!(Y="")
  S BARRAYGO=Y
  Q
  ;

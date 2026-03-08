@@ -1,5 +1,8 @@
 ABMEH62 ; IHS/ASDST/DMJ - HCFA-1500 EMC RECORD FB0 (Medical Segment) ;    
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS Third Party Billing System;**10**;APR 24, 2006
+ ;
+ ;  ABM*2.4*9 09/17/2001 IHS/FCS/DRS
+ ;  Part 3a - NDC #  3b - units  3c - date
  ;
  ; IHS/SD/SDR - v2.5 p10 - IM20395
  ;   Split out lines bundled by rev code
@@ -49,7 +52,8 @@ LOOP ;LOOP HERE
  S ABMR(62,80)=$$FMT^ABMERUTL(ABMR(62,80),"7NRJ2")
  Q
 90 ;68-82 Ordering Provider ID
- S ABMR(62,90)=$P(ABMRV(J,K,M),U,16)
+ ;S ABMR(62,90)=$P(ABMRV(J,K),"^",16)  ;abm*2.5*10 IM20395
+ S ABMR(62,90)=$P(ABMRV(J,K,M),U,16)  ;abm*2.5*10 IM20395
  S ABMR(62,90)=$$FMT^ABMERUTL(ABMR(62,90),15)
  Q
 100 ;83-84 Ordering Provider State
@@ -73,23 +77,27 @@ LOOP ;LOOP HERE
  S ABMR(62,140)=$$FMT^ABMERUTL(ABMR(62,140),"4NR")
  Q
 150 ;110-120 National Drug Code
- S ABMR(62,150)=$TR($P(ABMRV(J,K,M),U,15),"-","")
+ ;S ABMR(62,150)=$TR($P(ABMRV(J,K),"^",15),"-","")  ;abm*2.5*10 IM20395
+ S ABMR(62,150)=$TR($P(ABMRV(J,K,M),U,15),"-","")  ;abm*2.5*10 IM20395
  S ABMR(62,150)=$$FMT^ABMERUTL(ABMR(62,150),11)
  Q
 160 ;121-127 National Drug Units
  D
  .N X
- .S X=$P(ABMRV(J,K,M),U,5)+.5\1
+ .;S X=$P(ABMRV(J,K),U,5)+.5\1  ;abm*2.5*10 IM20395
+ .S X=$P(ABMRV(J,K,M),U,5)+.5\1  ;abm*2.5*10 IM20395
  .S:'X X=1
  .S ABMR(62,160)=X
  S ABMR(62,160)=$$FMT^ABMERUTL(ABMR(62,160),"7NR")
  Q
 170 ;128-142 Prescription #
- S ABMR(62,170)=$P(ABMRV(J,K,M),U,13)
+ ;S ABMR(62,170)=$P(ABMRV(J,K),"^",13)  ;abm*2.5*10 IM20395
+ S ABMR(62,170)=$P(ABMRV(J,K,M),U,13)  ;abm*2.5*10 IM20395
  S ABMR(62,170)=$$FMT^ABMERUTL(ABMR(62,170),15)
  Q
 180 ;143-150 Prescription Date
- S ABMR(62,180)=$$Y2KD2^ABMDUTL($P(ABMRV(J,K,M),U,10))
+ ;S ABMR(62,180)=$$Y2KD2^ABMDUTL($P(ABMRV(J,K),"^",10))  ;abm*2.5*10 IM20395
+ S ABMR(62,180)=$$Y2KD2^ABMDUTL($P(ABMRV(J,K,M),U,10))  ;abm*2.5*10 IM20395
  S ABMR(62,180)=$$FMT^ABMERUTL(ABMR(62,180),8)
  Q
 190 ;151-152 Prescription # of Months
@@ -149,12 +157,14 @@ LOOP ;LOOP HERE
  S ABMR(62,320)=$$FMT^ABMERUTL(ABMR(62,320),10)
  Q
 330 ;314-316 Drug Days Supply
- S ABMR(62,330)=$P(ABMRV(J,K,M),U,14)
+ ;S ABMR(62,330)=$P(ABMRV(J,K),"^",14)  ;abm*2.5*10 IM20395
+ S ABMR(62,330)=$P(ABMRV(J,K,M),U,14)  ;abm*2.5*10 IM20395
  S ABMR(62,330)=$$FMT^ABMERUTL(ABMR(62,330),"3NR")
  Q
 340 ;317-317 Refill Indicator
  S ABMR(62,340)="N"
- S:$P(ABMRV(J,K,M),U,17) ABMR(62,340)="Y"
+ ;S:$P(ABMRV(J,K),"^",17) ABMR(62,340)="Y"  ;abm*2.5*10 IM20395
+ S:$P(ABMRV(J,K,M),U,17) ABMR(62,340)="Y"  ;abm*2.5*10 IM20395
  S ABMR(62,340)=$$FMT^ABMERUTL(ABMR(62,340),1)
  Q
 350 ;318-318 Brand Need Indicator

@@ -1,18 +1,22 @@
 ADEPQA3 ; IHS/HQT/MJL - SEARCH PARAMS ;  [ 03/24/1999   9:04 AM ]
- ;;6.0;ADE;**11**;JAN 15, 2002
+ ;;6.0;ADE;**11,38**;MAR 25, 1999;Build 158
  ;IHS/HMW
+ ;;IHS/OIT/GAB 2.2023 File 200 Update - ADE Patch 38
  ;Functions to set up search parameters
  ;
-PROV() ;EP - Returns "1/0^dfn,dfn,dfn" where dfn is dfn in provider file
+PROV() ;EP - Returns "1/0^dfn,dfn,dfn" where dfn is dfn in provider file ;OIT/IHS/GAB PATCH 38, DFN in New Person file
  N DIR,ADEPRV,ADEFLG,DIC,ADEJ,ADEK,ADEY
 PRV1 S ADEPRV=""
  K DIR W ! S DIR("A")="Limit search to specific ATTENDING DENTIST(S)"
  S DIR(0)="Y",DIR("B")="NO" D ^DIR
  I $$HAT()!(Y=0) Q 0
  K DIC
- S DIC="^DIC(6,",DIC(0)="AQEM"
- S DIC("S")="I $P(^DIC(6,Y,0),U,4)]"""",$D(^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)),+^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)=52"
- F ADEJ=1:1 S DIC("A")="Select "_$S(ADEPRV]"":"ANOTHER ",1:"")_"Attending Dentist: " D ^DIC Q:X=""  Q:$$HAT()  S ADEY=$P(Y,U,2) D
+ ;S DIC="^DIC(6,",DIC(0)="AQEM"
+ ;S DIC("S")="I $P(^DIC(6,Y,0),U,4)]"""",$D(^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)),+^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)=52"
+ ;/IHS/OIT/GAB PATCH 38 - Commented above 2 lines and added below 2 lines for File200 update; CK PROV CLASS Number,52/DENTIST, updated the 3rd line below from S ADEY=$P(Y,U,2)
+ S DIC="^VA(200,",DIC(0)="AQEM"
+ S DIC("S")="I $P($G(^VA(200,Y,""PS"")),U,5)]"""",$D(^DIC(7,$P($G(^VA(200,Y,""PS"")),U,5),9999999)),+^DIC(7,$P($G(^VA(200,Y,""PS"")),U,5),9999999)=52"
+ F ADEJ=1:1 S DIC("A")="Select "_$S(ADEPRV]"":"ANOTHER ",1:"")_"Attending Dentist: " D ^DIC Q:X=""  Q:$$HAT()  S ADEY=$P(Y,U,1) D
  . S ADEFLG=0 F ADEK=1:1:$L(ADEPRV,",") I $P(ADEPRV,",",ADEK)=ADEY S ADEFLG=1 Q
  . Q:ADEFLG
  . I ADEPRV]"" S $P(ADEPRV,",",$L(ADEPRV,",")+1)=ADEY Q
@@ -21,16 +25,19 @@ PRV1 S ADEPRV=""
  I ADEPRV="" G PRV1
  Q "1^"_ADEPRV
  ;
-HYG() ;EP - Returns "1/0^dfn,dfn,dfn" where dfn is dfn in provider file
+HYG() ;EP - Returns "1^dfn,dfn,dfn" where dfn is dfn in provider file
  N DIR,ADEPRV,ADEFLG,DIC,ADEJ,ADEY,ADEK
 HYG1 S ADEPRV=""
  K DIR W ! S DIR("A")="Limit search to specific HYGIENIST/THERAPIST(S)"
  S DIR(0)="Y",DIR("B")="NO" D ^DIR
  I $$HAT()!(Y=0) Q 0
  K DIC
- S DIC="^DIC(6,",DIC(0)="AQEM"
- S DIC("S")="I $P(^DIC(6,Y,0),U,4)]"""",$D(^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)),+^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)=46"
- F ADEJ=1:1 S DIC("A")="Select "_$S(ADEPRV]"":"ANOTHER ",1:"")_"Hygienist/Therapist: " D ^DIC Q:X=""  Q:$$HAT()  S ADEY=$P(Y,U,2) D
+ ;S DIC="^DIC(6,",DIC(0)="AQEM"
+ ;S DIC("S")="I $P(^DIC(6,Y,0),U,4)]"""",$D(^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)),+^DIC(7,$P(^DIC(6,Y,0),U,4),9999999)=46"
+ ;/IHS/OIT/GAB PATCH 38 - Commented above 2 lines and added below 2 lines for File200 update, CK PROV CLASS, 46/HYG updated 3rd line below from S ADEY=$P(Y,U,2)
+ S DIC="^VA(200,",DIC(0)="AQEM"
+ S DIC("S")="I $P($G(^VA(200,Y,""PS"")),U,5)]"""",$D(^DIC(7,$P($G(^VA(200,Y,""PS"")),U,5),9999999)),+^DIC(7,$P($G(^VA(200,Y,""PS"")),U,5),9999999)=46"
+ F ADEJ=1:1 S DIC("A")="Select "_$S(ADEPRV]"":"ANOTHER ",1:"")_"Hygienist/Therapist: " D ^DIC Q:X=""  Q:$$HAT()  S ADEY=$P(Y,U,1) D
  . S ADEFLG=0 F ADEK=1:1:$L(ADEPRV,",") I $P(ADEPRV,",",ADEK)=ADEY S ADEFLG=1 Q
  . Q:ADEFLG
  . I ADEPRV]"" S $P(ADEPRV,",",$L(ADEPRV,",")+1)=ADEY Q

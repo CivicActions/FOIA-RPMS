@@ -1,10 +1,11 @@
-PSOORFI2 ;BIR/BHW-finish cprs orders cont. ;29-May-2012 14:58;PLS
- ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,46,130,146,1005,1006,177,222,225,1015**;DEC 1997;Build 62
+PSOORFI2 ;BIR/BHW-finish cprs orders cont. ;12-Dec-2023 17:16;DU
+ ;;7.0;OUTPATIENT PHARMACY;**7,15,23,27,46,130,146,1005,1006,177,222,225,1015,1034**;DEC 1997;Build 37
  ;External reference ^YSCL(603.01 supported by DBIA 2697
  ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
  ; Modified - IHS/MSC/PLS - 05/16/06 - Line RF+18
  ;                          09/25/06 - Line SIG+5
  ;                          10/24/07 - Line RF+19
+ ;                          05/04/23 - Check for RTS
 HLP W !,"Enter 'S' to process orders with a priority of STAT",!,"      'E' to process orders with an Emergency priority,",!,"      'R' to process Routine orders.",! Q
 HELP ;
  W !,"Please enter a minimum of two (2) characters.",!,"Enter Patient's name whose med orders are to be completed.",!
@@ -44,6 +45,9 @@ RF ;process refill request from CPRS
  S PSOREF("IRXN")=$P(OR0,"^",19) D PSOL^PSSLOCK($P(OR0,"^",19)) I '$G(PSOMSG) D  D PAUSE^VALM1 K PSOREF,PSOMSG Q
  .I $P($G(PSOMSG),"^",2)'="" W $C(7),!!,$P(PSOMSG,"^",2),! Q
  .W $C(7),!!,"Another person is editing Rx "_$P(^PSRX($P(OR0,"^",19),0),"^"),!
+ ;IHS/MSC/PLS - 05/03/2023 - p1034
+ I $$GET1^DIQ(52,PSOREF("IRXN"),32.1,"I"),'$$HASREF^APSPFNC1(PSOREF("IRXN")) D  D PAUSE^VALM1 K PSOREF,PSOMSG Q
+ .W $C(7),!!,"Rx "_$$GET1^DIQ(52,PSOREF("IRXN"),.01)_" was Returned to Stock. Use REISSUE to dispense."
  ;
  D FULL^VALM1
  I '$P($G(^PS(52.41,ORD,0)),"^",23),+$G(^PS(52.41,ORD,"FLG")) D  I $D(DIRUT)!'Y S VALMBCK="B" Q

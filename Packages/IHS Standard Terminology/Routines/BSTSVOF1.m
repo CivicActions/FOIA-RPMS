@@ -1,9 +1,8 @@
 BSTSVOF1 ;GDIT/HS/BEE-Standard Terminology - Versioning handling overflow 2 ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;**1**;Dec 01, 2016;Build 36
+ ;;2.0;IHS STANDARD TERMINOLOGY;**1,3,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
- ;BSTS*1.0*6;Change to updates
  ;Run the PCC update option
  ;BSTS*2.0*1;CR#8457;Switch DUZ to PCC UIFS UPDATE USER (or ADAM,ADAM)
 UIFS(ZTQUEUED) ;Run the PCC UIFS option
@@ -19,6 +18,9 @@ UIFS(ZTQUEUED) ;Run the PCC UIFS option
  ;Switch users, run PCC UIFS option, and switch back to original user
  S ^XTMP("BSTSLCMP","STS")="Running the PCC Update ICD-10 Diagnoses from SNOMED Concept ID (UIFS) option"
 EX1 M ODUZ=DUZ K DUZ S DUZ=NDUZ D DUZ^XUP(.DUZ) D QUEUE^APCDPLFH K DUZ M DUZ=ODUZ  ;SAC Exemption Granted 1/31/17-See bsts0200.01t
+ ;
+ ;Mark as queued
+ S $P(^XTMP("BSTSLCMP","UPD"),U,6)=400
  Q
  ;
 ASKSB() ;Ask Individual Subset
@@ -39,7 +41,6 @@ ASKSB1 W !! S DIR("?")="Select a subset from the following list or type ALL for 
  S DIR(0)="F^3:50"
  D ^DIR I $G(DIRUT)!$G(DUOUT)!(Y="") Q "-1"
  ;
- ;BSTS*1.0*4;Filter out IHS PROBLEM ALL SNOMED
  I Y="IHS PROBLEM ALL SNOMED" W !!,"CANNOT DOWNLOAD IHS PROBLEM ALL SNOMED" H 3 G ASKSB1
  I Y]"",Y'="ALL",'$D(SLIST("B",Y)) W !!,"INVALID SUBSET" H 3 G ASKSB1
  ;
@@ -190,6 +191,19 @@ XUPCNC ;
  ;
  Q
  ;
+CSTMDT(NMID) ;Mark custom codeset concepts as out of date
+ ;
+ NEW ICONC,CIEN
+ ;
+ S ^XTMP("BSTSLCMP","STS")="Marking "_NMID_" entries as out of date"
+ S ICONC="" F  S ICONC=$O(^BSTS(9002318.4,"C",NMID,ICONC)) Q:ICONC=""  S CIEN="" F  S CIEN=$O(^BSTS(9002318.4,"C",NMID,ICONC,CIEN)) Q:CIEN=""  D
+ . NEW BSTS,ERR
+ . ;
+ . ;Mark OOD
+ . S BSTS(9002318.4,CIEN_",",".12")="@"
+ . D FILE^DIE("","BSTS","ERR")
+ Q
+ ;
 CLLMDT(NMID) ;Mark CODESET concepts last modified date to null
  ;
  I $G(NMID)="" Q
@@ -197,21 +211,38 @@ CLLMDT(NMID) ;Mark CODESET concepts last modified date to null
  NEW ICONC,CIEN
  ;
  ;Loop through concepts and clear out modified date for codes in codeset
- S ^XTMP("BSTSLCMP","STS")="Marking entries as out of date"
- S ICONC="" F  S ICONC=$O(^BSTS(9002318.4,"C",NMID,ICONC)) Q:ICONC=""  D
- . S CIEN="" F  S CIEN=$O(^BSTS(9002318.4,"C",NMID,ICONC,CIEN)) Q:CIEN=""  D
- .. NEW CDSET,BSTS,ERR,LMD,OOD
+ S ^XTMP("BSTSLCMP","STS")="Marking "_NMID_" entries as out of date"
+ S ICONC="" F  S ICONC=$O(^BSTS(9002318.4,"C",NMID,ICONC)) Q:ICONC=""  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
+ . S CIEN="" F  S CIEN=$O(^BSTS(9002318.4,"C",NMID,ICONC,CIEN)) Q:CIEN=""  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
+ .. NEW CDSET,BSTS,ERR
  .. ;
  .. ;Skip partial entries
  .. I $$GET1^DIQ(9002318.4,CIEN_",",.03,"I")="P" Q
  .. ;
- .. ;Don't clear if updated today (or later as process could run across days)
- .. S OOD=$$GET1^DIQ(9002318.4,CIEN_",",.11,"I")
- .. S LMD=$$GET1^DIQ(9002318.4,CIEN_",",.12,"I")
- .. I OOD'="Y",LMD'<DT Q
- .. ;
  .. ;Mark as out of date
  .. S ^XTMP("BSTSLCMP","STS")="Marking entry "_CIEN_" as out of date"
+ .. S BSTS(9002318.4,CIEN_",",".11")="Y"
+ .. S BSTS(9002318.4,CIEN_",",".12")="@"
+ .. D FILE^DIE("","BSTS","ERR")
+ ;
+ Q
+ ;
+SUBMDT(NMID) ;Mark concepts last modified date to null
+ ;
+ I $G(NMID)="" Q
+ ;
+ NEW ICONC,CIEN
+ ;
+ ;Loop through concepts and clear out modified date for codes in codeset
+ S ^XTMP("BSTSLCMP","STS")="Marking "_NMID_" entries as out of date"
+ S ICONC="" F  S ICONC=$O(^BSTS(9002318.4,"C",NMID,ICONC)) Q:ICONC=""  D
+ . S CIEN="" F  S CIEN=$O(^BSTS(9002318.4,"C",NMID,ICONC,CIEN)) Q:CIEN=""  D
+ .. NEW CDSET,BSTS,ERR
+ .. ;
+ .. ;Skip partial entries
+ .. I $$GET1^DIQ(9002318.4,CIEN_",",.03,"I")="P" Q
+ .. ;
+ .. ;Mark as out of date
  .. S BSTS(9002318.4,CIEN_",",".12")="@"
  .. D FILE^DIE("","BSTS","ERR")
  ;
@@ -239,6 +270,10 @@ DAYCHK(OVRRID) ;Perform daily update checks - jobbed off by CHECK^BSTSVRSN
  ;Check for new IHS VANDF '32771' - Quit if check performed or DTS timed out
  S STS=$$VCHK^BSTSVRSN(32771,OVRRID)
  ;
+ ;GDIT/HS/BEE;FEATURE#123647;Check for new CVX version
+ ;Check for new CVX '5190' version
+ S STS=$$VCHK^BSTSVRSN(5190,OVRRID)
+ ;
  ;Check for new GMRA Signs Symptoms '32772' - Quit if check performed or DTS timed out
  S STS=$$VCHK^BSTSVRSN(32772,OVRRID)
  ;
@@ -257,25 +292,22 @@ DAYCHK(OVRRID) ;Perform daily update checks - jobbed off by CHECK^BSTSVRSN
  ;Check for new SNOMED CT to ICD-10-CM Auto-Codeables '32779' - Quit if check performed or DTS timed out
  S STS=$$VCHK^BSTSVRSN(32779,OVRRID)
  ;
- ;BSTS*1.0*7;Added 32780 check
  ;Check for new SNOMED CT to ICD-10-CM Auto-Codeables '32780' - Quit if check performed or DTS timed out
  S STS=$$VCHK^BSTSVRSN(32780,OVRRID)
  ;
- ;Check for new SNOMED CT to ICD-9-CM Auto-Codeables '32778' - Quit if check performed or DTS timed out
- ;BSTS*1.0*6;No longer look for ICD9 updates
- ;S STS=$$VCHK(32778) I STS G XCHECK
+ ;GDIT/HS/BEE;FEATURE#125580;Check for new subset versions
+ S STS=$$VCHK^BSTSVRSN(32781,OVRRID)  ;RxNorm
+ S STS=$$VCHK^BSTSVRSN(32782,OVRRID)  ;CVX
+ S STS=$$VCHK^BSTSVRSN(32783,OVRRID)  ;SNOMED
  ;
+ ;GDIT/HS/BEE;FEATURE#120458;BSTS*2.0*8;Disable Subset Refresh Checks
  ;Check for needed subset refresh - Also refresh VUID/NDC entries
- S NMIEN=$O(^BSTS(9002318.1,"B",36,"")) I NMIEN="" G XDAYCHK
- I ($$GET1^DIQ(9002318.1,NMIEN_",",.06,"I")'=DT)!(OVRRID) D SCHK^BSTSVRSN(36,1)
+ ;S NMIEN=$O(^BSTS(9002318.1,"B",36,"")) I NMIEN="" G XDAYCHK
+ ;I ($$GET1^DIQ(9002318.1,NMIEN_",",.06,"I")'=DT)!(OVRRID) D SCHK^BSTSVRSN(36,1)
  ;
  ;Check for needed RxNorm subset refresh
- S NMIEN=$O(^BSTS(9002318.1,"B",1552,"")) I NMIEN="" G XDAYCHK
- I ($$GET1^DIQ(9002318.1,NMIEN_",",.06,"I")'=DT)!(OVRRID) D SCHK^BSTSVRXN(1552,1)
- ;
- ;BSTS*1.0*8;Process no longer works
- ;Check to see if ICD9 to SMD process needs run - Only run once
- ;I $$GET1^DIQ(9002318.1,NMIEN_",",".09","I")="" D QUEUE^BSTSVOFL("ICD")
+ ;S NMIEN=$O(^BSTS(9002318.1,"B",1552,"")) I NMIEN="" G XDAYCHK
+ ;I ($$GET1^DIQ(9002318.1,NMIEN_",",.06,"I")'=DT)!(OVRRID) D SCHK^BSTSVRXN(1552,1)
  ;
  ;Schedule daily error purge
  D QUEUE^BSTSVOFL("PRG")
@@ -287,8 +319,8 @@ DAYCHK(OVRRID) ;Perform daily update checks - jobbed off by CHECK^BSTSVRSN
  S BSTS(9002318,SITE_",",.03)=DT
  D FILE^DIE("","BSTS","ERROR")
  ;
- ;Schedule the process to run at 6:02
- I '$$PSCHD("BSTSVOFL") S ZTSK=$$JOB^BSTSVOFL()
+ ;Cancel current process and schedule the process to run at scheduled time
+ D DEQUE^BSTSUTL0("PROC","BSTSVOFL") S ZTSK=$$JOB^BSTSVOFL()
  ;
  ;Schedule job to run tomorrow if not already scheduled
  I '$$PSCHD("BSTSVRSN") D

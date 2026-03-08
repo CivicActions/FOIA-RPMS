@@ -1,6 +1,10 @@
-PSORESK1 ;BHAM ISC/SAB - return to stock continued ;17-Jan-2014 11:18;DU
- ;;7.0;OUTPATIENT PHARMACY;**9,201,1018**;DEC 1997;Build 21
- ;IHS/MSC/MGH entry point CHECK ADDED 01/07/2014
+PSORESK1 ;BHAM ISC/SAB - return to stock continued ;26-Feb-2025 10:47;DU
+ ;;7.0;OUTPATIENT PHARMACY;**9,201,1018,1029,1034,1036**;DEC 1997;Build 17
+ ;Modified - IHS/MSC/MGH entry point CHECK ADDED 01/07/2014
+ ;           IHS/MSC/PLS - 12/01/21 - Line CHANGE+7
+ ;                       - 05/04/23 - Line CHECK+3 and CHKDUP EP
+ ;                       - 08/22/23 - Updates to CHKDUP
+ ;                       - 02/26/2025 - CHANGE+9 FID 114104
 HP W !!,"Wand the barcode number of the Rx or manually key in",!,"the number below the barcode or the Rx number."
  W !,"The barcode number format is - 'NNN-NNNNNNN'",!!,"Press 'ENTER' to process Rx or ""^"" to quit"
  Q
@@ -31,6 +35,7 @@ CMOP1 ; REFILL released by CMOP?  Called by PSORESK
 CHECK(RX) ;IHS/MSC/MGH Check and update the expiration date as needed
  N EXP,OLDEXP,REF,REMFILL
  S OLDEXP=$$GET1^DIQ(52,RX,26,"I")
+ Q:$$CHKDUP(RX) OLDEXP_U_1  ;IHS/MSC/PLS - 05/04/2023 - p1034
  S REF=$$GET1^DIQ(52,RX,9)
  I REF=0 S EXP=$$CHANGE(RX)    ;This is an original fill, change expiration date back after RTS
  E  D
@@ -45,6 +50,20 @@ CHANGE(RX) ;Change the expiration date back based on issue date and other logic
  S $P(CS,U,2)=$$ISSCH^APSPFNC2(DRG,"2")
  S EXTEXP=$$GET1^DIQ(50,DRG,9999999.08,"I")
  S ISSDT=$$GET1^DIQ(52,RX,1,"I")
- S X2=$S(EXTEXP:EXTEXP,$P(CS,U,2):184,CS:184,1:366)
+ ;IHS/MSC/PLS - 12/01/2021
+ ;S X2=$S(EXTEXP:EXTEXP,$P(CS,U,2):184,CS:184,1:366)
+ S X2=$S(EXTEXP:EXTEXP,1:$$EXPDATE^PSOUTLA2(CS,ISSDT))  ;p1036 removed _$G() around CS
  S EXPDTE=$$FMADD^XLFDT(ISSDT,X2)
  Q EXPDTE
+ ;Check for existing ACTIVE Rx with same drug
+CHKDUP(RX) ;-
+ N DRG,DRGNM,STA,DNM,DUP,PSOSD,PSODFN
+ S PSODFN=+$P($G(^PSRX(RX,0)),U,2)
+ D ^PSOBUILD
+ S DUP=0
+ S DRG=$$GET1^DIQ(52,RX,6,"I")
+ S DRGNM=$$GET1^DIQ(50,DRG,.01)
+ S (STA,DNM)=""
+ F  S STA=$O(PSOSD(STA)) Q:STA=""!$G(DUP)  F  S DNM=$O(PSOSD(STA,DNM)) Q:DNM=""!$G(PSORX("DFLG"))  I $P(PSOSD(STA,DNM),U)'=RX D  Q:$G(DUP)
+ .I $$UP^XLFSTR(DRGNM)=$$UP^XLFSTR($P(DNM,U)),$P(PSOSD(STA,DNM),U,2)<10 S DUP=1
+ Q DUP

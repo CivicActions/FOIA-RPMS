@@ -1,5 +1,6 @@
-DINIT220 ;SFISC/DPC-LOAD DATA FOR DATA TYPE FILE ;7/22/94  10:50
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINIT220 ;SFISC/DPC-LOAD DATA FOR DATA TYPE FILE ;7/22/94  10:50 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(ENTRY+I) G:X="" ^DINIT24 S Y=$E($T(ENTRY+I+1),5,999),X=$E(X,4,999),@X=Y
  Q

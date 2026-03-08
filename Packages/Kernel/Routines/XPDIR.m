@@ -1,5 +1,6 @@
-XPDIR ;SFISC/RSD - Install Restart ; 09/29/2005
- ;;8.0;KERNEL;**30,58,393**;Jul 10, 1995;Build 12
+XPDIR ;SFISC/RSD - Install Restart; 3 May 96 15:22 ;01/29/97  10:43 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**30,58**;Jul 10, 1995
 EN ;restart install
  N DIR,DIRUT,POP,XPD,XPDA,XPDD,XPDIJ,XPDDIQ,XPDNM,XPDNOQUE,XPDPKG,XPDST,XPDSET,XPDT,XPDQUIT,XPDQUES,Y,ZTSK,%
  S %="I $P(^(0),U,9)#3,$D(^XPD(9.7,""ASP"",Y,1,Y)),$D(^XTMP(""XPDI"",Y))",XPDST=$$LOOK^XPDI1(%)
@@ -28,7 +29,7 @@ EN ;restart install
  .S XPD(9.7,XPDST_",",5)=""  D FILE^DIE("","XPD")
  I $G(ZTSK) W !!,"This install is already queued as task #",ZTSK,!,"Please use the Taskman Menu if you want to reschedule." G ABORT
  ;kill XPDT array so that while in XPDI and ABORT is called, nothing is deleted
- S XPDIJ=0,XPDA=XPDST,XPDNM=$P(^XPD(9.7,XPDA,0),U) K XPDT
+ S XPDIJ=0,XPDA=XPDST K XPDT
  ;restore environment check variables
  I $D(^XTMP("XPDI",XPDA,"ENVVAR")) D
  .S:$D(^XTMP("XPDI",XPDA,"ENVVAR","XPDNOQUE")) XPDNOQUE=^("XPDNOQUE")

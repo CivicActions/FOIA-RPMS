@@ -1,5 +1,5 @@
-BMCPOS1 ; IHS/PHXAO/TMJ - PATCH #1 POST-INIT ;   
- ;;4.0;REFERRED CARE INFO SYSTEM;;JAN 09, 2006
+BMCPOS1 ; IHS/PHXAO/TMJ - PATCH #1 POST-INIT ;   [ 03/25/03  12:13 PM ]
+ ;;2.0;REFERRED CARE INFO SYSTEM;**1**;JUN 05, 2002
  ;
 START ;
  ; The following line prevents the "Disable Options..." and "Move

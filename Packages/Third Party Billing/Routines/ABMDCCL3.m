@@ -1,5 +1,5 @@
 ABMDCCL3 ; IHS/ASDST/DMJ - Cancelled claim Stats ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**8,10**;APR 05, 2002
  ;Original;TMD;
  ;
  ; IHS/SD/SDR - v2.5 p10 - IM20737
@@ -13,7 +13,7 @@ PRINT ;EP for writing data
  S ABM("PG")=0
  D HDB
  S ABM("CNT")=0,ABM("AMT")=0,ABM("O")="",ABM("OL")=""
- S ABM("TOTCNT")=0
+ S ABM("TOTCNT")=0  ;abm*2.5*10 IM20911
  F  S ABM("O")=$O(ABM("ST",ABM("O"))) Q:'ABM("O")!($G(ABM("F1")))  D
  .W !!?5,"Cancelling Official: ",$P(^VA(200,ABM("O"),0),U)
  .S ABM("L")="",ABM("OL")="",(ABM("SUBCNT"),ABM("V"),ABM("SUBAMT"))=0
@@ -29,10 +29,10 @@ PRINT ;EP for writing data
  ...S ABM("A")=$P(ABM("ST",ABM("O"),ABM("L"),ABM("V")),U,2)
  ...W ?60,$J($FN(ABM("T"),",",0),5)
  ...S ABM("CNT")=ABM("CNT")+ABM("T"),ABM("SUBCNT")=ABM("SUBCNT")+ABM("T")
- ...S ABM("TOTCNT")=ABM("TOTCNT")+ABM("T")
+ ...S ABM("TOTCNT")=ABM("TOTCNT")+ABM("T")  ;abm*2.5*10 IM20911
  ...S ABM("AMT")=ABM("AMT")+ABM("A"),ABM("SUBAMT")=ABM("SUBAMT")+ABM("A")
  ...S ABM("SSAMT")=ABM("SSAMT")+ABM("A"),ABM("SSCNT")=ABM("SSCNT")+ABM("T")
- .D SUBHDR
+ .D SUBHDR  ;abm*2.5*10
  D TOTHDR
  W !!,"E N D  O F  R E P O R T"
  D PAZ^ABMDRUTL
@@ -45,17 +45,21 @@ HDB S ABM("PG")=ABM("PG")+1 D WHD^ABMDRHD
  S $P(ABM("LINE"),"-",80)="" W !,ABM("LINE") K ABM("LINE")
  Q
  ;
-SUBHDR ;
- Q:+$G(ABM("SUBCNT"))=0
- W !?60,"------"
- W !?16,"Subtotal:",?60,$J($FN(ABM("SUBCNT"),",",0),5)
+SUBHDR ;Q:'ABM("SUBCNT")  ;abm*2.5*10 IM20737
+ Q:+$G(ABM("SUBCNT"))=0  ;abm*2.5*10 IM20737
+ ;W !?27,"------"  ;abm*2.5*10 IM20911
+ W !?60,"------"  ;abm*2.5*10 IM20911
+ ;W !?16,"Subtotal:",?60,ABM("SUBCNT")  ;abm*2.5*10 IM20911
+ W !?16,"Subtotal:",?60,$J($FN(ABM("SUBCNT"),",",0),5)  ;abm*2.5*10 IM20911
  S ABM("SUBCNT")=0
  Q
  ;
-TOTHDR ;
- Q:+$G(ABM("TOTCNT"))=0
- W !?60,"------"
- W !?19,"Total:",?60,$J($FN(ABM("TOTCNT"),",",0),5)
+TOTHDR ;Q:'ABM("T")  ;abm*2.5*10 IM20737
+ Q:+$G(ABM("TOTCNT"))=0  ;abm*2.5*10 IM20737 & IM20911
+ ;W !?27,"------"  ;abm*2.5*10 IM20911
+ W !?60,"------"  ;abm*2.5*10 IM20911
+ ;W !?19,"Total:",?60,ABM("T")  ;abm*2.5*10 IM20911
+ W !?19,"Total:",?60,$J($FN(ABM("TOTCNT"),",",0),5)  ;abm*2.5*10 IM20911
  S ABM("T")=0
  Q
 XIT ;EXIT POINT

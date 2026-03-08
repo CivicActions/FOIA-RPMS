@@ -1,6 +1,6 @@
-DIWE3 ;SFISC/GFT-WP - MOVE, DELETE, REPEAT, TRANSFER ;12:49 PM  5 Oct 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**8**;Mar 30, 1999
+DIWE3 ;SFISC/GFT-WP - MOVE, DELETE, REPEAT, TRANSFER ;11/2/96  06:21 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**33**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 M ;MOVE
  S DWAFT=1 G 1:X=U,OPT:'X S (DW1,DW3)=0 D MOVE Q:$D(DTOUT)  S:DW1>DW3 DW1=DW1+I,DW2=DW2+I D DEL:DW1
@@ -74,36 +74,26 @@ Z0 N MSG S MSG="",FILE=FI,FLD=$G(FD),WPROOT=$G(WPRT),IENS=$G(IEN)
  D GET1 I MSG]"" D Q0 G Z0
  S DWAFT=U D F
  Q
-RT(DIROOT,DIARR) ;
- N QL,CROOT,FILE,GL,OK,RT,TOPFILE
- Q:$G(DIROOT)=""
- S CROOT=$NA(@$$CREF^DILF(DIROOT))
- S:$G(DIARR)="" DIARR=$NA(^TMP($J,DIROOT))
- K @DIARR
- ;
- S QL=$QL(CROOT)
- I QL>1 D
- . S RT=$NA(@CROOT,QL-2),FILE=+$P($G(@RT@(0)),U,2),RT=$$OREF^DILF(RT)
- . I FILE,$D(^DD(FILE,0))#2 D
- .. S TOPFILE=$$FNO^DILIBF(FILE)
- .. I TOPFILE D
- ... S GL=$G(^DIC(TOPFILE,0,"GL"))
- ... I GL]"",RT[GL S OK=1 D RT1
- S:'$G(OK) @DIARR=U
+RT(ROOT,DIARR) ;
+ N A,B,C,D,Z,SUB,RT,FILE,TOPFILE,%,IENS
+ Q:$G(ROOT)']""  S:'$D(DIARR) DIARR="^TMP($J,ROOT)" K @DIARR
+ S A=",",IENS="",(B,D)=$L(ROOT,A)-1
+ F  S RT=$P(ROOT,A,1,B-1),B=B-1 Q:RT=""  D  Q:$G(FILE)
+ . S RT=RT_A I +$P($G(@(RT_"0)")),U,2) S C=+$P(^(0),U,2) I $D(^DD(C,0)),RT[^DIC($$FNO^DILIBF(C),0,"GL") S FILE=C D RT1
+ I RT="" S @DIARR=U Q
  Q
-RT1 ;
- N %,FLD,IENS,NOD,X,Y
- S @DIARR@("FILE")=FILE
- S @DIARR@("TOPFILE")=TOPFILE
+RT1 S @DIARR@("FILE")=FILE
+ S (@DIARR@("TOPFILE"),TOPFILE)=$$FNO^DILIBF(FILE)
  S @DIARR@("ROOT")=RT
- ;
- S NOD=$QS(CROOT,QL),FLD=$O(^DD(FILE,"GL",NOD,0,""))
- I FLD,$P($P($G(^DD(FILE,FLD,0)),U,4),";")=NOD S @DIARR@("FLDNO")=FLD
- ;
- S IENS="" F %=QL-3:-2:1 S IENS=IENS_$QS(CROOT,%)_","
- S @DIARR@("IENS")=IENS
+ N Y,X F  S SUB=$P(ROOT,A,D) D  Q:Y!(SUB="")
+ .S Y=0 Q:SUB=""
+ .I 'SUB S SUB=$S($E(SUB)=$C(34):$E(SUB,2,$L(SUB)-1),$G(@SUB):@SUB,1:"") Q:SUB=""
+ .S X=$O(^DD(FILE,"GL",SUB,0,""))  I $G(X),$P($P(^DD(FILE,X,0),U,4),";")=SUB S @DIARR@("FLDNO")=X,Y=1 Q
+ .S @DIARR@("FLDNO")=$O(^DD(^DD(FILE,0,"UP"),"GL",SUB,0,"")),Y=1
+ S RT=$S(FILE=TOPFILE:ROOT,1:RT),RT=$P(RT,"(",2),Z=$L(RT,A)-1
+ F %=1:2:Z S IENS=IENS_$P(RT,A,Z-%) I $P(RT,A,Z-%)]"" S IENS=IENS_A
+ S @DIARR@("IENS")=$S(FILE=TOPFILE:"",1:IENS)
  Q
- ;
 PRSREL N X,FTYPE,T,M,W,I,FI,FD,WPRT S X=VAL
  S T=$F(X," IN ") I T S X=$E(X,1,T-5),W=":",M=T-4,I=X_W_$E(VAL,T,999),T=$F(I," FILE",M) S:T&$F(W,$E(I,T)) I=$E(I,1,T-6)_$E(I,T,999) S X=I
  S VAL=$P(X,":"),FI=$P(X,":",2),FD=$P(X,":",3)
@@ -141,14 +131,14 @@ NW N DIR,X,Y
  W !!,"Do you want to continue?",! N X,Y,DIR S DIR(0)="Y" D ^DIR
  W ! S:'Y MSG="TEXT TRANSFER CANCELLED" Q
 Q0 W "  <"_MSG_">",$C(7) Q
-DIAC I FI=3.9 Q
+DIAC I FILE=3.9 Q
  N DIAC,DIFILE
- S DIAC="RD",DIFILE=FI
- D ^DIAC S:'DIAC FI=0
+ S DIAC="RD",DIFILE=FILE
+ D ^DIAC S:'DIAC FILE=0
  Q
 XM(Z) N %,A9,XMZ,ARR,MSG,A1
  S A1=Z
-% W !,"Transfer which Response: Original Message// " R A9:DTIME I A9[U S MSG="TEXT TRANSFER CANCELLED",Z=0 D Q0 Q
+% W !,"Transfer from Response: Original Message// " R A9:DTIME I A9[U S MSG="TEXT TRANSFER CANCELLED",Z=0 D Q0 Q
  I A9?1."?" S XMZ=+Z D ENT8^XMAH S Z=A1 G %
  I A9=""!(A9=0)!(A9="O") Q
  I A9 D  Q:Z

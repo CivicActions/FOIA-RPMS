@@ -1,27 +1,24 @@
-%ZTM0 ;SEA/RDS-TaskMan: Manager, Part 2 (Begin) ;07/17/08  08:16
- ;;8.0;KERNEL;**42,36,67,88,118,127,136,175,275,355,446**;Jul 10, 1995;Build 44
- ;Per VHA Directive 2004-038, this routine should not be modified.
+%ZTM0 ;SEA/RDS-TaskMan: Manager, Part 2 (Begin) ;22 Jan 2003 6:07 pm
+ ;;8.0;KERNEL;**42,36,67,88,118,127,136,175,275**;JUL 10, 1995;
  ;
 START ;Entry Point--start Task Manager at system startup
  S $ETRAP="D ER^%ZTM5",^%ZTSCH("ER")="",U="^"
+ D STATUS^%ZTM("RUN","Startup")
  L ^%ZTSCH:10 G:'$T RESTART ;Someone already running
- K ^%ZTSCH("DEV"),^("DEVOPEN"),^("LOAD"),^("LOADA"),^("STATUS"),^("STOP"),^("SUB"),^("UPDATE")
- S %ZTIME=$$H3^%ZTM($H)
- D STATUS^%ZTM("RUN","Startup") ;Move after kill p446
- S %ZTLKTM=5 ;Temp value for I6^%ZTM ;p446
+ K ^%ZTSCH("DEV"),^("DEVOPEN"),^("LOAD"),^("LOADA"),^("STATUS"),^("STOP"),^("UPDATE")
  D I6^%ZTM ;Handle Persistent Jobs
  S ZTSK=0 F  S ZTSK=$O(^%ZTSCH("TASK",ZTSK)) Q:'ZTSK  D
  . D TSKSTAT^%ZTM1("E","Interrupted While Running")
  . K ^%ZTSCH("TASK",ZTSK)
- K ^%ZTSCH("TASK") ;Remove all p446
  D SETUP
- I "CFO"[%ZTYPE G BADTYPE ;Moved after SETUP p446
+ K ^%ZTSCH("TASK"),^%ZTSCH("SUB")
  S ^%ZTSCH("IDLE")=0,^%ZTSCH("SUB",%ZTPAIR)=0,^(%ZTPAIR,0)=0
  D STATUS^%ZTM("RUN","Startup Hang")
+ I "CFO"[%ZTYPE G BADTYPE
  H %ZTPFLG("TM-DELAY") ;Wait for system stability.
 S1 ;
  D STATUS^%ZTM("RUN","Startup jobs")
- ;S %ZTLOOP=0,%ZTRUN=1 D CHECK^%ZTM ;Why? ;p446
+ S %ZTLOOP=0 D CHECK^%ZTM
  D STRTUP
  S ZTU="" F  S ZTU=$O(^%ZTSCH("C",ZTU)) Q:ZTU=""  S ^%ZTSCH("C",ZTU)=0 ;Reset VS counts in C list.
  K %ZTI,%ZTY,ZTIO,ZTO,ZTP,ZTSK,ZTU
@@ -30,9 +27,8 @@ S1 ;
  ;
 RESTART ;Entry Point--restart Task Manager
  S $ETRAP="D ER^%ZTM5",^%ZTSCH("ER")="",U="^"
+ D STATUS^%ZTM("RUN","Restart")
  K ^%ZTSCH("STATUS"),^("STOP")
- S %ZTIME=$$H3^%ZTM($H)
- D STATUS^%ZTM("RUN","Restart") ;Move after kill p446
  D SETUP
  I '$D(^%ZTSCH("IDLE")) S ^%ZTSCH("IDLE")=0
  I '$D(^%ZTSCH("SUB",%ZTPAIR)) S ^%ZTSCH("SUB",%ZTPAIR)=0
@@ -49,7 +45,7 @@ ST2 S ^%ZTSCH("RUN")=$H,%ZTPAIR="ROU"
  D UPDATE^%ZTM5 I $D(ZTREQUIR)#2 D STATUS^%ZTM("PAUSE","Required link to "_ZTREQUIR_" is down.") H 60 G ST2
  ;Clear the NOT Responding count
  S X="" F  S X=$O(^%ZTSCH("C",X)) Q:X=""  S ^%ZTSCH("C",X)=0
- D JOB,NOLOG^%ZOSV S %ZTNLG=Y,DTIME=1,DUZ=0,DUZ(0)="@"
+ D JOB,NOLOG^%ZOSV S %ZTNLG=Y,DTIME=0,DUZ=0,DUZ(0)="@"
  K Z D NAME K X,Y,Z,ZT
  Q
 STRTUP ;Queue the entries from the STARTUP X-ref
@@ -71,15 +67,13 @@ ZOSF ;SETUP--determine whether any required ^%ZOSF nodes are missing
  Q
  ;
 JOB ;SETUP--setup JOB command
- I %ZTOS["OpenM" D  Q
- . S:'$L(%ZTPFLG("DCL")) %ZTJOB="J ^%ZTMS::5"  ;"J ^%ZTMS:ZTUCI:5"
- . S:$L(%ZTPFLG("DCL")) %ZTJOB="D ^%ZTMDCL"
- . Q
- I %ZTOS["GT.M" S %ZTJOB="J GTM^%ZTMS::5",@("$ZINTERRUPT=""I $$JOBEXAM^ZU($ZPOSITION)""") Q
  I %ZTOS["VAX DSM" D  Q
  . S:'$L(%ZTPFLG("DCL")) %ZTJOB="J ^%ZTMS:(OPTION=""/UCI=""_$P(ZTUCI,"","")_""/VOL=""_ZTDVOL):5"
  . S:$L(%ZTPFLG("DCL")) %ZTJOB="D ^%ZTMDCL"
  . Q
+ I %ZTOS["OpenM" S %ZTJOB="J ^%ZTMS::5" Q  ;"J ^%ZTMS:ZTUCI:5"
+ I %ZTOS["GT.M" S %ZTJOB="J GTM^%ZTMS::5",$ZINTERRUPT="I $$JOBEXAM^ZU($ZPOSITION)" Q
+ I %ZTOS["M/SQL" S %ZTJOB="J ^%ZTMS:ZTUCI" Q
  I %ZTOS["MSM" S %ZTJOB="J ^%ZTMS[ZTUCI,ZTDVOL]:%ZTSIZ:5" Q  ;Set Maxpartsiz
  I %ZTOS["DTM" S %ZTJOB="J ^%ZTMS:(NSPACE=ZTUCI)" Q
  S %ZTJOB="J ^%ZTMS::5"
@@ -98,4 +92,4 @@ HALT ;Cleanup and halt
  I %ZTPFLG("XUSCNT") D COUNT^XUSCNT(-1)
  K ^%ZTSCH("STATUS",$J),^%ZTSCH("RUN"),^%ZTSCH("UPDATE",$J)
  K ^%ZTSCH("LOADA",%ZTPAIR)
- X "HALT"
+ HALT

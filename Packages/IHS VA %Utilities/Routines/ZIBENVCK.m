@@ -54,7 +54,7 @@ ENVCHK ; IHS KIDS environment check utility
  Q
  ;
 QUIT ; quit the KIDS install    
- W !!,"THE HELP DESK"
+ W !!,"CONTACT JAN BERGEMANN (ALIAS JAN SOLIS) IMMEDIATELY AND LOUDLY 505 248-4204"
  S XPDABORT=1 ;abort all transport globals in the distribution and kill them from ^XTMP
  ; if ^XTMP("XPDI") exists, the install option will abort
  Q

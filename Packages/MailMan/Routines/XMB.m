@@ -1,7 +1,5 @@
-XMB ;ISC-SF/GMB-Send Bulletin APIs ;04/17/2002  07:38
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/THM/RWF/CAP
- ;
+XMB ;(WASH ISC)/THM/RWF/CAP-Bulletins & TaskMan ;06/02/99  15:47
+ ;;7.1;MailMan;**3,7,24,26,27,50**;Jun 02, 1994
  ; Entry points are (DBIA 10069):
  ; ^XMB     Create and deliver a bulletin in the background (task).
  ; EN^XMB   Create a bulletin in the foreground (now) and send it in
@@ -43,7 +41,6 @@ XMB ;ISC-SF/GMB-Send Bulletin APIs ;04/17/2002  07:38
  D:$D(XMYBLOB) SETBLOB(.XMYBLOB,.XMATTACH)
  D:$D(XMDT) SETLATER(XMDT,.XMINSTR)
  I XMDUZ'?.N D SETFROM^XMD(.XMDUZ,.XMINSTR) Q:$G(XMMG)["Error ="
- D INITAPI^XMVVITAE
  S:$D(XMTEXT) XMTEXT=$$CREF^DILF(XMTEXT)
  S:$D(XMDF) XMINSTR("ADDR FLAGS")="R" ; Ignore addressee restrictions
  S:$D(XMBTMP) XMINSTR("ADDR FLAGS")=$G(XMINSTR("ADDR FLAGS"))_"I" ; Don't initialize (kill) the ^TMP addressee global
@@ -82,15 +79,34 @@ SETLATER(XMDT,XMINSTR) ;
 BULL ; Manually post a bulletin
  D BULLETIN^XMJMBULL
  Q
-ZTSK ; Entry point for TaskMan to transmit messages to a site.
- ; Needed for transition from v7.1 to v8.0.  Once site has transitioned,
- ; this entry point can be deleted.
- S ZTREQ="@"
- S XMINST=XMB("XMSCR")
- Q:$$OBE^XMTDR(XMINST)
- S XMTREC=$G(^XMBS(4.2999,XMINST,4))
- S ^XMBS(4.2999,XMINST,4)=$P(XMTREC,U,1,2)_U_XMB("SCRIPT",0)_U_XMB("TRIES")_U_U_XMB("ITERATIONS")_U_XMB("FIRST SCRIPT")_U_$P(XMB("SCRIPT"),U,6)
- S ^XMBS(4.2999,XMINST,5)=XMB("SCRIPT")
- K XMB,XMTREC
- G TASK^XMTDR
+ZTSK ;ENTRY POINT FROM THE TASK MANAGER
+ S XMTSK=ZTSK S:'$D(XMDT) XMDT="N"
+ S:'$D(XMIO) XMIO="" D KILL:"236"'[XMB("TYPE")
+ S:'$D(XMDUZ) XMDUZ=.5 G @(XMB("TYPE"))
+2 K:'$G(XMBTMP) ^TMP("XMY",$J),^TMP("XMY0",$J) K XMDT S XMB=XMB("A") G EN ; BULLETIN
+3 D XMTAUDIT^XMBPOST(.XMB)
+ G ZTSK^XMS0 ; REMOTE TRANSMISSION
+4 ; PRINT MESSAGE ON DEVICE
+ S XMDUZ=XMB("XMDUZ")
+ S XMZ=XMB("XMZ")
+ S XMDVIENS=$$IENS(XMZ,XMB("XMXX"))
+ G DEVICE^XMTDO
+5 ; PUMP INTO SERVER
+ S XMZ=XMB("XMZ")
+ S XMSERVER=XMB("XMXX")
+ S XMSVIENS=$$IENS(XMZ,XMB("XMXX"))
+ G SERVER^XMTDO
+6 G ZTSK^XMS1 ; POLLER
+7 G RECV^XMS3 ; INTER-UCI TRANSFER
+ Q
+IENS(XMZ,XMRECIP) ;
+ Q $$FIND1^DIC(3.91,","_XMZ_",","QX",XMRECIP,"C")_","_XMZ_","
+KILL ; Kill task ZTSK
+ N %
+ S %=$S($D(XMINST):XMINST,$D(XMSCR):XMSCR,1:0)
+ I % D
+ . K ^XMBS(4.2999,%,3)
+ . S $P(^XMBS(4.2999,%,4),U,2)=$$NOW^XLFDT
+ S ZTREQ="@" Q
+NEW ;this tag is no longer called, XM*7.1*24
  Q

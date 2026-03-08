@@ -1,0 +1,165 @@
+BEHORXSP ;IHS/MSC/MGH - Requirements for special medications  ;10-Feb-2023 10:34;PLS
+ ;;1.1;BEH COMPONENTS;**009014,009015,009019**;Mar 20, 2007
+ Q
+NEEDCI(RET,OITM) ;EP  Returns boolean if the orderable item is in a BSTS subset
+ N SUBSET,PSOI,DIEN,INSUB,NDC,INPUT,RXNORM
+ S RET=0
+ S INSUB=0
+ S PSOI=+$P($G(^ORD(101.43,+OITM,0)),U,2)  ; Pharmacy Orderable Item I
+ S DIEN=0 F  S DIEN=$O(^PSDRUG("ASP",PSOI,DIEN)) Q:'DIEN!(RET=1)  D
+ .S NDC=$$VANDC^PSSDEE(DIEN)
+ .S RXNORM=$$RXNORM^APSPFNC1(NDC,1)
+ .I '+RXNORM D
+ ..S RXNORM=$$GET1^DIQ(50,DIEN,9999999.27)
+ .I +RXNORM D
+ ..S SUBSET="RXNO EPCS GHB"
+ ..S INPUT=+RXNORM_U_SUBSET_U_1552
+ ..S INSUB=$$CIDINSB(INPUT)
+ ..I +INSUB S RET=1
+ ..Q:RET=1
+ ..Q  ;P35 defeat DETOX check
+ ..S SUBSET="RXNO EPCS DRUG DETOX"
+ ..S INPUT=+RXNORM_U_SUBSET_U_1552
+ ..S INSUB=$$CIDINSB(INPUT)
+ ..I +INSUB S RET=1
+ Q
+CIDINSB(INPUT) ;Return whether a concept id is in a subset
+ ;
+ ;Input: INPUT -
+ I $P(INPUT,U)="" Q 0   ;Missing concept id
+ I $P(INPUT,U,2)="" Q 0  ;Missing subset
+ I $P(INPUT,U,3)="" S $P(INPUT,U,3)="1552"
+ ;
+ N VAR,I,FND,STS,IN
+ ;
+ ;Lookup by ID
+ S STS=$$CNCLKP^BSTSAPI("VAR",$P(INPUT,U)_U_$P(INPUT,U,3))
+ ;
+ ;Check if in subset
+ S FND=0,I="" F  S I=$O(VAR(1,"SUB",I)) Q:I=""  D  Q:FND
+ .I $G(VAR(1,"SUB",I,"SUB"))=$P(INPUT,U,2) S FND=1
+ Q FND
+DETOX(RET,OITM,SNOMED,PROV) ;EP
+ ;Input
+ ;OITM - Orderable item
+ ;SNOMED - Clinical indication
+ ;PROV - ordering provider
+ ;Returns 0 if the snomed is not in a BSTS subset
+ ;       -1 if the snomed is in the subset but provider has no detox number
+ ;        Detox number if the snomed is in the subset and the provider has a detox number
+ N SUB,IN,FLG,DATA,INSUB,ITEM,DESC,DETOX
+ N SUBSET,PSOI,DIEN,NDC,INPUT,RXNORM
+ S RET=0,INSUB=0
+ Q  ;P35 defeat DETOX check
+ S INSUB=0
+ S PSOI=+$P($G(^ORD(101.43,+OITM,0)),U,2)  ; Pharmacy Orderable Item I
+ S DIEN=0 F  S DIEN=$O(^PSDRUG("ASP",PSOI,DIEN)) Q:'DIEN!(INSUB=1)  D
+ .S NDC=$$VANDC^PSSDEE(DIEN)
+ .S RXNORM=$$GET1^DIQ(50,DIEN,9999999.27)
+ .I '+RXNORM D
+ ..S RXNORM=$$RXNORM^APSPFNC1(NDC,1)
+ .I +RXNORM D
+ ..S SUBSET="RXNO EPCS DRUG DETOX"
+ ..S INPUT=+RXNORM_U_SUBSET_U_1552
+ ..S INSUB=$$CIDINSB(INPUT)
+ I +INSUB D
+ .S IN=SNOMED
+ .S DATA=$$CONC^BSTSAPI(IN)
+ .S DESC=$P(DATA,U,3)
+ .S SUB="PXRM EPCS DRUG DETOX"
+ .S IN=DESC_U_SUB_U_U_1
+ .S FLG=$$VSBTRMF^BSTSAPI(IN)
+ .;if this is a detox diagnosis, check for detox number
+ .I FLG=1 D
+ ..S DETOX=$$GET1^DIQ(200,PROV,53.11)
+ ..I DETOX'="" S RET=DETOX
+ ..E  S RET=-1
+ Q
+EDT(RET,OI,EDT,PAT,PRV,SUP,DRG) ;
+ S RET=0
+ ;Check order file for any of the same OI today
+ N ORPT,INVDT,TODAY,ORIEN,ACTION,ARR,DAYS,EARLY,EDATE,NDATE,SUPPLY,DAYTOT
+ N SIGN,SS,CSEXP,CSDAYS,END,LAST
+ S CSEXP=$$GET^XPAR("ALL","APSP CS II ORDER DATE MAX")
+ S TODAY=9999999-DT
+ S RET="0^"_DT
+ S ORPT=PAT_";DPT("
+ S INVDT=""
+ F  S INVDT=$O(^OR(100,"AC",ORPT,INVDT)) Q:'+INVDT!($P(INVDT,".",1)>TODAY)  D
+ .S ORIEN=0,SIGN=""
+ .F  S ORIEN=$O(^OR(100,"AC",ORPT,INVDT,ORIEN)) Q:'+ORIEN  D
+ ..Q:$$VALUE^ORCSAVE2(+ORIEN,"PICKUP")="C"    ;Clinic orders not included
+ ..S SS=$$VALUE^ORCSAVE2(+ORIEN,"SSRREQIEN")
+ ..I +SS S SIGN=$P($G(^OR(100,+ORIEN,8,1,0)),U,6)
+ ..Q:+SS&('+SIGN)                  ;Don't use order that is surescripts and is not signed
+ ..S ACTION=99999 S ACTION=$O(^OR(100,"AC",ORPT,INVDT,ORIEN,ACTION),-1)  Q:'+ACTION  D
+ ...;Check the order and put into array
+ ...D CHKOR(.ARR,ORIEN,ACTION,OI,DRG)
+ I EDT="" S EDT=DT
+ S DAYTOT=SUP
+ S NDATE=DT
+ N X1,X2,X
+ S X1=EDT,X2=SUP D C^%DTC
+ S END=X
+ N X1,X2,X
+ S X1=DT,X2=+CSEXP D C^%DTC
+ S CSDAYS=X
+ S EDATE=""  F  S EDATE=$O(ARR(EDATE)) Q:'+EDATE!($P(RET,U,1)<0)  D
+ .S DAYS=$G(ARR(EDATE))
+ .I EDT>CSDAYS S RET="-2^"_CSDAYS
+ .I END>EDATE!(END=EDATE) D
+ ..N X1,X2,X
+ ..S X1=EDATE,X2=DAYS D C^%DTC
+ ..S NDATE=X
+ ..I NDATE>EDT&((EDATE>EDT)!(EDATE=EDT)) S RET="-3^"_EDATE
+ .S DAYTOT=DAYTOT+DAYS
+ Q:+RET<0
+ I NDATE>CSDAYS S RET="-2^"_CSDAYS Q
+ I EDT<NDATE S RET="1^"_NDATE Q
+ I DAYTOT>90 S RET=-1
+ Q
+CHKOR(ARR,ORIEN,ACTION,OI,DRG) ;See if it belongs in the array
+ ;Check if orderables match
+ N ORY,ORSTS,OR3,ORD,DISP
+ S OR3=$G(^OR(100,ORIEN,3)),ORSTS=$P(OR3,U,3)
+ S ORD=$$VALUE^ORCSAVE2(ORIEN,"ORDERABLE")
+ S DISP=$$VALUE^ORCSAVE2(ORIEN,"DRUG")
+ Q:DRG'=DISP
+ ;Q:ORD'=OI
+ ;Make sure its active
+ Q:(ORSTS=1)!(ORSTS=2)!(ORSTS=7)!(ORSTS=10)!(ORSTS=12)!(ORSTS=13)!(ORSTS=14)!(ORSTS=99)
+ S EARLY=$$VALUE^ORCSAVE2(ORIEN,"EARLIEST")
+ I EARLY="" S EARLY=DT
+ S SUPPLY=$$VALUE^ORCSAVE2(ORIEN,"SUPPLY")
+ S ARR(EARLY)=SUPPLY
+ Q
+GHB(RET,OITM) ;EP
+ N SUBSET,PSOI,DIEN,INSUB,NDC,INPUT,RXNORM,INACT
+ S RET=0
+ S INSUB=0
+ S PSOI=+$P($G(^ORD(101.43,+OITM,0)),U,2)  ; Pharmacy Orderable Item I
+ S DIEN=0 F  S DIEN=$O(^PSDRUG("ASP",PSOI,DIEN)) Q:'DIEN!(RET=1)  D
+ .S INACT=$$GET1^DIQ(50,DIEN,100,"I") I INACT,INACT<DT Q  ;P35
+ .S RXNORM=$$GET1^DIQ(50,DIEN,9999999.27)  ;P35-Look at Drug File first
+ .I '+RXNORM D
+ ..S NDC=$$VANDC^PSSDEE(DIEN)
+ ..S RXNORM=$$RXNORM^APSPFNC1(NDC,1)  ;p35 - Look for RXNORM using NDC second
+ .I +RXNORM D
+ ..S SUBSET="RXNO EPCS GHB"
+ ..S INPUT=+RXNORM_U_SUBSET_U_1552
+ ..S INSUB=$$CIDINSB(INPUT)
+ ..I +INSUB S RET=1
+ Q
+CKPKG(OLIST,ORDERS) ;Check list of orders for the packaging type
+ N ITM,ORDER,PICKUP
+ S ITM="" F  S ITM=$O(ORDERS(ITM)) Q:ITM=""  D
+ .S ORDER=$P($G(ORDERS(ITM)),U,1)
+ .S PICKUP=$$VALUE^ORCSAVE2(+ORDER,"PICKUP")
+ .S OLIST(ITM)=ORDER_U_PICKUP
+ Q
+HCPYALW(RET,ORDER) ;Can an order be switched over to hardcopy
+ N PICKUP
+ S RET=0
+ S PICKUP=$$VALUE^ORCSAVE2(+ORDER,"PICKUP")
+ I PICKUP="M"!(PICKUP="W") S RET=1
+ Q

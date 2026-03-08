@@ -1,5 +1,5 @@
-RAORD8 ;HISC/CAH,FPT AISC/RMO-Ward/Clinic Scheduled Request Log ;9/9/94  10:05
- ;;5.0;Radiology/Nuclear Medicine;;Mar 16, 1998
+RAORD8 ;HISC/CAH,FPT AISC/RMO IHS/OIT/BT - Ward/Clinic Scheduled Request Log ;11/11/2022 16:15
+ ;;5.0;Radiology/Nuclear Medicine;**1010**;Mar 16, 1998
  K DIC S DIC("A")="Select Ward/Clinic: ",DIC="^SC(",DIC(0)="AEMQ" W ! D ^DIC K DIC G Q:Y<0 S RALIFN=+Y,RALNM=$P(Y,"^",2)
 DATE S %DT("A")="Starting Imaging Exam Scheduled Date: ",%DT="EXA" W ! D ^%DT K %DT G Q^RAORD8:Y<0 S RALDTE1=Y
  S %DT("A")="Ending Imaging Exam Scheduled Date: ",%DT="EXA" W ! D ^%DT K %DT G Q^RAORD8:Y<0 S RALDTE2=Y
@@ -37,9 +37,11 @@ XFER ;Find out if patient transferred in or out of the requesting loc
 CHKUTL F RAOIFN=0:0 S RAOIFN=$O(^TMP($J,"RAORD8",RAOSCH,RADFN,RAOIFN)) Q:'RAOIFN!(RAX["^")  S RAORD0=^(RAOIFN) I $D(^DPT(RADFN,0)) S RADPT0=^(0) D PRT
  Q
  ;
-PRT D HD:($Y+4)>IOSL!('RAPGE) Q:RAX["^"  S RAPRC=$S($D(^RAMIS(71,+$P(RAORD0,"^",2),0)):$P(^(0),"^"),1:"UNKNOWN"),RANME=$P(RADPT0,"^")
+PRT D HD:($Y+4)>IOSL!('RAPGE) Q:RAX["^"  S RAPRC=$S($D(^RAMIS(71,+$P(RAORD0,"^",2),0)):$P(^(0),"^"),1:"UNKNOWN")
+ S RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1)
  S RATIME=$$FMTE^XLFDT(RAOSCH,2) I $D(RALOCFLG) S RAILCNM=$S('$D(^RA(79.1,+$P(RAORD0,"^",20),0)):"UNKNOWN",$D(^SC(+^(0),0)):$P(^(0),"^"),1:"UNKNOWN")
- W !,$E(RANME,1,19),?20,$$SSN^RAUTL(RADFN,1),?28,RATIME,?43,$E(RAPRC,1,21) W:$D(RAILCNM) ?66,$E(RAILCNM,1,15)
+ W !,RANME W:$L(RANME)<20 ?20 W:$L(RANME)>20 !
+ W ?20,$$SSN^RAUTL(RADFN,1),?28,RATIME,?43,$E(RAPRC,1,21) W:$D(RAILCNM) ?66,$E(RAILCNM,1,15)
  S X=$G(^TMP($J,"RAORD8-XFER",RAOSCH,RADFN,RAOIFN)) I $L(X) D
  . S RALOCN=$P(X,U),RARLOCN=$P(X,U,2)
  . I RARLOCN=RALNAME W !?10,"Patient transferred to: ",RALOCN,!

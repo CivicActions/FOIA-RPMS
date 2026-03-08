@@ -1,5 +1,5 @@
-ZOSFGUX ;SFISC/MVB,PUG/TOAD - ZOSF Table for GT.M for Unix ;4/18/07  10:30
- ;;8.0;KERNEL;**275,425**;Jul 10, 1995;Build 18
+ZOSFGUX ;SFISC/MVB,PUG/TOAD - ZOSF Table for GT.M for Unix ;10 Feb 2003 6:37 pm
+ ;;8.0;KERNEL;**275**;Jul 10, 1995
  ;; for GT.M for Unix, version 4.3
  ;
  S %Y=1,DTIME=$G(DTIME,600)
@@ -36,7 +36,7 @@ Z ;
  ;;BRK
  ;;U $I:(CENABLE)
  ;;DEL
- ;;D DEL^%ZOSV2(X) ;N %RD,%OD S %RD=$P($S($ZRO["(":$P($P($ZRO,"(",2),")"),1:$ZRO)," ")_"/",%OD=$S($ZRO["(":$P($ZRO,"(",1)_"/",1:%RD) ZSYSTEM "rm -f "_%RD_X_".m" ZSYSTEM "rm -f "_%OD_X_".o"
+ ;;N %RD,%OD S %RD=$P($S($ZRO["(":$P($P($ZRO,"(",2),")"),1:$ZRO)," ")_"/",%OD=$S($ZRO["(":$P($ZRO,"(",1)_"/",1:%RD) ZSYSTEM "rm -f "_%RD_X_".m" ZSYSTEM "rm -f "_%OD_X_".o"
  ;;EOFF
  ;;U $I:(NOECHO)
  ;;EON
@@ -76,11 +76,11 @@ Z ;
  ;;NBRK
  ;;U $I:(NOCENABLE)
  ;;NO-PASSALL
- ;;U $I:(ESCAPE:TERMINATOR="":NOPASTHRU)
+ ;;U $I:(NOPASSTHRU)
  ;;NO-TYPE-AHEAD
  ;;U $I:(NOTYPEAHEAD)
  ;;PASSALL
- ;;U $I:(NOESCAPE:NOTERMINATOR:PASTHRU)
+ ;;U $I:(PASSTHRU)
  ;;PRIINQ
  ;;S Y=$$PRIINQ^%ZOSV()
  ;;PRIORITY
@@ -99,8 +99,6 @@ Z ;
  ;;K ^UTILITY($J) D ^%RSEL S X="" X "F  S X=$O(%ZR(X)) Q:X=""""  S ^UTILITY($J,X)=""""" K %ZR
  ;;RSUM
  ;;S Y=0 F %=1,3:1 S %1=$T(+%^@X),%3=$F(%1," ") Q:'%3  S %3=$S($E(%1,%3)'=";":$L(%1),$E(%1,%3+1)=";":$L(%1),1:%3-2) F %2=1:1:%3 S Y=$A(%1,%2)*%2+Y
- ;;RSUM1
- ;;N %,%1,%2,%3 S Y=0 F %=1,3:1 S %1=$T(+%^@X),%3=$F(%1," ") Q:'%3  S %3=$S($E(%1,%3)'=";":$L(%1),$E(%1,%3+1)=";":$L(%1),1:%3-2) F %2=1:1:%3 S Y=$A(%1,%2)*(%2+%)+Y
  ;;SS
  ;;D ^ZSY
  ;;SAVE

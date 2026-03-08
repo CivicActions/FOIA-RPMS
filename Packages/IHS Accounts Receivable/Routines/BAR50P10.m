@@ -1,5 +1,5 @@
 BAR50P10 ; IHS/SD/LSL - NEW REPORT ERA CLAIMS ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,20,21,22**;OCT 26,2005;Build 38
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,20,21,22,29,30**;OCT 26,2005;Build 55
  ;
  ; IHS/SD/LSL - 10/1/03 - V1.7 Patch 4 - HIPAA
  ;      Routine Created
@@ -10,6 +10,8 @@ BAR50P10 ; IHS/SD/LSL - NEW REPORT ERA CLAIMS ;
  ; IHS/SD/RTL - 04/8/05 - V1.8 Patch 1
  ;      Can't view check detail in ERA Claim Report
  ; IHS/SD/SDR - 1/5/2011 - V1.8 P20 - Included new status Exception (E)
+ ;IHS/SD/CPC - 20191129 BAR*1.8*29 CR6982 - Remove X option from ERA claim status report 
+ ;IHS/SD/CPC - 20200804 ;BAR*1.8*30 CR10550 
  ;
  ; ********************************************************************
  ;;
@@ -40,7 +42,9 @@ DISP ;
  K IMP
  D ENP^XBDIQ1(90056.02,IMPDA,".01;.05","IMP(")
  W !,@IOF,!,"Reports for : ",?20,IMP(.01)
- W !,?20,IMP(.05),?50,"CHK/EFT #: ",$E(BARCHK,1,23)
+ ;W !,?20,IMP(.05),?50,"CHK/EFT #: ",$E(BARCHK,1,23)   ;BAR*1.8*30 CR10550
+ W !,?20,IMP(.05)   ;BAR*1.8*30 CR10550
+ W !,"CHK/EFT #: ",BARCHK   ;BAR*1.8*30 CR10550
  Q
  ; ********************************************************************
 INIT ;
@@ -78,9 +82,11 @@ STATUS ;
  W !!,"Enter the list of Claim Status(s) you desire to print,"
  W !,"and in the sequence to be printed out.",!
  W !,"C - Claim Unmatched",?25,"R - Reason Unmatched",?50,"N - Not to Post"
- W !,"M - Matched",?25,"P - Posted",?50,"X - Claim & Reason Unmatched"
+ ;W !,"M - Matched",?25,"P - Posted",?50,"X - Claim & Reason Unmatched"  ;IHS/SD/CPC - 20191129 BAR*1.8*29 CR6982
+ W !,"M - Matched",?25,"P - Posted",?50,"E - Exception"  ;"X - Claim & Reason Unmatched" BAR*1.8*29 CR6982
  ;W !,"A - All Categories",!,?5,"Example:   CRXN",!  ;bar*1.8*20 REQ7
- W !,"A - All Categories",?25,"E - Exception",!,?5,"Example:   CRXN",!  ;bar*1.8*20 REQ7
+ ;W !,"A - All Categories",?25,"E - Exception",!,?5,"Example:   CRXN",!  ;bar*1.8*20 REQ7  ;IHS/SD/CPC - 20191129 BAR*1.8*29 CR6982
+ W !,"A - All Categories",!,?5,"Example:   CRN",!  ;IHS/SD/CPC - 20191129 BAR*1.8*29 CR6982
  S BARBAD=0
  K DIR,BARINDX
  ;S DIR(0)="FO^0:6"  ;bar*1.8*20 REQ7
@@ -93,10 +99,12 @@ STATUS ;
  . S BARDONE=1
  I Y="^" S BARDONE=1 Q
  ;S Z="CRNMPX"  ;bar*1.8*20 REQ7
- S Z="CRNMPXE"  ;bar*1.8*20 REQ7
+ ;S Z="CRNMPXE"  ;bar*1.8*20 REQ7
+ S Z="CRNMPE"  ;IHS/SD/CPC - 20191129 BAR*1.8*29 CR6982
  I Y="A" S Y=Z
  ;S Z="CRNMPX"  ;bar*1.8*20 REQ7
- S Z="CRNMPXE"  ;bar*1.8*20 REQ7
+ ;S Z="CRNMPXE"  ;bar*1.8*20 REQ7 ;IHS/SD/CPC - 20191129 BAR*1.8*29 CR6982
+ S Z="CRNMPE"  ;bar*1.8*20 REQ7 ;IHS/SD/CPC - 20191129 BAR*1.8*29 CR6982
  F I=1:1:$L(Y) I Z'[$E(Y,I) D  Q
  . W !!,">>>BAD ENTRY<<<>>> ",Y
  . S BARBAD=1
@@ -152,16 +160,19 @@ SETHDR ;
  ;
  S BAR("HD",0)="ELECTRONIC CLAIM REPORT - "_$P(BARTYP("NAME")," ")
  S BARTMP="FOR FILE NAME: "_IMP(.05)
+ I $P(BARCHK(0),U,8)="XX" D                                       ;BAR*1.8*30 CR10550
+ .S BAR("HD",1)=BARTMP_"             NPI: "_$P(BARCHK(0),U,9)      ;BAR*1.8*30 CR10550
+ E  S BAR("HD",1)=BARTMP_"             TIN: "_$P(BARCHK(0),U,11)   ;BAR*1.8*30 CR10550
  D PAD
- ;S BAR("HD",1)=BARTMP_"CHECK/EFT TRACE: "_$E(BARCHK,1,12)  ;bar*1.8*22 SDR
- S BAR("HD",1)=BARTMP_"CHECK/EFT TRACE: "_$E(BARCHK,1,20)  ;bar*1.8*22 SDR
+ ;S BAR("HD",1)=BARTMP_"CHECK/EFT TRACE: "_$E(BARCHK,1,12)  ;bar*1.8*22 SDR ;BAR*1.8*30 CR10550
+ ;S BAR("HD",1)=BARTMP_"CHECK/EFT TRACE: "_$E(BARCHK,1,20)  ;bar*1.8*22 SDR ;BAR*1.8*30 CR10550
   ;BAR*1.8*1 SRS ADDENDUM FOR BAR*1.8*1
  S BARTMP=" "
- D PAD
- I $P(BARCHK(0),U,8)="XX" D
- .S BAR("HD",1.5)=BARTMP_"            NPI: "_$P(BARCHK(0),U,9)
- E  S BAR("HD",1.5)=BARTMP_"            TIN: "_$P(BARCHK(0),U,11)
- ;END
+ ;D PAD    ;BAR*1.8*30 CR10550
+ ;I $P(BARCHK(0),U,8)="XX" D    ;BAR*1.8*30 CR10550
+ ;.S BAR("HD",1.5)=BARTMP_"            NPI: "_$P(BARCHK(0),U,9)  ;BAR*1.8*30 CR10550
+ ;E  S BAR("HD",1.5)=BARTMP_"            TIN: "_$P(BARCHK(0),U,11)  ;BAR*1.8*30 CR10550
+ S BAR("HD",1.5)="CHECK/EFT TRACE: "_BARCHK   ;BAR*1.8*30 CR10550
  S BAR("HD",2)="FOR RPMS FILE: "_IMP(.01)_" FOR "_$P(BARCHK(0),U,7)
  S BAR("HD",3)=BARDASH
  S BARTMP=$$GET1^DIQ(90056.22,BARCKIEN,.03)
@@ -242,8 +253,8 @@ BROWSE ;
  ;
 PRINT ;
  ; Print report to device.  Queuing allowed.
- S BARQ("RC")="COMPUTE^BAREDP11"      ; Build tmp global with data
- S BARQ("RP")="PRINT^BAREDP11"       ; Print reports from tmp global
+ S BARQ("RC")="COMPUTE^BAR50P11"      ; Build tmp global with data
+ S BARQ("RP")="PRINT^BAR50P11"       ; Print reports from tmp global
  S BARQ("NS")="BAR"                  ; Namespace for variables
  S ZTSAVE("IMPDA")=""
  S BARQ("RX")="POUT^BARRUTL"         ; Clean-up routine

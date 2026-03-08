@@ -1,5 +1,5 @@
 DGPFRPI2 ;ALB/RBS - PRF PRINCIPAL INVEST REPORT CONT. ; 6/14/04 10:39am
- ;;5.3;Registration;**554,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**554,1015,1022**;MAY 28, 2004;Build 18
  ;
  ;This routine will be used to display/print all patient assignments
  ;for a Principal Investigator assigned to the Research record flag.
@@ -68,7 +68,12 @@ PRINT(DGSORT,DGLIST) ;output report
  . . . . S DGSTR=$G(@DGLIST@(DGFG,DGPNAM,DGDFN,DGLN))
  . . . . W !
  . . . . I DGODFN'=DGDFN S DGODFN=DGDFN D  ;only print name once
- . . . . . W $E(DGPNAM,1,16),?18,$P(DGSTR,U)
+ . . . . . ;202307 97197 maw p1022 PPN
+ . . . . . N PRF
+ . . . . . S PRF=$$GETPREF^AUPNSOGI(DGDFN,"E",1)
+ . . . . . W $G(PRF)
+ . . . . . W !,?18,$P(DGSTR,U)
+ . . . . . ;W $E(DGPNAM,1,16),?18,$P(DGSTR,U)
  . . . . W ?30,$P(DGSTR,U,2),?48,$P(DGSTR,U,3),?60,$P(DGSTR,U,4),?71,$P(DGSTR,U,5)
  ;
  ;Shutdown if stop task requested
@@ -118,7 +123,10 @@ HEAD2 W !,"Principal Investigator: "
  . W ?24,X
  Q
  ;
-HEAD3 W !!,"PATIENT",?18,"SSN",?30,"ACTION",?48,"ACTION DT",?60,"REVIEW DT",?71,"STATUS"
+HEAD3  ;
+ ;202307 97197 maw p1022 PPN
+ W !!,"PATIENT",?18,"CHART #",?30,"ACTION",?48,"ACTION DT",?60,"REVIEW DT",?71,"STATUS"
+ ;W !!,"PATIENT",?18,"SSN",?30,"ACTION",?48,"ACTION DT",?60,"REVIEW DT",?71,"STATUS"
  W !,"================",?18,"==========",?30,"================",?48,"=========",?60,"=========",?71,"========="
  Q
  ;

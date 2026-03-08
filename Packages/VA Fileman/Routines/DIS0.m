@@ -1,6 +1,7 @@
-DIS0 ;SFISC/GFT-SEARCH, IF STATEMENT AND MULTIPLE COMBO'S ;30JAN2005
- ;;22.0;VA FileMan;**144**;Mar 30, 1999;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIS0 ;SFISC/GFT-SEARCH, IF STATEMENT AND MULTIPLE COMBO'S ;2/24/93  13:51 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  W ! K R,N,DL,DE,DJ
  S O=0,E=$D(DC(2)),N="IF: A// ",DE=$S(E:"IF: ",1:N),DL=0
  S C=","
@@ -10,12 +11,10 @@ R W !,DE K DV R X:DTIME S:'$T DTOUT=1 G Q:X[U!'$T
 P S P=P+1,DQ=$E(X,P) I DQ="" G BAD:Y=U,L
  I DQ?.A S DV=$A(DQ)-64 I $D(DC(DV)) D ASKQ G CHK
  G P:"&+ "[DQ I DU="","'-"[DQ S DU="'" G P
-BAD D  W !! K DJ(DL),DE(DL) S DL=DL-1 G R
- .I DQ?."?" D BLD^DIALOG($S($D(DC(2)):8004.2,1:8004.1)),MSG^DIALOG("WH") Q  ;HELP depending on whether there is a CONDITION B
- .W "   <",DQ,">??"
+BAD W $C(7)," <",DQ,">??" K DJ(DL),DE(DL) S DL=DL-1 G R
  ;
 ASKQ S J=DC(DV),%=J["?."" """,I=J["^'"+(DU["'")#2 I J["W^" S DV(DV)=$S(I:2-%,1:%+%+1) S:% DC(DV)=$E(J,1,$L(J)-5)_"=""""" Q
- S:$P(J,U)[C DV(DV)=J?.E1",.01^".E&%+(I+%#2) Q
+ S:$P(J,U,1)[C DV(DV)=J?.E1",.01^".E&%+(I+%#2) Q
  ;
 CHK S %=$F(Y,U_DV) I % S %=$P($E(Y,%),U,1)'=DU,DQ=""""_DQ_""" AND """_$E("'",%)_DQ_""" IS "_$P("REDUNDANT^CONTRADICTORY",U,%+1) G BAD
  S %=1,Y=Y_DV_DU_U,DU="",J=$P(DC(DV),U,1) G P:J'[C F Z=2:1 I $P(J,C,Z,99)'[C S J=$P(J,C,1,Z-1)_C Q

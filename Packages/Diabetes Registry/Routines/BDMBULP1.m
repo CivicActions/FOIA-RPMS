@@ -46,7 +46,7 @@ WRITEMSG ;
  ;;MAKE SURE YOU ASSIGN THE BDMZEDIT KEY TO USERS WHO NEED TO UPDATE PATIENT RECORDS
  ;;
  ;;For additional information contact your RPMS site manager, Area Office RPMS or
- ;;the HELP DESK.
+ ;;the ITSC HELP DESK at ITSCHELP@mail.ihs.gov (505) 248-4371.
  ;;
  ;;  
  ;;+++++++++++++++++++++ End of Announcement +++++++++++++++++++++++

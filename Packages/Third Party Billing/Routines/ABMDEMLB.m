@@ -1,17 +1,18 @@
 ABMDEMLB ; IHS/ASDST/DMJ - DSD/JLG - Edit Utility - MULTIPLES - PART 3 ; 
- ;;2.6;IHS Third Party Billing;**1,2,13,14**;NOV 12, 2009;Build 238
+ ;;2.6;IHS Third Party Billing;**1,2,13,14,29,34**;NOV 12, 2009;Build 645
  ;
- ;IHS/DSD/MRS - 5/6/1999 - NOIS DXX-0599-140006 Patch 1
- ;      Changed indirect (ABMZ("DICI")) to direct call to fee table for outside labs
+ ;IHS/DSD/MRS 5/6/1999 NOIS DXX-0599-140006 Patch 1 Changed indirect (ABMZ("DICI")) to direct call to fee table for outside labs
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 6 - Added code for A0425/A0888 to remove mileage from page 3A
- ; IHS/SD/SDR - v2.5 p9 - IM13945 - Ability to delete range of codes
- ; IHS/SD/SDR - v2.5 p10 - IM20384 - Fix for <UNDEF>CONT+5^ABMDEMLB
+ ;IHS/SD/SDR 2.5*8 task 6 Added code for A0425/A0888 to remove mileage from page 3A
+ ;IHS/SD/SDR 2.5*9 IM13945 Ability to delete range of codes
+ ;IHS/SD/SDR 2.5*10 IM20384 Fix for <UNDEF>CONT+5^ABMDEMLB
  ;
- ; IHS/SD/SDR - abm*2.6*1 - HEAT2653 - E-codes not deleting
- ; IHS/SD/SDR - abm*2.6*2 - 3PMS10003A - Modified to call ABMFEAPI
- ;IHS/SD/SDR - 2.6*13 - exp mode 35 - changes for injury date, 01 occurrence code and dt first symptom, 11 occurrence code
- ;IHS/SD/SDR - 2.6*14 - HEAT165301 - Removed link introduced in 13 between page 9A and 3
+ ;IHS/SD/SDR 2.6*1 HEAT2653 E-codes not deleting
+ ;IHS/SD/SDR 2.6*2 3PMS10003A Modified to call ABMFEAPI
+ ;IHS/SD/SDR 2.6*13 exp mode 35 changes for injury date, 01 occurrence code and dt first symptom, 11 occurrence code
+ ;IHS/SD/SDR 2.6*14 HEAT165301 Removed link introduced in 13 between page 9A and 3
+ ;IHS/SD/SDR 2.6*29 CR10404 Added tag CLIANUM to check if CLIA required for Insurer, CPT/HCPCS
+ ;IHS/SD/SDR 2.6*34 ADO60694 Delete DRG if primary DX is being deleted
  ;
 D1 ; EP - Delete Multiple
  I +$E(Y,2,3)>0&(+$E(Y,2,3)<(ABMZ("NUM")+1)) S Y=+$E(Y,2,3) G D2
@@ -36,6 +37,7 @@ D3 ;
  I Y=1 D
  .;I ABMZ("SUB")=51,"^01^11^"[("^"_$P(ABMZ(+ABMXANS),U)_"^") S ABMOIEN=$P(ABMZ(+ABMXANS),U,2),ABMDEL=1 D OCCURCD^ABMDEML K ABMDEL  ;abm*2.6*13 exp mode 35  ;abm*2.6*14 HEAT165301
  .F ABM("I")=1:1 S ABM=$P(ABMXANS,",",ABM("I")) Q:ABM=""  D
+ ..I (ABMZ("SUB")=17)&(ABM=1) D DRGDLT  ;start new abm*2.6*34 IHS/SD/SDR ADO60694
  ..I (ABMZ("SUB")=43)!(ABMZ("SUB")=47),"A0425^A0888"[$P(ABMZ(ABM),U) D
  ...I $P(ABMZ(ABM),U)="A0425",$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),12)),U,8)=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),$P(ABMZ(ABM),U,2),0)),U,3) D
  ....S DIE="^ABMDCLM(DUZ(2),"
@@ -65,6 +67,14 @@ D3 ;
  ..D ^DIK
 XIT K ABMX
  Q
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60694
+DRGDLT ;Primary DX is being deleted, also delete DRG
+ S DIE="^ABMDCLM(DUZ(2),"
+ S DA=ABMP("CDFN")
+ S DR=".513////@"
+ D ^DIE
+ Q
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60694
  ;
 CONT ;EP for setting Contract Provider procedures to zero
  W !!,"Either the Attending or Operating Provider's affiliation is Contract, depending",!,"upon local policy, procedures done by a Contract Provider may be unbillable."
@@ -85,6 +95,15 @@ LAB ;EP for Outside Labs
  ;I $P($G(^ABMDFEE(ABMP("FEE"),+ABMX("Y"),0)),U,2)>0 S ABMZ("DR")=ABMZ("DR")_";.04////"_$P(^(0),U,2)_";.06///@"  ;abm*2.6*2 3PMS10003A
  I $P($$ONE^ABMFEAPI(ABMP("FEE"),ABMZ("CAT"),+ABMX("Y"),ABMP("VDT")),U)>0 S ABMZ("DR")=ABMZ("DR")_";.04////"_$P(^(0),U,2)_";.06///@"  ;abm*2.6*2 3PMS10003A
  Q
+ ;start new abm*2.6*29 IHS/SD/SDR CR10404
+CLIANUM(X) ;EP to see if CLIA required
+ I $D(^ABMNINS(ABMP("LDFN"),ABMP("INS"),4,"B",X)) D
+ .S ABM("CLIAIEN")=0
+ .S ABM("CLIAIEN")=$O(^ABMNINS(ABMP("LDFN"),ABMP("INS"),4,"B",X,0))
+ .Q:ABM("CLIAIEN")=0
+ .I $P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),4,ABM("CLIAIEN"),0)),U,3)="Y" S ABMP("CLIAREQ")=1
+ Q
+ ;end new abm*2.6*29 IHS/SD/SDR CR10404
  ;
 RX ;EP for entering Prescription Number
  K ABMX("P")

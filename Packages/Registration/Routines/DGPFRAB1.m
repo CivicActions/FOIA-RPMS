@@ -1,5 +1,5 @@
 DGPFRAB1 ;ALB/RBS - PRF APPROVED BY REPORT CONT. ; 6/4/04 11:17am
- ;;5.3;Registration;**554,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**554,1015,1022**;MAY 28, 2004;Build 18
  ;
  ;This routine will be used to display or print all Patient Record
  ;Flag Assignment History Actions for the Approved By Person who
@@ -200,7 +200,12 @@ PRNTPAT ; loop and print all patients for flag
  . . . S DGSTR=$G(@DGLIST@(DGAPNM,DGIEN,DGCAT,DGFG,DGNAM,DGDFN,DGLN))
  . . . W !
  . . . I DGODFN'=DGDFN S DGODFN=DGDFN D  ;only print name once
- . . . . W $E(DGNAM,1,16),?18,$P(DGSTR,U)
+ . . . . ;202307 97197 maw p1022 PPN
+ . . . . N PRF
+ . . . . S PRF=$$GETPREF^AUPNSOGI(DGDFN,"E",1)
+ . . . . W $G(PRF)
+ . . . . W !,?18,$P(DGSTR,U)
+ . . . . ;W $E(DGNAM,1,16),?18,$P(DGSTR,U)
  . . . W ?30,$P(DGSTR,U,2),?48,$P(DGSTR,U,3),?60,$P(DGSTR,U,4),?71,$P(DGSTR,U,5)
  . . . S DGCNT=DGCNT+1
  Q
@@ -232,7 +237,9 @@ HEAD1 W !!,"Approved By: ",DGAPNM
  ;
 HEAD2 W !,"Flag Name: ",$G(DGFG)," - ",$S(+DGCAT=1:"Category I (National)",1:"Category II (Local)")
  ;
- W !!,"PATIENT",?18,"SSN",?30,"ACTION",?48,"ACTION DT",?60,"REVIEW DT",?71,"STATUS"
+ ;202307 97197 maw p1022
+ W !!,"PATIENT",?18,"CHART #",?30,"ACTION",?48,"ACTION DT",?60,"REVIEW DT",?71,"STATUS"
+ ;W !!,"PATIENT",?18,"SSN",?30,"ACTION",?48,"ACTION DT",?60,"REVIEW DT",?71,"STATUS"
  W !,"================",?18,"==========",?30,"================",?48,"=========",?60,"=========",?71,"========="
  Q
  ;

@@ -1,100 +1,79 @@
-DICL3 ;SF/TKW-VA FileMan: Lookup: Lister, Part 4 ;1/26/99  08:32 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**3**;Mar 30, 1999
+DICL3 ;SEA/TOAD-VA FileMan: Lookup: Lister, Part 4 ;6/20/95  17:36 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**17**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
- ;
-FOLLOW(DIFILE,DIF,DIDEF,DICHNNO,DILVL,DIFRFILE,DIFIELD,DIDXFILE,DIVPTR,DISUB,DISCREEN) ;
- ;
- ; follow pointer/vp chains to end, building stack along the way
- ;
-F1 ; increment stack level, loop increments at top
- ; if pointing file lacks B index, store that in stack
- ;
- S DILVL=DILVL+1
- I DILVL=1 S DIF(1,DIFILE)=U_DIDXFILE
- I DILVL>1 D
- . S DIF(DILVL,DIFILE)=DIFRFILE_U_DIVPTR
- . I '$D(@DIFILE(DIFILE)@("B")) S DIFILE(DIFILE,"NO B")=""
- . S DIFILE(DIFILE,"O")=$$OREF^DIQGU(DIFILE(DIFILE))
- . Q
-F2 ; Find data type of .01 field of pointed-to file, process
- ; end of pointer chain.
- N T S T=$P(DIDEF,U,2)
- I T'["P",T'["V" D  Q
- . S DIFILE("STACKEND",DICHNNO)=DILVL_U_DIFILE
- . N L,F F L=DILVL:-1:1 D
- . . S DIFILE("STACK",DICHNNO,L,DIFILE)=DIFRFILE_U_DIVPTR
- . . Q:L=1
- . . S DIFILE=+DIF(L,DIFILE)
- . . S F=DIF(L-1,DIFILE),DIFRFILE=$P(F,U),DIVPTR=$P(F,U,2)
- . S DICHNNO=DICHNNO+1
- . Q
-F3 ; Advance file number, Process regular pointers within pointer chain.
- N DIFRFILE S DIFRFILE=DIFILE
- I T["P" D  Q
- . S DIFILE=+$P($P(DIDEF,U,2),"P",2)
- . S DIFILE(DIFILE)=$$CREF^DIQGU(U_$P(DIDEF,U,3))
- . S DIDEF=$G(^DD(DIFILE,.01,0))
- . D FOLLOW(.DIFILE,.DIF,DIDEF,.DICHNNO,.DILVL,DIFRFILE,"","",0)
- . Q
-F4 ; Process variable pointers within the pointer chain.
- N DIVP,G
- S:'$G(DIFIELD) DIFIELD=.01
- F DIVP=0:0 S DIVP=$O(^DD(DIFILE,DIFIELD,"V",DIVP)) Q:'DIVP  S G=$G(^(DIVP,0)) D
- . Q:'G
- . S DIFILE=+G,G=$G(^DIC(DIFILE,0,"GL")) I G="" S DIFILE=DIFRFILE Q
- . I DILVL=1,$D(DISCREEN("V",DISUB)),'$D(DINDEX(DISUB,"VP",G)) S DIFILE=DIFRFILE Q
- . S DIFILE(DIFILE)=$$CREF^DIQGU(G)
- . S DIDEF=$G(^DD(DIFILE,.01,0))
- . N DISAVL S DISAVL=DILVL
- . D FOLLOW(.DIFILE,.DIF,DIDEF,.DICHNNO,.DILVL,DIFRFILE,"","",1)
- . S DILVL=DISAVL,DIFILE=DIFRFILE
+ ;11819;4321703;
+ 
+POINT 
+ ; BRANCH^DICL--perform recursive list for pointer index
+ N DICODE,DIFIENP,DILVL,DIPLVL,DISCREEN
+ S DIPLVL=+$G(DIFILE("LVL"))
+ N DIFILE
+ S DIFILE=+$P($P(DINDEX("NODE"),U,2),"P",2)
+ S DILVL=DIPLVL+1
+ S DIFILE("LVL")=DILVL
+ S DISCREEN="X "_$NA(^TMP("DILVL",$J,DILVL))
+ S DICODE="N DIPLVL,DIROOT S DIPLVL="_DIPLVL_",DIROOT=$NA("_$NA(@DIROOT@(DINDEX))_"),DIFIENP=$O(@DIROOT@(Y,"""")) I DIFIENP'="""""
+ I DIPLVL S DICODE=DICODE_" X "_$NA(^TMP("DILVL",$J,DIPLVL))
+ S ^TMP("DILVL",$J,DILVL)=DICODE
+RECUR 
+ ; perform recursive call
+ D LIST^DICL(.DIFILE,"","",DIFLAGS_"f",DINUMBER,DIFROM,DIPART,"B",DICALSCR,"",DILIST)
+ K ^TMP("DILVL",$J,DILVL)
+ I $D(DIERR) D CALLOUT^DIEFU($G(DIMSGA)):$G(DIMSGA)'="" Q
  Q
- ;
-BACKTRAK(DIFLAGS,DIFILE,DISTACK,DIEN,DIFIEN,DINDEX0,DINDEX,DIDENT,DISCREEN,DILIST) ;
- ;
- ; Back up on pointer stack until we get back to home file.
- ;
-B1 ; back up one level on stack, recover file #, root, and index file,
- ; and set value to match equal to the previous level's ien value
- ;
- N F,DIVPTR S F=DIFILE("STACK",+DISTACK,+$P(DISTACK,U,2),+$P(DISTACK,U,3))
- S DIVPTR=$P(F,U,2),F=+F
- N DIVALUE D
- . I 'DIVPTR S DIVALUE=DIEN Q
- . S DIVALUE=DIEN_";"_$P(DIFILE(+$P(DISTACK,U,3),"O"),U,2)
- . Q
- S DISTACK=(+DISTACK)_U_($P(DISTACK,U,2)-1)_U_F
- I $P(DISTACK,U,2)=1 D  Q
- . N DIROOT1 S DIROOT1=$S($D(DIFILE(F,"NO B")):DIFILE(F,"NO B"),1:DIFILE(F,"O")_"DINDEX0")_")"
- . I $O(@DIROOT1@(DIVALUE,""))="" S DIEN="" Q
- . S DINDEX0(1)=DIVALUE,DIEN=""
- . S DIFILE=+F
- . S F=$TR(DIFLAGS,"vp")
- . D WALK^DICLIX(F,.DINDEX0,.DIDENT,.DIFILE,.DIEN,.DIFIEN,.DISCREEN,.DILIST,.DINDEX,"",.DIC)
- . S DIFILE=+$P(DIFILE("STACK"),U,3)
- . Q
- ;
-B2 ; loop through matches on pointer index,
- ; quit when no matches, if not back to root of pointer chain yet,
- ; make another recursive call to BACKTRAK to unwind to pointing
- ; file's matches
- ;
- S DIEN="" F  D  Q:DIEN=""!($G(DIERR))
- . N DIROOT1 S DIROOT1=$S($D(DIFILE(F,"NO B")):DIFILE(F,"NO B"),1:DIFILE(F,"O")_"""B""")_")"
- . S DIEN=$O(@DIROOT1@(DIVALUE,DIEN))
+ 
+FOLLOW(DIFILE,DIROOT,DIPOINT,DIDEF) 
+ ; follow pointer to end, building stack along the way
+ N DILVL S DILVL=0
+ I $G(DIFILE("NO B")) S DIFILE("STACK",1,"NO B")=1
+ F  D  Q:DIPOINT=""
+ . S DILVL=DILVL+1
+ . S DIFILE("STACK",DILVL)=DIFILE_DIROOT_U_DIFILE("INDEX")
+ . I DILVL>1,'$D(^DD(DIFILE,0,"IX","B")),'$D(@DIROOT@("B")) D
+ . . S DIFILE("STACK",DILVL,"NO B")=1
+ . . D TMPIX^DICU2(DIROOT)
+ . I 'DIPOINT S DIPOINT="" Q
+ . S (DIFILE,DIFILE("INDEX"))=DIPOINT
+ . S DIROOT=$$CREF^DIQGU(U_$P(DIDEF,U,3))
+ . S DIDEF=$G(^DD(DIFILE,.01,0))
+ . S DIPOINT=+$P($P(DIDEF,U,2),"P",2)
+ S DIFILE("STACK")=DILVL
+ Q
+ 
+BACKTRAK(DIFILE,DIEN,DILVL) 
+ ; follow pointer chain to root, considering all pointing records
+ ; formal parameter list includes only those needed for recursion
+ ; for rest of list, see $$SCREEN and ACCEPT calls within loop
+ S DILVL=DILVL-1
+ S DIFILE=$P(DIFILE("STACK",DILVL),U)
+ N DIROOT1 S DIROOT1=U_$P(DIFILE("STACK",DILVL),U,2)
+ S DIFILE("INDEX")=$P(DIFILE("STACK",DILVL),U,3)
+ N DIVALUE S DIVALUE=DIEN
+B1 S DIEN="" F  D  Q:DIEN=""!(DIFLAGS["q")
+ . N DINDEX1 S DINDEX1=$S(DILVL>1:"B",1:DINDEX("MAIN"))
+ . S DIEN=$O(@DIROOT1@(DINDEX1,DIVALUE,DIEN),DINDEX("WAY"))
  . Q:DIEN=""
- . D BACKTRAK(.DIFLAGS,.DIFILE,DISTACK,DIEN,DIFIEN,.DINDEX0,.DINDEX,.DIDENT,.DISCREEN,.DILIST)
- . Q
+ . I DILVL>1 D
+ . . D BACKTRAK(.DIFILE,DIEN,DILVL) Q:DIFLAGS["q"
+ . E  D
+ . . I DITOIN'="",DITO=DIENTRY,DIEN=DITOIN D  Q
+ . . . S DIFLAGS=DIFLAGS_"q",DIEN="",DIENTRY="",DIOUT1=1,DIOUT2=1 Q
+ . . I DIFROM("LOOKING FOR START") N DISKIP S DISKIP=0 D  Q:DISKIP
+ . . . I DIFROM=DIENTRY,DIFROM("IEN")'=DIEN S DISKIP=1 Q
+ . . . S DIFROM("LOOKING FOR START")=0 Q:DIFROM'=DIENTRY  S DISKIP=1
+B2 . . N DIROOT2
+ . . S DIROOT2=DIROOT("MAIN")
+ . . S DIROOT2("O")=DIROOT("MAIN O")
+ . . N DINDEX2 D
+ . . . M DINDEX2=DINDEX("MAIN")
+ . . . M DINDEX2("END")=DINDEX
+ . . . K DINDEX2("END","MAIN"),DINDEX2("MAIN")
+ . . Q:$$SCREEN^DICL2(DIFILE,.DIEN,DIFLAGS,.DIROOT2,DIFIEN,DISCREEN,DICALSCR,DIFILSCR,DINDEX2)
+ . . I 'DICOUNT("JUST LOOKING") S DICOUNT("LAST IEN")=DIEN
+ . . D ACCEPT^DICL2(.DIFILE,.DIEN,DIFLAGS,.DIROOT2,DIFIEN,DIVALUE,.DICOUNT,.DINDEX2,.DIDENT,.DILIST)
+ . . I DIOUT2 S DIFLAGS=DIFLAGS_"q"
+B3 S DIFILE=+DIFILE("STACK",DIFILE("STACK"))
+ S DIFILE("INDEX")=$P(DIFILE("STACK",DIFILE("STACK")),U,3)
  Q
- ;
-SETB ; Set temporary "B" index on pointed-to files.
- Q:'$O(DIFILE("STACK",0))
- N I,J,DIFL,DITEMP
- F I=0:0 S I=$O(DIFILE("STACK",I)) Q:'I  F J=0:0 S J=$O(DIFILE("STACK",I,J)) Q:'J  F DIFL=0:0 S DIFL=$O(DIFILE("STACK",I,J,DIFL)) Q:'DIFL  I $D(DIFILE(DIFL,"NO B")) D
- . D TMPB^DICUIX1(.DITEMP,DIFL)
- . S DIFILE(DIFL,"NO B")=DITEMP
- . D BLDB^DICUIX1(DIFILE(DIFL),DITEMP)
- . Q
- Q
- ;
+ 

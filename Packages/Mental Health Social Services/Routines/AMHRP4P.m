@@ -1,5 +1,5 @@
-AMHRP4P ; IHS/CMI/LAB - print active client list (using case open/close) 03 Jun 2009 12:10 PM ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHRP4P ; IHS/CMI/LAB - print active client list (using case open/close) ;
+ ;;3.0;IHS BEHAVIORAL HEALTH;**7**;JAN 27, 2003
  ;
  ;
 PRINT ;
@@ -73,7 +73,7 @@ HEAD1 ;
  W !?13,"********** CONFIDENTIAL PATIENT INFORMATION **********"
  W !,$P(^VA(200,DUZ,0),U,2),?72,"Page ",AMHPG,!
  W ?(80-$L($P(^DIC(4,DUZ(2),0),U))/2),$P(^DIC(4,DUZ(2),0),U),!
- ;W ?15,"Encounter Dates: ",AMHBDD," to ",AMHEDD,!
+ W ?15,"Encounter Dates: ",AMHBDD," to ",AMHEDD,!
  I AMHPROG]"" S X="Program: "_$$EXTSET^XBFUNC(9002011.58,.03,AMHPROG) W $$CTR(X,80),!
  W ?10,"ACTIVE CLIENT LIST (CASE OPEN DATE WITH NO CASE CLOSED DATE)"
 PIH W !,"PATIENT NAME",?18,"CHART",?25,"SEX",?31,"DOB",?38,"CASE OPEN",?48,"CASE ADMIT",?60,"PROVIDER",?72,"PROBLEM"

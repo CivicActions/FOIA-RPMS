@@ -1,5 +1,5 @@
-APCDEREG ; IHS/CMI/LAB - HS IN DATA ENTRY ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDEREG ; IHS/CMI/TUCSON - HS IN DATA ENTRY ; [ 01/10/05  1:20 PM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**8**;MAR 09, 1999
  ;
  N DIC,DA,D0,X,Y,DP,DI,DL
  I $G(AUPNPAT)="" W !!,$C(7),$C(7),"Sorry I don't know the patient.",! Q

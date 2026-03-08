@@ -1,5 +1,5 @@
 ICPTMIDX ;DLS/DEK - MUMPS Cross Reference Routine for History ; 04/28/2003
- ;;6.0;CPT/HCPCS;**14**;May 19, 1997;Build 44
+ ;;6.0;CPT/HCPCS;**14**;May 19, 1997;Build 9
  ;
  ; ICPTMOD          CPT/HCPC Code Modifier from Global
  ; ICPTMODX         CPT/HCPC Code Modifier passed in (X)

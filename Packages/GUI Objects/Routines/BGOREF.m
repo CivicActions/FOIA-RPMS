@@ -1,5 +1,5 @@
-BGOREF ; IHS/BAO/TMD - Manage REFUSALS ;18-Apr-2014 12:29;DU
- ;;1.1;BGO COMPONENTS;**1,3,5,11,13**;Mar 20, 2007;Build 16
+BGOREF ; IHS/BAO/TMD - Manage REFUSALS ;18-Nov-2021 10:15;DU
+ ;;1.1;BGO COMPONENTS;**1,3,5,11,13,30**;Mar 20, 2007;Build 16
  ; Add/edit a refusal
  ;  INP = Refusal IEN [1] ^ Refusal Type [2] ^ Item IEN [3] ^ Patient IEN [4] ^
  ;        Refusal Date [5] ^ Comment [6] ^ Provider IEN [7] ^ Reason [8]

@@ -1,5 +1,5 @@
-APCLCAWP ; IHS/CMI/LAB -print tally of walkin and appt clinic visits ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCAWP ; IHS/OHPRD/TMJ -print tally of walkin and appt clinic visits ;  [ 12/16/2003  1:44 PM ]
+ ;;3.0;IHS PCC REPORTS;**6,16**;FEB 05, 1997
 START ;
  S APCL80S="-------------------------------------------------------------------------------"
  D NOW^%DTC S Y=X D DD^%DT S APCLDT=Y

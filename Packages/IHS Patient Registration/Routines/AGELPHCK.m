@@ -1,5 +1,8 @@
-AGELPHCK ; IHS/ASDS/EFG - Check if Registered Policy Holder ;   
- ;;7.1;PATIENT REGISTRATION;;AUG 25,2005
+AGELPHCK ; IHS/ASDS/EFG - Check if Registered Policy Holder ;   [ 05/07/2003  3:10 PM ]
+ ;;7.0;IHS PATIENT REGISTRATION;**1**;MAR 28, 2003
+ ;
+ ; IHS/SD/EFG - AG*7*1 - 02/27/2003
+ ;     ADD POLICY HOLDER ADDRESS AND PHONE NUMBER FIELDS FOR EDITING
  ;
  I $D(AGELP("PHPAT")),AGELP("PHPAT")]"",$D(^DPT(AGELP("PHPAT"),0)) G REG
  W !!,"Presently the POLICY HOLDER is NOT known as a REGISTERED PATIENT."
@@ -11,6 +14,7 @@ AGELPHCK ; IHS/ASDS/EFG - Check if Registered Policy Holder ;
  K DIR
  G XIT:$D(DTOUT)!(Y="^")
  G NAME:Y=0,PLK
+ ;
 REG I AGELP("MODE")="A" G NAME
  W !!?5,"The Policy Holder is presently linked to "
  W $P(^DPT(AGELP("PHPAT"),0),U),$S($D(^AUPNPAT(AGELP("PHPAT"),41,DUZ(2),0)):" ["_$P(^(0),U,2)_"]",1:"")
@@ -30,6 +34,7 @@ REG I AGELP("MODE")="A" G NAME
  .K AGELP("PHPAT")
  .G AGELPHCK
  G NAME
+ ;
 PLK K DIC
  S DIC(0)="QZEAM",DIC="^AUPNPAT("
  D ^DIC
@@ -50,7 +55,8 @@ NAME W !
  S DIE="^AUPN3PPH(",DA=AGELP("PH")
  S DR=".01Name as Stated on Policy..: "
  D ^DIE
- S DR=".09;.11;.12;.13;.14"
- D ^DIE
+ S DR=".09;.11;.12;.13;.14"  ; IHS/SD/EFG  AG*7*1  02/27/2003
+ D ^DIE  ; IHS/SD/EFG  AG*7*1  02/27/2003
+ ;
 XIT K DIR,DUOUT,DTOUT,DIROUT,DIRUT
  Q

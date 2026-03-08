@@ -1,5 +1,5 @@
 XMRPCTSA ;(KC-VAMC)/XXX-Steal TWIX's from PCTS Host [RCVR] ;04/08/98  10:39
- ;;8.0;MailMan;;Jun 28, 2002
+ ;;7.1;MailMan;**6,31,61,50**;Jun 02, 1994
  ; Create a Mailgroup called PCTS, all messages will be sent to its
  ; membership.  This can be called from a mailman script, it should
  ; look something like this:

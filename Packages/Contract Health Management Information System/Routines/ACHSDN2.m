@@ -1,5 +1,5 @@
 ACHSDN2 ; IHS/ITSC/PMF - DENIAL SET UP & DISPLAY ;
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**3,4,10,12,18,19,21,24**;JUN 11,2001;Build 43
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**3,4,10,12,18,19,21,24,32**;JUN 11,2001;Build 39
  ;ACHS*3.1*3  improve denial/patient lookup
  ;            also, handle 'alt resource availabe' as special
  ;ACHS*3.1*4  close device before passing DUMP to taskman
@@ -12,6 +12,7 @@ Q1 ;
  Q
  ;
 PRIORCK ;EP - Enter Priority Category.
+ ;ACHS*3.1*32 NO LONGER USED WITH NEW MEDICAL PRIORITIES
  I $L($$DN^ACHS(400,2)) S Y=1 Q
  S Y=0
  W !!,*7,"A PRIORITY CATEGORY is required - try again."

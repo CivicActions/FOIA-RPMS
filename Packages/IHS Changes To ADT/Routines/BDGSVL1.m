@@ -1,5 +1,5 @@
 BDGSVL1 ; IHS/ANMC/LJF - SCHED VISIT LISTING ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
 EN ; -- main entry point for BDG SCHED VISITS
  I $E(IOST,1,2)'="C-" D INIT,PRINT Q
@@ -65,7 +65,14 @@ INIT ; -- init variables and list array
  ;
 DETAIL(IEN) ;build detailed display
  NEW LINE,X
- S LINE=$E($$GET1^DIQ(9009016.7,IEN,.01),1,18)                  ;patient
+ ;202307 77894 maw p1022 PPN
+ N PRF,PRFI
+ S PRFI=$$GET1^DIQ(9009016.7,IEN,.01,"I")
+ S PRF=$$GETPREF^AUPNSOGI(PRFI,"E",1)
+ S LINE=$G(PRF)                  ;patient
+ D SET(LINE,.VALMCNT)
+ S LINE=""
+ ;S LINE=$E($$GET1^DIQ(9009016.7,IEN,.01),1,18)                  ;patient
  S LINE=$$PAD(LINE,20)_$J($$GET1^DIQ(9009016.7,IEN,.011),6)     ;chart #
  S LINE=$$PAD(LINE,28)_$$GET1^DIQ(9009016.7,IEN,.012)           ;age
  S LINE=$$PAD(LINE,33)_$$GET1^DIQ(2,+$G(^BDGSV(IEN,0)),.02,"I")  ;sex
@@ -109,7 +116,14 @@ DETAIL(IEN) ;build detailed display
  ;
 BRIEF(IEN)  ;build brief display
  NEW LINE,X,Y,Z
- S LINE=$E($$GET1^DIQ(9009016.7,IEN,.01),1,18)              ;patient
+ ;202307 77894 maw p1022 PPN
+ N PRF,PRFI
+ S PRFI=$$GET1^DIQ(9009016.7,IEN,.01,"I")
+ S PRF=$$GETPREF^AUPNSOGI(PRFI,"E",1)
+ S LINE=$G(PRF)                  ;patient
+ D SET(LINE,.VALMCNT)
+ S LINE=""
+ ;S LINE=$E($$GET1^DIQ(9009016.7,IEN,.01),1,18)              ;patient
  S LINE=$$PAD(LINE,20)_$J($$GET1^DIQ(9009016.7,IEN,.011),6)  ;chart #
  S LINE=$$PAD(LINE,28)_$$GET1^DIQ(9009016.7,IEN,.02)        ;date
  S LINE=$$PAD(LINE,41)_$$VSTTYPE(IEN)                       ;vst type

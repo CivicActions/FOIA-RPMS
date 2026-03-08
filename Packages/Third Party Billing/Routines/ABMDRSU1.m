@@ -1,6 +1,7 @@
 ABMDRSU1 ; IHS/ASDST/DMJ - Summarized Claim Display ; 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**38**;NOV 12, 2009;Build 756
  ;Original;TMD;
+ ;IHS/SD/SDR 2.6*38 ADO99134 Removed SSN from display/report
 VAR S U="^" K ABM
 START ;
  S ABM("80E")="==============================================================================="
@@ -33,12 +34,14 @@ VST S ABM("VTYPE")=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,7)
  Q
  ;
 HD ;EP to print mid header
- S ABM("HRN")="no HRN here",ABM("SSN")="    none"
+ ;S ABM("HRN")="no HRN here",ABM("SSN")="    none"  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ S ABM("HRN")="no HRN here"  ;abm*2.6*38 IHS/SD/SDR ADO99134
  S (ABM("DOB"),Y)=$P(^DPT(ABM("PDFN"),0),U,3) I ABM("DOB")]"" X ^DD("DD") S ABM("DOB")=Y
  I $D(^AUPNPAT(ABM("PDFN"),41,ABM("LOC"),0)) S ABM("HRN")=$P(^AUPNPAT(ABM("PDFN"),41,ABM("LOC"),0),U,2)
- S ABM("SSN")=$P(^DPT(ABM("PDFN"),0),U,9) I ABM("SSN")]"" S ABM("SSN")=$E(ABM("SSN"),1,3)_"-"_$E(ABM("SSN"),4,5)_"-"_$E(ABM("SSN"),6,9)
+ ;S ABM("SSN")=$P(^DPT(ABM("PDFN"),0),U,9) I ABM("SSN")]"" S ABM("SSN")=$E(ABM("SSN"),1,3)_"-"_$E(ABM("SSN"),4,5)_"-"_$E(ABM("SSN"),6,9)  ;abm*2.6*38 IHS/SD/SDR ADO99134
  W !,ABM("PN")
- I '$D(ABM("CONT")) W "  (",ABM("HRN"),")",?38,ABMP("CDFN"),?50,ABM("DOB"),?66,ABM("SSN")
+ ;I '$D(ABM("CONT")) W "  (",ABM("HRN"),")",?38,ABMP("CDFN"),?50,ABM("DOB"),?66,ABM("SSN")  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ I '$D(ABM("CONT")) W "  (",ABM("HRN"),")",?38,ABMP("CDFN"),?50,ABM("DOB")  ;abm*2.6*38 IHS/SD/SDR ADO99134
  E  W "   (continued from previous page)"
  K ABM("CONT")
  Q
@@ -52,6 +55,7 @@ HEAD1 ;
  W ?(80-$L($P(^DIC(4,DUZ(2),0),U))/2),$P(^DIC(4,DUZ(2),0),U),?(64-$L(ABMP("PG"))),"Page: ",ABMP("PG"),"  "
  I $D(ABMP("HEAD2")) S ABM("LENG")=$L(ABMP("HEAD2")) W !?6,?((80-ABM("LENG"))/2),ABMP("HEAD2"),?70,"  "
  I $D(ABMP("HEAD3")) S ABM("LENG")=$L(ABMP("HEAD3")) W !?6,?((80-ABM("LENG"))/2),ABMP("HEAD3"),?70,"  ",!
- W !,"Patient Name  (HRN)",?37,"CLM #",?48,"Date of Birth",?70,"SSN"
+ ;W !,"Patient Name  (HRN)",?37,"CLM #",?48,"Date of Birth",?70,"SSN"  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ W !,"Patient Name  (HRN)",?37,"CLM #",?48,"Date of Birth"  ;abm*2.6*38 IHS/SD/SDR ADO99134
  W !,ABM("80E")
  Q

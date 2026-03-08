@@ -253,11 +253,11 @@ GREET ;;EP - TO ADD TO MAIL MESSAGE
  ;;  
  ;;Sections of the IHS Standard Code Book (SCB) can be viewed, printed,
  ;;and extracted from the NPIRS Intranet website at url:
- ;;  http://dpsntweb1.hqw.DOMAIN.NAME/ciweb/main.html
+ ;;  http://dpsntweb1.hqw.ihs.gov/ciweb/main.html
  ;;  
  ;;Questions about this patch, which is a product of the RPMS DBA
- ;;can be directed to the Help Desk
- ;;.  Please
+ ;;can be directed to the ITSC Help Desk, 505-248-4371
+ ;;or 888-830-7280, or via e-mail to "hqwhd@mail.ihs.gov".  Please
  ;;refer to patch "AUM*4.1*3".
  ;;  
  ;;###;NOTE: This line indicates the end of text in this message.

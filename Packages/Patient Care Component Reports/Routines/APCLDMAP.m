@@ -1,5 +1,5 @@
-APCLDMAP ; IHS/CMI/LAB - print hs for dm patients with appts ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLDMAP ;IHS/CMI/LAB - print hs for dm patients with appts [ 03/11/02  12:23 PM ]
+ ;;3.0;IHS PCC REPORTS;**11,16,17,19**;FEB 05, 1997
  ;
  ;
  ;this routine will go through the Diabetes Register
@@ -47,9 +47,6 @@ CLIN1 ;
  S APCLCLN(+Y)=""
  G CLIN1
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G CLIN
  S XBRP="PRINT^APCLDMAP",XBRC="PROC^APCLDMAP",XBRX="EOJ^APCLDMAP",XBNS="APCL"
  D ^XBDBQUE
  Q
@@ -115,7 +112,6 @@ PROC ;
  S APCLDMX=0 F  S APCLDMX=$O(^ACM(41,"B",APCLREG,APCLDMX)) Q:APCLDMX'=+APCLDMX  D
  .;check to see if patient has an appt
  .S DFN=$P(^ACM(41,APCLDMX,0),U,2)
- .Q:$$DEMO^APCLUTL(DFN,$G(APCLDEMO))
  .S APCLDMY=APCLSD F  S APCLDMY=$O(^DPT(DFN,"S",APCLDMY)) Q:APCLDMY=""!($P(APCLDMY,".")>APCLED)  D
  ..I $P(^DPT(DFN,"S",APCLDMY,0),U,2)["C" Q  ;cancelled
  ..I $D(APCLCLN) S X=$P(^DPT(DFN,"S",APCLDMY,0),U) I '$D(APCLCLN(X)) Q  ;not a clinic of interest

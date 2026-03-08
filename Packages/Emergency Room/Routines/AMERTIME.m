@@ -1,5 +1,5 @@
 AMERTIME ; IHS/OIT/SCR - CHECKS TIMES FOR PROPER RELATIONSHIP 
- ;;3.0;ER VISIT SYSTEM;**2**;FEB 23, 2009
+ ;;3.0;ER VISIT SYSTEM;**2,13**;MAR 03, 2009;Build 36
  ;
 CHKTIME(AMERARV,AMERAIEN) ; EP from AMEREDIT
  ; AMERARV- ARIVAL TIME IN FILEMAN FORMAT
@@ -16,7 +16,9 @@ CHKTIME(AMERARV,AMERAIEN) ; EP from AMEREDIT
  S AMERQUIT=0
  S (AMEROLD,AMERTRIT)=$P(^AMERVSIT(AMERDA,12),U,2)
  ; I ARRIVE TIME compared to TRIAGE TIME is after go onto loop, else it's ok
- I $$TCOMP(AMERARV,AMERTRIT,1)=1 D
+ ;GDIT/HS/BEE;Feature#73115/75284;AMER*3.0*13;Multiple nurse/provider handling - triage now done elsewhere
+ ;I $$TCOMP(AMERARV,AMERTRIT,1)=1 D
+ I 0 I $$TCOMP(AMERARV,AMERTRIT,1)=1 D
  .S Y=AMERTRIT X ^DD("DD")
  .S AMERTRIT=Y  ; TRIAGE NURSE TIME IN EXTERNAL FORMAT FOR DIC("B")
  .S DR="12.2////@"
@@ -274,9 +276,10 @@ COMPUTE(AMERDA) ; EP from AMEREDIT
  I X'="" S %=$$DT^AMERSAV1(X,Z,"M"),DR=$S(DR'="":DR_";",1:""),DR=DR_"12.3////"_%
  E  S DR=$S(DR'="":DR_";",1:""),DR=DR_"12.3////@"
  ; C3 ; TRIAGE WAIT
- S X=$P($G(^AMERVSIT(AMERDA,12)),U,2)
- I X'="" S %=$$DT^AMERSAV1(X,Z,"M"),DR=$S(DR'="":DR_";",1:""),DR=DR_"12.4////"_%
- E  S DR=$S(DR'="":DR_";",1:""),DR=DR_"12.4////@"
+ ;GDIT/HS/BEE;Feature#73115/75284;AMER*3.0*13;Multiple nurse/provider handling - triage WTG done elsewhere
+ ;S X=$P($G(^AMERVSIT(AMERDA,12)),U,2)
+ ;I X'="" S %=$$DT^AMERSAV1(X,Z,"M"),DR=$S(DR'="":DR_";",1:""),DR=DR_"12.4////"_%
+ ;E  S DR=$S(DR'="":DR_";",1:""),DR=DR_"12.4////@"
  ; C4 ; VISIT DURATION
  S X=$P($G(^AMERVSIT(AMERDA,6)),U,2)
  I X'="" S %=$$DT^AMERSAV1(X,Z,"M"),DR=$S(DR'="":DR_";",1:""),DR=DR_"12.5////"_%

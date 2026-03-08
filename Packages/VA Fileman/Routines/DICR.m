@@ -1,39 +1,9 @@
-DICR ;SFISC/GFT-RECURSIVE CALL FOR X-REFS ON TRIGGERED FLDS ;6DEC2004
- ;;22.0;VA FileMan;**11,88,157**;Mar 30, 1999;Build 9
- ;Per VHA Directive 2004-038, this routine should not be modified.
- ;
- ;From a TRIGGER on field DIH,DIG
- ;DIU is old value, DIV new
-AUDIT I $P(^DD(DIH,DIG,0),U,2)["a" D  ;NOIS ISB-1102-31285
- .N DIANUM,DIIX,C,DP
- .I DIU]"" S X=DIU,DIIX=2_U_DIG,DP=DIH D AUDIT^DIET
- .I DIV]"",^DD(DIH,DIG,"AUDIT")'="e"!(DIU]"") S X=DIV,DIIX=3_U_DIG,DP=DIH D AUDIT^DIET ;Don't audit NEW if there's no OLD and mode is EDIT ONLY
- Q:'$O(^DD(DIH,DIG,1,0))&'$D(^DD("IX","F",DIH,DIG))
- N DICRIENS,DICRBADK
- I $D(^DD("KEY","F",DIH,DIG)) D  Q:$G(DICRBADK)
- . N DICRFDA,DICRMSG,DIERR
- . D SAVE
- . S DICRIENS=$$IENS(DIH,.DA)
- . S DICRFDA(DIH,DICRIENS,DIG)=DIV
- . I '$$KEYVAL^DIE("","DICRFDA","DICRMSG") D
- .. S DICRBADK=1
- .. S X=DIU X $$HSET(DIH,DIG)
- . D RESTORE
- ;
+DICR ;SFISC/GFT-RECURSIVE CALL FOR X-REFS ON TRIGGERED FLDS ;4/17/89  11:05 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  I DIU]"" F DIW=0:0 S DIW=$O(^DD(DIH,DIG,1,DIW)),X=DIU Q:'DIW  I $P(^(DIW,0),U,3)=""!'$D(DB(0,DIH,DIG,DIW,2)) S DB(0,DIH,DIG,DIW,2)=1 D SAVE X ^(2) D RESTORE
  I DIV]"" F DIW=0:0 S DIW=$O(^DD(DIH,DIG,1,DIW)),X=DIV Q:'DIW  I $P(^(DIW,0),U,3)=""!'$D(DB(0,DIH,DIG,DIW,1)) S DB(0,DIH,DIG,DIW,1)=1 D SAVE X ^(1) D RESTORE
- ;
- I $D(^DD("IX","F",DIH,DIG)) D
- . N DICRCTRL,DICRVAL,I
- . D SAVE
- . S:$D(DICRIENS)[0 DICRIENS=$$IENS(DIH,.DA)
- . S DICRVAL(DIH,DICRIENS,DIG,"O")=DIU
- . S DICRVAL(DIH,DICRIENS,DIG,"N")=DIV
- . S:$G(DICRREC)]"" DICRCTRL="r"
- . S DICRCTRL("VAL")="DICRVAL("
- . D INDEX^DIKC(DIH,.DA,DIG,"",.DICRCTRL)
- . D:$G(DICRREC)]"" @DICRREC
- . D RESTORE
 Q Q
  ;
 SAVE F DB=1:1 Q:'$D(DB(DB))
@@ -71,79 +41,4 @@ CONV ;
  K %,%1,Y
  Q
 SD ;
- S DIV(0)=DA D U:DA>0 K DA,DIH,DIG,DIV Q
- ;
-TRIG(DICRLIST,DICROUT) ;Modify the trigger logic of fields that trigger fields
- ;in DICRLIST so that they call ^DICR unconditionally.
- ;In:
- ; DICRLIST(file#,field#) = array of potentionally triggered fields
- ;Out:
- ; DICROUT(file,field)="" (of triggering field modified)
- ;
- N DICRFIL,DICRFLD
- S DICRFIL=""
- F  S DICRFIL=$O(DICRLIST(DICRFIL)) Q:'DICRFIL  D
- . S DICRFLD=""
- . F  S DICRFLD=$O(DICRLIST(DICRFIL,DICRFLD)) Q:'DICRFLD  D TRMOD(DICRFIL,DICRFLD,.DICROUT)
- Q
- ;
-TRMOD(DICRFIL,DICRFLD,DICROUT) ;Modify the trigger logic of fields that
- ;trigger a field so that they call ^DICR unconditionally.
- ;In:
- ; DICRFIL = file# of triggered field
- ; DICRFLD = triggered field#
- ;Out:
- ; DICROUT(file,field)="" (of triggering field modified)
- ;
- ;Loop through 5 node to get triggering fields/xrefs
- N DICRN,DICRFL,DICRFD,DICRXR
- S DICRN=0
- F  S DICRN=$O(^DD(DICRFIL,DICRFLD,5,DICRN)) Q:'DICRN  D
- . S DICRXR=$G(^DD(DICRFIL,DICRFLD,5,DICRN,0))
- . S DICRFL=+$P(DICRXR,U),DICRFD=+$P(DICRXR,U,2),DICRXR=+$P(DICRXR,U,3)
- . Q:'DICRFL!'DICRFD!'DICRXR
- . D MOD(DICRFL,DICRFD,DICRXR,.DICROUT)
- Q
- ;
-MOD(DICRFL,DICRFD,DICRXR,DICROUT) ;Modify trigger logic
- ;In:
- ; DICRFL = file# of triggering field
- ; DICRFD = field# of triggering field
- ; DICRXR = xref# of trigger
- ;Out:
- ; DICROUT(file,field)="" (if trigger was modified)
- ;
- Q:'$D(^DD(DICRFL,DICRFD,1,DICRXR))
- N DICRMOD,DICRND,DICRSTR,DICRVAL
- ;
- ;Loop through xref nodes
- S DICRND=0
- F  S DICRND=$O(^DD(DICRFL,DICRFD,1,DICRXR,DICRND)) Q:'DICRND  D
- . S DICRVAL=$G(^DD(DICRFL,DICRFD,1,DICRXR,DICRND)),DICRMOD=0
- . F DICRSTR="D ^DICR:$O(^DD(DIH,DIG,1,0))>0","D ^DICR:$N(^DD(DIH,DIG,1,0))>0" D
- .. F  Q:DICRVAL'[DICRSTR  D
- ... S DICRVAL=$P(DICRVAL,DICRSTR)_"D ^DICR"_$P(DICRVAL,DICRSTR,2,999)
- ... S DICRMOD=1
- . Q:'DICRMOD
- . S ^DD(DICRFL,DICRFD,1,DICRXR,DICRND)=DICRVAL
- . S DICROUT(DICRFL,DICRFD)=""
- Q
- ;
-IENS(FIL,DA) ;Build IENS
- N I,IENS
- S IENS=DA_","
- F I=1:1:$$FLEV^DIKCU(FIL) S IENS=IENS_DA(I)_","
- Q IENS
- ;
-HSET(FIL,FLD) ;Hard set a value in the file
- Q:$P($G(^DD(FIL,FLD,0)),U)="" ""
- ;
- N HSET,ND,PC,OROOT
- S PC=$P($G(^DD(FIL,FLD,0)),U,4)
- S ND=$P(PC,";"),PC=$P(PC,";",2) Q:ND?." "!("0 "[PC) ""
- S:ND'=+$P(ND,"E") ND=""""_ND_""""
- ;
- S OROOT=$$FROOTDA^DIKCU(FIL,"O")_"DA," Q:OROOT="DA,"
- I PC S HSET="S $P("_OROOT_ND_"),U,"_PC_")=X"
- E  S HSET="S $E("_OROOT_ND_"),"_+$E(PC,2,999)_","_$P(PC,",",2)_")=X"
- Q HSET
+ S DIV(0)=DA D U K DA,DIH,DIG,DIV Q

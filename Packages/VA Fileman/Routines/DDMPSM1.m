@@ -1,5 +1,6 @@
-DDMPSM1 ;SFISC/DPC-IMPORT SCREENMAN CALLS (CONT) ;9/20/96  11:28
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDMPSM1 ;SFISC/DPC-IMPORT SCREENMAN CALLS (CONT) ;9/20/96  11:28 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**30**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 HOSTHELP ;Called from HELP on the Host File prompt.
  N DDMPPATH

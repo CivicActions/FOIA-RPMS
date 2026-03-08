@@ -1,5 +1,5 @@
 LA7ADL1 ;DALOI/JMC - Automatic Download of Test Orders (Cont'd) ; 1/30/95 09:00 [ 04/21/2003  8:15 AM ]
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;AUTOMATED LAB INSTRUMENTS;**17,23,57**;Sep 27, 1994
  ;
 BUILD ; Build test listing for all instruments designated for auto download.

@@ -1,12 +1,13 @@
 ABMDTFEE ; IHS/SD/SDR - Table Maintenance of 3P CODES ;
- ;;2.6;IHS Third Party Billing;**1,2,21,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS Third Party Billing;**1,2,21,27,29**;NOV 12, 2009;Build 562
  ;
  ;IHS/SD/SDR 2.6 CSV
- ;IHS/SD/SDR 2.6*1 NO HEAT - Populate owner of table
- ;IHS/SD/SDR 2.6*2 3PMS10003A - populate new effective dates multiple
+ ;IHS/SD/SDR 2.6*1 NO HEAT Populate owner of table
+ ;IHS/SD/SDR 2.6*2 3PMS10003A populate new effective dates multiple
  ;IHS/SD/SDR 2.6*21 HEAT135354 Fix so when CPT selected the effective fee, if there is one, will display; was just printing a dash, no description, and 0.00 for the fee no matter what was entered.
  ;IHS/SD/SDR 2.6*27 CR8894 Fixed so short descriptions and fees will print if ?? typed at any prompt.  Fixed how entries were getting filed to use new
  ;  DINUM methodology.  It requires codes to be hardset into global and then edited.
+ ;IHS/SD/SDR 2.6*29 CR10834 Fixed so fee amount would display for 90000 codes instead of 0.00
  ;
  S U="^" W !
 FEE K DIC
@@ -93,7 +94,8 @@ EDIT ;
  ;
  I "123458"[ABM D
  .;W !,ABMCODE," - ",$E($P($$CPT^ABMCVAPI(+Y,DT),U,3),1,55),?65,$J($FN($P($$ONE^ABMFEAPI(ABM("FEE"),ABM("SUB"),+Y,DT),U),",",2),9)
- .W !,X," - ",$E($P($$CPT^ABMCVAPI(+Y,DT),U,3),1,55),?65,$J($FN($P($$ONE^ABMFEAPI(ABM("FEE"),ABM("SUB"),+Y,DT),U),",",2),9)
+ .;W !,X," - ",$E($P($$CPT^ABMCVAPI(+Y,DT),U,3),1,55),?65,$J($FN($P($$ONE^ABMFEAPI(ABM("FEE"),ABM("SUB"),+Y,DT),U),",",2),9)  ;abm*2.6*29 IHS/SD/SDR CR10834
+ .W !,X," - ",$E($P($$CPT^ABMCVAPI($P(Y,U,2),DT),U,3),1,55),?65,$J($FN($P($$ONE^ABMFEAPI(ABM("FEE"),ABM("SUB"),$P(Y,U,2),DT),U),",",2),9)  ;abm*2.6*29 IHS/SD/SDR CR10834
  ;end new abm*2.6*27 IHS/SD/SDR CR8894
  ;
  I +Y<1 G EDIT

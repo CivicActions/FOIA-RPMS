@@ -1,15 +1,14 @@
 ABMDE2P ; IHS/ASDST/DMJ - Edit Page 2 - PICK PAYER ; 
- ;;2.6;IHS 3P BILLING SYSTEM;**6,24,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,24,27,37**;NOV 12, 2009;Build 739
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 8
- ;    Added code for replacement insurer
- ;
- ;IHS/SD/SDR v2.5 p9 - IM13815 - change bill type when different insurer is picked
+ ;IHS/SD/SDR 2.5*8 task 8 Added code for replacement insurer
+ ;IHS/SD/SDR 2.5*9 IM13815 change bill type when different insurer is picked
  ;
  ;IHS/SD/SDR 2.6*6 NOHEAT allow a 10th insurer to be selected; if 10th was selected it was putting 1st
  ;IHS/SD/SDR 2.6*24 CR9823 Added code to update fees if an insurer is Picked that has a different fee table setup than the one on the claim originally
  ;IHS/SD/SDR 2.6*27 CR8894 Updated fee table change from p24 to use CPT, not CPT IEN for lookup
- ; *********************************************************************
+ ;IHS/SD/SDR 2.6*37 ADO78452 Fixed Pick option so it doesn't change bill type unless a different one is set in the EDIN option
+ ;*********************************************************************
  ;
 P1 ; Pick Insurer
  W !
@@ -28,8 +27,8 @@ P2 ;
  ;S ABM("ANS")=$E(Y)  ;abm*2.6*6 NOHEAT
  S ABM("ANS")=+$G(Y)  ;abm*2.6*6 NOHEAT
  I $P(ABMZ(ABM("ANS")),U,4)="U" D  Q
- . W !!,*7,$P(ABMZ(ABM("ANS")),U)," is Designated as UNBILLABLE!",!
- . D PAZ
+ .W !!,*7,$P(ABMZ(ABM("ANS")),U)," is Designated as UNBILLABLE!",!
+ .D PAZ
  I '$D(ABMZ("UNBILL",ABM("ANS"))) G PA
  W !!,$P(ABMZ(ABM("ANS")),U)," has Already been Billed!"
  W !
@@ -60,9 +59,19 @@ P3 ;
  S ABMVIST=$P(^ABMDCLM(DUZ(2),DA,0),U,7)
  S ABMMODE=$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMVIST,0)),U,4)
  S DR=".08////"_ABMP("INS")_$S(ABMMODE:";.14///"_ABMMODE,1:"")
- S ABMP("BTYP")=$S($P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,11)'="":$P($G(^ABMDCODE($P(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0),U,11),0)),U),1:ABMP("VTYP"))
- S DR=DR_";.12////"_ABMP("BTYP")
+ ;S ABMP("BTYP")=$S($P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,11)'="":$P($G(^ABMDCODE($P(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0),U,11),0)),U),1:ABMP("VTYP"))  ;abm*2.6*37 IHS/SD/SDR ADO78452
+ ;S DR=DR_";.12////"_ABMP("BTYP")  ;abm*2.6*37 IHS/SD/SDR ADO78452
+ ;D ^DIE  ;abm*2.6*37 IHS/SD/SDR ADO78452
+ ;start new abm*2.6*37 IHS/SD/SDR ADO78452
+ S ABMT("BTYP")=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,12)
+ D ^ABMDEVAR
+ ;the bill type should remain whatever it was prior to visit type being edited unless there is something
+ ;set up in the BILL TYPE field for the insurer/visit type
+ S DIE="^ABMDCLM(DUZ(2),"
+ S DA=ABMP("CDFN")
+ S DR=".12////"_ABMT("BTYP")
  D ^DIE
+ ;end new abm*2.6*37 IHS/SD/SDR ADO748452
  K DR
  K ^ABMDCLM(DUZ(2),DA,13,"C")
  S ABMP("C0")=^ABMDCLM(DUZ(2),ABMP("CDFN"),0)
@@ -102,7 +111,7 @@ P3 ;
  S DA=0
  F  S DA=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,DA)) Q:'DA  D
  .I "CU"'[$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,DA,0),U,3) D
- .. I DA'=$P(ABMZ(ABM("ANS")),U,3) D ^DIE
+ ..I DA'=$P(ABMZ(ABM("ANS")),U,3) D ^DIE
  S ABMPS("FEE")=ABMP("FEE")  ;abm*2.6*24 IHS/SD/SDR CR9823
  D TPICHECK^ABMDE1
  ;start new abm*2.6*24 IHS/SD/SDR CR9823

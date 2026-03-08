@@ -1,15 +1,17 @@
 ABMUCUTL ; IHS/SD/SDR - 3PB/UFMS Cashiering Utilities   
- ;;2.6;IHS Third Party Billing;**1,3,4,6,8,10,11,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing;**1,3,4,6,8,10,11,21,40**;NOV 12, 2009;Build 785
  ; New routine - v2.5 p12 SDD item 4.9.1
  ; Cashiering Utilities
  ;
- ; IHS/SD/SDR - v2.5 p13 - IM25924 - <UNDEF>EP+32^ABMUCAPI
- ; IHS/SD/SDR - abm*2.6*1 - HEAT4323 - Added Quit if tribal to ADDBENTR
- ; IHS/SD/SDR - abm*2.6*1 - FIXPMS10011 - Added DOS to GETBILL
- ; IHS/SD/SDR - abm*2.6*4 - NOHEAT - fix for duplicate bills when ITYP changes
- ; IHS/SD/SDR - abm*2.6*6 - HEAT27136 - Bug found when two parents on same database.
- ;IHS/SD/SDR - 2.6*21 - HEAT121470 - Updated to use a new x-ref for session status.  Taking
+ ;IHS/SD/SDR 2.5*13 IM25924 <UNDEF>EP+32^ABMUCAPI
+ ;IHS/SD/SDR 2.6*1 HEAT4323 Added Quit if tribal to ADDBENTR
+ ;IHS/SD/SDR 2.6*1 FIXPMS10011 Added DOS to GETBILL
+ ;IHS/SD/SDR 2.6*4 NOHEAT fix for duplicate bills when ITYP changes
+ ;IHS/SD/SDR 2.6*6 HEAT27136 Bug found when two parents on same database.
+ ;IHS/SD/SDR 2.6*21 HEAT121470 Updated to use a new x-ref for session status. Taking
  ;    too long to look through all sessions and causing <STORE>FINDACLS+22^ABMUCUTL 
+ ;IHS/SD/SDR 2.6*40 ADO75369 Added lock with timeout when creating session so only one can be created at a time;
+ ;  Pine Ridge was managing to get two open cashiering sessions at a time, causing duplicate bill issues
  ;
 FINDOPEN(ABMDUZ) ;EP - look for open session for one user
  ; 0 returned means no open session found
@@ -69,6 +71,7 @@ CR8SESS() ;EP - create new session in file
  S ABMUSER=+Y
  ;
  ;sign in date
+ L +^ABMUCASH(ABMLOC,10,ABMUSER):5  I '$T Q 0   ;abm*2.6*40 IHS/SD/SDR ADO75369
  K DIC,DIE,X,Y,DA
  S DA(2)=ABMLOC
  S DA(1)=ABMUSER
@@ -78,6 +81,7 @@ CR8SESS() ;EP - create new session in file
  S DIC("P")=$P(^DD(9002274.4502,".02",0),U,2)
  S DIC("DR")=".04////O"
  D ^DIC
+ L -^ABMUCASH(ABMLOC,10,ABMUSER)  ;abm*2.6*40 IHS/SD/SDR ADO75369
  I Y<0 Q 0
  Q Y
  ;

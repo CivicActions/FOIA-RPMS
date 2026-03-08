@@ -1,5 +1,5 @@
-XUMFH ;CIOFO-SF/RAM - Master File HL7 Msg Handler ;11/16/05
- ;;8.0;KERNEL;**206,209,217,218,262,335,261,390,369,416**;Jul 10, 1995;Build 5
+XUMFH ;CIOFO-SF/RAM - Master File HL7 Msg Handler ;06/28/00
+ ;;8.0;KERNEL;**206,209,217,218,262,335,261**;Jul 10, 1995
  ;
  ; This routine handles Master File HL7 messages.
  ;
@@ -7,7 +7,7 @@ MAIN ; -- entry point
  ;
  N CNT,ERR,I,X,HLFS,HLCS,ERROR,HLRESLTA,IFN,IEN,MTPE,TYPE,ARRAY
  N HDT,KEY,MID,REASON,VALUE,XREF,ALL,GROUP,PARAM,ROOT,SEG,QRD
- N QID,WHAT,WHO,HLSCS,CDSYS,ERRCNT,IDX98
+ N QID,WHAT,WHO,HLSCS,CDSYS
  ;
  D INIT,PROCESS,REPLY,EXIT
  ;
@@ -16,9 +16,9 @@ MAIN ; -- entry point
 INIT ; -- initialize
  ;
  K ^TMP("DILIST",$J),^TMP("DIERR",$J)
- K ^TMP("HLS",$J),^TMP("HLA",$J),^TMP("XUMF ERROR",$J)
+ K ^TMP("HLS",$J),^TMP("HLA",$J)
  ;
- S (ERROR,CNT,TYPE,ARRAY,ERRCNT)=0
+ S (ERROR,CNT,TYPE,ARRAY)=0
  S HLFS=HL("FS"),HLCS=$E(HL("ECH")),HLSCS=$E(HL("ECH"),4)
  ;
  Q
@@ -108,9 +108,7 @@ MFE ; -- MFE segment
  .D EM("MFE segment NULL key "_$E(HLNODE,1,80),.ERR)
  .
  S XREF=$P(KEY,HLCS,3)
- S CDSYS=$S($L(XREF)>1:XREF,1:"")
- ;
- S IEN=$S(CDSYS'="":$$IEN^XUMF(IFN,CDSYS,$P(KEY,HLCS)),1:$$FIND1^DIC(IFN,,"BX",$P(KEY,HLCS),XREF,,"ERR"))
+ S IEN=$$FIND1^DIC(IFN,,"BX",$P(KEY,HLCS),XREF,,"ERR")
  S IEN=$S(IEN:IEN,KEY["ALL":"ALL",$G(ERR)'="":"ERROR",1:"NEW")
  I IEN="ERROR" D  Q
  .D EM("MFE segment couldn't resolve IEN",.ERR)
@@ -130,12 +128,7 @@ ZZZ ; -- get [Z...] segment(s)
  ;
  I $G(ARRAY) D ARRAY Q
  ;
- N FDA,IENS,FIELD,ERR,PRE,POST,XUMF,MULT,FDA1,SEQ,SEQ1,SEQ2,SEQ3,XUMFSEQ
- ;
- D SEGPRSE^XUMFXHL7("HLNODE","XUMFSEQ")
- ;
- I IFN=4,CDSYS'="",XUMFSEQ(2)'="",'$D(^DIC(4,"D",XUMFSEQ(2),IEN)) D  Q
- .D EM("Coding system/station number mismatch - record "_KEY_" not updated",.ERR)
+ N FDA,IENS,FIELD,ERR,PRE,POST,XUMF,MULT,FDA1,SEQ,SEQ1,SEQ2,SEQ3
  ;
  S PRE=$G(^TMP("XUMF MFS",$J,"PARAM","PRE"))
  D:PRE'="" @(PRE)
@@ -146,7 +139,6 @@ ZZZ ; -- get [Z...] segment(s)
  S IENS=$S(IEN:IEN,1:"+1")_","
  S SEQ=0
  F  S SEQ=$O(^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ)) Q:'SEQ  D
- .I IFN=4,SEQ=17 D NPI^XUMF Q
  .S SEQ1=$P(SEQ,"."),SEQ2=$P(SEQ,".",2)
  .S SEQ3=$O(^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ,"HLSCS",0))
  .I SEQ3 D SUBCOMP Q
@@ -154,24 +146,19 @@ ZZZ ; -- get [Z...] segment(s)
  .I FIELD=".01" D
  ..N FDA,IEN1
  ..S TYP=$G(^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ,FIELD))
- ..;S VALUE=$$VALUE()
- ..S VALUE=$S(SEQ2:XUMFSEQ($P(SEQ,".")),1:XUMFSEQ(SEQ))
- ..S:SEQ2 VALUE=$$VAL2()
+ ..S VALUE=$$VALUE(.HLNODE,SEQ1)
+ ..S:SEQ2 VALUE=$P(VALUE,HLCS,SEQ2)
  ..S VALUE=$$DTYP^XUMFP(VALUE,TYP,HLCS,0)
  ..S FDA(IFN,IENS,FIELD)=VALUE
  ..D UPDATE^DIE("E","FDA","IEN1","ERR")
  ..I $D(ERR) D
- ...D EM("Update DIE - error message",.ERR)
+ ...D EM("update DIE call error message in ZZZ",.ERR)
  ...K ERR
- ..;NEW RECORD
- ..I $D(IEN1) D
- ...S IENS=IEN1(1)_","
- ...D CDSYS^XUMF(CDSYS,$P(KEY,HLCS),IEN1(1))
+ ..I $D(IEN1) S IENS=IEN1(1)_","
  .I 'FIELD D SUBFILE Q
  .S TYP=$G(^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ,FIELD))
- .;S VALUE=$$VALUE()
- .S VALUE=$S(SEQ2:XUMFSEQ($P(SEQ,".")),1:XUMFSEQ(SEQ))
- .S:SEQ2 VALUE=$$VAL2()
+ .S VALUE=$$VALUE(.HLNODE,SEQ)
+ .S:SEQ2 VALUE=$P(VALUE,HLCS,SEQ2)
  .S VALUE=$$DTYP^XUMFP(VALUE,TYP,HLCS,0)
  .S FDA(IFN,IENS,FIELD)=VALUE
  ;
@@ -179,7 +166,7 @@ ZZZ ; -- get [Z...] segment(s)
  ;
  D FILE^DIE("E","FDA","ERR")
  I $D(ERR) D
- .D EM("File DIE -- error message",.ERR)
+ .D EM("file DIE call error message in ZZZ",.ERR)
  .K ERR
  ;
  S POST=$G(^TMP("XUMF MFS",$J,"PARAM","POST"))
@@ -196,13 +183,12 @@ SUBFILE ; -- process subfile record
  S IFN=^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ,"FILE")
  S FIELD=^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ,"FIELD")
  S TYP=^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ,"DTYP")
- ;S VALUE=$$VALUE()
- S VALUE=$S(SEQ2:XUMFSEQ($P(SEQ,".")),1:XUMFSEQ(SEQ))
- S:SEQ2 VALUE=$$VAL2()
+ S VALUE=$$VALUE(.HLNODE,SEQ)
+ S:SEQ2 VALUE=$P(VALUE,HLCS,SEQ2)
  S VALUE=$$DTYP^XUMFP(VALUE,TYP,HLCS,0)
  ;
- S MULT=$G(^TMP("XUMF MFS",$J,"PARAM","MULT",SEG,SEQ))
- S MKEY=$G(^TMP("XUMF MFS",$J,"PARAM","MKEY",SEG,SEQ))
+ S MULT=$G(^TMP("XUMF MFS",$J,"PARAM","MULT","ZIN",SEQ))
+ S MKEY=$G(^TMP("XUMF MFS",$J,"PARAM","MKEY","ZIN",SEQ))
  I MULT=SEQ Q:VALUE=""  D
  .N FDA,IEN
  .S FDA(IFN,"?+1,"_IENS,.01)=VALUE
@@ -225,27 +211,41 @@ SUBFILE ; -- process subfile record
  ;
  Q
  ;
-VALUE() ; -- parse segment
+VALUE(HLNODE,SEQ) ; -- handle HL7 continuation nodes
  ;
- ;Q
+ N I,X,Y,N,T,Z,NODE
  ;
- ;N COL
+ S SEQ=$P($G(SEQ),".") Q:'SEQ ""
  ;
- ;D SEGPRSE^XUMFXHL7("HLNODE","COL")
+ M Z=HLNODE
+ S Z(0)=HLNODE
  ;
- ;Q:SEQ2 COL($P(SEQ,"."))
+ S I=0
+ F  S I=$O(Z(I)) Q:'I  D
+ .Q:$E(Z(I),1)=HLFS
+ .S X=$P(Z(I),HLFS)
+ .S Y=$O(Z(I),-1)
+ .S Z(Y)=Z(Y)_X
+ .S:$L(Z(I),HLFS)'="" Z(I)=HLFS_$P(Z(I),HLFS,2,999)
+ .K:$L(Z(I),HLFS)="" Z(I)
  ;
- ;Q COL(SEQ)
+ S X=0
+ F  S X=$O(Z(X)) Q:'X  D
+ .S X(X)=$L(Z(X),HLFS)-1
+ S X(0)=$L(Z,HLFS)-1
  ;
+ S (X,N,T)=""
+ F  S X=$O(X(X)) Q:X=""  D
+ .S T=T+$P(X(X),U),N(T+1)=X
  ;
-VAL2() ; -- parse component
+ S (X,Y)=""
+ F  S X=$O(X(X)) Q:X=""  D
+ .S $P(X(X),U,2)=Y
+ .S Y=+X(X)+Y
  ;
- N XXX
+ S NODE=$G(N(+$O(N(SEQ)))) Q:NODE="" ""
  ;
- D SEQPRSE^XUMFXHL7("VALUE","XXX")
- ;
- Q XXX(1,SEQ2)
- ;
+ Q $P(Z(NODE),HLFS,(SEQ-($P(X(NODE),U,2))+1))
  ;
 SUBCOMP ; -- subcomponents
  ;
@@ -253,9 +253,8 @@ SUBCOMP ; -- subcomponents
  F  S SEQ3=$O(^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ,"HLSCS",SEQ3)) Q:'SEQ3  D
  .S FIELD=$O(^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ,"HLSCS",SEQ3,0))
  .S TYP=$G(^TMP("XUMF MFS",$J,"PARAM","SEG",SEG,"SEQ",SEQ,"HLSCS",SEQ3,FIELD))
- .;S VALUE=$$VALUE()
- .S VALUE=$S(SEQ2:XUMFSEQ($P(SEQ,".")),1:XUMFSEQ(SEQ))
- .S VALUE=$$VAL2()
+ .S VALUE=$$VALUE(.HLNODE,SEQ)
+ .S VALUE=$P(VALUE,HLCS,SEQ2)
  .S VALUE=$P(VALUE,HLSCS,SEQ3)
  .S VALUE=$$DTYP^XUMFP(VALUE,TYP,HLSCS,0)
  .S FDA(IFN,IENS,FIELD)=VALUE
@@ -267,10 +266,6 @@ ARRAY ; -- query data stored in array (not filed)
  I $P($G(KEY),HLCS)="" D  Q
  .D EM("Null KEY found in the following segment: "_$E(HLNODE,1,80),.ERR)
  .S ERROR=ERROR_U_$G(ERR)
- ;
- I $G(IFN)=9.8 D  Q
- .S IDX98=$G(IDX98)+1
- .S ^TMP("XUMF ARRAY",$J,IDX98)=HLNODE
  ;
  M ^TMP("XUMF ARRAY",$J,$P(KEY,HLCS))=HLNODE
  ;
@@ -301,63 +296,33 @@ REPLY ; -- master file response
  ;
 EXIT ; -- cleanup, and quit
  ;
- I $D(^TMP("XUMF ERROR",$J)) D EM1 K ^TMP("XUMF ERROR",$J)
- ;
  K ^TMP("DILIST",$J),^TMP("DIERR",$J),^TMP("HLS",$J),^TMP("HLA",$J)
  ;
  Q
  ;
-EM(ERROR,ERR) ; -- error message
+EM(ERROR,ERR,XMSUB,XMY) ; -- error message
  ;
- D EM^XUMFHM(ERROR,.ERR)
+ N X,XMTEXT,FLG
  ;
- Q
+ S FLG=0
  ;
+ D MSG^DIALOG("AM",.X,80,,"ERR")
  ;
- ;N X,I,Y,XMTEXT,FLG
+ S X(.1)="HL7 message ID: "_$G(HL("MID"))
+ S X(.2)="",X(.3)=$G(ERROR),X(.4)=""
+ S:$G(XMSUB)="" XMSUB="MFS ERROR"
+ S XMY("G.XUMF ERROR")=""
+ S XMTEXT="X("
  ;
- ;S FLG=0
+ S X=.9 F  S X=$O(X(X)) Q:'X  D
+ .I X(X)="" K X(X) Q
+ .I X(X)["DINUMed field cannot" S FLG=1 K X(X) Q
+ .I X(X)["ASSOCIATION" S FLG=1 K X(X) Q
+ .I X(X)["INSTITUTION" S FLG=1 K X(X) Q
  ;
- ;D MSG^DIALOG("AM",.X,80,,"ERR")
+ I FLG Q:'$O(X(.9))
  ;
- ;S X(.02)="",X(.03)=$G(ERROR),X(.04)=""
- ;
- ;S X=.9 F  S X=$O(X(X)) Q:'X  D
- ;.I X(X)="" K X(X) Q
- ;.I X(X)["DINUMed field cannot" S FLG=1 K X(X) Q
- ;.I X(X)["ASSOCIATION" S FLG=1 K X(X) Q
- ;.I X(X)["INSTITUTION" S FLG=1 K X(X) Q
- ;.I X(X)["The entry does not exist." S FLG=1 K X(X) Q
- ;.I X(X)["already exists." S FLG=1 K X(X) Q
- ;
- ;I FLG Q:'$O(X(.9))
- ;
- ;S ERRCNT=ERRCNT+1
- ;
- ;S ^TMP("XUMF ERROR",$J,ERRCNT_".01")=""
- ;S ^TMP("XUMF ERROR",$J,ERRCNT_".02")=""
- ;S ^TMP("XUMF ERROR",$J,ERRCNT_".03")=$G(ERROR)
- ;S ^TMP("XUMF ERROR",$J,ERRCNT_".04")=""
- ;S ^TMP("XUMF ERROR",$J,ERRCNT_".05")="KEY: "_$G(KEY)_"   IFN: "_$G(IFN)_"   IEN: "_$G(IEN)
- ;S ^TMP("XUMF ERROR",$J,ERRCNT_".06")=""
- ;S X=.9 F  S X=$O(X(X)) Q:'X  D
- ;.S ^TMP("XUMF ERROR",$J,ERRCNT_"."_X)=X(X)
- ;
- ;Q
- ;
-EM1 ;
- ;
- D EM1^XUMFHM
+ D ^XMD
  ;
  Q
- ;
- ;N XMY,XMSUB
- ;
- ;S ^TMP("XUMF ERROR",$J,.1)="HL7 message ID: "_$G(HL("MID"))
- ;S XMY("G.XUMF ERROR")="",XMSUB="MFS ERROR"
- ;S XMTEXT="^TMP(""XUMF ERROR"",$J,"
- ;
- ;D ^XMD
- ;
- ;Q
  ;

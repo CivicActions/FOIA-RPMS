@@ -1,0 +1,9 @@
+BDMDOZ ;IHS/CMI/LAB-CREATED BY ^ATXSTX ON NOV 13, 2024;
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**18**;JUN 14, 2007;Build 147
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^BDMDOZA ;   DM AUDIT OTHER EDUC CPTS
+ D ^BDMDOZB ;   DM AUDIT TUBERCULOSIS DXS
+ Q

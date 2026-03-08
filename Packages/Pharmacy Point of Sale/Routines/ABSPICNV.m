@@ -1,5 +1,5 @@
 ABSPICNV ; IHS/OIT/CASSevern/Pieran ran 2/24/2011 - Convert Insurance Profiles based on Formats
- ;;1.0;PHARMACY POINT OF SALE;**D.0,48**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**D.0,48**;JUN 21, 2001;Build 131
  ;
  ; This routine will go through each ABSP Insurer entry and get the information off the corresponding Format and populate the necessary entries in the insurer file
 EN ;EP
@@ -10,7 +10,7 @@ EN ;EP
  . S ABSPFMT=$P($G(^ABSPEI(ABSPINS,100)),U)
  . Q:'ABSPFMT
  . D PROCESS(ABSPINS,ABSPFMT)
- S ^ABSP(9002313.99,1,"ABSPICNV")=1		;This is how we know if this conversion has been run or not.
+ S ^ABSP(9002313.99,1,"ABSPICNV")=1    ;This is how we know if this conversion has been run or not.
  Q
 PROCESS(ABSPINS,ABSPFMT) ;Process the format here
  N ABSPBIN,ABSPPCN,ABSPMPD,ABSPVER,ABSPMAX,ABSPDISP,ABSPCONT,ABSPEXCL,ABSPHELP,ABSPSPEC,ABSPSPSG,ABSPSPFL
@@ -20,7 +20,7 @@ PROCESS(ABSPINS,ABSPFMT) ;Process the format here
  D POPSEG(ABSPINS,.ABSPSPSG)
  D POPFLD(ABSPINS,.ABSPSPFL)
  Q
-GETINFO(ABSPFMT)
+GETINFO(ABSPFMT)  ; NEED SEMICOLON?
  N ABSPFARY,ABSPINCL,ABSPSUPP
  D GETS^DIQ(9002313.92,ABSPFMT_",","**","","ABSPFARY")
  S ABSPBIN=ABSPFARY(9002313.92,ABSPFMT_",",1.01)
@@ -37,15 +37,15 @@ GETINFO(ABSPFMT)
  D GETSPEFLDS(.ABSPFARY,.ABSPSPEC)
  D GETSUPFLDS(.ABSPFARY,.ABSPSPSG,.ABSPSPFL)
  Q
-GETINCFLDS(ABSPFARY,ABSPINCL) 	;Get list of all fields included on this format
+GETINCFLDS(ABSPFARY,ABSPINCL)  ;Get list of all fields included on this format
  N ARR
  S ARR="ABSPFARY(9002313.9205)"
  F  S ARR=$Q(@ARR) Q:ARR'["ABSPFARY(9002313"  S:($QS(ARR,3)=.02)&&(@ARR'="") ABSPINCL(@ARR)=""
  Q
-GETSPEFLDS(ABSPFARY,ABSPSPEC) 	;Get list of all fields requiring special coding
+GETSPEFLDS(ABSPFARY,ABSPSPEC)   ;Get list of all fields requiring special coding
  N ARR
  S ARR="ABSPFARY(9002313.9205)"
- F  S ARR=$Q(@ARR) Q:ARR'["ABSPFARY(9002313"  D:($QS(ARR,3)=.03)&&(@ARR="SPECIAL") 
+ F  S ARR=$Q(@ARR) Q:ARR'["ABSPFARY(9002313"  D:($QS(ARR,3)=.03)&&(@ARR="SPECIAL")
  . N LINE,X,Y
  . S LINE=0
  . F  S LINE=$O(ABSPFARY($QS(ARR,1),$QS(ARR,2),1,LINE)) Q:LINE=""  D
@@ -53,7 +53,7 @@ GETSPEFLDS(ABSPFARY,ABSPSPEC) 	;Get list of all fields requiring special coding
  . . I LINE=1 S ABSPSPEC(ABSPFARY($QS(ARR,1),$QS(ARR,2),.02))=X
  . . ELSE  S ABSPSPEC(ABSPFARY($QS(ARR,1),$QS(ARR,2),.02))=ABSPSPEC(ABSPFARY($QS(ARR,1),$QS(ARR,2),.02))_"  "_X
  Q
-GETSUPSEGS(ABSPFARY,ABSPSPSG) 	;Get list of all Segments to be suppressed
+GETSUPSEGS(ABSPFARY,ABSPSPSG)   ;Get list of all Segments to be suppressed
  I '$D(ABSPFARY(9002313.9209)) S ABSPSPSG(2)="" ;Suppress Provider Segment
  I '$D(ABSPFARY(9002313.9213)) S ABSPSPSG(5)="" ;Suppress COB Segment
  I '$D(ABSPFARY(9002313.9214)) S ABSPSPSG(6)="" ;Suppress Workers Comp Segment
@@ -67,7 +67,7 @@ GETSUPSEGS(ABSPFARY,ABSPSPSG) 	;Get list of all Segments to be suppressed
  S ABSPSPSG(15)="" ;Suppress Facility Segment
  S ABSPSPSG(16)="" ;Suppress Narrative Segment
  Q
-GETSUPFLDS(ABSPFARY,ABSPSPSG,ABSPSPFL) 	;Get list of all fields to be suppressed
+GETSUPFLDS(ABSPFARY,ABSPSPSG,ABSPSPFL)   ;Get list of all fields to be suppressed
  N FLDARR,FLDNUM,NCPDPFLD,ABSPINCL,SEG,SEGMENT,SEGFLDS
  S SEG("CLAIM")="455^402^436^407^456^457^458^459^415^419^354^420^460^308^429^453^445^446^330^454^600^418^461^462^463^464^343^344^345^357^391^995^996^147^114"
  S SEG("PATIENT")="331^332^310^322^323^324^325^326^307^333^334^335^350^384"
@@ -112,7 +112,7 @@ GETSUPFLDS(ABSPFARY,ABSPSPSG,ABSPSPFL) 	;Get list of all fields to be suppressed
 POPTOP(ABSPINS,ABSPBIN,ABSPPCN,ABSPMPD,ABSPVER,ABSPMAX,ABSPDISP,ABSPCONT,ABSPEXCL,ABSPHELP) ;Populate things that go on top level of Insurance
  N INS,CURHELP,ZERR  ; /IHS/OIT/RAM ; 9 JUN 17 ; ADD DBS CALL ERROR RETURN VARIABLE
  S CURHELP=$$GET1^DIQ(9002313.4,ABSPINS_",",100.05)
- I CURHELP="" S INS(1,9002313.4,ABSPINS_",",100.05)=ABSPHELP		;Don't over-write if they already have this field on the Insurer
+ I CURHELP="" S INS(1,9002313.4,ABSPINS_",",100.05)=ABSPHELP    ;Don't over-write if they already have this field on the Insurer
  S INS(1,9002313.4,ABSPINS_",",100.15)=ABSPVER
  S INS(1,9002313.4,ABSPINS_",",100.16)=ABSPBIN
  S INS(1,9002313.4,ABSPINS_",",100.17)=ABSPPCN
@@ -129,8 +129,8 @@ POPSPEC(ABSPINS,ABSPSPEC) ;Now populate the Special Code stuff
  N NCPDPCD,INS,STRING,ZERR  ; /IHS/OIT/RAM ; 9 JUN 17 ; ADD DBS CALL ERROR RETURN VARIABLE
  S NCPDPCD=""
  F  S NCPDPCD=$O(ABSPSPEC(NCPDPCD)) Q:NCPDPCD=""  D
- . Q:(NCPDPCD=111)!(NCPDPCD=103)		;These are the fields that can't be overriden
- . S STRING=$TR(ABSPSPEC(NCPDPCD),"^","|")		;Fileman won't store this string with a ^ (caret) in it
+ . Q:(NCPDPCD=111)!(NCPDPCD=103)   ;These are the fields that can't be overriden
+ . S STRING=$TR(ABSPSPEC(NCPDPCD),"^","|")   ;Fileman won't store this string with a ^ (caret) in it
  . S INS(1,9002313.42,"+1,"_ABSPINS_",",.01)=NCPDPCD
  . S INS(1,9002313.42,"+1,"_ABSPINS_",",.02)=STRING
  . ; D UPDATE^DIE("E","INS(1)")
@@ -142,7 +142,7 @@ POPSEG(ABSPINS,ABSPSPSG) ;Next we populate the suppressed segments
  S SEGCD=""
  F  S SEGCD=$O(ABSPSPSG(SEGCD)) Q:SEGCD=""  D
  . S INS(1,9002313.48,"+1,"_ABSPINS_",",.01)=SEGCD
- . ; D UPDATE^DIE("","INS(1)")		;On this one we are using the Internal value
+ . ; D UPDATE^DIE("","INS(1)")    ;On this one we are using the Internal value
  . D UPDATE^DIE("","INS(1)",,"ZERR") ; /IHS/OIT/RAM ; 9 JUN 17 ; UPDATE DBS CALL TO ALLOW FOR ERROR RETURN.
  . I $D(ZERR) D LOG^ABSPOSL2("POPSEG^ABSPICNV",.ZERR) ; /IHS/OIT/RAM ; 9 JUN 17 ; AND LOG IT IF AN ERROR OCCURS.
  Q
@@ -155,7 +155,7 @@ POPFLD(ABSPINS,ABSPSPFL) ;Next we populate the suppressed fields
  . D UPDATE^DIE("E","INS(1)",,"ZERR") ; /IHS/OIT/RAM ; 9 JUN 17 ; UPDATE DBS CALL TO ALLOW FOR ERROR RETURN.
  . I $D(ZERR) D LOG^ABSPOSL2("POPFLD^ABSPICNV",.ZERR) ; /IHS/OIT/RAM ; 9 JUN 17 ; AND LOG IT IF AN ERROR OCCURS.
  Q
-REVERSE
+REVERSE  ; NEED SEMICOLON?
  N ABSPINS,ABSPFMT
  S ABSPINS=0
  F  S ABSPINS=$O(^ABSPEI(ABSPINS)) Q:ABSPINS=""  D
@@ -164,5 +164,5 @@ REVERSE
  . K ^ABSPEI(ABSPINS,210)
  . K ^ABSPEI(ABSPINS,220)
  . K ^ABSPEI(ABSPINS,221)
- S ^ABSP(9002313.99,1,"ABSPICNV")=0		;This is how we know if this conversion has been run or not.
+ S ^ABSP(9002313.99,1,"ABSPICNV")=0    ;This is how we know if this conversion has been run or not.
  Q

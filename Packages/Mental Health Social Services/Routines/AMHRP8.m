@@ -1,5 +1,5 @@
-AMHRP8 ; IHS/CMI/LAB - ACTIVE CLIENT LIST ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHRP8 ; IHS/CMI/LAB - ACTIVE CLIENT LIST ; [ 02/21/2007  3:57 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**5,6,8**;JAN 27, 2003
  ;
 START ;
  I '$D(IOF) D HOME^%ZIS
@@ -24,11 +24,8 @@ PROV ;limit by provider
  S AMHPROV=""
  S DIR(0)="Y",DIR("A")="Limit the list to those patients who have seen a particular provider",DIR("B")="N" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  G:$D(DIRUT) GETDATES
- G:'Y DEMO
+ G:'Y ZIS
  I Y=1 S DIC("A")="Enter PROVIDER Name: ",DIC=200,DIC(0)="AEQMZ" D ^DIC G PROV:Y<0 S AMHPROV=+Y
-DEMO ;
- D DEMOCHK^AMHUTIL1(.AMHDEMO)
- I AMHDEMO=-1 G PROV
 ZIS ;
  S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
  I $D(DIRUT) G XIT
@@ -52,7 +49,6 @@ PROC ;EP - entry point for processing
  K DFN
  Q
 PROC1 ;
- Q:$$DEMO^AMHUTIL1(DFN,$G(AMHDEMO))
  S (AMHID,AMHFOUND)=0 F  S AMHID=$O(^AMHREC("AE",DFN,AMHID)) Q:AMHID'=+AMHID!(AMHFOUND)  D CHK
  Q
 CHK ;check to see if patient meets criteria

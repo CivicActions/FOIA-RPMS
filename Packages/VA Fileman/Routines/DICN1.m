@@ -1,47 +1,19 @@
-DICN1 ;SFISC/GFT,TKW,SEA/TOAD-PROCESS DIC("DR") ;10:54 AM  9 Feb 2001 [ 04/02/2003   8:23 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**4,67**;Mar 30, 1999
- ;THIS ROUTINE CONTAINS AN IHS MODIFICATON BY IHS/ANMC/FBD 6/19/97
- ;AND IHS/OIRM/DSD/AEF/01/08/03
+DICN1 ;SFISC/GFT,SEA/TOAD-PROCESS DIC("DR") ;1/16/97  10:24 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**29**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
+ ;12257;5825723;3890;
  ;
  K DIDA,DICRS,Y,%RCR
  F Y="DIADD","I","J","X","DO","DC","DA","DE","DG","DIE","DR","DIC","D","D0","D1","D2","D3","D4","D5","D6","DI","DH","DIA","DICR","DK","DIK","DL","DLAYGO","DM","DP","DQ","DU","DW","DIEL","DOV","DIOV","DIEC","DB","DV","DIFLD" S %RCR(Y)=""
  S DZ="W !?3,$S("""_$P(DO,U)_"""'=$P(DQ(DQ),U):"""_$P(DO,U)_""",1:"""")_"" ""_$P(DQ(DQ),U)_"": """
- S Y=DA N % S %=0 D  I '$D(%) D W,BAD Q
- . S DD="" N I,J,X,Y
- . I DINO01 D
- . . S DD=".01//"
- . . S I=$G(DISUBVAL(+DO(2),.01)) I I="" S DD=DD_";" Q
- . . S DD=DD_$S(DIC(0)'["E":"/",1:"")_"^S X=DISUBVAL("_+DO(2)_",.01);" Q
- . K DISUBVAL(+DO(2),.01)
- . F I=0:0 S I=$O(DISUBVAL(+DO(2),I)) Q:'I  D
- . . S DD=DD_I_"//"
- . . I $G(DISUBVAL(+DO(2),I,"INT"))]"" S DD=DD_"//^S X=DISUBVAL("_+DO(2)_","_I_",""INT"");" Q
- . . S:DIC(0)'["E" DD=DD_"/"
- . . S DD=DD_"^S X=DISUBVAL("_+DO(2)_","_I_");" Q
- . S DD=DD_$G(DIC("DR")) I DD]"",$E(DD,$L(DD))'=";" S DD=DD_";"
- . Q:DIC(0)'["E"
- . F I=0:0 S I=$O(^DD("KEY","B",+DO(2),I)) Q:'I!('$D(%))  F J=0:0 S J=$O(^DD("KEY",I,2,J)) Q:'J!('$D(%))  D
- . . S X=$G(^DD("KEY",I,2,J,0)) Q:$P(X,U,2)'=+DO(2)
- . . S Y=$P(X,U) Q:'Y  D CKID
- . . Q
- . Q:$D(DIC("DR"))!('$D(%))
- . S Y=0 F  S Y=$O(^DD(+DO(2),0,"ID",Y)) Q:'Y  D CKID Q:'$D(%)
- . Q
- I DD]"",$O(^DD("KEY","B",+DO(2),0)) D
- . N I S I=$S(DIC(0)["E":"M",1:"")
- . S DD=DD_"S DIEFIRE="""_I_"""" Q
- S %RCR="RCR^DICN1" D STORLIST^%RCR
- I $D(Y)<9 S Y=DA Q
+ I $D(DIC("DR")) S DD=DIC("DR")
+ E  S DD="",%=0,Y=0 F  S Y=$O(^DD(+DO(2),0,"ID",Y)) S:Y="" Y=-1 Q:Y'>0  D CKID I '$D(%) D W G BAD
+ S %RCR="RCR^DICN1" D STORLIST^%RCR G D^DICN:$D(Y)<9
+BAD S:$D(D)#2 DA=D K Y I '$D(DO(1)) S Y=-1 G Q^DIC2
+ K DO G A^DIC
  ;
-BAD S:$D(D)#2 DA=D K Y I '$D(DO(1)) S Y=-1 D Q^DIC2 Q
- K DO D A^DIC S DS(0)="1^",Y=-1 Q
- ;
-CKID I $G(DUZ(0))'="@",$G(^DD(+DO(2),Y,9))]"" D  Q:'$D(%)  Q:$L(^DD(+DO(2),Y,9))<%
- . F %=1:1 I DUZ(0)[$E(^DD(+DO(2),Y,9),%) Q:$L(^(9))'<%  K:$P(^(0),U,2)["R" % Q
- Q:Y=.01
- I $P(DD,"//")=Y!(DD[(";"_Y_"//"))!(DD[(";"_Y_";")) Q
+CKID I $D(DUZ(0)),DUZ(0)'="@",$D(^DD(+DO(2),Y,9)),^(9)]"" F %=1:1 I DUZ(0)[$E(^(9),%) Q:$L(^(9))'<%  K:$P(^(0),U,2)["R" % G Q
  S DD=DD_Y_";"
 Q Q
  ;
@@ -50,44 +22,23 @@ W S A1="T",DST="SORRY!  A VALUE FOR '"_$P(^(0),U,1)_"' MUST BE ENTERED," W:'$D(D
  S %RCR="D^DICN1" D STORLIST^%RCR Q
  ;
 H I $D(DDS) S DDH=$S($D(DDH):DDH+1,1:1),DDH(DDH,A1)=DST K A1,DST Q
- ;----- BEGIN IHS MODIFICATION
- ;THIS LINE IS COMMENTED OUT AND REPLACED BY THE LINE BELOW TO ADD
- ;CHECK FOR ZTQUEUED.  ORIGINAL MODIFICATION BY IHS/ANMC/FBD 6/19/97
  ;W DST K A1,DST Q
- W:'$D(ZTQUEUED) DST K A1,DST Q
- ;----- END IHS MODIFICATION
+ W:'$D(ZTQUEUED) DST K A1,DST Q  ;IHS/ANMC/FBD  6/19/97 added ZTQUEUED CK
 RCR ;
- K DR,DIADD,DQ,DG,DE,DO N DISAV0 S DIE=DIC,DR=DD,DIE("W")=DZ,DISAV0=DIC(0) K DIC
- I $D(DIE("NO^")) S %RCR("DIE(""NO^"")")=DIE("NO^")
- S DIE("NO^")="BACKOUTOK" N X
- D:$D(DDS) CLRMSG^DDS D:DR]""  K DIE("W"),DIE("NO^")
- . N DISAV0,DIFILEI,DINDEX,DIVAL,DIENS,DIOPER
- . S DIOPER="A" K % M %=DISUBVAL N DISUBVAL M DISUBVAL=% K %
- . D ^DIE Q
+ K DR,DIADD,DQ,DG,DE,DO S DIE=DIC,DR=DD,DIE("W")=DZ K DIC I $D(DIE("NO^")) S %RCR("DIE(""NO^"")")=DIE("NO^")
+ S DIE("NO^")="OUTOK"
+ D:$D(DDS) CLRMSG^DDS D ^DIE K DIE("W"),DIE("NO^")
  D:$D(DDS)
  . I $Y<IOSL D CLRMSG^DDS Q
  . D REFRESH^DDSUTL
 A I '$D(DA) S Y(0)=0 Q
- ;----- BEGIN IHS MODIFICATION - DI*22.0*1001
- ;LINE BELOW IS COMMENTED OUT AND REPLACED BY NEW LINE TO CALL
- ;$$IHSGL TO ALLOW USE OF DUZ(2) "SOFT" GLOBAL REFERENCE
- ;IHS/OIRM/DSD/AEF/01/08/03
- ;S:'$$INTEG^DIKK(DIE,DA_DIENS,"","","d") Y(0)=0,X="BADKEY"
- I '$$IHSGL($G(DIFILEI)) S:'$$INTEG^DIKK(DIE,DA_DIENS,"","","d") Y(0)=0,X="BADKEY"
- ;----- END IHS MODIFICATION
- Q:$D(Y)<9&'$D(DTOUT)&'$D(DIC("W"))&($G(X)'="BADKEY")
- I $G(X)="BADKEY",DISAV0["E" W !,"      ",$$EZBLD^DIALOG(741)
+ Q:$D(Y)<9&'$D(DTOUT)&'$D(DIC("W"))
  S:'$G(DTOUT)&($D(Y)'<9) DUOUT=1
-ZAP S DIK=DIE
- ;----- BEGIN IHS MODIFICATION
- ;THIS LINE IS COMMENTED AND REPLACED BY THE LINE BELOW TO ADD ZTQUEUED
- ;CHECK.  ORIGINAL MODIFICATION BY IHS/ANMC/FBD 6/19/97
- ;I DISAV0["E" S A1="T",DST=$C(7)_"   <'"_$P(@(DIK_"DA,0)"),U,1)_"' DELETED>" W:'$D(DDS) !?3 D H D:$D(DDS) LIST^DDSU
- I DISAV0["E" S A1="T",DST=$C(7)_"   <'"_$P(@(DIK_"DA,0)"),U,1)_"' DELETED>" W:'$D(DDS) !?3 D H D:$D(DDS) LIST^DDSU
- ;----- END IHS MODIFICATION
+ZAP ;S DIK=DIE,A1="T",DST=$C(7)_"   <'"_$P(@(DIK_"DA,0)"),U,1)_"' DELETED>" W:'$D(DDS) !?3 D H D:$D(DDS) LIST^DDSU
+ S DIK=DIE,A1="T",DST=$C(7)_"   <'"_$P(@(DIK_"DA,0)"),U,1)_"' DELETED>" W:'$D(DDS)&('$D(ZTQUEUED)) !?3 D H D:$D(DDS) LIST^DDSU  ;IHS/ANMC/FBD  6/19/97 added ZTQUEUED CK
  D ^DIK S Y(0)=0 K DST Q
  ;
-D N DISAV0 S DISAV0=DIC(0),DIE=DIC D ZAP Q
+D S DIE=DIC G ZAP
  ;
 ASKP001 ; ask user to confirm new record's .001 field value
  ; NEW^DICN
@@ -98,11 +49,11 @@ ASKP001 ; ask user to confirm new record's .001 field value
  S Y=$P(DO,U,2)
  I '$D(^DD(+Y,.001,0)) S Y=1 Q
  ;
- ; if this is not a LAYGO lookup in which X looks like an IEN, and we're
- ; adding a new file, and we haven't tried this before, then offer a new
- ; .001 based on the user's or site's file range, whichever's handy.
- ; NEW^DICN will increment this .001 forward to find the first gap, then
- ; drop back through here to the paragraph below (because DO(3) will be
+ ; if this is not a LAYGO lookup in which X looks like an IEN, and we're 
+ ; adding a new file, and we haven't tried this before, then offer a new 
+ ; .001 based on the user's or site's file range, whichever's handy. 
+ ; NEW^DICN will increment this .001 forward to find the first gap, then 
+ ; drop back through here to the paragraph below (because DO(3) will be 
  ; defined next time) to offer it to the user
  ;
  I '$D(DIENTRY),DIC="^DIC(",'$D(DO(3)) D  S Y="TRY NEXT" Q
@@ -124,16 +75,14 @@ ASKP001 ; ask user to confirm new record's .001 field value
  I '$D(DDS) D
  . W !,DST K DST R Y:$S($D(DTIME):DTIME,1:300) E  S DTOUT=1,Y=U W $C(7)
  E  D
- . S A1="Q",DST=3_U_DST N DIY D H,LIST^DDSU S Y=$S($D(DTOUT):U,1:%) K %
+ . S A1="Q",DST=3_U_DST D H,LIST^DDSU S Y=$S($D(DTOUT):U,1:%) K %
  ;
  ; sort through possible responses
  ;
  I Y[U S Y=U Q
  I Y="" S Y=1 Q
  I Y'="?" D  Q:Y
- . S X=Y D N S Y=$D(X)#2 D:Y  Q:Y
- . . I $D(@(DIC_X_")")) K X S Y=0
- . . Q
+ . S X=Y D N S Y=$D(X)#2 Q:Y
  . W $C(7)
  . W:'$D(DDS) "??"
  ;
@@ -143,33 +92,11 @@ ASKP001 ; ask user to confirm new record's .001 field value
  I '$D(DDS) D
  . W:DST]"" !?5,DST X:$D(^(4)) ^(4) K DST ; NAKED
  E  D
- . S A1=0 N DIY D H S:$D(^(4)) DDH("ID")=^(4) D LIST^DDSU ; NAKED
- S X=$P(DO,U,3) D INCR^DICN0
+ . S A1=0 D H S:$D(^(4)) DDH("ID")=^(4) D LIST^DDSU ; NAKED
+ S X=$P(DO,U,3) D INCR^DICN
  S Y="TRY NEXT"
  Q
  ;
- ;----- BEGIN IHS MODIFICATION - XU*8.0*1007
- ;ADD NEW SUBROUTINE IHSGL - IHS/OIRM/DSD/AEF/01/08/03
- ;
-IHSGL(X) ;----- CHECK GL NODE OF TOP LEVEL FILE FOR DUZ(2)
- ;USED TO ALLOW USE OF "SOFT" GLOBAL REFERENCES, I.E., DUZ(2)
- ;
- ;      RETURNS:
- ;      0 IF THE TOP LEVEL FILE "GL" NODE DOES NOT CONTAIN DUZ(2)
- ;      1 IF IT DOES
- ;
- ;      INPUT:
- ;      X  =  FILE NUMBER
- ;
- N DITOP,Y
- S Y=0
- I X D
- . S DITOP=X
- . F  Q:'$D(^DD(DITOP,0,"UP"))  S DITOP=^("UP")
- . S Y=$G(^DIC(DITOP,0,"GL"))["DUZ(2)"
- Q Y
- ;      
- ;----- END IHS MODIFICATION
 N ; test X as an IEN (apply input transform and numeric restrictions)
  ; USR^DICN, ASKP001
  ;
@@ -177,6 +104,4 @@ N ; test X as an IEN (apply input transform and numeric restrictions)
  I $D(X),$L(X)<15,+X=X,X>0,X>1!(DIC'="^DIC(") Q
  K X
  Q
- ;
- ; 741   Either key values are null, or creates a duplicate key.
  ;

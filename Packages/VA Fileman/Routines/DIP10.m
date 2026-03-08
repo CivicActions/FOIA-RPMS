@@ -1,6 +1,6 @@
-DIP10 ;SFISC/TKW - PROCESS BY(0) INPUT VARIABLES ;12:59 PM  6 Aug 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**2**;Mar 30, 1999
+DIP10 ;SFISC/TKW - PROCESS BY(0) INPUT VARIABLES ;12/13/96  10:05 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**26,35**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 EN ;
  N I,J,K,X,Y,DIR K DPP(0),DPP(1) I $G(BY(0))="" D BLD^DIALOG(201,"BY(0)")
@@ -21,7 +21,7 @@ EN ;
  S DPP(0)=L(0)-1 K DISTXT
  S J=8004 I BY(0)?1"^DIBT("1.N1",1," S J=+$P(BY(0),"^DIBT(",2) D ENT(0,J) S J=8003
  I '$D(DISTXT) S I(1)=$S($E(BY(0),$L(BY(0)))=",":$E(BY(0),1,($L(BY(0))-1))_")",1:BY(0)) D BLD^DIALOG(J,.I,"","DIR") S DPP(0,"TXT")=DIR
-DPP F I=1:1:L(0)-1 S DPP(I)=S_"^^SORT FIELD "_I_"^""@^^^^^^4",DPP(I,"SER")="999^999",(DPP(I,"GET"),DPP(I,"CM"))="S DISX("_I_")=DIOO"_(L(0)-I)
+ F I=1:1:L(0)-1 S DPP(I)=S_"^^SORT FIELD "_I_"^""@^^^^^^4",DPP(I,"SER")="999^999",J="",$P(J,"D",L(0)-I+1)="",(DPP(I,"GET"),DPP(I,"CM"))="S DISX("_I_")="_J_"D0"
  S DPP(0,"IX")=$E(U,$E(BY(0))'=U)_BY(0)_DCC_U_$S($D(L(0)):L(0),1:1)
  F I=0:0 S I=$O(FR(0,I)) Q:'I  I FR(0,I)]"",$D(DPP(I)) S (Y,K)=FR(0,I) D FRV^DIP1 S DPP(I,"F")=Y_U_K S:I=1 DPP(0,"F")=Y_U_K
  F I=0:0 S I=$O(TO(0,I)) Q:'I  I TO(0,I)]"",$D(DPP(I)) S DPP(I,"T")=TO(0,I)_U_TO(0,I)

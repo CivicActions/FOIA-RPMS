@@ -1,20 +1,16 @@
 ABMER20A ; IHS/ASDST/DMJ - UB92 EMC RECORD 20 (Patient) cont'd ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**21,31**;NOV 12, 2009;Build 615
  ;Original;DMJ;02/07/96 12:33 PM
  ;
- ;IHS/DSD/DMJ - 7/15/1999 NOIS BXX-0799-150034 Patch 3 #3
- ;      Modified to allow spaces in patient last name
- ; IHS/ASDS/DMJ - 04/20/00 - V2.4 Patch 1 - NOIS HQW-0500-100040
- ;     Modified location code to check for satellite first.  If no satellite, use parent.
- ; IHS/ASDS/LSL - 07/10/00 - V2.4 Path 2 - NOIS NDA-0700-180029
- ;      Modified to strip off the leading zero of admission source and admission type.
- ; IHS/ASDS/LSL - 09/06/00 - V2.4 Patch 3 - NOIS CAA-0900-110008
- ;      If nothing in admission source or type, make it null instead of 0 (zero).
- ; IHS/ASDS/SDH - 09/27/01 - v2.4 Patch 9 - NOIS XAA-0901-200095
- ;     After moving Kidscare to Page 5 from Page 7 found that there are checks that are done for Medicaid that should also 
+ ;IHS/DSD/DMJ 7/15/1999 NOIS BXX-0799-150034 Patch 3 #3 Modified to allow spaces in patient last name
+ ;IHS/ASDS/DMJ 04/20/00 2.4*1 NOIS HQW-0500-100040 Modified location code to check for satellite first.  If no satellite, use parent.
+ ;IHS/ASDS/LSL 07/10/00 2.4*2 NOIS NDA-0700-180029 Modified to strip off the leading zero of admission source and admission type.
+ ;IHS/ASDS/LSL 09/06/00 2.4*3 NOIS CAA-0900-110008 If nothing in admission source or type, make it null instead of 0 (zero).
+ ;IHS/ASDS/SDH 09/27/01 2.4*9 NOIS XAA-0901-200095 After moving Kidscare to Page 5 from Page 7 found that there are checks that are done for Medicaid that should also 
  ;     be done for Kidscare.
  ;
- ;IHS/SD/SDR - 2.6*21 - HEAT169641 - Include comma and middle initial if AO Control# is 61044
+ ;IHS/SD/SDR 2.6*21 HEAT169641 Include comma and middle initial if AO Control# is 61044
+ ;IHS/SD/SDR 2.6*31 CR8848 Changed to always use patient name and patient DOB; these populate UB-04 FL8b and FL10, and 1500(02/12) FL2, FL3
  ;
  ; *********************************************************************
  ;            
@@ -138,24 +134,27 @@ PNM ; EP
  ; Patient name
  K ABME("PNM"),ABME("DOB")
  ; if insurer type is Medicare FI
- I ABMP("ITYPE")="R" D
- .; if insurer name contains "MEDICARE"
- .I $P(^AUTNINS(ABMP("INS"),0),U)["MEDICARE" D
- ..; Medicare Patient name from MEDICARE ELIGIBLE
- ..S ABME("PNM")=$P($G(^AUPNMCR(ABMP("PDFN"),21)),U)
- ..S ABME("DOB")=$P($G(^AUPNMCR(ABMP("PDFN"),21)),"^",2) ; DOB
- .; If insurer name contains "RAILROAD"
- .I $P(^AUTNINS(ABMP("INS"),0),U)["RAILROAD" D
- ..; Railroad Patient name from RAILROAD ELIGIBLE
- ..S ABME("PNM")=$P($G(^AUPNRRE(ABMP("PDFN"),21)),U)
- ..S ABME("DOB")=$P($G(^AUPNRRE(ABMP("PDFN"),21)),"^",2) ; DOB
- ;
- ; if insurer type is Medicaid FI
- I ABMP("ITYPE")="D"!(ABMP("ITYPE")="K") D
- .Q:'$G(ABMCDNUM)
- .S ABME("PNM")=$P($G(^AUPNMCD(ABMCDNUM,21)),U) ; Pat name
- .I $P($P(ABME("PNM"),",",2)," ",2)'=""&($$RCID^ABMERUTL(ABMP("INS"))[61044) S $P(ABME("PNM"),",",2)=$P($P(ABME("PNM"),",",2)," ",1)_","_$P($P(ABME("PNM"),",",2)," ",2)  ;abm*2.6*21 IHS/SD/SDR HEAT169641
- .S ABME("DOB")=$P($G(^AUPNMCD(ABMCDNUM,21)),"^",2) ; dob
+ ;start old abm*2.6*31 IHS/SD/SDR CR8848
+ ;I ABMP("ITYPE")="R" D
+ ;.; if insurer name contains "MEDICARE"
+ ;.I $P(^AUTNINS(ABMP("INS"),0),U)["MEDICARE" D
+ ;..; Medicare Patient name from MEDICARE ELIGIBLE
+ ;..S ABME("PNM")=$P($G(^AUPNMCR(ABMP("PDFN"),21)),U)
+ ;..S ABME("DOB")=$P($G(^AUPNMCR(ABMP("PDFN"),21)),"^",2) ; DOB
+ ;.; If insurer name contains "RAILROAD"
+ ;.I $P(^AUTNINS(ABMP("INS"),0),U)["RAILROAD" D
+ ;..; Railroad Patient name from RAILROAD ELIGIBLE
+ ;..S ABME("PNM")=$P($G(^AUPNRRE(ABMP("PDFN"),21)),U)
+ ;..S ABME("DOB")=$P($G(^AUPNRRE(ABMP("PDFN"),21)),"^",2) ; DOB
+ ;;
+ ;; if insurer type is Medicaid FI
+ ;I ABMP("ITYPE")="D"!(ABMP("ITYPE")="K") D
+ ;.Q:'$G(ABMCDNUM)
+ ;.I +$P($G(^AUPNMCD(ABMCDNUM,0)),U,6)'=0,($P($G(^AUTTRLSH(+$P($G(^AUPNMCD(ABMCDNUM,0)),U,6),0)),U)'="SELF") Q  ;don't use Medicaid info if RELATIONSHIP TO INSURED is not self  ;abm*2.6*31 IHS/SD/SDR CR8848
+ ;.S ABME("PNM")=$P($G(^AUPNMCD(ABMCDNUM,21)),U) ; Pat name
+ ;.I $P($P(ABME("PNM"),",",2)," ",2)'=""&($$RCID^ABMERUTL(ABMP("INS"))[61044) S $P(ABME("PNM"),",",2)=$P($P(ABME("PNM"),",",2)," ",1)_","_$P($P(ABME("PNM"),",",2)," ",2)  ;abm*2.6*21 IHS/SD/SDR HEAT169641
+ ;.S ABME("DOB")=$P($G(^AUPNMCD(ABMCDNUM,21)),"^",2) ; dob
+ ;end old abm*2.6*31 IHS/SD/SDR CR8848
  ;
  ; Else get from patient file
  S:$G(ABME("PNM"))="" ABME("PNM")=$P($G(^DPT(+ABMP("PDFN"),0)),U)

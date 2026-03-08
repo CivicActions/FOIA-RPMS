@@ -1,5 +1,5 @@
-APCLCV ; IHS/CMI/LAB - Indian Beneficiary Calendar Year Visit Summary ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLCV ; IHS/OHPRD/TMJ - Indian Beneficiary Calendar Year Visit Summary ; [ 10/03/99  9:22 AM ]
+ ;;3.0;IHS PCC REPORTS;**5**;FEB 05, 1997
  ;IHS/CMI/LAB - fixed per California Area
 START ; 
  D INFORM
@@ -39,7 +39,7 @@ CLINIC1 ;Get Multiple Clinics in Search
  K APCLCLNT
  ;
  S X="CLINIC",DIC="^AMQQ(5,",DIC(0)="FM",DIC("S")="I $P(^(0),U,14)" D ^DIC K DIC,DA I Y=-1 W "OPPS - QMAN NOT CURRENT - QUITTING" G EOJ
- D PEP^AMQQGTX0(+Y,"APCLCLNT(")
+ D ^AMQQGTX0(+Y,"APCLCLNT(")
  I '$D(APCLCLNT) G CLINIC
  I $D(APCLCLNT("*")) K APCLCLNT
  ;K DIC S DIC=40.7,DIC(0)="AEQMZ",DIC("A")="Which Clinic:  " D ^DIC
@@ -47,9 +47,6 @@ CLINIC1 ;Get Multiple Clinics in Search
  ;S APCLCL=+Y
  ;
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G CLINIC
  S XBRP="^APCLCVP",XBRC="^APCLCV1",XBRX="EOJ^APCLCV",XBNS="APCL"
  D ^XBDBQUE
  D EOJ

@@ -1,5 +1,5 @@
 BDMSMU ; IHS/CMI/LAB - utilities for hmr ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**3,4,8,9,10**;JUN 14, 2007;Build 12
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**3,4,8,9,10,13,14,15,18**;JUN 14, 2007;Build 147
  ;
 D1(D) ;EP - DATE WITH 4 YR
  I $G(D)="" Q ""
@@ -80,18 +80,20 @@ LASTITEM(P,V,T,F) ;EP - return last item V
  NEW BDMY,%,E,Y K BDMY S %=P_"^LAST "_T_" "_V,E=$$START1^APCLDF(%,"BDMY(")
  Q $S(F="D":$P($G(BDMY(1)),"^"),F="B":$P($G(BDMY(1)),"^")_"^"_$P($G(BDMY(1)),"^",2),1:$P($G(BDMY(1)),"^",2))
  ;
-PLTAX(P,A,S,F) ;EP - is DM on problem list 1 or 0
+PLTAX(P,A,S,F,J) ;EP - is DM on problem list 1 or 0
  I $G(P)="" Q ""
  I $G(A)="" Q ""
  S S=$G(S)
  S F=$G(F)
  I F="" S F=1
- N T S T=A  ;$O(^ATXAX("B",A,0))
+ S J=$G(J)
+ N T S T=$O(^ATXAX("B",A,0))
  ;I 'T Q ""
  N X,Y,I,Z S (X,Y,I)=0,Z="" F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(I)  I $D(^AUPNPROB(X,0)) D
  .Q:$P(^AUPNPROB(X,0),U,12)="D"
+ .I J]"" Q:$P(^AUPNPROB(X,0),U,12)=J
  .S Y=$P(^AUPNPROB(X,0),U)
- .Q:'$$ICD^BDMUTL(Y,T,9)
+ .Q:'$$ICD^ATXCHK(Y,T,9)
  .I S]"",$P(^AUPNPROB(X,0),U,12)'=S Q
  .S I=1
  .S Z=X
@@ -135,25 +137,30 @@ LASTHF(P,C,F,BD,ED) ;EP - get last factor in category C for patient P
  I '$G(P) Q ""
  I $G(C)="" Q ""
  I $G(F)="" S F=""
- S C=$O(^AUTTHF("B",C,0))
+ NEW N
+ S N=C
+ S C=$O(^AUTTHF("B",N,0))
+ ;I '$G(C) Q ""
+ I 'C S C=$O(^AUTTHF("C",N,0))
  I '$G(C) Q ""
  I $G(BD)="" S BD=$$DOB^AUPNPAT(P)
  I $G(ED)="" S ED=DT
  NEW H,D,O S H=0 K O
+ ;IHS/CMI/LAB - FIXED 02/26/2021 PER HELP DESK TICKET
  F  S H=$O(^AUTTHF("AC",C,H))  Q:'+H  D
- .  Q:'$D(^AUPNVHF("AA",P,H))
- .  S D=$O(^AUPNVHF("AA",P,H,""))
- .  Q:'D
- .  I (9999999-D)<BD Q
- .  I (9999999-D)>ED Q
- .  S O(D)=$O(^AUPNVHF("AA",P,H,D,""))
- .  Q
+ .Q:'$D(^AUPNVHF("AA",P,H))
+ .S D="" F  S D=$O(^AUPNVHF("AA",P,H,D)) Q:D'=+D  D
+ ..Q:(9999999-D)>ED  ;after time frame
+ ..Q:(9999999-D)<BD  ;before time frame
+ ..S O(D)=$O(^AUPNVHF("AA",P,H,D,""))
+ .Q
  S D=$O(O(0))
  I D="" Q D
  I F="N" Q $$VAL^XBDIQ1(9000010.23,O(D),.01)
  I F="S" Q $P($G(^AUPNVHF(O(D),0)),U,6)
  I F="B" Q $$VAL^XBDIQ1(9000010.23,O(D),.01)_"  "_$$DATE^BDMS9B1((9999999-D))
  I F="X" Q $$VAL^XBDIQ1(9000010.23,O(D),.01)_"  "_$$DATE^BDMS9B1((9999999-D))_U_(9999999-D)
+ I F="A" Q 1_U_$$VAL^XBDIQ1(9000010.23,O(D),.01)_U_(9999999-D)_U_$$VAL^XBDIQ1(9999999.64,$$VALI^XBDIQ1(9000010.23,O(D),.01),.02)
  Q 9999999-D
  ;
 FRSTITEM(P,V,T,F) ;EP - return last item V

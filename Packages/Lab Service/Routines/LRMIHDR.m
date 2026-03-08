@@ -1,5 +1,5 @@
 LRMIHDR ;DALOI/CJS/BA/RLM-HEALTH DEPARTMENT REPORT ;2/19/91 10:46 [ 05/01/2003  7:12 AM ]
- ;;5.2T9;LR;*1018*;Nov 17, 2004
+ ;;5.2;LR;*1018*;Nov 18, 2004
  ;;5.2;LAB SERVICE;**45,272,298**;Sep 27, 1994
  ; Reference to ^%DT supported by DBIA #10003
  ; Reference to ^%ZISC supported by DBIA #10089

@@ -1,5 +1,5 @@
 ABSPOSQ3 ; IHS/FCS/DRS - tasked from ABSPOSQ2 ;     [ 09/12/2002  10:18 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,14**;JUN 01, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,14**;JUN 01, 2001;Build 131
  Q
  ; 
  ; Subroutines split away from ABSPOSQ3:
@@ -100,7 +100,7 @@ ENDJOB ;
  D DONE^ABSPOSL
 ENDJOB99 ;EP
  I '$D(^ABSPECX("ABSPOSQ3","JOB",$J)) D  ; impossible
- . D IMPOSS^ABSPOSUE("P","TI","my job-defined locked node disappeared!!!  $J="_$J,,"ENDJOB99",$T(+0))
+ .D IMPOSS^ABSPOSUE("P","TI","my job-defined locked node disappeared!!!  $J="_$J,,"ENDJOB99",$T(+0))
  K ^ABSPECX("ABSPOSQ3","JOB",$J)
  L -^ABSPECX("ABSPOSQ3","JOB",$J)
  ;

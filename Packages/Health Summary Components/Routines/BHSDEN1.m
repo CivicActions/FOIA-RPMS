@@ -1,10 +1,11 @@
-BHSDEN1 ;IHS/CIA/MGH - Health Summary for Dental ;17-Mar-2006 10:36;MGH
- ;;1.0;HEALTH SUMMARY COMPONENTS;;March 17, 2006
+BHSDEN1 ;IHS/CIA/MGH - Health Summary for Dental ;16-Mar-2023 10:47
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**18**;Jan 06, 2006;Build 18
  ;===================================================================
  ;Taken from ADERVW1
  ; IHS/HQT/MJL  - DENTAL CHART REVIEW PT 3 ;  [ 03/24/1999   9:04 AM ]
  ;;6.0;ADE;;APRIL 1999
  ;Dental health summary; list procedures - continuation of BHSDEN
+ ; Modified - 03/16/2023 patch 18 IHS/MSC/MIR Lines DNTCHK+6:+15
  ;
 DO ; EP
  I '$D(^ADEPCD("DATE",ADEPAT)) S ADETXT="<No Services on Record>",ADENRQ="",ADEICL=0 X ADEPRT Q
@@ -26,8 +27,16 @@ DNTCHK ;
  I 'ADEDTU W ADEDTD S ADEFO=""
  I ADENSH=ADEFO S ADESFN=""
  E  S (ADESFN,ADEFO)=ADENSH W ?10,ADESFN
- I ADEREP]"",$D(^DIC(16,ADEREP,0)) W " --",$P(^DIC(16,ADEREP,0),U),"--"
- I ADEPRV]"",ADEPRV'=ADEREP,$D(^DIC(16,ADEPRV,0)) W " (Provider: ",$P(^DIC(16,ADEPRV,0),U),")"
+ ; patch 18 IHS/MSC/MIR 03/16/2023
+ I ADEREP]"" D
+ .N ADEREPNM S ADEREPNM=$$GET1^DIQ(9002007,ADEDFN,3)
+ .I ADEREPNM]"" W " --",ADEREPNM,"--"      ; patch 18 IHS/MSC/MIR 03/16/2023
+ .;I $D(^DIC(16,ADEREP,0)) W " --",$P(^DIC(16,ADEREP,0),U),"--"
+ I ADEPRV]"",ADEPRV'=ADEREP D
+ .N ADEPRVNM S ADEPRVNM=$$GET1^DIQ(9002007,ADEDFN,4)
+ .I ADEPRVNM]"" W " (Provider: ",ADEPRVNM  ; patch 18 IHS/MSC/MIR 03/07/2023
+ .;I $D(^DIC(16,ADEPRV,0)) W " (Provider: ",$P(^DIC(16,ADEPRV,0),U),")"
+ ; End of change
  W !
  S ADEDTU=1
  D DSVC

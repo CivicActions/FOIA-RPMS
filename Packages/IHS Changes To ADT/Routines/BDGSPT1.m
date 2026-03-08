@@ -1,5 +1,5 @@
 BDGSPT1 ; IHS/OIT/LJF - DISPLAY PATIENTS ACCESSED BY A USER
- ;;5.3;PIMS;**1005,1007**;MAY 28,2004
+ ;;5.3;PIMS;**1005,1007,1022**;MAY 28,2004;Build 18
  ;IHS/OIT/LJF 01/20/2006 PATCH 1005 Added this routine
  ;
  NEW BDGUSR,BDGBD,BDGED,SCREEN,BDGSORT
@@ -37,8 +37,14 @@ INIT ; -- init variables and list array
  . S DFN=0 F  S DFN=$O(^TMP("BDGSPT1A",$J,SORT,DFN)) Q:'DFN  D
  . . S RVDT=0 F  S RVDT=$O(^TMP("BDGSPT1A",$J,SORT,DFN,RVDT)) Q:'RVDT  D
  . . . S IENS=RVDT_","_DFN
- . . . S LINE=$$PAD(" "_$E($$GET1^DIQ(2,DFN,.01),1,21),24)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)  ;patient/chart#
- . . . S LINE=$$PAD(LINE,34)_$E($$READRVD^BDGF(RVDT),1,18)                    ;date/time accessed
+ . . . ;20230619 97824 p1022 maw for PPN
+ . . . ;S LINE=$$PAD(" "_$E($$GET1^DIQ(2,DFN,.01),1,21),24)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)  ;patient/chart#
+ . . . S LINE=$$PAD(" "_$$GETPREF^AUPNSOGI(DFN,"E",1),60)  ;patient/chart#
+ . . . S VALMCNT=VALMCNT+1
+ . . . D SET^VALM10(VALMCNT,LINE)
+ . . . ;S VALMCNT=VALMCNT+1
+ . . . S LINE=""
+ . . . S LINE=$$PAD(LINE,24)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)_"    "_$E($$READRVD^BDGF(RVDT),1,18)                    ;date/time accessed
  . . . ;S LINE=$$PAD(LINE,54)_$E($$GET1^DIQ(38.11,IENS,3),1,15)               ;option accessed  cmi/anch/maw 9/12/2007 orig line
  . . . S LINE=$$PAD(LINE,54)_$E($$GET1^DIQ(38.11,IENS,3),1,22)                ;option accessed cmi/anch/maw 9/12/2007 per ljf email PATCH 1007
  . . . ;S X=$$SENS(DFN,RVDT) I X]"" S LINE=$$PAD(LINE,70)_"/ "_X              ;sensitivity level cmi/anch/maw 9/12/2007 orig line

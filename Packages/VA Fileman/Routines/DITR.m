@@ -1,15 +1,15 @@
-DITR ;SFISC/GFT-FIND FLDS TO XRF ;8SEP2011
- ;;22.0;VA FileMan;**41,168**;Mar 30, 1999;Build 27
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DITR ;SFISC/GFT-FIND FLDS TO XRF ;3/12/98  14:25 [ 09/10/1998  10:48 AM ]
+ ;;21.0;VA FileMan;**1007**;Sep 8, 1998
+ ;;21.0;VA FileMan;**6,25,41**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+ ;12381;5528738;2468;
+ ;
  N DITRCNT
 LOOP S (DFL,DTL)=DFL-1 Q:'$D(DFN(DFL))
 N S @("DFN(DFL)=$O("_DFR(DFL)_"DFN(DFL)))")
  I DFN(DFL)]"",$D(^(DFN(DFL)))#2 S Z=^(DFN(DFL)),A="" D:$G(DIFRFRV) SFRV1 G NS
  G LOOP:DFN(DFL)="",1:DFL#2,LOOP:$D(^(DFN(DFL),0))-1 S Z=^(0),X="D"_(DFL\2),@X=DFN(DFL) I DTO,$D(DSC(DDF(DFL+1))) X DSC(DDF(DFL+1)) E  G N
- I $P(^DD(DDT(DTL),.01,0),U,2)["W" D ^DITR1 G N
- D ^DITR1 I A D:$G(DIFRSA)]"" ERR G N
- I $G(DIFRSA)]"",'DKP,@("$D("_DTO(DTL)_"Y))") D KILLIDX
- D D,SFRV1:$G(DIFRFRV)
+ D ^DITR1 G N:A D D,SFRV1:$G(DIFRFRV)
 NS S A=$O(^DD(DDF(DFL),"GL",DFN(DFL),A)) G N:A=""
  S W=$O(^(A,0)) S:W="" W=-1 G:$G(DIFRDKP) NS:$D(@DIFRSA@("^DD",DIFRFILE,DDF(DFL),W)) I A S Y=$P(Z,U,A) G NS:Y=""
  E  S Y=$E(Z,+$E(A,2,9),$P(A,",",2)) F %=$L(Y):-1 Q:" "'[$E(Y,%)  G NS:'% S Y=$E(Y,1,%-1)
@@ -47,19 +47,7 @@ F ;
  Q:'$D(^(Z))  S X=$P(DITF,";",2) I X S Z=$P(^(Z),U,X) G I
  S Z=$E(^(Z),+$E(X,2,9),+$P(X,",",2))
 I ;
- S DFL=0,DTL=0,DA=D0 D ^DITR1
- I A D:$G(DIFRSA)]"" ERR Q
- I $G(DIFRSA)]"" S DIFRND0=Y I 'DKP,@("$D("_DTO(DTL)_"Y))") D KILLIDX
+ S DFL=0,DTL=0,DA=D0 D ^DITR1 I $G(DIFRSA)]"" S:$D(@DIFRSA@("TMP"))>9 DIFRND0=Y
+ Q:A
 GO ;
  S DFL=1,DTL=1,DFN(1)=-1 D N
- Q
- ;
-KILLIDX ; Kill the old index for single entry (overwrite mode only).
- N DIK,DA,%,A,B S DA=Y,DIK=DTO(DTL),DIK(0)="ABs"
- S A=$$CREF^DILF(DIK),A=$NA(@A),B=$QL(A)-1 F %=1:1:DFL\2 S DA(%)=$QS(A,B),B=B-2 ;GET SUBSCRIPTED VALUES OF DA  --GFT
- N D0,DDF,DDT,DFL,DFR,DINUM,DTL,DTN,DTO,I,W,X,Y,Z
- D IX2^DIK Q
- ;
-ERR N DIPAR S DIPAR(.01)=X,DIPAR("IEN")=Y,DIPAR("FILE")=DDT(DFL)
- D BLD^DIALOG(9513.1,.DIPAR) Q
- ;

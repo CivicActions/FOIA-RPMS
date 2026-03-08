@@ -1,5 +1,5 @@
 APCDCAFG ; IHS/CMI/LAB - ; COMP VISITS W/LAST USER
- ;;2.0;IHS PCC SUITE;**11**;MAY 14, 2009;Build 58
+ ;;2.0;IHS PCC SUITE;**11,29**;MAY 14, 2009;Build 20
  ;
 START ;
  D XIT
@@ -108,7 +108,7 @@ HDR ;EP;HEADER
  I $E(IOST)="C",IO=IO(0) W ! S DIR(0)="EO" D ^DIR K DIR I Y=0!(Y="^")!($D(DTOUT)) S APCDQUIT=1 Q
 HDR1 ;
  W:$D(IOF) @IOF S APCDPG=APCDPG+1
- W !,$$FMTE^XLFDT(DT),?70,"Page: ",APCDPG
+ W !,$$FMTE^XLFDT($$NOW^XLFDT()),?70,"Page: ",APCDPG
  W !?29,"PCC Data Entry Module"
  W !,$$CTR("******************************************************",80)
  W !,$$CTR("*   COUNT OF VISITS REVIEWED/COMPLETED BY OPERATOR   *",80)

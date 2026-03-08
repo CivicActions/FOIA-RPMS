@@ -1,5 +1,5 @@
 BQICEVW ;VNGT/HS/BEE - CMET Views ; 06 Jun 2008  2:22 PM
- ;;2.3;ICARE MANAGEMENT SYSTEM;;Apr 18, 2012;Build 59
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**3**;Mar 01, 2021;Build 32
  ;
 RET(DATA,OWNR,PLIEN,CARE) ; EP - BQI GET CMET VIEW
  ; Input
@@ -39,7 +39,6 @@ RET(DATA,OWNR,PLIEN,CARE) ; EP - BQI GET CMET VIEW
  S SORT=$$SFNC(CRN,TYP)
  S SDIR="A"_$C(29)_"D"_$C(29)_"A",TEMPL="System Default"
  S II=II+1,@DATA@(II)=TIEN_U_TEMPL_U_DEF_U_TYP_U_DISPLAY_U_SORT_U_SDIR_$C(30)
- ;S II=II+1,@DATA@(II)=DISPLAY_"^"_$G(SORT)_"^"_$G(SDIR)_$C(30)
  ;
 DONE ;
  S II=II+1,@DATA@(II)=$C(31)
@@ -108,8 +107,6 @@ FIL(OWNR,PLIEN,CARE,TEMPL,SOR,SDIR,DOR) ; EP - Filer
  .. S BQIDEL(90505.1231,IENS,.01)="@"
  . I $D(BQIDEL) D FILE^DIE("","BQIDEL","ERROR")
  . K DA,IENS
- . ;
- . N DA,IENS
  . S DA(2)=OWNR,DA(1)=PLIEN
  . S DA=0
  . F  S DA=$O(^BQICARE(OWNR,1,PLIEN,4,DA)) Q:'DA  D
@@ -118,7 +115,6 @@ FIL(OWNR,PLIEN,CARE,TEMPL,SOR,SDIR,DOR) ; EP - Filer
  .. S BQIDEL(90505.14,IENS,.01)="@"
  . I $D(BQIDEL) D FILE^DIE("","BQIDEL","ERROR")
  . K DA,IENS
- . ;
  . ; If template
  . I $G(TEMPL)'=""  D  Q
  .. NEW DA,DIC,DLAYGO,IENS,DIE
@@ -139,21 +135,19 @@ FIL(OWNR,PLIEN,CARE,TEMPL,SOR,SDIR,DOR) ; EP - Filer
  .. S DA(3)=OWNR,DA(2)=PLIEN,DA(1)=CRIEN
  .. S DIC="^BQICARE("_DA(3)_",1,"_DA(2)_",23,"_DA(1)_",1,",DIE=DIC
  .. S DLAYGO=90505.1231,DIC(0)="L",DIC("P")=DLAYGO
- .. ;S GIEN=$O(^BQI(90506.1,"B",GCODE,""))
  .. S X=GCODE
- .. I $G(^BQICARE(DA(3),1,DA(2),23,DA(1),0))="" S ^BQICARE(DA(3),1,DA(2),23,DA(1),0)="^90505.1231^^"
+ .. I $G(^BQICARE(DA(3),1,DA(2),23,0))="" S ^BQICARE(DA(3),1,DA(2),23,0)="^90505.123^^"
  .. K DO,DD D FILE^DICN
  .. S DA=+Y I DA<1 S ERROR=1 Q
+ .. I $G(^BQICARE(DA(3),1,DA(2),23,DA(1),1,0))="" S ^BQICARE(DA(3),1,DA(2),23,DA(1),1,0)="^90505.1231^^"
  .. S IENS=$$IENS^DILF(.DA)
  .. S BQIUPD(90505.1231,IENS,.02)=DI
  .. D FILE^DIE("","BQIUPD","ERROR")
- . ;
  . F SI=1:1:$L(SOR,$C(29)) S SIEN=$P(SOR,$C(29),SI) Q:SIEN=""  D
  .. NEW DA,X,IENS,BQIUPD
  .. ;I SIEN'?.N S SIEN=$O(^BQI(90506.1,"B",SIEN,""))
  .. S SN=$O(^BQICARE(OWNR,1,PLIEN,23,CRIEN,1,"B",SIEN,""))
  .. S DA(3)=OWNR,DA(2)=PLIEN,DA(1)=CRIEN,DA=SN,IENS=$$IENS^DILF(.DA)
- .. ;S BQIUPD(90505.1231,IENS,.03)=SIEN
  .. S BQIUPD(90505.1231,IENS,.03)=SI
  .. S BQIUPD(90505.1231,IENS,.04)=$P(SDIR,$C(29),SI)
  .. D FILE^DIE("","BQIUPD","ERROR")
@@ -174,8 +168,6 @@ FIL(OWNR,PLIEN,CARE,TEMPL,SOR,SDIR,DOR) ; EP - Filer
  .. S BQIDEL(90505.3231,IENS,.01)="@"
  . I $D(BQIDEL) D FILE^DIE("","BQIDEL","ERROR")
  . K DA,IENS
- . ;
- . N DA,IENS
  . S DA(3)=OWNR,DA(2)=PLIEN,DA(1)=DUZ
  . S DA=0
  . F  S DA=$O(^BQICARE(OWNR,1,PLIEN,30,DUZ,4,DA)) Q:'DA  D
@@ -184,7 +176,6 @@ FIL(OWNR,PLIEN,CARE,TEMPL,SOR,SDIR,DOR) ; EP - Filer
  .. S BQIDEL(90505.34,IENS,.01)="@"
  . I $D(BQIDEL) D FILE^DIE("","BQIDEL","ERROR")
  . K DA,IENS
- . ;
  . ; If template
  . I $G(TEMPL)'=""  D  Q
  .. NEW DA,DIC,DLAYGO,IENS,DIE
@@ -205,18 +196,16 @@ FIL(OWNR,PLIEN,CARE,TEMPL,SOR,SDIR,DOR) ; EP - Filer
  .. S DA(4)=OWNR,DA(3)=PLIEN,DA(2)=DUZ,DA(1)=CRIEN
  .. S DIC="^BQICARE("_DA(4)_",1,"_DA(3)_",30,"_DA(2)_",23,"_DA(1)_",1,",DIE=DIC
  .. S DLAYGO=90505.3231,DIC(0)="L",DIC("P")=DLAYGO
- .. ;S GIEN=$O(^BQI(90506.1,"B",GCODE,""))
  .. S X=GCODE
- .. I $G(^BQICARE(DA(4),1,DA(3),30,DA(2),23,DA(1),0))="" S ^BQICARE(DA(4),1,DA(3),30,DA(2),23,DA(1),0)="^90505.321^^"
+ .. I $G(^BQICARE(DA(4),1,DA(3),30,DA(2),23,0))="" S ^BQICARE(DA(4),1,DA(3),30,DA(2),23,0)="^90505.323^^"
  .. K DO,DD D FILE^DICN
  .. S DA=+Y I DA<1 S ERROR=1
+ .. I $G(^BQICARE(DA(4),1,DA(3),30,DA(2),23,DA(1),0))="" S ^BQICARE(DA(4),1,DA(3),30,DA(2),23,DA(1),0)="^90505.321^^"
  . ;
  . F SI=1:1:$L(SOR,$C(29)) S SIEN=$P(SOR,$C(29),SI) Q:SIEN=""  D
  .. NEW DA,X,IENS
- .. ;I SIEN'?.N S SIEN=$O(^BQI(90506.1,"B",SIEN,""))
  .. S SN=$O(^BQICARE(OWNR,1,PLIEN,30,DUZ,23,CRIEN,1,"B",SIEN,""))
  .. S DA(4)=OWNR,DA(3)=PLIEN,DA(2)=DUZ,DA(1)=CRIEN,DA=SN,IENS=$$IENS^DILF(.DA)
- .. ;S BQIUPD(90505.3231,IENS,.02)=SIEN
  .. S BQIUPD(90505.3231,IENS,.02)=SI
  .. S BQIUPD(90505.3231,IENS,.03)=$P(SDIR,$C(29),SI)
  . D FILE^DIE("I","BQIUPD","ERROR")
@@ -227,7 +216,7 @@ DFNC() ;EP -- Get the standard display order
  NEW CRIEN,TYP,ORD,KEY
  S DVALUE=""
  ; Check for any alternate display order which trumps source display order
- S CRIEN=$$FIND1^DIC(90506.5,"","B",CARE,"","","ERROR")
+ S CRIEN=$$FIND1^DIC(90506.5,"","OB",CARE,"","","ERROR")
  S TYP=$P(^BQI(90506.5,CRIEN,0),U,2)
  S ORD=""
  F  S ORD=$O(^BQI(90506.1,"AF",TYP,ORD)) Q:ORD=""  D
@@ -240,7 +229,7 @@ DFNC() ;EP -- Get the standard display order
  ... S DVALUE=DVALUE_STVCD_$C(29)
  ;
  ; Get demographic data display order
- S CRIEN=$$FIND1^DIC(90506.5,"","B","Patient","","","ERROR")
+ S CRIEN=$$FIND1^DIC(90506.5,"","OB","Patient","","","ERROR")
  S TYP=$P(^BQI(90506.5,CRIEN,0),U,2)
  ; Check for alternate display order first
  S ORD=""
@@ -282,7 +271,7 @@ SFNC(CRN,TYP) ;EP -- Get the standard sort order
  ... S SVALUE=SVALUE_$S(SVALUE]"":$C(29),1:"")_STVCD
  ;
  ;Now Get Patient Sort(s)
- S CRN=$$FIND1^DIC(90506.5,"","B","Patient","","","ERROR")
+ S CRN=$$FIND1^DIC(90506.5,"","OB","Patient","","","ERROR")
  S TYP=$P(^BQI(90506.5,CRN,0),U,2)
  S ORD=""
  F  S ORD=$O(^BQI(90506.1,"AE",TYP,ORD)) Q:ORD=""  D
@@ -298,7 +287,7 @@ SFNC(CRN,TYP) ;EP -- Get the standard sort order
 CDEF() ; EP - Get Care Management source default fields
  NEW CRIEN,TYP,ORD,KEY
  S MVALUE=""
- S CRIEN=$$FIND1^DIC(90506.5,"","B",CARE,"","","ERROR")
+ S CRIEN=$$FIND1^DIC(90506.5,"","OB",CARE,"","","ERROR")
  S TYP=$P(^BQI(90506.5,CRIEN,0),U,2)
  ;
  ; Check for normal display order
@@ -352,12 +341,10 @@ TMPL(CARE) ;EP - Check if layout template is used
  . S DA(2)=OWNR,DA(1)=PLIEN,IENS=$$IENS^DILF(.DA)
  . S TEMPL=$$GET1^DIQ(90505.14,IENS,.01,"E")
  I TEMPL'="" D
- . ;S LYIEN=$$DEF^BQILYUTL(OWNR,"M")
  . S LYIEN=$$TPN^BQILYUTL(DUZ,TEMPL)
  . I LYIEN="" Q
  . D DEF^BQILYDEF(LYIEN)
  . S RESULT=1
- . ;S DISPLAY=$P(@DATA@(II),U,3),SOR=$P(@DATA@(II),U,4),SDIR=$P(@DATA@(II),U,5)
  Q RESULT
  ;
 CVW(CARE) ;EP - Get Customized Care Management view
@@ -373,19 +360,13 @@ CVW(CARE) ;EP - Get Customized Care Management view
  . S TYP=$P(^BQI(90506.5,CRN,0),U,2)
  . S IEN=0,DISPLAY="",SORT="",SDIR=""
  . F  S IEN=$O(^BQICARE(OWNR,1,PLIEN,23,CIEN,1,IEN)) Q:'IEN  D
- .. ;S GIEN=$P(^BQICARE(OWNR,1,PLIEN,23,CIEN,1,IEN,0),"^",1)
  .. S CODE=$P(^BQICARE(OWNR,1,PLIEN,23,CIEN,1,IEN,0),"^",1)
  .. S SIEN=$P(^BQICARE(OWNR,1,PLIEN,23,CIEN,1,IEN,0),"^",3)
  .. S RIEN=$P(^BQICARE(OWNR,1,PLIEN,23,CIEN,1,IEN,0),"^",4)
- .. ;S CODE=$P(^BQI(90506.1,GIEN,0),U,1)
  .. S DISPLAY=DISPLAY_CODE_$C(29)
  .. I SIEN'="" D
- ... ;I SIEN?.N S CODE=$P(^BQI(90506.1,SIEN,0),U,1)
- ... ;E  S CODE=SIEN
- ... ;S SORT=SORT_CODE_$C(29)
  ... S $P(SORT,$C(29),SIEN)=CODE
  ... S $P(SDIR,$C(29),SIEN)=RIEN
- .. ;S SDIR=SDIR_RIEN_$C(29)
  ;
  ; User is not owner but share
  I OWNR'=DUZ D  I FL=0 Q 0
@@ -398,15 +379,10 @@ CVW(CARE) ;EP - Get Customized Care Management view
  .. S CODE=$P(^BQICARE(OWNR,1,PLIEN,30,DUZ,23,CIEN,1,IEN,0),"^",1)
  .. S SIEN=$P(^BQICARE(OWNR,1,PLIEN,30,DUZ,23,CIEN,1,IEN,0),"^",3)
  .. S RIEN=$P(^BQICARE(OWNR,1,PLIEN,30,DUZ,23,CIEN,1,IEN,0),"^",4)
- .. ;S CODE=$P(^BQI(90506.1,GIEN,0),U,1)
  .. S DISPLAY=DISPLAY_CODE_$C(29)
  .. I SIEN'="" D
- ... ;I SIEN?.N S CODE=$P(^BQI(90506.1,SIEN,0),U,1)
- ... ;E  S CODE=SIEN
- ... ;S SORT=SORT_CODE_$C(29)
  ... S $P(SORT,$C(29),SIEN)=CODE
  ... S $P(SDIR,$C(29),SIEN)=RIEN
- .. ;S SDIR=SDIR_RIEN_$C(29)
  ;
  S DISPLAY=$$TKO^BQIUL1(DISPLAY,$C(29))
  S SORT=$$TKO^BQIUL1(SORT,$C(29))

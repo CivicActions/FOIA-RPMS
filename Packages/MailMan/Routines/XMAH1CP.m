@@ -14,7 +14,7 @@ AQ ;Is it a network response ?  (current code just checks sender)
  ;IHSNET -the send across network question has already been asked
  ;FORUM is screened when sender is from there
  ;R mfd  ;for testing
- K XMNETREC,IHSREC I XMDUZ'=.6,$S($P(XMR,U,2)["@":1,1:0),$S($P(XMR,U,2)["DOMAIN.NAME":0,1:1) S XMNETREC=1,IHSREC=1
+ K XMNETREC,IHSREC I XMDUZ'=.6,$S($P(XMR,U,2)["@":1,1:0),$S($P(XMR,U,2)["FORUM.VA.GOV":0,1:1) S XMNETREC=1,IHSREC=1
  K IHS,IHSNET D IHS  ;IHS/MFD added line
  D REPLY^XMA11 K XMSUB I X[U K XMNETREC G AZ
  W !!," << LOCAL Reply Sent >>",!
@@ -36,7 +36,7 @@ ARA W *7,$S($D(IORVON):IORVON,1:""),!,"Do you wish to send this reply across the
  W !,"The sender of this message will not see your response if you answer 'No'."
  W !!,"CAUTION !!!",!!
  W "A network response will go to all message recipients on the mail system"
- W !,"of the sender.  FOR EXAMPLE, If the sender's address ends '@DOMAIN.NAME'"
+ W !,"of the sender.  FOR EXAMPLE, If the sender's address ends '@FORUM.VA.GOV'"
  W !,"and the message had 500 recipients on FORUM, then a response sent across"
  W !,"the network will be delivered to 500 recipients.  If you prefer to send a"
  W !,"response only to the sender, you should create a new message.",!!

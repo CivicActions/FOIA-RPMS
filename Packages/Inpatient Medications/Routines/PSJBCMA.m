@@ -1,5 +1,5 @@
-PSJBCMA ;BIR/MV-RETURN INPATIENT ACTIVE MEDS (CONDENSED) ;16 Mar 99 / 10:13 AM
- ;;5.0; INPATIENT MEDICATIONS ;**32,41,46,57,63,66,56,69,58,81,91,104,111,112,186,159,173,190**;16 DEC 97;Build 12
+PSJBCMA ;BIR/MV-RETURN INPATIENT ACTIVE MEDS (CONDENSED) ;30-Dec-2022 15:42;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**32,41,46,57,63,66,56,69,58,81,91,104,111,112,186,159,173,190,1033**;16 DEC 97;Build 34
  ;
  ; Reference to ^PS(50.7 is supported by DBIA 2180.
  ; Reference to ^PS(51 is supported by DBIA 2176.
@@ -11,7 +11,9 @@ PSJBCMA ;BIR/MV-RETURN INPATIENT ACTIVE MEDS (CONDENSED) ;16 Mar 99 / 10:13 AM
  ; Reference to ^PSDRUG is supported by DBIA 2192.
  ; Usage of this routine by BCMA is supported by DBIA 2828.
  ;
-EN(DFN,BDT,OTDATE)         ; return condensed list of inpat meds
+ ; Modified - IHS/MSC/PLS - 12/30/2022 - IVVAR+2, IVVAR+6
+ ;
+EN(DFN,BDT,OTDATE) ; return condensed list of inpat meds
  NEW CNT,DN,F,FON,ON,PST,WBDT,X,X1,X2,Y,%
  D:+$G(DFN) ORDER
  I '$D(^TMP("PSJ",$J,1,0)) S ^(0)=-1
@@ -52,7 +54,7 @@ ORDER ;Loop thru orders.
  K PSJON
  Q
 UDVAR ;Set ^TMP for Unit dose & Pending orders
- D UDPEND Q:'$$CLINICS($G(CLINIC)) 
+ D UDPEND Q:'$$CLINICS($G(CLINIC))
  D TMP
  ;Setup Dispense drug for ^TMP
  S CNT=0 D NOW^%DTC
@@ -65,11 +67,12 @@ UDVAR ;Set ^TMP for Unit dose & Pending orders
  Q
 IVVAR ;Set variables for IV and pending orders
  NEW ND,X,Y
- I FON["P" D UDPEND Q:'$$CLINICS(CLINIC)  S PSJ("INFRATE")=$P($G(^PS(53.1,ON,8)),U,5)
+ I FON["P" D UDPEND Q:'$$CLINICS(CLINIC)  S PSJ("INFRATE")=$P($P($G(^PS(53.1,ON,8)),U,5),"@")
  I FON["V" D  Q:'$$CLINICS(CLINIC)
  . S X=$G(^PS(55,DFN,"IV",ON,0)),CLINIC=$G(^("DSS")) Q:'$$CLINICS(CLINIC)
  . S PSJ("STARTDT")=$P(X,U,2),PSJ("STOPDT")=$P(X,U,3)
- . S PSJ("INFRATE")=$P(X,U,8),PSJ("SCHD")=$P(X,U,9)
+ . ;S PSJ("INFRATE")=$P(X,U,8),PSJ("SCHD")=$P(X,U,9)
+ . S PSJ("INFRATE")=$P($P(X,U,8),"@"),PSJ("SCHD")=$P(X,U,9)
  . S PSJ("ADM")=$P(X,U,11),PSJ("AUTO")=$P(X,U,12),PSJ("STATUS")=$P(X,U,17)
  . S PSJ("IVTYPE")=$P(X,U,4),PSJ("INSYR")=$P(X,U,5)
  . S PSJ("CPRS")=$P(X,U,21),PSJ("CHEMO")=$P(X,U,23)
@@ -136,7 +139,7 @@ UDPEND ;
  D SIOPI
  S PSJ("STC")=PSJ("ST")
  I PSJ("ST")="R"!(PSJ("ST")="C") S PSJ("STC")=$S(PSJ("SCHD")["PRN":"P","^ONCALL^ON-CALL^ON CALL^"[("^"_PSJ("SCHD")_"^"):"OC",$$ONE(DFN,FON,PSJ("SCHD"))="O":"O",1:"C")
- Q 
+ Q
 TMP ;Setup ^TMP that have common fields between IV and U/D
  N A
  S PSJINX=PSJINX+1

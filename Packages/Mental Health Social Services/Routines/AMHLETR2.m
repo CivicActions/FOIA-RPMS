@@ -1,5 +1,5 @@
-AMHLETR2 ; IHS/CMI/LAB - print report of tps needing resolved ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLETR2 ; IHS/CMI/LAB - print report of tps needing resolved ; [ 02/21/2007  3:38 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4,7,8**;JAN 27, 2003
  ;
  ;fixed potential undef
  ;
@@ -43,9 +43,6 @@ SORT ;
  S DIR(0)="S^P:Responsible Provider;N:Patient Name;D:Date Established",DIR("A")="Sort list by",DIR("B")="P" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G THER
  S AMHSORT=Y
-DEMO ;
- D DEMOCHK^AMHUTIL1(.AMHDEMO)
- I AMHDEMO=-1 G THER
 ZIS ;
  S XBRC="PROC^AMHLETR2",XBRP="PRINT^AMHLETR2",XBNS="AMH",XBRX="XIT^AMHLETR2"
  D ^XBDBQUE
@@ -63,8 +60,7 @@ PROC1 ;
  S X=$G(^AMHPTXP(AMHTP,0))
  Q:$P(X,U,2)=""  ;no patient
  Q:'$$ALLOWP^AMHUTIL(DUZ,$P(X,U,2))
- Q:$$DEMO^AMHUTIL1($P(X,U,2),$G(AMHDEMO))
- Q:'$$ALLOWTP^AMHLETP(DUZ,AMHTP)
+ Q:'$$ALLOWTP^AMHLETP(AMHTP)
  I $G(AMHTHER),$P(X,U,4)'=AMHTHER Q
  I AMHPROG]"",$P(X,U,17)'=AMHPROG Q
  D @AMHSORT
@@ -121,8 +117,7 @@ HEAD1 ;EP
  W ?20,"Date Established: ",AMHBDD," to ",AMHEDD,!
  I AMHPROG]"" S X="Program: "_$$EXTSET^XBFUNC(9002011.56,.17,AMHPROG) W $$CTR(X),!
  I $G(AMHTHER) S X="Responsible Provider:  "_$P(^VA(200,AMHTHER,0),U) W $$CTR(X),!
- W !,"PATIENT NAME",?23,"DOB",?33,"CHART #",?41,"DATE",?54,"REVIEW DATE",?68,"ANTICIPATED"
- W !?41,"ESTABLISHED",?68,"COMPLETION",!?68,"DATE"
- W !
+ W !,"PATIENT NAME",?23,"DOB",?33,"CHART #",?41,"DATE",?54,"REVIEW DATE",?68,"RESOLVE DATE"
+ W !?41,"ESTABLISHED",!
  W AMH80D,!
  Q

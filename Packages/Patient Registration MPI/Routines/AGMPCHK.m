@@ -1,7 +1,6 @@
-AGMPCHK ;GDIT/HS/SWH-Site ID Check; NOV 11, 2016
- ;;7.2;IHS PATIENT REGISTRATION;**5**;NOV 30, 2016 ;Build 20
+AGMPCHK ;GDIT/HS/SWH - MPI Site ID Check; NOV 11, 2016
+ ;;1.0;AGMP;**3**;Apr 30, 2021;Build 45
  Q
- ;
  ; 
 BUILD ;Create the Institution - Site Information globals entries
  N INST,SID
@@ -14,16 +13,14 @@ BUILD ;Create the Institution - Site Information globals entries
  .D CENTRY(SID,INST,"VALID")
  Q
  ;
- ;
 UENTRY(INST,VAL,ID1) ;Update an entry within the ^AGMPCHK global
  S ^AGMPCHK(INST,1)=VAL
  S ^AGMPCHK(INST)=ID1
  I (VAL="INVALID") D  Q
  .S ^AGMPCHK(INST,"NT")=$H
- .D NOTIF^AGMPIHLO("","The "_INST_" / "_ID1_" site is now disabled.")
+ .D NOTIF^AGMPHLO("","The "_INST_" / "_ID1_" site is now disabled.")
  S ^AGMPCHK(INST,0)=ID1
  Q
- ;
  ;
 CENTRY(ID1,INST,VAL) ;Create an entry within the ^AGMPCHK global
  S ^AGMPCHK(INST)=ID1
@@ -32,12 +29,10 @@ CENTRY(ID1,INST,VAL) ;Create an entry within the ^AGMPCHK global
  S ^AGMPCHK(0)=$G(^AGMPCHK(0))+1 ;Add one to to total number of entries
  Q
  ;
- ;
 RENTRY(INST) ;Remove an entry within the ^AGMPCHK global
  K ^AGMPCHK(INST)
  S ^AGMPCHK(0)=$G(^AGMPCHK(0))-1 ; Subtract one from the total number of entries
  Q
- ;
  ;
 GETINST(ID1,INST) ;Retrieve the institution associated with the Site from the ^AGMPCHK global
  N TINST
@@ -46,7 +41,6 @@ GETINST(ID1,INST) ;Retrieve the institution associated with the Site from the ^A
  F  S TINST=$O(^AGMPCHK(TINST)) Q:TINST=""  D
  .I $G(^AGMPCHK(TINST))=ID1 S INST=TINST
  Q
- ;
  ;
 SITELST ;Print out the current site information within the ^AGMPCHK global
  N INTS,TB
@@ -60,7 +54,6 @@ SITELST ;Print out the current site information within the ^AGMPCHK global
  .W $J(^AGMPCHK(INST,0),14)
  .W $J(^AGMPCHK(INST,1),14)
  Q
- ;
  ;
 ISITERST ;Interactive Reset, user option
  L +^AGMPCHK:3
@@ -80,7 +73,6 @@ ISITERST ;Interactive Reset, user option
  D ^DIR
  I Y D SITERST(Y(0))
  Q
- ;
  ;
 SITERST(RSID) ;Site Reset, mark Valid the SiteID that is sent in, 'ALL' is sent in then we loop through the AGMPCHK global marking all Valid
  L +^AGMPCHK:5 ;Attempt to lock the AGMPCHK global.
@@ -110,7 +102,6 @@ SITERST(RSID) ;Site Reset, mark Valid the SiteID that is sent in, 'ALL' is sent 
  L -^AGMPCHK ;Unlock the AGMPCHK global
  Q
  ;
- ;
 UPDATE ;Check to see if the information stored is the same as the information in the AGFAC and Institution Globals
  N INST,USID,$ESTACK,$ETRAP
  S $ETRAP="D UNWIND^%ZTER"
@@ -127,14 +118,14 @@ UPDATE ;Check to see if the information stored is the same as the information in
  L -^AGMPCHK ;Unlock the AGMPCHK global
  Q
  ;
- ;
 UPDMSGQ(PDFN,PDFN2,PMSGTYPE,PSITE) ;Add the needed entries to the AGMPCHKQ global
+ I ($G(PMSGTYPE)="A40") Q  ; A40 processing disabled.
  L +^AGMPCHKQ(PSITE,PDFN):5 I '$T Q  ;Attempt to lock the AGMPCHKQ(SITE,Patient) global node, if no lock quit the update process.
  I ($G(PMSGTYPE)="A40") D  L -^AGMPCHKQ(PSITE,PDFN) Q  ;if this is a merge message do some checks and then set the Queue entry as needed.
- .I '($G(PDFN2)) D NOTIF^AGMPIHLO(PDFN,"Unable to ADD merge entry to the AGMPCHKQ.  No DFN2")  Q
- .I '($G(PDFN)) D NOTIF^AGMPIHLO(PDFN,"Unable to ADD merge entry to the AGMPCHKQ. No DFN")  Q
- .I ($D(^DPT(PDFN,0))),'($D(^DPT(PDFN2,0))),'($D(^AGMPCHKQ(PSITE,PDFN2,0))="1") D NOTIF^AGMPIHLO(PDFN,"Missing DFN2 information not ADDing the merge entry to the AGMPCHKQ.")  Q
- .I ($D(^DPT(PDFN2,0))),'($D(^DPT(PDFN,0))),'($D(^AGMPCHKQ(PSITE,PDFN,0))="1") D NOTIF^AGMPIHLO(PDFN,"Missing DFN information not ADDing the merge entry to the AGMPCHKQ.")  Q
+ .I '($G(PDFN2)) D NOTIF^AGMPHLO(PDFN,"Unable to ADD merge entry to the AGMPCHKQ.  No DFN2")  Q
+ .I '($G(PDFN)) D NOTIF^AGMPHLO(PDFN,"Unable to ADD merge entry to the AGMPCHKQ. No DFN")  Q
+ .I ($D(^DPT(PDFN,0))),'($D(^DPT(PDFN2,0))),'($D(^AGMPCHKQ(PSITE,PDFN2,0))="1") D NOTIF^AGMPHLO(PDFN,"Missing DFN2 information not ADDing the merge entry to the AGMPCHKQ.")  Q
+ .I ($D(^DPT(PDFN2,0))),'($D(^DPT(PDFN,0))),'($D(^AGMPCHKQ(PSITE,PDFN,0))="1") D NOTIF^AGMPHLO(PDFN,"Missing DFN information not ADDing the merge entry to the AGMPCHKQ.")  Q
  .I '($D(^AGMPCHKQ(PSITE,PDFN,1))) D  Q
  ..I '($D(^AGMPCHKQ(PSITE,PDFN))) S ^AGMPCHKQ(PSITE,0)=$G(^AGMPCHKQ(PSITE,0))+1
  ..S ^AGMPCHKQ(PSITE,PDFN,1)=PDFN2
@@ -143,7 +134,6 @@ UPDMSGQ(PDFN,PDFN2,PMSGTYPE,PSITE) ;Add the needed entries to the AGMPCHKQ globa
  .S ^AGMPCHKQ(PSITE,PDFN,0)=""
  L -^AGMPCHKQ(PSITE,PDFN)
  Q
- ;
  ;
 SNDMSGQ(PSITE) ;Send the messages for the instituiton/site ID that is now VALID
  N AGMPCHKFLG,SUCCESS,SDUZ2,SNDC,DEXEC,TDFN,TDFN2
@@ -157,20 +147,21 @@ SNDMSGQ(PSITE) ;Send the messages for the instituiton/site ID that is now VALID
  .F  S TDFN=$O(^AGMPCHKQ(PSITE,TDFN),-1) Q:'TDFN  D
  ..L +^AGMPCHKQ(PSITE,TDFN):5 I '$T S SNDC=0 Q  ;Attempt to lock the AGMPCHKQ(SITE,Patient) global node, if we can't lock go to the next patient.
  ..I $D(^AGMPCHKQ(PSITE,TDFN,0)) D
- ...D CREATMSG^AGMPIHLO(TDFN,"A08",,.SUCCESS)
+ ...D CREATMSG^AGMPHLO(TDFN,"A08",,.SUCCESS)
  ..I SUCCESS,$G(^AGMPCHKQ(PSITE,TDFN,1)) D
  ...S TDFN2=$G(^AGMPCHKQ(PSITE,TDFN,1))
  ...I $D(^AGMPCHKQ(PSITE,TDFN2,0)) D
- ....D CREATMSG^AGMPIHLO(TDFN2,"A08",,.SUCCESS)
+ ....D CREATMSG^AGMPHLO(TDFN2,"A08",,.SUCCESS)
  ....I SUCCESS K ^AGMPCHKQ(PSITE,TDFN2)
- ...I SUCCESS D CREATMSG^AGMPIHLO(TDFN,"A40",TDFN2,.SUCCESS)
+ ...; A40 processing disabled.
+ ...;I SUCCESS D CREATMSG^AGMPHLO(TDFN,"A40",TDFN2,.SUCCESS)
  ..I SNDC S SNDC=SUCCESS
  ..L -^AGMPCHKQ(PSITE,TDFN)
  ..Q:'SUCCESS
  ..K ^AGMPCHKQ(PSITE,TDFN)
  .I SNDC  D
  ..K ^AGMPCHKQ(PSITE)
- ..W !,"Messages sent for Site "_PSITE
+ ..W !,"Queue for site "_PSITE_" processed"
  .I 'SNDC  W !,"There was an Error in processing the messages for Site "_PSITE
  .K AGMPCHKFLG
  .S DUZ(2)=SDUZ2 ; SAC 2009 2.2.3.3

@@ -1,5 +1,6 @@
-DINZMGR ;SFISC/MKO-TO SET UP THE MGR ACCOUNT FOR THE SYSTEM ;3:04 PM  1 Oct 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINZMGR ;SFISC/MKO-TO SET UP THE MGR ACCOUNT FOR THE SYSTEM ;08:32 AM  28 Sep 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;This is a modification of Kernel's ZTMGRSET routine.
  I $D(^%ZTSK),$D(^%ZOSF("MGR"))#2 D  Q
@@ -81,12 +82,10 @@ ZOSF S DIR("A",1)="Do you want me to set nodes in the ^%ZOSF global and"
  ;S %S="DINVM11P" D MOVE
  ;D ^DINZM11P
  Q
-3 ;CACHE/OpenM;was M/SQL;before that, was M/SQL-VAX
- ;W !?3,$C(7)_"M/SQL is not yet supported."
+3 ;M/SQL;was M/SQL-VAX
+ W !?3,$C(7)_"M/SQL is not yet supported."
  ;S %S="DINVMVX" D MOVE
  ;D ^DINZMVX
- S %S="DINVONT" D MOVE
- D ^DINZONT
  Q
 4 ;DSM-4
  ;S %S="DINVDSM" D MOVE
@@ -107,7 +106,7 @@ ZOSF S DIR("A",1)="Do you want me to set nodes in the ^%ZOSF global and"
  D ^DINZDTM
  Q
 8 ;GT.M(VAX)
- ;W !?3,$C(7)_"GT.M(VAX) is not yet supported."
+ W !?3,$C(7)_"GT.M(VAX) is not yet supported."
  ;S %S="DINVGTM" D MOVE
  ;S %S="DINV1GTM",%D="%ZOSV1" D MOVE
  ;D ^DINZGTM

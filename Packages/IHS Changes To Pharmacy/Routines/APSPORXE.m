@@ -1,7 +1,5 @@
-APSPORXE ;IHS/TUCSON/LAB - enter outside rx  [ 02/20/2001  1:51 PM ];09-Oct-2008 11:25;SM
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1,2,3,1007**;Sep 23, 2004
- ;
- ; Modified - IHS/MSC/PLS - 05/19/08 - Line FIND+1
+APSPORXE ;IHS/TUCSON/LAB - enter outside rx  [ 02/20/2001  1:51 PM ]
+ ;;6.0;IHS PHARMACY MODIFICATIONS;**1,2,3**;09/03/97
  ;
 START ;EP - called from option
 HDR ;write header
@@ -32,9 +30,7 @@ EXIT ;cleanup and exit
  D KILL^AUPNPAT K DFN,APCDPAT
  Q
 FIND ;find all rx's on that date
- ;IHS/MSC/PLS - 05/19/08 - Updated call to PCC
- ;K APSPRX S Y="APSPRX(",X=DFN_"^ALL MEDS;DURING "_APSPDATE_"-"_APSPDATE S APSPER=$$^APCLDF(X,Y)
- K APSPRX S Y="APSPRX(",X=DFN_"^ALL MEDS;DURING "_APSPDATE_"-"_APSPDATE S APSPER=$$START1^APCLDF(X,Y)
+ K APSPRX S Y="APSPRX(",X=DFN_"^ALL MEDS;DURING "_APSPDATE_"-"_APSPDATE S APSPER=$$^APCLDF(X,Y)
  I APSPER W !!,"ERROR in finding outside rx's - data fetcher error!!" K APSPRX Q
  S X=0 F  S X=$O(APSPRX(X)) Q:X'=+X  S V=$P(APSPRX(X),U,5),M=+$P(APSPRX(X),U,4) I $P(^AUPNVSIT(V,0),U,7)'="E" K APSPRX(X)
  I '$D(APSPRX) W !!,$C(7),$C(7),"No OUTSIDE Rx's recorded for ",$P(^DPT(DFN,0),U)," on " S Y=APSPDATE D DD^%DT W Y,".",! Q
@@ -69,7 +65,7 @@ D ;delete
  S DIE="^AUPNVMED(",DA=+$P(APSPRX(APSPX),U,4),DR=".01///@" D ^DIE K DIE,DA,DR,DIY,DIW,DIU,DIV
  ;9/14/99 Version 6 Patch 2- changed APCDVLDT to APCDVDLT
  ;the incorrect variable was keeping the delete flag from being set
- ;in the AUPNVSIT global for the affected visit - next 2 lines changed
+ ;in the AUPNVSIT global for the affected visit - next 2 lines changed 
  ;S V=$P(APSPRX(APSPX),U,5) I '$P(^AUPNVSIT(V,0),U,9) S APCDVLDT=V D ^APCDVDLT K APCDVDLT
  S V=$P(APSPRX(APSPX),U,5) I '$P(^AUPNVSIT(V,0),U,9) S APCDVDLT=V D ^APCDVDLT K APCDVDLT   ;IHS/DSD/LWJ/POC 09/14/99 (fixed APCDVDLT being set)
  ;IHS/DSD/LWJ/POC 09/14/99 - end of fix to APCDVLDT (version 6,patch 2)

@@ -1,6 +1,7 @@
 ACHSA6 ; IHS/ITSC/TPF/PMF - ENTER DOCUMENTS (7/8)-(EST. COST, MED DATA) ;JUL 10, 2008 
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**14,19,23**;JUN 11,2001;Build 43
- ;3.1*14 12.4.2007 IHS/OIT/FCJ ADDED CSV CHANGES
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**14,19,23,32**;JUN 11,2001;Build 39
+ ;ACHS*3.1*14 12.4.2007 IHS/OIT/FCJ ADDED CSV CHANGES
+ ;ACHS*3.1*32 6.20.24 IHS.OIT.FCJ NEW STANDARD MED PRIORITIES
  ;
 A1 ; Input estimated charges.
  W !!,"Estimated Charges: "
@@ -32,12 +33,14 @@ A2 ; Confirm amount obligated.
 A3 ; Enter Referral Medical Priority Code
  I '$$AVAIL^ACHSUUP(ACHSESDO,ACHSACFY,ACHSCFY) W !!,"This amount exceeds your funds available." G A1
  W !
- S DIR(0)="9002080.01,81",DIR("??")="^D DISPMPC^ACHSA6"
+ ;S DIR(0)="9002080.01,81",DIR("??")="^D DISPMPC^ACHSA6"  ;ACHS*3.1*32
+ S DIR(0)="9002080.01,81"  ;ACHS*3.1*32
  S:ACHSRMPC]"" DIR("B")=ACHSRMPC
  D ^DIR
  G A1:$D(DUOUT),KDIR:$D(DTOUT)
  D KDIR
- S ACHSRMPC=$G(Y)
+ ;S ACHSRMPC=$G(Y)  ;ACHS*3.1*32
+ S ACHSRMPC=Y(0,0),ACHSRMP=+Y  ;ACHS*3.1*32
  ;
 A4 ; Enter additional referral data.
  I (ACHSTYP=2)!$D(ACHSBLKF)!$D(ACHSSLOC) G ^ACHSA7
@@ -134,6 +137,7 @@ KDIR ;
  Q
  ;
 DISPMPC ;EP - From call to DIR, display medical priorities
+ ;NO LONGER USED; ACHS*3.1*32
  W !!
  S %=0
  F  S %=$O(^DD(9002080.01,81,21,%)) Q:'%  W !,$G(^DD(9002080.01,81,21,%,0)) I $G(^DD(9002080.01,81,21,%+1,0))[" - " Q:'$$DIR^XBDIR("E","Press RETURN...")

@@ -1,6 +1,6 @@
-DDSM1 ;SFISC/MKO-MULTILINE, LOAD AND DELETE ;9:49 AM  20 Apr 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**8**;Mar 30, 1999
+DDSM1 ;SFISC/MKO-MULTILINE, LOAD AND DELETE ;2:23 PM  9 Feb 1996 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**6,13,11**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 LOAD(DDSIEN) ;Load subentries
@@ -66,7 +66,6 @@ MDEL ;Entry point from MDEL^DDSUTL
  . K @DDSREFT@(DDSPG,DDSBK,DDSPDA,"B",DDSDA)
  . K @DDSREFT@(DDSPG,DDSBK,DDSPDA,DDSSN)
  . K @DDSREFT@("F"_DDP,DDSDA)
- . K @DDSREFT@("F0",DDSDA)
  ;
  ;Close up gaps in ^TMP array
  S (DDSI,DDSSN)=0

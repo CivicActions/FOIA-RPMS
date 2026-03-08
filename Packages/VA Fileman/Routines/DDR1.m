@@ -1,6 +1,6 @@
-DDR1 ;ALB/MJK-FileMan Delphi Components' RPCs ;4/18/97  16:15
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DDR1 ;ALB/MJK-FileMan Delphi Components' RPCs ;4/18/97  16:15 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**34**;Feb 28, 1998
  ;
  Q
  ;

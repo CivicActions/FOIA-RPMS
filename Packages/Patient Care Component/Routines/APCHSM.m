@@ -1,5 +1,5 @@
-APCHSM ; IHS/CMI/LAB - HEALTH SUMMARY (MULTIPLE PATIENTS) ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHSM ; IHS/TUCSON/LAB - HEALTH SUMMARY (MULTIPLE PATIENTS) ;  [ 10/24/99  2:53 PM ]
+ ;;2.0;IHS RPMS/PCC Health Summary;**3**;JUN 24, 1997
  ; IHS/TUCSON/VJM - SELPT sub-rtn:  change READ to a DIR call.  Added
  ; the LIST sub-rtn which is called from SELPT 
  ;

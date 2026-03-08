@@ -1,23 +1,34 @@
 BSTSDTS3 ;GDIT/HS/BEE-Standard Terminology DTS Calls/Processing ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3,4,7,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
 ACODE(RET,BSTSWS) ;Get list of '36' entries having auto-codable ICD-10s
  ;
- NEW SLIST,DLIST,CNT,MFAIL,FWAIT,TRY,FCNT,STS,ABORT,ERSLT,LENTRY,TR
+ NEW SLIST,DLIST,CNT,MFAIL,FWAIT,TRY,FCNT,STS,ABORT
+ NEW ERSLT,LENTRY,TR,FUT,X1,X2,X,BIPROG
+ ;
+ ;Retrieve restart information
+ S BIPROG=$G(BSTSWS("BIPROG"))
+ I BIPROG,($P(BIPROG,U,4)'="ACODE")!($P(BIPROG,U,5)'="BSTSDTS3") S ^XTMP("BSTSLCMP","QUIT")=1,STS=0 G XACODE
+ ;
+ ;Update tracker
+ S $P(^XTMP("BSTSLCMP","UPD"),U,1,5)="1^ACODE^BSTSVRSC^ACODE^BSTSDTS3"
+ ;
+ S X1=DT,X2=60 D C^%DTC S FUT=X
  ;
  S SLIST=$NA(^XTMP("BSTSLCMP")) ;Returned List
  S DLIST=$NA(^TMP("BSTSCMCL",$J))
- K @DLIST
+ I $P(BIPROG,U,6)<10 D
+ . K @DLIST
+ . S $P(^XTMP("BSTSLCMP","UPD"),U,6)="10"
  ;
  ;Retrieve Failover Variables
  S MFAIL=$$FPARMS^BSTSVOFL()
  S FWAIT=$P(MFAIL,U,2)
  S MFAIL=$P(MFAIL,U)
  ;
- ;BSTS*1.0*8;Extra error handling
- F TR=1:1:60 D  I +STS Q
+ S STS=1 I $P(BIPROG,U,6)<20 F TR=10:10:60 D  I +STS Q
  . ;Get List of ICD10 Autocodeables - 32777
  . S (ABORT,FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS!(STS="0^") Q
  .. D RESET^BSTSWSV1  ;Reset the DTS link to on
@@ -33,13 +44,13 @@ ACODE(RET,BSTSWS) ;Get list of '36' entries having auto-codable ICD-10s
  I +STS=0 Q 0
  ;
  ;Move results to second scratch global
- S CNT=0 F  S CNT=$O(@DLIST@(CNT)) Q:'CNT  S @SLIST@(CNT)=@DLIST@(CNT)
- M @SLIST@("DTS")=@DLIST@("DTS")
+ I $P(BIPROG,U,6)<20 D
+ . S CNT=0 F  S CNT=$O(@DLIST@(CNT)) Q:'CNT  S @SLIST@(CNT)=@DLIST@(CNT)
+ . M @SLIST@("DTS")=@DLIST@("DTS")
  ;
  ;Get List of ICD10 Autocodeable Predicates - 32779
  K @DLIST
- ;BSTS*1.0*8;Extra error handling
- F TR=1:1:60 D  I +STS Q
+ S STS=1 I $P(BIPROG,U,6)<20 F TR=10:10:60 D  I +STS Q
  .S (ABORT,FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS!(STS="0^") Q
  .. D RESET^BSTSWSV1  ;Reset the DTS link to on
  .. S STS=$$ACODEP^BSTSCMCL(.BSTSWS,.ERSLT) I +STS!(STS="0^") Q
@@ -54,7 +65,7 @@ ACODE(RET,BSTSWS) ;Get list of '36' entries having auto-codable ICD-10s
  I +STS=0 Q 0
  ;
  ;Merge results to second scratch global
- S CNT=0 F  S CNT=$O(@DLIST@(CNT)) Q:'CNT  D
+ I $P(BIPROG,U,6)<20 S CNT=0 F  S CNT=$O(@DLIST@(CNT)) Q:'CNT  D
  . NEW DTSID,LAST
  . S DTSID=$P(@DLIST@(CNT),U) Q:DTSID=""
  . I $D(@SLIST@("DTS",DTSID)) Q
@@ -63,31 +74,31 @@ ACODE(RET,BSTSWS) ;Get list of '36' entries having auto-codable ICD-10s
  . S @SLIST@("DTS",DTSID)=LAST
  ;
  ;Get list of equivalency concepts
- S STS=$$EQLST^BSTSDTS4(DLIST,ABORT,FCNT,STS,TRY,MFAIL,.BSTSWS,.ERSLT,CNT,SLIST,FWAIT)
+ S STS=1 I $P(BIPROG,U,6)<20 S STS=$$EQLST^BSTSDTS4(DLIST,ABORT,FCNT,STS,TRY,MFAIL,.BSTSWS,.ERSLT,CNT,SLIST,FWAIT)
+ I 'STS S ^XTMP("BSTSLCMP","QUIT")=1 Q 0
  ;
  ;Get the list of concepts in subsets
- S STS=$$SCODE^BSTSDTS4(.BSTSWS,1)
+ S STS=1 I $P(BIPROG,U,6)<20 S STS=$$SCODE^BSTSDTS4(.BSTSWS,1)
+ I 'STS S ^XTMP("BSTSLCMP","QUIT")=1 Q 0
+ ;
+ S $P(^XTMP("BSTSLCMP","UPD"),U,6)="20"
  ;
  ;Get last entry
  S LENTRY=$O(@SLIST@("A"),-1)
  ;
  ;Now process each entry
  S (ABORT,CNT)=0 F  S CNT=$O(@SLIST@(CNT)) Q:'CNT  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
- . NEW DTSID,VAR,TRY,FCNT,CIEN,LMOD
+ . NEW DTSID,VAR,TRY,FCNT
  . ;
  . ;Get DTSId
  . S DTSID=$P(@SLIST@(CNT),U) Q:DTSID=""
- . ;
- . ;Check last modified - skip if today
- . S CIEN=$O(^BSTS(9002318.4,"D",36,DTSID,""))
- . ;BSTS*1.0*4;Do not do date check
- . I CIEN]"" S LMOD=$$GET1^DIQ(9002318.4,CIEN_",",.12,"I") ;I LMOD'<DT Q
  . ;
  . S ^XTMP("BSTSLCMP","STS")="Getting mapping details for DTSID: "_DTSID_" (Entry "_CNT_" of "_LENTRY_")"
  . ;Pull detail from DTS - Hang max of 12 times
  . S (ABORT,FCNT)=0 F TRY=1:1:(12*MFAIL) D  I +STS=2!(STS="0^") Q
  .. D RESET^BSTSWSV1  ;Reset the DTS link to on
- .. S STS=$$DTSLKP^BSTSAPI("VAR",DTSID_"^36^^^^1") I +STS=2!(STS="0^") Q
+ .. ;Added FUT to handle ICD10 updates
+ .. S STS=$$DTSLKP^BSTSAPI("VAR",DTSID_"^36^"_FUT_"^^^1") I +STS=2!(STS="0^") Q
  .. S FCNT=FCNT+1 I FCNT'<MFAIL D  ;Fail handling
  ... S ABORT=$$FAIL^BSTSVOFL(MFAIL,FWAIT,TRY,"ACODE^BSTSDTS3 - Getting Update for entry: "_DTSID)
  ... I ABORT=1 S ^XTMP("BSTSLCMP","QUIT")=1 D ELOG^BSTSVOFL("SNOMED TO ICD10 MAPPING FAILED ON DETAIL LOOKUP: "_DTSID)
@@ -96,7 +107,16 @@ ACODE(RET,BSTSWS) ;Get list of '36' entries having auto-codable ICD-10s
  . ;Remove entry
  . K @SLIST@(CNT)
  ;
- Q STS
+ ;Update the subset multiple
+ D
+ . NEW VAR,STS
+ . S VAR=$$SUBSET^BSTSAPI("VAR","36^2")
+ ;
+ ;Mark as error or complete
+ I 'STS S ^XTMP("BSTSLCMP","QUIT")=1
+ S:'$D(^XTMP("BSTSLCMP","QUIT")) $P(^XTMP("BSTSLCMP","UPD"),U,6)=200
+ ;
+XACODE Q STS
  ;
 A9CODE(RET,BSTSWS) ;Get list of '36' entries having auto-codable ICD-9s
  ;
@@ -132,15 +152,10 @@ A9CODE(RET,BSTSWS) ;Get list of '36' entries having auto-codable ICD-9s
  ;
  ;Now loop through and process each entry
  S (ABORT,CNT)=0 F  S CNT=$O(@SLIST@(CNT)) Q:'CNT  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
- . NEW DTSID,VAR,TRY,FCNT,CIEN,LMOD
+ . NEW DTSID,VAR,TRY,FCNT
  . ;
  . ;Get DTSId
  . S DTSID=$P(@SLIST@(CNT),U) Q:DTSID=""
- . ;
- . ;Check last modified - skip if today
- . S CIEN=$O(^BSTS(9002318.4,"D",36,DTSID,""))
- . ;BSTS*1.0*4;Do not do date check
- . I CIEN]"" S LMOD=$$GET1^DIQ(9002318.4,CIEN_",",.12,"I") ;I LMOD'<DT Q
  . ;
  . S ^XTMP("BSTSLCMP","STS")="Getting mapping details for DTSID: "_DTSID_" (Entry "_CNT_" of "_LENTRY_")"
  . ;Pull detail from DTS - Hang max of 12 times
@@ -373,6 +388,9 @@ SUPDATE(NMID,ROUT) ;EP-Add/Update Special Codeset Entries
  ;
 RET(CONCDA,CVRSN,GL) ;Handle retired concepts
  ;
+ ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Handle inactives
+ ;No longer retiring this way
+ Q 1
  ;Input
  ; CONCDA - Pointer to concept file, if populated
  ; CVRSN - Current codeset version

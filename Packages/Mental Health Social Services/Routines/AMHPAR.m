@@ -1,5 +1,5 @@
 AMHPAR ; IHS/CMI/LAB - Export Package Level Parameters Mar 03, 2006@10:07:20 ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;3.0;IHS BEHAVIORAL HEALTH;**6**;JAN 27, 2003
  ;;
 MAIN ; main (initial) parameter transport routine
  K ^TMP($J,"XPARRSTR")

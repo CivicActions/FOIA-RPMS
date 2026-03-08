@@ -1,9 +1,10 @@
-ABMDTINS ; IHS/ASDST/DMJ - Table Maintenance of INSURER FILE ; 
- ;;2.6;IHS 3P BILLING SYSTEM;**10,11,22**;NOV 12, 2009;Build 418
+ABMDTINS ; IHS/SD/SDR - Table Maintenance of INSURER FILE ; 
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,11,22,32**;NOV 12, 2009;Build 621
  ;
- ; IHS/SD/SDR - v2.5 p12 - UFMS - Added prompt for Federal Tax ID
+ ;IHS/SD/SDR 2.5*12 UFMS Added prompt for Federal Tax ID
  ;
  ;IHS/SD/SDR 2.6*22 HEAT335246 Added code for new prompt to print/not print NDC if all-inclusive mode is selected for insurer.
+ ;IHS/SD/SR 2.6*32 CR10210 Remove ALL INCLUSIVE PRINT NDC prompt
  ;
  K ABM
  W !!,"WARNING: Before ADDING a new INSURER you should ensure that it"
@@ -46,10 +47,12 @@ ADDR W !!,"<--------------- MAILING ADDRESS --------------->"
  ;S DR=".22All Inclusive Mode.: //"_$S(ABM("DFLT"):"Y",1:"")_";.24Backbill Limit (months): " D ^DIE G XIT:$D(Y)  ;abm*2.6*22 IHS/SD/SDR HEAT335246
  ;start new abm*2.6*22 IHS/SD/SDR HEAT335246
  S DR=".22All Inclusive Mode.: //"_$S(ABM("DFLT"):"Y",1:"") D ^DIE G XIT:$D(Y)
- S DIE="^ABMNINS(DUZ(2),"
- S DR=".14"_$S($P($G(^AUTNINS(DA,2)),U,2)="Y":"For All Inclusive print the NDC",1:"////@")
- D ^DIE G XIT:$D(Y)
- K DR S DIE="^AUTNINS("
+ ;start old abm*2.6*32 IHS/SD/SDR CR10210
+ ;S DIE="^ABMNINS(DUZ(2),"
+ ;S DR=".14"_$S($P($G(^AUTNINS(DA,2)),U,2)="Y":"For All Inclusive print the NDC",1:"////@")
+ ;D ^DIE G XIT:$D(Y)
+ ;K DR S DIE="^AUTNINS("
+ ;end old abm*2.6*32 IHS/SD/SDR CR10210
  S DR=".24Backbill Limit (months): " D ^DIE G XIT:$D(Y)
  ;end new abm*2.6*22 IHS/SD/SDR HEAT335246
  I ABM("DFLT"),$P(^AUTNINS(DA,2),U,2)="N" S ABM=0 F  S ABM=$O(^ABMNINS(DUZ(2),DA,1,ABM)) Q:'ABM  D

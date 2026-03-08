@@ -1,6 +1,5 @@
-XPDET ;SFISC/RSD - Input tranforms & help for file 9.6 & 9.7 ;10/19/2002
- ;;8.0;KERNEL;**15,39,41,44,51,58,66,137,229,393,539**;Jul 10, 1995;Build 15
- ;Per VHA Directive 2004-038, this routine should not be modified.
+XPDET ;SFISC/RSD - Input tranforms & help for file 9.6 & 9.7 ;10/10/2002  15:43 [ 03/19/2004  12:04 PM ]
+ ;;8.0;KERNEL;**15,39,41,44,51,58,66,137,229,1009**;Jul 10, 1995
  Q
 INPUTB(X) ;input tranfrom for NAME in BUILD file
  ;X=user input
@@ -8,7 +7,7 @@ INPUTB(X) ;input tranfrom for NAME in BUILD file
  I $L(X)>50!($L(X)<3)!$D(^XPD(9.6,"B",X)) K X Q
  I X["*" K:$P(X,"*",2,3)'?1.2N1"."1.2N.1(1"V",1"T").2N1"*"1.6N X Q
  S %=$L(X," ") I %<2 K X Q
- S %=$P(X," ",%) K:%'?1.2N1"."1.2N.1(1"V",1"T",1"B").2N X
+ S %=$P(X," ",%) K:%'?1.2N1"."1.2N.1(1"V",1"T").2N X
  Q
 INPUTE(X) ;input transform for ENTRIES in KERNEL FILES multiple
  ;X=user input
@@ -99,7 +98,7 @@ SCRA(Y) ;screen of ACTION field in ENTRIES multiple in KERNEL FILES multiple, Y=
  Q:D1'=19&(D1'=101) 0
  ;only Options and Protocol can disable
  Q:Y=5 1
- N FGR,X,XPDF,XPDT,XPDY,XPDZ
+ N FGR,X,XPDF,XPDT,XPDZ
  ;get X=name, FGR=global reference, XPDF=file #
  S XPDY=Y,XPDF=D1,X=$P(^XPD(9.6,D0,"KRN",D1,"NM",D2,0),U),FGR=$$FILE^XPDV(D1)
  Q:X="" 0
@@ -179,15 +178,14 @@ ID97 ;identifier for Install file
  D
  .;Loaded, get DATE LOADED
  .I 'XPD9 S XPD=$$FMTE^XLFDT($P(XPD0,U,3),2) Q
- .Q:XPD9>4
+ .Q:XPD9>3
  .;Started, get INSTALL START TIME
  .I XPD9=2 S XPD=$$FMTE^XLFDT($P(XPD1,U),2) Q
- .;Completed or De-Installed, get INSTALL COMPLETE TIME
- .I XPD9>2 S XPD=$$FMTE^XLFDT($P(XPD1,U,3),2) Q
+ .;Completed, get INSTALL COMPLETE TIME
+ .I XPD9=3 S XPD=$$FMTE^XLFDT($P(XPD1,U,3),2) Q
  .;Queued, get QUEUED TASK NUMBER
  .I XPD9=1 S XPD="#"_$P(XPD0,U,6) Q
- ;S XPDET(1)="   "_$$EXTERNAL^DILFD(9.7,.02,"",XPD9)_"  "_XPD,XPDET(1,"F")="?0"
- S XPDET(1)="  "_XPD,XPDET(1,"F")="?0"
+ S XPDET(1)="   "_$$EXTERNAL^DILFD(9.7,.02,"",XPD9)_"  "_XPD,XPDET(1,"F")="?0"
  S:XPD2]"" XPDET(2)="=> "_$E(XPD2,1,70),XPDET(2,"F")="!?5"
  D EN^DDIOL(.XPDET)
  Q
@@ -204,4 +202,3 @@ PAR964 ;Clear other fields if file is partial.  Called from within form
  D PUT^DDSVAL(DIE,.DA,222.9,"n","","I") ;User Override
  D PUT^DDSVAL(DIE,.DA,224,"","","I") ;Data Screen
  Q
- ;

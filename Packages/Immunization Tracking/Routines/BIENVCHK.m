@@ -1,13 +1,14 @@
-BIENVCHK ;IHS/CMI/MWR - ENVIRONMENTAL CHECK FOR KIDS; DEC 15, 2010
- ;;8.5;IMMUNIZATION;**16**;MAR 01,2018
+BIENVCHK ;IHS/CMI/MWR - ENVIRONMENTAL CHECK FOR KIDS; ; 10 Jun 2025  12:10 AM
+ ;;8.5;IMMUNIZATION;**27,28,29,30,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  ENVIRONMENTAL CHECK ROUTINE FOR KIDS INSTALLATION.
- ;;  PATCH 16: Check environment for Imm v8.5 Patch 15. START+63
- ;;
+ ;;  PATCH 26: Check environment for Imm v8.5 Patch 26.
  ;
  ;
  ;----------
 START ;EP
+ ;
+ F X="XP01","XPZ1","XPZ2","XPI1" S XPDDIQ(X)=0
  ;
  I '$G(DUZ) W !,"DUZ UNDEFINED OR 0." D SORRY(2) Q
  ;
@@ -16,91 +17,64 @@ START ;EP
  N X,Z
  S X=$P(^VA(200,DUZ,0),U)
  W !!,$$CJ^XLFSTR("Hello, "_$P(X,",",2)_" "_$P(X,","),IOM)
- S X="Checking Environment for "_$P($T(+2),";",4)_" v"_$P($T(+2),";",3)
+ S X="Checking Environment for the installation of "_$P($T(+2),";",4)_" v"_$P($T(+2),";",3)
  S Z=$P($P($T(+2),";",5),"**",2)
  S:Z X=X_", Patch "_Z_"."
  W !!,$$CJ^XLFSTR(X,IOM),!
  ;
- S XPDQUIT=0
+ N BIQUIT S BIQUIT=0,XPDQUIT=0
  ;
  ;---> REQUIREMENTS
  ;
- ;---> Kernel v8.
- I '$$VCHK("XU","8.0",2) S XPDQUIT=2
+ ;---> Kernel v8.0 patch 1018 (XU*8.0*1018) or later.
+ D CHECK("KERNEL","XU","8.0",1018,.BIQUIT)
+ ;
+ ;---> VA FileMan v22.0 patch 1018 (DI*22.0*1018) or later.
+ D CHECK("VA FILEMAN","DI","22.0",1018,.BIQUIT)
+ ;;
+ ;********** PATCH 21, v8.5, APR 01,2021, IHS/CMI/MWR
+ ;---> Per Brian Everett, DTS:
+ ;---> IHS STANDARD TERMINOLOGY (BSTS) v2.0 patch 1.
+ ;D CHECK("IHS STANDARD TERMINOLOGY","BSTS","2.0",1,.BIQUIT)
+ ;
+ ;********** PATCH 27, v8.5, AUG 01,2022, ihs/cmi/maw
+ ;---> Immunization v8.5 patch 24 (BI*8.5*24) or later.
+ ;D CHECK("IMMUNIZATION","BI","8.5",27,.BIQUIT)
+ ;
+ ;********** PATCH 28, v8.5, AUG 01,2022, ihs/cmi/maw
+ ;---> Immunization v8.5 patch 24 (BI*8.5*24) or later.
+ D CHECK("IMMUNIZATION","BI","8.5",30,.BIQUIT)
  ;
  ;
- ;---> Fileman v22.
- I '$$VCHK("DI","22",2) S XPDQUIT=2
- ;
- ;
- ;I '$$VCHK("AUT","98.1",2) S XPDQUIT=2
+ ;I '$$VCHK("AUT","98.1",2) S BIQUIT=2
  ;S X=$$LAST("IHS DICTIONARIES (POINTERS)","98.1")
- ;I $P(X,U,1)'=14&($P(X,U,1)'>14) D  S XPDQUIT=2
- ;.W !,$$CJ^XLFSTR("AUT v98.1 Patch 14 NOT INSTALLED",IOM)
  ;
  ;---> XB/ZIB v3.0 patch 11.
- ;I '$$VCHK("XB","3.0",2) S XPDQUIT=2
+ ;I '$$VCHK("XB","3.0",2) S BIQUIT=2
  ;S X=$$LAST("IHS/VA UTILITIES","3.0")
- ;I $P(X,U)'=11&($P(X,U)'>11) D  S XPDQUIT=2
- ;.W !,$$CJ^XLFSTR("XB/ZIB v3.0 patch 11 NOT INSTALLED",IOM)
  ;
  ;---> IHS PCC REPORTS v3.0 patch 29.
- ;I '$$VCHK("APCL","3.0",2) S XPDQUIT=2
+ ;I '$$VCHK("APCL","3.0",2) S BIQUIT=2
  ;S X=$$LAST("IHS PCC REPORTS","3.0")
- ;I $P(X,U)'=29&($P(X,U)'>29) D  S XPDQUIT=2
- ;.W !,$$CJ^XLFSTR("IHS PCC REPORTS v3.0 patch 29 NOT INSTALLED",IOM)
  ;
  ;---> PCC Suite v2.0 patch 2.
- ;I '$$VCHK("BJPC","2.0",2) S XPDQUIT=2
+ ;I '$$VCHK("BJPC","2.0",2) S BIQUIT=2
  ;S X=$$LAST("IHS PCC SUITE","2.0")
- ;I $P(X,U)'=2&($P(X,U)'>2) D  S XPDQUIT=2
- ;.W !,$$CJ^XLFSTR("BJPC v2.0 Patch 2 NOT INSTALLED",IOM)
- ;
  ;
  ;---> IHS Clinical Reporting System v9.0 patch 1.
- ;I '$$VCHK("BGP","9.0",2) S XPDQUIT=2
+ ;I '$$VCHK("BGP","9.0",2) S BIQUIT=2
  ;S X=$$LAST("IHS CLINICAL REPORTING","9.0")
- ;I $P(X,U)'=1&($P(X,U)'>1) D  S XPDQUIT=2
- ;.W !,$$CJ^XLFSTR("BGP v9.0 Patch 1 NOT INSTALLED",IOM)
- ;
- ;
- ;********** PATCH 15, v8.5, SEP 30,2017, IHS/CMI/MWR
  ;
  ;---> Check environment for previous load of Taxonomy v5.1.
- ;I '$$VCHK("ATX","5.1",2) S XPDQUIT=2
- ;
- ;---> Check Patch Level of Taxonomy.
- ;---> Check for ATX v5.1, required patch.
- ;D
+ ;I '$$VCHK("ATX","5.1",2) S BIQUIT=2
  ;.S X=$$LAST("TAXONOMY","5.1")
- ;.;---> Patch 20.
- ;.I $P(X,U)'=20&($P(X,U)'>20) D  S XPDQUIT=2
- ;..W !,$$CJ^XLFSTR("ATX v5.1 Patch 20 NOT INSTALLED",IOM)
- ;.;
- ;.I XPDQUIT'=2 D
- ;..W !,$$CJ^XLFSTR("Checking for Patch 20 of ATX v5.1...Patch 20 Present",IOM)	
  ;
- ;	
- ;---> Check environment for previous load of Imm v8.5.
- I '$$VCHK("BI","8.5",2) S XPDQUIT=2
- ;
- ;---> Check Patch Level of Imm.
- ;---> Check for Imm v8.5, required patch.
- D
- .S X=$$LAST("IMMUNIZATION","8.5")
- .;---> Patch 15.
- .I $P(X,U)'=15&($P(X,U)'>15) D  S XPDQUIT=2
- ..W !,$$CJ^XLFSTR("BI v8.5 Patch 15 NOT INSTALLED",IOM)
- .;
- .I XPDQUIT'=2 D
- ..W !,$$CJ^XLFSTR("Checking for Patch 15 of BI v8.5...Patch 15 Present",IOM)
- ;**********
  ;
  ;---> Check for multiple BI entries in the Package File.
  N DA,DIC
  S X="BI",DIC="^DIC(9.4,",DIC(0)="",D="C"
  D IX^DIC
- I Y<0,$D(^DIC(9.4,"C","BI")) D  S XPDQUIT=2
+ I Y<0,$D(^DIC(9.4,"C","BI")) D  S BIQUIT=2
  .W !!,$$CJ^XLFSTR("You Have More Than One Entry In The",IOM)
  .W !,$$CJ^XLFSTR("PACKAGE File with a ""BI"" prefix.",IOM)
  .W !,$$CJ^XLFSTR("One entry needs to be deleted.",IOM)
@@ -114,25 +88,72 @@ START ;EP
  ;---> Do not ask "MOVE routines to other CPUs?" question.
  S XPDDIQ("XPZ2")=0
  ;
- I XPDQUIT D SORRY(XPDQUIT) Q
+ I BIQUIT D SORRY(BIQUIT) Q
  ;
  W !!,$$CJ^XLFSTR("ENVIRONMENT OK.",IOM)
  ;
- I '$$DIR^XBDIR("E","","","","","",1) D SORRY(2) Q
+ ;I '$$DIR^XBDIR("E","","","","","",1) D SORRY(2) Q
  Q
  ;
+ ;
+ ;----------
+CHECK(BIPKG,BIPRE,BIVER,BIPAT,BIQUIT) ;EP Check the version and patch level of this package.
+ ;---> Parameters:
+ ;     1 - BIPKG  (req)  Package in the PACKAGE File.
+ ;     2 - BIPRE  (req)  Package Prefix in the PACKAGE File.
+ ;     3 - BIVER  (req)  Package Version in the PACKAGE File.
+ ;     4 - BIPAT  (req)  Package Last Patch in the PACKAGE File.
+ ;     5 - BIQUIT (ret)  Package Last Patch in the PACKAGE File.
+ ;
+ I ($G(BIPKG)="")!($G(BIPRE)="")!($G(BIVER)="")!($G(BIPAT)="") D  Q
+ .W !!,"Package parameters missing, check routine BIENVCHK!"
+ .W $$DIR^XBDIR("E","Press RETURN")
+ .S BIQUIT=2
+ ;
+ N BIQUIT1 S BIQUIT1=0
+ ;
+ ;---> Check Package version.
+ I '$$VCHK(BIPRE,BIVER,2) S BIQUIT1=2
+ ;
+ ;---> Check Package patch level.
+ ;
+ ;*********************
+ ;---> Just for patch 20.
+ ;I $$VER^BILOGO'="8.5*20" S BIPAT=1
+ ;
+ ;*********************
+ D
+ .S X=$$LAST(BIPKG,BIVER)
+ .;
+ .;---> Special check for BI, since mix of patches (20+ and 1000+).
+ .I BIPKG="IMMUNIZATION",($P($$VER^BILOGO,"*",2)<BIPAT) D  S BIQUIT1=2  Q
+ ..W !,$$CJ^XLFSTR(BIPKG_" v"_BIVER_" patch "_BIPAT_" is NOT INSTALLED!",IOM),!
+ .;
+ .;---> All other packages.
+ .I ($P(X,U)'=BIPAT)&($P(X,U)'>BIPAT) D  S BIQUIT1=2  Q
+ ..W !,$$CJ^XLFSTR(BIPKG_" v"_BIVER_" patch "_BIPAT_" is NOT INSTALLED!",IOM),!
+ .;
+ .W !,$$CJ^XLFSTR(BIPKG_" v"_BIVER_" patch "_BIPAT_"... Patch "_BIPAT_" is present.",IOM),!
+ ;
+ I BIQUIT1 S BIQUIT=BIQUIT1
+ Q
+ ;
+ ;
 SORRY(X) ;
- KILL DIFQ
- S XPDQUIT=X
- W:'$D(ZTQUEUED) !,$$CJ^XLFSTR("Sorry...",IOM),$$DIR^XBDIR("E","Press RETURN")
+ K DIFQ S XPDQUIT=X
+ D:'$D(ZTQUEUED)
+ .W !!,$$CJ^XLFSTR("Sorry, the installation has been discontinued.",IOM)
+ .W !,$$CJ^XLFSTR("No changes have been made.",IOM),!
+ .W $$DIR^XBDIR("E","Press RETURN")
  Q
  ;
 VCHK(ABMPRE,ABMVER,ABMQUIT) ; Check versions needed.
  ;
  NEW ABMV
  S ABMV=$$VERSION^XPDUTL(ABMPRE)
- W !,$$CJ^XLFSTR("Need at least "_ABMPRE_" v"_ABMVER_"..."_ABMPRE_" v"_ABMV_" Present",IOM)
- I ABMV<ABMVER W !,$$CJ^XLFSTR("^^^^**NEEDS TO BE INSTALLED**^^^^",IOM) Q 0
+ I ABMV="" S ABMV=0
+ W !,$$CJ^XLFSTR("Need at least "_ABMPRE_" v"_ABMVER_"... "_ABMPRE_" v"_ABMV_" is present",IOM)
+ I ABMV<ABMVER W !,$$CJ^XLFSTR("*** NEEDS TO BE INSTALLED ***",IOM) Q 0
  Q 1
  ;
 LAST(PKG,VER) ;EP - returns last patch applied for a Package, PATCH^DATE

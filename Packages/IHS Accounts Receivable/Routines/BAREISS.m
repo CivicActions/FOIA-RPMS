@@ -20,7 +20,7 @@ BAREISS ; IHS/SD/LSL - EISS data, file, send ;08/20/2008
  ;
  ; 1.  For PSR report - not queued
  ;          Entry name =                BAR EISS PSR F
- ;          Target System ID =          127.0.0.1
+ ;          Target System ID =          161.223.90.5
  ;          Username =                  bardata
  ;          Password =                  1bardat/
  ;          Arguments =     -i   (immediate mode - otherwise ftp delay)
@@ -29,7 +29,7 @@ BAREISS ; IHS/SD/LSL - EISS data, file, send ;08/20/2008
  ;
  ; 2.  For PSR report - queued
  ;          Entry name =                BAR EISS PSR B
- ;          Target System ID =          127.0.0.1
+ ;          Target System ID =          161.223.90.5
  ;          Username =                  bardata
  ;          Password =                  1bardat/
  ;          Arguments =     -i   (immediate mode - otherwise ftp delay)
@@ -38,7 +38,7 @@ BAREISS ; IHS/SD/LSL - EISS data, file, send ;08/20/2008
  ;
  ; 3.  For ASM report - not queued
  ;          Entry name =                BAR EISS ASM F
- ;          Target System ID =          127.0.0.1
+ ;          Target System ID =          161.223.90.5
  ;          Username =                  bardata
  ;          Password =                  1bardat/
  ;          Arguments =     -i   (immediate mode - otherwise ftp delay)
@@ -47,7 +47,7 @@ BAREISS ; IHS/SD/LSL - EISS data, file, send ;08/20/2008
  ;
  ; 4.  For ASM report - queued
  ;          Entry name =                BAR EISS ASM B
- ;          Target System ID =          127.0.0.1
+ ;          Target System ID =          161.223.90.5
  ;          Username =                  bardata
  ;          Password =                  1bardat/
  ;          Arguments =     -i   (immediate mode - otherwise ftp delay)

@@ -1,12 +1,13 @@
 ABMDESMH ; IHS/SD/SDR - Profession Services for Seperate Bill ; 
- ;;2.6;IHS 3P BILLING SYSTEM;**10,14**;NOV 12, 2009;Build 238
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,14,28,29**;NOV 12, 2009;Build 562
  ;
- ; IHS/SD/SDR - V2.5 p5 - 5/18/04 - Modified to put POS and TOS by line item
- ; IHS/SD/SDR - v2.5 p13 - IM25574
- ;   Correction to CPT Modifier in Medical multiple
+ ;IHS/SD/SDR 2.5 p5 5/18/04 Modified to put POS and TOS by line item
+ ;IHS/SD/SDR 2.5 p13 IM25574 Correction to CPT Modifier in Medical multiple
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - 2.6*14 - HEAT161263 - Changed to use $$GET1^DIQ so output transform will execute for SNOMED/Provider Narrative
+ ;IHS/SD/SDR 2.6 CSV
+ ;IHS/SD/SDR 2.6*14 HEAT161263 Changed to use $$GET1^DIQ so output transform will execute for SNOMED/Provider Narrative
+ ;IHS/SD/SDR 2.6*28 CR10648 Put CPT Narrative in array
+ ;IHS/SD/SDR 2.6*29 CR10410 Added Medicare non-covered changes
  ;
  K ABMS I $D(ABMP("FLAT")),$P(ABMP("FLAT"),U,3)]"" G FLAT
  ;
@@ -14,7 +15,11 @@ ABMDESMH ; IHS/SD/SDR - Profession Services for Seperate Bill ;
 MS S:'$D(ABMS("I")) ABMS("I")=1 S ABMX="""""",ABMX("ER")=0 F ABMS("I")=ABMS("I"):1 S ABMX=$O(@(ABMP("GL")_"21,""C"","_ABMX_")")) Q:'ABMX  S ABMX("X")=$O(^(ABMX,"")) D MS1
  G PRO
  ;
-MS1 S ABMX(0)=@(ABMP("GL")_"21,"_ABMX("X")_",0)"),ABMX(1)=$G(^(1))
+MS1 ;
+ ;S ABMX(0)=@(ABMP("GL")_"21,"_ABMX("X")_",0)"),ABMX(1)=$G(^(1))  ;abm*2.6*28 IHS/SD/SDR CR10648
+ S ABMX(0)=@(ABMP("GL")_"21,"_ABMX("X")_",0)"),ABMX(1)=$G(^(1)),ABMX(2)=$G(^(2))  ;abm*2.6*28 IHS/SD/SDR CR10648
+ S ABMX(1)=$G(@(ABMP("GL")_"21,"_ABMX("X")_",1)"))  ;abm*2.6*28 IHS/SD/SDR CR10648
+ S ABMX(2)=$G(@(ABMP("GL")_"21,"_ABMX("X")_",2)"))  ;abm*2.6*28 IHS/SD/SDR CR10648
  S ABMX("R")=$P(ABMX(0),U,3)
  I +$P(ABMX(0),U,7)=0!(ABMX("R")=""&($P(^ABMDEXP(ABMP("EXP"),0),U)["UB")) S ABMS("I")=ABMS("I")-1 Q
  I (ABMX("R")<960!(ABMX("R")>963))&(ABMX("R")'=969) S ABMS("I")=ABMS("I")-1 Q
@@ -31,14 +36,20 @@ MSH S ABMS(ABMS("I"))=$P(ABMX(0),U,7)
  S $P(ABMS(ABMS("I")),U,10)=$P($G(ABMX(0)),"^",15)  ;POS
  ;S $P(ABMS(ABMS("I")),U,8)=$P(^AUTNPOV($P(ABMX(0),U,6),0),U)  ;abm*2.6*14 HEAT161263
  S $P(ABMS(ABMS("I")),U,8)=$$GET1^DIQ(9999999.27,$P(ABMX(0),U,6),"01","E")  ;abm*2.6*14 HEAT161263
+ I "^35^"[("^"_ABMP("EXP")_"^") S $P(ABMS(ABMS("I")),U,12)=$P(ABMX(2),U,2)  ;abm*2.6*28 IHS/SD/SDR CR10648
  Q
  ;
 PRO S ABMX=0 F ABMS("I")=ABMS("I"):1 S ABMX=$O(@(ABMP("GL")_"27,"_ABMX_")")) Q:'ABMX  S ABMX("X")=ABMX D PRO1
  G ANS
  ;
 PRO1 S ABMX(0)=@(ABMP("GL")_"27,"_ABMX("X")_",0)")
+ S ABMX(2)=$G(@(ABMP("GL")_"27,"_ABMX("X")_",2)"))  ;abm*2.6*28 IHS/SD/SDR CR10648
  S ABMX("SUB")=($P(ABMX(0),U,3)*$P(ABMX(0),U,4))
  S ABMS("TOT")=ABMS("TOT")+ABMX("SUB")
+ ;start new abm*2.6*29 IHS/SD/SDR CR10410
+ S ABMCNDCK=U_$P(ABMX(0),U,5)_U_$P(ABMX(0),U,8)_U_$P(ABMX(0),U,9)
+ D CNCD21CK^ABMDESM1
+ ;end new abm*2.6*29 IHS/SD/SDR CR10410/1
  ;
 PROH S ABMS(ABMS("I"))=ABMX("SUB")
  D HDT^ABMDESM1
@@ -50,20 +61,27 @@ PROH S ABMS(ABMS("I"))=ABMX("SUB")
  S $P(ABMS(ABMS("I")),U,6)=$P(ABMX(0),U,3)
  S $P(ABMS(ABMS("I")),U,7)=1
  S $P(ABMS(ABMS("I")),U,8)=$P($$CPT^ABMCVAPI(+ABMX(0),ABMP("VDT")),U,3)  ;CSV-c
+ I "^35^"[("^"_ABMP("EXP")_"^") S $P(ABMS(ABMS("I")),U,12)=$P(ABMX(2),U,2)  ;abm*2.6*28 IHS/SD/SDR CR10648
  Q
  ;
 ANS S ABMX=0 F ABMS("I")=ABMS("I"):1 S ABMX=$O(@(ABMP("GL")_"39,"_ABMX_")")) Q:'ABMX  S ABMX("X")=ABMX D ANS1
  G XIT
  ;
 ANS1 S ABMX(0)=@(ABMP("GL")_"39,"_ABMX("X")_",0)")
+ S ABMX(2)=@(ABMP("GL")_"39,"_ABMX("X")_",2)")  ;abm*2.6*28 IHS/SD/SDR CR10648
  S ABMX("R")=$P(ABMX(0),U,2) I ABMX("R")'=963 S ABMS("I")=ABMS("I")-1 Q
  S ABMX("C")=$P(ABMX(0),U,3)   ; D ANESTH^ABMDESMA
  S ABMX("SUB")=ABMX("C")+$P(ABMX(0),U,4)
  S ABMS("TOT")=ABMS("TOT")+ABMX("SUB")
+ ;start new abm*2.6*29 IHS/SD/SDR CR10410
+ S ABMCNDCK=U_$P(ABMX(0),U,6)_U_$P(ABMX(0),U,14)_U_$P(ABMX(0),U,19)
+ D CNCD21CK^ABMDESM1
+ ;end new abm*2.6*29 IHS/SD/SDR CR10410/1
 ANSH S ABMS(ABMS("I"))=ABMX("SUB") D HDT^ABMDESM1
  S ABMX("C")=$P(ABMX(0),U) D CPT S $P(ABMS(ABMS("I")),U,4)=ABMX("C")_"-47"
  S $P(ABMS(ABMS("I")),U,6)=1,$P(ABMS(ABMS("I")),U,7)=7
  S $P(ABMS(ABMS("I")),U,8)="ANESTHESIA IN ASSOC W/ CPT:"_$P($$CPT^ABMCVAPI(+ABMX(0),ABMP("VDT")),U,2)  ;CSV-c
+ I "^35^"[("^"_ABMP("EXP")_"^") S $P(ABMS(ABMS("I")),U,12)=$P(ABMX(2),U,2)  ;abm*2.6*28 IHS/SD/SDR CR10648
  Q
  ;
 CPT ;

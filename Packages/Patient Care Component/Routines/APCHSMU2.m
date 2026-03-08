@@ -1,5 +1,5 @@
 APCHSMU2 ; IHS/CMI/LAB - utilities for hmr ;
- ;;2.0;IHS PCC SUITE;**11**;MAY 14, 2009;Build 58
+ ;;2.0;IHS PCC SUITE;**11,23**;MAY 14, 2009;Build 17
  ;
  ;
  ;cmi/anch/maw 8/28/2007 code set versioning in CPT
@@ -170,30 +170,34 @@ LASTCPTI(P,T,BDATE,EDATE) ;EP
  ..Q
  .Q
  Q APCHDX4
-CPTREFT(P,BDATE,EDATE,T) ;EP - return ien of CPT entry if patient had this CPT
+CPTREFT(P,BDATE,EDATE,T,REFT) ;EP - return ien of CPT entry if patient had this CPT
  I '$G(P) Q ""
  I '$G(T) Q ""
  I $G(EDATE)="" Q ""
  I $G(BDATE)="" S BDATE=$$FMADD^XLFDT(EDATE,-365)
- NEW G,X,Y,Z,I
+ S REFT=$G(REFT)
+ NEW %,X,Y,Z,I,G
  S G=""
  S I=0 F  S I=$O(^AUPNPREF("AA",P,81,I)) Q:I=""!($P(G,U)]"")  D
  .S X=0 F  S X=$O(^AUPNPREF("AA",P,81,I,X)) Q:X'=+X!($P(G,U)]"")  S Y=0 F  S Y=$O(^AUPNPREF("AA",P,81,I,X,Y)) Q:Y'=+Y  S D=$P(^AUPNPREF(Y,0),U,3) I D'<BDATE&(D'>EDATE) D
  ..Q:'$$ICD^ATXAPI(I,T,1)
+ ..I REFT]"",REFT'=$P(^AUPNPREF(Y,0),U,7) Q
  ..S G=$$TYPEREF^APCHSMU(Y)_$E($$VAL^XBDIQ1(81,I,$$FFD^APCHSMU(81)),1,(44-$L($$TYPEREF^APCHSMU(Y))))_"^on "_$$FMTE^XLFDT(D)_"^"_D
  .Q
  Q G
-RADREF(P,BDATE,EDATE,T) ;EP - return ien of CPT entry if patient had this CPT
+RADREF(P,BDATE,EDATE,T,REFT) ;EP - return ien of CPT entry if patient had this CPT
  I '$G(P) Q ""
  I '$G(T) Q ""
  I $G(EDATE)="" Q ""
  I $G(BDATE)="" S BDATE=$$FMADD^XLFDT(EDATE,-365)
+ S REFT=$G(REFT)
  NEW G,X,Y,Z,I,C
  S G=""
  S I=0 F  S I=$O(^AUPNPREF("AA",P,71,I)) Q:I=""!($P(G,U)]"")  D
  .S X=0 F  S X=$O(^AUPNPREF("AA",P,71,I,X)) Q:X'=+X!($P(G,U)]"")  S Y=0 F  S Y=$O(^AUPNPREF("AA",P,71,I,X,Y)) Q:Y'=+Y  S D=$P(^AUPNPREF(Y,0),U,3) I D'<BDATE&(D'>EDATE) D
  ..S C=$P($G(^RAMIS(71,I,0)),U,9) Q:C=""
  ..Q:'$$ICD^ATXAPI(C,T,1)
+ ..I REFT]"",REFT'=$P(^AUPNPREF(Y,0),U,7) Q
  ..S N=$P(^AUPNPREF(Y,0),U,7)
  ..S G=$$TYPEREF^APCHSMU(Y)_$E($$VAL^XBDIQ1(81,C,$$FFD^APCHSMU(81)),1,(44-$L($$TYPEREF^APCHSMU(Y))))_"^on "_$$FMTE^XLFDT(D)_"^"_D
  .Q
@@ -202,16 +206,18 @@ RADREF(P,BDATE,EDATE,T) ;EP - return ien of CPT entry if patient had this CPT
 LASTTD(P) ;EP
  I '$G(P) Q ""
  Q $$LASTTD^APCLAPI4(P)
-PRCREFT(P,BDATE,EDATE,T) ;EP - return ien of proc
+PRCREFT(P,BDATE,EDATE,T,REFT) ;EP - return ien of proc
  I '$G(P) Q ""
  I '$G(T) Q ""
- I $G(EDATE)="" Q ""
+ I $G(EDATE)="" S EDATE=DT
  I $G(BDATE)="" S BDATE=$$FMADD^XLFDT(EDATE,-365)
+ S REFT=$G(REFT)
  NEW G,X,Y,Z,I
  S G=""
  S I=0 F  S I=$O(^AUPNPREF("AA",P,80.1,I)) Q:I=""!($P(G,U))  D
- .S (X,G)=0 F  S X=$O(^AUPNPREF("AA",P,80.1,I,X)) Q:X'=+X!($P(G,U))  S Y=0 F  S Y=$O(^AUPNPREF("AA",P,80.1,I,X,Y)) Q:Y'=+Y  S D=$P(^AUPNPREF(Y,0),U,3) I D'<BDATE&(D'>EDATE) D
+ .S X=0 F  S X=$O(^AUPNPREF("AA",P,80.1,I,X)) Q:X'=+X!($P(G,U))  S Y=0 F  S Y=$O(^AUPNPREF("AA",P,80.1,I,X,Y)) Q:Y'=+Y  S D=$P(^AUPNPREF(Y,0),U,3) I D'<BDATE&(D'>EDATE) D
  ..Q:'$$ICD^ATXAPI(I,T,0)
+ ..I REFT]"",REFT'=$P(^AUPNPREF(Y,0),U,7) Q
  ..S G="1^"_D_"^"_$P(^AUPNPREF(Y,0),U,7)_"^"_$P($$ICDOP^ICDEX(I,"","","I"),U,2)
  .Q
  Q G
@@ -232,3 +238,17 @@ S(X) ;
  NEW %,C S (C,%)=0 F  S %=$O(APCHSTEX(%)) Q:%'=+%  S C=C+1
  S APCHSTEX(C+1)=X
  Q
+PRCNMI(P,BDATE,EDATE,T) ;EP - return ien of proc
+ I '$G(P) Q ""
+ I '$G(T) Q ""
+ I $G(EDATE)="" Q ""
+ I $G(BDATE)="" S BDATE=$$FMADD^XLFDT(EDATE,-365)
+ NEW G,X,Y,Z,I
+ S G=""
+ S I=0 F  S I=$O(^AUPNPREF("AA",P,80.1,I)) Q:I=""!($P(G,U))  D
+ .S (X,G)=0 F  S X=$O(^AUPNPREF("AA",P,80.1,I,X)) Q:X'=+X!($P(G,U))  S Y=0 F  S Y=$O(^AUPNPREF("AA",P,80.1,I,X,Y)) Q:Y'=+Y  S D=$P(^AUPNPREF(Y,0),U,3) I D'<BDATE&(D'>EDATE) D
+ ..Q:'$$ICD^ATXAPI(I,T,0)
+ ..Q:$P(^AUPNPREF(Y,0),U,7)'="N"
+ ..S G="1^"_D_"^"_$P(^AUPNPREF(Y,0),U,7)_"^"_$P($$ICDOP^ICDEX(I,"","","I"),U,2)
+ .Q
+ Q G

@@ -1,5 +1,5 @@
-APCLVPVC ; IHS/CMI/LAB - APC visit counts by selected vars ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLVPVC ; IHS/OHPRD/TMJ - APC visit counts by selected vars ;  [ 04/10/03  2:57 PM ]
+ ;;3.0;IHS PCC REPORTS;**7,11,13**;FEB 05, 1997
  ;
 START ; 
  I '$G(DUZ(2)) W $C(7),$C(7),!!,"SITE NOT SET IN DUZ(2) - NOTIFY SITE MANAGER!!",!! Q
@@ -101,7 +101,7 @@ CHKDISC2 ;CHECK DISC IF CONVERTED TO FILE 200
  ;
 PRINT ;
  S APCL80S="*******************************************************************************"
- S APCLDT=$$FMTE^XLFDT(DT)
+ S %DT="",X="T" D ^%DT S DT=Y D DD^%DT S APCLDT=Y
  S (APCLTOT,APCLPG)=0 D HEAD
  S APCLSORT=0 K APCLQUIT
  F I=0:0 S APCLSORT=$O(^TMP("APCLVPVC",APCLJOB,APCLBTH,APCLSORT)) Q:APCLSORT=""!($D(APCLQUIT))  D PRINT1

@@ -1,10 +1,11 @@
-PSOLLL2 ;BIR/JLC-LASER LABEL ;29-May-2012 14:52;PLS
- ;;7.0;OUTPATIENT PHARMACY;**120,138,141,1006,161,200,1015**;DEC 1997;Build 62
+PSOLLL2 ;BIR/JLC-LASER LABEL ;16-Feb-2018 08:19;DU
+ ;;7.0;OUTPATIENT PHARMACY;**120,138,141,1006,161,200,1015,1023**;DEC 1997;Build 121
  ;
  ;Reference to $$ECMEON^BPSUTIL supported by DBIA 4410
  ; Modified - IHS/CIA/PLS - 03/05/04
  ;            IHS/MSC/PLS - 09/11/07 - Line L11
  ;                          05/26/10 - Line L11+7
+ ; Modified - IHS/MSC/MGH - 05/16/17 - L1+8 Modified for EPCS
 L1 I $G(PSOIO("PFDI"))]"" X PSOIO("PFDI")
  I '$G(PFF) D
  .N PGY
@@ -13,6 +14,9 @@ L1 I $G(PSOIO("PFDI"))]"" X PSOIO("PFDI")
  S PFM=0,T=$S($D(REPRINT)&($G(PSOBLALL)):"(GROUP REPRINT)",$D(REPRINT):"(REPRINT)",1:"")
  S T=T_$S($G(RXP):"(PARTIAL)",1:"")_$S($D(REPRINT):" ",$G(RXP):" ",1:"")_$P(PS2,"^",2)_"  "_TECH_"  "_$P(PSONOWT,":",1,2) D PRINT(T)
  S T="Rx# "_RXN_"  "_DATE_"  "_$S('PFF:"Fill "_(RXF+1)_" of "_(1+$P(RXY,"^",9)),1:"(fill document continued)") D PRINT(T)
+ ;IHS/MSC/MGH added for EPCS
+ I $D(^PSRX(RX,"PKI")) S SSNPN=^PSRX(RX,"PKI"),SSNPN=$S(SSNPN:"(DSIG)",$P(SSNPN,"^",2):"(NOT DSIG)",1:"")
+ I '$D(^PSRX(RX,"PKI")),+$$GET1^DIQ(52,RX,9999999.42,"I") S SSNPN="(NOT DSIG)"
  S T=PNM_"  "_$G(SSNPN) D PRINT(T,1)
  S LENGTH=0,PTEXT="",PFF=0,XFONT=$E(PSOFONT,2,99)
  N DP,TEXTP,TEXTL,MORE

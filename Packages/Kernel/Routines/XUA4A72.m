@@ -1,5 +1,5 @@
-XUA4A72 ;SFISC/RWF - Person class API's ;08/05/2004  15:53
- ;;8.0;KERNEL;**27,49,74,132,222,300,327,357**;Jul 10, 1995;Build 2
+XUA4A72 ;SFISC/RWF - Person class API's ;09/18/2003  13:46 [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**27,49,74,132,222,300,327**;Jul 10, 1995
  ; Entry Points (DBIA 1625)
  ; $$GET      - Returns active class, given duz and date.
  ; $$IEN2CODE - Returns VA CODE from PERSON CLASS file, given IEN.
@@ -40,7 +40,7 @@ GETUE(IEN,DATE) ;private, Get the user entry
  . S Y=""
  . F  S Y=$O(^VA(200,IEN,"USC1","AD",D,Y),-1) Q:'Y  D  Q:XUOK
  . . S X=$G(^VA(200,IEN,"USC1",Y,0))
- . . I $P(X,U,2),DATE'<$P(X,U,2),DATE'>$P(X,U,3)!($P(X,U,3)="") S XUOK=1
+ . . I $P(X,U,2),DATE'<$P(X,U,2),DATE<$P(X,U,3)!($P(X,U,3)="") S XUOK=1
  Q $S(XUOK:Y_U_X_U_U,1:-2)
  ;
 REMOVE ;Allow privileged user to remove a wrong entry in the users file.

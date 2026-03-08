@@ -1,11 +1,14 @@
 BMCADDFY ; IHS/PHXAO/TMJ - ADD A NEW REFERRAL FOR A SPECIFIC FISCAL YEAR ;      [ 01/09/2006  3:51 PM ]
- ;;4.0;REFERRED CARE INFO SYSTEM;**8,9,10**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**8,9,10,15**;JAN 09, 2006;Build 168
  ;IHS/OIT/FCJ REMOVE AUTO SEND MSGS ;ADD TYP OF COM
  ;    ;CHNGD COM CALL, BO & MED HX, WILL NOT BE CALLED FR FORM,
  ;    ;CHNGD OPT 1 & 4 DSPLY NAMES
  ;    Rmvd asking for Case com;Tst for SR;add new form for call-ins
  ;BMC*4.0*8 7.2.13 IHS.OIT.FCJ TST FOR REF NUMBER ALREADY USED
- ;4.0*8 IHS/OIT/FCJ Added selecting a visit and adding a v ref entry
+ ;BMC*4.0*8 IHS/OIT/FCJ Added selecting a visit and adding a v ref entry
+ ;BMC*4.0*15 4.20.23 IHS.OIT.FCJ ADD PREFERRED NAME FOR SCREEN DISPLAYS
+ ;           UPDATED THE DISPLAY OF LAST 5 REFERRALS
+ ;
  ; See ^BMCVDOC for system wide variables set by main menu
  ; Subscripted BMCREC is EXTERNAL form.
  ;   BMCREC("PAT NAME")=patient name
@@ -54,7 +57,8 @@ PATIENT ; GET PATIENT
 PATIENT2 ;ASK FOR PAT UNTIL USER SELECTS OR QUITS
  S BMCQ=1 S DIC="^AUPNPAT(",DIC(0)="AEMQ" D DIC^BMCFMC
  Q:Y<1
- S BMCDFN=+Y,BMCREC("PAT NAME")=$P(^DPT(+Y,0),U)
+ ;S BMCDFN=+Y,BMCREC("PAT NAME")=$P(^DPT(+Y,0),U)          ;BMC*4.0*15 
+ S BMCDFN=+Y,BMCREC("PAT NAME")=$E($$GETPREF^AUPNSOGI(+Y,"E",1),1,37)  ;BMC*4.0*15
  S BMCQ=0
  I $$DOD^AUPNPAT(BMCDFN) D  I 'Y K BMCDFN,BMCREC("PAT NAME") Q
  . W !!,"This patient is deceased."
@@ -74,11 +78,12 @@ REFDISP ;Display if Pat has existing Refs
  W ?25,"**LAST 5 REFERRALS**",!,?25,"********************",!
  I '$D(^BMCREF("AA",BMCDFN)) W !,?20,"**--NO EXISTING REFERRALS--**",! S BMCQ=1 Q
  S BMCQ=0,BMCDT="",CT=5  ;BMC*4.0*9 ADDED CT TO NXT 3 LINES
- F I=1:1:5 S BMCDT=$O(^BMCREF("AA",BMCDFN,BMCDT),-1) Q:BMCDT=""  D NEXT Q:CT=0
+ F I=0:1:5 S BMCDT=$O(^BMCREF("AA",BMCDFN,BMCDT),-1) Q:BMCDT=""  D NEXT Q:CT=0
  K CT Q
 NEXT ;2ND $O
  S BMCRIEN=""
- F  S BMCRIEN=$O(^BMCREF("AA",BMCDFN,BMCDT,BMCRIEN),-1) Q:BMCRIEN'=+BMCRIEN  D
+ ;F  S BMCRIEN=$O(^BMCREF("AA",BMCDFN,BMCDT,BMCRIEN),-1) Q:BMCRIEN'=+BMCRIEN  D   ;BMC*4.0*15
+ F  S BMCRIEN=$O(^BMCREF("AA",BMCDFN,BMCDT,BMCRIEN)) Q:BMCRIEN'=+BMCRIEN  D      ;BMC*4.0*15
  .Q:BMCDT=""
  .Q:BMCRIEN=""
  .Q:$P($G(^BMCREF(BMCRIEN,1)),U)'=""  ;4.0 IHS/OIT/FCJ TST FOR SR
@@ -114,6 +119,8 @@ NUMBER ;GENERATE REF NUMBER
  ;
  S BMCQ=1
  S DIR(0)="F^2:2^K:X'?2N X",DIR("A")="Enter the Desired Fiscal Year",DIR("?")="Enter the 2 Digit Fiscal Year - 2001=01 - 2002=02 etc." KILL DA D ^DIR KILL DIR
+ I BMCRY=Y W !!,?10,"This is the current FY.",!?10,"Please use the Add Referral Option for current year." G NUMBER  ;BMC*4.0*15
+ I +Y<1 S BMCQ=1 Q   ;BMC*4.0*15
  S BMCFY=Y
  I '$D(BMCFY) D EOP^BMC Q
  ;
@@ -124,7 +131,8 @@ NUMBER ;GENERATE REF NUMBER
 SHOW ;Display last 5-10 Referrals #
  W !!,?25,"********************",!
  W ?10,"**LAST 10 REFERRALS FOR FISCAL YEAR "_BMCFY_"**",!,?25,"********************",!
- I '$D(^BMCREF("FY",BMCSTART)) W !,?10,"**--NO EXISTING REFERRALS FOR THIS FISCAL YEAR--**",! S BMCQ=1 Q
+ ;I '$D(^BMCREF("FY",BMCSTART)) W !,?10,"**--NO EXISTING REFERRALS FOR THIS FISCAL YEAR--**",! S BMCQ=1 Q  ;BMC*4.0*15
+ I '$D(^BMCREF("FY",BMCSTART)) W !,?10,"**--NO EXISTING REFERRALS FOR THIS FISCAL YEAR--**",! G REFNUM  ;BMC*4.0*15
  S BMCQ=0,BMCIEN="",I=0
  F  S BMCIEN=$O(^BMCREF("FY",BMCSTART,BMCIEN),-1) Q:(BMCIEN="")!(I=10)  D
  . Q:BMCIEN=""
@@ -133,19 +141,23 @@ SHOW ;Display last 5-10 Referrals #
  .S I=I+1
  ;
 REFNUM ;Get Referral Number Choice
+ ;BMC*4.0*15
  W !
- S DIR(0)="F^1:5",DIR("A")="Enter the Desired Referral Number",DIR("?")="Enter a whole number-Do NOT preceed with Zero's 1-5 characters in length" KILL DA D ^DIR KILL DIR
- I $D(DIRUT) D EOP^BMC G NUMBER
- S BMCRNUM=+Y
- I BMCRNUM<1 G REFNUM
- I 'BMCRNUM D EOP^BMC Q
+ ;S DIR(0)="F^1:5",DIR("A")="Enter the Desired Referral Number",DIR("?")="Enter a whole number-Do NOT preceed with Zero's 1-5 characters in length" KILL DA D ^DIR KILL DIR
+ ;I $D(DIRUT) D EOP^BMC G NUMBER
+ ;S BMCRNUM=+Y
+ ;I BMCRNUM<1 G REFNUM
+ ;I 'BMCRNUM D EOP^BMC Q
  ;
  S X=$$REFNFY^BMC
- Q:'X
- I $D(^BMCREF("C",X)) W !,"Referral number already used, try another number.",! G REFNUM     ;BMC*4.0*8 IHS.OIT.FCJ PREVENT USING THE SAME NUMBER
- X $P(^DD(90001,.02,0),U,5,99)
- I '$D(X) W !,"Error generating new referral number.  Notify programmer.",! D EOP^BMC Q
- S BMCRNUMB=X,BMCQ=0 Q
+ ;Q:'X
+ ;I $D(^BMCREF("C",X)) W !,"Referral number already used, try another number.",! G REFNUM     ;BMC*4.0*8 IHS.OIT.FCJ PREVENT USING THE SAME NUMBER
+ ;X $P(^DD(90001,.02,0),U,5,99)
+ ;I '$D(X) W !,"Error generating new referral number.  Notify programmer.",! D EOP^BMC Q
+ I +X<1 W !,"Error generating new referral number.  Notify programmer.",! D EOP^BMC Q
+ S BMCRNUMB=X,BMCQ=0
+ D PAUSE^BMC    ;BMC*4.0*15
+ Q
  ;
 ADD ; ADD NEW REFERRAL RECORD
  S BMCQ=1

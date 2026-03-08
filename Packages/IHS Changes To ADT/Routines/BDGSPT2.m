@@ -1,5 +1,5 @@
 BDGSPT2 ; IHS/OIT/LJF - LIST TEMPLATE CODE FOR USER ACCESS RESTRICTIONS
- ;;5.3;PIMS;**1008,1009**;MAY 28, 2004
+ ;;5.3;PIMS;**1008,1009,1022**;MAY 28, 2004;Build 18
  ;IHS/OIT/LJF 08/23/2007 ROUTINE ADDED with Patch 1008
  ;
 USER ;EP; Select User whose access will be restricted
@@ -31,7 +31,9 @@ INIT ; -- init variables and list array
  ; find entries and sort by status and then by patient name
  NEW STATUS,DFN,PATNM,SORT
  S DFN=0 F  S DFN=$O(^BDGSPT(BDGUSR,1,DFN)) Q:'DFN  D
- . S PATNM=$$GET1^DIQ(2,DFN,.01)
+ . ;20230621 97824 p1022 maw change to PPN
+ . ;S PATNM=$$GET1^DIQ(2,DFN,.01)
+ . S PATNM=$$GETPREF^AUPNSOGI(DFN,"E",1)
  . S STATUS=$$STATUS(BDGUSR,DFN,2)  ;2=long format
  . S SORT=$S(STATUS["RESTRICTED":1,STATUS["TEMPORARY":2,1:3)
  . S ^TMP("BDGSPT2A",$J,SORT,PATNM,DFN)=STATUS
@@ -43,8 +45,12 @@ INIT ; -- init variables and list array
  . S PATNM=0 F  S PATNM=$O(^TMP("BDGSPT2A",$J,SORT,PATNM)) Q:PATNM=""  D
  . . S DFN=0 F  S DFN=$O(^TMP("BDGSPT2A",$J,SORT,PATNM,DFN)) Q:'DFN  D
  . . . S COUNT=COUNT+1
- . . . S LINE=$$PAD($J(COUNT,3)_$$SP(3)_$E(PATNM,1,25),33)
- . . . S LINE=$$PAD(LINE_$J($$HRCN^BDGF2(DFN,DUZ(2)),6),43)
+ . . . ;20230621 97824 p1022 maw PPN display
+ . . . ;S LINE=$$PAD($J(COUNT,3)_$$SP(3)_$E(PATNM,1,25),33)
+ . . . S LINE=$$PAD($J(COUNT,3)_$$SP(3)_PATNM,80)
+ . . . D SET(LINE,.VALMCNT,COUNT,DFN)
+ . . . S LINE=""
+ . . . S LINE=$$PAD($$SP(30)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6),43)
  . . . S LINE=LINE_^TMP("BDGSPT2A",$J,SORT,PATNM,DFN)
  . . . D SET(LINE,.VALMCNT,COUNT,DFN)
  ;

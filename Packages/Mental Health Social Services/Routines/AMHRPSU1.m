@@ -1,5 +1,5 @@
 AMHRPSU1 ; IHS/CMI/LAB - Suicide Form data element tally ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**1,8**;JUN 02, 2010;Build 7
+ ;;4.0;IHS BEHAVIORAL HEALTH;**1,8,11**;JUN 02, 2010;Build 27
  ;
  ;
 START ;
@@ -155,6 +155,9 @@ V2 ;
  S AMHC=25,(X,Y)=$$VAL^XBDIQ1(2,P,1901)
  I X="" S X="UNKNOWN",Y="ZZZZZ"
  S ^(X)=$S($D(^XTMP("AMHRPSU1",AMHJ,AMHH,"TALLY","AGE",AMHAGEG,AMHC,Y,X)):^(X)+1,1:1),^(X)=$S($D(^XTMP("AMHRPSU1",AMHJ,AMHH,"TALLY","TOTAL",AMHC,Y,X)):^(X)+1,1:1)
+ S AMHC=26,(X,Y)=$$VAL^XBDIQ1(9002011.65,AMHR,.07)
+ I X="" S X="UNKNOWN",Y="ZZZZZ"
+ S ^(X)=$S($D(^XTMP("AMHRPSU1",AMHJ,AMHH,"TALLY","AGE",AMHAGEG,AMHC,Y,X)):^(X)+1,1:1),^(X)=$S($D(^XTMP("AMHRPSU1",AMHJ,AMHH,"TALLY","TOTAL",AMHC,Y,X)):^(X)+1,1:1)
  Q
 ETHN(P,F) ;EP
  I '$G(P) Q ""
@@ -178,6 +181,7 @@ PRINT ;EP called from xbdbque
  .D HEAD Q:$D(AMHQUIT)
  .W !,"Age Range: ",AMHAGEG," years",?30,"Total # of Suicide Forms: ",AMHTOT(AMHAGEG),!?63,"REPORT TOTALS"
  .S AMHV="" F  S AMHV=$O(^XTMP("AMHRPSU1",AMHJ,AMHH,"TALLY","AGE",AMHAGEG,AMHV)) Q:AMHV=""!($D(AMHQUIT))  D
+ ..I AMHV=26,$D(AMHCOMM) Q
  ..I $Y>(IOSL-6) D HEAD Q:$D(AMHQUIT)
  ..S AMHL=$P($T(@AMHV),";;",2) W !?1,$$LBLK(AMHL,28)
  ..S AMHY="" F  S AMHY=$O(^XTMP("AMHRPSU1",AMHJ,AMHH,"TALLY","AGE",AMHAGEG,AMHV,AMHY)) Q:AMHY=""!($D(AMHQUIT))  D
@@ -190,6 +194,7 @@ PRINT ;EP called from xbdbque
  D HEAD Q:$D(AMHQUIT)
  W !,"Age Range: ","ALL AGES",?30,"Total # of Suicide Forms: ",AMHTOT,!?63,"REPORT TOTALS"
  S AMHV="" F  S AMHV=$O(^XTMP("AMHRPSU1",AMHJ,AMHH,"TALLY","TOTAL",AMHV)) Q:AMHV=""!($D(AMHQUIT))  D
+ .I AMHV=26,$D(AMHCOMM) Q
  .I $Y>(IOSL-6) D HEAD Q:$D(AMHQUIT)
  .S AMHL=$P($T(@AMHV),";;",2) W !?1,$$LBLK(AMHL,28)
  .S AMHY="" F  S AMHY=$O(^XTMP("AMHRPSU1",AMHJ,AMHH,"TALLY","TOTAL",AMHV,AMHY)) Q:AMHY=""!($D(AMHQUIT))  D
@@ -269,3 +274,4 @@ LABEL ;
 23 ;;Race:
 24 ;;Ethnicity:
 25 ;;Veteran's Status:
+26 ;;Community Where Act Ocurred:

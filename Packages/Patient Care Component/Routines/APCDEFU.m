@@ -1,5 +1,5 @@
 APCDEFU ; IHS/CMI/LAB - APCD Auto Print PCC Encounter Form Utility ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**28**;MAY 14, 2009;Build 72
  ;
  ;This routine contains the header, footer, and form feed utilities
  ;for the Automated PCC Encounter Form
@@ -23,7 +23,7 @@ FOOT ;EP-- page footer
  S APCDPAT=$P(APCDVREC,U,5)
  S APCDHRN=$$HRN^AUPNPAT(APCDPAT,DUZ(2))
  S:APCDHRN="" APCDHRN="<?????>"
- W !,?3,"HR#:  ",APCDHRN,?30,"SSN:  ",$$SSN^AUPNPAT(APCDPAT)
+ W !,?3,"HR#:  ",APCDHRN
  W !,?3,"NAME:  ",$$VAL^XBDIQ1(2,APCDPAT,.01)
  W ?30,"SEX: ",$$EXTSET^XBFUNC(2,.02,$P(^DPT(APCDPAT,0),U,2))
  W !?3,"DOB:  ",$$DOB^AUPNPAT(APCDPAT,"E")
@@ -40,7 +40,7 @@ FF ;-- form feed
  S DFN=$P(APCDVREC,U,5)
  S APCDHRN=$$HRN^AUPNPAT(DFN,DUZ(2))
  S:APCDHRN="" APCDHRN="<?????>"
- W !,?3,"HR#:  ",APCDHRN,?30,"SSN:  ",$P(^DPT(DFN,0),U,9)
+ W !,?3,"HR#:  ",APCDHRN
  W !,?3,"NAME:  ",APCDPAT
  I $E(IOST)="C" D
  . I IO=IO(0) W ! S DIR(0)="EO"

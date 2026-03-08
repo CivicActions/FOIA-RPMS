@@ -1,8 +1,8 @@
 PSSCSPD ;BIR/RTR-Corresponding drug functions ;03/28/00
- ;;1.0;PHARMACY DATA MANAGEMENT;**34,47**;9/30/97
+ ;;1.0;PHARMACY DATA MANAGEMENT;**34**;9/30/97
  ;
 REP ;
- W !!,"Since this report must check every drug in the DRUG (#50) File, we recommend",!,"that you queue this report to a printer.",!
+ W !!,"Since this report must check every drug in the DRUG (#50) File, we recommend",!,"that you queued this report to a printer.",!
  K IOP,%ZIS,POP S %ZIS="QM" D ^%ZIS I $G(POP) W !!,"Nothing queued to print.",! Q
  I $D(IO("Q")) S ZTRTN="START^PSSCSPD",ZTDESC="Corresponding drug report" D ^%ZTLOAD K %ZIS W !,"Report queued to print.",! Q
 START ;
@@ -66,12 +66,10 @@ EDIT ;
  G EDIT
  Q
 PAT ;
- W ! K PSSOTH,DIC S DIC(0)="QEAMZ",DIC("A")="Select Pharmacy Orderable Item: ",DIC="^PS(50.7," D ^DIC K DIC I Y<1!($D(DTOUT))!($D(DUOUT)) G PATQ
- S PSSOTH=$S($P($G(^PS(59.7,1,40.2)),"^"):1,1:0)
- K DIE W ! S DA=+Y,DIE="^PS(50.7,",DR="7;S:'$G(PSSOTH) Y=""@1"";7.1;@1"
- D ^DIE G:$D(Y)!($D(DTOUT)) PATQ
+ W ! K DIC S DIC(0)="QEAMZ",DIC("A")="Select Pharmacy Orderable Item: ",DIC="^PS(50.7," D ^DIC K DIC I Y<1!($D(DTOUT))!($D(DUOUT)) G PATQ
+ K DIE W ! S DA=+Y,DIE="^PS(50.7,",DR="7" D ^DIE G:$D(Y)!($D(DTOUT)) PATQ
  G PAT
-PATQ W ! K DA,DIC,DIE,PSSOTH
+PATQ W ! K DA,DIC,DIE
  Q
 MARK ;
  W !!,"This option will automatically mark all corresponding Inpatient and Outpatient",!,"drugs that are listed in the 'Potential Corresponding Inpatient/Outpatient Drug",!,"Matches' section of the 'Report of Corresponding Drugs'.",!

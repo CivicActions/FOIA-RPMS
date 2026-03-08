@@ -1,16 +1,17 @@
-%ZOSVKSS ;OAK/KAK - Automatic INTEGRIT Routine (cont.) (Cache) ;5/9/07  10:44
- ;;8.0;KERNEL;**90,94,197,268,456**;Jul 26, 2004
+%ZOSVKSS ;SF/KAK - Automatic INTEGRIT Routine (cont.) (OpenM-NT) ;21 AUG 97 2:42 pm [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1005,1007**;APR 1, 2003 
+ ;;8.0;KERNEL;**90,94,197**;May 24, 2001
  ;
- ; Version for Cache
+ ; OpenM-NT Version for Cache 3.2
  ;
 RESTART ;-- called by routine C+6^%ZOSVKSE
  ; 
  ;-- code from routine CHECKPNT
  ;
  K SUB,C
- N B,D,E,FLAG,LE,LL,LN,LNP,TL1
+ N B,FLAG
  ;
- S (ERR,FLAG,NP,NB,LSNP,LNB)=0
+ S (FLAG,NP,NB,LSNP,LNB,ERR)=0
  ;
  S X="",@^%ZOSF("TRAP")
  ;
@@ -110,7 +111,6 @@ MB N A,X,L,BL,J,K,R
  .S N=$A(X,2),A=4,L=A+((N+1)*3) I L'=$L(X) D ER18 Q
  .S R=$A(X,4)*256+$A(X,3) I (R<1)!(R>2048) D ER19
  .F K=0:1:N S BL=(((($A(X,A+3)*256)+$A(X,A+2))*256)+$A(X,A+1)),A=A+3 S B=BL-1#400 I $D(B(BL-B,B)) D ER20 S B(BL-B,B)=C(I)_","_J_","_K
- Q
  ;-- end code from routine CHECK0
  ;
 CHECK1 ;-- code from routine CHECK1
@@ -209,3 +209,4 @@ ERDK ; if D-BL error in lower block D - pointer block is BLK
 MISC ; misc error
  S KMPSERR="MISC",ERR=1
  Q
+ ;-- end code from routine CHECKERR

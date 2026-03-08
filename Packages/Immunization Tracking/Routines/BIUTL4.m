@@ -1,15 +1,15 @@
 BIUTL4 ;IHS/CMI/MWR - UTIL: SCREENMAN CODE; OCT 15, 2010
- ;;8.5;IMMUNIZATION;**12**;MAY 01,2016
+ ;;8.5;IMMUNIZATION;**19,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: SCREENMAN CODE: VAC SELECT ACTIONS, SERIES VALID,
  ;;           LOC BRANCHING LOGIC, VISIT LOC DEF, SKIN TEST READ MM.
  ;;  PATCH 2: Comment out code that would disable VFC Elig field for
  ;            patients >19yrs.  OLDDATE+15
- ;;  PATCH 5: Add NDC to reset fields when vaccine is changed.  VACCHG+14
  ;;  PATCH 5: Add leading zero to default volume if less than 1.  VISVOL+21
  ;;  PATCH 9: Make VIS Presented Date default to Visit Date (when changed).  OLDATE+9
  ;;  PATCH 10: Only stuff VIS Presented Date if this is a V Imm.  OLDDATE+18
  ;;  PATCH 12: If date not today, Inj Site not required  OLDDATE+17
+ ;;  PATCH 19: Comment out NDC for V Immunizations.  VACCHG+15
  ;
  ;----------
 VACSCR ;EP
@@ -78,10 +78,11 @@ VACCHG(BIVAC) ;EP
  ;---> Reaction, and VIS will be deleted and replaced.
  D:$G(BI("K"))
  .N BIMSG
- .;********** PATCH 5, v8.5, JUL 01,2013, IHS/CMI/MWR
- .;---> Add NDC to reset fields when vaccine is changed.
- .S BIMSG="* NOTE: Because you have changed the vaccine, Dose Override,"
- .S BIMSG=BIMSG_"Lot#, NDC, and any Reaction and VIS will be removed or replaced"
+ .;
+ .;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ .;---> NDC Code no longer in V Imm.
+ .S BIMSG="* NOTE: Because you have changed the vaccine, Dose Override, "
+ .S BIMSG=BIMSG_"Lot#, and any Reaction and VIS will be removed or replaced"
  .S BIMSG=BIMSG_" with defaults for the new vaccine."
  .D HLP^DDSUTL(BIMSG),HLP^DDSUTL("$$EOP")
  ;
@@ -91,7 +92,8 @@ VACCHG(BIVAC) ;EP
  D PUT^DDSVALF(10) S BI("Q")=""   ;VIS
  D PUT^DDSVALF(14) S BI("S")=""   ;Dose Override
  D PUT^DDSVALF(5) S BI("W")=""    ;Volume
- D PUT^DDSVALF(3.8) S BI("H")=""  ;NDC
+ ;
+ ;D PUT^DDSVALF(3.8) S BI("H")=""  ;NDC
  ;**********
  ;
  ;---> If Category is Historical Event, do not stuff Lot# and VIS defaults.
@@ -127,7 +129,9 @@ VISVOL(BIVAC) ;EP
  .Q:'X
  .;---> For Influenza CVX 15, if patient is <36 mths change default=.25 ml.
  .D:BIVAC=148
- ..Q:'$G(BIDFN)  S:$$AGE^BIUTL1(BIDFN)<36 X=".25"
+ ..Q:'$G(BIDFN)
+ ..;V8.5 PATCH 29 - FID-107546 Tdap age check
+ ..S:+$P($$AGE^BIUTL1(BIDFN),U,2)<36 X=".25"
  .;
  .;********** PATCH 5, v8.5, JUL 01,2013, IHS/CMI/MWR
  .;---> Add leading zero to default volume if less than 1.
@@ -220,11 +224,15 @@ LOTSEL(BIX) ;EP
  .D LOTWARN^BIUTL7($G(BI("D")),$G(BI("E")),$G(BI("F")))
  .D VISVOL(BIVAC)
  ;
- D
- .;---> Stuff default NDC IEN for this Lot Number.
- .Q:(+$G(BI("H")))
- .N BINDC S BINDC=$$LOTTX^BIUTL6(BIX,3)
- .I BINDC D PUT^DDSVALF(3.8,,,BINDC,"I")
+ ;
+ ;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ ;---> NDC Code no longer in V Imm.
+ ;D
+ ;.;---> Stuff default NDC IEN for this Lot Number.
+ ;.Q:(+$G(BI("H")))
+ ;.N BINDC S BINDC=$$LOTTX^BIUTL6(BIX,3)
+ ;.I BINDC D PUT^DDSVALF(3.8,,,BINDC,"I")
+ ;**********
  ;
  Q
  ;
@@ -282,7 +290,7 @@ OLDDATE(X) ;EP
  .D PUT^DDSVALF(11,,,"E","I") S BI("I")="E"
  .I ($G(DT)-X)>5 D NOPROV^BIUTL7("E")
  .;
- .;********** PATCH 12, v8.5, MAY 01,2016, IHS/CMI/MWR
+ .;********** PATCH 12, v8.5, OCT 24,2011, IHS/CMI/MWR
  .;---> If Date not today, set Injection Site and Volume fields not required.
  .D REQ^DDSUTL(4,"","",0),REQ^DDSUTL(5,"","",0)
  ;
@@ -292,10 +300,7 @@ OLDDATE(X) ;EP
  ;D PUT^DDSVALF(10.2,,,BIDATEE,"E") S BI("QQ")=BIDATEE
  I $G(BIVTYPE)="I" D PUT^DDSVALF(10.2,,,BIDATEE,"E") S BI("QQ")=BIDATEE
  ;
- ;********** PATCH 12, v8.5, MAY 01,2016, IHS/CMI/MWR
- ;---> Insert missing Q.
  Q
- ;**********
  ;
  ;
  ;----------

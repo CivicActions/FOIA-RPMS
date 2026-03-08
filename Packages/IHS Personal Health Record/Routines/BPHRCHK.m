@@ -1,12 +1,12 @@
 BPHRCHK ;GDIT/HS/ALA-PHR System Check ; 16 Feb 2018  11:42 AM
- ;;2.1;IHS PERSONAL HEALTH RECORD;**2**;Apr 01, 2014;Build 4
+ ;;2.1;IHS PERSONAL HEALTH RECORD;**2,4**;Apr 01, 2014;Build 3
  ;
 EN ;EP - Check PHR connection with a patient
  NEW QFLG,RESULT,DFN,BPHREUID
  S QFLG=0 D LIP Q:QFLG
  I $P($G(^AUTTLOC(DUZ(2),21)),"^",5)="" D EN^DDIOL("Location "_$P(^DIC(4,DUZ(2),0),"^",1)_" does not have DIRECT email address.","","!!") Q
  D PAT(.RESULT,"","","")
- I $P($G(RESULT),"^",10)'="" D EN^DDIOL($P(RESULT,"^",10),"","!!") Q
+ I $P($G(RESULT),"^",12)'="" D EN^DDIOL($P(RESULT,"^",12),"","!!") Q
  I $P($G(RESULT),"^",1)=0 D EN^DDIOL("Patient is not signed up for PHR.","","!!") Q
  I $P($G(RESULT),"^",1)=-1 D EN^DDIOL("Error occurred, please check error log.","","!!") Q
  ;accessed PHR (0=No, 1=Yes)^last date^used secure messaging (0=No, 1=Yes)^last date^direct address
@@ -29,7 +29,7 @@ EN1 ;EP - Check a patient
  ;
  ;Select patient
  D PAT(.RESULT,BDT,EDT,PROV)
- I $P($G(RESULT),"^",10)'="" D EN^DDIOL($P(RESULT,"^",10),"","!!") Q
+ I $P($G(RESULT),"^",12)'="" D EN^DDIOL($P(RESULT,"^",12),"","!!") Q
  I $P($G(RESULT),"^",1)=0 D EN^DDIOL("Patient is not signed up for PHR.","","!!?5") Q
  I $P($G(RESULT),"^",1)=-1 D EN^DDIOL("Error occurred, please check error log.","","!!?5") Q
  ;accessed PHR (0=No, 1=Yes)^last date^used secure messaging (0=No, 1=Yes)^last date^direct address

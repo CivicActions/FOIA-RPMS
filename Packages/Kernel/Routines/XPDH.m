@@ -1,5 +1,6 @@
-XPDH ;SFISC/XAK,RSD - help for answering install questions ;03/27/2008 09:11
- ;;8.0;KERNEL;**58,95,108,399**;Jul 10, 1995;Build 12
+XPDH ;SFISC/XAK,RSD - help for answering install questions ;12/16/98  09:11 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**58,95,108**;Jul 10, 1995
 REP ;changing your file name
  W !!?5,"If YES, then the incoming file name and Data Dictionary will"
  W !?5,"overwrite the existing file ",FLAG,"."
@@ -31,8 +32,8 @@ MSG ;creating a Packman message
 MG ;adding Coordinator to a Mail Group
  W !!?5,"Enter the person responsible for maintaining the membership"
  W !?5,"of the incoming Mail Group.  The person must exist in the"
- W !?5,"New Person file, #200.  If the Mail Group exist, it will"
- W !?5,"default to the existing coordinator."
+ W !?5,"New Person file, #200.  This person will be the coordinator"
+ W !?5,"only if this Mail Group is new on your system."
  Q
 INHIBIT ;Inhibit logons during install
  W !!?5,"YES means that KIDS will set the Inhibit logon in each volume"

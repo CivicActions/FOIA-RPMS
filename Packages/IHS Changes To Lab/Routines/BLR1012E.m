@@ -10,7 +10,7 @@ EN ;Prevents loading of the transport global.
  I $S('$G(DUZ):1,$D(DUZ)[0:1,$D(DUZ(0))[0:1,1:0) W !!,$$CJ^XLFSTR("Please Log in to set local DUZ... variables",80),! S XPDQUIT=1
  I '$D(^VA(200,$G(DUZ),0))#2 W !,$$CJ^XLFSTR("You are not a valid user on this system",80),! S XPDQUIT=1
  W !!,"Checking for LR 5.2 Patch 1011..."
- F RN="BLRTN","LRORD" X "ZL @RN S LN2=$T(+2)" I LN2'["1011",LN2'["1012" D
+ F RN="BLRTN,LRORD" X "ZL @RN S LN2=$T(+2)" I LN2'["1011",LN2'["1012" D
  .  W !,$$CJ^XLFSTR(RN_"--Patch 'LR*5.2*1011' has not been installed.",80)
  .  W ! S XPDQUIT=1
  K BLRFDA,BLRIEN,BLREMSG,DIC

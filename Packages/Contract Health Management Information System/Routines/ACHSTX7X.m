@@ -1,5 +1,5 @@
 ACHSTX7X ; IHS/ITSC/TPF/PMF - CHS TRIBAL STATISTICAL EXPORT ERROR REPORT ; 
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**22,23**;JUN 11, 2001;Build 43
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**22,23**;JUN 11, 2001;Build 86
  ;
  ; Produces report for incomplete data items for Statisitcal (638)
  ; records to be sent to DDPS.

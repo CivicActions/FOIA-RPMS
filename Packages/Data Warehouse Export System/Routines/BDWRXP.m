@@ -1,7 +1,7 @@
 BDWRXP ;cmi/anch/maw - BDW Mark Visit for Export that didn't export already 8/8/2007 10:14:44 AM
- ;;1.0;IHS DATA WAREHOUSE;**1,2**;JAN 23, 2006
+ ;;1.0;IHS DATA WAREHOUSE;**1,2,10**;JAN 24, 2006;Build 9
  ;
- ;
+ ;IHS/CMI/LAB - PATCH 10 ADD DEMO PATIENT CHECK
  ;
  ;this routine will go back to the beginning of the fiscal year and mark
  ;visits for export that did not export already
@@ -30,7 +30,7 @@ FY(BDWDT) ;-- lets find out the fiscal year based on DT passed in
  Q BDWFY
  ;
 LOOK(BDWBEG,BDWEND) ;-- look through all visits for the fiscal year until today and mark for export
- N BDWDA,BDWCNT
+ N BDWDA,BDWCNT,BDWPAT
  S BDWCNT=0
  I $G(BDWINT) W !,"Searching"
  S BDWDA=BDWBEG F  S BDWDA=$O(^AUPNVSIT("B",BDWDA)) Q:'BDWDA!(BDWDA>BDWEND)  D
@@ -49,6 +49,9 @@ LOOK(BDWBEG,BDWEND) ;-- look through all visits for the fiscal year until today 
  .. Q:'BDWVCDT
  .. Q:'BDWVEDT
  .. Q:$P(BDWREC,U,11)  ;visit deleted
+ .. S BDWPAT=$P(BDWREC,U,5)  ;patient DFN
+ .. Q:$$DEMO^APCLUTL(BDWPAT,"E")
+ .. Q:$E($$SSN^AUPNPAT(BDWPAT),1,5)="00000"
  .. Q:$P(BDWREC1,U,6)  ;already exported
  .. Q:$D(^AUPNVSIT("ADWO",BDWVCDT,BDWIEN))  ;xref already set
  .. Q:$D(^AUPNVSIT("ADWO",BDWVEDT,BDWIEN))  ;xref already set

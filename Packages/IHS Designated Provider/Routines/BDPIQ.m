@@ -1,5 +1,5 @@
 BDPIQ ; IHS/CMI/TMJ - Inquire to a Specific Patient Record ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;1.0;DESIGNATED PROVIDER MGT SYSTEM;**1**;SEP 10, 2004
  ;
  ;
  ;

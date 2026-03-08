@@ -1,5 +1,5 @@
 ABME661 ; IHS/ASDST/DMJ - UB92 V5 EMC RECORD 61 (Outpatient Services) ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS Third Party Billing System;**10**;APR 24, 2006
  ;Original;DMJ;08/18/95 10:06 AM
  ;
  ; IHS/SD/SDR - v2.5 p10 - IM20395
@@ -19,6 +19,16 @@ LOOP ;LOOP HERE
  S L=0
  S J=0 F  S J=$O(ABMRV(J)) Q:'J  D
  .S K=-1 F  S K=$O(ABMRV(J,K)) Q:K=""  D
+ ..;start old code abm*2.5*10 IM20395
+ ..;S L=L+1 I L#3=1 D
+ ..;.S ABME("S#")=ABME("S#")+1
+ ..;.F I=10,20,30,35 D @(I_"^ABME661"),ADD
+ ..;F I=40:10:130 D @(I_"^ABME661"),ADD
+ ..;Q:J=9999
+ ..;S ABM("ACTOT")=+$P(ABMRV(J,K),"^",6)
+ ..;S ABM("NCTOT")=+$P(ABMRV(J,K),"^",7)
+ ..;D ADTT^ABMER60
+ ..;end old code start new code IM20395
  ..S M=0
  ..F  S M=$O(ABMRV(J,K,M)) Q:M=""  D
  ...S L=L+1 I L#3=1 D
@@ -29,6 +39,7 @@ LOOP ;LOOP HERE
  ...S ABM("ACTOT")=+$P(ABMRV(J,K,M),U,6)
  ...S ABM("NCTOT")=+$P(ABMRV(J,K,M),U,7)
  ...D ADTT^ABMER60
+ ;end new code IM20395
  I '$G(ABMP("NOFMT")),$L(ABMREC(61,ABME("S#")))<192 F  D  Q:$L(ABMREC(61,ABME("S#")))>191
  .S ABMREC(61,ABME("S#"))=ABMREC(61,ABME("S#"))_" "
  Q
@@ -51,23 +62,28 @@ ADD ;ADD TO RECORD
  S ABMR(61,35)=$$FMT^ABMERUTL(ABMR(61,35),2)
  Q
 40 ;28-31 Revenue Code 1
- S ABMR(61,40)=$P(ABMRV(J,K,M),U)
+ ;S ABMR(61,40)=$P(ABMRV(J,K),"^",1)  ;abm*2.5*10 IM20395
+ S ABMR(61,40)=$P(ABMRV(J,K,M),U)  ;abm*2.5*10 IM20395
  S ABMR(61,40)=$$FMT^ABMERUTL(ABMR(61,40),"4NR")
  Q
 50 ;32-36 HCPCS Procedure Code 1
- S ABMR(61,50)=$P(ABMRV(J,K,M),U,2)
+ ;S ABMR(61,50)=$P(ABMRV(J,K),"^",2)  ;abm*2.5*10 IM20395
+ S ABMR(61,50)=$P(ABMRV(J,K,M),U,2)  ;abm*2.5*10 IM20395
  S ABMR(61,50)=$$FMT^ABMERUTL(ABMR(61,50),5)
  Q
 60 ;37-38 Modifier 1 (CPT-4 and HCPCS) 1
- S ABMR(61,60)=$P(ABMRV(J,K,M),U,3)
+ ;S ABMR(61,60)=$P(ABMRV(J,K),"^",3)  ;abm*2.5*10 IM20395
+ S ABMR(61,60)=$P(ABMRV(J,K,M),U,3)  ;abm*2.5*10 IM20395
  S ABMR(61,60)=$$FMT^ABMERUTL(ABMR(61,60),2)
  Q
 70 ;39-40 Modifier 2 (CPT-4 and HCPCS) 1
- S ABMR(61,70)=$P(ABMRV(J,K,M),U,4)
+ ;S ABMR(61,70)=$P(ABMRV(J,K),"^",4)  ;abm*2.5*10 IM20395
+ S ABMR(61,70)=$P(ABMRV(J,K,M),U,4)  ;abm*2.5*10 IM20395
  S ABMR(61,70)=$$FMT^ABMERUTL(ABMR(61,70),2)
  Q
 80 ;41-47 Units of Service 1
- S ABMR(61,80)=$P(ABMRV(J,K,M),U,5)
+ ;S ABMR(61,80)=$P(ABMRV(J,K),"^",5)  ;abm*2.5*10 IM20395
+ S ABMR(61,80)=$P(ABMRV(J,K,M),U,5)  ;abm*2.5*10 IM20395
  S ABMR(61,80)=$$FMT^ABMERUTL(ABMR(61,80),"7NR")
  Q
 90 ;48-53 Form Locator 49
@@ -75,7 +91,8 @@ ADD ;ADD TO RECORD
  S ABMR(61,90)=$$FMT^ABMERUTL(ABMR(61,90),6)
  Q
 100 ;54-63 Charges Total 1
- S ABMR(61,100)=$P(ABMRV(J,K,M),U,6)
+ ;S ABMR(61,100)=$P(ABMRV(J,K),"^",6)  ;abm*2.5*10 IM20395
+ S ABMR(61,100)=$P(ABMRV(J,K,M),U,6)  ;abm*2.5*10 IM20395
  S ABMR(61,100)=$$FMT^ABMERUTL(ABMR(61,100),"10NRJ2")
  Q
 110 ;64-73 Charges Non-Covered 1

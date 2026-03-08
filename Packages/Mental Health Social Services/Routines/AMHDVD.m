@@ -1,5 +1,5 @@
-AMHDVD ; IHS/CMI/LAB - Visit display 18-MAY-1995 ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHDVD ; IHS/CMI/LAB - Visit display 18-MAY-1995 ; 
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4**;JAN 27, 2003
  ;; ;
 EN ;EP -- main entry point for AMH VISIT DISPLAY
  K ^TMP("AMHVDSG",$J)

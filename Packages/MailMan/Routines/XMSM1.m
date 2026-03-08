@@ -1,0 +1,3 @@
+XMSM1 ;(WASH ISC)/CAP-OBSOLETE ;10/06/97  07:17
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+ Q

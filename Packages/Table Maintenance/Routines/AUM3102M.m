@@ -1,0 +1,28 @@
+AUM3102M ;IHS/SET/GTH - SCB UPDATE 2002 OCT 04 ; [ 10/11/2002  12:51 PM ]
+ ;;3.1;TABLE MAINTENANCE;**2**;SEP 23,2002
+ ;
+VAL(X,%,Y) ;EP - return background info.
+ I X["AREA" Q $T(@%)
+ S Y=0
+ I X["SU" D  Q Y
+ . NEW C,T
+ . F C=1:1 S T=$P($T(SU+C),";",3) Q:T="END"  I $P(T,U,1,2)=($E(%,1,2)_U_$E(%,3,4)) S Y=1_";;"_T Q
+ .Q
+ I '(X["CTY") Q 0
+ NEW C,T
+ F C=1:1 S T=$P($T(COUNTY+C),";",3) Q:T="END"  I $P(T,U,1,2)=($E(%,1,2)_U_$E(%,3,4)) S Y=1_";;"_T Q
+ Q Y
+ ;
+ ;
+AREA ; CODE^NAME^PREFIX/REGION^CAN PREFIX
+35 ;;35^ALASKA TRIBE/638^A^359
+58 ;;58^NASHVILLE NON-IHS^U^351
+ ;;END
+ ;
+SU ; AREA^SU^NAME
+3534 ;;35^34^BRISTOL BAY
+ ;;END
+ ;
+COUNTY ; STATE^COUNTY^NAME
+ ;;END
+ ;

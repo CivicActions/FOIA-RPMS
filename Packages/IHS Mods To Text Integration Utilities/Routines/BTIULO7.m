@@ -1,5 +1,5 @@
-BTIULO7 ;IHS/ITSC/LJF - IHS OBJECTS ADDED IN PATCHES;06-Aug-2018 15:33;MGH
- ;;1.0;TEXT INTEGRATION UTILITIES;**1001,1002,1003,1004,1005,1006,1007,1009,1010,1012,1013,1020**;NOV 04, 2004;Build 7
+BTIULO7 ;IHS/ITSC/LJF - IHS OBJECTS ADDED IN PATCHES;05-Feb-2019 13:40;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1001,1002,1003,1004,1005,1006,1007,1009,1010,1012,1013,1020,1021**;NOV 04, 2004;Build 11
  ;IHS/CIA/MGH line up number of labs and only display test name
  ;Made changes to call ehr 1.1 visit creation
  ;Patch 1005 Changed lookup for dates without times
@@ -8,6 +8,7 @@ BTIULO7 ;IHS/ITSC/LJF - IHS OBJECTS ADDED IN PATCHES;06-Aug-2018 15:33;MGH
  ;Patch 1007 fixed total time for visit selection
  ;Patch 1009 fixed reproductive history again and last # measurements
  ;Patch 1010 added qualifiers
+ ;Patch 1021 changed to look at 30 visits
 LASTHFC(PAT,CTG,CAP) ;EP - return last factor in category CTG for patient PAT; PATCH 1001
  ; CAP = 1 if want caption to be returned; = 0 otherwise
  NEW CTGN,HF,HFDT,LIST,RESULT,X
@@ -89,15 +90,15 @@ NLAB(DFN,TIUTST,TIUCNT,BRIEF) ;EP; -- returns last # of current lab result for s
  I $G(BRIEF) S CAPTION=$E(TIUTST,1,30)_":"  ;PATCH 1003
  E  S CAPTION="Last "_TIUCNT_" "_$E(TIUTST,1,30)_": "
  S (VDT,CNT)=0
- F  S VDT=$O(^AUPNVLAB("AA",DFN,LAB,VDT)) Q:('VDT)!(CNT=TIUCNT)  D
+ F  S VDT=$O(^AUPNVLAB("AA",DFN,LAB,VDT)) Q:('VDT)!(CNT>30)  D
  . S IEN=0
- . F  S IEN=$O(^AUPNVLAB("AA",DFN,LAB,VDT,IEN)) Q:'IEN!(CNT=TIUCNT)  D
+ . S CNT=CNT+1
+ . F  S IEN=$O(^AUPNVLAB("AA",DFN,LAB,VDT,IEN)) Q:'IEN  D
  .. K TIU D ENP^XBDIQ1(9000010.09,IEN,".03:.05;1109;1201","TIU(")
  .. Q:TIU(.04)=""                       ;skip if not resulted
  .. S DATE=$$GET1^DIQ(9000010.09,IEN,1201,"I")
  .. I DATE="" S DATE=$$GET1^DIQ(9000010.09,IEN,.03,"I")
  .. S DATE2=$S(TIU(1201)]"":TIU(1201),1:TIU(.03))
- .. S CNT=CNT+1                         ;increment counter
  .. S LGTH=$L(TIU(.05)) ;PATCH 1003
  .. S DATA=$S(LGTH=1:"   "_DATE2,LGTH=2:"  "_DATE2,1:"    "_DATE2)   ;PATCH 1003
  .. S ARR(DATE,IEN)=$J(TIU(.04),8)_"  "_TIU(.05)_"  "_DATA
@@ -125,8 +126,8 @@ NVIT(DFN,TIUMSR,TIUCNT,TIUDATE,BRIEF) ;EP; returns last # of of a specific vital
  E  S CAPTION="Last "_TIUCNT_" "_TIUMSR_": "
  ;
  S (VDT,CNT)=0
- F  S VDT=$O(^AUPNVMSR("AA",DFN,MSR,VDT)) Q:('VDT)!(CNT>TIUCNT)  D
- . S IEN=0
+ F  S VDT=$O(^AUPNVMSR("AA",DFN,MSR,VDT)) Q:('VDT)!(CNT>30)  D
+ . S IEN=0,CNT=CNT+1
  . F  S IEN=$O(^AUPNVMSR("AA",DFN,MSR,VDT,IEN)) Q:'IEN  D
  . . K TIU D ENP^XBDIQ1(9000010.01,IEN,".03;.04;2;1201","TIU(","I")
  . . Q:TIU(2,"I")=1
@@ -147,7 +148,7 @@ NVIT(DFN,TIUMSR,TIUCNT,TIUDATE,BRIEF) ;EP; returns last # of of a specific vital
  . . ;IHS/MSC/MGH 1009 Changed lookup to not add a . if there is no time
  . . S DATE=$S($G(TIU(1201,"I"))]"":+TIU(1201,"I"),1:(9999999-VDT))
  . . ;S DATE=$S($G(TIU(.07,"I"))]"":TIU(.07,"I"),$G(TIU(1201,"I"))]"":TIU(1201,"I"),1:(9999999-$P(VDT,"."))_$S($P(VDT,".",2)'="":"."_$P(VDT,".",2),1:""))
- . . S ARR(DATE,IEN)=LINE,CNT=CNT+1
+ . . S ARR(DATE,IEN)=LINE
  ;
  ; loop thru array backwards to display most recent first
  S CNT=0,DATE=""

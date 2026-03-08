@@ -1,5 +1,5 @@
-APCDCHKI ; IHS/CMI/LAB - I-LINKER ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDCHKI ; IHS/CMI/TUCSON - I-LINKER ; [ 01/16/01  1:00 PM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**4,8,9**;MAR 09, 1999
  ;
  ;IHS/CMI - patch 4 added check for mfi created visits
  W !!,"This routine will find all In-Hospital visits that are not linked to a",!,"hospitalization and link them if possible."

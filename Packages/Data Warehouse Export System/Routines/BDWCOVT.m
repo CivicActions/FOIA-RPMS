@@ -1,0 +1,251 @@
+BDWCOVT ; IHS/CMI/LAB - DISPLAY IND LISTS 15 Dec 2010 9:42 AM ;
+ ;;1.0;IHS DATA WAREHOUSE;**7**;JAN 23, 2006;Build 65
+ ;; ;
+EP ;EP - CALLED FROM OPTION
+ D EN
+ Q
+EOJ ;EP
+ D EN^XBVK("BDW")
+ Q
+ ;; ;
+EN ;EP -- main entry point for 
+ D EN^VALM("BDW COVID-19 TAXONOMY UPDATE")
+ D CLEAR^VALM1
+ D FULL^VALM1
+ W:$D(IOF) @IOF
+ D EOJ
+ Q
+ ;
+HDR ; -- header code
+ S VALMHDR(1)="UPDATE/VIEW COVID-19 DIAGNOSTIC TESTS TAXONOMY"
+ Q
+ ;
+INIT ;EP -- init variables and list array
+ S BDWTIEN=$O(^ATXLAB("B","BDW COVID-19 DIAGNOSTIC TESTS",0))
+ I 'BDWTIEN D CREATETX S BDWTIEN=$O(^ATXLAB("B","BDW COVID-19 DIAGNOSTIC TESTS",0))
+ K BDWTAX
+ S BDWHIGH="",C=0
+ S BDWFILE=60,BDWDESC=$P(^ATXLAB(BDWTIEN,0),U,2),BDWT=$P(^ATXLAB(BDWTIEN,0),U,1),C=C+1
+ S BDWTAX(C,0)=BDWT
+ S $E(BDWTAX(C,0),55)=BDWDESC
+ ;S BDWTAX("IDX",C,C)=BDWY_U_"L"_U_BDWY
+ ;S C=C+1
+ S J=0
+ S BDWX=0 F  S BDWX=$O(^ATXLAB(BDWTIEN,21,BDWX)) Q:BDWX'=+BDWX  D
+ .S C=C+1,J=J+1
+ .S BDWITMI=$P(^ATXLAB(BDWTIEN,21,BDWX,0),U)
+ .S BDWTAX(C,0)=" "_J_")  "_$P($G(^LAB(60,BDWITMI,0)),U)
+ .S C=C+1,BDWTAX(C,0)="     POSITIVE RESULT VALUES:  "
+ .S X=0,Y="" F  S X=$O(^ATXLAB(BDWTIEN,21,BDWX,12,X)) Q:X'=+X  D
+ ..S:Y]"" Y=Y_",  " S Y=Y_$P(^ATXLAB(BDWTIEN,21,BDWX,12,X,0),U,1)
+ .S $E(BDWTAX(C,0),35)=Y
+ .S C=C+1,BDWTAX(C,0)="     NEGATIVE RESULT VALUES:"
+ .S X=0,Y="" F  S X=$O(^ATXLAB(BDWTIEN,21,BDWX,13,X)) Q:X'=+X  D
+ ..S:Y]"" Y=Y_",  " S Y=Y_$P(^ATXLAB(BDWTIEN,21,BDWX,13,X,0),U,1)
+ .S $E(BDWTAX(C,0),35)=Y
+ .S C=C+1,BDWTAX(C,0)="     INDETERMINATE RESULT VALUES:"
+ .S X=0,Y="" F  S X=$O(^ATXLAB(BDWTIEN,21,BDWX,14,X)) Q:X'=+X  D
+ ..S:Y]"" Y=Y_",  " S Y=Y_$P(^ATXLAB(BDWTIEN,21,BDWX,14,X,0),U,1)
+ .S $E(BDWTAX(C,0),35)=Y
+ .Q
+ S (VALMCNT,BDWHIGH)=C
+ Q
+ ;
+ ;
+HELP ; -- help code
+ S X="?" D DISP^XQORM1 W !!
+ Q
+ ;
+EXIT ; -- exit code
+ Q
+ ;
+EXPND ; -- expand code
+ Q
+ ;
+BACK ;go back to listman
+ D TERM^VALM0
+ S VALMBCK="R"
+ D INIT
+ D HDR
+ K DIR
+ K X,Y,Z,I
+ Q
+ ;
+EDIT ;EP
+ D CLEAR^VALM1
+ W !!?2,"Lab Tests"
+ ;NEW BDWC
+ I '$O(^ATXLAB(BDWTIEN,21,0)) S BDWC=0 W "  None recorded" G FM12
+ D EN^DDIOL($$REPEAT^XLFSTR("-",75),"","!?1")
+ K BDWCM S X=0,BDWC=0 F  S X=$O(^ATXLAB(BDWTIEN,21,X)) Q:X'=+X  D
+ .S Y=$P(^ATXLAB(BDWTIEN,21,X,0),U,1)
+ .S BDWC=BDWC+1,BDWCM(BDWC)=X
+ .W !?2,BDWC,")  ",$P(^LAB(60,Y,0),U,1)_" "_$$RVS(BDWTIEN,X)
+FM12 ;
+ ;D CLEAR^VALM1
+ D EN^DDIOL("","","!")
+ K DIR
+ S DIR(0)="S^A:Add a Lab Test"_$S(BDWC:";E:Edit an Existing Lab Test or result values;D:Delete a Lab Test",1:"")_";N:No Change"
+ S DIR("A")="Which action",DIR("B")="N" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) G FM13
+ I Y="N" G FM13
+ I Y="A" D FMA G EDIT
+ I Y="E" D FME
+ I Y="D" D FMD
+ G EDIT
+ ;
+FMD ;
+ D ^XBFMK
+ S DIR(0)="N^1:"_BDWC_":0",DIR("A")="Select Test to Remove from taxonomy (1-"_BDWC_")" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) Q
+ S BDWLTTI=BDWCM(+Y),BDWTXLI=$P(^ATXLAB(BDWTIEN,21,BDWLTTI,0),U,1)
+ S DA(1)=BDWTIEN,DA=$O(^ATXLAB(BDWTIEN,21,"B",BDWTXLI,0)),DIE="^ATXLAB("_BDWTIEN_",21,",DR=".01///@" D ^DIE
+ D ^XBFMK
+ Q
+FME ;
+ ;EDIT A TEST
+ ;get test to edit
+ S DIR(0)="N^1:"_BDWC_":0",DIR("A")="Select Test to Edit (1-"_BDWC_")" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) Q
+ S BDWLTTI=BDWCM(+Y),BDWTXLI=$P(^ATXLAB(BDWTIEN,21,BDWLTTI,0),U,1)
+ D PADD
+ Q
+FM13 ;
+ D BACK
+ K Y
+ Q
+RVS(T,I) ;
+ NEW Y,X,V,Z
+ S V=""
+ S Y=0 F  S Y=$O(^ATXLAB(T,21,I,12,Y)) Q:Y'=+Y  D
+ .S Z=$P(^ATXLAB(T,21,I,12,Y,0),U,1)
+ .S:V="" V="(" S:$P(V,"(",2)]"" V=V_", " S V=V_Z
+ S Y=0 F  S Y=$O(^ATXLAB(T,21,I,13,Y)) Q:Y'=+Y  D
+ .S Z=$P(^ATXLAB(T,21,I,13,Y,0),U,1)
+ .S:V="" V="(" S:$P(V,"(",2)]"" V=V_", " S V=V_Z
+ S Y=0 F  S Y=$O(^ATXLAB(T,21,I,14,Y)) Q:Y'=+Y  D
+ .S Z=$P(^ATXLAB(T,21,I,14,Y,0),U,1)
+ .S:V="" V="(" S:$P(V,"(",2)]"" V=V_", " S V=V_Z
+ ;
+ I V]"" S V=V_")"
+ Q V
+FMA ;
+LABADD ;
+ NEW BDWTXLI,Y,X,DA,DIC
+ K DIC
+ S DIC(0)="AEMQ",DIC="^LAB(60,",DIC("A")="Which LAB Test: " D ^DIC
+ I Y=-1 Q
+ S BDWTXLI=+Y
+ I '$P(^ATXLAB(BDWTIEN,0),U,11),$O(^LAB(60,BDWTXLI,2,0)) S BDWYN="" D  G:'BDWYN LABADD
+ .W !!,"This lab test, ",$P(^LAB(60,BDWTXLI,0),U),", is a panel test and the"
+ .W !,"taxonomy ",$P(^ATXLAB(BDWTIEN,0),U)," should not contain panel tests.",!
+ .S DIR(0)="Y",DIR("A")="Do you still want to add this lab test to this taxonomy",DIR("B")="N" KILL DA D ^DIR KILL DIR
+ .Q:$D(DIRUT)
+ .S BDWYN=Y
+ I $D(^ATXLAB(BDWTIEN,21,"B",+Y)) W !!,"Lab test ",$P(^LAB(60,+Y,0),U)," is already in the taxonomy." H 2 G LABADD
+ S DA(1)=BDWTIEN
+ S X=BDWTXLI
+ S DIC="^ATXLAB("_DA(1)_",21,"
+ S DIC(0)="L" K DD,DO
+ S:'$D(^ATXLAB(DA(1),21,0)) ^ATXLAB(DA(1),21,0)="^9002228.02101PA"
+ D FILE^DICN
+ I '$D(^ATXLAB(BDWTIEN,21,"B",BDWTXLI)) W !!,"adding lab test failed." H 2 G LABADD
+ S BDWLTTI=$O(^ATXLAB(BDWTIEN,21,"B",BDWTXLI,0))
+ ;
+ ;
+PADD ;
+ S BDWT="POSITIVE",BDWNODE=12,BDWFILE="9002228.210112" D ADDRES
+NADD W !
+ S BDWT="NEGATIVE",BDWNODE=13,BDWFILE="9002228.210113" D ADDRES
+INDADD W !
+ S BDWT="INDETERMINATE",BDWNODE=14,BDWFILE="9002228.210114" D ADDRES
+ Q
+CREATETX ;EP - CALLED FROM POST INIT OF PATCH 7
+ D ^XBFMK
+ S DIC="^ATXLAB(",DIC(0)="L",X="BDW COVID-19 DIAGNOSTIC TESTS",DIC("DR")=".05////"_DUZ_";.06////"_DT_";.09////60;.08////B;.11///0"
+ K DD,D0,DO
+ D FILE^DICN
+ D ^XBFMK
+ Q
+ADDRES ;
+ W !!,"Please enter the various ",BDWT," result values for test ",$P(^LAB(60,BDWTXLI,0),U,1)
+ K BDWC S X=0,Y="",BDWC=0 F  S X=$O(^ATXLAB(BDWTIEN,21,BDWLTTI,BDWNODE,X)) Q:X'=+X  S Y=$P(^ATXLAB(BDWTIEN,21,BDWLTTI,BDWNODE,X,0),U,1),BDWC=BDWC+1,BDWC(BDWC)=$P(^ATXLAB(BDWTIEN,21,BDWLTTI,BDWNODE,X,0),U,1)_U_X
+ S (X,C)=0 F  S X=$O(BDWC(X)) Q:X'=+X  W !?7,X,") ",$P(BDWC(X),U,1)
+ K DIR
+ S DIR(0)="S^A:Add a "_BDWT_" result value"_$S(BDWC:";D:Delete a "_BDWT_" result value",1:"")_";N:No Change"
+ S DIR("A")="Which action",DIR("B")="N" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) Q
+ I Y="N" Q
+ I Y="D" D  G ADDRES
+ .K DIR S DIR(0)="N^1:"_BDWC_":",DIR("A")="Delete which one" KILL DA D ^DIR KILL DIR
+ .I $D(DIRUT) Q
+ .I Y="" Q
+ .K DIK,DA S DA(2)=BDWTIEN,DA(1)=BDWLTTI,DA=$P(BDWC(+Y),U,2),DIK="^ATXLAB("_BDWTIEN_",21,"_BDWLTTI_","_BDWNODE_"," D ^DIK K DIK,DA
+ ;
+ ;
+PADD1 D EN^DDIOL("","","!")
+ S DIR(0)="FO^1:30",DIR("A")="ENTER "_BDWT_" RESULT VALUE" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) Q
+ I Y="" Q
+ K DIE
+ I $D(^ATXLAB(BDWTIEN,21,BDWLTTI,BDWNODE,"B",Y)) W !,"Already entered" Q
+ ;GET NEXT IEN IN MULTIPLE
+ ;directly setting due to being unable to add -
+ S (X,I)=0 F  S X=$O(^ATXLAB(BDWTIEN,21,BDWLTTI,BDWNODE,X)) Q:X'=+X  S I=X
+ S I=I+1
+ S ^ATXLAB(BDWTIEN,21,BDWLTTI,BDWNODE,I,0)=Y
+ S ^ATXLAB(BDWTIEN,21,BDWLTTI,BDWNODE,"B",Y,I)=""
+ S ^ATXLAB(BDWTIEN,21,BDWLTTI,BDWNODE,0)="^"_BDWFILE_"^"_I_"^"_I
+ S DA=BDWTIEN,DIK="^ATXLAB(" D IX^DIK
+ G ADDRES
+POST ;EP - called from post init to create lab taxonomy
+ ;pre - populate with ABBOTT test and values
+ NEW BDWTIEN,BDWLABT,BDWTLIEN,X,DIE,DA,DR,DIC
+ S BDWTIEN=$O(^ATXLAB("B","BDW COVID-19 DIAGNOSTIC TESTS",0))
+ I 'BDWTIEN D CREATETX S BDWTIEN=$O(^ATXLAB("B","BDW COVID-19 DIAGNOSTIC TESTS",0))
+ I 'BDWTIEN Q  ;oops, something went wrong
+ ;CHECK TO SEE IF THE ABBOTT TEST IS IN THERE, IF IT IS QUIT
+ S BDWLABT=$O(^LAB(60,"B","_COVID-19 (Abbott ID NOW)",0))
+ I 'BDWLABT Q  ;don't have test so can't add it
+ I $D(^ATXLAB(BDWTIEN,21,"B",BDWLABT)) Q  ;already has this test
+ ;ADD LAB TEST TO TAXONOMY
+ S X=BDWLABT
+ S DA(1)=BDWTIEN
+ S DIC="^ATXLAB("_DA(1)_",21,"
+ S DIC(0)="L" K DD,DO
+ S:'$D(^ATXLAB(DA(1),21,0)) ^ATXLAB(DA(1),21,0)="^9002228.02101PA"
+ D FILE^DICN
+ I Y=-1 Q
+ ;add positive values
+ ;COVID-19 POSITIVE and P
+ ;COVID-19 Negative and N
+ K DIE,DA
+ S DA(1)=BDWTIEN
+ S DA=$O(^ATXLAB(BDWTIEN,21,"B",BDWLABT,0))
+ I 'DA Q
+ S DIE="^ATXLAB("_BDWTIEN_",21,"
+ S DR="1201////COVID-19 POSITIVE"
+ D ^DIE
+ K DIE,DA
+ S DA(1)=BDWTIEN
+ S DA=$O(^ATXLAB(BDWTIEN,21,"B",BDWLABT,0))
+ I 'DA Q
+ S DIE="^ATXLAB("_BDWTIEN_",21,"
+ S DR="1201////P"
+ D ^DIE
+ K DIE,DA
+ S DA(1)=BDWTIEN
+ S DA=$O(^ATXLAB(BDWTIEN,21,"B",BDWLABT,0))
+ I 'DA Q
+ S DIE="^ATXLAB("_BDWTIEN_",21,"
+ S DR="1301////COVID-19 Negative"
+ D ^DIE
+ K DIE,DA
+ S DA(1)=BDWTIEN
+ S DA=$O(^ATXLAB(BDWTIEN,21,"B",BDWLABT,0))
+ I 'DA Q
+ S DIE="^ATXLAB("_BDWTIEN_",21,"
+ S DR="1301////N"
+ D ^DIE
+ K DIE,DA
+ Q

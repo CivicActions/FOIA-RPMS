@@ -1,18 +1,24 @@
 AGED11A ; IHS/ASDS/EFG - EDIT DOCUMENT SUMMARY PAGE (PAGE 9) ; MAR 19, 2010
- ;;7.1;PATIENT REGISTRATION;**1,2,7,8**;AUG 25, 2005
+ ;;7.1;PATIENT REGISTRATION;**1,2,7,8,15**;AUG 25, 2005;Build 1
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC
+ ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
  ;
  ;AG*7.1*7 - Modified code to allow the new page 10 to be called
  ;
 VAR D DRAW
  Q:$D(AGSEENLY)
  K DIR
- S DIR("?")="Enter your choice now."
- S DIR("?",1)="You may enter the item number of the field you wish to edit,"
- S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
- S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
- S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go back to the main menu."
+ W !,AGLINE("EQ")  ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC - START OLD CODE
+ ;S DIR("?")="Enter your choice now."
+ ;S DIR("?",1)="You may enter the item number of the field you wish to edit,"
+ ;S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
+ ;S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
+ ;S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go back to the main menu."
+ ;IHS/OIT/NKD AG*7.1*15 - END OLD CODE
  S DIR("A")="CHANGE which item? (1-"_AG("N")_") NONE// "
- D READ^AGED1
+ ;D READ^AGED1  ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC
+ D EDREAD^AGUTL2  ;IHS/OIT/NKD AG*7.1*15
  I $D(MYERRS("C","E")),(Y'?1N.N),(Y'=AGOPT("ESCAPE")) W !,"ERRORS ON THIS PAGE. PLEASE FIX BEFORE EXITING!!" H 3 G VAR
  Q:Y=AGOPT("ESCAPE")
  Q:$D(DTOUT)!$D(DFOUT)

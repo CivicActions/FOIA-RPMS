@@ -1,8 +1,5 @@
 ABMDEML ; IHS/SD/SDR - Edit Utility - FOR MULTIPLES ;   
- ;;2.6;IHS Third Party Billing;**1,2,3,6,8,9,10,11,13,14,18,21,23,27**;NOV 12, 2009;Build 486
- ;
- ;IHS/ASDS/DMJ 2.4*7 NOIS HQW-0701-100066 Modifications made related to Medicare Part B
- ;IHS/ASDS/LSL 2.4*9 NOIS HQW-0701-100066 Above change doesn't work as ABMP("HCFA") is undefined. Changed code back to listing HCFA modes of export
+ ;;2.6;IHS Third Party Billing;**1,2,3,6,8,9,10,11,13,14,18,21,23,27,28,29,31,33,37**;NOV 12, 2009;Build 739
  ;
  ;IHS/SD/SDR 2.5*4 IM11671 Added 837 format to list so it would inquire for corr. diagnosis
  ;IHS/SD/SDR 2.5*5 Modified to put POS, TOS by line item
@@ -25,11 +22,17 @@ ABMDEML ; IHS/SD/SDR - Edit Utility - FOR MULTIPLES ;
  ;IHS/SD/SDR 2.6*14 HEAT165301 Removed link between page 9A and page 3 questions introduced in patch13
  ;IHS/SD/SDR 2.6*21 HEAT240919 Added Provider Narrative default for DX and PX.  Was missing default after switch to ICD10.
  ;IHS/SD/SDR 2.6*21 HEAT136508 Made change to ask for CLIA if lab code starts with 'G'
- ;IHS/SD/SDR 2.6*21 HEAT235867 Added code to put default provider narrative for ICD10 codes.  DD change was causing there to be no default
- ;IHS/SD/AML 2.6*23 HEAT247169 Added code to prompt for NDC when subfile is 43.
+ ;IHS/SD/SDR 2.6*21 HEAT235867 Added put default provider narrative for ICD10 codes.  DD change was causing there to be no default
+ ;IHS/SD/AML 2.6*23 HEAT247169 Added prompt for NDC when subfile is 43.
  ;IHS/SD/SDR 2.6*27 CR8894 Fixed so default fee would show up from fee table if there is one.  Also fixed anesthesia page to use pointer, not actual CPT.
  ;  was causing NO SUCH ENTRY to display for CPT name if CPT wasn't DINUMed.  Also made change for category 13 and the CPT code is something specific,
  ;  like lab or rad
+ ;IHS/SD/SDR 2.6*28 CR10648 Added default (CPT description) to CPT NARRATIVE
+ ;IHS/SD/SDR 2.6*28 CR10551 Added NDC for 25 (Rev), 27 (Medical) multiples
+ ;IHS/SD/SDR 2.6*29 CR10404 Use new 3P Insurer 4 multiple field to prompt for CLIA if CPT is not in the 80000 range
+ ;IHS/SD/SDR 2.6*31 CR11624 Fix for <SUBSCR>VLTCP+8^ICPTCOD when there are two entries in CPT file for one CPT
+ ;IHS/SD/SDR 2.6*33 ADO60186/CR12024 Moved NDC and CPT NARRATIVE; the data from the NDC prompt is needed for the CPT NARRATIVE prompt with the changes for this CR.
+ ;IHS/SD/SDR 2.6*37 ADO89299 Populate DEA# if NDC and ordering provider present on line item
  ; *********************************
 A1 ;
  ;Documentation by Linda Lehman 3/19/97
@@ -64,13 +67,12 @@ A1 ;
  .Q:Y<1
  .S Y=$P(Y(0),U,6)
  .S ABMZ("DR")=$P(ABMZ("DR"),".03")_".03//"_$P(Y(0),U,7)_$P(ABMZ("DR"),".03",2)_";.06////"_$P(Y(0),U)
- ;If a special screen exist for this page (only 8G), then use that code.  Otherwise, find the screen for file, .01 field 
+ ;If a special screen exist for this page (only 8G), then use that code.  Otherwise, find screen for file, .01 field 
  ;of specified 3P claim file multiple points to.
  I $D(ABMZ("DICS")) S DIC("S")=ABMZ("DICS")
  E  S ABMX("DICS")="9002274.30"_ABMZ("SUB") X:$D(^DD(ABMX("DICS"),.01,12.1)) ^DD(ABMX("DICS"),.01,12.1)
  S DIC=$S($D(ABMZ("DICI")):ABMZ("DICI"),1:ABMZ("DIC"))
- ;S DIC(0)="QEAM"  ;abm*2.6*14
- S DIC(0)="QEAMI"  ;abm*2.6*14
+ S DIC(0)="QEAMI"
  S DIC("A")="Select "_ABMZ("ITEM")_": "
  S:$D(ABMZ("DICW")) DIC("W")=ABMZ("DICW")
  ;
@@ -112,22 +114,7 @@ MOD ;
  .I $G(ABMZ("SUB"))=17&($P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,13)="Y")&(($E(ABMP("BTYP"),1,2)=11)!($E(ABMP("BTYP"),1,2)="12")) S ABMZ("DR")=ABMZ("DR")_";.05//"
  .S ABMZ("DR")=ABMZ("DR")_$P(ABMZ("NARR"),U)_+Y
  I '$D(ABMZ("CHRG")) G DIAG
- S ABMX("DIC")=$S($E(ABMZ("DIC"),3,5)="CPT":ABMZ("CAT"),$E(ABMZ("DIC"),6,8)="ADA":21,1:31)
- I ABMX("DIC")=31 S Y=$E(Y,1,2)_"0"
- I $G(ABMZ("CAT"))=13 D
- .;start new abm*2.6*27 IHS/SD/SDR CR8894
- .S ABMX("TST")=$P($G(^ICPT(ABMX("Y"),0)),U)
- .S ABMTF=0
- .F ABMT=1:1:($L(ABMX("TST"))) D  ;if there's an alpha char involved leave category as 13 for HCPCS
- ..I $A($E(ABMX("TST"),ABMT))>64 S ABMTF=1
- .I ABMTF=1 Q
- .S ABMX("Y")=ABMX("TST")
- .I ABMX("Y")<2000 S ABMX("DIC")=23 Q
- .;end new abm*2.6*27 IHS/SD/SDR CR8894
- .I ABMX("Y")<70000 S ABMX("DIC")=11 Q
- .I ABMX("Y")<80000 S ABMX("DIC")=15 Q
- .I ABMX("Y")<90000 S ABMX("DIC")=17 Q
- .I ABMX("Y")<100000 S ABMX("DIC")=19 Q
+ D CAT^ABMDEML1(ABMX("Y")) ;abm*2.6*31 CR10857 split routine due to size
  I $D(ABMZ("ANTH")) S ABMX("DIC")=23
  I $D(ABMZ("CONTRACT")) D CONT^ABMDEMLB I Y=1 G DIAG
  I $D(ABMZ("OUTLAB")) D LAB^ABMDEMLB I Y=1 G DIAG
@@ -139,19 +126,27 @@ MOD ;
  .I +$G(ABMZ("MODFEE"))=$G(ABMZ("MODFEE")) D  Q
  ..S ABMZ("DR")=ABMZ("DR")_ABMZ("MODFEE")
  .;S ABMZ("DR")=ABMZ("DR")_$P($$ONE^ABMFEAPI(ABMP("FEE"),ABMX("DIC"),ABMX("NEWY"),ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A  ;abm*2.6*27 IHS/SD/SDR CR8894
- .S ABMZ("DR")=ABMZ("DR")_$P($$ONE^ABMFEAPI(ABMP("FEE"),ABMX("DIC"),$P($G(^ICPT(+ABMX("NEWY"),0)),U),ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A  ;abm*2.6*27 IHS/SD/SDR CR8894
- ;start new abm*2.6*9 NARR
- I $D(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,"B",ABMX("Y"))) D
- .Q:$P($G(^ABMDEXP(ABMP("EXP"),0)),U)'["5010"  ;only 5010 formats
- .S ABMCNCK=$O(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,"B",ABMX("Y"),0))
- .I ABMCNCK,$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,ABMCNCK,0)),U,2)="Y" S ABMZ("DR")=ABMZ("DR")_";22Narrative"
- ;end new NARR
+ .S ABMZ("DR")=ABMZ("DR")_$P($$ONE^ABMFEAPI(ABMP("FEE"),ABMX("DIC"),$P($G(^ICPT(+ABMX("NEWY"),0)),U),ABMP("VDT")),U)  ;abm*2.6*27 IHS/SD/SDR CR8894
+ ;start old abm*2.6*33 IHS/SD/SDR CR12024
+ ;I $D(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,"B",ABMX("Y"))) D
+ ;.;Q:$P($G(^ABMDEXP(ABMP("EXP"),0)),U)'["5010"  ;only 5010 formats  ;abm*2.6*28 IHS/SD/SDR CR10648
+ ;.I ($P($G(^ABMDEXP(ABMP("EXP"),0)),U)'["5010")&(ABMP("EXP")'=35) Q  ;abm*2.6*28 IHS/SD/SDR CR10648
+ ;.S ABMCNCK=$O(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,"B",ABMX("Y"),0))
+ ;.;I ABMCNCK,$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,ABMCNCK,0)),U,2)="Y" S ABMZ("DR")=ABMZ("DR")_";22Narrative"  ;abm*2.6*28 IHS/SD/SDR CR10648
+ ;.I ABMCNCK,$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,ABMCNCK,0)),U,2)="Y" S ABMZ("DR")=ABMZ("DR")_";22CPT Narrative"  ;abm*2.6*28 IHS/SD/SDR CR10648
+ ;.I ABMCNCK,$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),5,ABMCNCK,0)),U,3)="Y" S ABMZ("DR")=ABMZ("DR")_"//"_$P($$CPT^ABMCVAPI(ABMX("Y"),ABMP("VDT")),U,3)  ;abm*2.6*28 IHS/SD/SDR CR10648
+ ;end old abm*2.6*33 IHS/SD/SDR CR12024
  D POSA^ABMDEMLC
- ;I ABMP("EXP")'=21,(ABMP("EXP")'=22),(ABMP("EXP")'=23),(ABMP("EXP")'=32) D TOSA^ABMDEMLC  ;don't do for 837 formats  ;abm*2.6*6 5010  ;abm*2.6*8 5010
- I ABMP("EXP")'=21,(ABMP("EXP")'=22),(ABMP("EXP")'=23),(ABMP("EXP")'=31),(ABMP("EXP")'=32),(ABMP("EXP")'=33) D TOSA^ABMDEMLC  ;don't do for 837 formats  ;abm*2.6*6 5010  ;abm*2.6*8 5010
- I ABMZ("SUB")=43 S ABMZ("DR")=ABMZ("DR")_";.19"  ;abm*2.6*23 IHS/SD/AML HEAT247169
+ I ABMP("EXP")'=21,(ABMP("EXP")'=22),(ABMP("EXP")'=23),(ABMP("EXP")'=31),(ABMP("EXP")'=32),(ABMP("EXP")'=33) D TOSA^ABMDEMLC  ;don't do for 837 formats
+ ;I ABMZ("SUB")=43 S ABMZ("DR")=ABMZ("DR")_";.19"  ;abm*2.6*23 IHS/SD/AML HEAT247169  ;abm*2.6*28 IHS/SD/SDR CR10551
+ ;I "^27^43^"[("^"_ABMZ("SUB")_"^") S ABMZ("DR")=ABMZ("DR")_";.19"  ;abm*2.6*28 IHS/SD/SDR CR10551  ;abm*2.6*33 IHS/SD/SDR CR12024
  ;I ($G(ABMX("Y"))>79999&($G(ABMX("Y"))<90000))!($G(ABMZ("SUB"))=37&(ABMX("Y")=36415)) D  ;lab charges only  ;abm*2.6*3 HEAT11696  ;abm*2.6*21 HEAT136508
- I ($G(ABMX("Y"))>79999&($G(ABMX("Y"))<90000))!($G(ABMZ("SUB"))=37&(ABMX("Y")=36415))!($E($P($$CPT^ABMCVAPI($G(ABMX("Y"),ABMP("VDT")),U,2),U,2))="G") D  ;lab charges only  ;abm*2.6*3 HEAT11696  ;abm*2.6*21 HEAT136508
+ ;I ($G(ABMX("Y"))>79999&($G(ABMX("Y"))<90000))!($G(ABMZ("SUB"))=37&(ABMX("Y")=36415))!($E($P($$CPT^ABMCVAPI($G(ABMX("Y"),ABMP("VDT")),U,2),U,2))="G") D  ;lab charges only  ;abm*2.6*21 HEAT136508  ;abm*2.6*29 IHS/SD/SDR CR10404
+ ;start new abm*2.6*29 IHS/SD/SDR CR10404
+ S ABMP("CLIAREQ")=0
+ D CLIANUM^ABMDEMLB(ABMX("Y"))
+ I ($G(ABMX("Y"))'="")&((ABMX("Y")>79999)&(ABMX("Y")<90000))!(ABMP("CLIAREQ")=1) D  ;lab charges or 3P Insurer 4 mult CLIA req'd
+ .;end new abm*2.6*29 IHS/SD/SDR CR10404
  .I $D(ABMX("MODS",90)) S ABMZ("DR")=ABMZ("DR")_";.14//"_$S($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,23)'="":$P($G(^ABMRLABS($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,23),0)),U,2),1:"")
  .E  S ABMZ("DR")=ABMZ("DR")_";.13//"_$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,22)
  I ABMZ("SUB")=37 D
@@ -161,7 +156,26 @@ MOD ;
  .S:(ABMP("EXP")=22) ABMZ("DR")=ABMZ("DR")_";W !,!,""Enter LABORATORY Results:"";.19;.21"
  .S:(ABMP("EXP")=32) ABMZ("DR")=ABMZ("DR")_";W !,!,""Enter LABORATORY Results:"";.19;.21;.22"  ;abm*2.6*6 5010
  .S:((ABMP("EXP")=21)!(ABMP("EXP")=31)) ABMZ("DR")=ABMZ("DR")_";W !,!,""Value Code 48 or 49 should be present on Page 9C"",!"  ;abm*2.6*8 5010
- I $P($G(^ICPT(ABMX("Y"),0)),U,3),($P($G(^DIC(81.1,$P($G(^ICPT(ABMX("Y"),0)),U,3),0)),U)["IMMUNIZATION") S ABMZ("DR")=ABMZ("DR")_";15"  ;abm*2.6*6 5010
+ ;
+ ;I $P($G(^ICPT(ABMX("Y"),0)),U,3),($P($G(^DIC(81.1,$P($G(^ICPT(ABMX("Y"),0)),U,3),0)),U)["IMMUNIZATION") S ABMZ("DR")=ABMZ("DR")_";15"  ;abm*2.6*6 5010  ;abm*2.6*28 IHS/SD/SDR CR10551
+ ;start new abm*2.6*28 IHS/SD/SDR CR10551
+ I ABMZ("SUB")=23!(ABMZ("SUB")=25)!(ABMZ("SUB")=27)!(ABMZ("SUB")=43) D
+ .S ABMTCPT=ABMX("Y")
+ .S ABMIMFG=0,ABMTCAT=0
+ .S ABMTCAT=$P($G(^ICPT(ABMTCPT,0)),U,3)
+ .S:+$G(ABMTCAT)'=0 ABMTCAT=$P($G(^DIC(81.1,ABMTCAT,0)),U)
+ .I (ABMTCAT["IMMUNIZATION")!(ABMTCAT["VACCINE") S ABMIMFG=1
+ .;
+ .;S ABMTDESC=$$CPTD^ICPTCOD(ABMTCPT,"ABMTCD","",ABMP("VDT")) ;cpt long desc ;abm*2.6*31 IHS/SD/SDR CR111624
+ .S ABMTDESC=$$CPTD^ABMCVAPI(ABMX("Y"),"ABMTCD","",ABMP("VDT")) ;cpt long desc ;abm*2.6*31 IHS/SD/SDR CR11624
+ .S ABMT=0
+ .F  S ABMT=$O(ABMTCD(ABMT)) Q:'ABMT  D
+ ..S ABMTDESC=$G(ABMTCD(ABMT))
+ ..I (ABMTDESC["IMMUNIZATION")!(ABMTDESC["VACCINE") S ABMIMFG=1
+ .;
+ .I ABMIMFG=1 S ABMZ("DR")=ABMZ("DR")_";15//"  ;prompt for IMMUN LOT/BATCH#
+ .I ABMIMFG=0 S ABMZ("DR")=ABMZ("DR")_";15////@"  ;delete it
+ ;end new abm*2.6*28 IHS/SD/SDR CR10551
  ;
 DIAG ;CORRESPONDING DIAGNOSES
  D
@@ -183,11 +197,9 @@ STUFF ;FILE MULTIPLE
  .S DIC="^ABMDCLM(DUZ(2),"_DA(1)_","_ABMZ("SUB")_","
  .S DIC("DR")=$P(ABMZ("DR"),";",2,99)
  .S DIC(0)="LE"
- .;S:$D(ABMZ("DR2")) DIC("DR")=DIC("DR")_ABMZ("DR2")  ;abm*2.6*14 ICD10 002F and 002H
  .;start new abm*2.6*14 ICD10 002F and 002H
  .I (ABMZ("SUB")=17) D
  ..I ($P($$DX^ABMCVAPI(+X,ABMP("VDT")),U,20)=30)&(ABMP("ICD10")<ABMP("VDT")) S DIC("DR")=DIC("DR")_ABMZ("DR2")
- ..;I ($P($$DX^ABMCVAPI(X,ABMP("VDT")),U,20)=1)&(ABMP("ICD10")>ABMP("VDT")) S DIC("DR")=DIC("DR")_ABMZ("DR2")
  ..I ($P($$DX^ABMCVAPI(+X,ABMP("VDT")),U,20)'=30)&(ABMP("ICD10")>ABMP("VDT")) S DIC("DR")=DIC("DR")_ABMZ("DR2")
  ..I ($P($$DX^ABMCVAPI(+X,ABMP("VDT")),U,20)=30) S DIC("DR")=DIC("DR")_";.06////1"
  .I (ABMZ("SUB")=19) D
@@ -196,16 +208,18 @@ STUFF ;FILE MULTIPLE
  ..I ($P($$ICDOP^ABMCVAPI(+X,ABMP("VDT")),U,15)=31) S DIC("DR")=DIC("DR")_";.06////1"
  .I "^17^19^"'[("^"_ABMZ("SUB")_"^") D
  ..S:$D(ABMZ("DR2")) DIC("DR")=DIC("DR")_ABMZ("DR2")
- .;end new 002F and 002H 
+ .;end new 002F, 002H 
  .S:+$G(ABMZ("NUM"))=0 ^ABMDCLM(DUZ(2),DA(1),ABMZ("SUB"),0)="^9002274.30"_ABMZ("SUB")_"P^^"
  .K DD,DO
  .D FILE^DICN
+ .D NDCCPTNA^ABMDEML1  ;abm*2.6*33 IHS/SD/SDR CR12024
  .S ABMOIEN=ABMX("Y")  ;abm*2.6*13
 PROV ;
- I ABMZ("SUB")=21!(ABMZ("SUB")=23)!(ABMZ("SUB")=27)!(ABMZ("SUB")=35)!(ABMZ("SUB")=37)!(ABMZ("SUB")=39)!(ABMZ("SUB")=43)!(ABMZ("SUB")=47) D  ;abm*2.6*10
+ I ABMZ("SUB")=21!(ABMZ("SUB")=23)!(ABMZ("SUB")=27)!(ABMZ("SUB")=35)!(ABMZ("SUB")=37)!(ABMZ("SUB")=39)!(ABMZ("SUB")=43)!(ABMZ("SUB")=47) D
  .K DIC,DR,DIE,DA
  .S DA(2)=ABMP("CDFN")
- .S DA(1)=+Y
+ .;S DA(1)=+Y  ;abm*2.6*33 IHS/SD/SDR CR12024
+ .S DA(1)=ABMLN  ;abm*2.6*33 IHS/SD/SDR CR12024
  .S DIC="^ABMDCLM(DUZ(2),"_DA(2)_","_ABMZ("SUB")_","_DA(1)_",""P"","
  .S DIC(0)="AELMQ"
  .S ABMFLNM="9002274.30"_$G(ABMZ("SUB"))
@@ -213,10 +227,13 @@ PROV ;
  .K ABMDPRV
  .S DIC("P")=$P(^DD(ABMFLNM,.18,0),U,2)
  .;default to rendering
- .S DIC("DR")=".02//RENDERING"
+ .;S DIC("DR")=".02//RENDERING"  ;abm*2.6*37 IHS/SD/SDR ADO89299
+ .S DIC("DR")=".02R//RENDERING"  ;abm*2.6*37 IHS/SD/SDR ADO89299
  .;change default to ordering if rendering exists already
- .I $D(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),DA(1),"P","C","R")) S DIC("DR")=".02//ORDERING"
+ .;I $D(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),DA(1),"P","C","R")) S DIC("DR")=".02//ORDERING"  ;abm*2.6*37 IHS/SD/SDR ADO89299
+ .I $D(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),DA(1),"P","C","R")) S DIC("DR")=".02R//ORDERING"  ;abm*2.6*37 IHS/SD/SDR ADO89299
  .D ^DIC
+ .S ABMSIEN=DA(1) D ORDDEA^ABMDE8D1  ;abm*2.6*37 ADO89299
  D MILEAGE
  I ABMZ("SUB")=23 D A^ABMDE8D
  G XIT:$D(ABMZ("ADD1"))
@@ -225,32 +242,8 @@ XIT ;
  K ABMX,DIC
  Q
 39 ;EP - dr string for anesthesia page
- ;S ABMZ("DR")=ABMZ("DR")_";.15//11;.07:.08"  ;abm*2.6*1 HEAT6566  ;abm*2.6*10 HEAT76189
- S ABMZ("DR")=ABMZ("DR")_";.07:.08"  ;abm*2.6*1 HEAT6566  ;IHS/SD/AML 7/20/2012 HEAT76189 - REMOVE DUPLICATE POS FIELD
- ;I ABMP("ITYP")="R" S ABMZ("DR")=ABMZ("DR")_";.12//1;.06;.07:.09;.03"  ;abm*2.6*1 HEAT6566
+ D 39^ABMDEML2  ;split abm*2.6*28 IHS/SD/SDR
  Q
 MILEAGE ;
- ;I (ABMZ("SUB")=47)!(ABMZ("SUB")=43),"A0888^A0425"[$P($$CPT^ABMCVAPI(ABMX("Y"),ABMP("VDT")),U,2) D  ;CSV-c  ;abm*2.6*10
- I (ABMZ("SUB")=47)!(ABMZ("SUB")=43),"^A0888^A0425^"[("^"_$P($$CPT^ABMCVAPI(ABMX("Y"),ABMP("VDT")),U,2)_"^") D  ;CSV-c  ;abm*2.6*10
- .S DIE="^ABMDCLM(DUZ(2),"
- .S DA=ABMP("CDFN")
- .S ABMIEN=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),"B",ABMX("Y"),0))
- .Q:+ABMIEN=0  ;abm*2.6*11 HEAT88601
- .I $P($$CPT^ABMCVAPI(ABMX("Y"),ABMP("VDT")),U,2)="A0425" S DR=".128////"_$S(+$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),12)),U,8)=0:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),ABMIEN,0)),U,3),1:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),12)),U,8))  ;CSV-c
- .I $P($$CPT^ABMCVAPI(ABMX("Y"),ABMP("VDT")),U,2)="A0888" S DR=".129////"_$S(+$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),12)),U,9)=0:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMZ("SUB"),ABMIEN,0)),U,3),1:$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),12)),U,9))  ;CSV-c
- .D ^DIE
+ D MILEAGE^ABMDEML2  ;split abm*2.6*28 IHS/SD/SDR
  Q
- ;abm*2.6*14 HEAT165301 removed below
- ;start new abm*2.6*13 new export mode
- ;OCCURCD ;
- ;populated page3 DATE OF FIRST SYMPTOM if occurrence code 11 is entered
- ;I ABMZ("SUB")=51 D
- ;.S ABMP("ACDT")=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),51,ABMOIEN,0)),U,2)
- ;.S ABMTEST=$P(^ABMDCODE($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),51,ABMOIEN,0)),U),0),U)
- ;.S DIE="^ABMDCLM(DUZ(2),"
- ;.S DA=ABMP("CDFN")
- ;.I ABMTEST="01" S DR=".82////"_$S(+$G(ABMDEL)=1:"@",1:ABMP("ACDT"))
- ;.I ABMTEST=11 S DR=".86////"_$S(+$G(ABMDEL)=1:"@",1:ABMP("ACDT"))
- ;.D ^DIE K DR
- ;Q
- ;end new abm*2.6*13

@@ -1,5 +1,5 @@
-BEHOCIR ;MSC/IND/MGH - CCD calls ;03-Dec-2013 13:37;du
- ;;1.1;BEH COMPONENTS;**066001**;March 12, 2008;Build 1
+BEHOCIR ;MSC/IND/MGH - CCD calls ;03-Jun-2020 11:03;PLS
+ ;;1.1;BEH COMPONENTS;**066001,066003**;March 12, 2008;Build 1
  ;=================================================================
  ;Set entry into the CCD
  ;The date/time and user will be associated with all the items in the list
@@ -116,7 +116,9 @@ GETNUM(RET,DFN) ;Return number of CCDAs for a pt
  ..S IMAGE=$P($G(^BEHOCIR(IEN,1)),U,1)
  ..Q:IMAGE=""
  ..Q:$P($G(^MAG(2005,IMAGE,100)),U,5)'=""
- ..S ARRAY(IMAGE)=""
+ ..S ITYPE=$$GET1^DIQ(2005,IMAGE,42)
+ ..I ITYPE="CCD-SUMMARY" D
+ ...S ARRAY(IMAGE)=""
  S IMG="" F  S IMG=$O(ARRAY(IMG)) Q:IMG=""  D
  .S DATA=""
  .S DCNT=DCNT+1

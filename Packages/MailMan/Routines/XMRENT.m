@@ -1,7 +1,5 @@
-XMRENT ;ISC-SF/GMB-Msg Network Header Info API ;04/19/2002  13:17
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CMW
- ;
+XMRENT ;(WASH ISC)/CMW - NETWORK MAIL API ENTRY POINTS ;06/15/99  07:35
+ ;;7.1;MailMan;**31,50**;Jun 02, 1994
  ; Entry points (DBIA 1143):
  ; $$NET  Get message information.
  ;
@@ -9,10 +7,10 @@ XMRENT ;ISC-SF/GMB-Msg Network Header Info API ;04/19/2002  13:17
  ;Parameter #1=Message #
  ;
  ;Output=STRING
- ; Message-date ^ Encryption-code ^ Returned addr of sender ^ Message ID
- ; ^ Sender ^ Message subject ^ Message ID of In-reply-to ^ Message Type
+ ;  Message-date ^ Encryption-code ^ Returned addr of sender ^ Message ID
+ ;   ^ Sender ^ Message subject ^ Message ID of In-reply-to ^ Message Type
  ;
-NET(XMZ) ;
+NET(XMZ) ;New all variables that are used in PARSE^XMR1
  Q:'$D(^XMB(3.9,XMZ,0)) ""
  N XMDATE,XMENCR,XMFROM,XMREMID,XMSEND,XMSUBJ,XMZO,XMFIRST
  S XMFIRST=$O(^XMB(3.9,XMZ,2,0))
@@ -30,11 +28,11 @@ LOCMAIL(XMZ,XMREMID,XMSUBJ,XMFROM,XMDATE,XMSEND,XMENCR,XMZO) ; Get data for Loca
  S XMENCR=$P(XMZREC,U,10)
  S XMFROM=$$NAME^XMXUTIL($P(XMZREC,U,2))
  S XMSUBJ=$$SUBJ^XMXUTIL2(XMZREC)
- S XMREMID=$$NETID^XMS3(XMZ)
+ S XMREMID=$$NETID^XMS0A(XMZ)
  Q
 NETMAIL(XMZ,XMREMID,XMSUBJ,XMFROM,XMDATE,XMSEND,XMENCR,XMZO) ; Get data for Message that originated from another domain
- D PARSE^XMR3(XMZ,.XMREMID,.XMSUBJ,.XMFROM,.XMDATE,.XMSEND,.XMENCR,.XMZO)
+ D PARSE^XMR1(XMZ,.XMREMID,.XMSUBJ,.XMFROM,.XMDATE,.XMSEND,.XMENCR,.XMZO)
  S:$G(XMSUBJ)="" XMSUBJ=" "
- S XMFROM="<"_$$REMADDR^XMXADDR3(XMFROM)_">"
+ S XMFROM="<"_$$REMADDR^XMXADDR1(XMFROM)_">"
  S:XMREMID[".VA.GOV" XMFROM=$TR($P(XMFROM,"@"),"._+",", .")_"@"_$P(XMFROM,"@",2)
  Q

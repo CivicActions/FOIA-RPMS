@@ -1,5 +1,5 @@
 ABMEH63 ; IHS/FCS/DRS - HCFA-1500 EMC RECORD FB1 (Medical Segment) ;    
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS Third Party Billing System;**10**;APR 24, 2006
  ;
  ; IHS/FCS/DRS - ABM*2.4*9 - New routine - V2.4 Patch 9 Part 1c
  ;      In response to Envoy edit checks about line item provider.
@@ -35,7 +35,8 @@ START ;START HERE
 LOOP ;LOOP HERE
  N ABMEH63
  D
- .N X S X=$P(ABMRV(J,K,L),U,7) S:'X X=ABMAPRV
+ .;N X S X=$P(ABMRV(J,K),U,7) S:'X X=ABMAPRV  ;abm*2.5*10 IM20395
+ .N X S X=$P(ABMRV(J,K,L),U,7) S:'X X=ABMAPRV  ;abm*2.5*10 IM20395
  .I X S ABMEH63("RENDERING")=X
  F I=10:10:250 D
  .D @I
@@ -137,11 +138,19 @@ LOOP ;LOOP HERE
  S ABMR(63,230)=""
  S ABMR(63,230)=$$FMT^ABMERUTL(ABMR(63,230),20)
  Q
+ ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ; Part 19a break up filler to account for Envoy's extra field
 240 ;300^15^X^RENDERING PROVIDER NETWORK ID (ENVOY SPECIAL)
  S ABMR(63,240)="" ; 
+ ; Apparently in Arizona (San Xavier) BC/BS and Medicaid require 
+ ;  something here.  As of 09/14/01 requests are outstanding to site
+ ;  to find out what exactly goes here.  Data seems to be absent from
+ ;  ^VA(200, and ^ABMNINS( and ^AUTNINS(.  The envoy error messages
+ ;  indicate formats quite different from what's stored in the usual
+ ;  places for provider id numbers.    Something will need to be sent
+ ;  here, we just don't yet know what.
  S ABMR(63,240)=$$FMT^ABMERUTL(ABMR(63,240),15)
  Q
-250 ;315^6^X^FILLER-FB1-315
+250 ;315^6^X^FILLER-FB1-315 ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
  S ABMR(63,250)=""
  S ABMR(63,250)=$$FMT^ABMERUTL(ABMR(63,250),6)
  Q
@@ -155,43 +164,48 @@ EX(ABMX,ABMY,ABMZ) ;EXTRINSIC FUNCTION HERE
  K ABMR(63,ABMX),ABME,ABMX,ABMY,ABMZ,ABM
  Q Y
  ;
+ ; Patch 9 Part 8 IHS/FCS/DRS 08/xx/2001
 TOSTSTL ; Loop to test all
- D TOSTST("")
- N X S X=""
- F  S X=$O(^ICPT("B",X)) Q:X=""  D TOSTST(X)
- Q
+ D TOSTST("") ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ N X S X="" ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ F  S X=$O(^ICPT("B",X)) Q:X=""  D TOSTST(X) ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ Q  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ ;
+ ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;  $$TOSTST,$$TOS new
  ;
 TOSTST(CPT,J) ; devel - test $$TOS logic
- W "CPT=",CPT
- W " " D
- . I CPT]"" D
- . . N X S X=$O(^ICPT("B",CPT,0)) Q:'X
- . . W $$GET1^DIQ(81,X_",","SHORT NAME")
- . . W " ",$$GET1^DIQ(81,X_",","CPT CATEGORY")
- . W " -> TOS="
- . S:'$D(J) J=21
- N K,ABMRV S K=1,ABMRV(J,K,L)=U_CPT
- W $$TOS,! Q
+ W "CPT=",CPT ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ W " " D  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . I CPT]"" D  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . . N X S X=$O(^ICPT("B",CPT,0)) Q:'X  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . . W $$GET1^DIQ(81,X_",","SHORT NAME") ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . . W " ",$$GET1^DIQ(81,X_",","CPT CATEGORY") ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . W " -> TOS=" ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . S:'$D(J) J=21 ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ ;N K,ABMRV S K=1,ABMRV(J,K)=U_CPT ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;  ;abm*2.5*10 IM20395
+ N K,ABMRV S K=1,ABMRV(J,K,L)=U_CPT ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;  ;abm*2.5*10 IM20395
+ W $$TOS,! Q  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
  ;
 TOS() ;EP - type of service (where x=multiple from 3P Bill File)
  ; Called from ABMEH61 and put here because we have $S well <10000
  ; Modified from TOS^ABMERUTL - some added precision
  ; We have J, K, and ABMRV(J,K)
- N CPT,TOS S CPT=$P(ABMRV(J,K,L),U,2)
- I CPT]"" D  Q:$D(TOS) TOS
- . I CPT="A9220" S TOS=10 Q  ; Blood
- . S CPTD0=$O(^ICPT("B",CPT,0)) Q:'CPTD0
- . N X S X=$G(^ICPT(CPTD0,0)) Q:X=""
- . I X["RADIATION THERAPY" S TOS="06" Q  ; Radiation Therapy
- . I X["CONSULTATION" S TOS="03" Q  ; Consultation
- . I X["OPINION" D  Q:$D(TOS)
- . . I X["2ND" S TOS="20" Q  ; Second Surgical Opinion
- . . I X["3RD" S TOS="21" Q  ; Third Surgical Opinion
- . I X["DIAGNOSTIC RADIOLOGY" S TOS="04" Q
- . N CAT S CAT=$P(X,U,3) Q:'CAT
- . S X=$G(^DIC(81.1,CAT,0)) Q:X=""
- . I $P(X,U,2)'="m" D  Q:X=""  ; replace X w/corr "major" node
- . . N MAJ S MAJ=$P(X,U,3) I MAJ="" S X="" Q
+ ;N CPT,TOS S CPT=$P(ABMRV(J,K),U,2) ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;  ;abm*2.5*10 IM20395
+ N CPT,TOS S CPT=$P(ABMRV(J,K,L),U,2) ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;  ;abm*2.5*10 IM20395
+ I CPT]"" D  Q:$D(TOS) TOS ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . I CPT="A9220" S TOS=10 Q  ; Blood ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . S CPTD0=$O(^ICPT("B",CPT,0)) Q:'CPTD0  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . N X S X=$G(^ICPT(CPTD0,0)) Q:X=""  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . I X["RADIATION THERAPY" S TOS="06" Q  ; Radiation Therapy ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . I X["CONSULTATION" S TOS="03" Q  ; Consultation ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . I X["OPINION" D  Q:$D(TOS)  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . . I X["2ND" S TOS="20" Q  ; Second Surgical Opinion ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . . I X["3RD" S TOS="21" Q  ; Third Surgical Opinion ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . I X["DIAGNOSTIC RADIOLOGY" S TOS="04" Q  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . N CAT S CAT=$P(X,U,3) Q:'CAT  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . S X=$G(^DIC(81.1,CAT,0)) Q:X=""  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . I $P(X,U,2)'="m" D  Q:X=""  ; replace X w/corr "major" node ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
+ . . N MAJ S MAJ=$P(X,U,3) I MAJ="" S X="" Q  ; ABM*2.4*9 IHS/FCS/DRS 09/21/01 ;
  . . S X=$G(^DIC(81.1,MAJ,0))
  . I X["MEDICINE" S TOS="01" Q
  . I X["SURGERY" S TOS="02" Q

@@ -1,5 +1,5 @@
-AMHLETR3 ; IHS/CMI/LAB - print report of tps needing resolved ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLETR3 ; IHS/CMI/LAB - print report of tps needing resolved ; [ 02/21/2007  3:38 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**7,8**;JAN 27, 2003
  ;
  ;
  ;
@@ -46,9 +46,6 @@ SORT ;
  S DIR(0)="S^P:Responsible Provider;N:Patient Name;C:Case Open Date",DIR("A")="Sort list by",DIR("B")="P" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G THER
  S AMHSORT=Y
-DEMO ;
- D DEMOCHK^AMHUTIL1(.AMHDEMO)
- I AMHDEMO=-1 G SORT
 ZIS ;
  S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
  I $D(DIRUT) G XIT
@@ -71,10 +68,9 @@ PROC ;EP - entry point for processing
  K AMHCASE
  Q
 PROC1 ;
- Q:'$$ALLOWCD^AMHLCD(DUZ,AMHCASE)
+ Q:'$$ALLOWCD^AMHLCD(AMHCASE)
  S DFN=$P(^AMHPCASE(AMHCASE,0),U,2)
  Q:DFN=""
- Q:$$DEMO^AMHUTIL1(DFN,$G(AMHDEMO))
  Q:'$$ALLOWP^AMHUTIL(DUZ,DFN)
  Q:$P(^AMHPCASE(AMHCASE,0),U,5)]""  ;CLOSED
  I AMHPROV,$P(^AMHPCASE(AMHCASE,0),U,8)'=AMHPROV Q  ;not this provider
@@ -96,7 +92,7 @@ TP(DATE,PAT,PROV,PRG) ;
  S X=0 F  S X=$O(^AMHPTXP("AC",PAT,X)) Q:X'=+X  D
  .Q:$P(^AMHPTXP(X,0),U,17)'=PRG
  .Q:$P(^AMHPTXP(X,0),U,4)'=PROV
- .Q:'$$ALLOWTP^AMHLETP(DUZ,X)
+ .Q:'$$ALLOWTP^AMHLETP(X)
  .I $P(^AMHPTXP(X,0),U,12)]"",$P(^AMHPTXP(X,0),U,12)<DATE Q  ;closed before this case opened
  .Q:$P(^AMHPTXP(X,0),U)<DATE
  .Q:$P(^AMHPTXP(X,0),U,15)="I"

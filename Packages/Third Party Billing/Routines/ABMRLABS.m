@@ -1,5 +1,5 @@
 ABMRLABS ; IHS/SD/SDR - Add/Edit Reference Lab Locations - 3/15/2005 2:11:05 PM
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**8**;AUG 31, 2005
  ; New routine - 3/15/05
  ;
 EP ;

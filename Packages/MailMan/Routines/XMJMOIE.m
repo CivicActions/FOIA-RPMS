@@ -1,24 +1,39 @@
-XMJMOIE ;ISC-SF/GMB-Edit msg that user has sent to self ;04/19/2002  11:01
- ;;8.0;MailMan;;Jun 28, 2002
+XMJMOIE ;ISC-SF/GMB-Edit msg that user has sent to self ;04/29/99  12:43
+ ;;7.1;MailMan;**50**;Jun 02, 1994
 EDIT(XMDUZ,XMK,XMZ,XMSUBJ,XMINSTR,XMRESTR) ;
- N XMABORT,XMDIR,XMOPT,XMOX,XMY
+ N XMABORT
  S XMABORT=0
  F  D  Q:XMABORT
- . D SENDSET(.XMINSTR,.XMOPT,.XMOX,.XMDIR)
- . D XMDIR^XMJDIR(.XMDIR,.XMOPT,.XMOX,.XMY,.XMABORT) Q:XMABORT
- . K XMDIR,XMOPT,XMOX
- . D @XMY
+ . N DIR,Y,X
+ . D SENDSET(.XMINSTR,.DIR)
+ . D ^DIR I $D(DIRUT) S XMABORT=$S($D(DTOUT):DTIME,1:1) Q
+ . D @Y
  Q
-SENDSET(XMINSTR,XMOPT,XMOX,XMDIR) ;
- D OPTEDIT^XMXSEC2(.XMINSTR,.XMOPT,.XMOX,1)
- I $G(XMOPT("NS","?"))=37309.1 K XMOPT("NS","?") ; You have no Network Signature.
- D SET^XMXSEC2("IM",37445,.XMOPT,.XMOX) ; Include responses from another message
- S XMDIR("A")=$$EZBLD^DIALOG(34066) ; Select Edit option:
- S XMDIR("??")="XM-U-MO-EDIT"
+SENDSET(XMINSTR,DIR) ;
+ S DIR(0)=""
+ I $G(XMINSTR("FLAGS"))["C" S DIR(0)=DIR(0)_";C:UnConfidential (surrogate may read)"
+ E                          S DIR(0)=DIR(0)_";C:Confidential (surrogate can't read)"
+ I $D(XMINSTR("RCPT BSKT")) S DIR(0)=DIR(0)_";D:Delivery basket remove"
+ E                          S DIR(0)=DIR(0)_";D:Delivery basket set"
+ I $G(XMINSTR("FLAGS"))["I" S DIR(0)=DIR(0)_";I:UnInformation only (recipients may respond)"
+ E                          S DIR(0)=DIR(0)_";I:Information only (recipients may not respond)"
+ I $G(XMINSTR("FLAGS"))["P" S DIR(0)=DIR(0)_";P:Normal delivery"
+ E                          S DIR(0)=DIR(0)_";P:Priority delivery"
+ I $G(XMINSTR("FLAGS"))["R" S DIR(0)=DIR(0)_";R:No Confirm receipt"
+ E                          S DIR(0)=DIR(0)_";R:Confirm receipt"
+ S DIR(0)=DIR(0)_";S:Edit Subject"
+ S DIR(0)=DIR(0)_";T:Edit Text"
+ I $D(XMINSTR("VAPOR"))     S DIR(0)=DIR(0)_";V:Vaporize date remove"
+ E                          S DIR(0)=DIR(0)_";V:Vaporize date set"
+ I $G(XMINSTR("FLAGS"))["X" S DIR(0)=DIR(0)_";X:UnClose message (forward allowed)"
+ E                          S DIR(0)=DIR(0)_";X:Closed message (no forward allowed)"
+ S DIR("A")="Select Edit option:  "
+ S DIR(0)="SAMO^"_$E(DIR(0),2,999)
  Q
 C ; Confidential msg
  N XMMSG
- D CONFID^XMXEDIT(XMZ,.XMINSTR,.XMMSG) I $D(XMERR) D SHOW^XMJERR Q
+ D CONFID^XMXEDIT(XMZ,.XMINSTR,.XMMSG)
+ I $D(XMERR) D SHOW^XMJERR Q
  W !,XMMSG
  Q
 D ; Delivery basket
@@ -30,38 +45,10 @@ D ; Delivery basket
  Q:'$D(XMINSTR("RCPT BSKT"))
  D DELIVER^XMXEDIT(XMZ,XMINSTR("RCPT BSKT"),.XMINSTR,.XMMSG)
  Q
-ES ; Edit Subject
- D ES^XMJMSO
- Q
-ET ; Edit Text
- I $G(XMPAKMAN) Q:$$NOPAKEDT^XMJMSO
- I $D(XMSECURE) D
- . N XMIA S XMIA=1
- . D DECMSG^XMJMCODE(XMZ)
- D BODY^XMJMS(XMDUZ,XMZ,XMSUBJ,.XMRESTR)
- I $D(XMSECURE) D
- . N XMIA S XMIA=1
- . D ENCMSG^XMJMCODE(XMZ)
- Q
 I ; Information only msg
  N XMMSG
  D INFO^XMXEDIT(XMZ,.XMINSTR,.XMMSG)
  W !,XMMSG
- Q
-IM ; Include responses from another message
- ;I $G(XMPAKMAN) Q:$$NOPAKEDT^XMJMSO
- I $G(XMPAKMAN) D  Q
- . W !,$$EZBLD^DIALOG(37445.4) ; You may not Include anything into a KIDS or PackMan message.
- I $D(XMSECURE) D
- . N XMIA S XMIA=1
- . D DECMSG^XMJMCODE(XMZ)
- D INCL^XMJMRO(XMDUZ,XMZ,XMZ,XMSUBJ,.XMRESTR,2,.XMABORT)
- I $D(XMSECURE) D
- . N XMIA S XMIA=1
- . D ENCMSG^XMJMCODE(XMZ)
- Q
-NS ; Add Network Signature
- D NS^XMJMSO
  Q
 P ; Priority msg
  N XMMSG
@@ -73,28 +60,25 @@ R ; Confirm receipt of msg
  D CONFIRM^XMXEDIT(XMZ,.XMINSTR,.XMMSG)
  W !,XMMSG
  Q
-S ; Scramble msg
- N XMMSG
- I $D(XMSECURE) D  Q
- . D SCRAMBLE^XMXEDIT(XMZ,.XMINSTR,.XMMSG)
- . W !,XMMSG
- D S^XMJMSO
- Q:'$D(XMINSTR("SCR KEY"))
- D SCRAMBLE^XMXEDIT(XMZ,.XMINSTR,.XMMSG)
+S ; Edit Subject
+ D ES^XMJMSO
+ Q
+T ; Edit Text
+ I $G(XMPAKMAN) Q:$$NOPAKEDT^XMJMSO
+ D BODY^XMJMS(XMDUZ,XMZ,XMSUBJ,.XMRESTR)
  Q
 V ; Vaporize date
  N XMMSG
  I $G(XMINSTR("VAPOR")) D  Q
  . D VAPOR^XMXEDIT(XMZ,"@",.XMINSTR,.XMMSG)
- . I XMK D KVAPOR^XMXUTIL(XMDUZ,XMK,XMZ,"@")
  . W !,XMMSG
  D V^XMJMSO
  Q:'$D(XMINSTR("VAPOR"))
- I XMK D KVAPOR^XMXUTIL(XMDUZ,XMK,XMZ,XMINSTR("VAPOR"))
  D VAPOR^XMXEDIT(XMZ,XMINSTR("VAPOR"),.XMINSTR,.XMMSG)
  Q
 X ; Closed msg
  N XMMSG
- D CLOSED^XMXEDIT(XMZ,.XMINSTR,.XMMSG) I $D(XMERR) D SHOW^XMJERR Q
+ D CLOSED^XMXEDIT(XMZ,.XMINSTR,.XMMSG)
+ I $D(XMERR) D SHOW^XMJERR Q
  W !,XMMSG
  Q

@@ -1,5 +1,5 @@
-BEHOENP1 ;MSC/IND/DKM - Retrieve PCC data for a visit ;03-Jun-2014 12:24;DU
- ;;1.1;BEH COMPONENTS;**005002,005004,005011,005012**;Sep 18, 2007
+BEHOENP1 ;MSC/IND/DKM - Retrieve PCC data for a visit ;20-Apr-2021 09:57;PLS
+ ;;1.1;BEH COMPONENTS;**005002,005004,005011,005012,005014**;Sep 18, 2007
  ;=================================================================
  ; RPC: Return PCC data for an associated visit
 LOAD(DATA,DFN,VIEN) ;EP
@@ -198,3 +198,15 @@ IMMELIG(CODE) ;EP
  N X
  S X=$G(^BIELIG(CODE,0))
  Q '$P(X,U,3)
+EXAMCODE(DATA,EXAM) ;Get exam codes for a specific exam
+ N RLIST,RL,CNT
+ K DATA
+ S CNT=0
+ Q:$G(EXAM)=""
+ I EXAM'?1.N D
+ .S EXAM=$O(^AUTTEXAM("B",EXAM,""))
+ Q:'EXAM
+ D VXAMR^AUPNCIX(EXAM,"RLIST")
+ S RL=0
+ F  S RL=$O(RLIST(RL)) Q:'RL  S CNT=CNT+1,DATA(CNT)=RLIST(RL)
+ Q

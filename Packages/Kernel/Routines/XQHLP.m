@@ -1,5 +1,5 @@
-XQHLP ;SEA/MJM - Menu Helper  ;07/21/09  11:37
- ;;8.0;KERNEL;**46,514**;Jul 10, 1995;Build 14
+XQHLP ;SEA/MJM - Menu Helper  ;04/13/98  13:59
+ ;;8.0;KERNEL;**46**;Jul 10, 1995;Build 5
  ;
 PAUSE R !!,"  **> Press 'RETURN' to continue, '^' to stop, or '?[option text]' for more",!?25,"help: ",XQL:DTIME D:XQL?1"?"1AN.ANP HELP S XQL=$S(XQL[U:-1,1:XQLN) W @IOF Q
  ;
@@ -11,7 +11,7 @@ SHOW  F  S XQX=$O(^XUTL("XQO",XQDIC,XQX)) Q:XQX=U!(XQL<0)!(XQX="")  I $P(^(XQX),
  .Q  ;G SHOW
  Q
  ;
-PRNT ;Print out the description of the option XQHY
+PRNT ;Print out the description of the option XQHY    
  I '$L($P(XQHY,U,2))!'$D(^DIC(19,+XQHY,0)) Q
  I XQL<5 D PAUSE Q:XQL<0
  S XQHY0=^XUTL("XQO",XQDIC,"^",+XQHY) W !!,"'"_$P(XQHY0,U,3)_"'     Option name: ",$P(XQHY0,U,2) S XQL=XQL-2 S %=$P(XQHY0,U) I %]"" W "     Synonym: ",%
@@ -39,7 +39,7 @@ EN ;Show descriptions from Option File Entry point from EN^XQ2
 OUT ;Exit here
  W !!
  ;S:$D(XQSAV) XQDIC=XQSAV
- K DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,XQA,XQHSV,XQHY,XQHY0,XQNXTOP,XQL,XQLN,XQN,XQSAV,XQX,Y
+ K DIR,DIROUT,DIRUT,DTOUT,DUOUT,X,XQA,XQHLP,XQHSV,XQHY,XQHY0,XQNXTOP,XQL,XQLN,XQN,XQSAV,XQX,Y
  I $D(XQHLP) K XQHLP Q
  G M2^XQ
  ;

@@ -1,9 +1,11 @@
 BCHDL1 ; IHS/TUCSON/LAB - PROCESS CHR RECORD LIST ;  [ 06/26/02  5:49 AM ]
- ;;1.0;IHS RPMS CHR SYSTEM;**7,8,12,13,14**;OCT 28, 1996
+ ;;2.0;IHS RPMS CHR SYSTEM;**1**;OCT 23, 2012;Build 6
  ;IHS/CMI/LAB - patch 8 Y2K
  ;IHS/CMI/LAB - tmp to xtmp
  ;
  ;Continuation of BCHDL.
+ ;  NOTE:  THIS ROUTINE IS OBSOLETE, IT IS BEING SENT WITH PATCH 1 TO
+ ;  REMOVE ALL REFERENCES TO S S N AS A PRECAUTION IN CASE SOMEONE RUNS IT FROM PROGRAMMER MODE
  ;
  ;
 START ;
@@ -64,8 +66,8 @@ MULT ;
  Q
  ;
 TX(DFN) ;create tx record
- NEW C,A,T,S,H,%,%1,N,DOB,SSN,R,FN,LN,MN,SA,CTY,ST,ZIP,HPH
-NAME S N=$P(^DPT(DFN,0),U),S=$P(^(0),U,2),DOB=$P(^(0),U,3),SSN=$P(^(0),U,9)
+ NEW C,A,T,S,H,%,%1,N,DOB,R,FN,LN,MN,SA,CTY,ST,ZIP,HPH
+NAME S N=$P(^DPT(DFN,0),U),S=$P(^(0),U,2),DOB=$P(^(0),U,3)
  S LN=$P(N,","),FN=$P($P(N,",",2)," "),MN=$P($P(N,",",2)," ",2)
  ;convert dob
  S DOB=$E(DOB,4,5)_"/"_$E(DOB,6,7)_"/"_(1700+$E(DOB,1,3))
@@ -83,7 +85,7 @@ H ;HRN
  S ST=$$VAL^XBDIQ1(2,DFN,.115)
  S ZIP=$P($G(^DPT(DFN,.11)),U,6)
  S HPH=$P($G(^DPT(DFN,.13)),U,1)
- S R=LN_"|"_FN_"|"_MN_"|"_H_"|"_SSN_"|"_DOB_"|"_S_"|"_T_"|"_C_"|"_$P(^AUTTLOC(BCHFAC,0),U,10)_"|"_$P($G(^AUTTSITE(1,1)),U,3)_"|"_M_"|"_SA_"|"_CTY_"|"_ST_"|"_ZIP_"|"_HPH_"|"_$$UID^AGTXID(DFN)
+ S R=LN_"|"_FN_"|"_MN_"|"_H_"|"_""_"|"_DOB_"|"_S_"|"_T_"|"_C_"|"_$P(^AUTTLOC(BCHFAC,0),U,10)_"|"_$P($G(^AUTTSITE(1,1)),U,3)_"|"_M_"|"_SA_"|"_CTY_"|"_ST_"|"_ZIP_"|"_HPH_"|"_$$UID^AGTXID(DFN)
  Q R
 QU(X) ;quote a string
  I X]"" S X=""""_X_""""

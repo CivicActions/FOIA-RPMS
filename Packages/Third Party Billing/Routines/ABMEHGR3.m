@@ -1,5 +1,5 @@
-ABMEHGR3 ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;     
- ;;2.6;IHS Third Party Billing;**1,3,6,9,23**;NOV 12, 2009;Build 427
+ABMEHGR3 ; IHS/SD/SDR - GET ANCILLARY SVCS REVENUE CODE INFO ;     
+ ;;2.6;IHS Third Party Billing;**1,3,6,9,23,28,36,37**;NOV 12, 2009;Build 739
  ;Original;DMJ;03/20/96 9:07 AM
  ;
  ;IHS/SD/SDR 2.5 p9 split routine from ABMEHGR2
@@ -13,6 +13,9 @@ ABMEHGR3 ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;
  ;IHS/SD/SDR 2.6*6 5010 - added prompts for SV5 segment
  ;IHS/SD/SDR 2.6*6 5010 - added test date to 37 multiple
  ;IHS/SD/AML 2.6*23 HEAT247169 for subfile 43 add NDC to array of data
+ ;IHS/SD/SDR 2.6*28 CR10551 Made IMMUNIZATION LOT/BATCH NUMBER an alphanumeric check, not just numeric
+ ;IHS/SD/SDR 2.6*36 ADO76171 Made 2nd, 3rd modifier populate in 837P file for Anesthesia
+ ;IHS/SD/SDR 2.6*37 ADO89299 Added logic for DEA# if controlled substance based on NDC
  ;
 35 ;EP - Radiology
  S DA=0
@@ -85,6 +88,10 @@ ABMEHGR3 ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;
  .;S $P(ABMRV(39,DA,ABMLCNT),U,10)=ABM(5)  ;Date/time of service  ;abm*2.6*1 HEAT8498
  .S $P(ABMRV(39,DA,ABMLCNT),U,10)=ABM(7)  ;date/time from service date  ;abm*2.6*1 HEAT8498
  .S $P(ABMRV(39,DA,ABMLCNT),U,11)=ABM(10)  ;Corresponding DX
+ .;start new abm*2.6*36 IHS/SD/SDR ADO76171
+ .S $P(ABMRV(39,DA,ABMLCNT),U,4)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),39,DA,0)),U,14)  ;2nd Modifier
+ .S $P(ABMRV(39,DA,ABMLCNT),U,12)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),39,DA,0)),U,19)  ;3rd Modifier
+ .;end new abm*2.6*36 IHS/SD/SDR ADO76171
  .S ABM(13)=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),39,DA,"P","C","R",0))  ;rendering provider
  .I +$G(ABM(13))'=0 S $P(ABMRV(39,DA,ABMLCNT),U,13)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),39,DA,"P",ABM(13),0)),U)
  .S ABM(21)=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),39,DA,"P","C","D",0))  ;ordering provider
@@ -129,10 +136,21 @@ ABMEHGR3 ; IHS/ASDST/DMJ - GET ANCILLARY SVCS REVENUE CODE INFO ;
  .S:+($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,2)) $P(ABMRV(43,DA,ABMLCNT),U,34)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,2)
  .S:+($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,3)) $P(ABMRV(43,DA,ABMLCNT),U,35)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,3)
  .S:+($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,4)) $P(ABMRV(43,DA,ABMLCNT),U,36)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,4)
- .S:+($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,5)) $P(ABMRV(43,DA,ABMLCNT),U,37)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,5)  ;immun. batch#6
+ .;S:+($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,5)) $P(ABMRV(43,DA,ABMLCNT),U,37)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,5)  ;immun. batch#6  ;abm*2.6*28 IHS/SD/SDR CR10551
+ .I ($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,5)'="") S $P(ABMRV(43,DA,ABMLCNT),U,37)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,1)),U,5)  ;immun. batch#6  ;abm*2.6*28 IHS/SD/SDR CR10551
  .;end new code 5010
  .S $P(ABMRV(43,DA,ABMLCNT),U,38)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,2)),U)  ;abm*2.6*6 5010 line item control number
  .S $P(ABMRV(43,DA,ABMLCNT),U,39)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,2)),U,2)  ;abm*2.6*9 NARR
+ .;start new abm*2.6*37 IHS/SD/SDR ADO89299
+ .S ABM("NDC")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,0)),U,19)
+ .I $G(ABM("NDC"))'="" D
+ ..S ABM("NDC")=$O(^PSDRUG("ZNDC",$TR(ABM("NDC"),"-"),0))
+ ..I +$G(ABM("NDC"))=0 Q
+ ..S ABMA("CSUB")=$P($G(^PSDRUG(ABM("NDC"),0)),U,3)
+ ..I (ABMA("CSUB")[2)!(ABMA("CSUB")[3)!(ABMA("CSUB")[4)!(ABMA("CSUB")[5) D
+ ...S ABMRVCSB(43,DA,ABMLCNT)=1
+ ...S $P(ABMRV(43,DA,ABMLCNT),U,41)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),43,DA,2)),U,6)  ;DEA#
+ .;end new abm*2.6*37 IHS/SD/SDR ADO89299
  Q
 45 ;EP - Supplies
  S DA=0

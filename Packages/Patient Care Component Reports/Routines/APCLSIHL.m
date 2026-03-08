@@ -1,5 +1,5 @@
-APCLSIHL ;cmi/flag/maw - APCL ILI CDC HL7 Export 5/12/2010 9:26:17 AM
- ;;3.0;IHS PCC REPORTS;**29,30,31**;FEB 05, 1997;Build 32
+APCLSIHL ;cmi/flag/maw - APCL ILI CDC HL7 Export 
+ ;;3.0;IHS PCC REPORTS;**29,30,31,33,34**;FEB 05, 1997;Build 43
  ;
 ILI(TYPE) ;EP -  lets create the ILI HL7 export here
  N APCLLAST
@@ -61,6 +61,7 @@ ZTS(TYP,LA) ;-- lets create the ZTS segment
  .. S RCNT1=$P(RDATA,",",13)
  .. S RCNT2=$P(RDATA,",",20)
  .. S RCNT3=$P(RDATA,",",42)
+ .. S RCNT4=$P(RDATA,",",100)
  .. D SET(.ARY,"ZTS",0)
  .. D SET(.ARY,CNT,1)
  .. D SET(.ARY,RDT,2)
@@ -68,6 +69,7 @@ ZTS(TYP,LA) ;-- lets create the ZTS segment
  .. D SET(.ARY,RCNT1,4)
  .. D SET(.ARY,RCNT2,5)
  .. D SET(.ARY,RCNT3,6)
+ .. D SET(.ARY,RCNT4,7)
  .. S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
  Q
  ;
@@ -104,9 +106,14 @@ NEWMSG(HLST,HLPM,RC,MTYPE,EVNTTYPE,TYP,LDA) ;EP
  I TYP="ILI" D
  . I '$D(ERR) D PID(.RC)
  . I '$D(ERR) D PV1(.RC)
- . I '$D(ERR),$G(RC(8))]"" D DG1(.RC,1,RC(8))
- . I '$D(ERR),$G(RC(9))]"" D DG1(.RC,2,RC(9))
- . I '$D(ERR),$G(RC(10))]""  D DG1(.RC,3,RC(10))
+ . ;I '$D(ERR),$G(RC(8))]"" D DG1(.RC,1,RC(8))
+ . ;I '$D(ERR),$G(RC(9))]"" D DG1(.RC,2,RC(9))
+ . ;I '$D(ERR),$G(RC(10))]""  D DG1(.RC,3,RC(10))
+ . S C=0
+ . F I=140:1:199 S J=$G(RC(I)) Q:J=""  D
+ . . Q:$D(ERR)
+ . . S C=C+1
+ . . D DG1(.RC,C,RC(I))
  . I '$D(ERR) D OBXMSR(.RC)
  . I '$D(ERR) D ZLI(.RC)
  . I '$D(ERR),$G(RC(45))]"" D ZSR(.RC,1,RC(45))
@@ -115,7 +122,7 @@ NEWMSG(HLST,HLPM,RC,MTYPE,EVNTTYPE,TYP,LDA) ;EP
  . I '$D(ERR),$G(RC(48))]"" D ZSR(.RC,4,RC(48))
  . I '$D(ERR),$G(RC(66))]"" D ZAN(.RC)
  . I $$ZPCCHK(.RC) D ZPC(.RC)
- . D ZCV
+ . ;D ZCV
  . I LDA=+$G(APCLLAST) D
  .. D ZHS(TYP)
  .. D ZTS(TYP,LDA)
@@ -219,7 +226,7 @@ PV1LAB(R) ;-- setup the PV1 LAB segment
  ;
 DG1(R,SQ,DG13) ;-- set the repeating DG1
  N ICDT
- S ICDT=$P($$ICDDX^APCLSILU(DG13,R(7)),U,20)  ;get the icd type based on the code
+ S ICDT=$P($$ICDDX^APCLSILU(DG13,R(7)),U,20)
  D SET(.ARY,"DG1",0)
  D SET(.ARY,SQ,1)
  D SET(.ARY,"ICD",2)
@@ -248,7 +255,7 @@ OBX(R) ;-- setup the ILI OBX segment
 OBXMSR(R) ;-- setup the ILI OBX HT/WT segment
  N I,CNT
  S CNT=0
- F I=11,125,126 D
+ F I=11 D
  . Q:R(I)=""
  . S CNT=CNT+1
  . D SET(.ARY,"OBX",0)
@@ -258,17 +265,6 @@ OBXMSR(R) ;-- setup the ILI OBX HT/WT segment
  . D SET(.ARY,$P(R(I),U,2),5)
  . D SET(.ARY,$$HLD($P(R(I),U,3)),14)
  . S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- F I=37 D
- . Q:R(I)=""
- . S CNT=CNT+1
- . D SET(.ARY,"OBX",0)
- . D SET(.ARY,CNT,1)
- . D SET(.ARY,"ST",2)
- . D SET(.ARY,"BMI",3)
- . D SET(.ARY,$P(R(I),U,1),5)
- . D SET(.ARY,$$HLD(R(38)),14)
- . S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
- . ;
  Q
  ;
 OBXLAB(R) ;
@@ -286,7 +282,7 @@ ZLI(R) ;-- setup the ILI ZLI segment
  D SET(.ARY,R(22),9)
  I $G(R(22))["." D
  . N ICDTA
- . S ICDTA=$P($$ICDDX^APCLSILU(R(22),R(7)),U,20)  ;get the icd type based on the code
+ . S ICDTA=$P($$ICDDX^APCLSILU(R(22),R(7)),U,20)
  . D SET(.ARY,$S(ICDTA="30":"I10",1:"I9"),9,3)
  D SET(.ARY,R(33),10)
  D SET(.ARY,R(34),11)
@@ -320,13 +316,19 @@ ZLI(R) ;-- setup the ILI ZLI segment
  D SET(.ARY,R(134),31)
  D SET(.ARY,R(135),32)
  D SET(.ARY,$$HLD(R(136)),33)
+ D SET(.ARY,R(200),34)  ;VACCINE CODE
+ D SET(.ARY,R(202),36)  ;COVID VACCINE MANU
+ D SET(.ARY,$$HLD(R(201)),35)  ;COVID VACCINE DATE
+ D SET(.ARY,R(203),37)  ;LOT
  S X=$$ADDSEG^HLOAPI(.HLST,.ARY,.ERR)
  Q
  ;
 ZPCCHK(R) ;-- do we need to create a ZPC
  I R(107) Q 1
- F I=113:1:122 I R(I) Q 1
- Q 0
+ NEW %
+ S %=0
+ F I=113:1:122 I R(I) S %=1
+ Q %
  ;
 ZPC(R) ;-- setup the ZPC segment
  D SET(.ARY,"ZPC",0)
@@ -411,6 +413,7 @@ ZAN(R) ;-- setup the ILI ZAN segment
  Q
  ;
 ZCV(R) ;-- setup the ILI ZCV segment
+ Q  ;NO OTHER VACCINES
  N J,ZCVC,VALC,VALD,ARBD,X,D
  S ZCVC=0
  S J=0 F  S J=$O(^AUPNVIMM("AC",DFN,J)) Q:J'=+J  D
@@ -507,7 +510,7 @@ WRITE(T) ; use XBGSAVE to save the temp global (APCLDATA) to a delimited
  NEW TST
  S TST=0
  I $P($G(^APCLILIC(1,0)),U,5)="T" S TST=1
- S (XBFN,APCLDFN)=$S(TST:"FLZ",$G(APCLFLF):"FLF",$G(APCLFLFN):"FLF",1:"FLU")_"_"_APCLASU_"_"_$$DATE(DT)_"_P31.txt"  ;IHS/CMI/LAB - PATCH 31 FILENAME AND PATCH #
+ S (XBFN,APCLDFN)=$S(TST:"FLZ",$G(APCLFLF):"FLF",$G(APCLFLFN):"FLF",1:"FLU")_"_"_APCLASU_"_"_$$DATE(DT)_"_P34.txt"  ;IHS/CMI/LAB - PATCH 31 FILENAME AND PATCH #
  S XBS1="SURVEILLANCE ILI SEND"
  ;
  D ^XBGSAVE

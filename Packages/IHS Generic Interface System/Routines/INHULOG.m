@@ -1,5 +1,5 @@
-INHULOG ; JC Hrubovcak ; 23 Aug 95 18:35 
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHULOG ;ihs/cmi/maw - Logon utilties;
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  ; GIS logon utilities. These utilities are used by the LOGON server
  ;functionality. They are called from the INHVCR* routines and are
@@ -9,9 +9,9 @@ INHULOG ; JC Hrubovcak ; 23 Aug 95 18:35
 GETDUZ(AC,VC,ZN) ; function, returns User IEN and ^DIC(3,IEN,0), or false on failure
  ; input: AC=Access, VC=Verify, hashed codes (required), ZN=zero node, returned by reference
  S ZN="",AC=$G(AC),VC=$G(VC) Q:'$L(AC)!'$L(VC) "^Required data missing"
- Q:'$D(^DIC(3,"A",AC)) "^Access code not found."
- N A,D,V S D=+$O(^DIC(3,"A",AC,0)) Q:D'>0 "^User not found."
- D SETDT^UTDT S A=$G(^DIC(3,D,0)),V=$G(^(.1)) Q:$P(V,U,2)'=VC "^Verify code mismatch."
+ Q:'$D(^VA(200,"A",AC)) "^Access code not found."
+ N A,D,V S D=+$O(^VA(200,"A",AC,0)) Q:D'>0 "^User not found."
+ D SETDT^UTDT S A=$G(^VA(200,D,0)),V=$G(^(.1)) Q:$P(V,U,2)'=VC "^Verify code mismatch."
  I $P(A,U,11),$P(A,U,11)<DT Q "^Beyond termination date."
  ;
  ; check prohibited times
@@ -26,7 +26,7 @@ SETENV(NEWDUZ,NEWDIV) ; function, setup environment variables, returns false on 
  Q:DUZ=NEWDUZ 0   ; no action needed
  ; validity checks, user is already "logged on"
  ; The ^XMB7(duz,100,$I) nodes should be defined
- D SETDT^UTDT N %,X S X=$G(^DIC(3,NEWDUZ,0)) Q:'$L(X) "2^User not found"
+ D SETDT^UTDT N %,X S X=$G(^VA(200,NEWDUZ,0)) Q:'$L(X) "2^User not found"
  S %=$P(X,U,3) Q:'$L(%) "2^No Access Code."
  S %=$P(X,U,4) I %,%<DT Q:"2^Past termination date."
  ; ensure call to XUDIV avoids terminal I/O
@@ -48,8 +48,8 @@ DTIME(INUSR,INDEF) ; function, returns timed-read (in seconds) for INUSR.
  ; to wait for remote system to communicate before connection is closed.
  ; Input: INUSR  - (req) USER IEN
  ;        INDEF  - (opt) customized default (e.g. for remote systems)
- Q:'$D(^DIC(3,INUSR,0)) ""
- N A S A=+$P($G(^(200)),U,10) Q:A>0 A
+ Q:'$D(^VA(200,INUSR,0)) ""
+ N A S A=+$P($G(^VA(200)),U,10) Q:A>0 A
  ; use KERNEL SITE PARAMETERS
  S A=+$P($G(^XMB(1,1,"XUS")),U,10)
  Q $S(A>0:A,$G(INDEF):INDEF,1:300)
@@ -73,10 +73,10 @@ DIVCHK(USR,REQDIV) ; $$function - Division validation for USR.
  ;
  N ALLOWDIV,DEFDIV,DEFOK,REQOK,X
  I $D(REQDIV),$S($G(REQDIV)<1:1,1:'$D(^DG(40.8,REQDIV,0))) Q "Invalid Medical Center Division requested"
- S DEFDIV=$P($G(^DIC(3,USR,0)),U,16),REQDIV=+$G(REQDIV)
+ S DEFDIV=$P($G(^VA(200,USR,0)),U,16),REQDIV=+$G(REQDIV)
  Q:DEFDIV'>0 "Default division is missing for user '"_USR_"'"
  ; ck if allowable divisions exist for USR
- I $O(^DIC(3,USR,2,0)) D  Q:'DEFOK "Default division does not match allowable divisions for user '"_USR_"'"  Q:'REQOK "Requested division '"_REQDIV_"' does not match allowable divisions for user '"_USR_"'"
+ I $O(^VA(200,USR,2,0)) D  Q:'DEFOK "Default division does not match allowable divisions for user '"_USR_"'"  Q:'REQOK "Requested division '"_REQDIV_"' does not match allowable divisions for user '"_USR_"'"
  . S DEFOK=0,REQOK='REQDIV ; do not ck requested div if not passed in
  . M ALLOWDIV=^DIC(3,USR,2)
  . S X=0 F  S X=$O(ALLOWDIV(X)) Q:'X  S:'DEFOK DEFOK=(DEFDIV=ALLOWDIV(X,0)) S:(REQDIV&'REQOK) REQOK=(REQDIV=ALLOWDIV(X,0)) Q:(DEFOK&REQOK)

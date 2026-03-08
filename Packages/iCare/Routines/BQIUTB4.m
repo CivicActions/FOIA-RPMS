@@ -1,13 +1,13 @@
 BQIUTB4 ;GDIT/HS/ALA-Tables ; 05 Dec 2012  12:40 PM
- ;;2.3;ICARE MANAGEMENT SYSTEM;**3,4**;Apr 18, 2012;Build 66
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5**;Mar 01, 2021;Build 20
  ;
 ACM(DATA) ;EP - ACM Registers
  NEW RN
  S II=0,RN=0
- S @DATA@(II)="T00010IEN^T00030"_$C(30)
+ S @DATA@(II)="T00010REGIEN^T00030"_$C(30)
  F  S RN=$O(^ACM(41.1,RN)) Q:'RN  D
  . I $G(^ACM(41.1,RN,0))="" Q
- . I $P(^ACM(41.1,RN,0),U,14)'=1 Q
+ . ;I $P(^ACM(41.1,RN,0),U,14)'=1 Q
  . I '$D(^ACM(41.1,RN,"AU",DUZ)) Q
  . S II=II+1,@DATA@(II)=RN_U_$P(^ACM(41.1,RN,0),U,1)_$C(30)
  S II=II+1,@DATA@(II)=$C(31)
@@ -207,5 +207,145 @@ CRM(DATA) ;EP - Care Management Layout Sources
  . ;
  . S II=II+1,@DATA@(II)=CIEN_U_$P(^BQI(90506.5,CIEN,0),U,1)_U_$G(FORM)_U_$G(TAG)_U_$G(TGIEN)_U_$G(REG)_U_$G(VIEW)_U_$G(REM)_U_$G(REPORT)_U_$G(PTDROP)_U_$G(PNDROP)_U_$G(MTDROP)_$C(30)
  . K REG,TGIEN,TAG,FMIEN,FORM,VIEW,RGIEN
+ S II=II+1,@DATA@(II)=$C(31)
+ Q
+ ;
+VENC(DATA) ;EP - Visit Locations of Encounter
+ NEW IEN,LNAME,LVAL,TY,ORD,LNM,II,SU,AR,DSP,DSPNM
+ S II=0
+ S @DATA@(II)="I00010IEN^T00030LOCATION^T00030SERVUNIT^T00030AREA^T00060DISPLAY_NAME^I00010SORTORD"_$C(30)
+ S IEN=0
+ F  S IEN=$O(^XTMP("BQIVLENC",IEN)) Q:IEN=""  D
+ . I $G(^DIC(4,IEN,0))="" Q
+ . S LNAME=$P(^DIC(4,IEN,0),"^",1)
+ . S SU=$$GET1^DIQ(9999999.06,IEN_",",.05,"E")
+ . S AR=$$GET1^DIQ(9999999.06,IEN_",",.04,"E")
+ . S DSP=LNAME_" ("_SU_")"
+ . ; If the location is inactive, show it with a '*'
+ . I $P($G(^AUTTLOC(IEN,0)),U,21)'="" S LVAL("[",LNAME,IEN)=IEN_"^"_SU_"^"_AR_"^"_DSP Q
+ . S LVAL(1,LNAME,IEN)=IEN_"^"_SU_"^"_AR_"^"_DSP
+ ;
+ S TY="",ORD=0 F  S TY=$O(LVAL(TY)) Q:TY=""  D
+ . S LNM="" F  S LNM=$O(LVAL(TY,LNM)) Q:LNM=""  D
+ .. S IEN="" F  S IEN=$O(LVAL(TY,LNM,IEN)) Q:IEN=""  D
+ ... S IEN=$P(LVAL(TY,LNM,IEN),"^",1),LNAME=LNM,SU=$P(LVAL(TY,LNM,IEN),"^",2)
+ ... S AR=$P(LVAL(TY,LNM,IEN),"^",3),DSPNM=$P(LVAL(TY,LNM,IEN),"^",4)
+ ... I TY="[" S LNAME="*"_LNAME
+ ... S ORD=ORD+1
+ ... S II=II+1,@DATA@(II)=IEN_"^"_LNAME_"^"_SU_"^"_AR_"^"_DSPNM_"^"_ORD_$C(30)
+ S II=II+1,@DATA@(II)=$C(31)
+ Q
+ ;
+VSERV(DATA) ;EP - Visit Service Categories
+ NEW II,VALUE,VAL
+ S II=0
+ S @DATA@(II)="T00010IEN^T00030DESCRIPTION"_$C(30)
+ S VALUE=$P(^DD(9000010,.07,0),"^",3)
+ F I=1:1:$L(VALUE,";") D
+ . S VAL=$P(VALUE,";",I) Q:VAL=""
+ . S II=II+1,@DATA@(II)=$P(VAL,":",1)_"^"_$P(VAL,":",2)_$C(30)
+ S II=II+1,@DATA@(II)=$C(31)
+ Q
+ ;
+OVCLN(DATA) ;EP - Visit Clinics
+ NEW II,IEN,LNAME,LVAL,TY,ORD,LNM,CIEN,CNAME
+ S II=0
+ S @DATA@(II)="I00010IEN^T00030HLOC^I00010IENCLINIEN^T00030CLIN^I00010SORTORD"_$C(30)
+ S IEN=0
+ F  S IEN=$O(^XTMP("BQIVHLOC",IEN)) Q:IEN=""  D
+ . I $G(^SC(IEN,0))="" Q
+ . S LNAME=$P(^SC(IEN,0),"^",1)
+ . ; If the clinic is inactive, show it with a '*'
+ . I $P($G(^SC(IEN,"I")),U,1)'="",$P($G(^SC(IEN,"I")),U,1)'>DT,$P($G(^SC(IEN,"I")),U,2)="" S LVAL("[",LNAME)=IEN Q
+ . I $P($G(^SC(IEN,"I")),U,1)'="",$P($G(^SC(IEN,"I")),U,1)'>DT,$P($G(^SC(IEN,"I")),U,2)="" S LVAL(1,LNAME)=IEN Q
+ . S LVAL(1,LNAME)=IEN
+ ;
+ S TY="",ORD=0 F  S TY=$O(LVAL(TY)) Q:TY=""  D
+ . S LNM="" F  S LNM=$O(LVAL(TY,LNM)) Q:LNM=""  D
+ .. S IEN=LVAL(TY,LNM),LNAME=LNM_" ("_^XTMP("BQIVHLOC",IEN)_")"
+ .. S CIEN=$P(^SC(IEN,0),"^",7)
+ .. I CIEN'="" S CNAME=$P(^DIC(40.7,CIEN,0),"^",1)_" ["_$P(^DIC(40.7,CIEN,0),"^",2)_"]"
+ .. I TY="[" S LNAME="*"_LNAME
+ .. S ORD=ORD+1
+ .. S II=II+1,@DATA@(II)=IEN_"^"_LNAME_"^"_CIEN_"^"_$G(CNAME)_"^"_ORD_$C(30)
+ .. K CNAME
+ S II=II+1,@DATA@(II)=$C(31)
+ Q
+ ;
+VCLN(DATA) ;
+ NEW II,IEN,LNAME,LVAL,TY,ORD,LNM,CIEN,CNAME
+ S II=0
+ S @DATA@(II)="I00010IEN^T00030CLIN^I00010SORTORD"_$C(30)
+ S IEN=0
+ F  S IEN=$O(^XTMP("BQIVHLOC",IEN)) Q:IEN=""  D
+ . I $G(^SC(IEN,0))="" Q
+ . S CIEN=$P(^SC(IEN,0),"^",7) I CIEN="" Q
+ . I CIEN'="" S CNAME=$P(^DIC(40.7,CIEN,0),"^",1)_" ["_$P(^DIC(40.7,CIEN,0),"^",2)_"]"
+ . S LVAL(1,CNAME)=CIEN
+ ;
+ S LNM="",ORD=0 F  S LNM=$O(LVAL(1,LNM)) Q:LNM=""  D
+ . S ORD=ORD+1,CIEN=LVAL(1,LNM)
+ . S II=II+1,@DATA@(II)=CIEN_"^"_LNM_"^"_ORD_$C(30)
+ S II=II+1,@DATA@(II)=$C(31)
+ Q
+ ;
+VPROV(DATA) ;EP - Visit Providers
+ NEW II,IEN,LNAME,LVAL,TY,ORD,LNM,TRMDT
+ S II=0
+ S @DATA@(II)="I00010IEN^T00040PROVIDER^I00010SORTORD"_$C(30)
+ S IEN="" F  S IEN=$O(^AUPNVPRV("B",IEN)) Q:IEN=""  D
+ . S TRMDT=+$P($G(^VA(200,IEN,0)),U,11),LNAME=$P(^VA(200,IEN,0),"^",1)
+ . I TRMDT=0 S LVAL(1,LNAME,IEN)=IEN Q
+ . I TRMDT'>DT S LVAL("[",LNAME,IEN)=IEN Q
+ . I TRMDT>DT S LVAL(1,LNAME,IEN)=IEN Q
+ . S LVAL(1,LNAME,IEN)=IEN
+ ;
+ S TY="",ORD=0 F  S TY=$O(LVAL(TY)) Q:TY=""  D
+ . S LNM="" F  S LNM=$O(LVAL(TY,LNM)) Q:LNM=""  D
+ .. S IEN="" F  S IEN=$O(LVAL(TY,LNM,IEN)) Q:IEN=""  D
+ ... S IEN=$P(LVAL(TY,LNM,IEN),"^",1),LNAME=LNM
+ ... I TY="[" S LNAME="*"_LNAME
+ ... S ORD=ORD+1
+ ... S II=II+1,@DATA@(II)=IEN_"^"_LNAME_"^"_ORD_$C(30)
+ S II=II+1,@DATA@(II)=$C(31)
+ Q
+ ;
+OVHLOC(DATA) ;EP - Visit Hosp Locations
+ NEW II,HN,HTY
+ S II=0
+ S @DATA@(II)="I00010IEN^T00040HLOC^T00030TYPE^I00010SORTORD"_$C(30)
+ S HN="" F  S HN=$O(^AUPNVSIT("AHL",HN)) Q:HN=""  D
+ . I $G(^SC(HN,0))="" Q
+ . S HTY=$P($G(^SC(HN,0)),"^",3),HNAM=$P($G(^SC(HN,0)),"^",1)
+ . I HNAM="" S HNAM="DELETED CLINIC ENTRY"
+ . I HTY'="" S HTY=$$GET1^DIQ(44,HN_",",2,"E")
+ . S:HTY="" HTY="OTHER LOCATION"
+ . S II=II+1,@DATA@(II)=HN_"^"_HNAM_"^"_HTY_$C(30)
+ S II=II+1,@DATA@(II)=$C(31)
+ Q
+ ;
+VHLOC(DATA) ;EP
+ NEW II,IEN,LNAME,LVAL,TY,ORD,LNM,HTY,HNAM
+ S II=0
+ S @DATA@(II)="I00010IEN^T00030HLOC^T00030TYPE^I00010SORTORD"_$C(30)
+ S IEN=0
+ F  S IEN=$O(^XTMP("BQIVHLOC",IEN)) Q:IEN=""  D
+ . I $G(^SC(IEN,0))="" Q
+ . S LNAME=$P(^SC(IEN,0),"^",1)
+ . ; If the clinic is inactive, show it with a '*'
+ . I $P($G(^SC(IEN,"I")),U,1)'="",$P($G(^SC(IEN,"I")),U,1)'>DT,$P($G(^SC(IEN,"I")),U,2)="" S LVAL("[",LNAME)=IEN Q
+ . I $P($G(^SC(IEN,"I")),U,1)'="",$P($G(^SC(IEN,"I")),U,1)'>DT,$P($G(^SC(IEN,"I")),U,2)="" S LVAL(1,LNAME)=IEN Q
+ . S LVAL(1,LNAME)=IEN
+ ;
+ S TY="",ORD=0 F  S TY=$O(LVAL(TY)) Q:TY=""  D
+ . S LNM="" F  S LNM=$O(LVAL(TY,LNM)) Q:LNM=""  D
+ .. S IEN=LVAL(TY,LNM),LNAME=LNM_" ("_^XTMP("BQIVHLOC",IEN)_")"
+ .. I TY="[" S LNAME="*"_LNAME
+ .. S HTY=$P($G(^SC(IEN,0)),"^",3),HNAM=$P($G(^SC(IEN,0)),"^",1)
+ .. I HNAM="" S HNAM="DELETED CLINIC ENTRY"
+ .. I HTY'="" S HTY=$$GET1^DIQ(44,IEN_",",2,"E")
+ .. S:HTY="" HTY="OTHER LOCATION"
+ .. S ORD=ORD+1
+ .. S II=II+1,@DATA@(II)=IEN_"^"_LNAME_"^"_HTY_"^"_ORD_$C(30)
  S II=II+1,@DATA@(II)=$C(31)
  Q

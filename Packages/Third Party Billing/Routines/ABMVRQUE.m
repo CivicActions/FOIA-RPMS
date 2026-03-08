@@ -1,5 +1,5 @@
 ABMVRQUE ;IHS/SD/SDR - Routine to regenerate claims for Riverside ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**13,14**;NOV 27, 2007
  ;
  ;Routine will loop through claims generated under Riverside
  ;putting the visits back into the ABILL cross reference and
@@ -26,7 +26,8 @@ SITE K ABML
  ;be that the site had claims generating at the satellite at
  ;one point but doesn't anymore
 FROMDT   ;
- K DIR,DIC,DIE,DA,X,Y
+ ;K DIR  ;abm*2.5*14 IM28166
+ K DIR,DIC,DIE,DA,X,Y  ;abm*2.5*14 IM28166
  S DIR("A")="Enter Encounter FROM date"
  S DIR(0)="D"
  D ^DIR
@@ -34,7 +35,8 @@ FROMDT   ;
  Q:$D(DIRUT)!$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
  S ABMFROM=+Y
 TODT     ;
- K DIR,DIC,DIE,DA,X,Y
+ ;K DIR  ;abm*2.5*14 IM28166
+ K DIR,DIC,DIE,DA,X,Y  ;abm*2.5*14 IM28166
  S DIR("A")="Enter Encounter TO date"
  S DIR(0)="D"
  D ^DIR
@@ -55,13 +57,13 @@ PAUSE ;
  W !!,"I am now going to loop through and requeue the requested visits"
  W !,"and dump the visit info to the screen."
  W !!,"PLEASE turn on screen capture to record the visit info."
- K DIR,DIC,DIE,X,Y,DA
+ K DIR,DIC,DIE,X,Y,DA  ;abm*2.5*14 IM28166
  W ! S DIR(0)="E",DIR("A")="Enter RETURN to Continue" D ^DIR K DIR
  ;
 LOOP ;loop thru claims and requeue
  W !,"VISIT IEN",?13,"HRN",?20,"S.CAT",?28,"ADMIT DT/TM",?45,"CLN",?65,"LOC",?74,"REVW'D"
  S ABMI=0
- K ABMALST
+ K ABMALST  ;abm*2.5*14 IM28166
  F  S ABMI=$O(ABML(ABMI)) Q:+ABMI=0  D
  .S ABMFDT=ABMFROM-.5
  .F  S ABMFDT=$O(^ABMDCLM(ABMI,"AD",ABMFDT)) Q:+ABMFDT=0!(ABMFDT>ABMTO)  D
@@ -71,6 +73,7 @@ LOOP ;loop thru claims and requeue
  ...F  S ABMP("VDFN")=$O(^ABMDCLM(ABMI,ABMP("CDFN"),11,ABMP("VDFN"))) Q:+ABMP("VDFN")=0  D
  ....Q:$D(^TMP($J,ABMP("VDFN")))  ;visit already requeued
  ....;
+ ....;start new code abm*2.5*14 IM28166
  ....I $D(^ABMDCLM(DUZ(2),ABMP("CDFN"),65)) D
  .....S D1=0
  .....F  S D1=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),65,D1)) Q:'D1  D
@@ -78,6 +81,7 @@ LOOP ;loop thru claims and requeue
  .....K D1
  ....Q:$D(ABMALST(ABMP("CDFN")))  ;an active bill was found; don't cancel
  ....I '$D(ABMALST(ABMP("CDFN"))) D ENT
+ ....;end new code IM28166
  ....;
  ....;remove THIRD PARTY BILLED from Visit
  ....K DIC,DIE,DA,DR,X,Y
@@ -99,6 +103,7 @@ LOOP ;loop thru claims and requeue
  ....W ?62,$E($P($G(^AUTTLOC(ABMP("LDFN"),0)),U,2),1,11)
  ....W ?77,ABMCSTAT
  ....S ^TMP($J,ABMP("VDFN"))=""
+ ; start new code abm*2.5*14 IM28166
  Q:'$D(ABMALST)  ;no active bills were found
  W !!,"ACTIVE BILLS WERE FOUND FOR THE FOLLOWING CLAIMS SO THEY WERE NOT REQUEUED"
  S ABMI=0
@@ -134,3 +139,4 @@ KCLM ;EP for Deleting Claim
  S DA=ABMP("CDFN")
  D ^ABMDEDIK
  Q
+ ;end new code IM28166

@@ -1,14 +1,11 @@
 BARTR ; IHS/SD/LSL - ENTER NEW TRANSACTION DEC 4,1996 ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**33**;OCT 26, 2005;Build 133
  ;;
- ; ITSC/SD/LSL - 10/10/02 - V1.7 - NOIS QAA-1200-130051
- ;        Modified NEW to a FILE^DICN call
- ;        Added MSG line tag
+ ;ITSC/SD/LSL 10/10/02 V1.7 NOIS QAA-1200-130051 Modified NEW to a FILE^DICN call; Added MSG line tag
+ ;IHS/SD/LSL 06/09/03 V1.7 Patch 1 Added UPLOAD line take to create new transaction for bills
+ ;   That are uploaded to AR using Upload by Date or Upload 3P Bill.
  ;
- ; IHS/SD/LSL - 06/09/03 - V1.7 Patch 1
- ;       Added UPLOAD line take to create new transaction for bills
- ;       That are uploaded to AR using Upload by Date or Upload
- ;       3P Bill.
+ ;IHS/SD/SDR 1.8*33 ADO60817 Made changes for new A/R Transaction Date/Time/Counter
  ;
  ; ********************************************************************
  ;
@@ -17,19 +14,35 @@ NEW() ;EP - extrensic call to establish a new transaction
  N X,Y,%,DIC,DINUM,D,DA
  F I=1:1:5 L +^BARTR(DUZ(2)):2 S X=$T Q:X
  I 'X D  Q X
- . W *7,!!,"A/R TRANSACTION FILE LOCKED see your site manager",!!
+ .W *7,!!,"A/R TRANSACTION FILE LOCKED see your site manager",!!
  F  D NOW^%DTC Q:'$D(^BARTR(DUZ(2),"B",%))
  S X=%
  S DIC="^BARTR(DUZ(2),"
  S DIC(0)="NXL"
  S DLAYGO=90050
- S DINUM=X
+ ;S DINUM=X  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+ L +^BARTR(0):30
+ S ^BARTR(0)=+$G(^BARTR(0))+1
+ I $G(^BARTR(0))>999 S ^BARTR(0)=1
+ S X=X_"."_+$G(^BARTR(0))
+ L -^BARTR(0)
+ ;end new bar*1.8*33 IHS/SD/SDR ADO60817
  K DD,DO
  D FILE^DICN
  K DLAYGO
  L -^BARTR(DUZ(2))
+ D DTTM(+Y)  ;bar*1.8*33 IHS/SD/SDR ADO60817
  Q +Y
  ; *********************************************************************
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+DTTM(TRDFN) ;EP - populate .011 field to use for date/time lookups; builds the 'C' x-ref for lookups
+ N X,Y,%,DIC,DINUM,D,DA,DR
+ S DIE="^BARTR(DUZ(2),"
+ S DA=TRDFN
+ S DR=".011////"_$P($G(^BARTR(DUZ(2),TRDFN,0)),".",1,2)
+ D ^DIE
+ ;end new bar*1.*33 IHS/SD/SDR ADO60817
  ;
 EN(BART) ;EP
  ;
@@ -60,11 +73,11 @@ DSP(DA) ;EP display transaction (needs DA)
 TOTAL(BARTRDA) ;EP
  ; - **gather BARTOT(tran.cat.type) totals and ADJ in Ax & Tx
  D
- . D ENP^XBDIQ1(90050.03,BARTRDA,".01;2;3;4;101:103","BART(","I")
- . I $L(BART(102)) S BARTOT("A"_BART(102,"I"))=$G(BARTOT("A"_BART(102,"I")))+BART(2)-BART(3) I 1
- . E  S BARTOT("T"_BART(101,"I"))=$G(BARTOT("T"_BART(101,"I")))+BART(2)-BART(3)
+ .D ENP^XBDIQ1(90050.03,BARTRDA,".01;2;3;4;101:103","BART(","I")
+ .I $L(BART(102)) S BARTOT("A"_BART(102,"I"))=$G(BARTOT("A"_BART(102,"I")))+BART(2)-BART(3) I 1
+ .E  S BARTOT("T"_BART(101,"I"))=$G(BARTOT("T"_BART(101,"I")))+BART(2)-BART(3)
 ETOTAL . ;
- . S BARTOT($$NODE)=$G(BARTOT($$NODE))+BART(2)-BART(3)
+ .S BARTOT($$NODE)=$G(BARTOT($$NODE))+BART(2)-BART(3)
  Q
  ; *********************************************************************
  ;
@@ -152,13 +165,13 @@ UPLOAD() ;
  S BARHRS=230000
  S BARDONE=0
  F  D  Q:BARDONE  Q:BARHRS>235959
- . S BARHRS=BARHRS+1
- . I $E(BARHRS,5,6)=60 D  Q:BARHRS>235959
- . . S BARHRS=$E(BARHRS,1,4)_"00"
- . . S BARHRS=BARHRS+100
- . S X=+($P(@BAR3PUP@("DTAP"),".")_"."_BARHRS)
- . Q:$D(^BARTR(DUZ(2),"B",X))
- . S BARDONE=1
+ .S BARHRS=BARHRS+1
+ .I $E(BARHRS,5,6)=60 D  Q:BARHRS>235959
+ ..S BARHRS=$E(BARHRS,1,4)_"00"
+ ..S BARHRS=BARHRS+100
+ .S X=+($P(@BAR3PUP@("DTAP"),".")_"."_BARHRS)
+ .Q:$D(^BARTR(DUZ(2),"B",X))
+ .S BARDONE=1
  Q:'BARDONE
  K DD,DO
  D ^DIC

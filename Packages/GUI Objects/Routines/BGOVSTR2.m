@@ -1,5 +1,5 @@
-BGOVSTR2 ; MSC/JS - Utility calls for V STROKE ;12-Nov-2014 14:03;PLS
- ;;1.1;BGO COMPONENTS;**13,14**;Mar 20, 2007
+BGOVSTR2 ; MSC/JS - Utility calls for V STROKE ;18-Nov-2021 10:13;DU
+ ;;1.1;BGO COMPONENTS;**13,14,30**;Mar 20, 2007
  ;01.24.14 - MSC/JS - move SET here to keep within 15k routine size limits
  ;02.06.14 - MSC/MGH Changed field .17 to store text
  ;05.01.14 - MSC/DKA Allow neither Fib Init nor Fib Not Init.
@@ -80,6 +80,8 @@ SET(RET,INP) ;EP
  ...D DELREF^BGOVSTR1(VFIEN)
  ..E  D
  ...; FT Not Initiated
+ ...;IHS/MSC/MGH Try to remove any refusal reason if this is an edit
+ ...D DELREF^BGOVSTR1(VFIEN)
  ...S (@FDA@(.14),REFDT)=$P(VFSTR,U,3) ;DidNotInit
  ...S:@FDA@(.14)'=""&(@FDA@(.14)'[".") @FDA@(.14)=@FDA@(.14)-1+.24
  ...S @FDA@(.15)=NOW,@FDA@(.16)=DUZ

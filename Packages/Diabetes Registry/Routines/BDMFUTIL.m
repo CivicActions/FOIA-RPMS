@@ -1,5 +1,5 @@
 BDMFUTIL ; IHS/CMI/LAB - DMS UTILITY PROGRAM ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**3,8**;JUN 14, 2007;Build 53
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**3,8,13,14**;JUN 14, 2007;Build 80
  ;UTILITY PROGRAM
  ;LOCATION FOR VARIOUS UTILITY FUNCTIONS
 TAX ;EP;TAXONOMY MANAGEMENT
@@ -268,11 +268,12 @@ REGLIST ;EP;LIST DIABETES REGISTERS
  .W !!,"You have access to the ",$P(^ACM(41.1,BDMRDA,0),U)," register,"
  .S BDMONE=""
  W @IOF
- W !!?5,"Select DIABETES Register"
- W !!?5,"---",?10,"------------------------------"
+ W !!?2,"Select DIABETES Register"
+ W !?2,"No.",?6,"Register Name",?37,"# Active",?46,"# members",?57,"Last patient update",!?37,"members"
+ W !?2,"---",?6,"------------------------------",?37,"--------",?46,"---------",?57,"-------------------"
  S J=0
  F  S J=$O(BDM(J)) Q:'J  D
- .W !?5,J,?10,$P(BDM(J),U,2)
+ .W !?2,J,?6,$P(BDM(J),U,2),?39,$$ACTM($P(BDM(J),U,1)),?48,$$ALLM($P(BDM(J),U,1)),?57,$$DATE^BDMS9B1($$LU($P(BDM(J),U,1)))
  .S BDMJ=J
  S DIR(0)="NO^1:"_BDMJ
  S DIR("A")="Which REGISTER"
@@ -281,6 +282,39 @@ REGLIST ;EP;LIST DIABETES REGISTERS
  I Y<1 S BDMQUIT="" Q
  S BDMRDA=+BDM(Y)
  Q
+C(X,X2,X3) ;
+ I '$G(X2) S X2=0
+ I '$G(X3) S X3=6
+ D COMMA^%DTC
+ Q X
+ALLM(R) ;count all members on the register (not deceased)
+ NEW A,B,C,P
+ S C=0
+ S A=0 F  S A=$O(^ACM(41,"B",R,A)) Q:A'=+A  D
+ .S P=$P(^ACM(41,A,0),U,2)
+ .Q:$$DOD^AUPNPAT(P)]""  ;no deceased
+ .S C=C+1
+ Q $$C(C)
+LU(R) ;count all members on the register (not deceased)
+ NEW A,B,C,P
+ S C="",B="",D=""
+ S A=0 F  S A=$O(^ACM(41,"B",R,A)) Q:A'=+A  D
+ .S P=$P(^ACM(41,A,0),U,2)
+ .Q:$$DOD^AUPNPAT(P)]""  ;no deceased
+ .S C=$P($G(^ACM(41,A,"DT")),U,2)
+ .I C>D S D=C
+ Q C
+ACTM(R) ;count all ACTIVE members on the register (not deceased)
+ NEW A,B,C,P
+ S C=0
+ S A=0 F  S A=$O(^ACM(41,"B",R,A)) Q:A'=+A  D
+ .S P=$P(^ACM(41,A,0),U,2)
+ .Q:'P
+ .Q:$$DOD^AUPNPAT(P)]""  ;no deceased
+ .I $P($G(^ACM(41,A,"DT")),U,1)'="A" Q
+ .S C=C+1
+ Q $$C(C)
+ ;
 CHARTS ;EP;TO EXPORT CHART NUMBERS
  K ^TMP("BDMCHART",$J)
  W @IOF
@@ -335,4 +369,56 @@ C1 ;
  F  S Z=$O(^TMP("BDMCHART",$J,Z)) Q:Z=""  D
  .U IO W Z,!
  .U 0 W "."
+ Q
+MREGLIST ;EP;LIST DIABETES REGISTERS
+ NEW BDMNOREG,BDMNOACC,BDMRDA,BDM,BDMONE,BDMJ,BDMK
+MR1 K BDMREGLT
+ K BDMQUIT
+ N J,X,Y,Z,BDM
+ S BDMNOREG=""
+ S J=0
+ S X=""
+ F  S X=$O(^ACM(41.1,"B",X)) Q:X=""  D
+ .X ^%ZOSF("UPPERCASE")
+ .Q:Y'["DIABET"
+ .K BDMNOREG
+ .S Y=0
+ .F  S Y=$O(^ACM(41.1,"B",X,Y)) Q:'Y  D
+ ..S BDMNOACC=1
+ ..Q:'$D(^ACM(41.1,+Y,"AU","B",DUZ))
+ ..K BDMNOACC
+ ..S J=J+1
+ ..S BDM(J)=Y_U_X
+ I '$O(BDM(0)) D  Q
+ .I $G(BDMNOACC) D  Q
+ ..W !!,"You do not have access to the DIABETES register."
+ ..W !,"Ask your Diabetes Management System coordinator for assistance."
+ ..S BDMQUIT="" H 5
+ .K BDMNOACC
+ K BDMQUIT
+ I '$O(BDM(1)) D  Q
+ .S BDMRDA=+BDM(1)
+ .W !!,"You have access to the ",$P(^ACM(41.1,BDMRDA,0),U)," register,"
+ .S BDMONE=""
+ W @IOF
+ W !!?2,"Select DIABETES Register"
+ W !?2,"No.",?6,"Register Name",?37,"# Active",?46,"# members",?57,"Last patient update",!?37,"members"
+ W !?2,"---",?6,"------------------------------",?37,"--------",?46,"---------",?57,"-------------------"
+ S J=0
+ F  S J=$O(BDM(J)) Q:'J  D
+ .W !?2,J,?6,$P(BDM(J),U,2),?39,$$ACTM($P(BDM(J),U,1)),?48,$$ALLM($P(BDM(J),U,1)),?57,$$DATE^BDMS9B1($$LU($P(BDM(J),U,1)))
+ .S BDMJ=J
+ W !!,"This response must be a list or range, e.g., 1,3,5 or 2-4,8"
+ W !
+ S DIR(0)="L^1:"_BDMJ,DIR("A")="Select Diabetes Register(s)" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) S BDMQUIT="" Q
+ I Y="" W !,"No registers selected." G MR1
+ S BDMK=Y,C="" F I=1:1 S C=$P(BDMK,",",I) Q:C=""  S BDMREGLT(+BDM(C))=""
+ W !!,"You have selected the following register(s):",!
+ S X=0 F  S X=$O(BDMREGLT(X)) Q:X'=+X  W ?5,$$VAL^XBDIQ1(9002241.1,X,.01),!
+ W !
+ K DIR
+ S DIR(0)="Y",DIR("A")="Is this correct",DIR("B")="Y" KILL DA D ^DIR KILL DIR
+ I $D(DIRUT) G MR1
+ I 'Y G MR1
  Q

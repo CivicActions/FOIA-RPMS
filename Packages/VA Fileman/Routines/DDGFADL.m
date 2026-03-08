@@ -1,5 +1,7 @@
-DDGFADL ;SFISC/MKO-ADJUST DATA LENGTH ;11:28 AM  22 Dec 1993
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDGFADL ;SFISC/MKO-ADJUST DATA LENGTH ;11:28 AM  22 Dec 1993 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA Fileman;;DEC 28, 1994
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  N DDGFE
  D DRAW(1)

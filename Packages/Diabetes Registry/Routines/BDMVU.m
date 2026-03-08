@@ -1,5 +1,5 @@
-BDMVU ; cmi/anch/maw - VIEW RECORD UTILITY CALLS ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;;AUG 11, 2006
+BDMVU ;IHS/CMI/THL - VIEW RECORD UTILITY CALLS;      [ 05/29/2002  8:20 PM ]
+ ;;1.0;DIABETES MANAGEMENT SYSTEM;**5**;OCT 01, 2000
  ;
  ;
 INTRO ;EP; displays intro text to view reocrd
@@ -15,16 +15,16 @@ RETURN ;EP; -- ask user to press return
  NEW Y S Y=$$READ("E","Press RETURN to continue") D ^XBCLS Q
  ;
 VALMSG() ;EP; called to reset message line
- Q "- Previous Screen   Q Quit   ?? for More Actions"
+ Q "- Previous Screen   Q Quit   ?? for More Actions" ;IHS/CIM/THL PATCH 5
  ;
 VALMSG2() ;EP; called to reset message line
- Q "V View Record   Q Quit   ?? for More Actions"
+ Q "V View Record   Q Quit   ?? for More Actions" ;IHS/CIM/THL PATCH 5
  ;
 VALMSG3() ;EP; called to reset message line
  Q "> Shift to Right  V View Record  ?? More Actions"
  ;
 VALMSG4() ;EP; called to reset message line
- Q "> Shift to Right  Q Quit   ?? More Actions"
+ Q "> Shift to Right  Q Quit   ?? More Actions" ;IHS/CIM/THL PATCH 5
  ;
 MSG(DATA,PRE,POST,BEEP) ;EP; -- writes line to device
  NEW I

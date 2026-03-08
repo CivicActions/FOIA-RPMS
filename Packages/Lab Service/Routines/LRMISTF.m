@@ -1,6 +1,8 @@
-LRMISTF ;SLC/CJS/BA - MASS DATA ENTRY INTO FILE 63.05 ;4/24/89  14:40 ; [ 04/14/2003  10:04 AM ]
- ;;5.2T9;LR;**1004,1018**;Nov 17, 2004
- ;;5.2;LAB SERVICE;**153**;Sep 27, 1994
+LRMISTF ;SLC/CJS/BA - MASS DATA ENTRY INTO FILE 63.05 ; 26-Apr-2023 12:25 ; MKK
+ ;;5.2;LAB SERVICE;**1004,153,1018,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
  ;from option LRMISTUF
 ACCESS I '$D(^XUSEC("LRVERIFY",DUZ)) W !,"You're not cleared for this option. You must have the LRVERIFY Key." Q
 BEGIN ;D ^LRPARAM Q:$G(LREND)  S LREND=0,LRVT="RE",LRSBS="13^11.6^11.57^11.58^17^15.51^21^19.6^27^24^37",(Z(13),Z(11.6),Z(11.57),Z(11.58))=1,(Z(17),Z(15.51))=5,(Z(21),Z(19.6))=8,(Z(27),Z(24))=11,Z(37)=16
@@ -23,7 +25,9 @@ ASK D LRAA^LRMIUT Q:LRAA<1  S LRSS=$P(^LRO(68,LRAA,0),U,2)
  I LRSS="" W !?5,"Accession Area LR SUBSCRIPT is misssing.",! Q
  I $P(LRPARAM,U,14) D ^LRCAPV G:LREND ANN^LRMIEDZ
  S %DT="AE",%DT("A")="Micro Accession Year: ("_$E(DT,2,3)_")//" D ^%DT K %DT("A") Q:X[U  S:X="" Y=$E(DT,1,3) S LRAD=$E(Y,1,3)_"0000"
- S DIC="^LAB(60,",DIC("A")="Select MICROBIOLOGY TEST: ",DIC(0)="AEMOQ",DIC("S")="I $P(^(0),U,4)=""MI"",$L($P(^(0),U,14))" D ^DIC K DIC Q:Y<1  S LRTEST=+Y
+ ; S DIC="^LAB(60,",DIC("A")="Select MICROBIOLOGY TEST: ",DIC(0)="AEMOQ",DIC("S")="I $P(^(0),U,4)=""MI"",$L($P(^(0),U,14))" D ^DIC K DIC Q:Y<1  S LRTEST=+Y
+ S DIC="^LAB(60,",DIC("A")="Select MICROBIOLOGY TEST: ",DIC(0)="AEMOQ",DIC("S")="I $P(^(0),U,4)=""MI"",$L($P(^(0),U,14))"  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
+ S DIC("S")=DIC("S")_",+$G(^(.3))=0"  D ^DIC K DIC Q:Y<1  S LRTEST=+Y  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  S LRECODE=$P(^LAB(60,LRTEST,0),U,14),LRECODE=$S($D(^LAB(62.07,LRECODE,.1)):^(.1),1:"")
  K LRSB S LRSBCNT=0 F LRSB=1:1 S X=$P(LRSBS,U,LRSB) Q:'X  S X1=""""_X,X2=";"_X I LRECODE[X,LRECODE[X1!(LRECODE[X2) S LRSB(X)="",LRSBCNT=LRSBCNT+1
  I 'LRSBCNT W "Test does not have an appropriate entry in the EDIT CODE" Q

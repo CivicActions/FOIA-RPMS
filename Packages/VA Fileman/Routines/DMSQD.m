@@ -1,6 +1,6 @@
-DMSQD ;SFISC/JHM-SETUP FOR DATATYPE AND DOMAIN ;5/7/98  14:53
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQD ;SFISC/JHM-SETUP FOR DATATYPE AND DOMAIN ;9/17/97  07:51 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
  Q
 LCKF ;BUILD KEY FORMAT FOR LONG CHARACTER FIELDS
  N KFI,DTI,KIE,KIX
@@ -35,7 +35,7 @@ PTROF(F) ;BUILD OUTPUT FORMAT FOR POINTER TO TABLE FI
  S OI=$O(^DMSQ("OF","B",ON,"")),TT=1.5214,IEN=$S(OI:OI,1:"+1")_","
  S BE="$S('{B}:"""",1:$$GET^DMSQU("_F_",{B}_"","",.01))"
  S FDA(TT,IEN,.01)=ON ;OF NAME
- S FDA(TT,IEN,1)=3 ; BASE DATA TYPE IS INTEGER
+ S FDA(TT,IEN,1)=4 ; BASE DATA TYPE IS NUMERIC
  S FDA(TT,IEN,2)="Output format for pointer to "_$P(T,U) ; COMMENT
  S FDA(TT,IEN,3)=BE ; OUTPUT TRANSFORM
  S OI=$$PUT^DMSQU(IEN,"FDA","ERR")
@@ -149,7 +149,7 @@ F(DI) N I,FDA,FDB,ERR,IEN,TT,EO
  ;;9;$S({I}:{I},1:"")
  ;;11;B
 13 ;;.01;POINTER
- ;;1;3
+ ;;1;4
  ;;2;Pointer to FileMan files in FILE - no subfiles
  ;;4;10
  ;;11;P

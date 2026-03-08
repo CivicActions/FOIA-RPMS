@@ -1,15 +1,11 @@
 ABMURCON ; IHS/SD/SDR - 3PB/UFMS Reconcile Sessions Option   
- ;;2.6;IHS Third Party Billing;**1,11**;NOV 12, 2009;Build 133
- ; IHS/SD/SDR - v2.5 p13 - IM25924 - <UNDEF>EP+32^ABMUCAPI fix
- ; IHS/SD/SDR - v2.5 p13 - NO IM - Modified to add EP for recon. page display
- ; IHS/SD/SDR - v2.5 p13 - IM26756 - Fix for Cancel Claim total doubling
- ; IHS/SD/SDR - abm*2.6*1 - HEAT5977 - <SUBSCR>CASHTOTP+5^ABMUUTL
- ; IHS/SD/SDR - abm*2.6*1 - HEAT6686 - only allow one person to export at a time
+ ;;2.6;IHS Third Party Billing;**1,11,42**;NOV 12, 2009;Build 789
+ ;IHS/SD/SDR 2.6*1 HEAT5977 <SUBSCR>CASHTOTP+5^ABMUUTL
+ ;IHS/SD/SDR 2.6*1 HEAT6686 only one person to export at a time
+ ;IHS/SD/SDR 2.6*42 ADO112033 Check Kernel System Parm for Prod/Test system
 EP ;EP
- ;start new code abm*2.6*1 HEAT6866
  L +ABMURCON:5
  I '$T W !!!,"Someone is already exporting..." H 2 Q
- ;end new code HEAT6866
  D HEADER^ABMURCN1("CLOSED")
  S ABMFLG="CLOSED"
  D FINDACLS^ABMUCUTL
@@ -61,7 +57,6 @@ SEL D HEADER^ABMURCN1("OPEN")
  .F  S ABMINS=$O(ABMMT(ABMINS)) Q:+ABMINS=0  D
  ..W !?5,$P($G(^AUTNINS(ABMINS,0)),U)," in session ID ",$G(ABMMT(ABMINS))
  ..W ! S DIR(0)="E",DIR("A")="Enter RETURN to Continue" D ^DIR K DIR
- ;start new code
  D ABBREVCK^ABMUUTL  ;chk if any abbrevs missing
  I ABMTRIBL=1 D
  .I $G(ABMVDFNF)=1 W !!,"IMPORTANT!!  IMPORTANT!!  Visit Locations missing abbreviations!"
@@ -77,8 +72,7 @@ SEL D HEADER^ABMURCN1("OPEN")
  .F  S ABMVDFN=$O(ABMMABB(ABMVDFN)) Q:+ABMVDFN=0  D
  ..W !?5,"("_ABMVDFN_") ",$P($G(^DIC(4,ABMVDFN,0)),U)," in session ID ",$G(ABMMABB(ABMVDFN))
  ..W ! S DIR(0)="E",DIR("A")="Enter RETURN to Continue" D ^DIR K DIR
- ;end new code
- I ABMTRIBL=1,($G(ABMPTINF)=1) D  ;write pseudo TIN insurers
+ I ABMTRIBL=1,($G(ABMPTINF)=1) D  ;wrt pseudo TIN insurers
  .;wrt insurers w/pseudo TINs
  .W !!,"Insurers with pseudo Tax IDs in this export selection:"
  .S ABMINS=0
@@ -90,13 +84,13 @@ SEL D HEADER^ABMURCN1("OPEN")
  I $P($G(^ABMDPARM(DUZ(2),1,4)),U,14)'=1 D NOSEND  ;reconcile; don't export
  S DIR(0)="E",DIR("A")="Enter RETURN to Continue" D ^DIR K DIR
  Q
-SELSESS ;SEL SESSIONS
+SELSESS ;SEL SESS
  D SELSESS^ABMURCN1
  Q
 PTINCK ;EP - pseudo TINs chk
  D PTINCK^ABMUUTL
  Q
-XSUMDISP ;EP - Summary export display
+XSUMDISP ;EP - Summ export display
  S ABMTRIBL=$P($G(^ABMDPARM(DUZ(2),1,4)),U,14)
  W $$EN^ABMVDF("IOF")
  I ABMTRIBL=1 S ABM("HD",0)="Export Summary Print"
@@ -170,9 +164,15 @@ XSUM2 ;EP; called from ABMUVBCR
  W !!
  W !
  I $G(ABMFILE)'="" W !!,"EXPORTED IN FILE ",ABMFILE D
- .W:(+$G(XBFLG)=0) !!,"File was sent successfully"
- .W:'(+$G(XBFLG)=0) !!,"File was **NOT** sent successfully"
- .W:$G(XBFLG(1))'="" ?40,"- ",$G(XBFLG(1))
+ .;start old abm*2.6*42 ADO112033
+ .;W:(+$G(XBFLG)=0) !!,"File was sent successfully"
+ .;W:'(+$G(XBFLG)=0) !!,"File was **NOT** sent successfully"
+ .;W:$G(XBFLG(1))'="" ?40,"- ",$G(XBFLG(1))
+ .;end old start new abm*2.6*42 ADO112033
+ .I (+$$GET1^DIQ(8989.3,1,501,"I")=0)!'(+$G(ABMP("XBFLG"))=0) W !!,"File was **NOT** sent successfully" Q
+ .W:(+$G(ABMP("XBFLG"))=0) !!,"File was sent successfully"
+ .W:$G(ABMP("XBFLG1"))'="" ?40,"- ",$G(ABMP("XBFLG1"))
+ ;end new abm*2.6*42 ADO112033
  Q
 SENDBTCH ;EP - ask export ques; export=yes
  S ABMDT=0
@@ -190,7 +190,7 @@ SENDBTCH ;EP - ask export ques; export=yes
  ....S:ABMUSER DIE="^ABMUCASH("_DA(2)_",10,"_DA(1)_",20,"
  ....S:'ABMUSER DIE="^ABMUCASH("_DA(2)_",20,"_DA(1)_",20,"
  ....S DA=ABMDT
- ....S DR=".04///T;.08///NOW"  ;transmitted status w/dt
+ ....S DR=".04///T;.08///NOW"  ;Xmitted status w/dt
  ....D ^DIE
  I +$G(ABMSBTOT)=0,(+$G(ABMAFLG)=0) D  Q  ;there aren't any bills, don't create exp file
  .W !!,"There aren't any bills to export in this selection."
@@ -223,7 +223,7 @@ EXPORT ;EP-loop thru sess; export data
  ; 9.61704 for object class
  ;Trailer record format:
  ; 1.Always T for trailer
- ; 2.Number records
+ ; 2.Number recs
  ; 3.Total file amt
  D FILENAME()
 EXTRACT ;
@@ -266,8 +266,7 @@ EXTRACT ;
  ...S ABMRQB=0
  ...F  S ABMRQB=$O(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMSDT,12,ABMRQB)) Q:+ABMRQB=0  D
  ....S ABMPREC=$G(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMSDT,12,ABMRQB,0))
- ....;S ABMBAOUT=$P($G(^AUTNINS($P($G(^ABMDBILL(ABMLOC,$P(ABMPREC,U,3),0)),U,8),2)),U)  ;abm*2.6*11 HEAT73780
- ....S ABMBAOUT=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+$P($G(^ABMDBILL(ABMLOC,$P(ABMPREC,U,3),0)),U,8),".211","I"),1,"I")  ;abm*2.6*11 HEAT73780 
+ ....S ABMBAOUT=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+$P($G(^ABMDBILL(ABMLOC,$P(ABMPREC,U,3),0)),U,8),".211","I"),1,"I")
  ....D RECORD
  ...;reque'd batches
  ...S ABMRQB=0
@@ -286,7 +285,7 @@ EXTRACT ;
  .........S ABMPREC=$G(^ABMUTXMT(ABMPBTCH,ABMLOOP,ABMBUSER,2,ABMBSDT,11,ABMBBA,2,ABMBBIEN,0))
  .........D RECORD
  ....D REEXPB^ABMURCN1  ;3 mult entry of 3P UFMS Export file
- ...;mark sess as Xmitted
+ ...;mark sess Xmitted
  ...K DIC,DIE,DA,DR,X,Y
  ...S DA(2)=ABMLOC
  ...S DA(1)=$S(ABMDUZ:ABMDUZ,1:1)
@@ -309,7 +308,7 @@ FILENAME() ;
  W !,"File will be created using the following name: ",!?5,ABMFILE
  I ABMFILE'="" Q 1
  Q 0
-GETFILNM(ASUFACS) ;EP - CREATE FILE NAME
+GETFILNM(ASUFACS) ;EP - CREATE FILENAME
  N FNROOT,FNEXT,FN,YR,DATE,TIME
  K DATETIME
  S FNROOT="IHS_TPB_RPMS_INV_"
@@ -330,12 +329,12 @@ SENDFILE(XBGL,XBFN) ;
  S:$G(XBFN)="" XBFN="UFMS.TST"
  S:$G(XBGL)="" XBGL="ABMTUFMS("
  S XBQSHO=""
- S XBF=$J    ;Beg 1st lev numeric subscr
- S XBE=$J    ;End 1st lev numeric subscr
+ S XBF=$J  ;Beg 1st lev numeric subscr
+ S XBE=$J  ;End 1st lev numeric subscr
  S XBFLT=1  ;indicates flat file
- S XBMED="F"     ;Flag indicates file as media
- S XBCON=1    ;Q if non-cononic
- S XBS1="ABM UFMS F"   ;ZISH SEND PARA entry
+ S XBMED="F"  ;Flag indicates file as media
+ S XBCON=1  ;Q if non-cononic
+ S XBS1="ABM UFMS F"  ;ZISH SEND PARA entry
  I $D(ZTQUEUED) S XBS1="ABM UFMS B"
  S XBQ="N"
  S XBUF=$P($G(^ABMDPARM(ABMLOC,1,4)),U,13)
@@ -350,7 +349,15 @@ SENDFILE(XBGL,XBFN) ;
  I XBUF="" D  Q
  .S XBFLG=-1
  .S XBFLG(1)="Missing UFMS storage directory. Please check TPB UFMS Parameters"
+ ;start new abm*2.6*42 IHS/SD/SDR ADO112033
+ S DIE="^ABMUTXMT("
+ S DA=ABMPXMIT
+ S DR=".05////"_$S($$GET1^DIQ(8989.3,1,501,"I")=1:"P",1:"T")
+ D ^DIE
+ I $$GET1^DIQ(8989.3,1,501,"I")'=1 D EP^ABMURTST Q
+ ;end new abm*2.6*42 IHS/SD/SDR ADO112033
  D ^XBGSAVE
+ S ABMP("XBFLG")=XBFLG,ABMP("XBFLG1")=XBFLG(1)  ;abm*2.6*42 IHS/SD/SDR ADO112033
  Q
 RECORD ;EP - get pieces; put together rec
  D RECORD^ABMURCN2
@@ -361,14 +368,14 @@ CREATBTH ;EP - create UFMS export entry
 BATCH ;EP - put bill in batch file
  D BATCH^ABMURCN1
  Q
-BILL ;EP - put entry in bill mult for transmit dt & save UFMS inv#
+BILL ;EP - put entry in bill mult for xmit dt & save UFMS inv#
  ;transmit dt
  D BILL^ABMURCN1
  Q
-NOSEND ;EP - don't send but mark reconciled
+NOSEND ;EP - don't send, mark reconciled
  D NOSEND^ABMURCN1
  Q
-RCONSESS ;mark session as transmitted
+RCONSESS ;mark sess transmitted
  D RCONSESS^ABMURCN1
  Q
 XIT ;EP

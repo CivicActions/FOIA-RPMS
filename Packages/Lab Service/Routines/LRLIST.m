@@ -1,5 +1,5 @@
 LRLIST ;SLC/RWF/CJS - LAB RESULTS LIST ;2/19/91  10:39 [ 04/14/2003  9:05 AM ]
- ;;5.2T9;LR;**1004,1006,1018**;Nov 17, 2004
+ ;;5.2;LR;**1004,1006,1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**44,86,153**;Sep 27, 1994
  W !,"Summary List (Supervisors')  >>> NOT FOR WARD USE <<<",!
 EN K ^TMP("LR",$J),LRAA

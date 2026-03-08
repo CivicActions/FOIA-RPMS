@@ -1,5 +1,6 @@
-DINIT11C ;SFISC/GFT,DCM-INITIALIZE VA FILEMAN ;9/9/94  14:01
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINIT11C ;SFISC/GFT,DCM-INITIALIZE VA FILEMAN ;9/9/94  14:01 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  F I=1:1:6 S D=$P("DD^RD^WR^DEL^LAYGO^AUDIT",U,I),^DD(1,30+I,0)=D_" ACCESS^C^^ ; ^S X=$S($D(^DIC(D0,0,"""_D_""")):^("""_D_"""),1:"""")"

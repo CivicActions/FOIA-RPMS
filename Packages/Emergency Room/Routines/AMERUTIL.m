@@ -1,7 +1,46 @@
 AMERUTIL ;GDIT/HS/BEE - AMER UTILITY CALLS ; 07 Oct 2013  11:33 AM
- ;;3.0;ER VISIT SYSTEM;**6,7,8**;MAR 03, 2009;Build 23
+ ;;3.0;ER VISIT SYSTEM;**6,7,8,14**;MAR 03, 2009;Build 4
  ;
  Q
+ ;
+ ;GDIT/HS/BEE;AMER*3.0*14;FEATURE#89183;08/04/2023;Display PPN
+DVPPN(DO) ;Display patient preferred name (used in templates)
+ ;
+ I '$G(DO) W "" Q
+ ;
+ NEW DFN,NAME
+ ;
+ ;Get the patient DFN from ER VISIT
+ S DFN=$$GET1^DIQ(9009080,DO_",",.02,"I")
+ ;
+ ;Get the name (based on switch)
+ S NAME=$$PPN(DFN,0)
+ ;
+ W NAME
+ ;
+ Q
+ ;
+ ;GDIT/HS/BEE;AMER*3.0*14;FEATURE#89183;08/04/2023;Display PPN
+PPN(DFN,OVR) ;Return patient preferred name
+ ;
+ ;Input:
+ ; DFN - Patient DFN
+ ; OVR - (1) Override XPAR and always return PPN format
+ ;
+ I $G(DFN)="" Q ""
+ S OVR=+$G(OVR)
+ ;
+ NEW NAME,NXPAR
+ ;
+ ;Retrieve AUPN PPN parameter value
+ ;
+ S NXPAR=""
+ D GETPAR^CIAVMRPC(.NXPAR,"AUPN DISPLAY PPN","SYS",1,"I","")
+ ;
+ I $G(NXPAR)!OVR S NAME=$$GETPREF^AUPNSOGI(DFN,"E")
+ E  S NAME=$$GET1^DIQ(2,DFN_",",.01,"E")
+ ;
+ Q NAME
  ;
 POV(AUPNPAT,AMERPCC,AMERPOV) ;EP - Return a list of POV entries for a visit
  ;

@@ -1,11 +1,16 @@
 AMERPCC1 ; IHS/OIT/SCR - SUPPORTING ROUTINES FOR PCC VISIT CREATION AND V PROVIDER EDITING ;
- ;;3.0;ER VISIT SYSTEM;**1,2**;FEB 23, 2009
+ ;;3.0;ER VISIT SYSTEM;**1,2,11**;MAR 03, 2009;Build 27
  ;
 SYNCHPRV(AMERDA,AMERPCC,AMERPAT) ; EP from AMERPCC
  ; INPUT
  ;   AMERDA : IEN OF ER VISIT FILE
  ;  AMERPCC : IEN OF VISIT FILE being broght in synch
  ;  AMERPAT : IEN OF PATIENT FILE for selected ER VISIT
+ ;
+ ;GDIT/HS/BEE 12/19/2018;CR#8013;Sync Prov
+ D SYNC^AMERPRV(AMERPCC)
+ Q
+ ;
  N AMERVERR,AMERFND,AMEREVAL,AMERETIM,AMERVPRV
  N AMERPROV,AMERTIME,AMERCNT,AMERLIST,AMERCNUM,AMERVIEN
  ; This routine updates V PROVIDER entires with provider information in ER VISIT file
@@ -118,13 +123,14 @@ VPRVUPDT ;
  .....S AMERVIEN=$P(APCLV(AMERVPRV),U,6)
  .....Q
  ....Q  ; IF THIS IS THE PCC PRIMARY PROVIDER
+ ... ;GDIT/HS/BEE 12/11/2018;CR#8013;Sync Prov - could be primary now
  ...;If V PROVIDER is NOT marked secondary and is not the ER DISCHARGE provider, mark this provider "secondary"
- ...I $P(APCLV(AMERVPRV),U,3)'="S" D
- ....Q:AMERPROV=1
- ....S AMERVDR=$S(AMERVDR'="":AMERVDR_";",1:"")
- ....S AMERVDR=AMERVDR_".04///"_"S"
- ....S AMERVIEN=$P(APCLV(AMERVPRV),U,6)
- ....Q
+ ...;I $P(APCLV(AMERVPRV),U,3)'="S" D
+ ...;.Q:AMERPROV=1
+ ...;.S AMERVDR=$S(AMERVDR'="":AMERVDR_";",1:"")
+ ...;.S AMERVDR=AMERVDR_".04///"_"S"
+ ...;.S AMERVIEN=$P(APCLV(AMERVPRV),U,6)
+ ...;.Q
  ...;Update V PROVIDER time, if different from day of admit
  ...I $P(APCLV(AMERVPRV),U,4)'=AMERTIME D
  ....S AMERVDR=$S(AMERVDR'="":AMERVDR_";",1:"")

@@ -1,12 +1,17 @@
-APSPELRX ;IHS/MSC/PLS - Electronic Pharmacy Support ;20-May-2013 17:28;PLS
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1006,1008,1009,1011,1016**;Sep 23, 2004;Build 74
+APSPELRX ;IHS/MSC/PLS - Electronic Pharmacy Support ;06-May-2020 08:17;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1006,1008,1009,1011,1016,1023,1024,1026**;Sep 23, 2004;Build 47
+ ;IHS/GDIT/MSC/MGH changes added for EPCS BRDCST+13
+ ;IHS/MSC/MGH 1024 added calls for sending change responses
+ ;IHS/MSC/MGH  DC+6 changed patch 1026
 EN(RX,PHARM) ;EP
+ N MSGID
+ S MSGID=""
  I $G(RX),$G(PHARM) D
  .I $$SS(RX,PHARM) D
- ..D BRDCAST(RX,PHARM)
+ ..D BRDCAST(RX,PHARM,.MSGID)
  .E  I $$FX(PHARM) D
  ..D FAX(RX,PHARM)
- .D PEI(RX)
+ .D PEI(RX,.MSGID)
  Q
  ; Called by APSPELRX PSCRIPT RPC
  ; Returns prescription text
@@ -23,20 +28,26 @@ PSCRIPT(DATA,ORIFN,RXNUM) ;EP
  D CAPTURE^CIAUHFS("D FAXRX^APSPELRX",DATA)
  Q
  ;
-BRDCAST(RX,PHARM) ;EP
- N ORIFN,RRIEN
+BRDCAST(RX,PHARM,MSGID) ;EP
+ N ORIFN,RRIEN,TYP
  S ORIFN=+$P($G(^PSRX(RX,"OR1")),U,2)
  S RRIEN=$$VALUE^ORCSAVE2(ORIFN,"SSRREQIEN")
  ; Check med class
  ; If III-V
- ;I $$DEACLS^APSPES2($$DEA^APSPES2($P($G(^PSRX(RX,0)),U,6)),"345") D  Q
+ ;I $$DEACLS^APSPES2A($$DEA^APSPES2A($P($G(^PSRX(RX,0)),U,6)),"345") D  Q
  ;.D DENY^APSPES3(ORIFN,RX,"RP","RP-A new prescription for a controlled substance is being faxed.",5)
  ;.D FAX(RX,PHARM)
  I RRIEN&($$ACT(RRIEN)'=3) D
- .D ACCEPT^APSPES3(RX,ORIFN)
+ .S TYP=$$GET1^DIQ(9009033.91,RRIEN,.12,"I")
+ .I TYP="R" D ACCEPT^APSPES3(RX,ORIFN)
+ .I TYP="C" D ACCCHG^APSPESC2(RX,ORIFN)
  E  D
- .Q:$$DEACLS^APSPES2($$DEA^APSPES2($P($G(^PSRX(RX,0)),U,6)),"2345")
- .D NEWRX^APSPES1(RX)
+ .N REST
+ .;IHS/GDIT/MSC/MGH changes for EPCS
+ .;Q:$$DEACLS^APSPES2A($$DEA^APSPES2A($P($G(^PSRX(RX,0)),U,6)),"2345")
+ .S REST=$$GET^XPAR("ALL","APSP AUTO RX SCHEDULE RESTRICT")
+ .Q:REST'=""&($$DEACLS^APSPES2A($$DEA^APSPES2A($P($G(^PSRX(RX,0)),U,6)),REST))
+ .D NEWRX^APSPES1(RX,.MSGID)
  Q
  ;
 ACT(IEN) ;EP-
@@ -133,7 +144,7 @@ FAXRX ;EP
  W !
  W !,"Signed: /ES/"_$$GET1^DIQ(200,SIGNER,.01)_"   "_VANUM_$S(+DEASCH&(DEASCH<6):"   "_DEA,1:"")  ;DEA PRINTS FOR SCH 1-5
  W:$$SUBS(RX) !!,"DISPENSE AS WRITTEN"
- I $$DEACLS^APSPES2($$DEA^APSPES2($P(RX0,U,6)),"345") D
+ I $$DEACLS^APSPES2A($$DEA^APSPES2A($P(RX0,U,6)),"345") D
  .Q:'$$VALUE^ORCSAVE2(+$P($G(^PSRX(RX,"OR1")),U,2),"SSRREQIEN")  ; Must be in response to a refill request
  .W !,"NOTE: This schedule III-V prescription is being faxed."
  ;
@@ -153,7 +164,15 @@ SS(RXIEN,PIEN) ;EP
  ; Input: ORID - ^OR(100 ien
 DC(ORID) ; EP -
  ; Send denial HL7 message
- D DENY^APSPES3(ORID)
+ N TYP,IEN,RX,STAT,SIGSTAT
+ S IEN=$$VALUE^ORCSAVE2(+ORID,"SSRREQIEN")
+ S TYP=$$GET1^DIQ(9009033.91,IEN,.12,"I")
+ S RX=$$GET1^DIQ(9009033.91,IEN,.06,"I")
+ S STAT=$$GET1^DIQ(100,+ORID,5,"I")
+ S SIGSTAT=$P($G(^OR(100,+ORID,8,1,0)),U,4)
+ Q:(STAT=11)&(SIGSTAT=2)     ;IHS/MSC/MGH Patch 1026
+ I TYP="R" D DENY^APSPES3(ORID,RX)
+ I TYP="C" D DENYCHG^APSPESC2(IEN)
  Q
  ; Return fax number or flag indicating a fax number is present
 FX(PIEN,FLG) ;EP
@@ -175,7 +194,7 @@ PRC(RX) ;EP
  N DIWL,DIWR,DIWF,LP,X
  S DIWL=0,DIWR=48,DIWF=""
  S LP=0 F  S LP=$O(^PSRX(RX,"PRC",LP)) Q:'LP  D
- .I $D(^(LP,0)) S X=^(0) D ^DIWP
+ .I $D(^PSRX(RX,"PRC",LP,0)) S X=^(0) D ^DIWP
  I $D(^UTILITY($J,"W")) D
  .W "MD Comments:"
  .S LP=0 F  S LP=$O(^UTILITY($J,"W",DIWL,LP)) Q:'LP  W ?13,^(LP,0),!
@@ -203,7 +222,7 @@ SUBS(RX) ;EP -
  S VAL=$$GET1^DIQ(52,RX,9999999.25,"I")
  Q $S((VAL=1)!(VAL=7):1,1:0)
  ; Populate the Pharmacy External Interface File
-PEI(RX) ; EP
+PEI(RX,MSGID) ; EP
  N FDA,ERR,IENS
  Q:'$G(RX)
  S IENS="+1,"
@@ -213,7 +232,47 @@ PEI(RX) ; EP
  S FDA(52.51,IENS,4)=$P(^PSRX(RX,0),U,4)  ; Provider
  S FDA(52.51,IENS,8)="F"
  S FDA(52.51,IENS,9)=0
+ S FDA(52.51,IENS,10)=$G(MSGID)
  S FDA(52.51,IENS,13)="E-PRESCRIBING MESSAGE"
  S FDA(52.51,IENS,14)=2
+ S FDA(52.51,IENS,15)=$P($G(^PSRX(RX,2)),U,9)
  D UPDATE^DIE(,"FDA",,"ERR")
  Q
+TWOAUTH(RET,ORIEN,OPRV) ;Return 1 if this order needs 2 factor authentication
+ N PICKUP,CS
+ S CS="",RET=0
+ S OPRV=$G(OPRV)
+ I OPRV="" S OPRV=DUZ
+ D CSVALUE^ORDEA(.CS,ORIEN)
+ Q:'+CS
+ S PICKUP=$$VALUE^ORCSAVE2(+ORIEN,"PICKUP")
+ I PICKUP="E" S RET=1 Q
+ Q:'+$$AUTHON(OPRV)
+ S RET=$S(PICKUP="W":1,PICKUP="M":1,1:0)
+ Q
+EPCSON(RET,OPRV) ;RPC for checking author for 2 factor authentication
+ S OPRV=$G(OPRV)
+ I OPRV="" S OPRV=DUZ
+ S RET=$$AUTHON(OPRV)
+ Q
+AUTHON(OPRV) ;See if the site/user is enabled for 2 factor authentication
+ N SITE,ON,SITEIEN,SITEON,RET2,THUMB
+ S ON=0,SITEIEN=0
+ S OPRV=$G(OPRV)
+ I OPRV="" S OPRV=DUZ
+ D PKISITE^ORWOR(.SITEON)
+ ;S SITE=$P($$SITE^VASITE(),U,1)
+ ;Q:'+SITE ON
+ ;S SITEIEN=$O(^ORD(100.7,"B",SITE,SITEIEN))
+ ;S SITEON=$$GET1^DIQ(100.7,SITEIEN,.02,"I")
+ Q:'+SITEON ON
+ ;Check to see that user is EPCS enabled
+ I $D(^ORD(100.7,"C",OPRV)) S ON=1
+ ;Check to see that they have a thumbprint
+ I ON=1 D
+ .S THUMB=$$GET1^DIQ(200,OPRV,9999999.2)
+ .I THUMB="" S ON=0
+ ;Check to see that the hash is good
+ I ON=1 D
+ .D VRFYPHSH^BEHOEP3(.ON,OPRV)
+ Q ON

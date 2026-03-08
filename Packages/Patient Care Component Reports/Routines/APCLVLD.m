@@ -1,5 +1,5 @@
-APCLVLD ; IHS/CMI/LAB - delete vgen/pgen custom report ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLVLD ; IHS/OHPRD/TMJ - delete vgen/pgen custom report ; [ 04/14/03  12:37 PM ]
+ ;;3.0;IHS PCC REPORTS;**13**;FEB 05, 1997
  ;
  ;This routine will do a DIC lookup into the lister report 
  ;temporary file and delete the entry.

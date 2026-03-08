@@ -1,5 +1,5 @@
-BGOVAMI2 ; IHS/MSC/DKA - AMI Utilities 2 ;11-Jun-2018 13:08;DU
- ;;1.1;BGO COMPONENTS;**13,14,24**;Mar 20, 2007;Build 1
+BGOVAMI2 ; IHS/MSC/DKA - AMI Utilities 2 ;08-Nov-2021 13:37;DU
+ ;;1.1;BGO COMPONENTS;**13,14,24,30**;Mar 20, 2007;Build 1
  ;01.23.14 - MSC/JS - move SET here to keep within 15k routine size limits
  ;01.28.14 - DEBUG EVENT CALL FOR NEW AMI RECORD ADDED
  ;O2.06.14 - Field .17 changed to store text
@@ -136,6 +136,8 @@ SET(RET,INP) ;EP
  ...D DELREF^BGOVAMI1(VFIEN)
  ..E  D
  ...; FT Not Initiated
+ ...;IHS/MSC/MGH Try to remove any refusal reason if this is an edit
+ ...D DELREF^BGOVAMI1(VFIEN)
  ...S (@FDA@(.14),REFDT)=$P(VFSTR,U,3) ;DidNotInit (Date)
  ...S @FDA@(.15)=NOW,@FDA@(.16)=DUZ
  ...;S (@FDA@(.17),REFUSED)=$P(VFSTR,U,4) ;DidnotInitReason

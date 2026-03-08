@@ -1,29 +1,20 @@
-ABMDE ; IHS/ASDST/DMJ - Claim Editor Selection ;      
- ;;2.6;IHS Third Party Billing;**1,3,6,8,9,10,13,14**;NOV 12, 2009;Build 238
+ABMDE ; IHS/SD/SDR - Claim Editor Selection ;      
+ ;;2.6;IHS Third Party Billing;**1,3,6,8,9,10,13,14,29**;NOV 12, 2009;Build 562
  ;
- ; IHS/ASDS/LSL - 08/13/2001 - V2.4 Patch 9 - NOIS HQW-0798-100082
- ;     Only check eligibility once.
+ ;IHS/ASDS/LSL 08/13/2001 2.4*9 NOIS HQW-0798-100082 Only check eligibility once.
+ ;IHS/ASDS/LSL 08/10/2001 2.4*9 NOIS OVA-0801-190038 Unlock the claim file as the lock table is filling up.
  ;
- ; IHS/ASDS/LSL - 08/10/2001 - V2.4 Patch 9 - NOIS OVA-0801-190038
- ;     Unlock the claim file as the lock table is filling up.
+ ;IHS/SD/SDR 2.5*8 task 6 Added code for new page selection (page 3A and page 8K)
+ ;IHS/SD/SDR 2.5*10 IM20337 Added code for Next if ADA and page 9F
+ ;IHS/SD/SDR 2.5*12 UFMS If user isn't logged into cashiering session they can't do this option
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 6
- ;    Added code for new page selection (page 3A and page 8K)
- ;
- ; IHS/SD/SDR - v2.5 p10 - IM20337
- ;   Added code for Next if ADA and page 9F
- ;
- ; IHS/SD/SDR - v2.5 p12 - UFMS
- ;   If user isn't logged into cashiering session they can't do
- ;   this option
- ;
- ; IHS/SD/SDR - abm*2.6*1 - HEAT6439 - Added check for page9
- ; IHS/SD/SDR - abm*2.6*3 - HEAT10547 - modified page9 check to display 9F & 9G for
- ;  all export modes; all others only for UB or 837I
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - added changes for page3B
- ; IHS/SD/SDR - abm*2.6*6 - NOHEAT - fix for <NOLINE>SCRN+2^ABMDE
- ;IHS/SD/SDR - 2.6*13 - made HCFA go to page 9A instead of straight to 9E
- ;IHS/SD/SDR - 2.6*14 - HEAT165301 - took out changes for 9A that were included in p13
+ ;IHS/SD/SDR 2.6*1 HEAT6439 - Added check for page9
+ ;IHS/SD/SDR 2.6*3 HEAT10547 - modified page9 check to display 9F & 9G for all export modes; all others only for UB or 837I
+ ;IHS/SD/SDR 2.6*6 5010 - added changes for page3B
+ ;IHS/SD/SDR 2.6*6 NOHEAT - fix for <NOLINE>SCRN+2^ABMDE
+ ;IHS/SD/SDR 2.6*13 made HCFA go to page 9A instead of straight to 9E
+ ;IHS/SD/SDR 2.6*14 HEAT165301 - took out changes for 9A that were included in p13
+ ;IHS/SD/SDR 2.6*29 CR10404 Added check for CLIA number to populate on page3 when the claim status is 'F'
  ;
  ; *********************************************************************
  ;
@@ -74,6 +65,7 @@ CHK ;
 DFN ;
  S ABMP("PDFN")=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,1)
  S ABMP("VTYP")=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),0),U,7)
+ D CLIACHK^ABMDE0  ;abm*2.6*29 IHS/SD/SDR CR10404
  S DIE="^ABMDCLM(DUZ(2),"
  S DA=ABMP("CDFN")
  S DR=".1////"_DT

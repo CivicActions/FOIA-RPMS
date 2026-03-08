@@ -1,11 +1,16 @@
-LR7OSUM ;slc/dcm - Silent Patient cum ;8/11/97
- ;;5.2T9;LR;**1018**;Nov 17, 2004
- ;;5.2;LAB SERVICE;**121,187,230,256**;Sep 27, 1994
+LR7OSUM ;VA/SLC/DCM - Silent Patient cum ;8/11/97
+ ;;5.2;LAB SERVICE;**121,187,230,256,IHS,1018,1054**;NOV 1, 1997;Build 20
+ ;
+ ; ADO 73380 - LR*5.2*1054 - Write Performing Labs on EHR Cumulative
+ ;
+ ;
 DFN S LRIN=0,LRIDT=0,LREND=0,LROUT=9999999
  K ZTRTN,DIC,X2
  D ^LRDPA Q:Y<0
+ N LRPLS      ; IHS/MSC/MKK - LR*5.2*1054
  U IO
  D LRLLOC,END
+ D SITELIST   ; IHS/MSC/MKK - LR*5.2*1054
  Q
 LRLLOC ;
  N GCNT,GIOSL,CCNT,B,C,LRSB,VA,VA200,VAERR,W
@@ -82,3 +87,25 @@ AP(DFN) ;Get just the AP results
  S SUBHEAD("AUTOPSY")=""
  D EN(.ZIP,DFN,,,,80,.SUBHEAD)
  Q
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054
+SITELIST ; EP - Cloned from LRRP2
+ Q:$D(LRPLS)<1
+ ;
+ NEW COL,ADDRESS
+ ;
+ W !!,"Performing Labs:",!!
+ S LRPLS=0
+ F  S LRPLS=$O(LRPLS(LRPLS)) Q:LRPLS=""  D
+ . I $T(NAME^XUAF4)]"",($T(PADD^XUAF4)]"") D
+ .. W $$LJ^XLFSTR("["_LRPLS_"]",8)    ; IHS/MSC/MKK - LR*5.2*1038
+ .. W ?7,$$NAME^XUAF4(LRPLS),"   "
+ .. S X=$$PADD^XUAF4(LRPLS)
+ .. S ADDRESS=$P(X,U)_"   "_$P(X,U,2)_", "_$P(X,U,3)_" "_$P(X,U,4)
+ .. S COL=+$X
+ .. I COL+$L(ADDRESS)>IOM W !,?10,ADDRESS
+ .. I COL+$L(ADDRESS)<(IOM+1) W ADDRESS
+ . W !
+ Q
+ ; ----- END IHS/MSC/MKK - LR*5.2*1054
+ ;

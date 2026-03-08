@@ -1,5 +1,5 @@
 BIREPF2 ;IHS/CMI/MWR - REPORT, FLU IMM; AUG 10,2010
- ;;8.5;IMMUNIZATION;**5**;JUL 01,2013
+ ;;8.5;IMMUNIZATION;**5,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW INFLUENZA IMMUNIZATION REPORT, GATHER DATA.
  ;;  PATCH 1: Add "Dose#" header to Doses column.  HEAD+86
@@ -34,15 +34,15 @@ HEAD(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH,BIUP) ;EP
  ;---> If Header array is NOT being for Listmananger include version.  vvv83
  S:'$D(VALM("BM")) X=$$LMVER^BILOGO()
  ;
- D WH^BIW(.BILINE,X)
- S X=$$REPHDR^BIUTL6(DUZ(2)) D CENTERT^BIUTL5(.X)
+ I BISPD'="CSV" D WH^BIW(.BILINE,X)
+ S X=$$REPHDR^BIUTL6(DUZ(2)) I BISPD'="CSV" D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
  S X="*  "_$S($G(BIFH)="H":"H1N1",1:"Standard Flu")_" Immunization Report  *"
- D CENTERT^BIUTL5(.X)
+ I BISPD'="CSV" D CENTERT^BIUTL5(.X)
  D WH^BIW(.BILINE,X)
  ;
- S X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT)
+ S:BISPD'="CSV" X=$$SP^BIUTL5(27)_"Report Date: "_$$SLDT1^BIUTL5(DT) S:BISPD="CSV" X="Report Date: "_$$SLDT1^BIUTL5(DT)
  D WH^BIW(.BILINE,X)
  ;
  ;********** PATCH 5, v8.5, JUL 01,2013, IHS/CMI/MWR
@@ -53,13 +53,13 @@ HEAD(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH,BIUP) ;EP
  D
  .I $P(BIYEAR,U,2)="m" S BIEND="03/31/"_($P(BIYEAR,U)+1) Q
  .S BIEND="12/31/"_$P(BIYEAR,U)
- S X=$$SP^BIUTL5(28)_"Date Range: "_BIBEG_" - "_BIEND
+ S:BISPD'="CSV" X=$$SP^BIUTL5(28)_"Date Range: "_BIBEG_" - "_BIEND S:BISPD="CSV" X="Date Range: "_BIBEG_" - "_BIEND
  D WH^BIW(.BILINE,X,1)
  ;
  S X=" "_$$BIUPTX^BIUTL6(BIUP),X=$$PAD^BIUTL5(X,48)
  D WH^BIW(.BILINE,X)
  ;
- D WH^BIW(.BILINE,$$SP^BIUTL5(79,"-"))
+ I BISPD'="CSV" D WH^BIW(.BILINE,$$SP^BIUTL5(79,"-"))
  ;
  D
  .;---> If specific Communities were selected (not ALL), then print
@@ -79,19 +79,27 @@ HEAD(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH,BIUP) ;EP
  .D SUBH^BIOUTPT5("BIBEN","Beneficiary Type",,"^AUTTBEN(",.BILINE,.BIERR,,12)
  .I $G(BIERR) D ERRCD^BIUTL2(BIERR,.X) D WH^BIW(.BILINE,X) Q
  .;
- .S X=$$SP^BIUTL5(13)_"|"_$$SP^BIUTL5(4)_"      Age in months/years on "
- .S X=X_$$SLDT2^BIUTL5((BIYEAR-1700)_1231)_$$SP^BIUTL5(12)_"|"
+ .I BISPD'="CSV" D
+ ..S X=$$SP^BIUTL5(13)_"|"_$$SP^BIUTL5(4)_"      Age in months/years on "
+ ..S X=X_$$SLDT2^BIUTL5((BIYEAR-1700)_1231)_$$SP^BIUTL5(12)_"|"
  .D WH^BIW(.BILINE,X)
  .;
  .;********** PATCH 1, v8.4, AUG 01,2010, IHS/CMI/MWR
  .;---> Add "Dose#" header to Doses column.
  .;S X=$$SP^BIUTL5(13)_"|"_$$SP^BIUTL5(55,"-")_"| Totals"
- .S X="    Dose#    |"_$$SP^BIUTL5(55,"-")_"| Totals"
+ .;for csv output only
+ .I BISPD="CSV" D
+ ..S X="*NOTE: The 18-49hr column tallies patients who are High Risk in that Age Group." D WH^BIW(.BILINE,X)
+ ..S X="They are not included in the normal 18-49y column." D WH^BIW(.BILINE,X) S X=" " D WH^BIW(.BILINE,X)
+ .I BISPD'="CSV" S X="    Dose#    |"_$$SP^BIUTL5(55,"-")_"| Totals"
+ .I BISPD="CSV" S X="Dose #"
  .;**********
  .;
  .D WH^BIW(.BILINE,X)
- .S X="             | 10-23m    2-4y   5-17y  18-49y *18-49hr 50-64y  65+yrs"
- .S X=$$PAD^BIUTL5(X,69)_"|"
+ .I BISPD'="CSV" D
+ ..S X="             | 10-23m    2-4y   5-17y  18-49y *18-49hr 50-64y  65+yrs"
+ ..S X=$$PAD^BIUTL5(X,69)_"|"
+ .I BISPD="CSV" S X="Age in months/years on "_$$SLDT2^BIUTL5((BIYEAR-1700)_1231)_",10-23m,2-4y,5-17y,18-49y,*18-49hr,50-64y,65+yrs,Totals"
  .D WH^BIW(.BILINE,X)
  ;
  ;---> If Header array is being built for Listmananger,
@@ -148,13 +156,15 @@ START(BIYEAR,BICC,BIHCF,BICM,BIBEN,BIFH,BIUP) ;EP
  ;
  ;---> Now write total patients considered who had refusals.
  N M,N S (M,N)=0 F  S M=$O(BITMP("REFUSALS",M)) Q:'M  S N=N+1
- S X="  Total Patients included who had Influenza Refusals on record"_$J(N,15)
- D WRITE^BIREPF3(.BILINE,X),WRITE^BIREPF3(.BILINE,$$SP^BIUTL5(79,"-"))
+ I BISPD'="CSV" S X="  Total Patients included who had Influenza Refusals on record"_$J(N,15)
+ I BISPD="CSV" S X="Total Patients included who had Influenza Refusals on record,"_N D WRITE^BIREPF3(.BILINE," "),WRITE^BIREPF3(.BILINE," ")
+ D WRITE^BIREPF3(.BILINE,X) I BISPD'="CSV" D WRITE^BIREPF3(.BILINE,$$SP^BIUTL5(79,"-"))
  ;
- S X="  *NOTE: The 18-49hr column tallies patients who are High Risk in that"
- D WRITE^BIREPF3(.BILINE,X)
- S X="         Age Group.  They are not included in the normal 18-49y column."
- D WRITE^BIREPF3(.BILINE,X),WRITE^BIREPF3(.BILINE,$$SP^BIUTL5(79,"-"))
+ I BISPD'="CSV" D
+ .S X="  *NOTE: The 18-49hr column tallies patients who are High Risk in that"
+ .D WRITE^BIREPF3(.BILINE,X)
+ .S X="         Age Group.  They are not included in the normal 18-49y column."
+ .D WRITE^BIREPF3(.BILINE,X),WRITE^BIREPF3(.BILINE,$$SP^BIUTL5(79,"-"))
  ;
  S VALMCNT=BILINE
  Q

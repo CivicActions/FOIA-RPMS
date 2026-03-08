@@ -1,6 +1,6 @@
-DDSM ;SFISC/MKO-MULTILINE ;10:12 AM  1 Oct 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**8**;Mar 30, 1999
+DDSM ;SFISC/MKO-MULTILINE ;10:49 AM  31 May 1996 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**6,13,14,20**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 MNAV(FND) ;Navigate within repeating blocks
  ;Returns FND if navigating to another field within the repeating
@@ -49,20 +49,17 @@ MDA ;Update DDO, DA and Dn, set FND=1
  ;
 SEL ;Issue read
  N DIRUT
- S DIR(0)="PO"_DIE_":QEMZ"_$E("L",'$D(DDSTP)&'$P(^DIST(.403,+DDS,40,DDSPG,40,DDSBK,2),U,4))_$E("V",$P(^(2),U,6))
+ S DIR(0)="PO"_DIE_":QEMZ"_$E("L",'$D(DDSTP)&'$P(^DIST(.403,+DDS,40,DDSPG,40,DDSBK,2),U,4))
  I $P(DDSREP,U,7) D
- . N DDSMSPEC S DDSMSPEC=$P(^DD($P(DDSREP,U,6),$P(DDSREP,U,7),0),U,2)
- . I $D(@(DIE_"0)"))[0 S ^(0)=U_DDSMSPEC_U_U
- . E  I $P(@(DIE_"0)"),U,2)'=DDSMSPEC S $P(^(0),U,2)=DDSMSPEC
+ . S:$D(@(DIE_"0)"))[0 @(DIE_"0)")=U_$P(^DD($P(DDSREP,U,6),$P(DDSREP,U,7),0),U,2)_U_U
  . I $P(DDSREP,U,9)]"" D
  .. N DDSROOT,DDSSUB
  .. S DDSROOT=$NA(@DDSREFT@(DDSPG,DDSBK,$P(DDSREP,U),"B"))
  .. S DDSSUB="Y_"",""_"""_$P(DDSREP,U)_""""
  .. S DDSROOT=$E(DDSROOT,1,$L(DDSROOT)-1)_","_DDSSUB_")"
  .. S DIR("S")="I $D("_DDSROOT_")"
- E  N DDSLASCN D
- . S DDSLASCN=$NA(@(DIE_""""_$P(DDSREP,U,9)_""","_+$P(DDSREP,U)_")"))
- . S DIR("S")="X ""I 0"" N R,S S (R,S)=DDSLASCN F  S R=$Q(@R) Q:R=""""!($NA(@R,"_$QL(DDSLASCN)_")'=S)  I $QS(R,$QL(R))=Y Q"
+ E  D
+ . S DIR("S")="I $D("_DIE_""""_$P(DDSREP,U,9)_""","_+$P(DDSREP,U)_",Y))"
  D ^DIR K DIR,DUOUT,DIROUT Q:DIR0N!$D(DIRUT)
  ;
  S DA=+Y,$P(DDSDA,",")=DA,@("D"_DDSDL)=DA

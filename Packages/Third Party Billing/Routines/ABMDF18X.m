@@ -1,5 +1,5 @@
-ABMDF18X ; IHS/ASDST/DMJ - ADA-99 FORM ;   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF18X ; IHS/ASDST/DMJ - ADA-99 FORM ;   [ 10/08/2002  4:10 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**2,14**;APR 05, 2002
  ;Original;TMD;09/12/95 8:49 AM
  ;
  ; IHS/ASDS/LSL - 06/24/00 - Patch 3 - NOIS DXX-0600-140080
@@ -17,7 +17,8 @@ LOOP ;
  ;
  ;Set to correct format line
  S ABM("FL")=ABM("LN")
- I ABM("LN")>40,ABM("LN")<49 S ABM("FL")=41 ;Lines 41 thru 48 are same
+ ;I ABM("LN")>40,ABM("LN")<50 S ABM("FL")=41 ;Lines 41 thru 49 are same  ;IHS/SD/AML abm*2.5*14 IM26566
+ I ABM("LN")>40,ABM("LN")<49 S ABM("FL")=41 ;Lines 41 thru 48 are same  ;IHS/SD/AML abm*2.5*14 IM26566
  I ABM("LN")>53,ABM("LN")<57 S ABM("FL")=54 ;Lines 54 thru 56 are same
  ;
  ;Set tab & format variables

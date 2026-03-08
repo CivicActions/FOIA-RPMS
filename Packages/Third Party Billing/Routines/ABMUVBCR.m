@@ -1,7 +1,7 @@
-ABMUVBCR ; IHS/SD/SDR - 3PB/UFMS View Batch Export Page Details   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMUVBCR ; IHS/SD/SDR - 3PB/UFMS View Batch Export Page Details   [ 10/31/2007  11:50 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**13**;MAY 24, 2007
  ; New routine to display Reconciliation Export page detail
- ; from Supervisor View Export Menu Option
+ ; from Supervisor View Export Menu Option;   MRS:ABM*2.5*13
 EP ;EP
  Q
  ;

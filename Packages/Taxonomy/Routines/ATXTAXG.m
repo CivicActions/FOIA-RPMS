@@ -1,5 +1,5 @@
 ATXTAXG ; IHS/CMI/LAB - DISPLAY TAX ;
- ;;5.1;TAXONOMY;**11**;FEB 04, 1997;Build 48
+ ;;5.1;TAXONOMY;**11,61**;FEB 04, 1997;Build 133
  ;; ;
 EP ;EP - CALLED FROM OPTION
  D EOJ ;START CLEAN
@@ -29,12 +29,15 @@ HDR ; -- header code
 INIT ; -- init variables and list array
  K ATXTAX S ATXHIGH="",C=0
  S J=0 F  S J=$O(^ATXTYPE(J)) Q:J'=+J  D
- .S C=C+1
  .S F=$P(^ATXTYPE(J,0),U,2)
  .Q:F=""
  .Q:'$D(^DIC(F))
+ .Q:F=95.3  ;NO LOINC
+ .Q:F=50.67
+ .Q:F=9999999.14
+ .S C=C+1
  .S ATXTAX(C,0)=C_")  "_$P(^ATXTYPE(J,0),U),$E(ATXTAX(C,0),38)=$E($P(^DIC(F,0),U),1,30)
- .S $E(ATXTAX(J,0),70)=F
+ .S $E(ATXTAX(C,0),70)=F
  .S ATXTAX("IDX",C,C)=J_U_F
  .Q
  S (VALMCNT,ATXHIGH)=C

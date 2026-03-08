@@ -1,5 +1,5 @@
 BSTSDTS5 ;GDIT/HS/BEE-Standard Terminology DTS Calls/Processing ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3,4,7,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
@@ -129,20 +129,29 @@ XCDST NEW FAIL
  ;
 CSTMCDST(RET,BSTSWS) ;Get list of custom codeset entries
  ;
- NEW SLIST,DLIST,CNT,NMID,MFAIL,FWAIT,TRY,FCNT,STS,ABORT,ERSLT,LENTRY,TR,NMIEN
+ NEW SLIST,DLIST,CNT,NMID,MFAIL,FWAIT,TRY,FCNT,STS,ABORT,ERSLT,LENTRY,TR,NMIEN,BIPROG
  ;
  S NMID=$G(BSTSWS("NAMESPACEID")) Q:NMID="" 0
  ;
+ ;Retrieve restart information
+ S BIPROG=$G(BSTSWS("BIPROG"))
+ I BIPROG,($P(BIPROG,U,4)'="CSTMCDST")!($P(BIPROG,U,5)'="BSTSDTS5") S ^XTMP("BSTSLCMP","QUIT")=1,STS=0 Q 0
+ ;
+ ;Update tracker
+ S $P(^XTMP("BSTSLCMP","UPD"),U,4,5)="CSTMCDST^BSTSDTS5"
+ ;
  S SLIST=$NA(^XTMP("BSTSLCMP")) ;Returned List
  S DLIST=$NA(^TMP("BSTSCMCL",$J))
- K @DLIST
+ I $P(BIPROG,U,6)<10 D
+ . K @DLIST
+ . S $P(^XTMP("BSTSLCMP","UPD"),U,6)="10"
  ;
  ;Retrieve Failover Variables
  S MFAIL=$$FPARMS^BSTSVOFL()
  S FWAIT=$P(MFAIL,U,2)
  S MFAIL=$P(MFAIL,U)
  ;
- F TR=1:1:60 D  I +STS Q
+ S STS=1 I $P(BIPROG,U,6)<20 F TR=1:1:60 D  I +STS Q
  . S (ABORT,FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS!(STS="0^") Q
  .. D RESET^BSTSWSV1  ;Reset the DTS link to on
  .. S STS=$$CSTMCDST^BSTSCMCL(.BSTSWS,.ERSLT) I +STS!(STS="0^") Q
@@ -155,11 +164,13 @@ CSTMCDST(RET,BSTSWS) ;Get list of custom codeset entries
  ;Quit on failure
  I +STS=0 Q 0
  ;
- ;Get last entry
- S LENTRY=$O(@DLIST@(""),-1)
+ S $P(^XTMP("BSTSLCMP","UPD"),U,6)="20"
  ;
  ;Move results to second scratch global
- S CNT=0 F  S CNT=$O(@DLIST@(CNT)) Q:'CNT  S @SLIST@(CNT)=@DLIST@(CNT)
+ I $P(BIPROG,U,6)<20 S CNT=0 F  S CNT=$O(@DLIST@(CNT)) Q:'CNT  S @SLIST@(CNT)=@DLIST@(CNT)
+ ;
+ ;Get last entry
+ S LENTRY=$O(@SLIST@("A"),-1)
  ;
  ;Now loop through and process each entry
  S (ABORT,CNT)=0 F  S CNT=$O(@SLIST@(CNT)) Q:'CNT  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
@@ -184,6 +195,10 @@ CSTMCDST(RET,BSTSWS) ;Get list of custom codeset entries
  . ;Remove entry
  . K @SLIST@(CNT)
  ;
+ ;Mark as error or complete
+ I 'STS S ^XTMP("BSTSLCMP","QUIT")=1
+ S:'$D(^XTMP("BSTSLCMP","QUIT")) $P(^XTMP("BSTSLCMP","UPD"),U,6)=200
+ ;
  Q STS
  ;
 RCODE(BSTSWS,ACODE) ;Retrieve list of concepts in RxNorm subsets and refresh
@@ -192,9 +207,16 @@ RCODE(BSTSWS,ACODE) ;Retrieve list of concepts in RxNorm subsets and refresh
  ;BSTSWS - Array of connection settings
  ;ACODE - If 1 do no process items here
  ;
- NEW SLIST,DLIST,SBCNT,MFAIL,FWAIT,TRY,FCNT,STS,ABORT,ERSLT,LENTRY,REVIN,X1,X2,X,RUNSTRT,TR
+ NEW SLIST,DLIST,SBCNT,MFAIL,FWAIT,TRY,FCNT,STS,ABORT,ERSLT,LENTRY,REVIN,X1,X2,X,RUNSTRT,TR,BIPROG
  ;
  S ACODE=$G(ACODE)
+ ;
+ ;Retrieve restart information
+ S BIPROG=$G(BSTSWS("BIPROG"))
+ I BIPROG,($P(BIPROG,U,4)'="RCODE")!($P(BIPROG,U,5)'="BSTSDTS5") S ^XTMP("BSTSLCMP","QUIT")=1,STS=0 Q 0
+ ;
+ ;Update tracker
+ S $P(^XTMP("BSTSLCMP","UPD"),U,4,5)="RCODE^BSTSDTS5"
  ;
  ;Get the current date
  S RUNSTRT=DT
@@ -205,7 +227,9 @@ RCODE(BSTSWS,ACODE) ;Retrieve list of concepts in RxNorm subsets and refresh
  ;
  S SLIST=$NA(^XTMP("BSTSLCMP")) ;Returned List
  S DLIST=$NA(^TMP("BSTSCMCL",$J))
- K @DLIST
+ I $P(BIPROG,U,6)<10 D
+ . K @DLIST
+ . S $P(^XTMP("BSTSLCMP","UPD"),U,6)="10"
  ;
  ;Retrieve Failover Variables
  S MFAIL=$$FPARMS^BSTSVOFL()
@@ -221,10 +245,10 @@ RCODE(BSTSWS,ACODE) ;Retrieve list of concepts in RxNorm subsets and refresh
  . K ^XTMP("BSTSLCMP","STS")
  ;
  ;Get list of concepts in subsets
- S ^XTMP("BSTSLCMP","STS")="Generating a list of concepts in subsets"
+ I $P(BIPROG,U,6)<20 S ^XTMP("BSTSLCMP","STS")="Generating a list of concepts in subsets"
  ;
  ;BSTS*1.0*8;Extra error handling
- F TR=1:1:60 D  I +STS Q
+ S STS=1 I $P(BIPROG,U,6)<20 F TR=10:10:60 D  I +STS Q
  .S (ABORT,FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS!(STS="0^") Q
  .. D RESET^BSTSWSV1  ;Reset the DTS link to on
  .. S STS=$$RCODE^BSTSCMCL(.BSTSWS,.ERSLT) I +STS!(STS="0^") Q
@@ -239,16 +263,19 @@ RCODE(BSTSWS,ACODE) ;Retrieve list of concepts in RxNorm subsets and refresh
  I +STS=0 Q 0
  ;
  ;Merge results to second scratch global
- S SBCNT=0 F  S SBCNT=$O(@DLIST@(SBCNT)) Q:'SBCNT  D
- . NEW DTSID,LAST
- . S DTSID=$P(@DLIST@(SBCNT),U) Q:DTSID=""
- . I $D(@SLIST@("DTS",DTSID)) Q
- . S LAST=$O(@SLIST@("A"),-1)+1
- . S @SLIST@(LAST)=@DLIST@(SBCNT)
- . S @SLIST@("DTS",DTSID)=LAST
+ I $P(BIPROG,U,6)<20 D
+ . S SBCNT=0 F  S SBCNT=$O(@DLIST@(SBCNT)) Q:'SBCNT  D
+ .. NEW DTSID,LAST
+ .. S DTSID=$P(@DLIST@(SBCNT),U) Q:DTSID=""
+ .. I $D(@SLIST@("DTS",DTSID)) Q
+ .. S LAST=$O(@SLIST@("A"),-1)+1
+ .. S @SLIST@(LAST)=@DLIST@(SBCNT)
+ .. S @SLIST@("DTS",DTSID)=LAST
  ;
  ;Do not process if part of main update
  I ACODE Q 1
+ ;
+ S $P(^XTMP("BSTSLCMP","UPD"),U,6)="20"
  ;
  ;Get last entry
  S LENTRY=$O(@SLIST@("A"),-1)
@@ -259,17 +286,6 @@ RCODE(BSTSWS,ACODE) ;Retrieve list of concepts in RxNorm subsets and refresh
  . ;
  . ;Get DTSId
  . S DTSID=$P(@SLIST@(SBCNT),U) Q:DTSID=""
- . ;
- . ;Check last modified - skip if today
- . S CIEN=$O(^BSTS(9002318.4,"D",36,DTSID,""))
- . S SKIP=0 I CIEN]"" D
- .. NEW OOD,LMOD
- .. ;
- .. ;Force update of out of date concepts
- .. S OOD=$$GET1^DIQ(9002318.4,CIEN_",",.11,"I") I OOD="Y" Q
- .. S LMOD=$$GET1^DIQ(9002318.4,CIEN_",",.12,"I") I LMOD'<RUNSTRT S SKIP=1
- .. I SKIP=1 S $P(@SLIST@(SBCNT),U,2)="Skipped"
- . I SKIP Q
  . ;
  . S ^XTMP("BSTSLCMP","STS")="Getting concept details for DTSID: "_DTSID_" (Entry "_SBCNT_" of "_LENTRY_")"
  . ;
@@ -282,8 +298,9 @@ RCODE(BSTSWS,ACODE) ;Retrieve list of concepts in RxNorm subsets and refresh
  ... I ABORT=1 S ^XTMP("BSTSLCMP","QUIT")=1 D ELOG^BSTSVOFL("RXNORM SUBSET REFRESH FAILED ON DETAIL LOOKUP: "_DTSID)
  ... S FCNT=0
  ;
- ;Clear status
- K ^XTMP("BSTSLCMP","STS")
+ ;Mark as error or complete
+ I 'STS S ^XTMP("BSTSLCMP","QUIT")=1
+ S:'$D(^XTMP("BSTSLCMP","QUIT")) $P(^XTMP("BSTSLCMP","UPD"),U,6)=200
  ;
  I 'STS Q 0
  Q 1
@@ -305,7 +322,7 @@ UPRSUB(GL,CONCDA,BSTSC) ;Update RxNorm subsets
  . NEW SB
  . S SB="" F  S SB=$O(@GL@("SUB",SB)) Q:SB=""  D
  .. ;
- .. NEW DIC,X,Y,DA,X,Y,IENS,DLAYGO
+ .. NEW DIC,X,Y,DA,X,Y,IENS,DLAYGO,STYP,SID
  .. S DA(1)=CONCDA
  .. S DIC(0)="LX",DIC="^BSTS(9002318.4,"_DA(1)_",4,"
  .. S X=$P($G(@GL@("SUB",SB)),U) Q:X=""
@@ -315,7 +332,12 @@ UPRSUB(GL,CONCDA,BSTSC) ;Update RxNorm subsets
  .. I +Y<0 Q
  .. S DA=+Y
  .. S IENS=$$IENS^DILF(.DA)
+ .. ;GDIT/HS/BEE;FEATURE#112749;Retrieve expression based subset information
+ .. S STYP=$P($G(@GL@("SUB",SB)),U,4)
+ .. S SID=$P($G(@GL@("SUB",SB)),U,5)
  .. S BSTSC(9002318.44,IENS,".02")=$$DTS2FMDT^BSTSUTIL($P($G(@GL@("SUB",SB)),U,2))
+ .. S BSTSC(9002318.44,IENS,".04")=$S(STYP]"":STYP,1:"@")
+ .. S BSTSC(9002318.44,IENS,".05")=$S(SID]"":SID,1:"@")
  ;
  ;Save NDC
  ;
@@ -372,7 +394,7 @@ UPRSUB(GL,CONCDA,BSTSC) ;Update RxNorm subsets
  ;Clear out existing entries
  D
  . NEW TTY
- . S TTY=0 F  S NDC=$O(^BSTS(9002318.4,CONCDA,12,TTY)) Q:'TTY  D
+ . S TTY=0 F  S TTY=$O(^BSTS(9002318.4,CONCDA,12,TTY)) Q:'TTY  D
  .. NEW DA,DIK
  .. S DA(1)=CONCDA,DA=TTY
  .. S DIK="^BSTS(9002318.4,"_DA(1)_",12," D ^DIK

@@ -1,5 +1,6 @@
-DIFGGU ;SFISC/XAK,EDE(OHPRD)-FILEGRAM FUNCTIONS  ; [ 11/10/92  10:38 AM ]
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFGGU ;SFISC/XAK,EDE(OHPRD)-FILEGRAM FUNCTIONS  ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ; Required variables:
  ;

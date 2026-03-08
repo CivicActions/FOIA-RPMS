@@ -1,5 +1,5 @@
 DGPFLMU ;ALB/KCL - PRF ASSIGNMENT LISTMAN UTILITIES ; 3/06/06 3:39pm
- ;;5.3;Registration;**425,650,1007,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Registration;**425,650,1007,1015,1022**;MAY 28, 2004;Build 18
  ;
  ;no direct entry
  QUIT
@@ -22,11 +22,17 @@ BLDHDR(DGDFN,DGPFHDR) ;This procedure builds the VALMHDR array to display the Li
  ;
  ;retrieve patient identifying info
  I $$GETPAT^DGPFUT2(DGDFN,.DGPFPAT)
+ ;202307 97197 maw p1022 PPN
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DGDFN,"E",1)
  ;
  ;set 1st line of header
- S DGPFHDR(1)="Patient: "_$G(DGPFPAT("NAME"))_" "
- S DGPFHDR(1)=$$SETSTR^VALM1("("_$G(DGPFPAT("SSN"))_")",DGPFHDR(1),$L(DGPFHDR(1))+1,80)
- S DGPFHDR(1)=$$SETSTR^VALM1("DOB: "_$$FDATE^VALM1($G(DGPFPAT("DOB"))),DGPFHDR(1),54,80)
+ S DGPFHDR(1)="Patient: "_$G(PRF)_" "
+ ;S DGPFHDR(1)="Patient: "_$G(DGPFPAT("NAME"))_" "
+ S DGPFHDR(1)=$$SETSTR^VALM1("("_$TR($G(DGPFPAT("SSN")),"-","")_")",DGPFHDR(1),$L(DGPFHDR(1))+1,80)
+ S DGPFHDR(1)=$$SETSTR^VALM1("DOB: "_$$FDATE^VALM1($G(DGPFPAT("DOB"))),DGPFHDR(1),64,80)
+ ;S DGPFHDR(1)=$$SETSTR^VALM1("("_$G(DGPFPAT("SSN"))_")",DGPFHDR(1),$L(DGPFHDR(1))+1,80)
+ ;S DGPFHDR(1)=$$SETSTR^VALM1("DOB: "_$$FDATE^VALM1($G(DGPFPAT("DOB"))),DGPFHDR(1),54,80)
  ;
  Q  ;IHS/OIT/LJF 12/21/2006 PATCH 1007 IHS not yet using MPI
  ;set 2nd line of header

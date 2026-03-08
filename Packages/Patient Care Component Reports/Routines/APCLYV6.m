@@ -1,5 +1,5 @@
 APCLYV6 ; IHS/CMI/LAB - VISIT COUNTS BY PROVIDER ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**26**;MAY 14, 2009;Build 48
  ;This report counts visits by provider for a range of dates
  ;
  W:$D(IOF) @IOF W !!?20,"OUTPATIENT CLINIC VISIT COUNTS BY PROVIDER",!!
@@ -47,12 +47,13 @@ SC ;
  W !?5,"5  S-DAY SURGERY"
  W !?5,"6  O-OBSERVATION"
  W !?5,"7  R-NURSING HOME"
+ W !?5,"8  M-Telemedicine"
  W !
- K DIR S DIR(0)="L^0:7",DIR("A")="Which visit service categories should be included",DIR("B")="" KILL DA D ^DIR KILL DIR
+ K DIR S DIR(0)="L^0:8",DIR("A")="Which visit service categories should be included",DIR("B")="" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G LOC
  I Y="" G LOC
  S APCLSCAT=Y
- S A=Y,C="" F I=1:1 S C=$P(A,",",I) Q:C=""  S X=$S(C=1:"A",C=2:"C",C=3:"T",C=4:"N",C=5:"S",C=6:"O",C=7:"R",1:"") I X]"" S APCLSCAT(X)=""
+ S A=Y,C="" F I=1:1 S C=$P(A,",",I) Q:C=""  S X=$S(C=1:"A",C=2:"C",C=3:"T",C=4:"N",C=5:"S",C=6:"O",C=7:"R",C=8:"M",1:"") I X]"" S APCLSCAT(X)=""
 ZIS ;
 DEMO ;
  D DEMOCHK^APCLUTL(.APCLDEMO)

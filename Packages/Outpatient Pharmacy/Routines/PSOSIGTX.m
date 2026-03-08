@@ -1,8 +1,9 @@
-PSOSIGTX ;BIR/RTR-Utility to calculate quantity ;6/04/00
- ;;7.0;OUTPATIENT PHARMACY;**46**;DEC 1997
+PSOSIGTX ;BIR/RTR-Utility to calculate quantity ;28-May-2024 12:37;DU
+ ;;7.0;OUTPATIENT PHARMACY;**46,1035**;DEC 1997;Build 39
  ;External reference to PS(51 supported by DBIA 2224
  ;External reference to PS(51.1 supported by DBIA 2225
  ;
+ ; Modified - IHS/MSC/PLS - 05/28/2024 - SCH+4 - FID 103810
 EN(PSOSIGX) ;
  N VARIABLE
  Q
@@ -10,7 +11,9 @@ SCH ;SCH = schedule entered     SCHEX = expanded schedule
  N SQFLAG,SCLOOP,SCLP,SCLPS,SCLHOLD,SCIN,SODL,SST
  K SCHEX S SQFLAG=0
  I $G(SCH)="" S SCHEX="" Q
- I SCH[""""!($A(SCH)=45)!(SCH?.E1C.E)!($L(SCH," ")>3)!($L(SCH)>20)!($L(SCH)<1) K SCH Q
+ ;FID 103810
+ ;I SCH[""""!($A(SCH)=45)!(SCH?.E1C.E)!($L(SCH," ")>3)!($L(SCH)>20)!($L(SCH)<1) K SCH Q
+ I SCH[""""!($A(SCH)=45)!(SCH?.E1C.E)!($L(SCH)>24)!($L(SCH)<1) K SCH Q
  F SCLOOP=0:0 S SCLOOP=$O(^PS(51.1,"B",SCH,SCLOOP)) Q:'SCLOOP!(SQFLAG)  I $P($G(^PS(51.1,SCLOOP,0)),"^",8)'="" S SCHEX=$P($G(^(0)),"^",8),SQFLAG=1
  Q:SQFLAG
  I $P($G(^PS(51,"A",SCH)),"^")'="" S SCHEX=$P(^(SCH),"^") Q

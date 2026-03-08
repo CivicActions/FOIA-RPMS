@@ -1,5 +1,5 @@
-ABME8CLM ; IHS/ASDST/DMJ - 837 CLM Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8CLM ; IHS/ASDST/DMJ - 837 CLM Segment [ 11/13/2003  12:25 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1,4,9,10**;APR 05, 2002
  ;Health Claim
  ;
  ; IHS/SD/SDR - v2.5 p9 - IM18516
@@ -30,7 +30,7 @@ LOOP ;LOOP HERE
  Q
 30 ;CLM02 - Monetary Amount
  S ABMR("CLM",30)=$P(ABMB2,U)  ;bill amount
- I ABMPSQ'=1,(+$P(ABMB2,U,7)'=0) S ABMR("CLM",30)=$P(ABMB2,U,7)
+ I ABMPSQ'=1,(+$P(ABMB2,U,7)'=0) S ABMR("CLM",30)=$P(ABMB2,U,7)  ;abm*2.5*10 COB issue
  S ABMR("CLM",30)=$J(ABMR("CLM",30),0,2)
  Q
 40 ;CLM03 - Claim Filing Indicator Code-not used
@@ -86,7 +86,7 @@ LOOP ;LOOP HERE
  I ABMP("EXP")=21 S ABMR("CLM",130)="" Q
  S ABMR("CLM",130)=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),59,0))
  Q:ABMR("CLM",130)=""
- S ABMR("CLM",130)=$P($G(^ABMDCODE(ABMR("CLM",130),0)),U)
+ S ABMR("CLM",130)=$P($G(^ABMDCODE(ABMR("CLM",130),0)),"^",1)
  Q
 140 ;CLM13 - Yes/No-not used
  S ABMR("CLM",140)=""
@@ -114,6 +114,9 @@ LOOP ;LOOP HERE
  Q
 210 ;CLM20 - Delay Reason Code
  S ABMR("CLM",210)=""
- S ABMDRC=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),"^",16)
- I ABMDRC'="" S ABMR("CLM",210)=$P($G(^ABMDCODE(ABMDRC,0)),"^")
+ ;start new code abm*2.5*9 IM18516
+ I ABMP("EXP")=21 D
+ .S ABMDRC=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),"^",16)
+ .I ABMDRC'="" S ABMR("CLM",210)=$P($G(^ABMDCODE(ABMDRC,0)),"^")
+ ;end new code abm*2.5*9 IM18516
  Q

@@ -1,5 +1,5 @@
-APCLVLP8 ; IHS/CMI/LAB - PRINT VISIT REPORT ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLVLP8 ; IHS/OHPRD/TMJ - PRINT VISIT REPORT ;  [ 01/10/05  9:34 PM ]
+ ;;3.0;IHS PCC REPORTS;**16**;FEB 05, 1997
  ;IHS/TUCSON/LAB - added killing of APCLPRNT to V subroutine 05/19/97
  ;IHS/TUCSON/LAB - modified subroutine FLAT - patch 1 - 05/27/97
 DELIMIT ;EP - Set up header line, dash line

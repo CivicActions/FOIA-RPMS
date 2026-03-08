@@ -1,70 +1,58 @@
 BYIMRT ;IHS/CIM/THL - IMMUNIZATION DATA EXCHANGE;
- ;;2.0;BYIM IMMUNIZATION DATA EXCHANGE;**3,4,5,6,7,8**;JUL 11, 2017;Build 310
- ;;CONTINUATION OF BYIMIMM
+ ;;3.0;BYIM IMMUNIZATION DATA EXCHANGE;**1,2,3,4,5,6,7**;AUG 20, 2020;Build 747
  ;
- ;REAL-TIME PROCESSING
+ ;REAL-TIME HL7 MESSAGE PROCESSING
  ;
- ;-----
+ ;=====
 RT ;EP;FOR REAL TIME QUERIES
  F  D RT1 Q:$D(BYIMQUIT)
  K BYIMQUIT
  Q
- ;-----
+ ;=====
+ ;
 RT1 ;REAL TIME
- D PATH^BYIMIMM6
- K BYIMQTX,BYIMQUIT
- S BYIMQTX=$S(BYIMQT=1:"VXQ",1:"QBP")
+ ;V3.0 PATCH 6 - FID-83958 HL7 ERROR MESSAGE PROCESSING
+ D PATH
+ K BYIMQT,BYIMQUIT
+ S BYIMQT="QBP"
  N RT
  W @IOF
- W !!?10,"Real-Time Query Options - Version: ",BYIMVER
+ W !!?10,"Immunization Query Options - Version: ",BYIMVER
  K DIR
- S DIR(0)="SO^1:Get  a Patient's Immunizations FROM State IIS;2:Send a Patient's Immunizations TO   State IIS;3:Review State IIS Responses;4:Check for Additional Response Messages"
- S DIR("A")="Select the action type"
+ S DIR(0)="SO^1:Request Patient Imm History and Forecast;2:Send Patient Immunizations;3:Review Query or VXU Response;4:Review Query or VXU Sent;5:Send Scheduled Appt Queries"
+ ;S DIR(0)="SO^1:Request Patient Imm History and Forecast;2:Send Patient Immunizations;3:Review Query or VXU Response;4:Review Query or VXU Sent;5:Send Scheduled Appt Queries;6:Review Daily Batch Error"
+ S DIR("A")="Which action"
  D ^DIR
  K DIR
  I 'Y S BYIMQUIT=1 Q
- S RT=$S(Y=1:"VXQ",Y=2:"VXU",Y=3:"RESP",Y=4:"RTIN",1:"")
- I RT="RESP" D RESP K BYIMQUIT Q
+ I Y=5 D SCHDT^BYIMRT2 Q
+ S RT=$S(Y=1:"QBP",Y=2:"VXU",Y=3:"RESP",Y=4:"SENT",Y=5:"RTIN",Y=6:"ACK",1:"")
+ I RT="RESP"!(RT="SENT") D RESP^BYIMRT2 K BYIMQUIT Q
+ I RT="ACK" D RESP^BYIMRT2 K BYIMQUIT Q
  I RT="RTIN" D  Q
  .W !!,"Checking for query responses that have not yet been processed."
  .W !!,"Please stand by..."
  .H 4
- .N BYIMRTIN
- .S BYIMRTIN=1
+ .N BYIMRTD
+ .S BYIMRTD=1
  .D RTIN
  .W !!,"Please check 'Review State IIS Responses' for new IIS responses."
  .D PAUSE^BYIMIMM6
  .K BYIMQUIT
- D PAT
- Q:'$D(^TMP($J,"BYIM RT"))
+ D PAT^BYIMRT3
+ Q:'$D(^BYIMTMP($J,"BYIM RT"))
+ ;V3.0 PATCH 6 - FID-83363 EXPORT FOR SELECTED STATES
+ D EXPST^BYIMRT3
  D SEND
- K ^TMP($J,"BYIM RT")
+ K ^BYIMTMP($J,"BYIM RT")
  Q
- ;-----
-PAT ;
- K ^TMP($J,"BYIM RT")
- I RT="VXU" D ALL
- W !!,"Select patient(s) to send to the State Immunization Registry"
- F  D P1 Q:$D(BYIMQUIT)
- K BYIMQUIT
- Q
- ;-----
-P1 ;SELECT MULTIPE PATIENTS
- K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
- S DIC=9000001
- S DIC("A")="Select "_$S($D(^TMP($J,"BYIM RT")):"another ",1:"")_"patient: "
- S DIC(0)="AEQM"
- W !
- D ^DIC
- K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
- I Y<1 S BYIMQUIT="" Q
- S ^TMP($J,"BYIM RT",+Y)=""
- D RTPAT
- Q
- ;-----
+ ;=====
+ ;
 SEND ;SEND RT QUERY
- W !!,$S(RT="VXQ":"A 'Query for Vaccination Record ("_BYIMQTX_")'",1:"An 'Unsolicited Vaccine Record Update (VXU)'")," will be sent for:"
- D RTPAT
+ N BYIMRTD
+ S BYIMRTD=1
+ W !!,$S(RT="QBP":"A 'Request for Evaluated Imm History and Forecast'",1:"An 'Unsolicited Vaccine Record Update (VXU)'")," will be sent for:"
+ D RTPAT^BYIMRT3
  K DIR
  S DIR(0)="YO"
  S DIR("A")="Do you want to proceed"
@@ -73,474 +61,404 @@ SEND ;SEND RT QUERY
  D ^DIR
  K DIR
  Q:Y'=1
- I '$D(ZTQUEUED)&$D(^TMP($J,"BYIM RT")) D
+ I '$D(ZTQUEUED),$G(BYIMRTD),$D(^BYIMTMP($J,"BYIM RT")) D
  .W !!,"Please stand by.  This may take a couple of seconds...",!
- S DFN=0
- F  S DFN=$O(^TMP($J,"BYIM RT",DFN)) Q:'DFN  D
- .D:RT="VXQ" VXQ(DFN)
- .D:RT="VXU" VXU(DFN)
- .K ^TMP($J,"BYIM RT",DFN)
- K ^TMP($J,"BYIM RT")
+ S DFX=0
+ F  S DFX=$O(^BYIMTMP($J,"BYIM RT",DFX)) Q:'DFX  D
+ .D:RT="QBP" QBP(DFX)
+ .I RT="VXU" S MID=$$VXU(DFX)
+ .K ^BYIMTMP($J,"BYIM RT",DFX)
+ K ^BYIMTMP($J,"BYIM RT")
  D PAUSE^BYIMIMM6
  Q
- ;-----
-RTPAT ;DISPLAY PATIENTS FOR RT QUERY
- N DFN
- W !
- S DFN=0
- F  S DFN=$O(^TMP($J,"BYIM RT",DFN)) Q:'DFN  D
- .W !," *** ",$P(^DPT(DFN,0),U)," *** "
+ ;=====
+ ;
+QBP(DFN) ;EP;TO SEND QBP MESSAGE
+ S MID=$$QBPX(DFN)
+ I '$D(ZTQUEUED),$G(BYIMU),$G(BYIMRTD) D QD
  Q
- ;-----
-VXQ(DFN) ;EP;TO SEND VXQ MESSAGE
- W:'$D(ZTQUEUED) !,"Query being sent for: ",$J(DFN,6),"  ",$P(^DPT(DFN,0),U)
- D DELAY
- S Y=$$VXQX(DFN)
- Q
-DELAY Q:$D(ZTQUEUED)
- W "  "
- F J=1:1:3 W "." H 1
- Q
- ;-----
-VXU(DFN) ;EP;TO SEND VXU MESSAGE
- N VST
- S VST=$O(^AUPNVSIT("AC",DFN,9999999999),-1)
- Q:'VST
- S Y=$$V04^BYIMIMM(VST,BYIMALL)
- W:'$D(ZTQUEUED) !,"Immunization record being sent for: ",$J(DFN,6),"  ",$P(^DPT(DFN,0),U)
- D DELAY
- S INHF=+Y
- Q:'INHF
- S BYIMUIF=$O(^INTHU("AT",INHF,0))
- Q:'BYIMUIF
- D LOGD^BYIMIMM4(DFN,"E")
- D RXR(BYIMUIF)
+ ;=====
+ ;
+VXU(VDFN) ;EP;TO SEND VXU MESSAGE
+ N VST,BYIMDUZ,BYIMLEDT,BYIMU
+ S VST=$O(^AUPNVSIT("AC",VDFN,9999999999),-1)
+ Q:'VST ""
+ S BYIMDUZ=$$DUZ^BYIMIMM()
+ D LED^BYIMIMM7
+ H 1
+ D NOW^%DTC
+ S NOW=%
+ K INDA
+ S INDA=VDFN
+ S INDA(9000010,1)=$O(^AUPNVSIT("AC",VDFN,9999999999),-1)
+ S INDA(2,1)=VDFN
+ F J=1,3,4,5,6 S INDA((9000000+J),1)=VDFN
+ S INDA("BYIMALL")=$G(BYIMALL)
+ S INDA("BYIMADM")=$G(BYIMADM)
+ S INDA("BYIMLEDT")=$G(BYIMLEDT)
+ S INDA("BYIMLEDS")=$G(BYIMLEDS)
+ S INDA("BYIMLEDE")=$G(BYIMLEDE)
+ S INDA("BYIMEXST")=$G(BYIMEXST)
+ S INDA("BYIMTEST")=$G(BYIMTEST)
+ S INDA("BYIMHX")=$G(BYIMHX)
+ S BYIMPAR="HL IHS IZV04 OUT PARENT"
+ S INHF=0
+ D ^INHF(BYIMPAR,.INDA)
+ F J=1:1 Q:$G(INHF)  H 1 W:'$D(ZTQUEUED) "W"
+ S BYIMU=+$O(^INTHU("AT",+$G(INHF),0))
+ F J=1:1 Q:BYIMU  S BYIMU=+$O(^INTHU("AT",$G(INHF),0))
+ Q:'BYIMU ""
  S BYIMSTP="VXU"
- D SFILE(BYIMUIF,DFN,BYIMSTP)
- D CLEANVXU(BYIMUIF)
- Q
- ;-----
+ S MID=$$SFILE(BYIMU,VDFN,BYIMSTP)
+ ;V3.0 PATCH 6 - FID-83363 EXPORT FOR SELECTED STATES
+ D:'$D(ZTQUEUED)&$G(BYIMRTD)
+ .W !!?3,"Immunizations for: ",$P(^DPT(VDFN,0),U)
+ .W !?7,"being sent to: "
+ .D DSTATE(BYIMEXST)
+ Q MID
+ ;PATCH 3 CR- END
+ ;=====
+ ;
 RSP ;EP;IMMUNIZATION DATA EXCHANGE
- S BHLDEST="D DEST^INHUSEN"
- S INDEST("RSPK11")="HL IHS IZV04 RSP IN"
- X BHLDEST
+ ;MOVED FOR PATCH 4
+ D RSP^BYIMRT3
  Q
- ;-----
-RESP ;EP;REVIEW RT RESPONSE FILES
+ ;=====
+ ;
+RTIMP(IPATH,FILE,STATE,OPATH) ;EP;IMPORT RESPONSE MESSAGES
+ ;IPATH = INBOUND PATH FOR STATE
+ ;FILE  = NAME OF FILE TO BE PROCESSED
+ ;STATE = STATE WITH WHICH SITE IS EXCHANGING
+ ;
  K BYIMQUIT
- F  D RESP1 Q:$D(BYIMQUIT)
- Q
- ;-----
-RESP1 ;REVIEW RESPONSES
- K BYIMQUIT
- K ^TMP($J,"BYIM RT")
- N DFN,RT
- W @IOF
- W !!?10,"Review Responses from the State IIS"
- K DIR
- S DIR(0)="SO^1:Review Immunizations ready to add to RPMS;2:Review Query Response Messages"
- S DIR("A")="Select the action type"
- W !
- D ^DIR
- K DIR,BYIMQUIT
- I 'Y S BYIMQUIT=1 Q
- S RT=$S(Y=1:"START",1:"NON")
- I RT="START" D START Q
- F  D NON Q:$D(BYIMQUIT)
- K BYIMQUIT
- Q
- ;-----
-START ;
- W @IOF
- W !!?10,"All NEW immunizations for Query Responses from the state"
- W !!?10,"that can be added to RPMS will be listed below."
- W !!
- S DIR("A")="Press <ENTER> to review immunizations, press '^' to exit"
- D PAUSE^BYIMIMM6
- Q:'Y
- D START^BYIMIMM1
- Q
- ;-----
-NON ;EP;TO REVIEW NON-IMMUNIZATION IIS RESPONSES
- W @IOF
- W !!?10,"Select Responses by Patient or Date"
- K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
- S DIC="^BYIMRT("
- S DIC(0)="AEMQ"
- S DIC("A")="Select Query Date or Patient: "
- S DIC("S")="I $P(^(0),U,2)=""E"""
- W !
- D ^DIC
- K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
- I Y<0 S BYIMQUIT=1 Q
- D DISP(+Y)
- Q
- ;-----
-RTIMP(FILE) ;EP;TO AUTOMATICALLY IMPORT REAL-TIME MESSAGES
- K BYIMQUIT
- N AUTOIMP,AUTOADD,DIR
- S AUTOIMP=$P($G(^BYIMPARA(DUZ(2),0)),U,4)
- S AUTOADD=$P($G(^BYIMPARA(DUZ(2),0)),U,5)
- D PATH^BYIMIMM6
- Q:IPATH=""
- S Y=$$OPEN^%ZISH(IPATH,FILE,"R")
- Q:Y
- N BYIMJ,BYIMX,UIF
+ N BYIMJ,BYIMX,UIF,XX
+ N DONE,ACT,UIF,MID,BYIMMSH,BYIMMSA,RSPDA,DFN,ORIG
+ S DONE=0
+ S ACT="RSP"
  S UIF=""
+ S MID=""
+ S BYIMMSH=""
+ S BYIMMSA=""
+ S DFN=$P(FILE,"_",3)
+ S RSPDA=$$RTLOG(FILE,ACT,IPATH,DFN,UIF,MID,0,STATE)
+ I 'RSPDA D  Q
+ .D NOW^%DTC
+ .S ^BYIMTMP("RTIMP",IPATH,FILE,"NO RSPDA",%)=FILE_U_ACT_U_IPATH_U_DFN_U_UIF_U_MID_U_STATE
+ S Y=$$OPEN^%ZISH(IPATH,FILE,"R")
+ I Y D NOW^%DTC S ^BYIMTMP("RTIMP",IPATH,FILE,"NO OPEN",%)="NO OPEN" Q
+ S ORIG=$O(^BYIMRT("ACT",$P(FILE,"."),"QBP",STATE,0))
+ S:'ORIG ORIG=$O(^BYIMRT("ACT",$P(FILE,"."),"VXU",STATE,0))
+ ;FIND ORIGINAL QUERY MESSAGE
  S BYIMJ=0
- ;F  U IO R BYIMX:DTIME D:BYIMX="" CLOSE^%ZISH() Q:BYIMX=""  D
- ;.I BYIMX["MSH|" D  Q:'UIF
- ;..D NEWUIF
- ;.I BYIMX["MSH|" D NEWUIF Q:'UIF
- ;.S BYIMJ=BYIMJ+1
- ;.S ^INTHU(UIF,3,BYIMJ,0)=BYIMX_"|CR|"
- D LOG(UIF,"I",FILE)
- N BYIMXX
- S BYIMXX=0
- F  S BYIMXX=$O(^BYIMTMP($J,"BYIM IMM",BYIMXX)) Q:'BYIMXX  D
- .D SET1^BYIMIMM1(BYIMXX)
+ F  U IO R BYIMX:DTIME D:BYIMX="" CLOSE^%ZISH() Q:BYIMX=""  D
+ .S:$E(BYIMX,1,4)["MSH|" ACT=$P($P(BYIMX,"|",9),U)
+ .S:$E(BYIMX,1,4)["MSA|" MID=$P(BYIMX,"|",3)
+ .S BYIMJ=BYIMJ+1
+ .S ^BYIMRT(RSPDA,1,BYIMJ,0)=BYIMX
+ S:BYIMJ ^BYIMRT(RSPDA,1,0)="^90480.21^"_BYIMJ_U_BYIMJ
+ ;DELETE IMPORTED FILE
+ S Y=$$DEL^%ZISH(IPATH,FILE)
+ ;DELETE 'SENT' COPY
+ S SLASH=$S(IPATH["/":"/",1:"\")
+ S LNG=$L(OPATH,SLASH)-2
+ S PATH=$P(OPATH,SLASH,1,LNG)
+ S DPATH=PATH_"sent"_SLASH
+ ;S Y=$$DEL^%ZISH(DPATH,FILE)
+ ;DELETE 'BACKUP' COPY
+ S DPATH=PATH_SLASH_"backup"_SLASH
+ S Y=$$DEL^%ZISH(DPATH,FILE)
+ S X1=$G(^BYIMRT(RSPDA,1,0))
+ S X2=$G(^BYIMRT(RSPDA,1,1,0))
+ S X3=$G(^BYIMRT(RSPDA,1,2,0))
+ S X4=$G(^BYIMRT(RSPDA,1,3,0))
+ W:'$D(ZTQUEUED)&$G(BYIMRTD) !,FILE," processed..."
+ S:ACT="ACK" ACT="RSP"
+ S DIE="^BYIMRT("
+ S DA=RSPDA
+ S DR=".02////"_$G(ACT)_";.06////"_MID_";.09////"_ORIG_";.1////"_$P(FILE,"_",4)
+ D ^DIE
+ ;V3.0 PATCH 5 - FID-88380 UPDATE PARSE PROCESS
+ ;PATCH 4 - FID-79417
+ ;Import from WIR uses XML characters for carriage return line feed
+ I $G(^BYIMRT(RSPDA,1,1,0))["&#xd;" D PARSE^BYIMRT3(RSPDA)
+ ;PATCH 4 - FID-79417 END
+ ;V3.0 PATCH 5 - FID-88380 END
+ D X2^BYIMRT1(RSPDA)
  Q
- ;-----
+ ;=====
+ ;
 LOG(UIF,ACT,FILE) ;LOG RT FILE
  Q:'$G(UIF)
  S ^BYIMTMP($J,"BYIM IMM",UIF)=""
- N XX,DFN
- S DFN=$P(FILE,"_",2)
+ S DFN=$P(FILE,"_",3)
  S MID=""
- S XX=0
+ I $G(^INTHU(UIF,3,2,0))["MSA|" S MID=$P(^(0),"|",3)
+ I MID'["IHS-",$G(^INTHU(UIF,3,3,0))["QAK|" S MID=$P(^(0),"|",2)
  S:MID'["IHS-" MID=""
- D RTLOG(FILE,ACT,IPATH,DFN,UIF,MID,0)
+ S QRYDA=$$RTLOG(FILE,ACT,IPATH,DFN,UIF,MID,0,STATE)
  Q
- ;-----
-VXQX(BYIMPAT) ;PEP;send query request for patient IEN - BYIMPAT
- ;BYIMPAT - PATIENT DFN/IEN
+ ;=====
+ ;
+QBPX(QDFN) ;EP;send query request for patient IEN - QDFN
+ ;QDFN - PATIENT DFN/IEN
  ;RETURNS GIS HL7 MESSAGE CREATION MESSAGE
  ;
- I '$G(BYIMPAT)!'$D(^DPT(+$G(BYIMPAT),0)) Q "No Patient identified for DFN "_$G(BYIMPAT)
- D PATH^BYIMIMM6
- S BYIMQTX=$S(BYIMQT=1:"VXQ",1:"QBP")
+ I '$G(QDFN)!'$D(^DPT(+$G(QDFN),0)) Q "No Patient identified for DFN "_$G(QDFN)
+ S BYIMDUZ=$$DUZ^BYIMIMM()
+ D PATH
  N BYIMDEST,INH,INDA,INA
- S INDA=BYIMPAT
- S INDA(2,1)=BYIMPAT
- S INDA(9000001,1)=BYIMPAT
+ S INDA=QDFN
+ S INDA(2,INDA)=""
+ S INDA(9000001,INDA)=""
  S INA("QNM",INDA)=""
- S BYIMDEST=$S(BYIMQT=1:"HL IHS IZV04 V01VXQ OUT PARENT",1:"HL IHS IZV04 QBP OUT PARENT")
- D ^INHF(BYIMDEST,.INDA,.INA)
- H 2
- I $G(INHF) D
- .S BYIMUIF=$O(^INTHU("AT",INHF,0))
- .Q:'BYIMUIF
- .S BYIMSTP=BYIMQTX
- .D SFILE(BYIMUIF,BYIMPAT,BYIMSTP)
- D EOJ^BYIMIMM
- Q $$MSG^BYIMIMM(INHF)
- ;-----
-SFILE(BYIMUIF,BYIMPAT,BYIMSTP) ;EP;TO SEND RT FILE VIA HL7 BRIDGE
- ;BYIMUIF - THE IEN OF THE ^INTHU( ENTRY FOR THE MESSAGE
- ;BYIMPAT - THE IEN OF PATIENT
- ;BYIMSTP - MESSAGE TYPE
- Q:'$G(BYIMUIF)!'$G(BYIMPAT)
- S BYIMSTP=$TR(BYIMSTP,"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz")
- S MID=""
- D PATH^BYIMIMM6
+ S BYIMPAR="HL IHS IZV04 QBP OUT PARENT"
+ D ^INHF(BYIMPAR,.INDA,.INA)
+ D:$G(INHF)
+ .S BYIMU=+$O(^INTHU("AT",INHF,0))
+ .I 'BYIMU F J=1:1:10 Q:BYIMU  S BYIMU=+$O(^INTHU("AT",INHF,0)) H:'BYIMU 1
+ Q:'$G(BYIMU) ""
+ S BYIMSTP="QBP"
+ S FILE=$$SFILE(BYIMU,QDFN,BYIMSTP)
+ D:'$D(ZTQUEUED)&$G(BYIMRTD)
+ .W !!?11,"Query for: ",$P(^DPT(QDFN,0),U)
+ .W !?7,"being sent to: "
+ .D DSTATE(BYIMEXST)
+ Q MID
+ ;=====
+ ;
+SFILE(BYIMU,SPAT,BYIMSTP) ;EP;SEND RT FILE VIA SMM
+ ;   BYIMU = IEN OF THE ^INTHU( ENTRY FOR THE MESSAGE
+ ;   SPAT    = IEN OF PATIENT
+ ;   BYIMSTP = MESSAGE TYPE
+ ;
+ ;   PATH    = PATH FOR EXPORT FILE
+ ;   FILE    = FILE NAME
+ ;   ACT     = ACTION
+ ;           VXU for Immunization Record
+ ;           QBP for QUERY
+ ;           RSP for RESPONSE
+ ;           ACK for ACKnowledgement
+ ;
+ Q:'$G(BYIMU)!'$G(SPAT) ""
+ ;PATCH 3 CR-
+ D PATH
  D NOW^%DTC
- S QFILE="izrt"_BYIMSTP_$TR(BYIMVER,".")_"_"_$E("000000",1,6-$L(BYIMPAT))_BYIMPAT_"_"_($P(%,".")+17000000)_"_"_$P(%,".",2)_$E("000000",1,6-$L($P(%,".",2)))_".dat"
- S ACT="W"
- D FILE(OPATH,QFILE,ACT,BYIMUIF,BYIMPAT,BYIMSTP)
+ S NOW=%
+ N STP
+ S STP=$TR(BYIMSTP,"ABCDEFGHIJKLMNOPQRSTUVWXYZ","abcdefghijklmnopqrstuvwxyz")
+ ;V3.0 PATCH 7 - FID-108414 INCLUDE ASUFAC IN QUERY FILE NAMES
+ S:$L($G(ASUFAC))'=6 ASUFAC=$P($G(^AUTTLOC(+$$DUZ^BYIMIMM(),0)),U,10)
+ S FILE="izrt_"_STP_"_"_SPAT_"_xx_"_ASUFAC_"_"_($P(%,".")+17000000)_"_"_$P(%,".",2)_".dat"
+ ;V3.0 PATCH 7 - FID-108414 END
+ S ACT=BYIMSTP
+ S PATH=OPATH
+ S MID=$P($G(^INTHU(BYIMU,3,1,0)),"|",10)
+ ;PATCH 2 CR-12280 REMOVE EXTRANEOUS ENTRY FROM BATCH EXPORT QUEUE
+ S DEST=NOW
+ K ^BYIMTMP("ORIG",BYIMU)
+ M ^BYIMTMP("ORIG",BYIMU)=^INTHU(BYIMU)
+ S ^BYIMTMP("DEST",BYIMDUZ,DEST,BYIMU)=""
+ S:'$D(BYIMEXST) BYIMEXST=""
+ I BYIMEXST=""!(BYIMEXST[(","_BYIMDUZ_",")) D HFSA1^BYIMIMM8(DEST,BYIMDUZ,FILE)
+ S AS=0
+ F  S AS=$O(^BYIMPARA(BYIMDUZ,3,AS)) Q:'AS  D:BYIMEXST=""!(BYIMEXST[(","_AS_","))
+ .K ^BYIMTMP("DEST",AS,DEST,BYIMU)
+ .S ^BYIMTMP("DEST",AS,DEST,BYIMU)=""
+ .Q:$G(^BYIMPARA(BYIMDUZ,3,AS,0))["COVID"
+ .D HFSA1^BYIMIMM8(DEST,AS,FILE)
+ H 1
+ D CLEAN(DEST,BYIMU)
+ ;PATCH 2 CR-12280 END
+ Q MID
+ ;PATCH 3 CR- END
+ ;=====
+ ;
+RTIN(BYIMRTD) ;EP;CHECK REAL-TIME INBOUND FILES FOR ALL STATE EXCHANGES
+ ;
+ ;BYIMRTD - CONTROLS DISPLAY DURING RESPONSE PROCESSING
+ ;          1 = DISPLAY EACH HL7 MESSAGE PROCESSED
+ ;          0 = DISPLAY SURPRESSED
+ ;
+ S:'$G(BYIMRTD) BYIMRTD=0
+ D PATH
+ S STATE=0
+ F  S STATE=$O(IPATH(STATE)) Q:'STATE  D
+ .S IPATH=IPATH(STATE)
+ .S OPATH=OPATH(STATE)
+ .D RTIN1(IPATH,STATE,OPATH)
  Q
-FILE(PATH,FILE,ACT,BYIMUIF,BYIMPAT,BYIMSTP) ;SEND FILE
- ;OPATH   - PATH FOR TRANSMISSION
- ;FILE    - FILE NAME
- ;ACT     - ACTION
- ;BYIMUIF - IEN IN ^INTHU
- ;BYIMPAT - PATIENT DFN
- ;BYIMSTP - 
- S Y=$$OPEN^%ZISH(PATH,FILE,ACT)
- I Y D  Q
- .D EXPBULL^BYIMIMM4(FILE,0,PATH)
- .D RTLOG(FILE,"E",PATH,BYIMPAT,BYIMUIF,MID,1)
- N X,XX
- D REFUSAL^BYIMSEG1(BYIMPAT,BYIMUIF)
- S X=""
- S XX=0
- F  S XX=$O(^INTHU(BYIMUIF,3,XX)) Q:'XX  S READ=^(XX,0) D F1
- D CLOSE^%ZISH()
- D RTLOG(QFILE,"E",OPATH,BYIMPAT,BYIMUIF,MID,0)
- Q:BYIMBDG<1
- N BYIMRTIN
- S BYIMRTIN=0
- D RTIN
- Q
- ;-----
-F1 ;WRTIE OUT EACH LINE
- S X=X_$P(READ,"|CR|")
- Q:READ'["|CR|"
- S:X["MSH|" MID=$P(X,"|",10)
- S:'BYIMIN1&($E(X,1,4)["IN1|"!($E(X,1,4)["IN2|")) X=""
- S:$E(X,1,5)="RXR||" X=""
- S:X["RXR|ZZZ" X=""
- S:X["OBX|"&(X["V00") X=""
- S:"|MSH|FHS|BHS|BTS|FTS|"'[("|"_$E(X,1,3)_"|") X=$TR(X,"\&")
- I X]"" U IO W X,!
- S X=""
- Q
- ;-----
-RTIN ;EP;CHECK REAL-TIME INBOUND FILES
+ ;=====
+ ;
+RTIN1(IPATH,STATE,OPATH) ;PROCESS FILES FROM EACH STATE
  N DIR,FILE
- D PATH^BYIMIMM6
  S DIR=$$LIST^%ZISH(IPATH,"izrt*",.DIR)
  N IN
  S IN=0
- F  S IN=$O(DIR(IN)) Q:'IN  S FILE=DIR(IN) D:FILE]""
- .Q:$D(^BYIMRT("ACT",FILE,"I"))
- .D RTIMP(FILE)
- .I $G(BYIMRTIN) W !,FILE," processed..."
+ F  S IN=$O(DIR(IN)) Q:'IN  S FILE=DIR(IN) I FILE]"",FILE'["(" D
+ .D RTIMP(IPATH,FILE,STATE,OPATH)
+ N DIR,FILE
+ S DIR=$$LIST^%ZISH(OPATH,"izrt*rejected*",.DIR)
+ N IN
+ S IN=0
+ F  S IN=$O(DIR(IN)) Q:'IN  S FILE=DIR(IN) D
+ .S Y=$$DEL^%ZISH(OPATH,FILE)
  Q
- ;-----
+ ;=====
+ ;
 RTDEST ;EP;CHECK DESTINATION GLOBAL FOR RT MESSAGES
- S BYIMDEST=$S(BYIMVER["2.3":"HL IHS IZV04 V01VXQ OUT PARENT",1:"HL IHS IZV04 QBP OUT PARENT")
- S BYIMDDA=$O(^INRHD("B",BYIMDEST,0))
- Q:'BYIMDDA
- N PRI
- S PRI=0
- F  S PRI=$O(^INLHDEST(BYIMDDA,PRI)) Q:'PRI  D
- .N BYIMDT
- .S BYIMDT=""
- .F  S BYIMDT=$O(^INLHDEST(BYIMDDA,PRI,BYIMDT)) Q:BYIMDT=""  D
- ..N BYIMUIF
- ..S BYIMUIF=0
- ..F  S BYIMUIF=$O(^INLHDEST(BYIMDDA,PRI,BYIMDT,BYIMUIF)) Q:'BYIMUIF  D
- ...Q:'$D(^INTHU(BYIMUIF,3))
- ...D UIF(BYIMUIF)
+ D RTDEST^BYIMRT2
  Q
- ;-----
-UIF(BYIMUIF) ;PROCESS UIF
- Q:'$G(BYIMUIF)
- Q:'$D(^INTHU(BYIMUIF,3))
- N XX
- S XX=$G(^INTHU(BYIMUIF,3,2))
- Q:XX=""
- N DFN,HRN,LOC,HRN,LOCDA,X,Y,Z
- S HRN=""
- S:XX["PID|" HRN=$P(XX,"|",4)
- S:XX["QRD|" HRN=$P($P(XX,"|",9),U)
- S:XX["QPD|" HRN=$P(XX,"|",3)
- S LOC=$E(HRN,1,6)
- S HRN=+$E(HRN,7,12)
- S LOCDA=$O(^AUTTLOC("C",LOC,0))
- Q:'LOCDA!'HRN
- S DFN=""
- S X=0
- F  S X=$O(^AUPNPAT("D",HRN,X)) Q:'X!DFN  I $D(^AUPNPAT("D",HRN,X,LOCDA)) S DFN=X
- Q:'DFN
- S BYIMSTP="IN"
- D SFILE(BYIMUIF,DFN,BYIMSTP)
- Q
- ;-----
-RTLOG(FILE,ACT,PATH,DFN,UIF,MID,STAT) ;EP;
- ;LOG EXPORT/IMPORT FILES THAT HAVE BEEN PROCESSED
- ;FILE     = NAME OF FILE IMPORTED OR EXPORTED
- ;ACT      = ACTION - 'I'MPORT OR 'E'XPORT
+ ;=====
+ ;
+RTLOG(FILE,ACT,PATH,DFN,UIF,MID,STAT,STATE) ;EP;
+ ;LOG EXPORT/IMPORT OF HL7 FILES
+ ;
+ ;FILE     = NAME OF FILE
+ ;ACT      = ACTION
+ ;           VXU for Immunization Record
+ ;           QBP for QUERY
+ ;           RSP for RESPONSE
+ ;           ACK for ACKnowledgement
  ;PATH     = DRIVE/DIRECTORY FILE SENT TO
  ;DFN      = DFN OF PATIENT FOR QUERY/RESPONSE
  ;UIF      = IEN OF THE UNIVERSAL MESSAGE ENTRY
  ;MID      = MESSAGE ID ASSIGNED FOR THE UNIVERSAL MESSAGE ENTRY
  ;STAT     = TRANSMITTION STATUS
- Q:$G(FILE)=""!($G(ACT)="")
+ ;STATE    = DATA EXCHANGE STATE
+ ;
+ ;V3.0 PATCH 7 - FID-108414 INCLUDE ASUFAC IN QUERY FILE NAMES
+ Q:$G(FILE)=""!($G(ACT)="")!($G(PATH)="")!('$G(DFN))!('$G(STATE)) ""
+ S QRYDA=""
+ S:ACT="RSP" QRYDA=$O(^BYIMRT("ACT",$P(FILE,"."),ACT,+$G(STATE),0))
+ N X,Y,Z,ACT0,NOW
  K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
+ D NOW^%DTC
+ S NOW=%
  S X=FILE
  S DIC="^BYIMRT("
  S DIC(0)="L"
- S DIC("DR")=".02////"_ACT_";.03////"_PATH_";.04////"_DFN_";.05////"_($P(FILE,"_",3)-17000000)_"."_$P($P(FILE,"_",4),".")_";.06////"_MID_";.07////"_UIF_";.08////"_$G(STAT)
- D FILE^DICN
+ S DIC("DR")=".02////"_ACT_";.03////"_PATH_";.04////"_DFN_";.05////"_($P(FILE,"_",6)-17000000)_"."_$P($P(FILE,"_",7),".")_";.06////"_MID_";.07////"_UIF_";.08////"_$G(STAT)_";.1////"_$P(FILE,"_",4)_";.11////"_NOW
+ D:'QRYDA FILE^DICN
  K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
- Q:Y<1
- S RTLDA=+Y
- S ^BYIMRT(RTLDA,1,0)="^90480.21"
- N X
- S X=0
- F  S X=$O(^INTHU(UIF,3,X)) Q:'X  S ^BYIMRT(RTLDA,1,X,0)=^(X,0),Z=X
- S $P(^BYIMRT(RTLDA,1,0),U,3)=Z
- S $P(^BYIMRT(RTLDA,1,0),U,4)=Z
- Q
- ;-----
-DISP(RTLDA) ;DISPLAY RESPONSE FILE
- D HDR
- N XX,BYIMQUIT
- S MID=$P(^BYIMRT(RTLDA,0),U,6)
- S FILE=$P(^BYIMRT(RTLDA,0),U)
- S XX=0
- S MIDDA=$O(^BYIMRT("ACT",FILE,"I",0))
- I 'MIDDA D  Q
- .W !!,"No response on file yet for this query."
- .D PAUSE^BYIMIMM6
- D MID
- K BYIMQUIT
- Q
- ;-----
-HDR ;QUERY RESPONSE DISPLAY HEADER
- W @IOF
-HDR1 W !!,"Query for Patient",?26,"Query Date",?38,"Query file"
- W !,"------------------------",?26,"----------",?38,"-------------------------------"
- N X0
- S X0=$G(^BYIMRT(RTLDA,0))
- W !,$P($G(^DPT(+$P(X0,U,4),0)),U)
- S X1=$P(X0,U,5)
- W ?26,$E(X1,4,5),"/",$E(X1,6,7),"/",$E(X1,1,3)+1700
- W ?38,$P(X0,U)
- Q
- ;-----
-HDR2 ;DISPLAY RELATED MESSAGE
- W !!!,"HL7 Response Message"
- W:$P(^BYIMRT(MIDDA,0),U,6)]"" " ID: ",$P(^(0),U,6)
- W !,"*******************************************************"
- W !
- Q
- ;-----
-NEWUIF ;CREATE INTHU ENTRY
- K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
- D NOW^%DTC
- S X=%
- S DIC="^INTHU("
- S DIC(0)="L"
- D FILE^DICN
- K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
- S UIF=+Y
- Q
- ;-----
-MID ;DISPLAY MESSAGE RESPONSES
- S MIDDA=0
- F  S MIDDA=$O(^BYIMRT("ACT",FILE,"I",MIDDA)) Q:'MIDDA!$G(BYIMQUIT)  D MID1
- K BYIMQUIT
- Q
- ;-----
-MID1 ;
- D HDR2
- N XX,BYIMQUIT
- S XX=0
- F  S XX=$O(^BYIMRT(MIDDA,1,XX)) Q:'XX!$D(BYIMQUIT)  S X=^(XX,0) D
- .I X["MSH|",X["|VXU" D DVXU(X) S BYIMQUIT=1 Q
- .W !,X
- .I IOST["C-",IOSL<($Y+4) D PAUSE^BYIMIMM6 S:X[U BYIMQUIT=1 W @IOF
- D PAUSE^BYIMIMM6
- Q
- ;-----
-VXQV01(UIF) ;EP;TO DISPLAY VXQ^V01 QUERY
- ;UIF     - IEN OF THE UNIVERSAL INTERFACE ENTRY
- Q:'$G(UIF)
- S MSH=$G(^INTHU(UIF,3,1,0))
- S QRD=$G(^INTHU(UIF,3,2,0))
- S QRF=$G(^INTHU(UIF,3,1,0))
- Q:MSH=""
- W !!,"Message ID: ",$P(MSH,"|",10)
- W !,"Patient HRN: ",+$E($P(QRD,"|",9),7,12),"  Facility: ",$P($G(^DIC(4,+$E($P(QRD,"|",9),1,6),0)),U)
- Q
- ;-----
-RXR(BYIMUIF) ;EP;CLEAN OUT BLANK RXR AND '0' OBX segments
+ S QRYDA=$S(QRYDA:QRYDA,Y:+Y,1:"")
+ Q QRYDA
+ ;=====
+ ;
+RXR(BYIMU) ;EP;CLEAN OUT BLANK RXR AND '0' OBX segments
  N X,Y
  S X=0
- F  S X=$O(^INTHU(BYIMUIF,3,X)) Q:'X  S Y=^(X,0) D
- .K:$E(Y,1,5)="RXR||" ^INTHU(BYIMUIF,3,X,0)
- .K:Y["OBX|"&(Y["V00") ^INTHU(BYIMUIF,3,X,0)
+ F  S X=$O(^INTHU(BYIMU,3,X)) Q:'X  S Y=^(X,0) D
+ .K:$E(Y,1,5)="RXR||" ^INTHU(BYIMU,3,X,0)
+ .K:Y["OBX|"&(Y["V00") ^INTHU(BYIMU,3,X,0)
  Q
- ;-----
-DVXU(X) ;DISPLAY RT VXU MESSAGE
- N DISP,HDR
- S XX=XX
- F  S XX=$O(^BYIMRT(MIDDA,1,XX)) Q:'XX!$G(BYIMQUIT)  S X=^(XX,0) D
- .D:X["PID|" PID(X)
- .D:X["RXA|" RXA(X)
- Q:'$D(DISP)
- F J=1:1:6 W !,HDR(J)
- N XX,YY
- S XX=""
- F  S XX=$O(DISP(XX)) Q:XX=""!$G(BYIMQUIT)  D
- .S YY=""
- .F  S YY=$O(DISP(XX,YY)) Q:YY=""!$G(BYIMQUIT)  S Z=DISP(XX,YY) D
- ..W !,XX,?12,YY
- ..W ?39,$J($P(Z,U),4)
- ..W ?45,$P(Z,U,2)
- ..W ?54,$P(Z,U,3)
- ..W ?69,$P(Z,U,4)
- .I IOST["C-",IOSL<($Y+4) D
- ..D PAUSE^BYIMIMM6
- ..S:X[U BYIMQUIT=1
- ..Q:$G(BYIMQUIT)
- ..W @IOF
- ..F J=1:1:6 W !,HDR(J)
+ ;=====
+ ;
+CLEAN(DEST,BYIMU) ;EP;REMOVE INLHDEST REMNANT AND TEMP ARRAYS FOR RT MESSAGE
+ Q:'$G(BYIMU)!'$G(DEST)
+ ;PATCH 2 CR-12280 REMOVE EXTRANEOUS ENTRY FROM BATCH EXPORT QUEUE
+ S QDEST=$$QDEST^BYIMIMM()
+ N X,Y,Z
+ S X=""
+ F  S X=$O(^INLHDEST(QDEST,X)) Q:X=""  D
+ .S Y=""
+ .F  S Y=$O(^INLHDEST(QDEST,X,Y)) Q:Y=""  D
+ ..K ^INLHDEST(DEST,X,Y,BYIMU)
+ ..S Z=0
+ ..F  S Z=$O(^INLHDEST(QDEST,X,Y,Z)) Q:'Z  D
+ ...I '$D(^INTHU(Z,3,1,0)) K ^INLHDEST(QDEST,X,Y,Z)
+ ...I $G(^INTHU(Z,3,1,0))["QBP^" K ^INLHDEST(QDEST,X,Y,Z)
+ S X=0
+ F  S X=$O(^BYIMPARA(BYIMDUZ,3,X)) Q:'X  D
+ .K ^BYIMTMP("DEST",X,DEST,BYIMU)
+ K ^BYIMTMP("DEST",BYIMDUZ,DEST,BYIMU)
+ K ^BYIMTMP("BYIMU",$J,BYIMU)
+ K ^BYIMTMP("ORIG",BYIMU)
  Q
-MSH ;DISPLAY RT MSH SEGMENT
- W !,$TR($P(X,"|",3),"^"," "),"  ",$TR($P(X,"|",4),"^"," "),"  "
- S Y=$P(X,"|",7)
- W $E(Y,1,4),"-",$E(Y,5,6),"-",$E(Y,7,8),"  ",$P(X,"|",9),"  ",$P(X,"|",11)
+ ;=====
+ ;
+QD ;DISPLAY QUERY MESSAGE
+ N DA,MID,SD,SITE
+ S MID=$P($G(^INTHU(BYIMU,3,1,0)),"|",10)
+ Q:MID=""
+ S SITE=$$DUZ^BYIMIMM()
+ W !!?4,"QUERY Message ID: ",MID," can be used to look up"
+ W !?4,"response(s) from:"
+ D:'$D(ZTQUEUED)&$G(BYIMRTD) DSTATE(BYIMEXST)
  Q
- ;-----
-PID(X) ;DISPLAY RT PID SEGMENT
- N Y,Z
- S Y="NAME"
- S $E(Y,33)="DOB"
- S $E(Y,45)="SEX"
- S HDR(1)=Y
- S HDR(2)="------------------------------  ----------  ---"
- S Y=$P(X,"|",6)
- S Y=$P(Y,U)_","_$P(Y,U,2)_" "_$P(Y,U,3)
- S Z=$P(X,"|",8)
- S $E(Y,33)=$E(Z,1,4)_"-"_$E(Z,5,6)_"-"_$E(Z,7,8)
- S $E(Y,45)=$P(X,"|",9)
- S HDR(3)=Y
- S HDR(4)=""
- S Y="ADMIN DATE"
- S $E(Y,13)="CVX  VACCINE NAME"
- S $E(Y,40)="QUAN"
- S $E(Y,46)="TYPE"
- S $E(Y,55)="LOT NO."
- S $E(Y,70)="EXP. DATE"
- S HDR(5)=Y
- S Y="----------"
- S $E(Y,13)="---  --------------------"
- S $E(Y,40)="----"
- S $E(Y,46)="-------"
- S $E(Y,55)="-------------"
- S $E(Y,70)="---------"
- S HDR(6)=Y
+ ;=====
+ ;
+DSTATE(BYIMEXST) ;EP;TO DISPLAY SELECTED STATES
+ ;V3.0 PATCH 6 - FID-83363 EXPORT FOR SELECTED STATES
+ S J=0
+ S:'$D(BYIMEXST) BYIMEXST=""
+ I BYIMEXST=""!(BYIMEXST[(","_BYIMDUZ_",")) W !?22,$P($G(^DIC(5,+$P($G(^BYIMPARA(BYIMDUZ,0)),U,14),0)),U) S J=J+1
+ S X=0
+ F  S X=$O(^BYIMPARA(BYIMDUZ,3,X)) Q:'X  D:BYIMEXST=""!(BYIMEXST[(","_X_","))
+ .I 'J W !?22 S J=J+1
+ .E  W !?17,"and: "
+ .W $P($G(^DIC(5,+$P($G(^BYIMPARA(BYIMDUZ,3,X,0)),U,14),0)),U)
+ ;V3.0 PATCH 6 - FID-83363 END
  Q
- ;-----
-RXA(X) ;DISPLAY RT RXA SEGMENT
- N Y,Z,AD,IMM,QUAN,TYPE,LOT,EXP
- S Y=$P(X,"|",4)
- S AD=$E(Y,1,4)_"-"_$E(Y,5,6)_"-"_$E(Y,7,8)
- S Y=$P(X,"|",6)
- S CVX=$P(Y,U)
- S IMM=$J(CVX,3)_"  "_$E($P(Y,U,2),1,20)
- S QUAN=$TR($P(X,"|",7),"^")
- S TYPE=$TR($E($P($P(X,"|",10),U,2),1,7),"^")
- S LOT=$TR($P(X,"|",16),"^")
- S Y=$TR($P(X,"|",17),"^")
- S EXP=$E(Y,1,4)_"-"_$E(Y,5,6)_"-"_$E(Y,7,8)
- S DISP(AD,IMM)=QUAN_U_TYPE_U_LOT_U_EXP
+ ;=====
+ ;
+PATH ;SET PATH
+ D PATH^BYIMIMM6
  Q
- ;-----
-ALL ;EP;TO SPECIFY NEW ONLY OR ALL IMMUNIZATIONS
- K BYIMALL
- W !!,"Which immunizations should be include:"
+ ;=====
+ ;
+TEST ;CHECK TEST PROCESS
+ K TMP,PLIST,^BYIMTMP("PLIST")
+ S J=0,X=$O(^DPT(9999999999),-1)-$R(1000)
+ F  S X=$O(^AUPNVIMM("AC",X),-1) Q:J>19!'X  D:'$D(^BYIMTMP("PLISTX",X))
+ .S (K,Y)=0
+ .F  S Y=$O(^AUPNVIMM("AC",X,Y)) Q:'Y  D
+ ..S K=K+1
+ .I K>14 S TMP(K,X)="",J=J+1,PLIST(X)=""
+ M ^BYIMTMP("PLIST")=TMP
+ M ^BYIMTMP("PLISTX")=PLIST
+ W !!,"NO.",?10,"Patient",?20,"Patient",?52,"DOB"
+ W !,"Imm's",?10,"IEN",?20,"NAME"
+ W !,"-----",?10,"-------",?20,"-----------------------------",?52,"--------"
+ S J=0
+ S X=0
+ F  S X=$O(^BYIMTMP("PLIST",X)) Q:'X  D
+ .S Y=0
+ .F  S Y=$O(^BYIMTMP("PLIST",X,Y)) Q:'Y  D
+ ..S J=J+1
+ ..W !,X,?10,Y,?20,$P(^DPT(Y,0),U) S DOB=$P(^(0),U,3) W ?52,$E(DOB,6,7),"/",$E(DOB,4,5),"/",$E(DOB,2,3)
  K DIR
- S DIR(0)="SO^1:NEW/EDITED Immunizations (not previously exported);2:ALL Immunizations for exported patient(s)"
- S DIR("A")="Send NEW or ALL Immunizations"
- S DIR("B")="NEW/EDITED Immunizations"
+ S DIR(0)="YO"
+ S DIR("A")="Send "_J_" VXU and Query TEST messages"
+ S DIR("B")="NO"
+ W !
  D ^DIR
  K DIR
- I 'Y S BYIMQUIT=1 Q
- S BYIMALL=+Y
+ Q:+Y'=1
+ K QTEST
+ K ^BYIMTMP("QTEST")
+ S QTEST=1
+ W !!,"Send VXU Messages",!!
+ S XX=0
+ F  S XX=$O(^BYIMTMP("PLIST",XX)) Q:'XX  D
+ .K PLIST
+ .W !!,"For Patients with: ",XX," immunizations."
+ .S YY=0
+ .F  S YY=$O(^BYIMTMP("PLIST",XX,YY)) Q:'YY  D
+ ..S PLIST(YY)=""
+ ..Q:$O(^BYIMTMP("PLIST",XX,YY))
+ ..S SND=$$SENDIMM^BYIMAPI(.PLIST,.SND,1)
+ K QTEST
+TQBP W !!,"Queries will be sent after 1 minute delay:",!
+ F J=1:1:60 W "." H 1
+ S XX=0
+ F  S XX=$O(^BYIMTMP("PLIST",XX)) Q:'XX  D
+ .K PLIST
+ .W !!,"For Patients with: ",XX," immunizations."
+ .S YY=0
+ .F  S YY=$O(^BYIMTMP("PLIST",XX,YY)) Q:'YY  D
+ ..S PLIST(YY)=""
+ ..Q:$O(^BYIMTMP("PLIST",XX,YY))
+ ..S QRY=$$QUERY^BYIMAPI(.PLIST,.QRY,1)
  Q
- ;-----
-CLEANVXU(BYIMUIF) ;REMOVE INLHDEST REMNANT FOR RT MESSAGES
- Q:'$G(BYIMUIF)
- N X,Y,Z
- S X=0
- F  S X=$O(^INLHDEST(X)) Q:'X  D
- .S Y=""
- .F  S Y=$O(^INLHDEST(X,Y)) Q:Y=""  D
- ..S Z=""
- ..F  S Z=$O(^INLHDEST(X,Y,Z)) Q:Z=""  K ^INLHDEST(X,Y,Z,BYIMUIF)
- Q
+ ;=====
  ;

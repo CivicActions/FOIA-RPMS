@@ -1,5 +1,5 @@
-AMHRP2 ; IHS/CMI/LAB - All visit report driver ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHRP2 ; IHS/CMI/LAB - All visit report driver ; [ 02/21/2007  3:54 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**1,6,8**;JAN 27, 2003
  ;
 START ; 
  I '$G(DUZ(2)) W $C(7),$C(7),!!,"SITE NOT SET IN DUZ(2) - NOTIFY SITE MANAGER!!",!! K AMHSITE Q
@@ -32,9 +32,6 @@ PS ;
  S DIR(0)="S^P:Primary Provider Only;S:Both Primary and Secondary Providers",DIR("A")="Include which providers",DIR("B")="P" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G PRV
  S AMHPSP=Y
-DEMO ;
- D DEMOCHK^AMHUTIL1(.AMHDEMO)
- I AMHDEMO=-1 G PS
 ZIS ;CALL TO XBDBQUE
  S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
  I $D(DIRUT) G XIT
@@ -57,7 +54,7 @@ BROWSE ;
 INFORM ;
  W:$D(IOF) @IOF
  W !,"****** ACTIVITY REPORT ******",!
- W !,"This report will tally activities by service unit, facility, and by ",!,"provider.",!
+ W !,"This report will tally activities by service unit, facility, and by ",!,"provider.  This report was patterned after GARS Report #1.",!
  D DBHUSR^AMHUTIL
  Q
  ;

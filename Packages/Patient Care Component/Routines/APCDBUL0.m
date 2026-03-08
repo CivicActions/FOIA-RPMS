@@ -1,5 +1,5 @@
-APCDBUL0 ; IHS/CMI/LAB - Routine to create bulletin ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDBUL0 ; IHS/BJI/GRL - Routine to create bulletin [ 01/10/05  2:07 PM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**10**;MAR 09, 1999
  ;;Borrowed from ACHSP1, ACHSP1A
  ;;
  ;

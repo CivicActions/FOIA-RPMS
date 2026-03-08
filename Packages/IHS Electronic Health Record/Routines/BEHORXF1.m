@@ -1,5 +1,5 @@
-BEHORXF1 ;MSC/IND/PLS - XML Support for Pharmacy Rx Gen service ;22-Aug-2013 10:07;DU
- ;;1.1;BEH COMPONENTS;**009007,009009,009010**;Sep 18, 2007
+BEHORXF1 ;MSC/IND/PLS - XML Support for Pharmacy Rx Gen service ;12-Mar-2019 14:25;MGH
+ ;;1.1;BEH COMPONENTS;**009007,009009,009010,009014**;Sep 18, 2007;Build 2
  ;=================================================================
  ; RPC: BEHORXF1 SFMTXML
  ; Save prescription xml format
@@ -28,10 +28,13 @@ UPTLOG(DATA,ORIFN,ACTION,ARY) ;EP-
  D UPDATE^DIE(,"FDA",,"ERR")
  I '$D(ERR) S DATA=1
  E  S DATA="0^Unable to update log"
+ D CSVALUE^ORDEA(.RET,+ORIFN)
+ I ACTION=2 D EDIT^APSPCSA(+ORIFN,"RE")
+ E  D EDIT^APSPCSA(+ORIFN,"PA")
  Q
  ; Validate Queue List
 VALQUE(DATA,ORLST) ;EP-
- ;CHECK SIGNATURE STATUS (<>2), oRDER STATUS ; EITHER PENDING or ACTIVE
+ ;CHECK SIGNATURE STATUS (<>2), ORDER STATUS ; EITHER PENDING or ACTIVE
  ; Package = OUTPATIENT PHARMACY
  ; Dialog = PSO OERR
  ; To = OUTPATIENT MEDICATIONS
@@ -41,7 +44,7 @@ VALQUE(DATA,ORLST) ;EP-
  ;    CII = OI is CII
  ;   Type = Outpatient
  S DATA=$$TMPGBL
- N ID,LP,PKG,DLG,NOA,STS,WHO,TO,PSIFN,TYPE,ATF,CNT,ADD,OI
+ N ID,LP,PKG,DLG,NOA,STS,WHO,TO,PSIFN,TYPE,ATF,CNT,ADD,OI,REST,TWOFA,PICKUP
  S CNT=0
  S LP=0 F  S LP=$O(ORLST(LP)) Q:LP=""  D
  .S ADD=0,ID=ORLST(LP)
@@ -54,13 +57,22 @@ VALQUE(DATA,ORLST) ;EP-
  .Q:'PSIFN
  .S STS=$$GET1^DIQ(100,+ID,5)
  .S OI=$$VALUE^ORCSAVE2(+ID,"ORDERABLE")
+ .S PICKUP=$$VALUE^ORCSAVE2(+ID,"PICKUP")
+ .Q:$$VALUE^ORCSAVE2(+ID,"PICKUP")="C"    ;Clinic orders not included
  .I STS="ACTIVE" D
- ..Q:('$$ERXOI^APSPFNC6(OI,"2345"))&('$$GET^XPAR("ALL","BEHORX AUTO-RECEIPT"))&(+$P($G(^PSRX(PSIFN,999999921)),U,4))
+ ..;IHS/GDIT/MSC/MGH changed hard coded to use parameter
+ ..S REST=$$GET^XPAR("ALL","APSP AUTO RX SCHEDULE RESTRICT")
+ ..Q:REST=""&(+$P($G(^PSRX(PSIFN,999999921)),U,4))   ;1022 do not send eRXs to the queue
+ ..;Q:('$$ERXOI^APSPFNC6(OI,"2345"))&('$$GET^XPAR("ALL","BEHORX AUTO-RECEIPT"))&(+$P($G(^PSRX(PSIFN,999999921)),U,4))
+ ..Q:('$$ERXOI^APSPFNC6(OI,REST))&('$$GET^XPAR("ALL","BEHORX AUTO-RECEIPT"))&(+$P($G(^PSRX(PSIFN,999999921)),U,4))
  ..S ATF=$P($G(^PSRX(PSIFN,999999921)),U,3)
  ..D:ATF ADDID(ID)
+ .;IHS/MSC/MGH Wet copies not needed after EPCS unless provider not EPCS provider
  .E  I STS="PENDING" D
- ..Q:'$$ERXOI^APSPFNC6(OI,"2"_$S($$GET^XPAR("ALL","BEHORX PRINT QUEUE C35"):"345",1:""))
- ..D ADDID(ID)
+ ..N PKISITE
+ ..Q:'$$ERXOI^APSPFNC6(OI,"2345")
+ ..S SIGSTAT=$P($G(^OR(100,+ID,8,1,0)),U,4)
+ ..I SIGSTAT=1 D ADDID(ID)
  Q
 ADDID(ID) ;EP-
  S CNT=CNT+1
@@ -168,7 +180,7 @@ ISA(TYPE,ID) ;EP-
  Q RET
  ; Add XML record for a prescription
 RXXML(RX,ORDID,ADDHDR) ;EP-
- N RXINFO,PRVIEN,QTY,QTYW,RRIEN,SSNUM,INI,PHMI,DRG,LNAME,DRUG,DISPU,RXDIV
+ N RXINFO,PRVIEN,QTY,QTYW,RRIEN,SSNUM,INI,PHMI,DRG,LNAME,DRUG,DISPU,RXDIV,AUTO,DEA,EARLY,DETOX,REPRINT
  K ^TMP("PS",$J)
  D OEL^PSOORRL(DFN,RX)
  S DRUG=$$GET1^DIQ(52,RX,6,"I")
@@ -179,6 +191,8 @@ RXXML(RX,ORDID,ADDHDR) ;EP-
  S $P(RXINFO,U,10)=RX_"R;O"
  S $P(RXINFO,U,13)=$$GET1^DIQ(59,+$$LOC^APSPFNC2(+ORDID),.01)
  S $P(RXINFO,U,14)=$$NDCVAL^APSPFUNC(RX)
+ S AUTO=$$GET1^DIQ(52,RX,9999999.23)   ;MSC/MGH Patch
+ S DEA=$$GET1^DIQ(50,$$GET1^DIQ(52,RX,6,"I"),3)
  S RRIEN=$$VALUE^ORCSAVE2(+ORDID,"SSRREQIEN")
  S SSNUM=$$GET1^DIQ(9009033.91,RRIEN,.1)
  D:$G(ADDHDR) ADD($$TAG("Prescription"))
@@ -194,7 +208,7 @@ RXXML(RX,ORDID,ADDHDR) ;EP-
  D ADD($$TAG("IndText",2,$P($$GETIND^BEHORXFN(ORDID),"~",2)))
  D ADD($$TAG("EnteredBy",2,$$GET1^DIQ(100,ORDID,3)))
  D ADD($$TAG("OrderLocation",2,$$GET1^DIQ(100,ORDID,6)))
- D ADD($$TAG("DEA",2,$$GET1^DIQ(50,$$GET1^DIQ(52,RX,6,"I"),3)))
+ D ADD($$TAG("DEA",2,DEA))
  D ADD($$TAG("Instruct",2,$$RXINSTR()))
  D ADD($$TAG("NotesToPharmacist",2,$$ORDCOM(ORDID)))
  D ADD($$TAG("IssueDate",2,$$FMTE^XLFDT($P(RXINFO,U,5),9)))
@@ -238,11 +252,20 @@ RXXML(RX,ORDID,ADDHDR) ;EP-
  D INST2^BEHORXRT(INI)
  S PHMI=$$GET1^DIQ(52,RX,9999999.24,"I")
  D PHARM2^BEHORXRT(PHMI)
+ S REPRINT=$$REPRNT^BEHORXF2(RX,AUTO,PHMI,DEA)
+ D ADD($$TAG("Reprint",2,REPRINT))
+ S EARLY=$$FMTE^XLFDT($$GET1^DIQ(52,RX,9999999.44),9)
+ I EARLY="" S EARLY=$$FMTE^XLFDT($P(RXINFO,U,5),9)
+ D ADD($$TAG("EarliestDispDate",2,EARLY))
+ S DETOX=$$GET1^DIQ(52,RX,9999999.41)
+ I DETOX'="" D
+ .S DETOX="DEA X: "_DETOX
+ .D ADD($$TAG("NADEAN",2,DETOX))
  D:$G(ADDHDR) ADD($$TAG("Prescription",1))
  Q
  ; Add XML record for an order
 ORDXML(ORD) ;EP-
- N POF,DEA,PRVIEN,QTY,QTYW,INI,DRUG,DISPU
+ N POF,DEA,PRVIEN,QTY,QTYW,INI,DRUG,DISPU,EARLY
  D ADD($$TAG("Order"))
  D ADD($$TAG("PatientName",2,$$GET1^DIQ(2,DFN,.01)))
  D BLDPT^BEHORXF2(DFN)
@@ -288,6 +311,8 @@ ORDXML(ORD) ;EP-
  S INI=$$GET1^DIQ(44,$P($$GET1^DIQ(100,ORD,6,"I"),";",1),3,"I")
  D INST2^BEHORXRT(INI)
  S PHMI=$$VALUE^ORCSAVE2(+ORD,"PHARMACY")
+ S EARLY=$$FMTE^XLFDT($$VALUE^ORCSAVE2(ORD,"EARLIEST"),9)
+ I EARLY'="" D ADD($$TAG("EarliestDispDate",2,EARLY))
  D PHARM2^BEHORXRT(PHMI)
  D ADD($$TAG("Order",1))
  Q
@@ -366,20 +391,8 @@ HOSPLOC(DATA,FROM,DIR,MAX,TYPE,START,END) ;EP
  S:'END END=START
  F  S FROM=$O(^SC("B",FROM),DIR),IEN="" Q:FROM=""  D  Q:CNT'<MAX
  .F  S IEN=$O(^SC("B",FROM,IEN),DIR) Q:'IEN  D
- ..I $$ACTLOC(IEN) D
+ ..I $$ACTLOC^BEHORXF2(IEN) D
  ...I $L(TYPE) Q:$P(^SC(IEN,0),U,3)'[TYPE
  ...;I START S APT=$O(^SC(IEN,"S",START-.1))\1 Q:'APT!(APT>END)
  ...S CNT=CNT+1,DATA(CNT)=IEN_U_$P(^SC(IEN,0),U)
  Q
- ; Returns true if active hospital location
- ; LOC = IEN of hospital location
- ; DAT = optional date to check (defaults to today)
-ACTLOC(LOC,DAT) ;PEP - Is active location?
- N D0,X
- S DAT=$G(DAT,DT)\1
- S X=$G(^SC(LOC,0))
- Q:'$L(X) 0                                                            ; Screen nonexistent entries
- S X=$G(^SC(LOC,"I"))
- Q:'X 1                                                                ; No inactivate date
- Q:DAT'<$P(X,U)&($P(X,U,2)=""!(DAT<$P(X,U,2))) 0                       ; Check reactivate date
- Q 1                                                                   ; Must still be active

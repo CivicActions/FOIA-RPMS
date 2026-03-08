@@ -1,5 +1,5 @@
-VENPCCIT ; IHS/OIT/GIS - INSTALLATION TOOLS: ADD A NEW TEMPLATE FOR VER 2.5 ;
- ;;2.6;PCC+;;NOV 12, 2007
+VENPCCIT ; IHS/ITSC/GIS - INSTALLATION TOOLS: ADD A NEW TEMPLATE FOR VER 2.5 ; 
+ ;;2.5;PCC+;**1**;OCT 25, 2005
  ;
  ; 
  ; 
@@ -35,7 +35,6 @@ NAME1 S DIR("?")="Name must be 3-30 uppercase letters.  Numbers and spaces OK al
  S Z=$O(^VEN(7.41,"B",TNM,0))
  I 'Z G HMN
  W !,"This template already exits.  Try again" W !! G NAME1
- ; 
 TEDIT ; EP - EDIT TEMPLATE PROPERTIES ; TIEN MUST EXIT
 HMN S FLD(.02)=25 ; HEADER MNEMONIC ; PATCHED BY GIS/OIT 10/15/05 ; PCC+ 2.5 PATCH 1
 TMN ; TEMPLATE MNEMONIC
@@ -328,10 +327,10 @@ HMR6 W !!,"Include patient education topics in the refusal list"
 HMRDIE D DIE(TIEN)
  G LAB^VENPCCIX ; CONTINUE IN VENPCCIX.  THIS ROUTINE IS GETTING TOO LONG!!!
  ; 
-FIN D ^XBFMK ; EP - CLEANUP
+FIN D ^XBFMK
  Q
  ;
-DT(DA) ; EP - DELETE A TEMPLATE
+DT(DA) ; DELETE A TEMPLATE
  N DIC,DIK
  I '$D(^VEN(7.41,+$G(DA),0)) Q  ; NOTHING TO DELETE
  W !!,"Are you sure you want to completely delete this template" S %=0
@@ -343,7 +342,7 @@ DT(DA) ; EP - DELETE A TEMPLATE
  D ^XBFMK
  Q
  ; 
-LKUP() ; EP - LOOK UP A PCC+ TEMPLATE
+LKUP() ; LOOK UP A PCC+ TEMPLATE
  N DIC,X,Y,CIEN
  S DIC="^VEN(7.41,"
  S DIC(0)="AEQM"

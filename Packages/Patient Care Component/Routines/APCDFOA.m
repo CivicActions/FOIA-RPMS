@@ -1,5 +1,5 @@
 APCDFOA ; IHS/CMI/LAB - QA AUDIT ON ICD PROCEDURE CODES ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**27**;MAY 14, 2009;Build 64
  ;
 START ; 
  S APCDSITE="" S:$D(DUZ(2)) APCDSITE=DUZ(2)
@@ -8,20 +8,23 @@ START ;
  W:$D(IOF) @IOF
  S APCDLHDR="ICD OPERATION/PROCEDURE CODING AUDIT"
  W !?((80-$L(APCDLHDR))/2),APCDLHDR
- W !!,"This report will list visits (by POSTING date with an option of random",!,"samples) for a selected data entry operator.  Purpose of Visit ",!,"ICD OPERATION/PROCEDURE Code and Provider Narrative will also be listed.",!!
+ W !!,"This report will list visits (by date last modified with an option of random",!,"samples) for a selected data entry operator.  Procedure ",!,"ICD OPERATION/PROCEDURE Code and Provider Narrative will also be listed.",!!
  S APCDJOB=$J,APCDBT=$H
  K ^XTMP("APCDFOA",APCDJOB,APCDBT)
 GETDATES ;
 BD ;get beginning date
- W ! S DIR(0)="D^:DT:EP",DIR("A")="Enter Beginning POSTING Date" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
+ W ! S DIR(0)="D^:DT:EP",DIR("A")="Enter Beginning Last Modified Date" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I $D(DIRUT) G XIT
  S APCDBD=Y
 ED ;get ending date
- W ! S DIR(0)="DA^"_APCDBD_":DT:EP",DIR("A")="Enter Ending POSTING Date: " S Y=APCDBD D DD^%DT S DIR("B")=Y,Y="" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
+ W ! S DIR(0)="DA^"_APCDBD_":DT:EP",DIR("A")="Enter Ending Last Modified Date: " S Y=APCDBD D DD^%DT S DIR("B")=Y,Y="" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I $D(DIRUT) G BD
  S APCDED=Y
  S X1=APCDBD,X2=-1 D C^%DTC S APCDSD=X
  ;
+ W !!,"Please Note:  Data Entry Operator will be determined by:"
+ W !?5,"The user who last marked the visit as Reviewed/Complete or if any of the"
+ W !?5,"V Procedure entries last modified by user was this user.",!
 PROV S DIC="^VA(200,",DIC(0)="AEQM",DIC("A")="Enter DATA ENTRY OPERATOR: " D ^DIC K DIC
  I $D(DTOUT)!(Y=-1) G BD
  S APCDPROV=+Y

@@ -1,19 +1,24 @@
 ABMDVST ; IHS/ASDST/DMJ - PCC Visit Stuff ;     
- ;;2.6;IHS 3P BILLING SYSTEM;**10,19,22**;NOV 12, 2009;Build 418
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,19,22,35,36,38,40**;NOV 12, 2009;Build 785
  ;Original;TMD;08/19/96 4:45 PM
  ;
- ; IHS/SD/SDR - V2.5 P8 - IM12246/IM17548 - Added code to put defaults on claim for CLIAs
- ; IHS/SD/SDR - v2.5 p8 - task 8 - Added tag for insurer replace and splitting routine
- ; IHS/SD/SDR - v2.5 p10 - IM19717/IM20374 - Added to check for when to merge visits into one claim
- ; IHS/SD/SDR - v2.5 p10 - IM20610 - Fix Medicare Part B check so only one claim will generate
- ; IHS/SD/SDR - v2.5 p10 - task order item 1 - Calls for ChargeMaster added to national code.  Calls were
- ;    supplied by Lori Butcher
- ; IHS/SD/SDR - v2.5 p10 - IM21500 - Added code to check new V Med field POINT OF SALE BILLING STATUS
+ ;IHS/SD/SDR 2.5*8 IM12246/IM17548 Added code to put defaults on claim for CLIAs
+ ;IHS/SD/SDR 2.5*8 task 8 Added tag for insurer replace and splitting routine
+ ;IHS/SD/SDR 2.5*10 IM19717/IM20374 Added to check for when to merge visits into one claim
+ ;IHS/SD/SDR 2.5*10 IM20610 Fix Medicare Part B check so only one claim will generate
+ ;IHS/SD/SDR 2.5*10 task order item 1 Calls for ChargeMaster added to national code.  Calls were supplied by Lori Butcher
+ ;IHS/SD/SDR 2.5*10 IM21500 Added code to check new V Med field POINT OF SALE BILLING STATUS
  ;    and only generate claim if at least one med wasn't billed by POS or was billed and rejected
  ;
- ;IHS/SD/SDR - 2.6*19 - HEAT251217 - Made change to populate SERVICE DATE FROM and SERVICE DATE TO all the time.
- ;IHS/SD/SDR 2.6*22 HEAT335246 - Added call to claim splitter
- ; *********************************************************************
+ ;IHS/SD/SDR 2.6*19 HEAT251217 Made change to populate SERVICE DATE FROM and SERVICE DATE TO all the time.
+ ;IHS/SD/SDR 2.6*22 HEAT335246 Added call to claim splitter
+ ;IHS/SD/SDR 2.6*35 ADO60700 Added counter for how many claims a visit generates
+ ;IHS/SD/SDR 2.6*36 ADO76247 Smarten up BILLED POS check to still generate claim if other charges besides RX or RX rejected in POS
+ ;IHS/SD/SDR 2.6*38 ADO97221 Check V Lab file for entries so a claim will generate if there are just labs on a visit; between p36
+ ;   and now it was skipping lab only visits (no claim created); Also updated check for BILLED POS to make sure there were meds
+ ;   on visit
+ ;IHS/SD/SDR 2.6*40 ADO111599 Added VA Contract# to claim if VA MEDICAL BENEFIT (VMBP) is an insurer on claim
+ ;**********************
 VAR ;
  N ABMSRC,DA,DIE,DIK
  K ABMP("DUP"),ABMP("NEWBORN")
@@ -24,6 +29,7 @@ VAR ;
  .S DA=ABMVDFN
  .S DR=".04////22"
  .D ^DIE
+ .D VISIT^ABMCGAPI(ABMVDFN,ABMCGIEN,22)  ;abm*2.6*35 IHS/SD/SDR ADO60700
  ;Find new Claim ien if ien null
  ;Not sure what will happen here if the claim is a split claim.
  ;Clearly only one claim will be updated.
@@ -54,6 +60,7 @@ VAR ;
  .S DA=ABMVDFN
  .S DR=".04////25"
  .D ^DIE
+ .D VISIT^ABMCGAPI(ABMVDFN,ABMCGIEN,25)  ;abm*2.6*35 IHS/SD/SDR ADO60700
  L +^ABMDCLM(DUZ(2),ABMP("CDFN")):10 E  S ABMP("LOCKFAIL")=1 Q
  S DR=""
  S Y=^ABMDCLM(DUZ(2),ABMP("CDFN"),0)
@@ -102,21 +109,44 @@ VAR ;
  I $D(^ABMDBILL(DUZ(2),"AS",ABMP("CDFN"))) Q
  Q
  ;
- ; *********************************************************************
+ ;*********************
 NEW ;CREATE NEW CLAIM
+ S ABMVCC=0  ;abm*2.6*35 IHS/SD/SDR ADO60700
  I $D(^ABMDBILL(DUZ(2),"AV",ABMVDFN)) D  Q
  .S DIE="^AUPNVSIT("
  .S DA=ABMVDFN
  .S DR=".04////20"
  .D ^DIE
+ .D VISIT^ABMCGAPI(ABMVDFN,ABMCGIEN,20)  ;abm*2.6*35 IHS/SD/SDR ADO60700
  ;BILLED POS insurer?
- I $P($G(^AUTNINS(ABMP("INS"),2)),U,3)="P" D
- .S ABMVMIEN=0
- .F  S ABMVMIEN=$O(^AUPNVMED("AD",ABMVDFN,ABMVMIEN)) Q:+ABMVMIEN=0  D  Q:$G(ABMPSFLG)=1
- ..I $P($G(^AUPNVMED(ABMVMIEN,11)),U,6)'=1 S ABMPSFLG=1
- I $D(^AUPNVMED("AD",ABMVDFN)),$P($G(^AUTNINS(ABMP("INS"),2)),U,3)="P",($G(ABMPSFLG)'=1) D  Q
- .K ABMPSFLG
- .D PCFL^ABMDVCK(62)  ;billed POS
+ ;start old abm*2.6*38 IHS/SD/SDR ADO97221
+ ;I $P($G(^AUTNINS(ABMP("INS"),2)),U,3)="P" D
+ ;.S ABMVMIEN=0
+ ;.;start old abm*2.6*36 IHS/SD/SDR ADO76247
+ ;.;F  S ABMVMIEN=$O(^AUPNVMED("AD",ABMVDFN,ABMVMIEN)) Q:+ABMVMIEN=0  D  Q:$G(ABMPSFLG)=1
+ ;.;.I $P($G(^AUPNVMED(ABMVMIEN,11)),U,6)'=1 S ABMPSFLG=1
+ ;.;end old start new abm*2.6*36 IHS/SD/SDR ADO76247
+ ;.S ABMPSFLG=1
+ ;.S ABMVMC=0  ;abm*2.6*38 IHS/SD/SDR ADO97221
+ ;.F  S ABMVMIEN=$O(^AUPNVMED("AD",ABMVDFN,ABMVMIEN)) Q:+ABMVMIEN=0  D  Q:$G(ABMPSFLG)=0  ;there's still an RX to bill
+ ;..S ABMVMC=ABMVMC+1  ;abm*2.6*38 IHS/SD/SDR ADO97221
+ ;..I $P($G(^AUPNVMED(ABMVMIEN,11)),U,6)="" S ABMPSFLG=0  ;POINT OF SALE BILLING STATUS is blank so we should try billing it
+ ;S X=$$CPT^AUPNCPT(ABMVDFN)
+ ;I +$O(AUPNCPT(0))'=0 S ABMPSFLG=0
+ ;I +$O(^AUPNVDEN("AD",ABMVDFN,0))'=0 S ABMPSFLG=0
+ ;end old abm*2.6*38 IHS/SD/SDR ADO97221
+ ;end new abm*2.6*36 IHS/SD/SDR ADO76247
+ ;I $D(^AUPNVMED("AD",ABMVDFN)),$P($G(^AUTNINS(ABMP("INS"),2)),U,3)="P",($G(ABMPSFLG)'=1) D  Q  ;abm*2.6*36 IHS/SD/SDR ADO76247
+ ;if active insurer RX BILLING STATUS is 'P' for 'BILLED POINT OF SALE' and there's only meds that were all billed POS
+ ;I ($P($G(^AUTNINS(ABMP("INS"),2)),U,3)="P")&($G(ABMPSFLG)=1) D  Q  ;abm*2.6*36 IHS/SD/SDR ADO76247  ;abm*2.6*38 IHS/SD/SDR ADO97221
+ ;.K ABMPSFLG  ;abm*2.6*38 IHS/SD/SDR ADO97221
+ ;.D PCFL^ABMDVCK(62)  ;billed POS  ;abm*2.6*38 IHS/SD/SDR ADO97221
+ ;start new abm*2.6*38 IHS/SD/SDR ADO97221
+ D START^ABMDVSTA
+ I ABMPSFLG=0 D PCFL^ABMDVCK(61) Q  ;Inpatient CODING COMPLETE is NO, meaning it is not complete
+ I (+$G(ABMHIEN)=0) I (($P($G(^AUTNINS(ABMP("INS"),2)),U,3)="P")&(ABMVMC>0)&(ABMLF=0)&(ABMCF=0)&(ABMDF=0)&(ABMTF=0)) D PCFL^ABMDVCK(62) Q  ;if BILLED POS and only meds
+ I (+$G(ABMHIEN)=0) I ((ABMMF=0)&(ABMLF=0)&(ABMCF=0)&(ABMDF=0)&(ABMTF=0)) D PCFL^ABMDVCK(16) Q  ;there are no billable charges
+ ;end new abm*2.6*38 IHS/SD/SDR ADO97221
  S DINUM=$$NXNM^ABMDUTL
  I DINUM="" S ABMP("NOKILLABILL")=1 Q
  K DIC
@@ -128,6 +158,7 @@ NEW ;CREATE NEW CLAIM
  I Y<1 S ABMP("NOKILLABILL")=1 Q
  S ABMP("CDFN")=+Y
  L +^ABMDCLM(DUZ(2),+Y):1 E  S ABMP("LOCKFAIL")=1 Q
+ S ABMVCC=$S(+$G(ABMVCC)'=0:+$G(ABMVCC)_"/",1:"")_+$G(ABMP("CDFN"))  ;abm*2.6*35 IHS/SD/SDR ADO60700
  S DA=+Y
  S DIE=DIC
  S DR=".02////"_$P($P(ABMP("V0"),U),".")_";.03////"_ABMP("LDFN")
@@ -141,10 +172,26 @@ NEW ;CREATE NEW CLAIM
  S DA=ABMVDFN
  S DR=".04////24"
  D ^DIE
+ D VISIT^ABMCGAPI(ABMVDFN,ABMCGIEN,24)  ;abm*2.6*35 IHS/SD/SDR ADO60700
  D VSIT
  S ABMNFLG=1
  D FRATE
  D OTHER
+ ;
+ ;start new abm*2.6*40 IHS/SD/SDR ADO111599
+ K ABMVAFLG
+ S ABMT("I")=0
+ F  S ABMT("I")=$O(ABML(ABMT("I"))) Q:'ABMT("I")  D
+ .Q:(ABMT("I")>97)
+ .S ABMT("IN")=$O(ABML(ABMT("I"),0))
+ .I $P($G(^AUTNINS(ABMT("IN"),0)),U)="VA MEDICAL BENEFIT (VMBP)" S ABMVAFLG=1
+ I $G(ABMVAFLG)=1 D
+ .S DIE="^ABMDCLM(DUZ(2),"
+ .S DA=ABMP("CDFN")
+ .S DR="927////"_$P($G(^ABMDPARM(DUZ(2),1,3)),U,13)  ;SITM VA CONTRACT#
+ .D ^DIE
+ ;end new abm*2.6*40 IHS/SD/SDR ADO111599
+ ;
  ;if routine BCMZINHO exists and there are tran codes in the table run BCMZINHO
  I $T(^BCMZINHO)]"",$O(^BCMTCA(0)) D:$D(^AUPNVSIT("AD",ABMVDFN)) ^BCMZINHO  ;IHS/CMI/LAB-chargemaster call
  K X,Y
@@ -155,9 +202,10 @@ NEW ;CREATE NEW CLAIM
  .S ABMBONLY=$S($P($G(^ABMDPARM(ABMP("LDFN"),1,5)),U)'="":$P(^ABMDPARM(ABMP("LDFN"),1,5),U),1:2)
  .I (ABMBONLY'=2) Q
  .D MAIN^ABMDSPLB(ABMP("CDFN"))
+ D CLAIM^ABMCGAPI(ABMCGVI,ABMCGIEN,ABMVCC,+ABMP("INS"))  ;abm*2.6*35 IHS/SD/SDR ADO60700
  Q
  ;
- ; *********************************************************************
+ ;*******************************
 VSIT ;
  S DA(1)=ABMP("CDFN")
  S DIC="^ABMDCLM(DUZ(2),"_DA(1)_",11,"
@@ -180,7 +228,7 @@ VSIT ;
  K DIC
  Q
  ;
- ; *********************************************************************
+ ;***************************
 FRATE ;
  ;I need code to prevent 2nd visit on claim from undoing eligibility
  N V,INSADD,INSSKIP

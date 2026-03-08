@@ -1,5 +1,5 @@
 BQIUL4 ;GDHS/HCD/ALA-Miscellaneous BQI utilities ; 21 Jul 2016  8:41 AM
- ;;2.7;ICARE MANAGEMENT SYSTEM;**1**;Dec 19, 2017;Build 12
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**7**;Mar 01, 2021;Build 14
  ;
  ;
 NNAD(DFN,NUM) ;EP -- Get patient's next appt date
@@ -126,3 +126,51 @@ LNVC(DFN,NUM) ;EP - Last # of visits' clinics
  .. S CNT=CNT+1 I CNT>NUM S QFL=1 Q
  . S RESULT=RESULT_$$GET1^DIQ(9000010,VIEN_",",.22,"E")_$C(13)_$C(10)
  Q $$TKO^BQIUL1(RESULT,$C(13)_$C(10))
+ ;
+MEAS(DFN,MEAS) ;EP - Last Measurement
+ NEW MVAL
+ S RESULT=$$MEAS^BQITUTL(DFN,MEAS)
+ I 'RESULT Q ""
+ S MVAL=$P(RESULT,"^",3) I MEAS="BMI" S MVAL=$J(MVAL,2,1)
+ Q MVAL_$C(10)_$C(13)_"("_$$FMTMDY^BQIUL1($P(RESULT,"^",2))_")"
+ ;
+HFAC(DFN,HFT) ;EP - Last Health Factor
+ NEW HVAL,HRES
+ S HRES=$$HF^BQIDCUTL(DFN,HFT)
+ I HRES="" Q ""
+ Q $$FMTMDY^BQIUL1($P(HRES,"^",1))
+ ;
+EXM(DFN,EXMC) ;EP - Last Exam
+ NEW EVAL,ERES,EXM,ECD,ERS
+ ; Convert the exam code to the ien EXvalue
+ S ECD=$E(EXMC,3,$L(EXMC))
+ S EXM=$O(^AUTTEXAM("C",ECD,"")) I EXM="" Q ""
+ S ERES=$$EXAM^BQITUTL(DFN,EXM)
+ I +ERES=0 Q ""
+ S ERS=$$GET1^DIQ(9000010.13,$P(ERES,"^",5)_",",.04,"E")
+ Q ERS_" ("_$$FMTMDY^BQIUL1($P(ERES,"^",2))_")"
+ ;
+LAD(DFN) ;EP
+ NEW LAPTM
+ S LAPTM=$$FMADD^XLFDT($$DT^XLFDT(),1)
+ S LAPTM=$O(^DPT(DFN,"S",LAPTM),-1) I LAPTM="" Q ""
+ Q LAPTM
+ ;
+LAPT(DFN) ;EP -- Get patient's last appt
+ ;Input
+ ;  DFN - Patient internal entry number
+ NEW LAPTM
+ S LAPTM=$$FMADD^XLFDT($$DT^XLFDT(),1)
+ S LAPTM=$O(^DPT(DFN,"S",LAPTM),-1) I LAPTM="" Q ""
+ Q $$FMTE^BQIUL1(LAPTM)
+ ;
+LAC(DFN) ;EP -- Get patient's last appt clinic
+ NEW LAPTM,IENS,DA,NAN,CSTCD,CST
+ S LAPTM=$$LAD(DFN)
+ I LAPTM="" Q ""
+ S DA(1)=DFN,DA=LAPTM,IENS=$$IENS^DILF(.DA)
+ S NAN=$$GET1^DIQ(2.98,IENS,.01,"I")
+ I NAN="" Q ""
+ S CST=$$GET1^DIQ(44,NAN_",",8,"I"),CSTCD=""
+ I CST'="" S CSTCD=$$GET1^DIQ(40.7,CST_",",1,"E")
+ Q $$GET1^DIQ(2.98,IENS,.01,"E")_" ("_CSTCD_")"

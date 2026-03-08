@@ -1,10 +1,10 @@
-BARRCXL ; IHS/SD/LSL - Cancelled Bills Report - Driver ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**19**;OCT 26, 2005
+BARRCXL ; IHS/SD/LSL - Cancelled Bills Report - Driver ;06/29/2020
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,30**;OCT 26, 2005;Build 55
  ;
  ; IHS/SD/PKD - 05/07/10 - BAR*1.8.19
  ;    Mirror questions asked in 3rd Party Billing CXL report
  ; IHS/SD/LSL - 03/06/03 - Routine created
- ;
+ ; IHS/SD/CPC - BAR*1.8*30 CR9476
  Q
  ; *********************************************************************
  ;
@@ -14,17 +14,20 @@ EN ; EP
  S BAR("PRIVACY")=1                   ; Privacy act applies
  D:'$D(BARUSR) INIT^BARUTL            ; Set A/R basic variable
  S BAR("LOC")="VISIT"                 ; Location always VISIT
+ S BAR("XML")=0                       ; Default to not print XML format ;IHS/SD/CPC - BAR*1.8*30 CR9476
  ; BEGIN BAR*1.8*19 - chgs to questions asked in Cancellation rpt.  PKD 5/07/10
  ;D ASKQUES                         ; Ask user questions
  D ASKAGAIN^BARRSEL
  Q:$D(DTOUT)!$D(DUOUT)
  ; date range no longer required for ALL bills BAR*1.8*19
- ; I '+BARY("OBAL"),'$D(BARY("DT",1)) Q   
+ ; I '+BARY("OBAL"),'$D(BARY("DT",1)) Q  
  D PROCEED                            ; Ask proceed
  Q:'+BAROK                            ; User chose not to continue
  D SETHDR
+ D:BAR("XML") XML^BARRCXL3
  S BARQ("RC")="COMPUTE^BARRCXL1"    ; Compute routine
  S BARQ("RP")="PRINT^BARRCXL2"      ; Print routine
+ S:BAR("XML") BARQ("RP")="PRINT^BARRCXL3"      ; XML routine
  S BARQ("NS")="BAR"                   ; Namespace for variables
  S BARQ("RX")="POUT^BARRUTL"          ; Clean-up routine
  D ^BARDBQUE                          ; Double queuing
@@ -40,7 +43,7 @@ EN ; EP
  W:'$D(BARY("LOC")) "ALL"
  D OBAL                               ; Ask open balance only
  Q:($D(DUOUT)!$D(DTOUT))
- I '+BARY("OBAL") D ASKDATE  Q:'$D(BARY("DT",1))
+ ;I '+BARY("OBAL") D ASKDATE  Q:'$D(BARY("DT",1))
  D RTYPE
  Q
  ; ********************************************************************
@@ -63,7 +66,8 @@ OBAL ;
  Q
  ; ********************************************************************
  ;
- ;ASKDATE ;No longer in use:  BAR/SD/PKD 1.8*19  5/10/10
+ASKDATE ;No longer in use:  BAR/SD/PKD 1.8*19  5/10/10
+ Q
  ; Ask type of date and date range
  K DIR
  S DIR(0)="SO^1:Approval Date;2:Visit Date"
@@ -129,6 +133,7 @@ PROCEED ;
  . S BARHDR2=BARHDR2_$$SDT^BARDUTL(BARY("DT",1))_" to "_$$SDT^BARDUTL(BARY("DT",2))
  W !!,$$EN^BARVDF("RVN"),"NOTE:",$$EN^BARVDF("RVF")
  W ?7,"You have selected to produce a "_BARY("RTYP","NM")_" Cancelled Bills Report"
+ ;W:BAR("XML") !,?9,"in Spreadsheet XML format"
  W !?7,BARHDR1
  W !?7,BARHDR2,!
  S DIR(0)="Y"
@@ -136,7 +141,9 @@ PROCEED ;
  S DIR("B")="YES"
  D ^DIR
  I '+Y S BAROK=0
- E  S BAROK=1
+ E  D
+ .S BAROK=1
+ .I $G(BAR("XML")) S ^TMP($J,"BAR-CXL XML HDR",0)="Cancelled Bills Report "_BARHDR1_" "_BARHDR2
  Q
  ; ********************************************************************
  ;

@@ -1,5 +1,5 @@
 ABMUEAPI ; IHS/SD/SDR - 3PB/UFMS API   
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;
  ; New routine - v2.5 p12 SDD item 4.5
  ; Checks entries in exclusion table (9002274.44)
@@ -25,7 +25,8 @@ BILL(ABMDUZ,ABMBIEN) ;PEP - Checks if bill should be send to UFMS based on
  S ABMBADT=$P($G(^ABMDBILL(ABMDUZ,ABMBIEN,1)),U,5)
  S ABMBCLN=$P($G(^ABMDBILL(ABMDUZ,ABMBIEN,0)),U,10)
  S ABMIIEN=$P($G(^ABMDBILL(ABMDUZ,ABMBIEN,0)),U,8)
- S ABMBITYP=$P($G(^AUTNINS(ABMIIEN,2)),U)
+ ;S ABMBITYP=$P($G(^AUTNINS(ABMIIEN,2)),U)  ;abm*2.6*10 HEAT73780
+ S ABMBITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMIIEN,".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  ;get table info and compare
  I '$D(^ABMUXCLD(ABMBVLOC)) Q ABMINC  ;quit if no entries for location
  S ABMEDM=0

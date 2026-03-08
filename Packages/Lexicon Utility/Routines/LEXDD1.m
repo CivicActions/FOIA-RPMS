@@ -1,17 +1,6 @@
-LEXDD1 ;ISL/KER - Display Defaults ;04/21/2014
- ;;2.0;LEXICON UTILITY;**80**;Sep 23, 1996;Build 10
- ;               
- ; Global Variables
- ;    ^DIC(49)            ICR  10093
- ;               
- ; External References
- ;    $$GET1^DIQ          ICR   2056
- ;    HOME^%ZIS           ICR  10086
- ;    ^%ZIS               ICR  10086
- ;    ^%ZISC              ICR  10089
- ;    ^%ZTLOAD            ICR  10063
- ;    ^DIR                ICR  10026
- ;               
+LEXDD1 ; ISL Display Defaults                     ; 09-23-96
+ ;;2.0;LEXICON UTILITY;;Sep 23, 1996;Build 15
+ ;
 SHOW ; Show user defaults
  W @IOF
  N LEXMODE,LEXUSER,LEXSERV
@@ -67,25 +56,23 @@ ALL ; Display for all users
  D ^%ZISC I $D(ZTQUEUED) S ZTREQ="@"
  Q
 ONE ; Display for one user
- Q:+($G(LEXDUZ))<1  N LEXITLE,LEXOK,LEXNM
+ Q:+($G(LEXDUZ))<1  N LEXITLE,LEXOK
  S LEXITLE="Lexicon User Defaults (Single User)"
  W !,LEXITLE W:IOST["P-" !! S LEXLC=$S(IOST["P-":LEXLC+3,1:LEXLC+1)
- S LEXNM=$$GET1^DIQ(200,+($G(LEXDUZ)),.01)
- I LEXDUZ'<1,$L(LEXNM) D
+ I LEXDUZ'<1,$D(^VA(200,+LEXDUZ)) D
  . S LEXOK=$$DEF I LEXOK D BUILD^LEXDD2 S LEXCNT=LEXCNT+1
  . I 'LEXOK D
- . . I LEXNM'="" D
- . . . N LEXNAME S LEXNAME=LEXNM
+ . . I $P($G(^VA(200,LEXDUZ,0)),"^",1)'="" D
+ . . . N LEXNAME S LEXNAME=$P($G(^VA(200,LEXDUZ,0)),"^",1)
  . . . S LEXNAME=$$FL^LEXDD4(LEXNAME)
  . . . W !,LEXNAME," has no defaults set",!
- . . I LEXNM="" D
+ . . I $P($G(^VA(200,LEXDUZ,0)),"^",1)="" D
  . . . W !,"User has no defaults set",!
- I LEXDUZ'<1,'$L(LEXNM) D
+ I LEXDUZ'<1,'$D(^VA(200,+LEXDUZ)) D
  . W !,"User not found",!
- D ^%ZISC S:$D(ZTQUEUED) ZTREQ="@"
- Q
+ D ^%ZISC S:$D(ZTQUEUED) ZTREQ="@" Q
 SERV ; Display for users in a Service
- Q:'$D(LEXSERV)  N LEXITLE,LEXNM,LEXSV
+ Q:'$D(LEXSERV)  N LEXITLE
  S LEXSERV=+LEXSERV
  S LEXITLE="Lexicon User Defaults in a Single Service ("_$P(^DIC(49,LEXSERV,0),U,1)_")"
  W !,LEXITLE W:IOST["P-" !! S LEXLC=$S(IOST["P-":LEXLC+3,1:LEXLC+1)
@@ -94,13 +81,12 @@ SERV ; Display for users in a Service
  . N LEXDUZ S LEXDUZ=0
  . F  S LEXDUZ=$O(^LEXT(757.2,"AUD",LEXUSR,LEXDUZ)) Q:+LEXDUZ=0  D
  . . I +LEXDUZ'<1 D
- . . . N LEXUSV S LEXUSV=$$GET1^DIQ(200,+($G(LEXDUZ)),29,"I")
- . . . I LEXUSV=LEXSERV D
- . . . . S LEXOK=$$DEF I LEXOK D BUILD^LEXDD2 S LEXCNT=LEXCNT+1
+ . . . I $P($G(^VA(200,LEXDUZ,5)),"^",1)=LEXSERV D
+ . . . . S LEXOK=$$DEF
+ . . . . I LEXOK D BUILD^LEXDD2 S LEXCNT=LEXCNT+1
  I +LEXCNT=0 D
  . W !!,"No users found with defaults set in the ",$P(^DIC(49,LEXSERV,0),U,1)," service."
- D ^%ZISC S:$D(ZTQUEUED) ZTREQ="@"
- Q
+ D ^%ZISC S:$D(ZTQUEUED) ZTREQ="@" Q
 SHOWQ ; Quit SHOW
  I IOST["P-" D ^%ZISC
  K ZTSAVE,ZTRTN,ZTDESC,ZTDTH,ZTIO,ZTQUEUED,ZTREQ,ZTSK,X,Y

@@ -1,10 +1,12 @@
-PSJDDUT ;BIR/LDT-INPATIENT MEDICATIONS DD UTILITY ;21 AUG 97  7:55 AM
- ;;5.0; INPATIENT MEDICATIONS ;**40,44,50,83,116,111**;16 DEC 97
+PSJDDUT ;BIR/LDT-INPATIENT MEDICATIONS DD UTILITY ;10-Jun-2024 10:04;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**40,44,50,83,116,111,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^PS(51 is supported by DBIA# 2176.
  ; Reference to ^PS(51.1 is supported by DBIA# 2177.
  ; Reference to ^PS(55 is supported by DBIA# 2191.
- ; 
+ ;
+ ; Modified - IHS/MSC/PLS - 06/10/2024 - SCH+3 - FID 103810
+ ;
 SPCIN ;Called from Non-Verified Orders File (53.1), Special Instructions
  ;field 8
  S PSJHLP(1)="IF ABBREVIATIONS ARE USED, THE TOTAL LENGTH OF THE EXPANDED"
@@ -45,7 +47,8 @@ UNPD ;Called from Non-Verified Orders File (53.1), Units Per Dose field 13
 SCH ;Called from Non-Verified Orders File (53.1), Schedule field 26
  ;(Replaces EN^PSGS0)
  ;/I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>2)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N") K X Q
- I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N") K X Q
+ ;IHS/MSC/PLS - p1035 FID 103810
+ I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N") K X Q
  I X?.E1L.E S X=$$ENLU^PSGMI(X) I '$D(PSGOES) D EN^DDIOL("  ("_X_")","","?0")
  I X["Q0" K X Q
  ;
@@ -99,13 +102,13 @@ HT ;
  ;;character and at least one admin time, and that at least the
  ;;first two letters of each weekday entered is needed.
  ;
-ADTM2 ;Called from Non-Verified Orders File (53.1), Admin Times field 39    
+ADTM2 ;Called from Non-Verified Orders File (53.1), Admin Times field 39
  S PSJHLP(1)="EACH TIME MUST BE TWO DIGITS BETWEEN 01 AND 24. THE TIMES MUST BE"
  S PSJHLP(2)="SEPARATED WITH ""-""'S AND BE IN ASCENDING ORDER."
  D WRITE
  Q
  ;
-WRDGP ;Called from Ward Group File (57.5), Ward Group field .01   
+WRDGP ;Called from Ward Group File (57.5), Ward Group field .01
  S PSJHLP(1)="There is at least one PICK LIST for this WARD GROUP.  This WARD"
  S PSJHLP(1,"F")="$C(7),!!?2"
  S PSJHLP(2)="GROUP cannot be deleted until the PICK LIST(s) is purged or deleted."

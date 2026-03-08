@@ -1,5 +1,6 @@
-DIE9 ;SFISC/GFT-JUMPING, FILING, MULTIPLES ;8:03 AM  13 Aug 1997
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIE9 ;SFISC/GFT-JUMPING, FILING, MULTIPLES ;12/22/93  10:18 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  G:$A(X)-94 X:'$P(DW,";E",2),@("T^"_DNM)
  I $D(DIE("NO^")),DIE("NO^")="OUTOK"'&(X=U) W $C(7),!?3,"Sorry, ""^"" is not allowed!" G B
@@ -38,7 +39,6 @@ R D UP G @("R"_DQ_U_DNM)
 UP S DNM=DNM(DL),DQ=DNM(DL,0),%=2 I $D(DIEC(DL)) D DIEC^DIE1 G U
  S DA=DA(1) K DA(1)
 DA I $D(DA(%)) S DA(%-1)=DA(%) K DA(%) S %=%+1 G DA
- S:$D(DIEZTMP)#2 DIIENS=$P(DIIENS,",",2,999)
 U K DTOUT,DNM(DL) S DL=DL-1 Q
  ;
 X W:'$D(ZTQUEUED) $C(7),"??"

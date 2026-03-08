@@ -1,11 +1,13 @@
-PSIVRP ;BIR/MLM-REPRINT IV LABELS FROM WARD OR MANUFACTURING LIST ;12 JUL 96 / 10:45 AM
- ;;5.0; INPATIENT MEDICATIONS ;**38,58**;16 DEC 97
+PSIVRP ;BIR/MLM-REPRINT IV LABELS FROM WARD OR MANUFACTURING LIST ;02-Feb-2024 15:39;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**38,58,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^PS(55 is supported by DBIA 2191
  ; Reference to ^PS(52.6 is supported by DBIA 1231
  ; Reference to ^PS(52.7 is supported by DBIA 2173
  ; Reference to ^DIC(42 is supported by DBIA# 10039
- ;        
+ ;
+ ; Modified - IHS/MSC/PLS - 02/02/2024 - Added reference to GETHLOC - FID 99318
+ ;
  D ^PSIVXU Q:$D(XQUIT)  I '$D(^PS(55,"PSIVWL",PSIVSN)) W $C(7),!!,"THIS OPTION MAY BE USED ONLY AFTER THE WARD LIST HAS BEEN RUN",!! G QUIT^PSIVRP1
  K DIR S DIR(0)="DOA^NE",DIR("A")="Reprint labels for DATE: ",DIR("B")="TODAY",DIR("??")="^S HELP=""REPRINT"" D ^PSIVHLP2" D ^DIR K DIR G:Y<1 QUIT^PSIVRP1 K PS D GTMES^PSIVRP1
  I '$D(PS) W $C(7),!!,"The Ward list & Scheduled Labels options MUST be run for the chosen date",!,"before you may use this option!!",!! K DIR S DIR(0)="E" D ^DIR K DIR G QUIT^PSIVRP1
@@ -33,7 +35,9 @@ ORDER ;
  I 'PRO,(X["??") D PRO G ORDER
  G:X="" GTRANGE W $C(7),!!,"Enter the ",$E(P,8,44)," for ",VADM(1),",",! W:'PRO """??"" to see a profile of all orders on the ward list for this patient,",! W " or ""^"" to exit",!! G ORDER
 ORDER1 ;
- W !! S ON=+X,Y=^PS(55,DFN,"IV",ON,0),PSIVT=$S($P(Y,"^",4)'="":$P(Y,"^",4),1:0),PSIVDT=$O(PSR(PSIVT)),WRD=$S($D(^DIC(42,+$P(Y,"^",22),0)):$P(^(0),"^",1),1:"Outpatient IV")
+ ;IHS/MSC/PLS - 02/02/2024 - p1035
+ ;W !! S ON=+X,Y=^PS(55,DFN,"IV",ON,0),PSIVT=$S($P(Y,"^",4)'="":$P(Y,"^",4),1:0),PSIVDT=$O(PSR(PSIVT)),WRD=$S($D(^DIC(42,+$P(Y,"^",22),0)):$P(^(0),"^",1),1:"Outpatient IV")
+ W !! S ON=+X D SETP S Y=^PS(55,DFN,"IV",ON,0),PSIVT=$S($P(Y,"^",4)'="":$P(Y,"^",4),1:0),PSIVDT=$O(PSR(PSIVT)),WRD=$S($D(^DIC(42,+$P(Y,"^",22),0)):$P(^(0),"^",1),1:$$GETHLOC^PSIVWL(.P))
  S LIST=$S($D(^PS(55,"PSIVWLM",PSIVSN,PSIVDT)):"M",1:"W")
  S STR=$S(LIST="M":"LIST^PSIVT^PSIVDT^X1^X2^DFN^ON",1:"LIST^PSIVT^WRD^PSIVDT^DFN^ON") Q:LIST="W"  S FILE="AD",X1=0 D BU S X1=X,FILE="SOL",X2=0 D BU S X2=X G:X1=0!(X2=0) QUIT^PSIVRP1 I PSIVT="A" S XT=X1,X1=X2,X2=XT
  Q

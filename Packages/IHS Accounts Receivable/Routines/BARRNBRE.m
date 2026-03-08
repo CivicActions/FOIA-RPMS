@@ -1,6 +1,7 @@
 BARRNBRE ; IHS/SD/POT - Non Ben Payment Report PART 4
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**24**;OCT 26, 2005;Build 69
- ; IHS/SD/POT 07/15/13 HEAT114352 NEW REPORT BAR*1.8*24
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**24,33**;OCT 26, 2005;Build 133
+ ;IHS/SD/POT 1.8*24 07/15/13 HEAT114352 NEW REPORT
+ ;IHS/SD/SDR 1.8*33 ADO60817 Changed from .01 (date/time/counter) to DATE/TIME field for date checking
  Q
  ;
 CHKTRANS(BARTR) ;EP - CALLED FROM BARRNBRA
@@ -25,7 +26,8 @@ CHKTRANS(BARTR) ;EP - CALLED FROM BARRNBRA
  .S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN ADJUSTMENT CATEGORY",$P(BARTR(0),U))=BARTR("ADJ CAT")
  I $D(BARY("TRANS TYPE","ADJ TYPE")),'$D(BARY("TRANS TYPE","ADJ TYPE",BARTR("ADJ TYPE"))) D  Q    ;TMM*1.8*19
  .S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN ADJ TYPE",$P(BARTR(0),U))=BARTR("ADJ TYPE")
- S BARTR("DT")=$P(BARTR(0),U)           ; Transaction date/time
+ ;S BARTR("DT")=$P(BARTR(0),U)           ; Transaction date/time  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ S BARTR("DT")=$P(BARTR(0),U,18)       ;Transaction date/time  ;bar*1.8*33 IHS/SD/SDR ADO60817
  S BARTR("B")=$P(BARTR(0),U,14)         ; A/R Collection batch IEN
  K BARTR("B DT")
  I BARTR("B")'="" D
@@ -60,17 +62,17 @@ CHKTRANS(BARTR) ;EP - CALLED FROM BARRNBRA
  S BARTR("3P PRINT")=$P(BAR(0),U,19)       ;3P PRINT DATE
  K BAR("QUIT")
  I $G(BARY("DT"))="V" D  Q:$G(BAR("QUIT"))       ; Not chosen visit date
- . S:BARTR("DOS BEGIN")<BARY("DT",1) BAR("QUIT")=1
- . S:$P(BARTR("DOS BEGIN"),".")>BARY("DT",2) BAR("QUIT")=1
- . I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN VISIT DATE",$P(BARTR(0),U))=""
+ .S:BARTR("DOS BEGIN")<BARY("DT",1) BAR("QUIT")=1
+ .S:$P(BARTR("DOS BEGIN"),".")>BARY("DT",2) BAR("QUIT")=1
+ .I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN VISIT DATE",$P(BARTR(0),U))=""
  I $G(BARY("DT"))="A" D  Q:$G(BAR("QUIT"))       ; Not chosen approval date
- . S:BARTR("3P APPROVAL")<BARY("DT",1) BAR("QUIT")=1
- . S:$P(BARTR("3P APPROVAL"),".")>BARY("DT",2) BAR("QUIT")=1
- . I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN APPROVAL DATE",$P(BARTR(0),U))=""
+ .S:BARTR("3P APPROVAL")<BARY("DT",1) BAR("QUIT")=1
+ .S:$P(BARTR("3P APPROVAL"),".")>BARY("DT",2) BAR("QUIT")=1
+ .I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN APPROVAL DATE",$P(BARTR(0),U))=""
  I $G(BARY("DT"))="X" D  Q:$G(BAR("QUIT"))       ; Not chosen export date
- . S:BARTR("3P PRINT")<BARY("DT",1) BAR("QUIT")=1
- . S:$P(BARTR("3P PRINT"),".")>BARY("DT",2) BAR("QUIT")=1
- . I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN EXPORT DATE",$P(BARTR(0),U))=""
+ .S:BARTR("3P PRINT")<BARY("DT",1) BAR("QUIT")=1
+ .S:$P(BARTR("3P PRINT"),".")>BARY("DT",2) BAR("QUIT")=1
+ .I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN EXPORT DATE",$P(BARTR(0),U))=""
  ;S BARTR("I")=$P(BAR(0),U,3)             ; A/R Account ;12/15/2013 P.OTT
  S BARTR("I")=$P(BARTR(0),U,6)             ; A/R Account ;12/15/2013 P.OTT
  S BARTR("L")=$P(BAR(10),U,8)            ; Visit location
@@ -79,16 +81,16 @@ CHKTRANS(BARTR) ;EP - CALLED FROM BARRNBRA
  S BAR("C")=$P(BAR(10),U,12)             ; Clinic  (Clinic Stop File)
  S BAR("DS")=$$GET1^DIQ(90050.01,BAR,23)   ; Discharge Service (#)
  I BARTR("I")]"" D
- . S D0=BARTR("I")
- . S BARTR("BI")=$$VALI^BARVPM(8)     ; Insurer Type
+ .S D0=BARTR("I")
+ .S BARTR("BI")=$$VALI^BARVPM(8)     ; Insurer Type
  I $G(BARTR("BI"))=""  S BARTR("BI")="No Billing Entity"
  I BARTR("BI")'="No Billing Entity" D
- . S BARTR("ALL")="O"                               ; Other Allow Cat
- . I BARTR("BI")="G" S BARTR("ALL")="O" Q           ;
- . I BARTR("BI")="R"!(BARTR("BI")="MD")!(BARTR("BI")="MH") S BARTR("ALL")="R" Q           ; Medicare Allow Cat
- . I BARTR("BI")="D" S BARTR("ALL")="D" Q           ; Medicaid Allow Cat
- . I BARTR("BI")="K" S BARTR("ALL")="D" Q           ; CHIPS is lumped with Medicaid  ;
- . I ",F,M,H,P,"[(","_BARTR("BI")_",") S BARTR("ALL")="P" Q  ; Private  ;
+ .S BARTR("ALL")="O"                               ; Other Allow Cat
+ .I BARTR("BI")="G" S BARTR("ALL")="O" Q           ;
+ .I BARTR("BI")="R"!(BARTR("BI")="MD")!(BARTR("BI")="MH") S BARTR("ALL")="R" Q           ; Medicare Allow Cat
+ .I BARTR("BI")="D" S BARTR("ALL")="D" Q           ; Medicaid Allow Cat
+ .I BARTR("BI")="K" S BARTR("ALL")="D" Q           ; CHIPS is lumped with Medicaid  ;
+ .I ",F,M,H,P,"[(","_BARTR("BI")_",") S BARTR("ALL")="P" Q  ; Private  ;
  I $G(BARTR("ALL"))=""  S BARTR("ALL")="No Allowance Category"
  I BARTR("L")=""!(BARTR("I")="")!(BARTR("DT")="") D
  .S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NULL LOCATION^INS TYPE^TRANS DATE/TIME",$P(BARTR(0),U))=BARTR("L")_U_BARTR("I")_U_BARTR("DT")
@@ -126,13 +128,13 @@ CHKTRANS(BARTR) ;EP - CALLED FROM BARRNBRA
  .S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN DISCHARGE SVC",$P(BARTR(0),U))=""
  K BAR("QUIT")
  I $G(BARY("DT"))="T" D  Q:$G(BAR("QUIT"))       ; Not chosen trans date
- . S:BARTR("DT")<BARY("DT",1) BAR("QUIT")=1
- . S:$P(BARTR("DT"),".")>BARY("DT",2) BAR("QUIT")=1
- . I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN TRANS DATE",$P(BARTR(0),U))=""
+ .S:BARTR("DT")<BARY("DT",1) BAR("QUIT")=1
+ .S:$P(BARTR("DT"),".")>BARY("DT",2) BAR("QUIT")=1
+ .I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN TRANS DATE",$P(BARTR(0),U))=""
  I $D(BARY("PER")) D  Q:$G(BAR("QUIT"))   ; Not chosen period date range
- . S:BARTR("DT")<BARBDT BAR("QUIT")=1
- . S:$P(BARTR("DT"),".")>BAREDT BAR("QUIT")=1
- . I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN PERIOD DATE",$P(BARTR(0),U))=""
+ .S:BARTR("DT")<BARBDT BAR("QUIT")=1
+ .S:$P(BARTR("DT"),".")>BAREDT BAR("QUIT")=1
+ .I $G(BAR("QUIT")) S:$G(DEBUG) ^TMP($J,"BAR-"_BAR("SUBR"),"REASON REJECTED","NOT CHOSEN PERIOD DATE",$P(BARTR(0),U))=""
  I $D(BARY("DATA SRC")) D  Q:$G(BAR("QUIT"))
  .I BARY("DATA SRC")="MANUAL",(BARTR("DATA SRC")="e") S BAR("QUIT")=1
  .I BARY("DATA SRC")="ELECTRONIC",(BARTR("DATA SRC")="m") S BAR("QUIT")=1

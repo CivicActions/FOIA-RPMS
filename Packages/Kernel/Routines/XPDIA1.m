@@ -1,6 +1,5 @@
-XPDIA1 ;SFISC/RSD - Install Pre/Post Actions for Kernel files cont. ;06/24/2008
- ;;8.0;KERNEL;**2,44,51,58,68,85,131,146,182,229,302,399,507,539**;Jul 10, 1995;Build 15
- ;Per VHA Directive 2004-038, this routine should not be modified.
+XPDIA1 ;SFISC/RSD - Install Pre/Post Actions for Kernel files cont. ;05/05/2003  13:32 [ 03/19/2004  12:04 PM ]
+ ;;8.0;KERNEL;**2,44,51,58,68,85,131,146,182,229,302,1009**;Jul 10, 1995
  Q
 HLPF1 ;help frames file pre
  K ^TMP($J,"XPD")
@@ -56,18 +55,14 @@ MAILGE1 ;mail group entry pre
  I $O(^XTMP("XPDI",XPDA,"KRN",3.8,OLDA,6,0)) M ^TMP($J,"XPD",DA,6)=^XTMP("XPDI",XPDA,"KRN",3.8,OLDA,6) K ^XTMP("XPDI",XPDA,"KRN",3.8,OLDA,6)
  ;if there is a new Description, kill the old Description
  K:$O(^XTMP("XPDI",XPDA,"KRN",3.8,OLDA,2,0)) ^XMB(3.8,DA,2)
- ;I=current mail group, J=incoming mail group
  S I=^XMB(3.8,DA,0),J=^XTMP("XPDI",XPDA,"KRN",3.8,OLDA,0)
  ;save REFERENCE COUNT (0;4) & LAST REFERENCED (0;5)
  S:$P(I,U,4) $P(J,U,4)=$P(I,U,4) S:$P(I,U,5) $P(J,U,5)=$P(I,U,5)
- ;check COORDINATOR (0;7), bring in one that was asked during install question
+ ;check COORDINATOR (0;7), if exist then save, else bring in one that was asked during install question
  D
- .;get the existing coordinator, and set it
- .I $P(I,U,7) S $P(J,U,7)=$P(I,U,7)
- .;check if there is a pre-question
+ .I $P(I,U,7) S $P(J,U,7)=$P(I,U,7) Q
  .S %=$O(^XPD(9.7,XPDA,"QUES","B","XPM"_OLDA_"#1",0)) Q:'%
- .;if they entered a coordinator, then set it
- .I $G(^XPD(9.7,XPDA,"QUES",%,1)) S $P(J,U,7)=^(1)
+ .S:$G(^XPD(9.7,XPDA,"QUES",%,1)) $P(J,U,7)=^(1)
  S ^XTMP("XPDI",XPDA,"KRN",3.8,OLDA,0)=J,I=$G(^XMB(3.8,DA,3))
  ;save ORGANIZER (3;1)
  I $P(I,U) S $P(^XTMP("XPDI",XPDA,"KRN",3.8,OLDA,3),U)=$P(I,U)
@@ -159,60 +154,39 @@ HLLLE ;HL7 logical link #870 entry pre
  .D BMES^XPDUTL(" Couldn't resolve Institution "_$P(J,U,2)_" for Logical Link "_$P(^HLCS(870,DA,0),U))
  ;repoint LLP TYPE (0;3)
  S:$P(J,U,3)]"" $P(J,U,3)=$$LK^XPDIA("^HLCS(869.1)",$P(J,U,3))
- ;repoint MAILMAN DOMAIN (0;7)
+ ;repoint DOMAIN (0;7)
  I $P(J,U,7)]"" S Y=$$LK^XPDIA("^DIC(4.2)",$P(J,U,7)) D:Y=""  S $P(J,U,7)=Y
  .D BMES^XPDUTL(" Couldn't resolve Domain "_$P(J,U,7)_" for Logical Link "_$P(^HLCS(870,DA,0),U))
- ;save node 0; pieces 4,5,6,7,9,10,11,12,16,19,21
- F L=4:1:7,9:1:12,16,19,21 S:$P(I,U,L)]"" $P(J,U,L)=$P(I,U,L)
- ;set SHUTDOWN LLP (0;15) no for multi-listener and yes for all else
- S Y=$P($G(^HLCS(870,DA,400)),U,3) S:Y]"" $P(J,U,15)=$S(Y="M":0,1:1)
+ ;save node 0; pieces 4,5,6,7,10,11,12,19,21
+ F L=4:1:7,10:1:12,19,21 S:$P(I,U,L)]"" $P(J,U,L)=$P(I,U,L)
+ ;set SHUTDOWN LLP (0;15) no for DSM multi-listener and yes for all else
+ S Y=$P($G(^HLCS(870,DA,400)),U,3) S:Y]"" $P(J,U,15)=$S(Y="M":(^%ZOSF("OS")["OpenM"),1:1)
  S ^XTMP("XPDI",XPDA,"KRN",870,OLDA,0)=J
  S I=$P($G(^XTMP("XPDI",XPDA,"KRN",870,OLDA,100)),U)
  ;repoint MAIL GROUP (100;1)
  S:I]"" $P(^XTMP("XPDI",XPDA,"KRN",870,OLDA,100),U)=$$LK^XPDIA("^XMB(3.8)",I)
- ;save data from site on nodes 200,300,400,500
- F L=200,300,400,500 S I=$G(^HLCS(870,DA,L)) D:I]""
+ ;save data from site on nodes 200,300,400
+ F L=200,300,400 S I=$G(^HLCS(870,DA,L)) D:I]""
  . S J=$G(^XTMP("XPDI",XPDA,"KRN",870,OLDA,L)) Q:J=""
  . ;check local data (I) and if exist set incomming data (J)
  . F K=1:1:10 S Y=$P(I,U,K) S:Y]"" $P(J,U,K)=Y
  . S ^XTMP("XPDI",XPDA,"KRN",870,OLDA,L)=J
- ;remove following values when a Test site (not a Production site)
- D:$P($$PARAM^HLCS2,U,3)'="P"
- . ;MAILMAN DOMAIN (0;7), DNS DOMAIN (0;8)
- . S $P(^XTMP("XPDI",XPDA,"KRN",870,OLDA,0),U,7,8)="^"
- . ;TCP/IP ADDRESS (400,1), IPV6 ADDRESS (500,1)
- . S J=$G(^XTMP("XPDI",XPDA,"KRN",870,OLDA,400))
- . S:J]"" $P(^XTMP("XPDI",XPDA,"KRN",870,OLDA,400),U)=""
- . S J=$G(^XTMP("XPDI",XPDA,"KRN",870,OLDA,500))
- . S:J]"" $P(^XTMP("XPDI",XPDA,"KRN",870,OLDA,500),U)=""
  Q
-KEYF1 ;SECURITY KEY file pre
- K ^TMP($J,"XPD")
- Q
-KEYE1 ;SECURITY KEY file entry pre
- S ^TMP($J,"XPD",DA)=""
- Q
-KEYF2 ;SECURITY KEY file post
- N DA,DIK,I,X,Y,Y0
+KEYF2 ;file post
+ N DA,DIK,I,X,Y,Y0,XPDF
  ;Repoint fields
- S DA=0,DIK=DIC
- F  S DA=$O(^TMP($J,"XPD",DA)) Q:'DA  D
- . ;Repoint SUBORDINATE (3)
- . S I=0 F  S I=$O(^DIC(19.1,DA,3,I)) Q:'I  S Y0=$G(^(I,0)) D
- . . S Y=$$LK^XPDIA("^DIC(19.1)",$P(Y0,U)) S:Y $P(^DIC(19.1,DA,3,I,0),U)=Y
- . ;MUTUALLY EXCLUSIVE KEYS (5)
- . S (I,X)=0 F  S I=$O(^DIC(19.1,DA,5,I)) Q:'I  S Y0=$G(^(I,0)) D
- . . S Y=$$LK^XPDIA("^DIC(19.1)",$P(Y0,U)) S:Y $P(^DIC(19.1,DA,5,I,0),U)=Y
+ S DA=0,DIK=DIC,XPDF=19.1 F  S DA=$O(^TMP($J,"XPD",DA)) Q:'DA  D
+ . ;repoint Related Frame (3;0)
+ . S I=0 F  S I=$O(^DIC(XPDF,DA,3,I)) Q:'I  S Y0=$G(^(I,0)),Y=$$LK^XPDIA("^DIC("_XPDF_")",$P(Y0,U,1)) S:Y $P(^DIC(XPDF,DA,2,I,0),U,1)=Y
+ . ;repoint OBJECT (5;0)
+ . S (I,X)=0 F  S I=$O(^DIC(XPDF,DA,5,I)) Q:'I  S Y0=$G(^(I,0)) D
+ . . S Y=$$LK^XPDIA("^DIC("_XPDF_")",$P(Y0,U)) S:Y $P(^DIC(9.2,DA,5,I,0),U)=Y
  . D IX1^DIK
  K ^TMP($J,"XPD")
  Q
 KEYDEL ;del security keys
  N XPDI S XPDI=0
  F  S XPDI=$O(^TMP($J,"XPDEL",XPDI)) Q:'XPDI  D DEL^XPDKEY(XPDI)
- Q
-LME1 ;List Templates entry pre
- ;kill old entry before data merge
- K ^SD(409.61,DA)
  Q
 LMDEL ;del list manager templates
  D DELIEN^XPDUTL1(409.61,$NA(^TMP($J,"XPDEL")))
@@ -242,16 +216,4 @@ HLLLDEL(RT) ;del HL7 logical link #870
  F  S XPDI=$O(TMP($J,"XPDEL",XPDI)) Q:'XPDI  D:$D(^HLS(774,"C",XPDI))
  . S XPDJ=0 F  S XPDJ=$O(^HLS(774,"C",XPDI,XPDJ))
  D DELIEN^XPDUTL1(870,RT)
- Q
-HLOE ;HLO application registry #779.2
- N I,J,K,L,Y
- S I=^HLD(779.2,DA,0),J=^XTMP("XPDI",XPDA,"KRN",779.2,OLDA,0)
- ;repoint APPLICATION SPECIFIC LISTENER (0;9)
- I $P(J,U,9)]"" S Y=$$LK^XPDIA("^HLCS(870)",$P(J,U,9)) D:Y=""  S $P(J,U,9)=Y
- .D BMES^XPDUTL(" Couldn't resolve APPLICATION SPECIFIC LISTENER "_$P(J,U,2)_" HLO APPLICATION "_$P(I,U))
- S ^XTMP("XPDI",XPDA,"KRN",779.2,OLDA,0)=J
- ;repoint Package File Link (2;1)
- S J=$P($G(^XTMP("XPDI",XPDA,"KRN",779.2,OLDA,2)),U)
- S:J]"" $P(^XTMP("XPDI",XPDA,"KRN",779.2,OLDA,2),U)=$$LK^XPDIA("^DIC(9.4)",J)
- ;save data from site on nodes 200,300,400
  Q

@@ -1,5 +1,5 @@
 LR175 ;DALISC/SED - LR*5.2*175 PATCH ENVIRNMENT CHECK ROUTINE ; 5/1/98 [ 05/02/2003  7:58 AM ]
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**175**;Sep 27, 1994
 EN ; Does not prevent loading of the transport global.
  ;Environment check is done only during the install.

@@ -1,5 +1,5 @@
 LR264 ;DALOI/FHS - LR*5.2*264 PATCH ENVIRONMENT CHECK ROUTINE
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**264**;Sep 27,1994
  ;Reference to VA(200 Supported by Reference #10060
  ;Reference to $$CJ^XLFSTR  Supported by Reference #10104

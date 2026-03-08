@@ -1,11 +1,13 @@
-PSBODL ;BIRMINGHAM/EFC-DUE LIST ;Mar 2004
- ;;3.0;BAR CODE MED ADMIN;**5,9,38,32,25**;Mar 2004;Build 6
- ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified. 
+PSBODL ;BIRMINGHAM/EFC-DUE LIST ;31-Mar-2023 09:31;DU
+ ;;3.0;BAR CODE MED ADMIN;**5,9,38,32,25,1033**;Mar 2004;Build 34
+ ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
  ;
  ; Reference/IA
  ; EN^PSJBCMA/2828
  ; $$GET^XPAR/2263
  ; ^XLFDT/10103
+ ;
+ ; Modified - IHS/MSC/PLS - 03/31/2023 - Line PRINT+49
  ;
 EN ; Prt DL
  N PSBGBL,PSBHDR,IOINHI,IOINORM,PSBGIVEN,PSBIEN,PSBLGDT,PSBEVDT,DFN,PSBFLAG
@@ -78,7 +80,9 @@ PRINT(DFN) ;^TMP($J.
  ..Q:(PSBOSP'>PSBNOW)
  ..S (PSBYES,PSBODD,PSBDAYB,PSBSCBR)=0
  ..S:$$PSBDCHK1^PSBVT1(PSBSCH) PSBYES=1,PSBDAYB=1
- ..F I=1:1 Q:$P(PSBSCH,"-",I)=""  I $P(PSBSCH,"-",I)?2N!($P(PSBSCH,"-",I)?4N) S PSBYES=1,PSBSCBR=1
+ ..;IHS/MSC/PLS - p1033
+ ..;F I=1:1 Q:$P(PSBSCH,"-",I)=""  I $P(PSBSCH,"-",I)?2N!($P(PSBSCH,"-",I)?4N) S PSBYES=1,PSBSCBR=1
+ ..F I=1:1 Q:$P($TR(PSBSCH,",","-"),"-",I)=""  I $P($TR(PSBSCH,",","-"),"-",I)?2N!($P($TR(PSBSCH,",","-"),"-",I)?4N) S PSBYES=1,PSBSCBR=1
  ..I PSBYES,PSBADST="",PSBSCHT'="O",PSBSCHT'="OC",PSBSCHT'="P" D  Q
  ...D ERROR^PSBMLU(PSBONX,PSBOITX,DFN,"Admin times required",PSBSCH)
  ..I PSBSCHT="OC" S PSBYES=1

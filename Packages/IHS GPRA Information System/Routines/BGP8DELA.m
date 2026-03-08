@@ -1,18 +1,18 @@
-BGP8DELA ;IHS/CMI/LAB - GPRA REPORT;
- ;;18.1;IHS CLINICAL REPORTING;;MAY 25, 2018;Build 66
+BGP8DELA ; IHS/CMI/LAB - IHS GPRA 08 REPORT DRIVER ;
+ ;;8.0;IHS CLINICAL REPORTING;**2**;MAR 12, 2008
  ;
  ;
  W:$D(IOF) @IOF
- W !!,$$CTR("2018 Area Aggregate Elder Care Clinical Performance Measure Report",80)
+ W !!,$$CTR("2008 Area Aggregate Elder Care Clinical Performance Measure Report",80)
 INTRO ;
  D XIT
  W !!,"This will produce an Elder Care Performance Measure Report for all ELDER"
  W !,"measures for a year period you specify.  You will be asked to provide:"
  W !,"1) the reporting period, 2) the baseline period to compare data to, and"
  W !,"3) the beneficiary/classification of the patients."
- W !!,"There are 28 topics in the Elder Care Measure Report."
+ W !!,"There are 27 topics in the Elder Care Measure Report."
  D XIT
- S BGPZZ="A" S X=0 F  S X=$O(^BGPELIR(X)) Q:X'=+X  S BGPIND(X)=""
+ S BGPZZ="A" S X=0 F  S X=$O(^BGPELIE(X)) Q:X'=+X  S BGPIND(X)=""
  S BGPAREAA=1
 TP ;get time period
  S BGPRTYPE=5
@@ -27,10 +27,7 @@ TP ;get time period
  I BGPQTR=2 S BGPBD=($E(BGPPER,1,3)-1)_"0401",BGPED=$E(BGPPER,1,3)_"0331"
  I BGPQTR=3 S BGPBD=($E(BGPPER,1,3)-1)_"0701",BGPED=$E(BGPPER,1,3)_"0630"
  I BGPQTR=4 S BGPBD=($E(BGPPER,1,3)-1)_"1001",BGPED=$E(BGPPER,1,3)_"0930"
- I BGPQTR=5 D
- .S D=$$FMADD^XLFDT(BGPPER,1)
- .I $E(BGPPER,4,7)'=1231 S BGPBD=($E(BGPPER,1,3)-1)_$E(D,4,7),BGPED=BGPPER,BGPPER=$E(BGPED,1,3)_"0000"
- .I $E(BGPPER,4,7)=1231 S BGPBD=$E(BGPPER,1,3)_$E(D,4,7),BGPED=BGPPER,BGPPER=$E(BGPED,1,3)_"0000"
+ I BGPQTR=5 S BGPBD=$$FMADD^XLFDT(BGPPER,-364),BGPED=BGPPER,BGPPER=$E(BGPED,1,3)_"0000"
  I BGPED>DT D  G:BGPDO=1 TP
  .W !!,"You have selected Current Report period ",$$FMTE^XLFDT(BGPBD)," through ",$$FMTE^XLFDT(BGPED),"."
  .W !,"The end date of this report is in the future; your data will not be",!,"complete.",!
@@ -40,9 +37,9 @@ TP ;get time period
  .Q
 BY ;get baseline year
  S BGPVDT=""
- W !!,"Enter the Baseline Year to compare data to.",!,"Use a 4 digit year, e.g. 2010"
+ W !!,"Enter the Baseline Year to compare data to.",!,"Use a 4 digit year, e.g. 1999, 2000"
  S DIR(0)="D^::EP"
- S DIR("A")="Enter Year (e.g. 2010)"
+ S DIR("A")="Enter Year (e.g. 2000)"
  D ^DIR KILL DIR
  I $D(DIRUT) G TP
  I $D(DUOUT) S DIRUT=1 G TP
@@ -75,17 +72,15 @@ ASU ;
  I '$D(BGPSUL) W !!,"No sites selected" D XIT Q
  S X=0,C=0 F  S X=$O(BGPSUL(X)) Q:X'=+X  S C=C+1
  W !!,"A total of ",C," facilities have been selected.",!!
- I C=1 S BGPRPTT="F",BGPSUCNT=1,Y=$O(BGPSUL(0)),X=$P(^BGPEDLCR(Y,0),U,9),X=$O(^AUTTLOC("C",X,0)) I X S BGPSUNM=$P(^DIC(4,X,0),U)
+ I C=1 S BGPRPTT="F",BGPSUCNT=1,Y=$O(BGPSUL(0)),X=$P(^BGPELDCE(Y,0),U,9),X=$O(^AUTTLOC("C",X,0)) I X S BGPSUNM=$P(^DIC(4,X,0),U)
  I C>1 S BGPRPTT="A"
 ZIS ;call to XBDBQUE
   D ^XBFMK
  K DIC,DIADD,DLAYGO,DR,DA,DD,X,Y,DINUM
 GI ;gather all gpra measures
- S X=0 F  S X=$O(^BGPELIR(X)) Q:X'=+X  S BGPIND(X)=""
- S BGPINDG="E"
+ S X=0 F  S X=$O(^BGPELIE(X)) Q:X'=+X  S BGPIND(X)=""
+ S BGPINDT="E"
  ;
- D TEXT^BGP8DSL
- I $D(DIRUT) G ASU
  D PT^BGP8DESL
  I BGPROT="" G ASU
  K IOP,%ZIS I BGPROT="D",BGPDELT="F" D NODEV,XIT Q
@@ -114,7 +109,7 @@ TSKMN ;EP ENTRY POINT FROM TASKMAN
  I $G(IO("DOC"))]"" S ZTIO=ZTIO_";"_$G(IO("DOC"))
  I $D(IOM)#2,IOM S ZTIO=ZTIO_";"_IOM I $D(IOSL)#2,IOSL S ZTIO=ZTIO_";"_IOSL
  K ZTSAVE S ZTSAVE("BGP*")=""
- S ZTCPU=$G(IOCPU),ZTRTN="DRIVER^BGP8DELA",ZTDTH="",ZTDESC="ELDER 09 REPORT" D ^%ZTLOAD D XIT Q
+ S ZTCPU=$G(IOCPU),ZTRTN="DRIVER^BGP8DELA",ZTDTH="",ZTDESC="ELDER 08 REPORT" D ^%ZTLOAD D XIT Q
  Q
  ;
 XIT ;
@@ -156,7 +151,7 @@ CHKY ;
  Q
 F ;fiscal year
  S (BGPPER,BGPVDT)=""
- W !!,"Enter the Calendar Year for the report END date.  Use a 4 digit",!,"year, e.g. 2018"
+ W !!,"Enter the Calendar Year for the report END date.  Use a 4 digit",!,"year, e.g. 2008"
  S DIR(0)="D^::EP"
  S DIR("A")="Enter Year"
  S DIR("?")="This report is compiled for a period.  Enter a valid date."
@@ -168,11 +163,11 @@ F ;fiscal year
  S BGPPER=BGPVDT
  Q
 ENDDATE ;
- W !!,"When entering dates, if you do not enter a full 4 digit year (e.g. 2018)"
+ W !!,"When entering dates, if you do not enter a full 4 digit year (e.g. 2008)"
  W !,"will assume a year in the past, if you want to put in a future date,"
  W !,"remember to enter the full 4 digit year.  For example, if today is"
- W !,"January 4, 2010 and you type in 6/30/07 the system will assume the year"
- W !,"as 1907 since that is a date in the past.  You must type 6/30/2010 if you"
+ W !,"January 4, 2008 and you type in 6/30/07 the system will assume the year"
+ W !,"as 1907 since that is a date in the past.  You must type 6/30/2008 if you"
  W !,"want a date in the future."
  S (BGPPER,BGPVDT)=""
  W ! K DIR,X,Y S DIR(0)="D^::EP",DIR("A")="Enter End Date for the Report: (e.g. 11/30/2005)" D ^DIR K DIR S:$D(DUOUT) DIRUT=1

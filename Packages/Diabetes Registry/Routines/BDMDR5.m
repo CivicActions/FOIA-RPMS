@@ -1,5 +1,5 @@
 BDMDR5 ; IHS/CMI/LAB - patients w/o dm on problem list ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,3,8,9,10**;JUN 14, 2007;Build 12
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,3,8,9,10,13,17,19**;JUN 14, 2007;Build 159
  ;
  ;
 START ;
@@ -7,15 +7,18 @@ START ;
  D EXIT
 R ;
  S BDMREG=""
- S DIC="^ACM(41.1,",DIC(0)="AEMQ",DIC("A")="Enter the Name of the Register: " D ^DIC
- I Y=-1 W !,"No register selected." D EXIT Q
- S BDMREG=+Y
+ D REG^BDMFUTIL
+ ;S DIC="^ACM(41.1,",DIC(0)="AEMQ",DIC("A")="Enter the Name of the Register: " D ^DIC
+ ;I Y=-1 W !,"No register selected." D EXIT Q
+ I $G(BDMRDA)="" D EXIT Q
+ S BDMREG=BDMRDA
+ ;
 STAT ;get status
  W !!,"Select the Patient Status for this report"
  S BDMSTAT=""
  K DIR
  S DIR(0)="S^"_$P(^DD(9002241,1,0),U,3)_";0:All Register Patients",DIR("A")="Which Status",DIR("B")="A" KILL DA D ^DIR KILL DIR
- I $D(DIRUT) G R
+ I $D(DIRUT) G EXIT
  I Y=0 S BDMSTAT="" G CLINIC
  S BDMSTAT=Y
 CLINIC ;
@@ -39,7 +42,7 @@ ED ;
  S X1=BDMBD,X2=-1 D C^%DTC S BDMSD=X
 ZIS ;
  S BDMTEMP=""
- S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="P" KILL DA D ^DIR KILL DIR
+ S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="B" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G GETDATES
  S BDMTEMP=Y
  ;call to XBDBQUE
@@ -91,6 +94,7 @@ PROC ;EP - called from XBDBQUE
  .I 'BDMG S ^XTMP("BDMDR5",BDMJOB,BDMBTH,"PATIENTS",$$GET1^DIQ(2,BDMPAT,.01),BDMPAT)=""
  Q
 PRINT ;EP - called from xbdbque
+ D LOG^BUSAAPI("O","P","P",$S($G(XQY0)]"":$P(XQY0,U),1:"BDMDR5"),"DM PTS NO VISIT")
  S BDMIOSL=$S($G(BDMGUI):55,1:IOSL)
  S BDM80D="-------------------------------------------------------------------------------"
  S BDMPG=0 D HEAD

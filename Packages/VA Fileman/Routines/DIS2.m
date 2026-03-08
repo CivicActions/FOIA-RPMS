@@ -1,6 +1,7 @@
-DIS2 ;SFISC/GFT-SEARCH, TEMPLATES & COMPUTED FIELDS;4JUN2005
- ;;22.0;VA FileMan;**6,144**;Mar 30, 1999;Build 5
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIS2 ;SFISC/GFT-SEARCH, TEMPLATES & COMPUTED FIELDS ;9/20/94  15:11 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  K DISV G G:'DUZ
 0 D  K DIRUT,DIROUT I $D(DTOUT)!($D(DUOUT)) G Q
  . N DIS,DIS0,DA,DC,DE,DJ,DL D S3^DIBT1 Q
@@ -23,24 +24,21 @@ TEM ;
  G DIS2
  ;
 COMP ;
- S E=X,DICMX="X DIS(DIXX)",DICOMP=N_"?",DQI="Y(",DA="DIS("""_$C(DC+64)_DL_"""," I $D(O(DC))[0 S O(DC)=X
+ S E=X,DICMX="X DIS(DIXX)",DICOMP=N,DQI="Y(",DA="DIS("""_$C(DC+64)_DL_"""," I '$D(O(DC))#2 S O(DC)=X
  G COLON:X?.E1":"
- I X?.E1":.01",$D(O(DC))[0 S O(DC)=$E(X,1,$L(X)-4)
- D EN^DICOMP,XA G X:'$D(X),X:Y["m" ;I Y["m" S X=E_":" G COMP
- S DA(DC)=X,DU=-DC,E=$E("B",Y["B")_$E("D",Y["D") I Y["p" S E="p"_+$P(Y,"p",2)
+ I X?.E1":.01",'$D(O(DC))#2 S O(DC)=$E(X,1,$L(X)-4)
+ D EN^DICOMP,XA G X^DIS:'$D(X),X^DIS:Y["m" ;I Y["m" S X=E_":" G COMP
+ S DA(DC)=X,DU=-DC,E=$E("B",Y["B")_$E("D",Y["D")
  G G^DIS
 XA S %=0 F  S %=$O(X(%)) Q:%=""  S @(DA_%_")")=X(%)
  S %=-1 Q
-COLON D ^DICOMPW,XA G X:'$D(X)
+COLON D ^DICOMPW G X^DIS:'$D(X) D XA
  S R(DL)=R,N(DL)=N,N=+Y,DY=DY+1,DV(DL)=DV,DL(DL)=DK,DL=DL+1,DV=DV_-DY_C,DY(DY)=DP_U_$S(Y["m":DC_"."_DL,1:"")_U_X,R=U_$P(DP,U,2)
  K X G R^DIS
  ;
 Q ;
  K DIC,DA,DX,O,D,DC,DI,DK,DL,DQ,DU,DV,E,DE,DJ,N,P,Z,R,DY,DTOUT,DIRUT,DUOUT,DIROUT,^UTILITY($J)
  Q
- ;
-X K O(DC) G X^DIS
- ;
 DIS ;PUT SET LOGIC INTO DIS FOR SUBFILE
  S %X="" F %Y=1:1 S %X=$O(DIS(%X)) Q:'%X  S %=$S($D(DIAR(DIARF,%X)):DIAR(DIARF,%X),1:DIS(%X)) S:%["X DIS(" %=$P(%,"X DIS(")_"X DIFG("_DIARF_","_$P(%,"X DIS(",2) S ^DIAR(1.11,DIARC,"S",%Y,0)=%X,^(1)=%
- S:%Y>1 %Y=%Y-1,^DIAR(1.11,DIARC,"S",0)="^1.1132^"_%Y_U_%Y G DIS2
+ S:%Y>1 %Y=%Y-1,^DIAR(1.11,DIARC,"S",0)="^1.1132^"_%Y_U_%Y G ^DIS2

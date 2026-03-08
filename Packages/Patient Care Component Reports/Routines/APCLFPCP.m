@@ -1,5 +1,5 @@
-APCLFPCP ; IHS/CMI/LAB - cont. of top ten ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLFPCP ; IHS/OHPRD/TMJ - cont. of top ten ;  [ 07/16/01  2:04 PM ]
+ ;;3.0;IHS PCC REPORTS;**10,20**;FEB 05, 1997
  ;
  ;cmi/anch/maw 9/10/2007 code set verioning in PCPT
  ;

@@ -1,5 +1,5 @@
-BGPDH ; IHS/CMI/LAB - cover page for gpra ;
- ;;7.0;IHS CLINICAL REPORTING;;JAN 24, 2007
+BGPDH ; IHS/CMI/LAB - cover page for gpra ;  [ 08/19/02  3:07 PM ]
+ ;;1.0;IHS GPRA REPORTING;**1**;JUN 12, 2002
  ;
  ;
  W:$D(IOF) @IOF

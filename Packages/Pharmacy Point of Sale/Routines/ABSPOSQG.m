@@ -1,5 +1,5 @@
 ABSPOSQG ; IHS/FCS/DRS - form transmission packets ; 
- ;;1.0;PHARMACY POINT OF SALE;**37,42**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**37,42**;JUN 21, 2001;Build 131
  Q
  ; PACKET(), split off from ABSPOSQ2
  ;

@@ -1,5 +1,5 @@
-XMFAX ;ISC-SF/GMB-Fax ;04/08/2002  14:46
- ;;8.0;MailMan;;Jun 28, 2002
+XMFAX ;ISC-SF/GMB-Fax ;07/08/98  10:51
+ ;;7.1;MailMan;**36,50**;Jun 02, 1994
 FAX(XMZ) ; Fax a message
  N XMABORT,XMCNT,XMFIEN,XMQUIET
  S XMQUIET=1 ; "quiet flag"
@@ -29,7 +29,7 @@ RECIPS(XMZ,XMFID,XMFIEN,XMCNT) ; Add recipients to fax record and update recipie
  . S XMCNT=XMCNT+1
  . S XMIENS="+1,"_XMFIEN_","
  . S XMFDA(589500.01,XMIENS,.01)=I ; Pointer to recipient
- . S XMFDA(589500.01,XMIENS,1)=$$EZBLD^DIALOG(39303.7) ;Awaiting Transmission Path
+ . S XMFDA(589500.01,XMIENS,1)="Awaiting Transmission Path"
  . S XMFDA(589500.01,XMIENS,2)=$P(XMREC,U,2) ; Recipient fax phone
  . S XMFDA(589500.01,XMIENS,3)=$P(XMREC,U,3) ; Recipient physical location
  . S XMFDA(589500.01,XMIENS,4)=$P(XMREC,U,4) ; Recipient voice phone
@@ -44,24 +44,35 @@ RECIPS(XMZ,XMFID,XMFIEN,XMCNT) ; Add recipients to fax record and update recipie
 BODY(XMZ,XMFIEN) ; Copy the msg text to the fax text
  N XMTEXT,XMREC,I,XMDATE,XMFROM
  S XMREC=^XMB(3.9,XMZ,0)
- S I=1,XMTEXT(I)=$$EZBLD^DIALOG(34536,$P(XMREC,U,1))_"  "_$$EZBLD^DIALOG(34537,XMZ) ; Subj: |1|  [#|1|]
- S XMDATE=$$MMDT^XMXUTIL1($P(XMREC,U,3))
+ S I=1,XMTEXT(I)="Subj: "_$P(XMREC,U,1)_"  ["_XMZ_"]"
+ S XMDATE=$P(XMREC,U,3) S:+XMDATE=XMDATE XMDATE=$$FMTE^XLFDT(XMDATE,1)
  I $L(XMTEXT(I))+$L(XMDATE)+1>79 S I=I+1,XMTEXT(I)=XMDATE
  E  S XMTEXT(I)=XMTEXT(I)_" "_XMDATE
- S I=I+1,XMTEXT(I)=$$EZBLD^DIALOG(39330,^XMB("NETNAME")) ;Site: |1|
- S I=I+1,XMTEXT(I)=$$EZBLD^DIALOG(34538,$$NAME^XMXUTIL($P(XMREC,U,2),1)) ; From: |1|
- I DUZ'=$P(XMREC,U,2) S I=I+1,XMTEXT(I)=$$EZBLD^DIALOG(39331,$$NAME^XMXUTIL(DUZ,1)) ;Sender: |1|
+ S I=I+1,XMTEXT(I)="From: "_$$FROM($P(XMREC,U,2))
+ I DUZ'=$P(XMREC,U,2) S I=I+1,XMTEXT(I)="Sender: "_$$FROM(DUZ)
  S I=I+1,XMTEXT(I)="-------------------------------------------------------------------------------"
  S I=I+1,XMTEXT(I)=""
  D WP^DIE(589500,XMFIEN_",",7,"","XMTEXT")
  D WP^DIE(589500,XMFIEN_",",7,"A","^XMB(3.9,"_XMZ_",2)")
  Q 
 SENDFAX(AKQ,AKIEN,AKML) ;
- W !,$$EZBLD^DIALOG(39332) ;Sending to fax
+ W !,"Sending to fax"
  D QUE^AKFAX0
  Q
 FAXHDR(XMFID,XMFTO) ; Print the fax header
- W !,$$EZBLD^DIALOG(39333,XMFTO) ;MailMan FAX for |1|
- N XMPARM S XMPARM(1)=XMFID,XMPARM(2)=$$FMTE^XLFDT($$NOW^XLFDT,5)
- W !,$$EZBLD^DIALOG(39334,.XMPARM),! ;FAXmail ID: |1|, Faxed: |2|
+ W !,"MailMan FAX for ",XMFTO
+ W !,"FAXmail ID: ",XMFID,", Faxed: ",$$FMTE^XLFDT($$NOW^XLFDT,1),!
  Q
+FROM(XMFROM) ;
+ N XMFREC,XMTITLE,XMNAME
+ Q:XMFROM'=+XMFROM XMFROM
+ S XMFREC=$G(^VA(200,XMFROM,0)) Q:XMFREC="" $S(XMFROM=.5:"POSTMASTER",1:"USER #"_XMFROM)_"@"_^XMB("NETNAME")
+ S XMNAME=$P(XMFREC,U)_"@"_^XMB("NETNAME")
+ I $P($G(XMDISPI),U)["T",$P(XMFREC,U,9) D
+ . S XMTITLE=$P($G(^DIC(3.1,$P(XMFREC,U,9),0)),U)
+ . S:XMTITLE'="" XMNAME=XMNAME_"@"_^XMB("NETNAME")_" - "_XMTITLE
+ E  I $P($G(XMDISPI),U)["I",$D(^XMB(3.7,XMFROM,6000)) D
+ . N XMINST
+ . S XMINST=$P(^XMB(3.7,XMFROM,6000),U)
+ . S:XMINST'="" XMNAME=XMNAME_" ("_XMINST_")"
+ Q XMNAME

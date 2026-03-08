@@ -1,9 +1,10 @@
-PSBODO ;BIRMINGHAM/EFC-BCMA UNIT DOSE VIRTUAL DUE LIST FUNCTIONS ;Mar 2004
- ;;3.0;BAR CODE MED ADMIN;**5,21,24,38**;Mar 2004;Build 8
+PSBODO ;BIRMINGHAM/EFC-BCMA UNIT DOSE VIRTUAL DUE LIST FUNCTIONS ;30-Dec-2022 15:35;DU
+ ;;3.0;BAR CODE MED ADMIN;**5,21,24,38,1033**;Mar 2004;Build 34
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;
  ; Reference/IA
  ; EN^PSJBCMA2/2830
+ ; Modified - IHS/MSC/PLS - 12/30/2022 - DISPORD+11
 EN ;
  ;
  ; Description:
@@ -27,7 +28,8 @@ DISPORD ;
  I '$G(PSBONX) W !,"Invalid Order"
  D:$G(PSBONX)
  .W !,"Orderable Item: ",PSBOITX
- .I PSBONX["V" W !,"Infusion Rate:  ",PSBIFR
+ .;I PSBONX["V" W !,"Infusion Rate:  ",PSBIFR
+ .I PSBONX["V" W !,"Infusion Rate:  ",$P(PSBIFR,"@")  ;IHS/MSC/PLS - 12/30/2022 - P1033
  .I PSBONX'["V" W !,"Dosage Ordered: ",PSBDOSE
  .W ?40,"Start:    ",PSBOSTX
  .W !?40,"Stop:     ",PSBOSPX

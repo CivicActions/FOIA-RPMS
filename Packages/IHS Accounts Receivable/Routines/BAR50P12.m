@@ -1,5 +1,5 @@
 BAR50P12 ; IHS/SD/SDR - AR ERA Batch/Item matching ; 01/30/2009
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**20,21**;OCT 26,2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**20,21,30**;OCT 26,2005;Build 55
  Q
 EN ;
  S BAR("PG")=0
@@ -14,7 +14,8 @@ EN ;
  .W !?1,$E(BARST,($L(BARST)-3),$L(BARST))  ;ST
  .I $P(BARREC,U,9) W "*" S BARPLB=1  ;PLB on chk
  .W ?12,$E($P(BARREC,U,6),1,25)  ;payer
- .W ?40,$P(BARREC,U)  ;Check#
+ .;W ?40,$P(BARREC,U)  ;Check#   ; IHS/SD/CPC CR10550 20200705 - BAR*1.8*30
+ .W ?40,$$PRTFMT^BARCHKU1($P(BARREC,U),23) ;FORMATTED CHECK# ; IHS/SD/CPC CR10550 20200705 - BAR*1.8*30
  .W ?65,$J($FN($P(BARREC,U,3),",",2),12)
  I +$G(BARPLB)>0 W !!?1,"* - Indicates a PLB segment has been located on this check."
  W !!,$$CJ^XLFSTR("* * E N D   O F   R E P O R T * *",IOM)

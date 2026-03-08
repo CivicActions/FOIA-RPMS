@@ -1,5 +1,5 @@
-INHUTC3 ;bar; 22 May 97 12:08; API to error search and reporting functions
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHUTC3 ;ihs/cmi/maw - API to error search and reporting functions
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  ;;COPYRIGHT 1997 SAIC
  Q
@@ -73,7 +73,7 @@ FIELDS ; All tags below this are used as a field table for 4001.1 file
  ;; field # ; field name ; INSRCH name
  ;;
  ;;.01;ENTRY;;
- ;;.02;USER WHO CREATED;USER;S X=$P($G(^DIC(3,+USER,0)),U)
+ ;;.02;USER WHO CREATED;USER;S X=$P($G(^VA(200,+USER,0)),U)
  ;;.03;CONTROL
 NAME ;;.04;CRITERIA NAME;NAME;
  ;;.05;CRITERIA TYPE;
@@ -137,7 +137,7 @@ ERRRES ;;15.04;ERROR RESOLUTION STATUS;INERSTAT;S X=$$CVTCODE^INHUTC3(X,4001.1,1
 RELSTDT ;;24.01;RELATIVE START DATE
 RELENDT ;;24.02;RELATIVE END DATE
 DIV1 ;;24.03;DIVISION;INDIV;S Y=$P($G(^DG(40.8,X,0)),U) S:$L(Y) X=Y
-USER ;;24.04;USER NAME;INUSER;S Y=$P($G(^DIC(3,X,0)),U) S:$L(Y) X=Y
+USER ;;24.04;USER NAME;INUSER;S Y=$P($G(^VA(200,X,0)),U) S:$L(Y) X=Y
 RMSGSTDT ;;24.05;REL AUX DATE 1
 RMGSENDT ;;24.06;REL AUX DATE 2
  ;;25;MAXIMUM TIME COMPILING

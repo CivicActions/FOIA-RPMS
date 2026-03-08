@@ -1,80 +1,100 @@
-PSOLSET ;BHAM ISC/SAB - site parameter set up ;14-Nov-2012 13:55;PB
-VERS ;;7.0;OUTPATIENT PHARMACY;**10,22,32,40,120,1009,247,1015**;DEC 1997;Build 62
- ;Reference to ^PS(59.7 supported by DBIA 694
- ;Reference to ^PSX(550 supported by DBIA 2230
- ;Reference to ^%ZIS(2 supported by DBIA 3435
- ; Modified - IHS/CIA/PLS - 12/30/03 - Line DIV3+11
- ;            IHS/MSC/PLS - 06/29/10 - Line LBL - Added check for APSPLAP
- ;            IHS/MSC/PB  - 11/14/12 - Line DIV3+4 to allow multi-divisional processing for CMOP
- ;
- I '$D(DUZ) W !,$C(7),"DUZ Number must be defined !!",! G LEAVE
- W !,"Outpatient Pharmacy software - Version "_$P($T(VERS),";",3)
- I $D(^XTMP("PSO_V7 INSTALL",0)) W !!,"Outpatient Pharmacy software is being installed.  PLEASE TRY LATER!",! G LEAVE
- S PSOBAR1="",PSOBARS=0 ;make sure we have one
+PSOLSET ;BHAM/ISC/SAB - SITE PARAMETER SET UP  [ 11/13/2003  4:14 PM ]
+VERS ;;6.0;OUTPATIENT PHARMACY;**1,2,3,4,5**;5/11/2001
+ ;NOTE: THIS RTN IS INCLUDED IN THE APSE*6.1*1 PATCH
+ I '$D(DUZ) W !,*7,"DUZ Number must be defined !!",! G LEAVE
+ W !,"Outpatient Pharmacy software - Version ",$P($T(VERS),";",3)
+OREO ;OREO entry bypasses into message
+ ;S APSQBY=1  ;SCREEN FOR DRUG FILE IHS/OKCAO/POC 5/11/2001 PATCH 4 WE PROBABLY DO NOT WANT TO DO THIS WITH PATCH 4
+ S PSOBAR1="",PSOBARS=0  ;make sure we have one
  S PSOCNT=0 F I=0:0 S I=$O(^PS(59,I)) Q:'I  S PSOCNT=PSOCNT+1,Y=I
- G DIV1:PSOCNT W !,$C(7) S DIR("A",1)="Site parameters must be specified for at least one site."
- S DIR("A",2)="This is usually done by the package Co-ordinator.",DIR("A")="Do you want to continue:  ",DIR("B")="YES",DIR(0)="SA^Y:YES;N:NO",DIR("?")="Enter Y to edit site parameters or N to exit." D ^DIR
+ G DIV1:PSOCNT W !,*7 S DIR("A",1)="SITE PARAMETERS MUST BE SPECIFIED FOR AT LEAST ONE SITE."
+ S DIR("A",2)="THIS IS USUALLY DONE BY THE PACKAGE CO-ORDINATOR.",DIR("A")="DO YOU WISH TO CONTINUE:  ",DIR("B")="YES",DIR(0)="SA^Y:YES;N:NO",DIR("?")="Enter Y to edit site parameters or N to exit." D ^DIR
  G LEAVE:"Y"'[$E(X)
  W ! D ^PSOSITED G PSOLSET
-DIV1 G:PSOCNT=1 DIV3 S DIR(0)="Y",DIR("?")="Enter 'Y' to select Division or 'N' to EXIT"
-DIV2 I PSOCNT>1 W ! S DIC("A")="Division: ",DIC=59,DIC(0)="AEMQ"
- S:$G(PSOVEX)'=1 DIC("S")="I $S('$D(^PS(59,+Y,""I"")):1,'^(""I""):1,DT'>^(""I""):1,1:0)"
- D ^DIC K DIC G:$D(DUOUT)!($D(DTOUT)) LEAVE
- I +Y<0 W $C(7),! S DIR("A",1)="A 'DIVISION' must be selected!",DIR("A")="Do you want to try again",DIR("B")="YES" D ^DIR G:'Y LEAVE G DIV2
+DIV1 G:PSOCNT=1 DIV3 S DIR(0)="SB^Y:YES;N:NO",DIR("?")="Enter 'Y' to select Division or 'N' to EXIT"
+ I $D(^PS(59,"C",DUZ(2))) S Y=$O(^PS(59,"C",DUZ(2),0)) G DIV3  ;IHS/DSD/JCM 5/28/93
+DIV2 I PSOCNT>1 W ! S DIC("A")="Division: ",DIC=59,DIC(0)="AEMQ" D ^DIC K DIC G:"^"[X FINAL I +Y<0 W *7 S DIR("A",1)="A 'DIVISION' must be selected!",DIR("A")="Do you want to try again?",DIR("B")="YES" D ^DIR G:"Y"'[$E(X) LEAVE G DIV2
 DIV3 K DIR S PSOSITE=+Y W:PSOCNT>1 !!?10,"You are logged on under the ",$P(^PS(59,PSOSITE,0),"^")," division.",! S PSOPAR=$G(^PS(59,PSOSITE,1)),PSOPAR7=$G(^PS(59,PSOSITE,"IB")),PSOSYS=$G(^PS(59.7,1,40.1)) D CUTDATE^PSOFUNC
- S PSOPINST=$P($G(^PS(59,PSOSITE,"INI")),"^")
- S (SITE,DA)=$P(^XMB(1,1,"XUS"),"^",17),DIC="4",DIQ(0)="IE",DR=".01;99",DIQ="PSXUTIL" D EN^DIQ1 S S3=$G(PSXUTIL(4,SITE,99,"I")),S2=$G(PSXUTIL(4,SITE,.01,"E")) K DA,DIC,DIQ(0),DR
- ;next line added to allow for multi-divisional processing
- I $G(PSOSITE)'="" S S3=$P($G(^PS(59,PSOSITE,0)),"^",6)
- S PSXSYS=+$O(^PSX(550,"C",""))_"^"_$G(S3)_"^"_$G(S2),PSOINST=S3
- K S3,S2,S1,PSXUTIL
- I $G(PSXSYS) D
- .K:($P($G(^PSX(550,+PSXSYS,0)),"^",2)'="A") PSXSYS
- .S Y=$$VERSION^XPDUTL("PSO") I Y>6.0 S PSXVER=1
- E  K PSXSYS
+ ;IHS/DSD/ENM 10/7/94 PCC/PARAMETERS/HOOKS
+IHSH ;-----------------------------------------------------------------
+ I $D(^APSPCTRL(PSOSITE,0)) S %APSITE=^(0)  ;IHS/OHPRD/JCM 7/23/89
+ ;I $D(^APSPCTRL(PSOSITE,3)) S %APSITE3=^(3),APSQTYPE=$P(^(3),"^",1)  ;IHS/DSD/ENM/POC 06/10/98 GET PATIENT INFO LANGUAGE 8/18/2000 IHS/OKCAO/POC
+ S %APSITE3=$G(^APSPCTRL(PSOSITE,3)),APSQTYPE=$P($G(^(3)),"^",1)  ;IHS/DSD/ENM/POC 06/10/98 GET PATIENT INFO LANGUAGE 8/18/2000 IHS/OKCAO/POC
+ I $P($G(%APSITE),U,36)]"" S $P(%APSITE,U,20)=$P(%APSITE,U,36)  ;IHS/DSD/ENM 11/21/97 SUMMARY LABEL COPIES PAR
+ S $P(%APSITE,U,15)="",$P(%APSITE,U,36)=""
+ ;IHS/DSD/ENM 10/12/95 MANUFACTURER PARAM SET
+ S APSPMAN=$P($G(^APSPCTRL(PSOSITE,1)),U)
+ ;USED IN FILLING RX AND REFILLS TO LIMIT FIELDS SEEN IHS/OKCAO/POC 11/20/2002
+ S PSOAWP=+$P(%APSITE3,"^",9)  ;IHS/OKCAO/POC 11/20/2002
+ S PSOCOST=+$P(%APSITE3,"^",10)  ;IHS/OKCAO/POC 11/20/2002
+ S PSONDC=$P(%APSITE3,"^",8)  ;IHS/OKCAO/POC 8/18/2000
+ S PSOPATST=$P(%APSITE3,"^",2)  ;IHS/OKCAO/POC 8/18/2000
+ S PSOBILST=$P(%APSITE3,"^",4) S:PSOBILST="" PSOBILST=0  ;IHS/OKCAO/POC 8/18/2000 DEFAULT IS MANUAL BILLING
+ S PSOBILRX=$P(%APSITE3,"^",5)  ;IHS/OKCAO/POC 8/18/2000
+ S APSQDNDC=$P(%APSITE3,"^",11)  ;DISPLAY NDC ON LABLE IHS/OKCAO/POC 11/20/2002
+ S PSOTRIP=$P(%APSITE3,"^",12)  ;TRIPLICATE NUMBER IHS/OKCAO/POC 11/20/2002
+ ;S PSONDC=1  ;XXXXXXXX FOR NOW ALWAYS ASK FOR NDC
+ ;S PSOPATST=1  ;XXXXXXX FOR NOW ALWAYS ASK FOR PATIENT STATUS
+ ;IHS/DSD/ENM 10/12/95 DEFAULT OTHER LOCATION SET
+ S APSPDOL=$P($G(^APSPCTRL(PSOSITE,1)),U,2)
+ I $D(^AUTTSITE(1,0)),$P(^(0),U,8)="Y",'$D(^APCCCTRL(DUZ(2),0))#2 W !,*7,"ENTRY MUST BE MADE IN THE PCC MASTER CONTROL FILE FOR THIS LOCATION",!,"PLEASE NOTIFY YOUR SITE MANAGER ... NO LINKAGE TO PCC IS OCCURRING !"
+ S PHARMACY("PKGE DFN")=$O(^DIC(9.4,"B","OUTPATIENT PHARMACY",""))
+ I $P(%APSITE,U,36)]"",'$D(^APCCCTRL(DUZ(2),11,PHARMACY("PKGE DFN"),0))#2 W !,*7,"ENTRY MUST BE MADE IN THE PCC MASTER CONTROL FILE FOR THIS PACKAGE !",!,"PLEASE NOTIFY YOUR SITE MANAGER ... NO LINKAGE TO PCC IS OCCURRING !"
+ I $D(^AUTTSITE(1,0)),$P(^(0),U,8)="Y",$D(^APCCCTRL(DUZ(2),0))#2,$D(^APCCCTRL(DUZ(2),11,PHARMACY("PKGE DFN"),0))#2,$P(^(0),U,2) S $P(%APSITE,U,15)="Y",$P(%APSITE,U,36)=$P(^APCCCTRL(DUZ(2),0),U,2)
+ K PHARMACY("PKGE DFN")
+ ;-----------------------------------------------------------------
+PDEDWM ;ISH/DSD/LWJ 04/18/01 Patient Drug Education Database expiration
+ ;                     warning message
+ S X="APSEWMSG" X ^%ZOSF("TEST") I $T D EP^APSEWMSG  ;IHS/DSD/LWJ 5/11/01 TEST FOR RTN APSEWMSG (CONFLICT IN PATCH 3/PDED RELEASE)
+ ;
+ ;-----------------------------------------------------------------
+CPARM ;IHS/DSD/ENM 02/08/99 ADDED CHRONIC MED PARAM DEFAULT DAYS
+ S PSOZZCP("DAYS")=""
+ K PSOZP("FLG"),DIRUT,DTOUT
+ S DIR(0)="NO^1:999:0"
+ S DIR("B")=90,DIR("A")="Number of Days For Chronic Med Profile"
+ D ^DIR
+ I $D(DIRUT)!($D(DTOUT)) S PSOZCP("FLG")="" G CPARMX
+ S PSOZZCP("DAYS")=$S(+Y>0:+Y,1:90)
+CPARMX ;-----------------------------------------------------------------
  S PSODIV=$S(($P(PSOSYS,"^",2))&('$P(PSOSYS,"^",3)):0,1:1)
+ S PSOINST=000 I $D(^DD("SITE",1)) S PSOINST=^DD("SITE",1)
  I $D(DUZ),$D(^VA(200,+DUZ,0)) S PSOCLC=DUZ
- ; IHS/CIA/PLS - 12/30/03 - Call to setup IHS variables
- S X="APSPSITE" X ^%ZOSF("TEST") I $T D EP^APSPSITE
-PLBL I $P(PSOPAR,"^",8) D
- .S %ZIS="MNQ",%ZIS("A")="Select PROFILE PRINTER: " S:$G(PSOCLBL)&($D(PSOPROP)) %ZIS("B")=PSOPROP
- .D ^%ZIS K %ZIS,IO("Q"),IOP Q:POP  S PSOPROP=ION D ^%ZISC
-LBL S %ZIS="MNQ",%ZIS("A")="Select LABEL PRINTER: " S:$G(PSOCLBL)&($D(PSOLAP))!($G(SUSPT))!($D(APSPLAP)) %ZIS("B")=$S($G(SUSPT):PSLION,$L($G(APSPLAP)):APSPLAP,1:$S($G(PSOLAP):PSOLAP,1:""))
- D ^%ZIS K %ZIS,IO("Q"),IOP S:POP PSOQUIT=1 G:POP EXIT S @$S($G(SUSPT):"PSLION",1:"PSOLAP")=ION,PSOPIOST=$G(IOST(0))
- N PSOIOS S PSOIOS=IOS D DEVBAR^PSOBMST
+ I $D(PSOREO) G EXIT  ;No printer questions for OREO
+ ;-----------------------------------------------------------------
+ZCM ;IHS/DSD/ENM 10/24/94 ASK CHRONIC MED QUEUE
+ ;W !,"Pre-Select Chronic Med Profile Device? (Y/N) "
+ W !,"Pre-Select PMI/Chronic Med Profile Device? (Y/N) "
+ S %=2 D YN^DICN
+ W:%Y["?" !,"Answer 'Yes' if you want the Chronic Med Profiles to automatically print with new Rx's"
+ G:%Y["?" ZCM
+ S APSPCP=%
+CPLBL ;IHS/DSD/ENM 10/21/94 ADD CHRONIC MED DEVICE CALL
+ ;I APSPCP=1 S %ZIS="MNQ",%ZIS("A")="Select PMI/Chronic Med Profile PRINTER: " D ^%ZIS K %ZIS,IO("Q"),IOP G:POP PLBL W:$D(IO("S")) !,"CAN'T SLAVE THIS DEVICE!",! G:$D(IO("S")) CPLBL S APSPCPP=ION D ^%ZISC
+ I APSPCP=1 S %ZIS="MNQ",%ZIS("A")="Select PMI/Chronic Med Profile PRINTER: " D ^%ZIS K %ZIS,IO("Q"),IOP G:POP PLBL S APSPCPP=ION D ^%ZISC
+PLBL I $P(PSOPAR,"^",8) S %ZIS="MNQ",%ZIS("A")="Select PROFILE PRINTER: " D ^%ZIS K %ZIS,IO("Q"),IOP G:POP LBL S PSOPROP=ION D ^%ZISC
+LBL S %ZIS="MNQ",%ZIS("B")="",%ZIS("A")="Select LABEL PRINTER: " D ^%ZIS K %ZIS,IO("Q"),IOP G:POP EXIT S PSOLAP=ION  ;IHS/DSD/ENM 04/17/97
+ F J=0,1 S @("PSOBAR"_J)="" I $D(^%ZIS(2,^%ZIS(1,IOS,"SUBTYPE"),"BAR"_J)) S @("PSOBAR"_J)=^("BAR"_J)
  S PSOBARS=PSOBAR1]""&(PSOBAR0]"")&$P(PSOPAR,"^",19),PSOIOS=IOS D ^%ZISC
-LASK I $G(PSOPIOST),$D(^%ZIS(2,PSOPIOST,55,"B","LL")) G EXIT
- K DIR S DIR("A")="OK to assume label alignment is correct",DIR("B")="YES",DIR(0)="Y",DIR("?")="Enter Y if labels are aligned, N if they need to be aligned." D ^DIR S:$D(DIRUT) PSOQUIT=1 G:Y!($D(DIRUT)) EXIT
-P2 S IOP=$G(PSOLAP) D ^%ZIS K IOP I POP W $C(7),!?5,"Printer is busy.",! G LASK
- U IO(0) W !,"Align labels so that a perforation is at the top of the",!,"print head and the left side is at column zero."
- ; IHS/CIA/PLS - 12/30/03 - Call IHS test label routine
- ;W ! K DIR,DIRUT,DUOUT,DTOUT S DIR(0)="E" D ^DIR K DIR,DTOUT,DUOUT Q:$D(DIRUT)  D ^PSOLBLT D ^%ZISC
- W ! K DIR,DIRUT,DUOUT,DTOUT S DIR(0)="E" D ^DIR K DIR,DTOUT,DUOUT Q:$D(DIRUT)  D ^APSPLBLT D ^%ZISC
- K DIRUT,DIR S DIR("A")="Is this correct",DIR("B")="YES",DIR(0)="Y",DIR("?")="Enter Y if labels are aligned correctly, N if they need to be aligned." D ^DIR S:$D(DIRUT) PSOQUIT=1 G:Y!($D(DIRUT)) EXIT
+LASK K DIR S DIR("A")="OK TO ASSUME LABEL ALIGNMENT IS CORRECT ?",DIR("B")="YES",DIR(0)="SB^Y:YES;N:NO",DIR("?")="Enter Y if labels are aligned, N if they need to be aligned." D ^DIR G:$D(DUOUT)!($D(DTOUT))!($D(DIRUT))!($D(DIROUT))!(Y="Y") EXIT
+ ;S IOP=$G(PSOLAP) D ^%ZIS K IOP I POP W !?5,"PRINTER IS BUSY. " G LASK
+ U IO(0) W !,"ALIGN LABELS SO THAT A PERFORATION IS AT THE TOP OF THE",!,"PRINT HEAD AND THE LEFT SIDE IS AT COLUMN ZERO."
+ ;R !,"PRESS RETURN WHEN READY:",X:DTIME Q:"^"=X!'$T  D ^PSOLBLT D ^%ZISC
+ R !,"PRESS RETURN WHEN READY:",X:DTIME Q:"^"=X!'$T  ;D ^APSPLBLT D ^%ZISC ;IHS/DSD/ENM 10.13.93
+P2 S IOP=$G(PSOLAP) D ^%ZIS K IOP I POP W !?5,"PRINTER IS BUSY. " G LASK
+ D ^APSPLBLT D ^%ZISC  ;IHS/DSD/ENM
+ K DIR S DIR("A")="IS THIS CORRECT ?",DIR("B")="YES",DIR(0)="SB^Y:YES;N:NO",DIR("?")="Enter Y if labels are aligned correctly, N if they need to be aligned." D ^DIR G:$D(DUOUT)!($D(DTOUT))!($D(DIRUT))!($D(DIROUT))!(Y="Y") EXIT
  G P2
 LEAVE S XQUIT="" G FINAL
-Q W !?10,$C(7),"Default printer for labels must be entered." G LBL
+Q W !?10,*7,"DEFAULT PRINTER FOR LABELS MUST BE ENTERED." G LBL
  ;
-EXIT D ^%ZISC Q:$G(PSOCLBL)
- D:'$G(PSOBFLAG) GROUP K I,IOP,X,Y,%ZIS,DIC,J,DIR,X,Y,DTOUT,DIROUT,DIRUT,DUOUT Q
+EXIT D ^%ZISC K I,IOP,X,Y,%ZIS,DIC,J,DIR,X,Y,DTOUT,DIROUT,DIRUT,DUOUT Q
  ;
-FINAL ;exit action from main menu - kill and quit
- K SITE,PSOCP,PSNP,PSL,PRCA,PSLION,PSOPINST
- K GROUPCNT,DISGROUP,PSOCAP,PSOINST,PSOION,PSONULBL,PSOSITE7,PFIO,PSOIOS,X,Y,PSOSYS,PSODIV,PSOPAR,PSOPAR7,PSOLAP,PSOPROP,PSOCLC,PSOCNT
- K PSODTCUT,PSOSITE,PSOPRPAS,PSOBAR1,PSOBAR0,PSOBARS,SIG,DIR,DIRUT,DTOUT,DIROUT,DUOUT,I,%ZIS,DIC,J,PSOREL
- S X="APSPXUT" X ^%ZOSF("TEST") I $T D ^APSPXUT   ; IHS/CIA/PLS - Clean up variables
- Q
-GROUP ;display group
- S GROUPCNT=0,AGROUP="" I $D(^PS(59.3,0)) F  S AGROUP=$O(^PS(59.3,"B",AGROUP)) Q:AGROUP=""  D
- .S GROUPCNT=GROUPCNT+1 I GROUPCNT=1 S AGROUP1=AGROUP
- S:GROUPCNT=1 GRPNME=AGROUP1,II="" G:GROUPCNT>1 GROUP1
- Q:'$D(GRPNME)  F  S II=$O(^PS(59.3,"B",GRPNME,II)) Q:II=""  S DISGROUP=II
- K AGROUP,AGROUP1,GRPNME,II
- Q
-GROUP1 W ! S DIC("A")="Bingo Board Display: ",DIC=59.3,DIC(0)="AEMQZ",DIR(0)="Y",DIR("?")="Enter 'Y' to select Bingo Board Display or 'N' to EXIT"
- S:$P($G(^PS(59,PSOSITE,1)),"^",20) DIC("B")=$P($G(^PS(59,PSOSITE,1)),"^",20)
- D ^DIC K DIC Q:$D(DTOUT)!($D(DUOUT))
- I +Y<0 W $C(7) S DIR("A",1)="A 'BINGO BOARD DISPLAY' should be selected!",DIR("A")="Do you want to try again",DIR("B")="YES",DIR("?")="A display group must be defined in order to run Bingo Board." D ^DIR Q:"Y"'[$E(X)  G GROUP
- S DISGROUP=+Y
- K DIR,DIC,AGROUP,AGROUP1,GRPNME,II
+FINAL ;EXIT ACTION FROM MAIN MENU - KILL AND QUIT
+ K PSOCAP,PSOINST,PSOION,PSONULBL,PSOSITE7,PFIO,PSOIOS,X,Y,PSOSYS,PSODIV,PSOPAR,PSOPAR7,PSOLAP,PSOPROP,PSOCLC,PSOCNT,PSODTCUT,PSOSITE,PSOPRPAS,PSOBAR1,PSOBAR0,PSOBARS,SIG,DIR,DIRUT,DTOUT,DIROUT,DUOUT,I,%ZIS,DIC,J,XQUIT,PSOREL
+ K APSPCP,APSPCPP,APSPMAN,APSPDOL,%APSITE,ZTSK,APCDALVR  ;IHS/DSD/ENM 02/24/97
+ K PSOBILRX,PSOBILST,PSONDC,PSOPATST,PSOAWP,PSOCOST,APSQDNDC,PSOTRIP  ;IHS/OKCAO/POC 11/20/2002 CLEAN UP
+ ;K APSQBY  ;FOR STOPPING DRUG SCREENING IHS/OKCAO/POC 5/11/2001 PATCH 4
+ K PSOZZCP("DAYS")  ;IHS/DSD/ENM 02/08/99
+ D ^APSPXUT
  Q

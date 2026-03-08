@@ -1,5 +1,5 @@
 ABSPDB1 ; IHS/OIT/CASSevern/Pieran ran 1/19/2011 - Handling of outgoing NCPDP Billing "B1" and Reversal "B2" Claims for D.0
- ;;1.0;PHARMACY POINT OF SALE;**42**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**42**;JUN 21, 2001;Build 131
  ;
  ; This routine will replace the ABSPOSCF for D.0, so that we no
  ; longer need to use the formats file.
@@ -7,10 +7,10 @@ ABSPDB1 ; IHS/OIT/CASSevern/Pieran ran 1/19/2011 - Handling of outgoing NCPDP Bi
  ; format it and place it in the CLAIM file ^ABSPC(CLAIMIEN
  ; The ABSP() Array is already set up in: GETINFO^ABSPOSCC before we get here.
  ;INPUT = ACTION
- ;		  "CLAIMHD" = Set up only the claim header for creating ^ABSPC entry
- ;		  "CLAIMRST" = Set up Rest of Claim info and fill in ^ABSPC entry
- ;		  "OUTHD"	= Create the actual Output HEADER Record
- ;		  "OUTRST"  = Create the actual Output Rest of the Record.
+ ; "CLAIMHD" = Set up only the claim header for creating ^ABSPC entry
+ ; "CLAIMRST" = Set up Rest of Claim info and fill in ^ABSPC entry
+ ; "OUTHD" = Create the actual Output HEADER Record
+ ; "OUTRST" = Create the actual Output Rest of the Record.
 EN(ACTION,MEDN,IEN) ;EP
  N INSARRAY,DO,SPECIAL,SUPRESF
  S RECORD=$G(RECORD)

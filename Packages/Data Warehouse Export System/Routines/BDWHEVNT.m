@@ -1,0 +1,53 @@
+BDWHEVNT ;ihs/cmi/maw - BDWH HL7 Event Driver ; 08 Jan 2019  2:33 PM
+ ;;1.0;IHS DATA WAREHOUSE;**6,9**;JAN 24, 2006;Build 103
+ ;
+DW1HHDR(LOG) ;-- generate header record
+ ;LOG IS THE LOG IEN IN 90213.1 BDW HOPE EXPORT LOG
+ ;PASS BACK MESSAGE IEN
+ NEW MSGIEN
+ S INDA=LOG
+ S INA("FILE")=90213.1
+ D ^INHF("HL IHS DW1HOPE HDR OUT PARENT",.INDA,.INA)
+ Q $P($$MSG(INHF),U)
+ ;
+DW1HTRLR(LOG) ;-- generate trailer record
+ ;LOG IS THE LOG IEN IN 90213.1 BDW HOPE EXPORT LOG
+ ;PASS BACK MESSAGE IEN
+ NEW MSGIEN
+ S INDA=LOG
+ S INA("FILE")=90213.1
+ D ^INHF("HL IHS DW1HOPE TRL OUT PARENT",.INDA,.INA)
+ Q $P($$MSG(INHF),U)
+ ;
+O13(VST,RXARRAY,PAT) ;-- generate the HOPE record
+ NEW MSGIEN
+ S INDA(9000010,1)=VST
+ S INDA=$$GET1^DIQ(9000010,VST,.05,"I")
+ I '$G(INDA) S INDA=$G(PAT)
+ D MAIN^BDWHBHL(.RXARRAY)
+ D ^INHF("HL IHS DW1HOPE O13 OUT PARENT",.INDA,.INA)
+ D EOJ
+ Q $P($$MSG(INHF),U)
+ ;
+O13OM(VST,OMARRAY,PAT) ;-- generate the HOPE record
+ NEW MSGIEN
+ S INDA=PAT
+ D MAINOM^BDWHBHL(.OMARRAY)
+ D ^INHF("HL IHS DW1HOPE O13 OUT PARENT",.INDA,.INA)
+ D EOJ
+ Q $P($$MSG(INHF),U)
+ ;
+ ;
+EOJ ;-- kills variables
+ K INDA,BHLPAT,BHLVST,BHLDGPMC,BHLVAIN,BHLADT,INA
+ Q
+ ;
+MSG(BHLMVAR)        ;-- return message defining status
+ I BHLMVAR="PAT" S BHLRMSG="Patient Not Passed In, Message Not Created"
+ I BHLMVAR="VST" S BHLRMSG="Visit Not Passed In, Message Not Created"
+ I BHLMVAR="VLAB" S BHLRMSG="VLAB Not Passed In, Message Not Created"
+ I BHLMVAR="MFL" S BHLRMSG="Mstr File Not Passed In, Message Not Created"
+ I BHLMVAR=0 S BHLRMSG="Message Not Created, problem with GIS call"
+ I BHLMVAR S BHLRMSG=BHLMVAR_U_"Message Created Successfully"
+ Q $G(BHLRMSG)
+ ;

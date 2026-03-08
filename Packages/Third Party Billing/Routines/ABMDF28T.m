@@ -1,5 +1,5 @@
 ABMDF28T ; IHS/SD/SDR - PRINT UB-04 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**3,8,9,10,11,14,16,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,8,9,10,11,14,16,21,33,34**;NOV 12, 2009;Build 645
  ;IHS/SD/SDR-2.6*3-POA changes-removed insurer type "R" check
  ;IHS/SD/SDR-2.6*14-ICD10 002F-Updated ICD indicator on form to 9 or 0
  ;IHS/SD/SDR-2.6*16-HEAT236243-Moved dt for box 74 so there is space between PX code and date.
@@ -11,6 +11,8 @@ ABMDF28T ; IHS/SD/SDR - PRINT UB-04 ;
  ;IHS/SD/SDR-2.6*21 HEAT189659 - Print taxonomy in 81 for SD Medicaid.
  ;IHS/SD/SDR-2.6*21 HEAT217449-Moved box 76 one char left.  Was only printing 7 of 8 chars of prov id.
  ; self-insured has already been billed.
+ ;IHS/SD/SDR 2.6*33 ADO60196 Moved FL76 back right 1 character.
+ ;IHS/SD/SDR 2.6*34 ADO60694 CR7384 Added FL71 for DRG
  ;
 55 ;
  W !
@@ -118,6 +120,12 @@ ABMDF28T ; IHS/SD/SDR - PRINT UB-04 ;
  S ABMDE=ABMR(70,250)_"^17^7"  ;Pt Reason Dx
  D WRT^ABMDF28W  ;FL #70
  ;
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60694
+ I +$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),5)),U,13)'=0 D
+ .S ABMDE=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),5)),U,13)_"^41^5R"  ;DRG
+ .D WRT^ABMDF28W  ;FL#71
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60694
+ ;
  S ABMDE=ABMR(70,260)_"^48^7"  ;Ext. cause of injury (1)
  D WRT^ABMDF28W  ;FL #72
  ;I ABMP("ITYPE")="R" D
@@ -147,13 +155,15 @@ ABMDF28T ; IHS/SD/SDR - PRINT UB-04 ;
  ..D WRT^ABMDF28W  ;FL #76
  .;don't print 76 ID qual and ID if Medicare and Tribal Self-Insured
  .I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,8)=2,$G(ABMTSIFG)=1 Q  ;abm*2.6*21 IHS/SD/SDR HEAT97615
- .;S ABMDE=$P($P(ABM("PRV",1),U,3),"#")_"^71^2"  ;ID qualifier  ;abm*2.6*21 IHS/SD/SDR HEAT217449
- .S ABMDE=$P($P(ABM("PRV",1),U,3),"#")_"^70^2"  ;ID qualifier  ;abm*2.6*21 IHS/SD/SDR HEAT217449
+ .;abm*2.6*33 IHS/SD/SDR ADO60196 - flipped these two lines so it's back to original code
+ .S ABMDE=$P($P(ABM("PRV",1),U,3),"#")_"^71^2"  ;ID qualifier  ;abm*2.6*21 IHS/SD/SDR HEAT217449
+ .;S ABMDE=$P($P(ABM("PRV",1),U,3),"#")_"^70^2"  ;ID qualifier  ;abm*2.6*21 IHS/SD/SDR HEAT217449
  .I DUZ("2")=1157 S ABMDE="^71^2"  ;IHS/SD/AML HEAT46786 - Remove ID Qualifier
  .I $P($G(^AUTNINS(ABMP("INS"),0)),U)="MONTANA DPHHS" S ABMDE="ZZ^68^2"  ;abm*2.6*21 IHS/SD/SDR HEAT162190
  .D WRT^ABMDF28W  ;FL #76
- .;S ABMDE=$P($P(ABM("PRV",1),U,3),"#",2)_"^73^9"  ;ID  ;abm*2.6*21 IHS/SD/SDR HEAT217449
- .S ABMDE=$P($P(ABM("PRV",1),U,3),"#",2)_"^72^9"  ;ID  ;abm*2.6*21 IHS/SD/SDR HEAT217449
+ .;abm*2.6*33 IHS/SD/SDR ADO60196 - flipped these two lines so it's back to original code
+ .S ABMDE=$P($P(ABM("PRV",1),U,3),"#",2)_"^73^9"  ;ID  ;abm*2.6*21 IHS/SD/SDR HEAT217449
+ .;S ABMDE=$P($P(ABM("PRV",1),U,3),"#",2)_"^72^9"  ;ID  ;abm*2.6*21 IHS/SD/SDR HEAT217449
  .I DUZ("2")=1157 S ABMDE="^73^9"  ;IHS/SD/AML HEAT46786 - Remove ID
  .I $P($G(^AUTNINS(ABMP("INS"),0)),U)="MONTANA DPHHS" S ABMDE="261QR1300X^70^10"  ;abm*2.6*21 IHS/SD/SDR HEAT162190
  .D WRT^ABMDF28W  ;FL #76

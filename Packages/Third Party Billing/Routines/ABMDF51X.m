@@ -1,6 +1,6 @@
-ABMDF51X ;IHS/DSD/DMJ/LSL - PRINT UB92       
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
- ;Original;DMJ;
+ABMDF51X ;IHS/DSD/DMJ/LSL - PRINT UB92       [ 03/07/2003  10:15 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**3,9,10**;APR 05, 2002
+ ;Original;DMJ;  IHS/CAO/JLB 2/6/2000  ADDED to CAO CHANGES
  ;
  ; IHS/SD/SDR - v2.5 p9 - IM18516
  ;    Added code to populate FL31 with Delayed Reason Code
@@ -141,11 +141,13 @@ ABMDF51X ;IHS/DSD/DMJ/LSL - PRINT UB92
  S ABMDE=ABMR(41,100)_"^72^2"                ; Condition code - 7
  D WRT^ABMDF11W                                  ; form locator #30
  ;
+ ;start new code abm*2.5*9 IM18516
  S ABMDRC=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),"^",16)  ;delayed reason code
  I ABMDRC D
  .S ABMDRC=$P($G(^ABMDCODE(ABMDRC,0)),"^")
  .S ABMDE=ABMDRC_"^76^2"
  .D WRT^ABMDF11W  ;form locator #31
+ ;end new code abm*2.5*9 IM18516
 10 ;
  W !!
  K ABMR
@@ -219,11 +221,14 @@ ABMDF51X ;IHS/DSD/DMJ/LSL - PRINT UB92
  .S I=0
  .F  S I=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I)) Q:'I  D  ; Insurer
  ..; Insurer status = Initiated
- ..I $P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I,0),"^",3)="I" S ABME("INS")=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I,0),U),ABME("INSIEN")=I
+ ..I $P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I,0),"^",3)="I" S ABME("INS")=$P(^(0),"^",1),ABME("INSIEN")=I
  .Q:'$G(ABME("INSIEN"))
  .D PRVT^ABMERINS
- .S ABMDE=$G(ABM(9000003.1,+$G(ABME("PH")),2,"E"))_"^^40"  ;card name-policy holder
- .S:($P(ABMDE,U)="") $P(ABMDE,U)=$G(ABM(9000003.1,+$G(ABME("PH")),.01,"E"))_"^^40"  ;name-policy holder
+ .; AmpMed needs to always see responsible party
+ .;Q:+ABME("REL")=1                  ; Q if relationship is self
+ ..;S ABMDE=$G(ABM(9000003.1,+$G(ABME("PH")),.01,"E"))_"^^40"  ;name-policy holder  ;abm*2.5*10 IM20000
+ ..S ABMDE=$G(ABM(9000003.1,+$G(ABME("PH")),2,"E"))_"^^40"  ;card name-policy holder  ;abm*2.5*10 IM20000
+ ..S:($P(ABMDE,U)="") $P(ABMDE,U)=$G(ABM(9000003.1,+$G(ABME("PH")),.01,"E"))_"^^40"  ;name-policy holder  ;abm*2.5*10 IM20000
  .D WRT^ABMDF11W                    ; form locator #38
  .Q
  ;

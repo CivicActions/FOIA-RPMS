@@ -1,10 +1,10 @@
 BILETPR3 ;IHS/CMI/MWR - PRINT PATIENT LETTERS.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**10**;MAY 30,2015
+ ;;8.5;IMMUNIZATION;**10,25**;OCT 24, 2011;Build 22
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  BUILD ^TMP WP ARRAY FOR PRINTING LETTERS.
  ;;  PATCH 10: If no skin tests on record, display explicitly. HISTORY2+106
  ;;            Display only the most recent three dates of Skin Tests. HISTORY2+152
- ;
+ ;;IHS/CMI/LAB - PATCH 25 CHANGED VISIT DATE TO ADMIN/VISIT DATE
  ;
  ;----------
 HISTORY2(BILINE,BIHX,BIDFN,BIFORM,BINVAL,BIPDSS) ;EP
@@ -39,6 +39,9 @@ HISTORY2(BILINE,BIHX,BIDFN,BIFORM,BINVAL,BIPDSS) ;EP
  ;---> 12 = Date of Visit Fileman format (YYYMMDD).
  ;---> 13 = Dose Override.
  ;---> 14 = Vaccine Component CVX Code.
+ ;IHS/CMI/LAB - added piece 15 as date adm or visit date
+ ;---> 16 = Date of Event/Administer shot (1201 field of V File) in FM format (YYYMMDD).
+ ;
  ;
  S X="       Immunization          Date Received   Location"
  S:BIFORM=4 X=X_"           Lot#"
@@ -66,7 +69,8 @@ HISTORY2(BILINE,BIHX,BIDFN,BIFORM,BINVAL,BIPDSS) ;EP
  ..S X="       "
  .;
  .S X=X_$P(Y,V,2),X=$$PAD^BIUTL5(X,29)
- .S X=X_$$TXDT1^BIUTL5($P(Y,V,12))
+ .;S X=X_$$TXDT1^BIUTL5($P(Y,V,12))   ;IHS/CMI/LAB - CHANGED 12 TO 16 FOR ADM/VISIT DATE
+ .S X=X_$$TXDT1^BIUTL5($P(Y,V,16))
  .;
  .;---> Pad with spaces to line up in columns, add Location.
  .S X=$$PAD^BIUTL5(X,45)_$E($P(Y,V,5),1,17)

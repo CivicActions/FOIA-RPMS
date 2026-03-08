@@ -1,5 +1,5 @@
-AMHLESHF ; IHS/CMI/LAB - calls from within screenman ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLESHF ; IHS/CMI/LAB - calls from within screenman ; [ 02/21/2007  3:30 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4,8**;JAN 27, 2003
  ;
 HED ;EP - display last
  ;DISPLAY 2 YRS WORTH OF HF FROM MHSS/PCC

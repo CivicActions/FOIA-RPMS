@@ -1,5 +1,6 @@
-XLFDT2 ;SEA/RDS - Library function Schedule  ;03/21/2006
- ;;8.0;KERNEL;**71,86,141,414**;Jul 10, 1995;Build 1
+XLFDT2 ;SEA/RDS - Library function Schedule  ;07/22/98  15:43 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**71,86,141**;Jul 10, 1995
  ;
 DECODE() ;SCH^XLFDT--Decode A Cycle Schedule String (Return Next Time)
  N %1,%D,%M,%T,%Y,Y,SCHL,LTMA,LTFM
@@ -44,8 +45,7 @@ WEEK ;DECODE--List Of Day Of Week Specifications
 ARRAY ;WEEK Subroutine--Build Incident Array
  S XL=$E(%Y),XLT="" D TIME:$P(%Y,"@",2)]"" S:XLT="" XLT=%T
  S %A="" S:"UMTWRFS"[XL %A=$F("UMTWRFS",XL)-1,%A=$S(%A'=%W:6-%W+%A#7+1,XLT'>%T:6-%W+%A#7+1,1:0) S:XL="D" %A=$S(%W=1:1,%W=7:2,XLT'>%T:1+(%W=6*2),1:0)
- ;Mid week > Sat, Sat > Sun, Sun > Sat.
- S:XL="E" %A=$S(%W>1&(%W<7):7-%W,XLT'>%T:$S(%W=1:6,1:1),1:0) Q
+ S:XL="E" %A=$S(%W>1&(%W<7):7-%W,XLT'>%T:7-(%W=7*6),1:0) Q
  ;
 TIME ;ARRAY--Build Time Node For Incidents That Include Times
  N %DT,X S %DT="RS",X="T@"_$P(%Y,"@",2) D ^%DT S XLT=$S(Y=-1:"",1:Y#1) Q

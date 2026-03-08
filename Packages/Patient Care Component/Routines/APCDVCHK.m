@@ -1,5 +1,5 @@
 APCDVCHK ; IHS/CMI/LAB - CHECK VISIT ;
- ;;2.0;IHS PCC SUITE;**2,8,11,15,17**;MAY 14, 2009;Build 18
+ ;;2.0;IHS PCC SUITE;**2,8,11,15,17,25**;MAY 14, 2009;Build 37
  ;
  ; APCDVSIT must equal the VISIT DFN to be checked.
  ; U must exist and be equal to "^".
@@ -14,6 +14,7 @@ START ;
  S APCDVCLC=$E($P(^AUTTLOC(APCDVCLC,0),U,10),5,6)
  I '$D(^AUPNVPOV("AD",APCDVSIT)) W !,"WARNING:  No purpose of visit entered for this visit!",!,$C(7)
  I '$D(^AUPNVPRV("AD",APCDVSIT)) W !,"WARNING:  No provider of service entered for this VISIT!",!,$C(7)
+ ;check for secondary POV used as primary POV
  I $P(APCDVREC,U,8)="",$P(APCDVREC,U,7)="A","I6TP"[$P(APCDVREC,U,3),APCDVCLC>0,APCDVCLC<50 W !,"WARNING:  No Clinic Type entered for this visit!",!,$C(7) S APCDNOCL=""
  I $P(APCDVREC,U,7)="H",$P(APCDVREC,U,3)'="C",'$D(^AUPNVINP("AD",APCDVSIT)) W !,"WARNING:  No V Hospitalization record has been created!",$C(7)
  I $P(APCDVREC,U,3)="C",'$D(^AUPNVCHS("AD",APCDVSIT)) W !,"WARNING:  No V CHS record has been created!",$C(7)
@@ -23,7 +24,8 @@ START ;
  E  I APCDVC1>1 W !,"WARNING:  Multiple primary providers were entered for this visit!",!,$C(7) S APCDMPQ=0
  I $D(^AUPNVPRC("AD",APCDVSIT)),$P(APCDVREC,U,7)'="H" D CHKPRC
  I $$CLINIC^APCLV(APCDVSIT,"C")=30 D CHKER   ;IHS/CMI/GRL
- I "AOSCTRM"[$P(^AUPNVSIT(APCDVSIT,0),U,7),$P(^APCCCTRL(DUZ(2),0),U,12)]"",$P($P(^AUPNVSIT(APCDVSIT,0),U),".")>$P(^APCCCTRL(DUZ(2),0),U,12) D CHKEHR
+ ;IHS/CMI/LAB - added IN for Tanana per Kimiko
+ I "AOSCTRMIN"[$P(^AUPNVSIT(APCDVSIT,0),U,7),$P(^APCCCTRL(DUZ(2),0),U,12)]"",$P($P(^AUPNVSIT(APCDVSIT,0),U),".")>$P(^APCCCTRL(DUZ(2),0),U,12) D CHKEHR
  ;above added for EHR and auditing of visits, d/e created
 CHKH ;
  I $P(APCDVREC,U,7)="H",$P(APCDVREC,U,3)'="C" D CHKH1
@@ -42,9 +44,11 @@ CHKDXOP2 ;
  ;
 CHKH1 ;
  ;NO LONGER NECESSARY WITH THE DATA WAREHOUSE EXPORT, PCC EXPORT NO LONGER USED
+ D PVCK^APCDCAF3
  Q:'$D(^AUPNVINP("AD",APCDVSIT))
  Q:'$D(^AUPNVPRV("AD",APCDVSIT))
  Q:'$D(^AUPNVPOV("AD",APCDVSIT))
+ ;
  K DIR,DIRUT,DUOUT,DTOUT,X,Y
  S DIR(0)="Y",DIR("A")="Is this Hospitalization visit ready for export to Headquarters (coding complete)",DIR("B")="Y" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  Q:$D(DIRUT)
@@ -57,7 +61,8 @@ CHKH1 ;
 CHKEHR2 ;
  ;if visit is deleted, don't bother with status update
  I $P(^AUPNVSIT(APCDVSIT,0),U,11) Q  ;visit is deleted.
- I "AOSCTRM"[$P(^AUPNVSIT(APCDVSIT,0),U,7),$P(^APCCCTRL(DUZ(2),0),U,12)]"",$P($P(^AUPNVSIT(APCDVSIT,0),U),".")>$P(^APCCCTRL(DUZ(2),0),U,12) D CHKEHR
+ ;IHS/CMI/LAB - added IN for Tanana per Kimiko
+ I "AOSCTRMIN"[$P(^AUPNVSIT(APCDVSIT,0),U,7),$P(^APCCCTRL(DUZ(2),0),U,12)]"",$P($P(^AUPNVSIT(APCDVSIT,0),U),".")>$P(^APCCCTRL(DUZ(2),0),U,12) D CHKEHR
  Q
 CHKEHR ;
  Q:$G(APCDCAF)="IN CAF"
@@ -116,6 +121,7 @@ UPD0 ;EP
  K DIC,DD,D0,DO
  ;
 UPD1 ;
+D D PVCK^APCDCAF3
  D ^XBFMK
  S DA=APCDVCA,DIE="^AUPNVCA(",DR=".04" D ^DIE K DA,DIE,DR
  S APCDCAR=$P(^AUPNVCA(APCDVCA,0),U,4)

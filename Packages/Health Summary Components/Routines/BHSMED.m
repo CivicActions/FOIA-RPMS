@@ -1,5 +1,5 @@
-BHSMED ;IHS/CIA/MGH - Health Summary for V MED file ;01-May-2014 11:04;DU
- ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,3,6,8,9**;March 17, 2006;Build 16
+BHSMED ;IHS/CIA/MGH - Health Summary for V MED file ;18-Nov-2024 11:04;DU
+ ;;1.0;HEALTH SUMMARY COMPONENTS;**1,2,3,6,8,9,21**;March 17, 2006;Build 45
  ;===================================================================
  ;Taken from APCHS7 routine
  ; IHS/TUCSON/LAB - PART 7 OF APCHS -- SUMMARY PRODUCTION COMPONENTS ;16
@@ -9,6 +9,8 @@ BHSMED ;IHS/CIA/MGH - Health Summary for V MED file ;01-May-2014 11:04;DU
  ;Patch 2 changes for meds on hold and refusals
  ;Patch 3 changes wording of on hold
  ;Patch 6 changes for non-VA meds and medication review
+ ;
+ ; IHS/MSC/MIR  11/18/2024  HOLDDSP+10 and HOLDDSP1+17 has been updated for "Hold" status Feature 115724 (BHS patch 21)
 MEDSCURR ; ************** CURRENT MEDICATIONS * 9000010.14 ********
  S BHSMTY="CURR" G CONT
 MEDSALL ; **************** ALL MEDICATIONS * 9000010.14 **********
@@ -23,7 +25,7 @@ MEDSCHR1 ; ******* CHRONIC MEDICATIONS, W/O D/C'ED *******
 CONT ; <SETUP>
  N BHSPAT,BHSQ
  S BHSPAT=DFN
- I '$D(^AUPNVMED("AC",BHSPAT)) S BHST="MEDICATION",BHSFN=50 D DISPREF^BHSRAD Q
+ I '$D(^AUPNVMED("AC",BHSPAT)),'$D(^PS(55,BHSPAT,"NVA")),'$D(^PS(55,BHSPAT,"P","A")) S BHST="MEDICATION",BHSFN=50 D DISPREF^BHSRAD Q
  D CKP^GMTSUP Q:$D(GMTSQIT)
  ; <BUILD>
  K ^TMP($J,"BHSMTB"),^TMP($J,"BHSMTP")
@@ -209,14 +211,15 @@ HOLDDSP ;EP - display all meds on hold
  S BHSRX=0 F  S BHSRX=$O(BHHMED(BHSRX)) Q:BHSRX'=+BHSRX!($D(GMTSQIT))  D
  .D HOLDDSP1
  .Q
- D CKP^GMTSUP Q:$D(GMTSQIT)
- W !,"Medications may be on hold for several reasons including: Too early"
- D CKP^GMTSUP Q:$D(GMTSQIT)
- W !,"for refill, patient has sufficient amount on hand,pharmacy resolving issue"
- D CKP^GMTSUP Q:$D(GMTSQIT)
- W !,"with prescriber, etc. Contact Pharmacy staff for details or view "
- D CKP^GMTSUP Q:$D(GMTSQIT)
- W !,"prescription details in Pharmacy system.",!
+ ;Following paragraph was removed IHS/MSC/MIR Patch 21 Feature 114134 (115709)
+ ;D CKP^GMTSUP Q:$D(GMTSQIT)
+ ;W !,"Medications may be on hold for several reasons including: Too early"
+ ;D CKP^GMTSUP Q:$D(GMTSQIT)
+ ;W !,"for refill, patient has sufficient amount on hand,pharmacy resolving issue"
+ ;D CKP^GMTSUP Q:$D(GMTSQIT)
+ ;W !,"with prescriber, etc. Contact Pharmacy staff for details or view "
+ ;D CKP^GMTSUP Q:$D(GMTSQIT)
+ ;W !,"prescription details in Pharmacy system.",!
  K BHHMED
  Q
 HOLDDSP1 ;write out med
@@ -236,7 +239,8 @@ HOLDDSP1 ;write out med
  K BHSICL,BHSNRQ,BHSP
  W ?14,"Ordering Provider: ",$$VAL^XBDIQ1(52,BHSRX,4),!
  D CKP^GMTSUP Q:$D(GMTSQIT)
- S BHSTXT=$$VAL^XBDIQ1(52,BHSRX,100)_" Reason: "_$$VAL^XBDIQ1(52,BHSRX,99)_" - "_$$VAL^XBDIQ1(52,BHSRX,99.1)_" ("_$$VAL^XBDIQ1(52,BHSRX,99.2)_")",BHSICL=14,BHSNRQ=""
+ N STTS S STTS=$$VAL^XBDIQ1(52,BHSRX,100)_" " S:STTS["HOLD" STTS=""  ;"ACTIVE/SEE DETAILS"  ;IHS/MSC/MIR Patch 21 Feature 114134 (115709)
+ S BHSTXT=STTS_"Reason: "_$$VAL^XBDIQ1(52,BHSRX,99)_" - "_$$VAL^XBDIQ1(52,BHSRX,99.1)_" ("_$$VAL^XBDIQ1(52,BHSRX,99.2)_")",BHSICL=14,BHSNRQ=""
  D PRTTXT^BHSUTL K BHSICL,BHSNRQ,BHSP
  Q
 MEDRU ;EP

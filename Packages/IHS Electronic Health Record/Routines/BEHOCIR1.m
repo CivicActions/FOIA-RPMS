@@ -1,5 +1,5 @@
-BEHOCIR1 ;MSC/IND/MGH - CCD calls ;06-Nov-2014 16:53;PLS
- ;;1.1;BEH COMPONENTS;**066001,066002**;March 12, 2008;Build 2
+BEHOCIR1 ;MSC/IND/MGH - CCD calls ;01-Jun-2020 08:53;PLS
+ ;;1.1;BEH COMPONENTS;**066001,066002,066004**;March 12, 2008;Build 2
  ;=================================================================
  ; RPC: BEHOCIR1 GETCCDS
  ; Call to return a list of CCDs for a patient.
@@ -110,4 +110,12 @@ AUTO ;EP
  Q:+Y>0
  S START=$$FMADD^XLFDT($$NOW^XLFDT(),,,60)
  D RESCH^XUTMOPT("BEHOCIR",START,"","1H","L")
+ Q
+ ; Set user CCDA preferences into XPAR
+CCDAPREF(RET,VAL) ;-
+ N ENT
+ S VAL="CCDA PREFS"
+ S:$D(VAL)'=11 VAL(1,0)=""
+ S ENT="USR.'"_+DUZ
+ D EN^XPAR("USR","BEHOCIR USER CCDA PREFS",1,.VAL,.RET)
  Q

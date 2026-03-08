@@ -1,26 +1,28 @@
-XMKPO ;ISC-SF/GMB-Post, other ;04/11/2002  07:08
- ;;8.0;MailMan;;Jun 28, 2002
+XMKPO ;ISC-SF/GMB-Post, other ;03/24/99  15:08
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Replaces ^XMBPOST and the first part of ^XMS1 (ISC-WASH/THM/RWF/CAP)
- ; Schedule a task to deliver bulletin, server, device
-DEVICE(XMDUZ,XMZ,XMDEVICE,XMDVIENS,XMPRTHDR) ; For D.Device or H.Device
+ ; Schedule a task to deliver remote, bulletin, server, device
+ ;XMB("SCRIPT")=Zero node of Script last run
+ ;XMB("SCRIPT",0)=Pointer to last script used
+DEVICE(XMDUZ,XMZ,XMDEVICE,XMDVIENS) ; For D.Device
  N I,ZTRTN,ZTDESC,ZTSAVE,ZTDTH,ZTSK,ZTIO
- F I="XMDUZ","XMZ","XMDVIENS","XMPRTHDR" S ZTSAVE(I)=""
+ F I="XMDUZ","XMZ","XMDVIENS" S ZTSAVE(I)=""
  S ZTIO=$P(XMDEVICE,".",2,99)
  S ZTDTH=$H
  S ZTRTN="DEVICE^XMTDO"
- S ZTDESC=$$EZBLD^DIALOG(42001,XMDEVICE) ; MailMan: To Device |1|
+ S ZTDESC="MailMan Device Handoff"
  D ^%ZTLOAD  ; Schedule Task
  Q
 SERVER(XMZ,XMSERVER,XMSVIENS) ; For S.Server
  N I,ZTRTN,ZTDESC,ZTSAVE,ZTDTH,ZTSK,ZTIO
- D SETSTAT^XMTDO(XMSVIENS,$$EZBLD^DIALOG(42002.1)) ; Setting up server task
+ D SETSTAT^XMTDO(XMSVIENS,"Setting up MM Server Task")
  F I="XMZ","XMSERVER","XMSVIENS" S ZTSAVE(I)=""
  S ZTDTH=$H
  S ZTRTN="SERVER^XMTDO"
- S ZTDESC=$$EZBLD^DIALOG(42002,XMSERVER) ; MailMan: To Server |1|
+ S ZTDESC="MailMan Server Handoff"
  S ZTIO=""
  D ^%ZTLOAD  ; Schedule Task
- D SETSTAT^XMTDO(XMSVIENS,$$EZBLD^DIALOG(42002.2,$G(ZTSK))) ; Server task #: |1|
+ D SETSTAT^XMTDO(XMSVIENS,"MM Server Task #"_$G(ZTSK,"N/A"))
  Q
 BULLETIN(XMDUZ,XMBNAME,XMBIEN,XMPARM,XMBODY,XMTO,XMINSTR,ZTSK,XMATTACH) ;
  N I,XMB,ZTRTN,ZTDESC,ZTSAVE,ZTDTH,ZTIO
@@ -32,7 +34,26 @@ BULLETIN(XMDUZ,XMBNAME,XMBIEN,XMPARM,XMBODY,XMTO,XMINSTR,ZTSK,XMATTACH) ;
  I $D(XMINSTR("LATER")) S ZTDTH=$$FMTH^XLFDT(XMINSTR("LATER"))
  E  S ZTDTH=$H
  S ZTRTN="TASK^XMXBULL"
- S ZTDESC=$$EZBLD^DIALOG(42003,XMBNAME) ; MailMan: Bulletin |1|
+ S ZTDESC="MailMan Bulletin: "_XMBNAME
  S ZTIO=""
  D ^%ZTLOAD  ; Schedule Task
+ Q
+REMOTE(XMZ,XMINST) ; For addresses containing "@"
+ N XMSITE,XMTASK,XMREC
+ S XMREC=^DIC(4.2,XMINST,0)
+ S XMSITE=$P(XMREC,U)
+ D PUTMSG^XMXMSGS2(.5,XMINST+1000,XMSITE,XMZ)
+ Q:$P(XMREC,U,2)'["S"  ; S means to start task immediately
+ ; The following node is not in the DD ! ***
+ S XMTASK=$P($G(^XMBS(4.2999,XMINST,0)),U,2)  ; Task number
+ I XMTASK,$$CHK^XMS5(XMTASK,XMINST) Q  ; Quit if task scheduled
+ D OKTRAN(XMINST,XMSITE)
+ Q
+OKTRAN(XMINST,XMSITE) ;
+ N XMB
+ S XMB("TYPE")=3
+ S (XMSCR,XMB("XMSCR"))=XMINST
+ S XMB("XMSCRN")=XMSITE
+ D XMTCHECK^XMBPOST(XMINST,.XMB)
+ D ZTSK^XMBPOST
  Q

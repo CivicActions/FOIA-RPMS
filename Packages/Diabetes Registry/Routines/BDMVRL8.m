@@ -1,5 +1,5 @@
 BDMVRL8 ; cmi/anch/maw - VIEW PT RECORD & DIAGNOSIS DATA ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**12**;JUN 14, 2007;Build 51
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**12,17**;JUN 14, 2007;Build 138
  ;
  ;
 CDISP ;EP;DISPLAY AND EDIT DIAGNOSIS
@@ -207,13 +207,20 @@ CLIST ;LIST ALL DIAGNOSIS
  .W !?5,X,?10,$P(BDM("DIAG",X),U,2)
  Q
 GETPLDX ;
+ NEW T,T1,T2,T3
  NEW T S T=$O(^ATXAX("B","SURVEILLANCE DIABETES",0))
+ NEW T1 S T1=$O(^ATXAX("B","BGP IMPAIRED FASTING GLUCOSE",0))
+ NEW T2 S T2=$O(^ATXAX("B","DM AUDIT IGT DXS",0))
+ NEW T3 S T3=$O(^ATXAX("B","DM AUDIT PREDIABETES DXS",0))
  I 'T Q
  NEW D,X,I S D="",X=0 F  S X=$O(^AUPNPROB("AC",DFN,X)) Q:X'=+X  D
  .Q:$P(^AUPNPROB(X,0),U,12)="D"  ;deleted problem
  .S I=$P(^AUPNPROB(X,0),U)
- .I $$ICD^BDMUTL(I,$P(^ATXAX(T,0),U),9) S BDMPLDX(X)="" Q
- .I $P($G(^AUPNPROB(X,800)),U,1)]"",$$SNOMED^BDMUTL(2019,"PXRM DIABETES",$P(^AUPNPROB(X,800),U,1)) S BDMPLDX(X)=""
+ .I $$ICD^ATXCHK(I,T,9) S BDMPLDX(X)="" Q
+ .I T1,$$ICD^ATXCHK(I,T1,9) S BDMPLDX(X)="" Q
+ .I T2,$$ICD^ATXCHK(I,T2,9) S BDMPLDX(X)="" Q
+ .I T3,$$ICD^ATXCHK(I,T3,9) S BDMPLDX(X)="" Q
+ .I $P($G(^AUPNPROB(X,800)),U,1)]"",$$SNOMED^BDMUTL($$LE^BDMS9B2(),"PXRM DIABETES",$P(^AUPNPROB(X,800),U,1)) S BDMPLDX(X)=""
  .Q
  Q
  ;
@@ -299,6 +306,6 @@ HDR ;
  K VALMHDR
  ;
  S VALMHDR(1)="Make sure that the date of onset is also documented on the"
- S VALMHDR(2)="patient's problem list so other clinician's can see it."
+ S VALMHDR(2)="patient's problem list so other clinician can see it."
  S VALMHDR(3)="Problem list entries can be modified using EHR."
  Q

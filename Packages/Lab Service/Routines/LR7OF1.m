@@ -1,5 +1,7 @@
-LR7OF1 ;slc/dcm/JAH - Setup new order from OE/RR ; 18-Apr-2016 06:13 ; MKK
- ;;5.2;LAB SERVICE;**1003,121,187,223,1021,256,299,1022,291,1031,1033,1034,1036,1037,1039**;NOV 1, 1997;Build 38
+LR7OF1 ;slc/dcm/JAH - Setup new order from OE/RR ;05-Apr-2022 13:55 ; MKK
+ ;;5.2;LAB SERVICE;**1003,121,187,223,1021,256,299,1022,291,1031,1033,1034,1036,1037,1039,1051**;NOV 1, 1997;Build 19
+ ;
+ ; MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 74908 - Ref Lab Fix
  ;
  ;
 EN ;Setup NEW orders from OE/RR messages
@@ -183,7 +185,8 @@ REFLICDS ; EP - Store the ICD code(s) into the BLR REFERENCE LAB ORDER/ACCESSION
  NEW DFN,F60IEN,ICD,ICDCODE,ICDEXIST,IENS,IENSICD,ORDERIEN,ORDERN
  NEW FDA,ERRS   ; IHS/MSC/MKK - LR*5.2*1036
  ;
- Q:$D(FDA(69.05))<1  ; If no ICD codes, skip
+ ; Q:$D(FDA(69.05))<1  ; If no ICD codes, skip
+ ; Even if no ICD Codes, store data ; MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 74908
  ;
  S IENS=LRSN_","_LRODT
  S ORDERN=$$GET1^DIQ(69.01,IENS,9.5)
@@ -195,11 +198,16 @@ REFLICDS ; EP - Store the ICD code(s) into the BLR REFERENCE LAB ORDER/ACCESSION
  S IENS=(CNT+LRJ)_","_LRSN_","_LRODT
  S F60IEN=$$GET1^DIQ(69.03,IENS,.01,"I")
  ;
- Q:$$REFLAB^BLRUTIL6(DUZ(2),+F60IEN)<1     ; If Test not MAPPED, do NOT put into 9009026.3
+ ; Q:$$REFLAB^BLRUTIL6(DUZ(2),+F60IEN)<1     ; If Test not MAPPED, do NOT put into 9009026.3
  ;
  S DFN=$$GET1^DIQ(63,LRDFN,.03,"I")
  S X=$$ORD^BLRRLEDI(ORDERN,DFN)     ; Store Order # if not in there already
  S ORDIEN=$$FIND1^DIC(9009026.3,,,ORDERN)
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 74908
+ ; Put this check AFTER order # is stored into 9009026.3
+ Q:$$REFLAB^BLRUTIL6(DUZ(2),+F60IEN)<1     ; If Test not MAPPED, do NOT put into 9009026.3
+ ; ----- END IHS/MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 74908
  ;
  Q:ORDIEN<1          ; If order not in 9009026.3, skip
  ;

@@ -1,12 +1,15 @@
 ABMPPFLR ; IHS/SD/SDR - Prior Payments/Adjustments filer (CE) ;
- ;;2.6;IHS Third Party Billing;**1,19**;NOV 12, 2009;Build 300
+ ;;2.6;IHS Third Party Billing;**1,19,37**;NOV 12, 2009;Build 739
  ;
  ; ABMPL(Insurer priority, Insurer IEN)=13 multiple IEN ^ Billing status
- ; ABMPP(Insurer IEN, "P" or "A", Counter)=Amount ^ Adj Category ^ Trans. Type ^ Std Adj. Reason
+ ; ABMPP(Insurer IEN, PI multiple or '1', "P" or "A", Counter)=Amount ^ Adj Category ^ Trans. Type ^ Std Adj. Reason
  ;
- ; IHS/SD/SDR - v2.5 p13 - IM25471 - Changes for CAS when SAR=A2
- ; IHS/SD/SDR - v2.6 p1 - HEAT414 - <UNDEF>EN+29^ABMPPFLR
- ;IHS/SD/SDR - 2.6*19 - HEAT168248 - Removes payment multiple completely so residual entries from previous run don't mess up current transactions
+ ;IHS/SD/SDR 2.5*13 IM25471 Changes for CAS when SAR=A2
+ ;
+ ;IHS/SD/SDR 2.6*1 HEAT414 <UNDEF>EN+29^ABMPPFLR
+ ;IHS/SD/SDR 2.6*19 HEAT168248 Removes payment multiple completely so residual entries from previous run don't mess up current transactions
+ ;IHS/SD/SDR 2.6*37 ADO76009 Added another subscript so I can separate if the pt has the same insurer twice; Also updated to store
+ ;  if the adj amount s/b part of secondary balance or not (before this is wasn't saving it)
  ;
 EN ;EP
  S ABMSTAT=""
@@ -16,23 +19,33 @@ EN ;EP
  .S ABMBIEN=0
  .F  S ABMBIEN=$O(^ABMDBILL(DUZ(2),"AS",ABMP("CDFN"),ABMSTAT,ABMBIEN)) Q:+ABMBIEN=0  D
  ..S ABMAINS=$P($G(^ABMDBILL(DUZ(2),ABMBIEN,0)),U,8)  ;active insurer
- ..Q:'$D(ABMPP(ABMAINS))  ;quit if no data for insurer
+ ..;Q:'$D(ABMPP(ABMAINS))  ;quit if no data for insurer  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ..S ABMEMLT=$S(+$P($G(^ABMDBILL(DUZ(2),ABMBIEN,0)),U,26)'=0:$P(^ABMDBILL(DUZ(2),ABMBIEN,0),U,26),1:1)  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ..Q:'$D(ABMPP(ABMAINS,ABMEMLT))  ;quit if no data for insurer  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ..K ^ABMDBILL(DUZ(2),ABMBIEN,3)  ;abm*2.6*19 HEAT168248
  ..K ABMBPIEN
  ..S ABMCAT=""
- ..F  S ABMCAT=$O(ABMPP(ABMAINS,ABMCAT)) Q:ABMCAT=""  D
+ ..;F  S ABMCAT=$O(ABMPP(ABMAINS,ABMCAT)) Q:ABMCAT=""  D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ..F  S ABMCAT=$O(ABMPP(ABMAINS,ABMEMLT,ABMCAT)) Q:ABMCAT=""  D  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ...S ABMLN=0
- ...F  S ABMLN=$O(ABMPP(ABMAINS,ABMCAT,ABMLN)) Q:+ABMLN=0  D
- ....S ABMLAMT=$P(ABMPP(ABMAINS,ABMCAT,ABMLN),U)  ;amt
- ....I +ABMLAMT=0,$P($G(ABMPP(ABMAINS,ABMCAT,ABMLN)),U,6)'="" D  Q
+ ...;F  S ABMLN=$O(ABMPP(ABMAINS,ABMCAT,ABMLN)) Q:+ABMLN=0  D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ...F  S ABMLN=$O(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN)) Q:+ABMLN=0  D  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ....;S ABMLAMT=$P(ABMPP(ABMAINS,ABMCAT,ABMLN),U)  ;amt  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ....S ABMLAMT=$P(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN),U)  ;amt  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ....;I +ABMLAMT=0,$P($G(ABMPP(ABMAINS,ABMCAT,ABMLN)),U,6)'="" D  Q  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ....I +ABMLAMT=0,$P($G(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN)),U,6)'="" D  Q  ;abm*2.6*37 IHS/SD/SDR ADO76009
  .....S DA(1)=ABMBIEN
  .....S DIK="^ABMDBILL(DUZ(2),DA(1),3,"
- .....S DA=$P(ABMPP(ABMAINS,ABMCAT,ABMLN),U,6)
+ .....;S DA=$P(ABMPP(ABMAINS,ABMCAT,ABMLN),U,6)  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .....S DA=$P(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN),U,6)  ;abm*2.6*37 IHS/SD/SDR ADO76009
  .....D ^DIK
  ....Q:+ABMLAMT=0
- ....S ABMADJC=$P($G(ABMPP(ABMAINS,ABMCAT,ABMLN)),U,2)  ;adj category
- ....S ABMADJT=$P($G(ABMPP(ABMAINS,ABMCAT,ABMLN)),U,3)  ;trans type
- ....S ABMSAR=$S($P($G(ABMPP(ABMAINS,ABMCAT,ABMLN)),U,4)'="":$P(ABMPP(ABMAINS,ABMCAT,ABMLN),U,4),1:"@")  ;std adj reason
+ ....;S ABMADJC=$P($G(ABMPP(ABMAINS,ABMCAT,ABMLN)),U,2)  ;adj category  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ....S ABMADJC=$P($G(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN)),U,2)  ;adj category  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ....;S ABMADJT=$P($G(ABMPP(ABMAINS,ABMCAT,ABMLN)),U,3)  ;trans type  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ....S ABMADJT=$P($G(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN)),U,3)  ;trans type  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ....;S ABMSAR=$S($P($G(ABMPP(ABMAINS,ABMCAT,ABMLN)),U,4)'="":$P(ABMPP(ABMAINS,ABMCAT,ABMLN),U,4),1:"@")  ;std adj reason  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ ....S ABMSAR=$S($P($G(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN)),U,4)'="":$P(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN),U,4),1:"@")  ;std adj reason  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ....;S ABMBPIEN=$P($G(ABMPP(ABMAINS,ABMCAT,ABMLN)),U,6)  ;IEN of entry  ;abm*2.6*19 IHS/SD/SDR HEAT168248
  ....S ABMBPIEN=0  ;treat like a new entry every time - was killed above, as well as entries could have been edited, merged  ;abm*2.6*19 IHS/SD/SDR HEAT168248
  ....I +ABMBPIEN=0 D  ;file as new entry
@@ -45,7 +58,8 @@ EN ;EP
  .....S DIC("P")=$P(^DD(9002274.4,3,0),U,2)
  .....K DD,DO D FILE^DICN
  .....S ABMBPIEN=+Y
- .....S $P(ABMPP(ABMAINS,ABMCAT,ABMLN),U,6)=ABMBPIEN
+ .....;S $P(ABMPP(ABMAINS,ABMCAT,ABMLN),U,6)=ABMBPIEN  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .....S $P(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN),U,6)=ABMBPIEN  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ....K X,Y,DIC,DIE,DR,DA
  ....S DA(1)=ABMBIEN
  ....S DIE="^ABMDBILL(DUZ(2),DA(1),3,"
@@ -62,6 +76,7 @@ EN ;EP
  .....I ABMADJC=19 S DR=".13///"_ABMLAMT
  .....I ABMADJC=20 S DR=".14///"_ABMLAMT
  .....S DR=$G(DR)_";.15///"_ABMADJC_";.16///"_ABMADJT_";.17////"_ABMSAR
+ .....S DR=$G(DR)_";.18////"_$P($G(ABMPP(ABMAINS,ABMEMLT,ABMCAT,ABMLN)),U,5)  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ....D ^DIE
  S ABMSPLFG=1
  Q

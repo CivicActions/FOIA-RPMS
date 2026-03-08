@@ -1,0 +1,31 @@
+ADE6P344 ;IHS/OIT/GAB - ADE V6.0 PATCH 34 [ 11/22/2019 8:37 AM ]
+ ;;6.0;ADE*6.0*34;;March 25, 1999;Build 68
+ ;IHS/OIT/GAB 11/2019 Patch 34 ADA-CDT code updates for 2020
+ ;Modification of 2020 ADA-CDT Codes - Update the OPSITE VALUE
+MOD2CDT ;EP
+ D P1,P2,P3
+ Q
+P1 ;
+ ;No Opsite changes (set 'NO OPSITE' = n)
+ N DIE,DR,DA,CODE
+ F CODE="5511","5512","5611","5612","5621","5622","5810","5811","5820","5821","6930","7270","7272","9971" D
+ .S DA=0
+ .S DA=$O(^AUTTADA("B",CODE,DA))
+ .S DIE="^AUTTADA(",DR=".09////"_"n" D ^DIE K DA,DIE,DR
+ Q
+P2 ;
+ ;No Opsite changes (Delete 'NO OPSITE' fld)
+ N DIE,DR,DA,CODE
+ F CODE="0220","0230","0460","0600","3431","4270","4320","4321","5520","5875","5931","5932","5933","5936","5937","5952","5953","5960","5982","5983","5984","5985","5986","5987","5988" D
+ .S DA=0
+ .S DA=$O(^AUTTADA("B",CODE,DA))
+ .S DIE="^AUTTADA(",DR=".09////"_"@" D ^DIE K DA,DIE,DR
+ Q
+P3 ;
+ ;No Opsite changes (Delete 'NO OPSITE' fld)
+ N DIE,DR,DA,CODE
+ F CODE="5991","5992","5993","7340","7350","7410","7411","7412","7413","7414","7415","7440","7441","7450","7451","7460","7461","7465","7471","7473","7485","7490","7510","7511","7520","7521","9950" D
+ .S DA=0
+ .S DA=$O(^AUTTADA("B",CODE,DA))
+ .S DIE="^AUTTADA(",DR=".09////"_"@" D ^DIE K DA,DIE,DR
+ Q

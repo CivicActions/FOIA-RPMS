@@ -25,7 +25,7 @@ NOTICE(XUT) ;Send a notification when the conversion process is stopped\done
  ;
  S XMDUZ=.5
  S XMY(DUZ)=""
- S XMY("G.XUPS IDENTITY MANAGEMENT@DOMAIN.NAME")=""
+ S XMY("G.XUPS IDENTITY MANAGEMENT@FORUM.VA.GOV")=""
  S XMSUB="XUPS NPF NAME STANDARDIZATION - "_XUPLACE_"("_XUNUM_")"
  ;
  S XUSTOP=$S(XUT(4):"cancelled.",1:"DONE!")

@@ -1,6 +1,5 @@
-XMAI2 ;ISC-SF/GMB -Send a message if too many messages ;04/19/2002  12:41
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CAP/L.RHODE
+XMAI2 ;(WASH ISC)/CAP/L.RHODE -Send a message if too many messages ;05/27/99  12:47
+ ;;7.1;MailMan;**36,50**;Jun 02, 1994
  ; Entry points used by MailMan options (not covered by DBIA):
  ; ENTER   XMMGR-DISK-MANY-MESSAGE-MAINT
 ENTER ;
@@ -8,31 +7,25 @@ ENTER ;
  S XMABORT=0
  D INIT(.XMMAX,.XMABORT) Q:XMABORT
  I $D(ZTQUEUED) D PROCESS Q
- F I="XMMAX" S XMSAVE(I)="" ;MailMan: Many Msg Maint Request
- D EN^XUTMDEVQ("PROCESS^XMAI2",$$EZBLD^DIALOG(36600),.XMSAVE)
+ F I="XMMAX" S XMSAVE(I)=""
+ D EN^XUTMDEVQ("PROCESS^XMAI2","MailMan Many Msg Maint Request",.XMSAVE)
  Q
 INIT(XMMAX,XMABORT) ;
  S XMMAX=500 ; Threshold number of messages a user can own
  Q:$D(ZTQUEUED)
- N DIR,Y,DIRUT,XMTEXT
- W !
- ;This option sends a message to every user who has more than a
- ;certain number of messages in his or her mailbox, asking the user
- ;to terminate unnecessary messages.
- D BLD^DIALOG(36601,"","","XMTEXT","F")
- D MSG^DIALOG("WM","","","","XMTEXT")
- W !
+ N DIR,Y,DIRUT
+ W !!,"This option sends a message to every user who has more than"
+ W !,XMMAX," messages in his or her mailbox, asking the user to"
+ W !,"terminate unnecessary messages."
+ W !!,"You may change the threshold if you wish."
  S DIR(0)="N^10::"
- S DIR("A")=$$EZBLD^DIALOG(36602) ;Enter the 'many message' threshold
+ S DIR("A")="Enter the 'many message' threshold"
  S DIR("B")=XMMAX
- D BLD^DIALOG(36603,"","","DIR(""?"")") ;How many messages may a user have before MailMan sends a nastygram?
+ S DIR("?")="How many messages may a user have before MailMan sends a nastygram?"
  D ^DIR I $D(DIRUT) S XMABORT=1 Q
  S XMMAX=Y
- W !
- ;Messages will be sent to owners of more than |1| messages.
- ;This option may take awhile - you may wish to queue it.
- D BLD^DIALOG(36604,XMMAX,"","XMTEXT","F")
- D MSG^DIALOG("WM","","","","XMTEXT")
+ W !!,"Messages will be sent to owners of more than ",XMMAX," messages."
+ W !!,"This option may take awhile - you may wish to queue it."
  Q
 PROCESS ; (Requires XMMAX)
  N XMUSER,XMCNT
@@ -43,8 +36,13 @@ PROCESS ; (Requires XMMAX)
  S:$D(ZTQUEUED) ZTREQ="@"
  Q
 MESSAGE(XMTO,XMCNT) ; Send message
- N XMPARM,XMINSTR
- S XMINSTR("FROM")=.5,XMINSTR("FLAGS")="I"
- S XMPARM(1)=XMCNT,XMPARM(2)=$$BMSGCT^XMXUTIL(XMTO,1)
- D TASKBULL^XMXBULL(.5,"XM TOO MANY MESSAGES",.XMPARM,"",XMTO,.XMINSTR)
+ N XMTEXT,XMINSTR
+ S XMINSTR("FROM")=.5
+ S XMTEXT(1)="You have at least "_XMCNT_" messages in your mail baskets."
+ S XMTEXT(2)="("_$$BMSGCT^XMXUTIL(XMTO,1)_" in your IN basket)"
+ S XMTEXT(3)=""
+ S XMTEXT(4)="Please terminate all of your unnecessary messages."
+ S XMTEXT(5)=""
+ S XMTEXT(6)="Thanks"
+ D SENDMSG^XMXSEND(.5,"Please Terminate Messages","XMTEXT",XMTO,.XMINSTR)
  Q

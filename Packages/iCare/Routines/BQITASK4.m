@@ -1,5 +1,5 @@
 BQITASK4 ;GDIT/HS/ALA-Update a diagnostic tag ; 29 Jan 2014  8:37 AM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.7;ICARE MANAGEMENT SYSTEM;**2**;Dec 19, 2017;Build 10
  ;
  ;
 EN(TAG) ; EP

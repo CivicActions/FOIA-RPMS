@@ -1,5 +1,5 @@
 AMHLESM ; IHS/CMI/LAB - calls from within screenman ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**1**;JUN 18, 2010;Build 8
+ ;;4.0;IHS BEHAVIORAL HEALTH;**1,11**;JUN 02, 2010;Build 27
  ;PATCH 2 - limit meds to 2 years
  ;
  ;CMI/TUCSON/LAB - 10/06/97 - PATCH 1 ADDED CODE TO PROPERLY DISPLAY AXIS IV&V ON PREVIOUS POV DISPLAYS (SUB ROUTINES HPOV AND HPOV1)
@@ -7,7 +7,7 @@ AMHLESM ; IHS/CMI/LAB - calls from within screenman ;
 EN1(AMHPAT) ;EP - called from protocol
  Q:'$G(AMHPAT)
  D HMED1
- NEW C S C="Medication List for "_$P(^DPT(AMHPAT,0),U)
+ NEW C S C="Medication List for "_$$GETPREF^AUPNSOGI(AMHPAT,"E",1)
  D ARRAY^XBLM("^TMP(""AMHDSPMEDS"",$J,",C)
  K ^TMP("AMHSMEDS",$J),^TMP("AMHDSPMEDS",$J)
  Q
@@ -16,7 +16,7 @@ HMED ;EP - display last
  ;display last 2 years worth of meds from mhss record
  I '$G(AMHPAT) S AMHMSG(1)="Unknown Patient" D HLP^DDSUTL(.AMHMSG) K AMHMSG Q
  D HMED1
- NEW C S C="Medication List for "_$P(^DPT(AMHPAT,0),U)
+ NEW C S C="Medication List for "_$$GETPREF^AUPNSOGI(AMHPAT,"E",1)
  D ARRAY^XBLM("^TMP(""AMHDSPMEDS"",$J,",C)
  K ^TMP("AMHDSPMEDS",$J)
 REFRESH ;

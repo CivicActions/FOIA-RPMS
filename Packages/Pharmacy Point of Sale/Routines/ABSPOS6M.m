@@ -1,5 +1,5 @@
 ABSPOS6M ; IHS/FCS/DRS - Print log of claim ;   
- ;;1.0;PHARMACY POINT OF SALE;;JUN 21, 2001
+ ;;1.0;PHARMACY POINT OF SALE;**54**;JUN 01, 2001;Build 131
  Q
 CLAIMLOG(RXI,DEST)         ;EP - from ABSPOS6D
  ;
@@ -23,7 +23,8 @@ CLAIMLOG(RXI,DEST)         ;EP - from ABSPOS6D
  W "   (RXI=",RXI,")"
  W !
  W "Patient: "
- S X=$P(REC(0),U,6) I X]"" S X=$P($G(^DPT(X,0)),U) W X
+ ;S X=$P(REC(0),U,6) I X]"" S X=$P($G(^DPT(X,0)),U) W X
+ S X=$P(REC(0),U,6) I X]"" S X=$P($G(^DPT(X,0)),U)_$$PPN1^ABSPUTL(X) W X   ;IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  W ?50,"Visit: "
  S X=$P(REC(0),U,7) I X]"" S X=$G(^AUPNVSIT(X,"VCN")) W X
  W !

@@ -1,5 +1,5 @@
-PSIVORC1 ;BIR/MLM-PROCESS INCOMPLETE IV ORDER - CONT ;31-Aug-2012 16:08;PLS
- ;;5.0; INPATIENT MEDICATIONS ;**1,37,69,110,157,134,1015**;16 DEC 97;Build 62
+PSIVORC1 ;BIR/MLM-PROCESS INCOMPLETE IV ORDER - CONT ;05-Feb-2025 15:45;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**1,37,69,110,157,134,1015,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^DD("DD" is supported by DBIA 10017.
  ; Reference to ^DD( is supported by DBIA 2255.
@@ -10,6 +10,7 @@ PSIVORC1 ;BIR/MLM-PROCESS INCOMPLETE IV ORDER - CONT ;31-Aug-2012 16:08;PLS
  ; Reference to ^VALM is supported by DBIA 10118.
  ; Reference to ^PS(55 is supported by DBIA# 2191.
  ; Modified - IHS/MSC/MGH - 08/31/2012 - Patch 1015 added $G for variables at EDIT1
+ ;            IHS/MSC/PLS - 02/05/2025 - Line 53+17 - FID 105236
  ;
 53 ; IV Type
  I $G(PSGORD)["P",$G(PSGAT),($G(P(9))]"") D
@@ -28,7 +29,9 @@ PSIVORC1 ;BIR/MLM-PROCESS INCOMPLETE IV ORDER - CONT ;31-Aug-2012 16:08;PLS
  I $G(P("RES"))'="R",$G(PSGORD)["P" N IVCAT,IVTYPTMP S IVCAT=$P($G(^PS(53.1,+PSGORD,2.5)),"^",5) S IVTYPTMP=$S((P(9)]""):"P",$G(P(5)):"P",$G(P(23))="P":"P",1:"")
  S DIR("B")=$S($G(IVCAT)="C"!($G(IVTYPTMP)="A"):"ADMIXTURE",$G(IVCAT)="I"!($G(IVTYPTMP)="P"):"PIGGYBACK",1:"ADMIXTURE")
  D DIRQ,^DIR S:$D(DTOUT)!(X="^") DONE=1 Q:DONE  G:$E(X)="^" 53 S P(4)=Y D:"CS"[P(4) @P(4)
- I PSIVAC'="PN" D ENT^PSIVCAL K %DT S X=P(2),%DT="RTX" D ^%DT S P(2)=+Y D ENSTOP^PSIVCAL K %DT S X=P(3),%DT="RTX" D ^%DT S P(3)=+Y
+ ;p1035 FID 105236
+ ;I PSIVAC'="PN" D ENT^PSIVCAL K %DT S X=P(2),%DT="RTX" D ^%DT S P(2)=+Y D ENSTOP^PSIVCAL K %DT S X=P(3),%DT="RTX" D ^%DT S P(3)=+Y
+ I PSIVAC'="PN" D:'$G(P(2)) ENT^PSIVCAL K %DT S X=P(2),%DT="RTX" D ^%DT S P(2)=+Y D ENSTOP^PSIVCAL K %DT S X=P(3),%DT="RTX" D ^%DT S P(3)=+Y
 OTYP ; Get order type, display type.
  S P("DTYP")=$S(P(4)="":0,P(4)="P"!(P(23)="P")!(P(5)):1,P(4)="H":2,1:3) S:PSIVAC'="CF" P("OT")=$S(P(4)="A":"F",P(4)="H":"H",1:"I")
  Q

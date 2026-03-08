@@ -1,0 +1,10 @@
+BQIAX ;GDIT/HS/ALA-CREATED BY ^ATXSTX ON FEB 19, 2015;
+ ;;2.4;ICARE MANAGEMENT SYSTEM;**3**;Apr 01, 2015;Build 5
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^BQIAXA ;    BQI HEP C SCREEN LOINC CODES
+ D ^BQIAXB ;    BQI HEP C CONFIRM LOINC CODES
+ D ^BQIAXC ;    BQI HEP C GENOTYPE LOINC
+ Q

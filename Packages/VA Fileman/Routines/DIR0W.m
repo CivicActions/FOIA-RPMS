@@ -1,5 +1,6 @@
-DIR0W ;SFISC/MKO-WORD FUNCTIONS FOR FIELD EDITOR ;09:45 AM  12 Dec 1994
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIR0W ;SFISC/MKO-WORD FUNCTIONS FOR FIELD EDITOR ;09:45 AM  12 Dec 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 WRT N DIR0I

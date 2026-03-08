@@ -1,5 +1,5 @@
 BQIRGCOP ;GDIT/HS/ALA-COPD Care Mgmt ; 26 Oct 2012  9:24 AM
- ;;2.5;ICARE MANAGEMENT SYSTEM;;May 24, 2016;Build 27
+ ;;2.3;ICARE MANAGEMENT SYSTEM;**3,4**;Apr 18, 2012;Build 66
  ;
 MS(DFN,TYP) ;EP
  NEW RESULT,RES,DATE,VALUE,VISIT
@@ -15,7 +15,7 @@ TBHF(DFN) ;EP
  ; Get the tobacco categories first
  S N=0
  F  S N=$O(^AUTTHF(N)) Q:'N  D
- . S HDATA=$G(^AUTTHF(N,0))
+ . S HDATA=^AUTTHF(N,0)
  . I $P(HDATA,U,13)=1 Q
  . I $P(HDATA,U,10)'="C" Q
  . I $P(HDATA,U,1)'["TOBACCO" Q
@@ -24,19 +24,18 @@ TBHF(DFN) ;EP
  ; Get the tobacco health factors
  S N=0
  F  S N=$O(^AUTTHF(N)) Q:'N  D
- . S HDATA=$G(^AUTTHF(N,0))
+ . S HDATA=^AUTTHF(N,0)
  . I $P(HDATA,U,13)=1 Q
- . S HC=$P(HDATA,U,3) I HC="" Q
- . I '$D(CAT(HC)) Q
+ . S HC=$P(HDATA,U,3) I '$D(CAT(HC)) Q
  . S TOB(N)=""
  ;
  S IEN=""
  F  S IEN=$O(^AUPNVHF("AC",DFN,IEN),-1) Q:IEN=""  D
  . S HDATA=$G(^AUPNVHF(IEN,0))
- . S HF=$P(HDATA,U,1) I HF="" Q
+ . S HF=$P(HDATA,U,1)
  . I '$D(TOB(HF)) Q
  . S VISIT=$P(HDATA,U,3) I VISIT="" Q
- . S VDATE=$P($G(^AUPNVSIT(VISIT,0)),U,1)\1
+ . S VDATE=$P(^AUPNVSIT(VISIT,0),U,1)\1
  . S PAT(VDATE)=IEN
  ;
  S DATE=$O(PAT(""),-1)
@@ -48,7 +47,7 @@ INHST(DFN) ; EP - Inhaled Steroids
  NEW TAX,TREF,DESC,MEET,X,RESULT,OTHER,VISIT
  I $G(UID)="" S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
  S DESC=""
- S TREF=$NA(^TMP(UID,"BQITAX")) K @TREF
+ S TREF=$NA(^TMP("BQITAX",UID)) K @TREF
  F TAX="BGP ASTHMA INHALED STEROIDS","BGP ASTHMA INHALED STEROIDS NDC" D BLD^BQITUTL(TAX,TREF)
  S X=$$TAX^BQITRUTL("","",1,DFN,9000010.14,"","",.TREF)
  ; if returns a found medication, check if it is an active medication
@@ -60,30 +59,3 @@ INHST(DFN) ; EP - Inhaled Steroids
  I 'X S RESULT="NO" Q RESULT
  S RESULT="YES",VISIT=$P(X,U,4),OTHER=$P(X,U,2)
  Q RESULT_U_OTHER_U_VISIT
- ;
-GLS(DATA,FAKE) ;EP - BQI GET COPD GLOSSARY
- NEW UID,II,TRIEN,CAT,TIT,SORT,RMK,REMARK,CT,NXT,GLIEN,IEN
- ;
- S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
- S DATA=$NA(^TMP(UID,"BQIRGCOP"))
- K @DATA
- ;
- S II=0
- NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BQIRGCOP D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
- ;
- S @DATA@(II)="T32767REPORT_TEXT"_$C(30)
- S GLIEN=$O(^BQI(90508.2,"B","COPD","")) I GLIEN="" S BMXSEC="Problem with COPD glossary in file 90508.2" G DONE
- S IEN=0 F  S IEN=$O(^BQI(90508.2,GLIEN,1,IEN)) Q:'IEN  D
- . S II=II+1,@DATA@(II)=$G(^BQI(90508.2,GLIEN,1,IEN,0))
- I II>0 S @DATA@(II)=@DATA@(II)_$C(30)
- ;
-DONE S II=II+1,@DATA@(II)=$C(31)
- Q
- ;
-ERR ;
- D ^%ZTER
- NEW Y,ERRDTM
- S Y=$$NOW^XLFDT() X ^DD("DD") S ERRDTM=Y
- S BMXSEC="Recording that an error occurred at "_ERRDTM
- I $D(II),$D(DATA) S II=II+1,@DATA@(II)=$C(31)
- Q

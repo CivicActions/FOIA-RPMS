@@ -1,5 +1,5 @@
 BQICMDNM ;VNGT/HS/ALA - Get Care Management Denominator ; 25 Sep 2008  2:41 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**3**;Mar 01, 2021;Build 32
  ;
  Q
  ;
@@ -22,7 +22,7 @@ EN(DATA,DFN,CARE) ;EP -- BQI GET CARE MGMT DENOMINATOR
  S @DATA@(II)=HDR_$C(30)
  ;
  I CARE'="" D
- . I CARE'?.N S CMN=$$FIND1^DIC(90506.5,"","B",CARE,"","","ERROR")
+ . I CARE'?.N S CMN=$$FIND1^DIC(90506.5,"","OB",CARE,"","","ERROR")
  . I CARE?.N S CMN=CARE
  . D DEF(CMN)
  . ;
@@ -45,7 +45,7 @@ ERR ;
  Q
  ;
 NRPC(DFN,CARE) ;EP - Return denominator as a flag in non RPC call
- I CARE'?.N S CMN=$$FIND1^DIC(90506.5,"","B",CARE,"","","ERROR")
+ I CARE'?.N S CMN=$$FIND1^DIC(90506.5,"","OB",CARE,"","","ERROR")
  I CARE?.N S CMN=CARE
  Q $$DEFA(CMN)
  ;

@@ -1,5 +1,5 @@
 BSDWLL ; IHS/ITSC/LJF, WAR - WAITING LIST LT CODE ;  [ 08/20/2004  11:59 AM ]
- ;;5.3;PIMS;**1001,1004,1007**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1004,1007,1022**;MAY 28, 2004;Build 18
  ;IHS/ITSC/WAR 04/27/2004 PATCH 1001 ending date missing in loop
  ;IHS/OIT/LJF  07/20/2005 PATCH 1004 added comments, subtotals & total to list display
  ;                                   added ability to print sort categories on separate pages
@@ -66,7 +66,11 @@ INIT ; -- init variables and list array
  ... ; create display line
  ... S DFN=+^BSDWL(BSDWLN,1,C,0)                                ;patient ien
  ... S BSDCNT=$G(BSDCNT)+1,LINE=$J(BSDCNT,3)_". "_$$FMTE^XLFDT(B)
- ... S LINE=$$PAD(LINE,20)_$E($$GET1^DIQ(2,DFN,.01),1,20)       ;patient name
+ ... ;S LINE=$$PAD(LINE,20)_$E($$GET1^DIQ(2,DFN,.01),1,20)       ;patient name
+ ... ;97933 maw p1022 20230630 PPN
+ ... S LINE=$$PAD(LINE,20)_$$GETPREF^AUPNSOGI(DFN,"E",1)
+ ... D SET(LINE,C,BSDCNT,.VALMCNT)
+ ... S LINE=""
  ... S LINE=$$PAD(LINE,42)_$J($$HRCN^BDGF2(DFN,+$G(DUZ(2))),6)  ;hrcn
  ... S LINE=$$PAD(LINE,52)_$J($$GET1^DIQ(2,DFN,.033),3)         ;age
  ... S LINE=$$PAD(LINE,60)_$$GET1^DIQ(2,DFN,.02,"I")            ;sex

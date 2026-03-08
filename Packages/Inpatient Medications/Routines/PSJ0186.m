@@ -1,10 +1,11 @@
-PSJ0186 ;BIR/JLC - FIND ORDERS WITH NULL SI / OPI ;09/14/2006
- ;;5.0; INPATIENT MEDICATIONS ;**186**;16 DE7 97
+PSJ0186 ;BIR/JLC - FIND ORDERS WITH NULL SI / OPI ;04-May-2023 15:31;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**186,1034**;16 DE7 97;Build 37
  ;
  ;Reference to ^PS(50.7 is supported by DBIA 2180.
  ;Reference to ^PS(55 supported by DBIA 2191.
  ;Reference to ^XPD(9.7 supported by DBIA 2197.
  ;
+ ; Modified - IHS/MSC/PLS - 05/04/2023 - Changed header to ID and SSN to XXXX
 EN ; Select device and determine format
  I $G(DUZ)="" W !,"Your DUZ is not defined.  It must be defined to run this routine." Q
  N F1,F2,ZTDESC,XSAVE,ZTRTN
@@ -58,18 +59,22 @@ START ;find potential problem orders
  .. F  S ORDER=$O(^TMP("PSJ0186",$J,DFN,I,ORDER)) Q:ORDER=""  S A=^(ORDER) D
  ... S B=^DPT(DFN,0)
  ... I F1="P" D
- .... W $E($P(B,"^"),1,25),?28,$E($P(B,"^",9),6,9),?34,$E($G(^DPT(DFN,.1)),1,10),?45
+ .... ;IHS/MSC/PLS - 05/04/2023 -p1034
+ .... ;W $E($P(B,"^"),1,25),?28,$E($P(B,"^",9),6,9),?34,$E($G(^DPT(DFN,.1)),1,10),?45
+ .... W $E($P(B,"^"),1,25),?28,"XXXX",?34,$E($G(^DPT(DFN,.1)),1,10),?45
  .... S B=$P(A,"^") W $E(B,4,5),"/",$E(B,6,7),"/",$E(B,1,3)+1700,?57
  .... S B=$P(A,"^",2) W $E(B,4,5),"/",$E(B,6,7),"/",$E(B,1,3)+1700,"  "
  .... I $Y+1>IOSL D HDR
  .... W $P(A,"^",4)," (",$S(I="UD":"UD",1:"IV"),") ",$P($G(^PS(50.7,$P(A,"^",3),0)),"^"),!
  ... I F1="C" D
- .... W $P(B,"^"),",",$E($P(B,"^",9),6,9),",",$G(^DPT(DFN,.1)),","
+ .... ;IHS/MSC/PLS - 05/04/2023 - p1034
+ .... ;W $P(B,"^"),",",$E($P(B,"^",9),6,9),",",$G(^DPT(DFN,.1)),","
+ .... W $P(B,"^"),",","XXXX",",",$G(^DPT(DFN,.1)),","
  .... S B=$P(A,"^") W $E(B,4,5),"/",$E(B,6,7),"/",$E(B,1,3)+1700,","
  .... S B=$P(A,"^",2) W $E(B,4,5),"/",$E(B,6,7),"/",$E(B,1,3)+1700,","
  .... W $P(A,"^",4),",(",$S(I="UD":"UD",1:"IV"),"),",$P($G(^PS(50.7,$P(A,"^",3),0)),"^"),!
  I '$D(^TMP("PSJ0186",$J)) W "Nothing to print",!
 EXIT D ^%ZISC Q
 HDR S PG=PG+1 W:$Y @IOF W RDT,?32,"SI/OPI RESEARCH",?83,"PAGE: ",PG,!!
- W "PATIENT NAME",?28,"SSN",?34,"WARD",?45,"START DATE",?57,"STOP DATE",?69,"ORDER INFO",!!
+ W "PATIENT NAME",?28,"ID ",?34,"WARD",?45,"START DATE",?57,"STOP DATE",?69,"ORDER INFO",!!
  Q

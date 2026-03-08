@@ -1,5 +1,5 @@
-RAPTLU ;HISC/CAH,FPT,GJC AISC/MJK,RMO-Patient's Exam Lookup ;11/13/00  09:13
- ;;5.0;Radiology/Nuclear Medicine;**2,8,15,23,56,47**;Mar 16, 1998;Build 21
+RAPTLU ;HISC/CAH,FPT,GJC AISC/MJK,RMO IHS/OIT/BT - Patient's Exam Lookup ;11/16/2022  11:11
+ ;;5.0;Radiology/Nuclear Medicine;**2,8,15,23,56,47,1010**;Mar 16, 1998;Build 21
  ;Supported EA #10001 DT^DIO2
  ;Supported IA #2378 ORCHK^GMRAOR
  ;Supported IA #10035 ^DPT(
@@ -18,7 +18,8 @@ Q K RTESC,RTFL,RACNT,RAERR,RASTP,RAELOC,RADTPRT,^TMP("MAG",$J,"COL"),^TMP("MAG",
  ;
 SEL ;
  ;Q:'$D(^DPT(RADFN,0))  S RANME=^(0),RASSN=$$SSN^RAUTL,RANME=$P(RANME,"^") K ^TMP($J,"RAEX") D HOME^%ZIS D HD S X="",RACNT=0
- Q:'$D(^DPT(RADFN,0))  S RANME=^(0),RASSN=$$SSN^RAUTL,RANME=$P(RANME,"^") K ^TMP($J,"RAEX") D HOME^%ZIS S X="",RACNT=0
+ Q:'$D(^DPT(RADFN,0))  S RASSN=$$SSN^RAUTL,RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1)
+ K ^TMP($J,"RAEX") D HOME^%ZIS S X="",RACNT=0
  ;I $$IMAGE^RARIC1 D MED^MAGSET3,ERASE^MAGSET3 ;don't call MAG 111300
  S X=""
  F RADTI=0:0 Q:X="^"!(X>0)  S RADTI=$O(^RADPT(RADFN,"DT",RADTI)) Q:RADTI'>0  I $D(^(RADTI,0)) S RANODE=^(0),RADTE=+^(0) D SEL2 ;swm080398
@@ -68,7 +69,8 @@ PRT ; Screen only if entered through Rad/Nuc Med
 HD ;
  Q:RAHDCNT>0
  S RAHDCNT=1
- I '$D(RTFL) W @IOF,?25,RAHEAD,!!,"Patient's Name: ",$E(RANME,1,20),"  ",RASSN,?55,"Run Date: " S Y=DT D DT^DIO2
+ I '$D(RTFL) W @IOF,?25,RAHEAD,!!,"Patient's Name: ",RANME,"  ",RASSN
+ W:$L(RANME)>20 ! W:$L(RANME)<21 ?55 W "Run Date: " S Y=DT D DT^DIO2
  I $D(RTFL) D ESC^RTRD:($Y+6)>IOSL Q:$D(RTESC)  W !!,"============================ Exam Procedure Profile =========================="
  I $$USESSAN^RAHLRU1() W !!?3,"Case No.",?21,"Procedure",?49,"Exam Dt",?59 W $S($D(RAREPORT):"Rpt",1:"Exam")," St",?68,"Imaging Loc"
  I $$USESSAN^RAHLRU1() W !?3,"--------",?21,"-------------",?49,"---------",?59,"--------",?68,"-----------" Q

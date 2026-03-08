@@ -1,5 +1,5 @@
-PSOORNW1 ;ISC BHAM/SAB - continuation of finish of new order ;28-Mar-2016 13:01;DU
- ;;7.0;OUTPATIENT PHARMACY;**23,46,78,117,131,133,172,1006,1013,148,222,268,206,1015,1021**;DEC 1997;Build 14
+PSOORNW1 ;ISC BHAM/SAB - continuation of finish of new order ;01-Feb-2024 11:26;DU
+ ;;7.0;OUTPATIENT PHARMACY;**23,46,78,117,131,133,172,1006,1013,148,222,268,206,1015,1021,1023,1035**;DEC 1997;Build 39
  ;Reference ^YSCL(603.01 supported by DBIA 2697
  ;Reference ^PS(55 supported by DBIA 2228
  ;Reference ^PSDRUG( supported by DBIA 221
@@ -8,11 +8,14 @@ PSOORNW1 ;ISC BHAM/SAB - continuation of finish of new order ;28-Mar-2016 13:01;
  ; Modified - IHS/MSC/PLS - 09/22/2011 - Line 2+6
  ;                          12/06/2012 - Line EDNEW+6
  ;            IHS/MSC/PLS - 03/28/2016 - Added REASK label, Line REASK+3
+ ; Modified - IHS/MSC/MGH  - 03/13/2019 - Line 2+5
+ ;            IHS/MSC/PLS - 01/30/2024 - Line EDNEW+8   FID 99321
 2 I $G(ORD) W !!,"Instructions: " D
  .S INST=0 F  S INST=$O(^PS(52.41,ORD,2,INST)) Q:'INST  S (MIG,INST(INST))=^PS(52.41,ORD,2,INST,0) D
  ..F SG=1:1:$L(MIG," ") W:$X+$L($P(MIG," ",SG)_" ")>IOM !?14 W $P(MIG," ",SG)_" "
  .S:'$D(PSODRUG("OI")) PSODRUG("OI")=$P(OR0,"^",8)
  .K INST,TY,MIG,SG
+ I $D(OR0),$P(OR0,"^",24)=1 S VALMSG="Digitally Signed Order - No such edits allowed" Q
  S (PSDC,PSI)=0 W !!,"The following Drug(s) are available for selection:"
  ;F PSI=0:0 S PSI=$O(^PSDRUG("ASP",PSODRUG("OI"),PSI)) Q:'PSI  I $S('$D(^PSDRUG(PSI,"I")):1,'^("I"):1,DT'>^("I"):1,1:0),$S($P($G(^PSDRUG(PSI,2)),"^",3)'["O":0,1:1) D  ;IHS/MSC/PLS - 09/22/2011
  F PSI=0:0 S PSI=$O(^PSDRUG("ASP",PSODRUG("OI"),PSI)) Q:'PSI  I $$SCREEN^APSPMULT(PSI,,1) I $S('$D(^PSDRUG(PSI,"I")):1,'^("I"):1,DT'>^("I"):1,1:0),$S($P($G(^PSDRUG(PSI,2)),"^",3)'["O":0,1:1) D  ;IHS/MSC/PLS - 09/22/2011
@@ -88,7 +91,7 @@ EDNEW K PSMAX,PSFMAX F DEA=1:1 Q:$E(PSODEA,DEA)=""  I $E(+PSODEA,DEA)>1,$E(+PSOD
  .S PSOX1=PTRF,PSOX=$S(PSOX1=11:11,1:PSOX1),PSOX=$S('PSOX:0,PSDAYS=90:3,1:PSOX)
  .;IHS/MSC/PLS - 12/06/2012
  .;S PSDY1=$S(PSDAYS<60:11,PSDAYS'<60&(PSDAYS'>89):5,PSDAYS=90:3,1:0) S MAX=$S(PSOX'>PSDY1:PSOX,1:PSDY1)
- .S PSDY1=$S(PSDAYS<60:15,PSDAYS<90:5,PSDAYS=90:3,PSDAYS<168:2,PSDAYS<365:1,1:0) S MAX=$S(PSOX'>PSDY1:PSOX,1:PSDY1)
+ .S PSDY1=$S(PSDAYS<60:15,PSDAYS<90:5,PSDAYS=90:3,PSDAYS=91:3,PSDAYS<168:2,PSDAYS<365:1,1:0) S MAX=$S(PSOX'>PSDY1:PSOX,1:PSDY1)  ;Added 91:3 p1035
  I PSRF>MAX D
  .W $C(7),!!,PSRF_" refills are not correct for a "_PSDAYS_" day supply.",!,"Please enter correct # of refills for a "_PSDAYS_" day supply. Max refills allowed is "_MAX_".",!
  .S (PSMAX("MAX"),PSFMAX("MAX"))=MAX,(PSMAX("RF"),PSFMAX("RF"))=PSRF,(PSMAX("DAYS"),PSFMAX("DAYS"))=PSDAYS,(PSMAX,PSFMAX)=1

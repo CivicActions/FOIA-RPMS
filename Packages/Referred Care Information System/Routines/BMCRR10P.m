@@ -1,7 +1,9 @@
 BMCRR10P ; IHS/PHXAO/TMJ - PRNT BILL VSTS ;   
- ;;4.0;REFERRED CARE INFO SYSTEM;;JAN 09, 2006
+ ;;4.0;REFERRED CARE INFO SYSTEM;**16**;JAN 09, 2006;Build 168
  ;IHS/ITSC/FCJ ADDED PRINTING OF SEC REF AND CHG FAC REFERRED TO COLUMN
  ;      TO PRIMARY PAYOR AND ADDED TOTALS
+ ;4.0*16 12.15.2023 IHS.OIT.FCJ ADD "C1" SUFFIX FOR CALLIN
+ ;
 START ;
  S BMC80E="==============================================================================="
  S BMC80D="-------------------------------------------------------------------------------"
@@ -27,7 +29,8 @@ PRINT1 ;
  I $Y>(IOSL-5) D HEAD Q:$D(BMCQUIT)
  W !,$$AVDOS^BMCRLU(BMCREF,"C")
  W ?11,$P(BMCRREC,U,2)
- W $P($G(^BMCREF(BMCREF,1)),U)
+ W $P($G(^BMCREF(BMCREF,1)),U)         ;BMC*4.0*16
+ W:$P($G(^BMCREF(BMCREF,1)),U)="" $$CALLIN^BMCRLU(BMCREF)         ;BMC*4.0*16
  W ?28,$E($P(^DPT(DFN,0),U),1,20)
  W ?49,$S($P(BMCRREC,U,6):$$VAL^XBDIQ1(200,$P(BMCRREC,U,6),1),1:"--")
  W ?54,$E($$VAL^XBDIQ1(90001,BMCREF,.04),1,3)

@@ -1,5 +1,5 @@
-ABMDF11Y ; IHS/ASDST/DMJ - PRINT UB92 ;    
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF11Y ; IHS/ASDST/DMJ - PRINT UB92 ;    [ 11/06/2003  2:27 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**4,8,9,10,11**;APR 05, 2002
  ;Original;DMJ;
  ;
  ;IHS/DSD/LSL -3/23/98 - Add to line tag  18 to quit print if
@@ -67,58 +67,78 @@ ABMDF11Y ; IHS/ASDST/DMJ - PRINT UB92 ;
  ; Policy holder street address
  S ABMDE=$G(ABM(9000003.1,+$G(ABME("PH")),.09,"E"))_"^^40"
  D WRT^ABMDF11W                     ; form locator #38
- I ABM38FLG["I" D
+ ;I ABM38FLG["I",ABMINM'["MEDICARE",ABMINM'["MEDICAID" D  ;abm*2.5*10 IM22017
+ I ABM38FLG["I" D  ;abm*2.5*10 IM22017
  .S ABMDE=ABMISTR_"^^40"
  .D WRT^ABMDF11W
  I ABMR(41,160)'="" D
  .S ABMDE=ABMR(41,160)_"^43^2"     ; Value code 1
  .D WRT^ABMDF11W                   ; form locator #39a
+ ; start code change IM13324
+ ;I ABMR(41,170) D
+ ;.S ABMDE=+ABMR(41,170)_"^46^9R"   ; Value Amount 1
  I ($TR(ABMR(41,170)," ",""))'="" D
- .I ABMR(41,160)="A0" S ABMDE=+ABMR(41,170)_"^46^9"
- .E  S ABMDE=$FN(+ABMR(41,170),"",2)_"^46^9R"  ;Value Amt 1
+ .I ABMR(41,160)="A0" S ABMDE=+ABMR(41,170)_"^46^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=$FN(+ABMR(41,170),"",2)_"^46^9R"  ;Value Amt 1  ;IHS/SD/SDR 8/4/05 task 6
+ .;S ABMDE=$FN(+ABMR(41,170),"",2)_"^46^9R"  ;Value Amt 1  ;IHS/SD/SDR 8/4/05 task 6
+ .;end code change IM13324
  .D WRT^ABMDF11W                   ; form locator #39a
  I ABMR(41,180)'="" D
  .S ABMDE=ABMR(41,180)_"^56^2"     ; Value code 2
  .D WRT^ABMDF11W                   ; form locator #40a
+ ;start code change IM13324
+ ;I ABMR(41,190) D
+ ;.S ABMDE=+ABMR(41,190)_"^59^9R"   ; Value amount 2
  I ($TR(ABMR(41,190)," ",""))'="" D
- .I ABMR(41,180)="A0" S ABMDE=+ABMR(41,190)_"^59^9"
- .E  S ABMDE=$FN(+ABMR(41,190),"",2)_"^59^9R"
+ .;S ABMDE=$FN(+ABMR(41,190),"",2)_"^59^9R"  ;Value amt 2  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,180)="A0" S ABMDE=+ABMR(41,190)_"^59^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=$FN(+ABMR(41,190),"",2)_"^59^9R"  ;IHS/SD/SDR 8/4/05 task 6
+ .;end code change IM13324
  .D WRT^ABMDF11W                   ; form locator #40a
  I ABMR(41,200)'="" D
  .S ABMDE=ABMR(41,200)_"^69^2"     ; Value code 3
  .D WRT^ABMDF11W                   ; form locator #41a
+ ; start code change IM13324
+ ;I ABMR(41,210) D
+ ;.S ABMDE=+ABMR(41,210)_"^72^9R"   ; Value amount 3
  I ($TR(ABMR(41,210)," ",""))'="" D
- .I ABMR(41,200)="A0" S ABMDE=+ABMR(41,210)_"^72^9"
- .E  S ABMDE=+ABMR(41,210)_"^72^9R"
+ .;S ABMDE=$FN(+ABMR(41,210),"",2)_"^72^9R"  ;Value amt 3  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,200)="A0" S ABMDE=+ABMR(41,210)_"^72^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,210)_"^72^9R"  ;IHS/SD/SDR 8/4/05 task 6
+ .; end code change IM13324
  .D WRT^ABMDF11W                   ; form locator #41a
  ;
 14 ;
  W !
- I ABM38FLG["I" D
+ ;I ABM38FLG["I",ABMINM'["MEDICARE",ABMINM'["MEDICAID" D  ;abm*2.5*10 IM22017
+ I ABM38FLG["I" D  ;abm*2.5*10 IM22017
  .S ABMDE=ABMICTY_", "_$P($G(^DIC(5,ABMIST,0)),U,2)_"  "_ABMIZIP_"^^40"
  .D WRT^ABMDF11W
  I ABMR(41,220)'="" D
  .S ABMDE=ABMR(41,220)_"^43^2"     ; Value code 4
  .D WRT^ABMDF11W                   ; form locator #39b
  I ABMR(41,230) D
- .I ABMR(41,220)="A0" S ABMDE=+ABMR(41,230)_"^46^9"
- .E  S ABMDE=+ABMR(41,230)_"^46^9R"   ; Value amount 4
+ .;S ABMDE=+ABMR(41,230)_"^46^9R"   ; Value amount 4  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,220)="A0" S ABMDE=+ABMR(41,230)_"^46^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,230)_"^46^9R"   ; Value amount 4  ;IHS/SD/SDR 8/4/05 task 6
  .D WRT^ABMDF11W                   ; form locator #39b
  I ABMR(41,240)'="" D
  .S ABMDE=ABMR(41,240)_"^56^2"     ; Value code 5
  .D WRT^ABMDF11W                   ; form locator #40b
  I ABMR(41,250) D
- .I ABMR(41,240)="A0" S ABMDE=+ABMR(41,250)_"^59^9"
- .E  S ABMDE=+ABMR(41,250)_"^59^9R"   ; Value amount 5
+ .;S ABMDE=+ABMR(41,250)_"^59^9R"   ; Value amount 5  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,240)="A0" S ABMDE=+ABMR(41,250)_"^59^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,250)_"^59^9R"   ; Value amount 5  ;IHS/SD/SDR 8/4/05 task 6
  .D WRT^ABMDF11W                   ; form locator #40b
  I ABMR(41,260)'="" D
  .S ABMDE=ABMR(41,260)_"^69^2"     ; Value code 6
  .D WRT^ABMDF11W                   ; form locator #41b
  I ABMR(41,270) D
- .I ABMR(41,260)="A0" S ABMDE=+ABMR(41,270)_"^72^9"
- .E  S ABMDE=+ABMR(41,270)_"^72^9R"   ; Value amount 6
+ .;S ABMDE=+ABMR(41,270)_"^72^9R"   ; Value amount 6  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,260)="A0" S ABMDE=+ABMR(41,270)_"^72^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,270)_"^72^9R"   ; Value amount 6  ;IHS/SD/SDR 8/4/05 task 6
  .D WRT^ABMDF11W                   ; form locator #41b
- Q:$G(ABMORE)
+ Q:$G(ABMORE)  ;IM15034
  ;
 15 ;
  W !
@@ -127,22 +147,25 @@ ABMDF11Y ; IHS/ASDST/DMJ - PRINT UB92 ;
  .S ABMDE=ABMR(41,280)_"^43^2"     ; Value code 7
  .D WRT^ABMDF11W                   ; form locator #39c
  I ABMR(41,290) D
- .I ABMR(41,280)="A0" S ABMDE=+ABMR(41,290)_"^46^9"
- .E  S ABMDE=+ABMR(41,290)_"^46^9R"   ; Value amount 7
+ .;S ABMDE=+ABMR(41,290)_"^46^9R"   ; Value amount 7  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,280)="A0" S ABMDE=+ABMR(41,290)_"^46^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,290)_"^46^9R"   ; Value amount 7  ;IHS/SD/SDR 8/4/05 task 6
  .D WRT^ABMDF11W                   ; form locator #39c
  I ABMR(41,300)'="" D
  .S ABMDE=ABMR(41,300)_"^56^2"     ; Value code 8
  .D WRT^ABMDF11W                   ; form locator #40c
  I ABMR(41,310) D
- .I ABMR(41,300)="A0" S ABMDE=+ABMR(41,310)_"^59^9"
- .E  S ABMDE=+ABMR(41,310)_"^59^9R"   ; Value amount 8
+ .;S ABMDE=+ABMR(41,310)_"^59^9R"   ; Value amount 8  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,300)="A0" S ABMDE=+ABMR(41,310)_"^59^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,310)_"^59^9R"   ; Value amount 8  ;IHS/SD/SDR 8/4/05 task 6
  .D WRT^ABMDF11W                   ; form locator #40c
  I ABMR(41,320)'="" D
  .S ABMDE=ABMR(41,320)_"^69^2"     ; Value code 9
  .D WRT^ABMDF11W                   ; form locator #41c
  I ABMR(41,330) D
- .I ABMR(41,320)="A0" S ABMDE=+ABMR(41,330)_"^72^9"
- .E  S ABMDE=+ABMR(41,330)_"^72^9R"   ; Value amount 9
+ .;S ABMDE=+ABMR(41,330)_"^72^9R"   ; Value amount 9  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,320)="A0" S ABMDE=+ABMR(41,330)_"^72^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,330)_"^72^9R"   ; Value amount 9  ;IHS/SD/SDR 8/4/05 task 6
  .D WRT^ABMDF11W                   ; form locator #41c
  ;
 16 ;
@@ -151,25 +174,33 @@ ABMDF11Y ; IHS/ASDST/DMJ - PRINT UB92 ;
  .S ABMDE=ABMR(41,340)_"^43^2"     ; Value code 10
  .D WRT^ABMDF11W                   ; form locator #39d
  I ABMR(41,350) D
- .I ABMR(41,340)="A0" S ABMDE=+ABMR(41,350)_"^46^9"
- .E  S ABMDE=+ABMR(41,350)_"^46^9R"   ; Value amount 10
+ .;S ABMDE=+ABMR(41,350)_"^46^9R"   ; Value amount 10  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,340)="A0" S ABMDE=+ABMR(41,350)_"^46^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,350)_"^46^9R"   ; Value amount 10  ;IHS/SD/SDR 8/4/05 task 6
  .D WRT^ABMDF11W                   ; form locator #39d
  I ABMR(41,360)'="" D
  .S ABMDE=ABMR(41,360)_"^56^2"     ; Value code 11
  .D WRT^ABMDF11W                   ; form locator #40d
  I ABMR(41,370) D
- .I ABMR(41,360)="A0" S ABMDE=+ABMR(41,370)_"^59^9"
- .E  S ABMDE=+ABMR(41,370)_"^59^9R"   ; Value amount 11
+ .;S ABMDE=+ABMR(41,370)_"^59^9R"   ; Value amount 11  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,360)="A0" S ABMDE=+ABMR(41,370)_"^59^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,370)_"^59^9R"   ; Value amount 11  ;IHS/SD/SDR 8/4/05 task 6
  .D WRT^ABMDF11W                   ; form locator #40d
  I ABMR(41,380)'="" D
  .S ABMDE=ABMR(41,380)_"^69^2"     ; Value code 12
  .D WRT^ABMDF11W                   ; form locator #41d
  I ABMR(41,390) D
- .I ABMR(41,380)="A0" S ABMDE=+ABMR(41,390)_"^72^9"
- .E  S ABMDE=+ABMR(41,390)_"^72^9R"   ; Value amount 12
+ .;S ABMDE=+ABMR(41,390)_"^72^9R"   ; Value amount 12  ;IHS/SD/SDR 8/4/05 task 6
+ .I ABMR(41,380)="A0" S ABMDE=+ABMR(41,390)_"^72^9"  ;IHS/SD/SDR 8/4/05 task 6
+ .E  S ABMDE=+ABMR(41,390)_"^72^9R"   ; Value amount 12  ;IHS/SD/SDR 8/4/05 task 6
  .D WRT^ABMDF11W                   ; form locator #41d
  ;
 18 ;
+ ; abm*2.5*10 - IM20395 - Changes start happening here to account for the new
+ ;    subscript in the ABMRV array.  They will not be documented individually
+ ;    but assumed in every ABMRV reference within linetag 18.  Old patch changes
+ ;    have also been removed.
+ ;
  ; Lines 18 - 40 on form (description area)
  ; ABMVR(IEN,code,counter) = IEN ^ Code ^ Modifier ^ 2nd Modifier ^ 
  ;                   Total units ^ Total charges ^ ^ Unit charge ^
@@ -204,7 +235,8 @@ ABMDF11Y ; IHS/ASDST/DMJ - PRINT UB92 ;
  ....S $P(ABMRV(I,"ZZTOT",1),U,8)=$P(ABMRV(I,J,L),U,8)  ; unit charge
  ....Q
  ...I 'ABMITMZ,J'="ZZTOT" Q
- ...I ABMITMZ,(J["TOT") Q    ; If itemized and done, Q
+ ...;I ABMITMZ,J="ZZTOT" Q    ; If itemized and done, Q ;abm*2.5*11 IM22386
+ ...I ABMITMZ,(J["TOT") Q    ; If itemized and done, Q ;abm*2.5*11 IM22386
  ...W !
  ...S ABMCTR=ABMCTR+1              ; Count items
  ...; If more than 22 items, complete bottom of form,
@@ -275,7 +307,9 @@ ABMDF11Y ; IHS/ASDST/DMJ - PRINT UB92 ;
  .W !
  .Q:'$D(ABMREC(30,I))
  .; Insurer name_" "_Payor Sub Identification
- .S ABMDE=$S($E(ABMREC(30,I),54,78)["RAILROAD":"RAILROAD MEDICARE",1:$E(ABMREC(30,I),54,78))_" "_$E(ABMREC(30,I),31,34)_"^^25"
+ .;S ABMDE=$E(ABMREC(30,I),54,78)_" "_$E(ABMREC(30,I),31,34)_"^^25"  ;abm*2.5*9 IM17247
+ .;S ABMDE=$S($E(ABMREC(30,I),54,78)["RAILROAD":"MEDICARE",1:$E(ABMREC(30,I),54,78)_" "_$E(ABMREC(30,I),31,34)_"^^25")  ;abm*2.5*9 IM17247  ;abm*2.5*10 IM17247
+ .S ABMDE=$S($E(ABMREC(30,I),54,78)["RAILROAD":"RAILROAD MEDICARE",1:$E(ABMREC(30,I),54,78))_" "_$E(ABMREC(30,I),31,34)_"^^25"  ;abm*2.5*10 IM17247
  .D WRT^ABMDF11W                                 ; form locator #50
  .S ABMDE=$E(ABMREC(30,I),160,172)_"^26^13"  ; Provider ID (blank)
  .D WRT^ABMDF11W                             ; form locator #51

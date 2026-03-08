@@ -1,9 +1,9 @@
-BEHOPTCX ;MSC/IND/DKM - Patient Context Object ;29-Jun-2015 15:00;PLS
- ;;1.1;BEH COMPONENTS;**004004,004005,004006,004007,004010,004011**;Mar 20, 2007
+BEHOPTCX ;MSC/IND/DKM - Patient Context Object ;09-Mar-2023 12:00;PLS
+ ;;1.1;BEH COMPONENTS;**004004,004005,004006,004007,004010,004011,004012,004013,004014**;Mar 20, 2007
  ;=================================================================
  ; Selects patient & returns key information
- ;  1    2   3   4    5      6    7    8      9       10     11  12 13  14  15  16     17     18      19
- ; NAME^SEX^DOB^SSN^LOCIEN^LOCNM^RMBD^VET^SENSITIVE^ADMITTED^HRN^SC^SC%^ICN^DOD^TS^PRIMTEAM^PRIMPRV^ATTND
+ ;  1    2   3   4    5      6    7    8      9       10     11  12 13  14  15  16     17     18      19     20
+ ; NAME^SEX^DOB^SSN^LOCIEN^LOCNM^RMBD^VET^SENSITIVE^ADMITTED^HRN^SC^SC%^ICN^DOD^TS^PRIMTEAM^PRIMPRV^ATTND^PREFNAME
 PTINFO(DATA,DFN,SLCT) ;
  N X,CA,WL,RB,TS,DOD,AT,VT,VAEL,VAERR,VDT,LINE
  K ^TMP("ORWPCE",$J)
@@ -26,7 +26,18 @@ PTINFO(DATA,DFN,SLCT) ;
  S $P(DATA,U,17)=$P($$OUTPTTM^BEHOPTPC(DFN),U,2)
  S $P(DATA,U,18)=$P($$OUTPTPR^BEHOPTPC(DFN),U,2)
  S $P(DATA,U,19)=$S(AT:$P($G(^VA(200,AT,0)),U),1:"")
+ S $P(DATA,U,20)=$$TITLE^XLFSTR($$GETPREF^AUPNSOGI(DFN,,1))
  D:$G(SLCT) LAST(,DFN)
+ Q
+ ; Returns address information for patient
+ ;   1   2     3   4     5    6    7        8          9            10       11
+ ; Add1^Add2^Add3^City^State^Zip^County^Phone(Res)^Phone(Work)^Phone(Cell)^Email
+PTINFO1(DATA,DFN) ;-
+ N VAPA,STR
+ D ADD^VADPT
+ S DATA=VAPA(1)_U_VAPA(2)_U_VAPA(3)_U_VAPA(4)_U_$P(VAPA(5),"^",2)_U_VAPA(6)_U_$P(VAPA(7),U,2)
+ S STR=$G(^DPT(DFN,.13))
+ S DATA=DATA_U_$P(STR,U)_U_$P(STR,U,2)_U_$P(STR,U,4)_U_$P(STR,U,3)
  Q
  ; Save/retrieve last patient selected for current institution
 LAST(DATA,DFN) ;
@@ -203,8 +214,10 @@ CD2(VAL) S CNT=CNT+1,DATA(CNT)=$G(VAL)
  ;
 FMTSSN(SSN) ;EP - P7
  N X
- S X=$E(SSN,6,$L(SSN))
- Q "XXX-XX-"_$S($L(X):X,1:"XXXX")
+ ;IHS/MSC/PLS - 02/23/2022 - Forced return of all X. - P34
+ ;S X=$E(SSN,6,$L(SSN))
+ ;Q "XXX-XX-"_$S($L(X):X,1:"XXXX")
+ Q "XXX-XX-XXXX"
  ; Fires CONTEXT.PATIENT event to notify client that an ADT event has occurred
 CXADTEVT(DFN,DGPMT) ;EP-
  I DGPMT=1!(DGPMT=3) D

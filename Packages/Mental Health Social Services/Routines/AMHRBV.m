@@ -1,5 +1,5 @@
-AMHRBV ; IHS/CMI/LAB - print billable visits ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHRBV ; IHS/CMI/LAB - print billable visits ; [ 02/21/2007  3:41 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**8**;JAN 27, 2003
 START ;
  I '$G(DUZ(2)) W $C(7),$C(7),!!,"SITE NOT SET IN DUZ(2) - NOTIFY SITE MANAGER!!",! Q
  W:$D(IOF) @IOF

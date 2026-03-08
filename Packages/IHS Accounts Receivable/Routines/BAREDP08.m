@@ -1,6 +1,7 @@
 BAREDP08 ; IHS/SD/LSL - POST HIPAA CLAIMS ; 12/01/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,4,5,6,10,19,20,23,24**;OCT 26,2005;Build 69
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,4,5,6,10,19,20,23,24,29,31**;OCT 26,2005;Build 90
  ;IHS/SD/POT HEAT147572 ALLOW TRIBAL SITES ERA POSTING OF NEG BAL & CANCELLED BILLS 2/11/2014 - BAR*1.8*.24
+ ;BAR*1.8*31 IHS.OIT.FCJ CR#6984REQ 4 Print Bill matched
  Q
 POST(BARCKDA) ; EP  bar*1.8*20 REQ6 changed BARCKIEN to BARCKDA
  ;Post this ERA Check (called from POST^BAREDP00)
@@ -41,13 +42,14 @@ POST(BARCKDA) ; EP  bar*1.8*20 REQ6 changed BARCKIEN to BARCKDA
  D EOP^BARUTL(1)
  D POSTEM
  I '+BARPSTED D  Q
- . W !!,"No matched bills to post",!!
+ . W:'$D(BARTMPER) !!,"No matched bills to post",!!
+ . W:$D(BARTMPER) !!,"Bills were matched by did not post for various reasons.",!,"See the RPT option for more details.",!!  ;Add flag to indicate some matched but with RNTP ;;IHS/DIT/CPC BAR*1.8*29 CR 6982 & 10777
  . I PSTQFLG=1 W !,$$EN^BARVDF("HIN"),"** BILLS HAVE BEEN MARKED AS 'ITEM BALANCE EXCEEDED'.  PLEASE REVIEW AND POST",!?4,"MANUALLY**",$$EN^BARVDF("HIF")  ;bar*1.8*20 REQ6
  . K DIR
  . D EOP^BARUTL(1)
  W !!,BARPSTED," Bills posted to AR.",!
+ W:$D(BARTMPER) !!,"Bills were matched but did not post for various reasons.",!,"See the RPT option for more details.",!!  ;Add flag to indicate some matched but with RNTP ;;IHS/DIT/CPC BAR*1.8*29 CR 6982 & 10777
  I PSTQFLG=1 W !!,$$EN^BARVDF("HIN"),"** BILLS HAVE BEEN MARKED AS 'ITEM BALANCE EXCEEDED'.  PLEASE REVIEW AND POST",!?4,"MANUALLY**",$$EN^BARVDF("HIF")
- D ROLLBACK  ;Rollback now or later
  Q
  ;
 GETBPR02(BARCHECK) ;EP -GET BPR02 MONETARY AMT FROM ERACHECK
@@ -99,16 +101,19 @@ POSTEM ; LOOP Claims with this chk
  .F  S CLMDA=$O(^XTMP("BAR-MBAMT",$J,DUZ(2),+CLMAMT,CLMDA)) Q:'+CLMDA  D  Q:+BARDONE
  ..S BARCKIEN=$O(^BAREDI("I",DUZ(2),IMPDA,5,"B",BARCHECK,0))  ;bar*1.8*20 REQ6
  ..S BARBL=$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U)  ;bar*1.8*20 REQ6
- ..D CLMFLG^BAREDP04(CLMDA,.ERRORS)  ;bar*1.8*20 REQ6
+ ..;D CLMFLG^BAREDP04(CLMDA,.ERRORS)  ;bar*1.8*20 REQ6 ;HEAT170856 - removed; it was deleting RNTP from claim, causing them to post when they shouldn't
  ..;;;old code I $$IHS^BARUFUT(DUZ(2)) S BARCHK=BARCHECK D NEGBAL^BAR50EB(IMPDA,"ERA")  ;bar*1.8*20
- .. S BARCHK=BARCHECK D NEGBAL^BAR50EB(IMPDA,"ERA")  ;HEAT147572 1/15/2014 $$ihs chk will be inside BAR50EB - BAR*1.8*.24
+ ..S BARCHK=BARCHECK D NEGBAL^BAR50EB(IMPDA,"ERA")  ;HEAT147572 1/15/2014 $$ihs chk will be inside BAR50EB - BAR*1.8*.24
  ..;;;old code D:$$IHS^BARUFUT(DUZ(2)) NONPAYCH^BAR50EP1(IMPDA)  ;bar*1.8*20
  ..D:$$IHSNEGB^BARUFUT(DUZ(2)) NONPAYCH^BAR50EP1(IMPDA) ;new code HEAT147572 - BAR*1.8*.24
  ..Q:$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,2)'="M"
- ..Q:(($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,2)="M")&(+$O(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,4,0))'=0))  ;matched but reason not to post bar*1.8*20 REQ5
+ ..;Q:(($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,2)="M")&(+$O(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,4,0))'=0))  ;matched but reason not to post bar*1.8*20 REQ5
+ ..I (($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,2)="M")&(+$O(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,4,0))'=0)) S BARTMPER=1  Q   ;Add flag to indicate some matched but with RNTP ;;IHS/DIT/CPC BAR*1.8*29 CR 6982 & 10777
  ..S CLMCNT=+$G(CLMCNT)+1  ;bar*1.8*20 REQ6
  ..D BASIC
+ ..S PSTQFLG=0
  ..D ENP^XBDIQ1(90056.0205,"IMPDA,CLMDA",".01;.05;1.01;.02;.04;.11;.12;301;501;601;602","CLM(")  ;BAR*1.8*5 INCLUDE 'POST THIS CLAIM AS TYPE' FIELD
+ ..W !?7,"ERA BILLS "_BARBL_" MATCHED TO A/R BILL ",BARBLIEN  ;BAR*1.8*31 IHS.OIT.FCJ CR#6984 REQ 4
  ..W !?7,"Billed: ",CLM(.05),?25,"Payment: ",CLM(.04)
  ..S IENS=BARITM_","_BARCOL_","
  ..S ITEMAMT=$$GET1^DIQ(90051.1101,IENS,19)  ;item posting balance

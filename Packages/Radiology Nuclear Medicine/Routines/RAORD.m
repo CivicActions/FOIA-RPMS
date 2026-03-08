@@ -1,5 +1,5 @@
-RAORD ;HISC/CAH,FPT,GJC AISC/RMO-Rad/NM Order Entry Main Menu ;3/13/98  12:16
- ;;5.0;Radiology/Nuclear Medicine;;Mar 16, 1998
+RAORD ;HISC/CAH,FPT,GJC AISC/RMO IHS/OIT/BT - Rad/NM Order Entry Main Menu ; Nov 11, 2022@12:47:15
+ ;;5.0;Radiology/Nuclear Medicine;**133,168,1009,1010**;Mar 16, 1998;Build 11
 2 ;;Schedule a Request
  N RAPTLOCK
 21 ; Patient lookup
@@ -7,7 +7,7 @@ RAORD ;HISC/CAH,FPT,GJC AISC/RMO-Rad/NM Order Entry Main Menu ;3/13/98  12:16
  I $$ORVR^RAORDU()'<3 D  G:'RAPTLOCK 21
  . S RAPTLOCK=$$LK^RAUTL19(+Y_";DPT(")
  . Q
- S RADFN=+Y,RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
+ S RADFN=+Y,RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1) S:RANME="" RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
  S (RAOFNS,RAOPTN)="Schedule",RAOVSTS="3;5"
  W ! D ^RAORDS G Q2:'$D(RAORDS)
  S %DT("A")="Schedule Request Date/Time: ",%DT="AEFXT"
@@ -32,7 +32,7 @@ Q2 ; Unlock if appropriate, kill vars
  I $$ORVR^RAORDU()'<3 D  G:'RAPTLOCK 31
  . S RAPTLOCK=$$LK^RAUTL19(+Y_";DPT(")
  . Q
- S RADFN=+Y,RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
+ S RADFN=+Y,RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1) S:RANME="" RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
  S (RAOFNS,RAOPTN)="Cancel"
  D CHKUSR^RAUTL2 S RAOVSTS=$S(RAMSG:"3;5;8",1:"5")
  W ! D ^RAORDS G Q3:'$D(RAORDS)
@@ -86,7 +86,7 @@ REASON ; Select a Cancel Reason
  I $$ORVR^RAORDU()'<3 D  G:'RAPTLOCK 40
  . S RAPTLOCK=$$LK^RAUTL19(+Y_";DPT(")
  . Q
- S RADFN=+Y,RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
+ S RADFN=+Y,RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1) S:RANME="" RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
  S (RAOFNS,RAOPTN)="Hold",RAOVSTS="5;8"
  W ! D ^RAORDS G Q4:'$D(RAORDS)
 41 ; Select a Hold Reason
@@ -108,9 +108,45 @@ Q4 ; unlock if appropriate, kill variables
  K D1,DDER,DI,DIPGM,DISYS,DUOUT,RAPARENT,^TMP($J,"PRO-ORD"),^("XQALSET")
  Q
  ;
+6 ;;Udate a HOLD REASON /RA*5*133
+ N RAPTLOCK
+60 ; Patient lookup
+ S DIC="^DPT(",DIC(0)="AEMQ" W ! D ^DIC K DIC G 64:Y<0
+ S RADFN=+Y,RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1) S:RANME="" RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
+ S (RAOFNS,RAOPTN)="Update hold reason",RAOVSTS="3"
+ W ! D ^RAORDS G 64:'$D(RAORDS)
+61 ; Select a Hold Reason
+ ;p168 - change lookup to catch types hold and general (3&9)
+ S DIC("A")="Select HOLD REASON: ",DIC("S")="I $P(^(0),U,2)=3!($P(^(0),U,2)=9)",DIC="^RA(75.2,",DIC(0)="AEMQ" W ! D ^DIC K DIC
+ I +Y<0,(X["^") D 64 Q
+ I +Y<0 W !!?3,"A Hold Reason is required to proceed." G 61
+ S RAOREA=+Y
+ W !?3,"...will now update the hold reason for the selected request(s)..." S RAOLP=0
+ F  S RAOLP=+$O(RAORDS(RAOLP)) Q:'RAOLP!('+$G(RAORDS(RAOLP)))  D
+ . S RAOIFN=$G(RAORDS(RAOLP)),RAOSTS=3 D ^RAORDU
+ . I $D(^RAO(75.1,RAOIFN,0)),$D(^RAMIS(71,+$P(^(0),"^",2),0)) W !?10,"...",$P(^(0),"^")," updated..."
+ . Q
+ D 64 G 60
+64 ; unlock if appropriate, kill variables
+ K %DT,C,D,D0,DA,I,POP,RADFN,RADIV,RANME,RAOFNS,RAOIFN,RAOLP,RAORDS
+ K RAOPTN,RAOREA,RAOSTS,RAOVSTS,X,Y
+ K D1,DDER,DI,DIPGM,DISYS,DUOUT,RAPARENT,^TMP($J,"PRO-ORD"),^("XQALSET")
+ Q
+ ;
 9 ;;Print Selected Requests by Patient
  K ^TMP($J,"RA PRINT HS BY PAT")
- S DIC="^DPT(",DIC(0)="AEMQ" W ! D ^DIC K DIC G Q9:Y<0 S RADFN=+Y,RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown"),RAOFNS="Print",RAOVSTS="1;2;3;5;6;8" W ! D ^RAORDS G Q9:'$D(RAORDS)
+ ;IHS/CMI/LAB patch 1009 CR#8982 - added choice to sort the list by urgency/date (which in currently does) or by date/urgency (new functionlity) 04/15/2021
+ ;COMMENTED OUT LINE BELOW AND REPLACED WITH SUBSEQUENT LINES
+ ;S DIC="^DPT(",DIC(0)="AEMQ" W ! D ^DIC K DIC G Q9:Y<0 S RADFN=+Y,RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown"),RAOFNS="Print",RAOVSTS="1;2;3;5;6;8" W ! D ^RAORDS G Q9:'$D(RAORDS)
+ ;begin new lines
+ S DIC="^DPT(",DIC(0)="AEMQ" W ! D ^DIC K DIC G Q9:Y<0
+ S RADFN=+Y,RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1) S:RANME="" RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
+ S RAOFNS="Print",RAOVSTS="1;2;3;5;6;8"
+ S DIR(0)="S^U:Urgency/Date;D:Date/Urgency",DIR("A")="How would you like the list of exams sorted",DIR("B")="U" KILL DA D ^DIR KILL DIR
+ G:$D(DIRUT) Q9
+ S BRALS=Y  ;THIS WILL BE A U OR D for RAORDS
+ ;IHS/CMI/LAB - end mods for patch 9 CR# 8982 04/15/2021
+ W ! D ^RAORDS G Q9:'$D(RAORDS)
  S RAOIFNS="" F RAOLP=1:1 Q:'$D(RAORDS(RAOLP))  S RAOIFNS=RAOIFNS_+RAORDS(RAOLP)_";"
  W ! K DIR,DIROUT,DIRUT,DTOUT,DUOUT
  S DIR(0)="Y",DIR("B")="No"
@@ -119,6 +155,7 @@ Q4 ; unlock if appropriate, kill variables
  D ^DIR G:$D(DIRUT) Q9 S RAGMTS=+Y
  S ZTRTN="START9^RAORD",ZTSAVE("RADFN")="",ZTSAVE("RAOIFNS")=""
  S ZTSAVE("RAGMTS")="" S:$D(RAOPT) ZTSAVE("RAOPT(")=""
+ S ZTSAVE("BRALS")=""  ;IHS/CMI/LAB PATCH 1009 ADDED FOR NEW SORT CR#8982
  W ! D ZIS^RAUTL G Q9:RAPOP
  ;
 START9 ; Start printing requests

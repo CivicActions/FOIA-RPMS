@@ -1,24 +1,24 @@
 ABMDESMM ; IHS/ASDST/DMJ - Summarized Claim Medical Charges ;
- ;;2.6;IHS Third Party Billing System;**3,13**;NOV 12, 2009;Build 213
+ ;;2.6;IHS Third Party Billing System;**3,13,28,29,37**;NOV 12, 2009;Build 739
  ;
- ;IHS/DSD/LSL -03/26/98  - Semicolon out the line in
- ;subrtn PRO that  quits if Optometry visit.
- ;Optometry 994 total was 0's 
- ; IHS/DSD/LSL - 09/02/98 - Patch 2 - NOIS NDA-0898-180038
- ;             0.00 charges on HCFA because version 2.0 does not assume
- ;             1 for units.  Modify code to set units to 1 if not
- ;             already defined.
+ ;IHS/DSD/LSL 03/26/98 Semicolon out the line in subrtn PRO that quits if Optometry visit.
+ ;Optometry 994 total was 0's
+ ;IHS/DSD/LSL 09/02/98 Patch 2 NOIS NDA-0898-180038 0.00 charges on HCFA because version 2.0 does not assume
+ ;     1 for units.  Modify code to set units to 1 if not already defined.
  ;
- ; IHS/SD/SDR - v2.5 - p5 - 5/18/04 - Modified to put POS and TOS by line item
- ; IHS/SD/SDR - V2.5 P8 - IM10618/IM11164 - Prompt/display provider
- ; IHS/SD/SDR - v2.5 p9 - task 1 - Use new service line provider multiple
- ; IHS/SD/SDR - v2.5 p11 - NPI
- ; IHS/SD/SDR - v2.5 p12 - IM25331 - Add provider taxonomy to CMS-1500 block 24K
- ; IHS/SD/SDR - v2.5 p13 - IM25574 - Correction for CPT modifier in Medical multiple
- ; IHS/SD/SDR - v2.5 p13 - IM25899 - Alignment changes
+ ;IHS/SD/SDR v2.5 p5 5/18/04 Modified to put POS and TOS by line item
+ ;IHS/SD/SDR V2.5 P8 IM10618/IM11164 Prompt/display provider
+ ;IHS/SD/SDR v2.5 p9 task 1 Use new service line provider multiple
+ ;IHS/SD/SDR v2.5 p11 NPI
+ ;IHS/SD/SDR v2.5 p12 IM25331 Add provider taxonomy to CMS-1500 block 24K
+ ;IHS/SD/SDR v2.5 p13 IM25574 Correction for CPT modifier in Medical multiple
+ ;IHS/SD/SDR v2.5 p13 IM25899 Alignment changes
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - 2.6*13 - Added check for new export mode 35
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*13 Added check for new export mode 35
+ ;IHS/SD/SDR 2.6*28 CR10648 Put CPT Narrative in array
+ ;IHS/SD/SDR 2.6*29 CR10410 Added check for Medicare non-covered
+ ;IHS/SD/SDR 2.6*37 ADO89299 Made changes to print DEA# if NDC is entered and is for controlled substance
  ;
 PRO ;EP for Medical Charges
  ;
@@ -28,11 +28,16 @@ PRO ;EP for Medical Charges
  ;
 PRO1 ;PRO1
  S ABMX(0)=@(ABMP("GL")_"27,"_ABMX("X")_",0)")
+ S ABMX(2)=$G(@(ABMP("GL")_"27,"_ABMX("X")_",2)"))  ;abm*2.6*28 IHS/SD/SDR CR10648
  S ABMZ("UNIT")=$P(ABMX(0),U,3)
  S:'+ABMZ("UNIT") ABMZ("UNIT")=1
  I $G(ABMP("VTYP",999)),'$G(ABMPRINT),ABMP("VTYP",999)'=ABMP("EXP"),$P(ABMX(0),"^",2)>959 Q
  S ABMX("SUB")=(ABMZ("UNIT")*$P(ABMX(0),U,4))
  S ABMS("TOT")=ABMS("TOT")+ABMX("SUB")
+ ;start new abm*2.6*29 IHS/SD/SDR CR10410
+ S ABMCNDCK=U_$P(ABMX(0),U,5)_U_$P(ABMX(0),U,8)_U_$P(ABMX(0),U,9)
+ D CNCD21CK^ABMDESM1
+ ;end new abm*2.6*29 IHS/SD/SDR CR10410
  I $P(^ABMDEXP(ABMP("EXP"),0),U)'["UB" G PROH
 PROU S ABMX("R")=$P(ABMX(0),U,2) Q:ABMX("R")=""  D REVN
  Q
@@ -40,7 +45,7 @@ PROU S ABMX("R")=$P(ABMX(0),U,2) Q:ABMX("R")=""  D REVN
 PROH S ABMS(ABMS("I"))=ABMX("SUB")
  S ABMCAT=27 D HDT^ABMDESM1
  S ABMX("C")=$P(ABMX(0),U) D CPT
- ;S $P(ABMS(ABMS("I")),U,4)=ABMX("C")_$S($P(ABMX(0),U,5)]"":"-"_$P($$MOD^ABMCVAPI($P(ABMX(0),U,5),"",ABMP("VDT")),U,2),1:"")_$S($P(ABMX(0),U,8)]"":"-"_$P(ABMX(0),U,8),1:"")_$S($P(ABMX(0),U,9)]"":"-"_$P(ABMX(0),U,9),1:"")  ;CSV-c  ;IHS/SD/SDR 3/1/2010 HEAT11136
+ ;S $P(ABMS(ABMS("I")),U,4)=ABMX("C")_$S($P(ABMX(0),U,5)]"":"-"_$P($$MOD^ABMCVAPI($P(ABMX(0),U,5),"",ABMP("VDT")),U,2),1:"")_$S($P(ABMX(0),U,8)]"":"-"_$P(ABMX(0),U,8),1:"")_$S($P(ABMX(0),U,9)]"":"-"_$P(ABMX(0),U,9),1:"")  ;IHS/SD/SDR HEAT11136
  S $P(ABMS(ABMS("I")),U,4)=ABMX("C")_$S($P(ABMX(0),U,5)]"":"-"_$P(ABMX(0),U,5),1:"")_$S($P(ABMX(0),U,8)]"":"-"_$P(ABMX(0),U,8),1:"")_$S($P(ABMX(0),U,9)]"":"-"_$P(ABMX(0),U,9),1:"")  ;CSV-c  ;IHS/SD/SDR 3/1/2010 HEAT11136
  ;I ABMP("EXP")=27  S $P(ABMS(ABMS("I")),U,4)=ABMX("C")_$S($P(ABMX(0),U,5)]"":"   "_$P(ABMX(0),U,5),1:"")_$S($P(ABMX(0),U,8)]"":" "_$P(ABMX(0),U,8),1:"")_$S($P(ABMX(0),U,9)]"":" "_$P(ABMX(0),U,9),1:"")  ;abm*2.6*13 new export mode 35
  I ABMP("EXP")=27!(ABMP("EXP")=35) S $P(ABMS(ABMS("I")),U,4)=ABMX("C")_$S($P(ABMX(0),U,5)]"":"   "_$P(ABMX(0),U,5),1:"")_$S($P(ABMX(0),U,8)]"":" "_$P(ABMX(0),U,8),1:"")_$S($P(ABMX(0),U,9)]"":" "_$P(ABMX(0),U,9),1:"")  ;abm*2.6*13 exp mode 35
@@ -60,6 +65,18 @@ PROH S ABMS(ABMS("I"))=ABMX("SUB")
  .S $P(ABMS(ABMS("I")),U,9)=$$K24N^ABMDFUTL(ABMDPRV)
  .S $P(ABMS(ABMS("I")),U,11)=$P($$NPI^XUSNPI("Individual_ID",ABMDPRV),U)
  .I $G(ABMP("NPIS"))="N" S $P(ABMS(ABMS("I")),U,9)=$$PTAX^ABMEEPRV(ABMDPRV)
+ I "^35^"[("^"_ABMP("EXP")_"^") S $P(ABMS(ABMS("I")),U,12)=$P(ABMX(2),U,2)  ;abm*2.6*28 IHS/SD/SDR CR10648
+ ;
+ ;start new abm*2.6*37 IHS/SD/SDR ADO89299
+ ;DEA# for controlled substance
+ I ((ABMP("EXP")=35)&($P(ABMX(0),U,19)'="")) D
+ .S ABM("NDC")=$O(^PSDRUG("ZNDC",$TR($P(ABMX(0),U,19),"-"),0))
+ .S ABMDPRV=$O(@(ABMP("GL")_"27,"_ABMX_",""P"",""C"",""D"",0)"))  ;ordering provider
+ .I +$G(ABMDPRV)'=0 D
+ ..S ABMDPRV=$P($G(@(ABMP("GL")_"27,"_ABMX_",""P"","_ABMDPRV_",0)")),U)
+ ..S ABMA("CSUB")=$P($G(^PSDRUG(+ABM("NDC"),0)),U,3)  ;DEA, SPECIAL HDLG
+ ..I (ABMA("CSUB")[2)!(ABMA("CSUB")[3)!(ABMA("CSUB")[4)!(ABMA("CSUB")[5) S $P(ABMS(ABMS("I")),U,13)=$P(ABMX(2),U,6)
+ ;end new abm*2.6*33 IHS/SD/SDR ADO89299
  Q
  ;
 CPT I ABMX("C")]"" S ABMX("C")=$P($$CPT^ABMCVAPI(ABMX("C"),ABMP("VDT")),U,2)  ;CSV-c

@@ -1,5 +1,5 @@
 BQIPTDDG ;APTIV/HC/ALA-Patient Detail Demographics ; 03 Mar 2008  1:32 PM
- ;;2.2;ICARE MANAGEMENT SYSTEM;;Jul 28, 2011;Build 37
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**3**;Mar 01, 2021;Build 32
  ;
  Q
  ;
@@ -93,5 +93,14 @@ HMLOC(DFN) ;EP - Return Patient Location of Home Value (Panel View field HMLOC)
  S (HMLOC,LIEN)="" F  S LIEN=$O(GDDATA(9000001,IEN,1201,LIEN)) Q:'LIEN  D
  . S HMLOC=$G(HMLOC)_$S($G(HMLOC)]"":" ",1:"")_$G(GDDATA(9000001,IEN,1201,LIEN))
  K LIEN
- ;
+ S HMLOC=$$REM(HMLOC,"^")
  Q HMLOC
+ ;
+REM(STR,VAL) ;EP - Remove value
+ I $G(STR)="" Q STR
+ I $G(VAL)="" Q STR
+ ;
+ NEW NSTR,LS,BQ,BQD
+ S LS=$L(STR),NSTR=""
+ F BQ=1:1:LS S BQD=$E(STR,BQ,BQ) I BQD'=VAL S NSTR=NSTR_BQD
+ Q NSTR

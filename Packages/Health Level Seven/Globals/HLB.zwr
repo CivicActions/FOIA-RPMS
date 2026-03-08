@@ -1,0 +1,6 @@
+CACHE FORMAT
+ZWR
+^HLB("AC"sending facility>_<sending application>_<msg id>,ien)=0
+^HLB("AD",<"IN" or "OUT">,<dt/tm for purging>,<message ien>)="
+^HLB("AC"sending facility>_<sending application>_<msg id>,ien)=0
+^HLB("AD",<"IN" or "OUT">,<dt/tm for purging>,<message ien>)="

@@ -1,6 +1,18 @@
 ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**8,9,10**;APR 05, 2002
  ;Original;DMJ;
+ ;
+ ; IHS/ASDS/LSL - 07/10/00 - V2.4 Patch 2 - NOIS NDA-0700-180029
+ ;     Modified to allow two (2) characters to print in box 18 and
+ ;     19 of UB-92
+ ;
+ ; IHS/ASDS/SDH - 08/23/01 - v2.4 Patch 9 - NOIS NDA-0801-180080
+ ;     Modified to fix missing days from inpatient stays
+ ;
+ ; IHS/ASDS/SDH - 11/27/01 - v2.4 p10 - NOIS UAA-0901-170076
+ ;     Modified so it would print what was selected in the UB-92
+ ;     FL38 field (policy holder, insurer, or blank)
+ ;
  ; IHS/SD/SDR - v2.5 p8 - IM14893/IM15353
  ;    Removal of "0" from FL19 and FL20
  ;
@@ -36,7 +48,7 @@ ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;
  W !
  S ABMP("NOFMT")=1  ; format flag (1 = no special formatting)
  D 120^ABMER10      ; Provider name
- I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMR(10,120)="SAN FELIPE HS"
+ I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMR(10,120)="SAN FELIPE HS"  ;abm*2.5*9 IM16991
  S ABMDE=ABMR(10,120)_"^^25"  ; data ^ tab ^ format
  D WRT^ABMDF11W     ; write data in specified format
  ;
@@ -45,13 +57,25 @@ ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;
  W !
  D 130^ABMER10      ; Provider address -- form locator #1
  D 30^ABMER20       ; Patient control number -- form locator #3
- I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMR(10,130)="PO BOX 4339"
+ I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMR(10,130)="PO BOX 4339"  ;abm*2.5*9 IM16991
  S ABMDE=ABMR(10,130)_"^^25"
  D WRT^ABMDF11W
  S ABMDE=ABMR(20,30)_"^57^20"
  D WRT^ABMDF11W
+ ;start old code abm*2.5*10 IM20182
+ ;S ABMDE=ABMP("BTYP")_"^"_$S($G(IOM)=80:77,1:78)_"^3"  ; Bill type -- form locator #4 
+ ;;D WRT^ABMDF11W  ;abm*2.5*9 IM12048
+ ;;start new code abm*2.5*9 IM12048
+ ;S ABMTAB=+$P(ABMDE,"^",2)+ABMP("LM")
+ ;I $P(ABMDE,"^",3)["R" S $P(ABMDE,"^")=$J($P(ABMDE,"^"),+$P(ABMDE,"^",3))
+ ;S ABMDE=$E($P(ABMDE,"^"),1,+$P(ABMDE,"^",3))
+ ;S:ABMTAB+$L(ABMDE)>IOM ABMDE=$E(ABMDE,1,IOM-ABMTAB)
+ ;W ?ABMTAB+1,ABMDE
+ ;;end new code abm*2.5*9 IM12048
+ ;end old code start new code IM20182
  S ABMDE=ABMP("BTYP")_"^77^3"  ; Bill type -- form locator #4
  D WRT^ABMDF11W
+ ;end new code IM20182
  ;
 3 ;
  ; Provider city, state, zip  -- form locator #1
@@ -63,7 +87,7 @@ ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;
  . S ABMR(10,160)=$E(ABMR(10,160),1,5)_"-"_$E(ABMR(10,160),6,9)
  . Q
  S ABMDE=ABMR(10,140)_", "_ABMR(10,150)_" "_ABMR(10,160)_"^^25"
- I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMDE="SAN FELIPE, NM 87001^^25"
+ I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMDE="SAN FELIPE, NM 87001^^25"  ;abm*2.5*9 IM16991
  D WRT^ABMDF11W
  ;
 4 ;
@@ -78,7 +102,7 @@ ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;
  D 230^ABMER30      ; Lifetime reserve days   -- form locator #10
  S ABMDE=ABMR(10,110)_"^^25"
  D WRT^ABMDF11W
- I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMR(10,40)=850210848
+ I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMR(10,40)=850210848  ;abm*2.5*9 IM16991
  S ABMDE=ABMR(10,40)_"^26^10"
  D WRT^ABMDF11W
  S ABMDE=ABMR(20,190)_"^37^6"
@@ -115,6 +139,7 @@ ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;
  D WRT^ABMDF11W
  S ABMP("NOFMT")=0
  ; Quit if printing additional pages to ONE itemized UB-92 claim
+ ;Q:$G(ABMORE)  ;IM15034
  ;
 8 ;
  W !!
@@ -138,12 +163,14 @@ ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;
  D WRT^ABMDF11W                                  ; form locator #17
  S:ABMR(20,180) ABMDE=ABMR(20,180)_"^21^2"   ; Admission hour
  D WRT^ABMDF11W                                  ; form locator #18
- I +$G(ABMR(20,100))'=0 S ABMR(20,100)="0"_ABMR(20,100)
- S ABMDE=(ABMR(20,100))_"^24^2"            ; Type of admission
+ ;S ABMDE=(0_ABMR(20,100))_"^25^2"            ; Type of admission  ;IM14893
+ I +$G(ABMR(20,100))'=0 S ABMR(20,100)="0"_ABMR(20,100)  ;IM14893
+ S ABMDE=(ABMR(20,100))_"^24^2"            ; Type of admission  ;IM14893
  D WRT^ABMDF11W                                  ; form locator #19
- I +$G(ABMR(20,110))'=0 S ABMR(20,110)="0"_ABMR(20,110)
- S ABMDE=(ABMR(20,110))_"^27^2"            ; Source of admission
- I $P($G(^AUTNINS(ABMP("INS"),0)),U)="ARIZONA MEDICAID",(ABMP("VTYP")=998) S ABMDE="^^28^2"
+ ;S ABMDE=(0_ABMR(20,110))_"^28^2"            ; Source of admission  ;IM14893
+ I +$G(ABMR(20,110))'=0 S ABMR(20,110)="0"_ABMR(20,110)  ;IM14893
+ S ABMDE=(ABMR(20,110))_"^27^2"            ; Source of admission  ;IM14893
+ I $P($G(^AUTNINS(ABMP("INS"),0)),U)="ARIZONA MEDICAID",(ABMP("VTYP")=998) S ABMDE="^^28^2"  ;abm*2.5*9 IM17778
  D WRT^ABMDF11W                                  ; form locator #20
  S:ABMR(20,220) ABMDE=ABMR(20,220)_"^30^2"   ; Discharge hour
  D WRT^ABMDF11W                                  ; form locator #21
@@ -229,9 +256,11 @@ ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;
  D WRT^ABMDF11W                             ; form locator #36b
  S ABMDE=ABMR(40,330)_"^50^6"           ; Occur. Span thru date - 2
  D WRT^ABMDF11W                             ; form locator #36b
+ ;start new code abm*2.5*9 IM18032
  S ABMDE=$E($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),4)),U,9),1,22)
  S:ABMDE'="" ABMDE=ABMDE_"^58^22"
  D WRT^ABMDF11W
+ ;end new code abm*2.5*9 IM18032
  ;
 12 ;
  ; If private insurance and relationship of policy holder to patient
@@ -249,8 +278,10 @@ ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;
  ....S ABME("INSIEN")=I
  ..Q:'$G(ABME("INSIEN"))
  ..D PRVT^ABMERINS
- ..S ABMDE=$G(ABM(9000003.1,+$G(ABME("PH")),2,"E"))_"^^40"  ;card name-policy holder
- ..S:($P(ABMDE,U)="") $P(ABMDE,U)=$G(ABM(9000003.1,+$G(ABME("PH")),.01,"E"))_"^^40"  ;name-policy holder
+ ..; AmpMed needs to always see responsible party
+ ..;S ABMDE=$G(ABM(9000003.1,+$G(ABME("PH")),.01,"E"))_"^^40"  ;name-policy holder  ;abm*2.5*10 IM20000
+ ..S ABMDE=$G(ABM(9000003.1,+$G(ABME("PH")),2,"E"))_"^^40"  ;card name-policy holder  ;abm*2.5*10 IM20000
+ ..S:($P(ABMDE,U)="") $P(ABMDE,U)=$G(ABM(9000003.1,+$G(ABME("PH")),.01,"E"))_"^^40"  ;name-policy holder  ;abm*2.5*10 IM20000
  ..D WRT^ABMDF11W   ;form locator 38
  ..Q
  ;
@@ -276,9 +307,11 @@ ABMDF11X ; IHS/ASDST/DMJ - PRINT UB92 ;
  .D WRT^ABMDF11W    ;form locator 38 line1
  ;
  I ABM38FLG["B"     ;if B it shouldn't do anything
+ ; start code change IM15034
  I $G(ABMORE)'="" D
  .D 13^ABMDF11Y
  Q:$G(ABMORE)
+ ; end code change IM15034
  ;
 OTHER ;DO OTHER ROUTINES & QUIT
  D ^ABMDF11Y,^ABMDF11Z

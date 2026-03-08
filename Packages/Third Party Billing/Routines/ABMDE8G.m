@@ -1,24 +1,26 @@
-ABMDE8G ; IHS/ASDST/DMJ - Page 8 - ANESTHESIA ;   
- ;;2.6;IHS Third Party Billing;**1,3,6,8,9**;NOV 12, 2009
+ABMDE8G ; IHS/SD/SDR - Page 8 - ANESTHESIA ;   
+ ;;2.6;IHS Third Party Billing;**1,3,6,8,9,10,32,36**;NOV 12, 2009;Build 698
  ;
  ; IHS/ASDS/DMJ - v2.4 p7 - 9/7/01 NOIS HQW-0701-100066
  ;     Modifications made related to Medicare Part B.
  ;
- ; IHS/SD/SDR - 11/4/02 - V2.5 P2 - ZZZ-0301-210046 - Modified to capture modifiers from PCC
- ; IHS/SD/SDR - V2.5 P8 - IM10618/IM11164 - Prompt/display provider
- ; IHS/SD/SDR - v2.5 p9 - IM16660 - 4-digit revenue codes
- ; IHS/SD/SDR - v2.5 p9 - task 1 - Use new service line provider multiple
- ; IHS/SD/SDR - v2.5 p10 - IM21539 - Made changes to correct display and calculations to be
+ ;IHS/SD/SDR 11/4/02 2.5*2 ZZZ-0301-210046 - Modified to capture modifiers from PCC
+ ;IHS/SD/SDR 2.5*8 IM10618/IM11164 Prompt/display provider
+ ;IHS/SD/SDR 2.5*9 IM16660 4-digit revenue codes
+ ;IHS/SD/SDR 2.5*9 task 1 Use new service line provider multiple
+ ;IHS/SD/SDR 2.5*10 IM21539 Made changes to correct display and calculations to be
  ;   correct amounts (was doing stuff that the payer does and we shouldn't be)
- ; IHS/SD/SDR - v2.5 p11 - NPI
- ; IHS/SD/SDR - v2.5 p12 - IM24277 - Added code for 2nd and 3rd modifier
+ ;IHS/SD/SDR 2.5*11 NPI
+ ;IHS/SD/SDR 2.5*12 IM24277 Added code for 2nd and 3rd modifier
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ; IHS/SD/SDR - abm*2.6*1 - HEAT6566 - Added code to do anes. one way for Medicare and another for everyone else.
- ; IHS/SD/SDR - abm*2.6*3 - HEAT12742 - corrections to MCR/non-MCR; Adrian spoke with Medicare; they said
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*1 HEAT6566 Added code to do anes. one way for Medicare and another for everyone else.
+ ;IHS/SD/SDR 2.6*3 HEAT12742 corrections to MCR/non-MCR; Adrian spoke with Medicare; they said
  ;   it should be like it was; removed all changes for 6566 so it was back to original code
- ; IHS/SD/SDR - 2.6*9 - Updates to code from heat 6566; it is commented out because it is only needed for MT Mcd.
+ ;IHS/SD/SDR 2.6*9 Updates to code from heat 6566; it is commented out because it is only needed for MT Mcd.
  ;   Site that needs the changes should comment out nat'l code and uncomment the other 6566 lines.
+ ;IHS/SD/SDR 2.6*32 CR8942 Fixed default revenue code
+ ;IHS/SD/SDR 2.6*36 ADO76171 Fixed 3rd modifier so it would actually save; it was prompted for it, but not storing it on the claim
  ;
 DISP K ABMZ S ABMZ("TITL")="ANESTHESIA SERVICES",ABMZ("PG")="8G",ABMZ("ADD1")=""
  I $D(ABMP("DDL")),$Y>(IOSL-9) D PAUSE^ABMDE1 G:$D(DUOUT)!$D(DTOUT)!$D(DIROUT) XIT I 1
@@ -27,7 +29,8 @@ DISP K ABMZ S ABMZ("TITL")="ANESTHESIA SERVICES",ABMZ("PG")="8G",ABMZ("ADD1")=""
  D G^ABMDE8X
 FEE S ABMZ("CAT")=23
  ;S ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*1 HEAT6566  ;abm*2.6*8
- S:ABMP("INS") ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*1 HEAT6566  ;abm*2.6*8
+ ;S:ABMP("INS") ABMP("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*1 HEAT6566  ;abm*2.6*10 HEAT73780
+ S:ABMP("INS") ABMP("ITYP")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ;abm*2.6*1 HEAT6566  ;abm*2.6*10 HEAT73780
  ;S ABMZ("DICS")="I ($P(^ICPT(Y,0),""^"")<70000)&($P($$CPT^ABMCVAPI(Y,ABMP(""VDT"")),""^"",7)'=1)"  ;CSV-c  ;abm*2.6*6
  S ABMZ("DICS")="I ($P(^ICPT(Y,0),""^"")<70000)&($P($$CPT^ABMCVAPI(Y,ABMP(""VDT"")),""^"",7)=1)"  ;CSV-c  ;abm*2.6*6
  S ABMZ("SUB")=39
@@ -41,10 +44,12 @@ FEE S ABMZ("CAT")=23
  ;.K ABMDPRV
  ;end old code NOHEAT
  S ABMZ("CHRG")=";W !;.04"
- S ABMZ("MOD")=.06_U_2_U_.14_U_2_U_.19
+ S ABMZ("MOD")=.06_U_2_U_.14_U_2_U_.19  ;abm*2.6*36 IHS/SD/SDR ADO76171
+ S ABMZ("MOD")=.06_U_2_U_.14_U_.19  ;abm*2.6*36 IHS/SD/SDR ADO76171
  S ABMZ("ITEM")="Anesthesia (CPT Code)"
  S ABMZ("DIC")="^ICPT(",ABMZ("X")="X",ABMZ("TOTL")=0,ABMZ("ANTH")=""
- I ^ABMDEXP(ABMMODE(7),0)["UB" S ABMZ("DR")=ABMZ("DR")_";W !;.02//370"  ;abm*2.6*1 HEAT6566
+ ;I ^ABMDEXP(ABMMODE(7),0)["UB" S ABMZ("DR")=ABMZ("DR")_";W !;.02//370"  ;abm*2.6*1 HEAT6566  ;abm*2.6*32 IHS/SD/SDR CR8942
+ I ^ABMDEXP(ABMMODE(7),0)["UB" S ABMZ("REVN")=";W !;.02//370"  ;abm*2.6*1 HEAT6566  ;abm*2.6*32 IHS/SD/SDR CR8942
  ;I ^ABMDEXP(ABMMODE(7),0)["UB",(ABMP("ITYP")'="R") S ABMZ("DR")=";W !;.02//370"_ABMZ("DR")  ;abm*2.6*1 HEAT6566
  ;I ^ABMDEXP(ABMMODE(7),0)["UB",(ABMP("ITYP")="R") S ABMZ("DR")=ABMZ("DR")_";W !;.02//370"  ;abm*2.6*1 HEAT6566
  D HD G LOOP

@@ -1,5 +1,5 @@
 BQI1POJB ;PRXM/HC/ALA-Ver 1.0 Post Install Task Job ; 02 Mar 2006  9:52 AM
- ;;2.4;ICARE MANAGEMENT SYSTEM;;Apr 01, 2015;Build 41
+ ;;1.1;ICARE MANAGEMENT SYSTEM;**3**;Apr 03, 2008
  Q
  ;
 ENT ;EP - Entry point for all tagging
@@ -44,7 +44,7 @@ DXC ;  Tag the diagnosis categories
  ;   BQEXEC - Diag Cat special executable program
  ;   BQPRG  - Diag Cat standard executable program
  ;   BQREF  - Taxonomy array reference
- ;   BQGLBB  - Temporary global reference
+ ;   BQGLB  - Temporary global reference
  ;   BQORD  - Order that the category must be determined
  ;           (Some categories depend upon a patient not being
  ;            in another category)
@@ -72,19 +72,19 @@ DXC ;  Tag the diagnosis categories
  .. ; Set the taxonomy array from the file definition
  .. S BQREF="BQIRY" K @BQREF
  .. D ARY^BQITUTL(BQDEF,BQREF)
- .. S BQGLBB=$NA(^TMP("BQIPOP",UID))
- .. K @BQGLBB
+ .. S BQGLB=$NA(^TMP("BQIPOP",UID))
+ .. K @BQGLB
  .. ;
  .. ; Call the populate category code
- .. S PRGM="POP^"_BQPRG_"(BQREF,BQGLBB)"
+ .. S PRGM="POP^"_BQPRG_"(BQREF,BQGLB)"
  .. D @PRGM
  .. ;
  .. ; File the returned patients
  .. S DFN=0
- .. F  S DFN=$O(@BQGLBB@(DFN)) Q:DFN=""  D FIL(BQGLBB)
+ .. F  S DFN=$O(@BQGLB@(DFN)) Q:DFN=""  D FIL(BQGLB)
  .. Q
  ;
- K @BQGLBB,AGE,BQEXEC,BQDEF,BQPRG,@BQREF,BQREF,BQGLBB,DFN,PRGM
+ K @BQGLB,AGE,BQEXEC,BQDEF,BQPRG,@BQREF,BQREF,BQGLB,DFN,PRGM
  K SEX,TXDXCN,TXDXCT,TXT,Y
  ;
  ;  Set the DATE/TIME DXN CATEGORY STOPPED field
@@ -103,7 +103,7 @@ GPR ;  Entry point to get GPRA values for all users
  ;
  NEW BGP3YE,BGPB3YE,BGPBBD,BGPBD,BGPBED,BGPED,BGPIND,BGPP3YE,BGPPBD,BGPPED
  NEW BGPQTR,BGPRPT,BGPRTYPE,BQIDATA,BQIGREF,BQIH,BQIINDG,BQIPUP,BQIROU,BQIY
- NEW BQIYR,IND,MCT,MEAS,SIND,BGPPER,BQIDFN
+ NEW BQIYR,IND,MCT,MEAS,SIND,BGPPER,BQIDFN,GPMEAS,MEVN
  NEW DIC,DIE,DR,DA
  ;
  ; Set the DATE/TIME GPRA STARTED field
@@ -143,9 +143,7 @@ GPR ;  Entry point to get GPRA values for all users
  . ; If patient is deceased, don't calculate
  . I $P($G(^DPT(BQIDFN,.35)),U,1)'="" Q
  . ; If patient has no active HRNs, quit
- . I '$$HRN^BQIUL1(BQIDFN) Q
- . ; If patient has no visits in 3 years, quit
- . I '$$VTHR^BQIUL1(BQIDFN) Q
+ . I '$$HRN^BQIUL1(BQIDFN),'$$VTHR^BQIUL1(BQIDFN) Q
  . ;
  . D @("BQI^"_BQIROU_"(BQIDFN,.BQIGREF)")
  . ;
@@ -207,6 +205,8 @@ FIL(BQGLBB) ;EP - File diagnosis category
  . S (X,DINUM)=DFN,DLAYGO=90507.5,DIC="^BQIPAT(",DIC(0)="L"
  . K DO,DD D FILE^DICN
  ;
+ I $O(@BQGLBB@(DFN,"CRITERIA",""))="" Q
+ ;
  S DA(1)=DFN
  I '$D(^BQIPAT(DFN,20,0)) S ^BQIPAT(DFN,20,0)="^90507.52P^^"
  S (X,DINUM)=BQTN,DIC(0)="L",DIC="^BQIPAT("_DA(1)_",20,",DLAYGO=90507.52
@@ -221,7 +221,6 @@ FIL(BQGLBB) ;EP - File diagnosis category
  NEW DA,DIK
  S DA(2)=DFN,DA(1)=BQTN,DA=0,DIK="^BQIPAT("_DA(2)_",20,"_DA(1)_",1,"
  F  S DA=$O(^BQIPAT(DFN,20,BQTN,1,DA)) Q:'DA  D ^DIK
- K ^BQIPAT(DFN,20,BQTN,1,"B")
  ;
  ;  Add the criteria on why patient met diagnosis category
  S TXT=""

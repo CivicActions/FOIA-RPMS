@@ -1,18 +1,17 @@
 BARDUTL ; IHS/SD/LSL - DATE UTILITIES FOR A/R PACKAGE ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**4,6,28**;OCT 26, 2005;Build 92
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**4,6,28,33,35**;OCT 26, 2005;Build 187
  ;
- ; IHS/SD/LSL - 02/20/04 - V1.7 Patch 5 - REMARK CODES
- ;      New utility to read in string to local array for printing
+ ;IHS/SD/LSL 02/20/04 V1.7 Patch 5 REMARK CODES New utility to read in string to local array for printing
  ;
- ; IHS/SD/LSL - 03/29/04 - V1.8
- ;      Added TRANS utility to find all $$ for specific trans type
- ;      on a bill.
- ; IHS/DIT/CPC - 20180427 CR9580 - Add Fileman to XML date conversion
- ; IHS/DIT/CPC - 20180427 CR5994 - Add utility to add wrapping break to a string at specified length.
+ ;IHS/SD/LSL 03/29/04 V1.8 Added TRANS utility to find all $$ for specific trans type on a bill.
+ ;IHS/DIT/CPC 20180427 CR9580 Add Fileman to XML date conversion
+ ;IHS/DIT/CPC 20180427 CR5994 Add utility to add wrapping break to a string at specified length.
+ ;IHS/SD/SDR 1.8*33 ADO60817 Added TRDT tag for new A/R Transaction date/time/counter format
+ ;IHS/SD/SDR 1.8*35 ADO77760 Added date formatting for MMM DD, CCYY
  ;
  ; ********************************************************************
  ;
-SDT(X) ; EP - Y is set to the printable date ##/##/## from X (fileman date)
+SDT(X) ; EP - Y is set to the printable date ##/##/#### from X (fileman date)
  N Y
  S Y=$S(+X>0:$E(X,4,5)_"/"_$E(X,6,7)_"/"_($E(X,1,3)+1700),1:"")  ;Y2000
  Q Y
@@ -37,7 +36,8 @@ CDT(X) ;EP - Y= date/time ##/##/##@##:## from X (fm date) for display in claim e
  S Y=$E(X,4,5)_"/"_$E(X,6,7)_"/"_($E(X,1,3)+1700)  ;Y2000
  I '$P(X,".",2) Q Y
  S BARTIME=$P(X,".",2)
- S BARTIME=BARTIME_"00"
+ ;S BARTIME=BARTIME_"00"  ;bar*1.*35 IHS/SD/SDR ADO59950
+ S BARTIME=BARTIME_"000"  ;if time is exact (like 10:00) it prints 10:0  ;bar*1.*35 IHS/SD/SDR ADO59950
  S Y=Y_"@"_$E(BARTIME,1,2)_":"_$E(BARTIME,3,4)
  Q Y
  ; *********************************************************************
@@ -86,7 +86,14 @@ MDT(X) ;EP - printable date and time in menu header format
 MDT2(X) ;EP - printable date, letter format
  S X=+$E(X,6,7)_" "_$P($T(MTHS+1),";;",+$E(X,4,5)+1)_" "_($E(X,1,3)+1700)  ;Y2000
  Q X
- ; *********************************************************************
+ ;*********************************************************************
+ ;
+ ;start new bar*1.8*35 IHS/SD/SDR ADO77760
+RDT(X) ;EP - printable date in MMM DD, CCYY format
+ S X=$P($T(MTHS+1),";;",+$E(X,4,5)+1)_" "_$E(X,6,7)_", "_($E(X,1,3)+1700)
+ Q X
+ ;*********************************************************************
+ ;end new bar*1.8*35 IHS/SD/SDR ADO77760
  ;
 Y2KDT(X) ;EP - date from fileman to Y2K format Y=MMDDCCYY
  N Y
@@ -301,3 +308,22 @@ TRANS2 ;
  I $P($G(^BARTR(DUZ(2),BARTR,1)),U)=40 D
  . S BARAMT("P")=$G(BARAMT("P"))+$$GET1^DIQ(90050.03,BARTR,3.5)
  Q
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+TRDT(X) ;EP - printable date/time/counter for A/R Transaction file new format as of bar*1.8*33
+ N BARDATE,BARTIME
+ S BARDATE=$P($T(MTHS+1),";;",+$E(X,4,5)+1)_" "_+$E(X,6,7)_", "_($E(X,1,3)+1700) ;Y2000
+ S BARTIME=$P(X,".",2)
+ I '$P(X,".",2) Q BAR("DATE")_"00:00:00.000"
+ S BARTIME=$P(X,".",2)_"000000"
+ S Y=BARDATE_"@"_$E(BARTIME,1,2)_":"_$E(BARTIME,3,4)_":"_$E(BARTIME,5,6)_":"_$S(+$P(X,".",3)'=0:$P(X,".",3),1:"000")
+ Q Y
+TRDT2(X) ;EP - printable date/time/counter for A/R Transaction file new format as of bar*1.8*33
+ N BARDATE,BARTIME
+ S X=$P($G(^BARTR(DUZ(2),X,0)),U)
+ S BARDATE=$P($T(MTHS+1),";;",+$E(X,4,5)+1)_" "_+$E(X,6,7)_", "_($E(X,1,3)+1700) ;Y2000
+ S BARTIME=$P(X,".",2)
+ I '$P(X,".",2) Q BAR("DATE")_"00:00:00.000"
+ S BARTIME=$P(X,".",2)_"000000"
+ S Y=BARDATE_"@"_$E(BARTIME,1,2)_":"_$E(BARTIME,3,4)_":"_$E(BARTIME,5,6)_":"_$S(+$P(X,".",3)'=0:$P(X,".",3),1:"000")
+ Q Y
+ ;end new bar*1.8*33 IHS/SD/SDR ADO60817

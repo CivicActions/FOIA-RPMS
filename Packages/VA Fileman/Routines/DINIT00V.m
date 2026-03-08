@@ -1,179 +1,98 @@
-DINIT00V ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ; 3/30/99  10:41:48
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINIT00V ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS  [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
- ;;^UTILITY(U,$J,.84,9233,2,4,0)
+ ;;^UTILITY(U,$J,.84,9201,2,77,0)
+ ;;=     few times, then press the arrow up key.  Also notice that the 'Line>'
+ ;;^UTILITY(U,$J,.84,9201,2,78,0)
+ ;;=     and 'Screen>' indicator numbers are changing. To see more of this
+ ;;^UTILITY(U,$J,.84,9201,2,79,0)
+ ;;=     text keep pressing the ARROW DOWN key.  Now try the arrow right key,
+ ;;^UTILITY(U,$J,.84,9201,2,80,0)
+ ;;=     then the arrow left key.  Notice that the 'Col>' indicator number is
+ ;;^UTILITY(U,$J,.84,9201,2,81,0)
+ ;;=     also changing.  This shows what column the left most edge of the
+ ;;^UTILITY(U,$J,.84,9201,2,82,0)
+ ;;=     document is on.  As you can see, the VA FileMan Browser is like a
+ ;;^UTILITY(U,$J,.84,9201,2,83,0)
+ ;;=     window placed over a document. You are in control of this window
+ ;;^UTILITY(U,$J,.84,9201,2,84,0)
+ ;;=     which moves over the document by pressing the functional key
+ ;;^UTILITY(U,$J,.84,9201,2,85,0)
+ ;;=     sequences.  Here are a few more functions.
+ ;;^UTILITY(U,$J,.84,9201,2,86,0)
  ;;= 
- ;;^UTILITY(U,$J,.84,9233,2,5,0)
- ;;=Command      Shortcut      Description
- ;;^UTILITY(U,$J,.84,9233,2,6,0)
- ;;=-------      --------      -----------
- ;;^UTILITY(U,$J,.84,9233,2,7,0)
- ;;=EXIT         see below     Exit form (asks whether changes should be saved)
- ;;^UTILITY(U,$J,.84,9233,2,8,0)
- ;;=CLOSE        <PF1>C        Close window and return to previous level
- ;;^UTILITY(U,$J,.84,9233,2,9,0)
- ;;=SAVE         <PF1>S        Save changes
- ;;^UTILITY(U,$J,.84,9233,2,10,0)
- ;;=NEXT PAGE    <PF1><Down>   Go to next page
- ;;^UTILITY(U,$J,.84,9233,2,11,0)
- ;;=REFRESH      <PF1>R        Repaint screen
- ;;^UTILITY(U,$J,.84,9233,2,12,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9233,2,13,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9233,2,14,0)
- ;;=\BOther Shortcut Keys\n
- ;;^UTILITY(U,$J,.84,9233,2,15,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9233,2,16,0)
- ;;=Exit form and save changes             <PF1>E
- ;;^UTILITY(U,$J,.84,9233,2,17,0)
- ;;=Quit form without saving changes       <PF1>Q
- ;;^UTILITY(U,$J,.84,9233,2,18,0)
- ;;=Invoke Record Selection Page           <PF1>L
- ;;^UTILITY(U,$J,.84,9251,0)
- ;;=9251^3^^5
- ;;^UTILITY(U,$J,.84,9251,1,0)
- ;;=^^1^1^2940707^^
- ;;^UTILITY(U,$J,.84,9251,1,1,0)
- ;;=Help Screen 1 of Form Editor help.
- ;;^UTILITY(U,$J,.84,9251,2,0)
- ;;=^^22^22^2940707^
- ;;^UTILITY(U,$J,.84,9251,2,1,0)
- ;;=                                                          \BHelp Screen 1 of 9\n
- ;;^UTILITY(U,$J,.84,9251,2,2,0)
- ;;=\BNAVIGATIONAL KEYS\n
- ;;^UTILITY(U,$J,.84,9251,2,3,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9251,2,4,0)
- ;;=Press    To move              |  Press         To move
- ;;^UTILITY(U,$J,.84,9251,2,5,0)
- ;;=-------------------------------------------------------------------
- ;;^UTILITY(U,$J,.84,9251,2,6,0)
- ;;=<Up>     Up one line          |  <PF1><Up>     To top of screen
- ;;^UTILITY(U,$J,.84,9251,2,7,0)
- ;;=<Down>   Down one line        |  <PF1><Down>   To bottom of screen
- ;;^UTILITY(U,$J,.84,9251,2,8,0)
- ;;=<Right>  Right one character  |  <PF1><Right>  To right edge of screen
- ;;^UTILITY(U,$J,.84,9251,2,9,0)
- ;;=<Left>   Left one character   |  <PF1><Left>   To left edge of screen
- ;;^UTILITY(U,$J,.84,9251,2,10,0)
- ;;=<Tab>    To next element
- ;;^UTILITY(U,$J,.84,9251,2,11,0)
- ;;=Q        To previous element
- ;;^UTILITY(U,$J,.84,9251,2,12,0)
- ;;=S        Right 5 characters
- ;;^UTILITY(U,$J,.84,9251,2,13,0)
- ;;=A        Left 5 characters
- ;;^UTILITY(U,$J,.84,9251,2,14,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9251,2,15,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9251,2,16,0)
- ;;=\BSAVING AND EXITING\n
- ;;^UTILITY(U,$J,.84,9251,2,17,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9251,2,18,0)
- ;;=Press    To
- ;;^UTILITY(U,$J,.84,9251,2,19,0)
- ;;=----------------------------------------------------
- ;;^UTILITY(U,$J,.84,9251,2,20,0)
- ;;=<PF1>S   Save changes
- ;;^UTILITY(U,$J,.84,9251,2,21,0)
- ;;=<PF1>E   Save changes and exit the Form Editor
- ;;^UTILITY(U,$J,.84,9251,2,22,0)
- ;;=<PF1>Q   Quit the Form Editor without saving changes
- ;;^UTILITY(U,$J,.84,9252,0)
- ;;=9252^3^^5
- ;;^UTILITY(U,$J,.84,9252,1,0)
- ;;=^^1^1^2941116^^^
- ;;^UTILITY(U,$J,.84,9252,1,1,0)
- ;;=Help Screen 2 of Form Editor.
- ;;^UTILITY(U,$J,.84,9252,2,0)
- ;;=^^19^19^2941116^
- ;;^UTILITY(U,$J,.84,9252,2,1,0)
- ;;=                                                          \BHelp Screen 2 of 9\n
- ;;^UTILITY(U,$J,.84,9252,2,2,0)
- ;;=\BSELECTING SCREEN ELEMENTS\n
- ;;^UTILITY(U,$J,.84,9252,2,3,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9252,2,4,0)
- ;;=To "select" a screen element, position the cursor over the element and
- ;;^UTILITY(U,$J,.84,9252,2,5,0)
- ;;=press <SpaceBar> or <Enter>.  This process is abbreviated <SelectElement>.
- ;;^UTILITY(U,$J,.84,9252,2,6,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9252,2,7,0)
- ;;=Press            To
- ;;^UTILITY(U,$J,.84,9252,2,8,0)
- ;;=----------------------------------------
- ;;^UTILITY(U,$J,.84,9252,2,9,0)
- ;;=<SelectElement>  Select a screen element
- ;;^UTILITY(U,$J,.84,9252,2,10,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9252,2,11,0)
- ;;=Once an element is selected, you can drag it around the screen by using
- ;;^UTILITY(U,$J,.84,9252,2,12,0)
- ;;=the navigational keys.  You cannot drag an element beyond the boundaries
- ;;^UTILITY(U,$J,.84,9252,2,13,0)
- ;;=of the block on which it is defined.
- ;;^UTILITY(U,$J,.84,9252,2,14,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9252,2,15,0)
- ;;=If you press <SpaceBar> or <Enter> over the caption of an element, both
- ;;^UTILITY(U,$J,.84,9252,2,16,0)
- ;;=the caption and data portion of the element, if one exists, are selected.
- ;;^UTILITY(U,$J,.84,9252,2,17,0)
- ;;=If you press <SpaceBar> or <Enter> over the data portion of an element,
- ;;^UTILITY(U,$J,.84,9252,2,18,0)
- ;;=only the data portion is selected and can be dragged independently of the
- ;;^UTILITY(U,$J,.84,9252,2,19,0)
- ;;=caption.  Press <SpaceBar> or <Enter> again to deselect the element.
- ;;^UTILITY(U,$J,.84,9253,0)
- ;;=9253^3^^5
- ;;^UTILITY(U,$J,.84,9253,1,0)
- ;;=^^1^1^2940707^
- ;;^UTILITY(U,$J,.84,9253,1,1,0)
- ;;=Help Screen 3 of Form Editor.
- ;;^UTILITY(U,$J,.84,9253,2,0)
- ;;=^^15^15^2940707^
- ;;^UTILITY(U,$J,.84,9253,2,1,0)
- ;;=                                                          \BHelp Screen 3 of 9\n
- ;;^UTILITY(U,$J,.84,9253,2,2,0)
- ;;=\BEDITING ELEMENT PROPERTIES\n
- ;;^UTILITY(U,$J,.84,9253,2,3,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9253,2,4,0)
- ;;=Press                 To
- ;;^UTILITY(U,$J,.84,9253,2,5,0)
- ;;=---------------------------------------------
- ;;^UTILITY(U,$J,.84,9253,2,6,0)
- ;;=<SelectElement><PF4>  Edit element properties
- ;;^UTILITY(U,$J,.84,9253,2,7,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9253,2,8,0)
- ;;=You will then be taken into a ScreenMan form where the properties of the
- ;;^UTILITY(U,$J,.84,9253,2,9,0)
- ;;=element can be edited.
- ;;^UTILITY(U,$J,.84,9253,2,10,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9253,2,11,0)
- ;;=The Form Editor uses ScreenMan forms as a kind of modal dialog box.  The
- ;;^UTILITY(U,$J,.84,9253,2,12,0)
- ;;=changes you make within the forms are permanent; that is, if from a
- ;;^UTILITY(U,$J,.84,9253,2,13,0)
- ;;=ScreenMan form you edit the properties of an element, use <PF1>E to save
- ;;^UTILITY(U,$J,.84,9253,2,14,0)
- ;;=and exit the form, and then use <PF1>Q to quit the Form Editor, the
- ;;^UTILITY(U,$J,.84,9253,2,15,0)
- ;;=changes you made to the properties of the element will remain.
- ;;^UTILITY(U,$J,.84,9254,0)
- ;;=9254^3^^5
- ;;^UTILITY(U,$J,.84,9254,1,0)
- ;;=^^1^1^2940707^
- ;;^UTILITY(U,$J,.84,9254,1,1,0)
- ;;=Help Screen 4 of Form Editor.
- ;;^UTILITY(U,$J,.84,9254,2,0)
- ;;=^^18^18^2940707^
+ ;;^UTILITY(U,$J,.84,9201,2,87,0)
+ ;;=     To PAGE DOWN one screen at one time, press the NEXT SCREEN key, PAGE
+ ;;^UTILITY(U,$J,.84,9201,2,88,0)
+ ;;=     DOWN or PF1 followed by the ARROW DOWN key, depending on what kind of
+ ;;^UTILITY(U,$J,.84,9201,2,89,0)
+ ;;=     CRT or workstation that is being used.
+ ;;^UTILITY(U,$J,.84,9201,2,90,0)
+ ;;=     
+ ;;^UTILITY(U,$J,.84,9201,2,91,0)
+ ;;=     To PAGE UP one screen at one time, press the PREV SCREEN key, PAGE UP
+ ;;^UTILITY(U,$J,.84,9201,2,92,0)
+ ;;=     or PF1 followed by the ARROW UP key, depending on what kind of CRT or
+ ;;^UTILITY(U,$J,.84,9201,2,93,0)
+ ;;=     workstation that is being used.
+ ;;^UTILITY(U,$J,.84,9201,2,94,0)
+ ;;=     
+ ;;^UTILITY(U,$J,.84,9201,2,95,0)
+ ;;=     To return to the TOP, back to the beginning of the document, press
+ ;;^UTILITY(U,$J,.84,9201,2,96,0)
+ ;;=     the <PF1> key followed by the letter 'T'.
+ ;;^UTILITY(U,$J,.84,9201,2,97,0)
+ ;;=     
+ ;;^UTILITY(U,$J,.84,9201,2,98,0)
+ ;;=     To go to the BOTTOM, end of the document, press the <PF1> key
+ ;;^UTILITY(U,$J,.84,9201,2,99,0)
+ ;;=     followed by the letter 'B'.
+ ;;^UTILITY(U,$J,.84,9201,2,100,0)
+ ;;=     
+ ;;^UTILITY(U,$J,.84,9201,2,101,0)
+ ;;=     To GOTO a specific screen, line or column press the <PF1> key
+ ;;^UTILITY(U,$J,.84,9201,2,102,0)
+ ;;=     followed by the letter 'G'.  This will cause a prompt to be displayed
+ ;;^UTILITY(U,$J,.84,9201,2,103,0)
+ ;;=     where a screen, line or column number can be entered preceded by a
+ ;;^UTILITY(U,$J,.84,9201,2,104,0)
+ ;;=     'S' , 'L' or 'C'.  The default is screen, meaning that the 'S' is
+ ;;^UTILITY(U,$J,.84,9201,2,105,0)
+ ;;=     optional when entering a screen number.  10 or S10 will go to screen
+ ;;^UTILITY(U,$J,.84,9201,2,106,0)
+ ;;=     10, if screen 10 is a valid screen.  L99 will go to line 99 and C33
+ ;;^UTILITY(U,$J,.84,9201,2,107,0)
+ ;;=     will go to column 33.
+ ;;^UTILITY(U,$J,.84,9201,2,108,0)
+ ;;=     
+ ;;^UTILITY(U,$J,.84,9201,2,109,0)
+ ;;=     To FIND a string of characters, on a line, press the <PF1> key
+ ;;^UTILITY(U,$J,.84,9201,2,110,0)
+ ;;=     followed by the letter 'F' or 'FIND' key.  A prompt will appear where
+ ;;^UTILITY(U,$J,.84,9201,2,111,0)
+ ;;=     a search string of characters can be entered.  The Find facility will
+ ;;^UTILITY(U,$J,.84,9201,2,112,0)
+ ;;=     search the document and immediately stop when it finds a match and
+ ;;^UTILITY(U,$J,.84,9201,2,113,0)
+ ;;=     'Goto' the line/screen.  The matched text will be highlighted in
+ ;;^UTILITY(U,$J,.84,9201,2,114,0)
+ ;;=     reverse video, if available, so it can be found easily.  However, if
+ ;;^UTILITY(U,$J,.84,9201,2,115,0)
+ ;;=     a string contains two or more words, matching will only be done if
+ ;;^UTILITY(U,$J,.84,9201,2,116,0)
+ ;;=     the words are found on the same line.  The default direction of the
+ ;;^UTILITY(U,$J,.84,9201,2,117,0)
+ ;;=     search is down.  This can be controlled by using the ARROW UP or
+ ;;^UTILITY(U,$J,.84,9201,2,118,0)
+ ;;=     ARROW DOWN keys instead of the RETURN key to terminate the search
+ ;;^UTILITY(U,$J,.84,9201,2,119,0)
+ ;;=     string.
+ ;;^UTILITY(U,$J,.84,9201,2,120,0)
+ ;;=     
+ ;;^UTILITY(U,$J,.84,9201,2,121,0)
+ ;;=     To, NEXT FIND, find the next occurrence of the same search string,
+ ;;^UTILITY(U,$J,.84,9201,2,122,0)
+ ;;=     press the letter 'N' or <PF1> followed by the letter 'N'. The FIND

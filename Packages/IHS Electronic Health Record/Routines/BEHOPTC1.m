@@ -1,6 +1,6 @@
-BEHOPTC1 ;MSC/IHS/MGH - Patcient Context Object;30-Dec-2010 13:51;PLS
- ;;1.1;BEH COMPONENTS;**004006**;Mar 20, 2007
- ;Copy o DGRPD
+BEHOPTC1 ;MSC/IHS/MGH - Patcient Context Object;09-Mar-2023 11:59;PLS
+ ;;1.1;BEH COMPONENTS;**004006,004014**;Mar 20, 2007
+ ;Copy of DGRPD
  ;ALB/MRL/MLR/JAN/LBD-PATIENT INQUIRY (NEW) ;11-Oct-2010 17:18;DU
  ;5.3;Registration;**109,124,121,57,161,149,286,358,436,445,489,498,506,513,518**;Aug 13, 1993
  ;IHS/ANMC/LJF  3/16/2001 removed limit on # of future appt to display
@@ -22,6 +22,7 @@ EN ;call to display patient inquiry - input DFN
  W ?42,"From/To: ",X,!?3,"Phone: ",$S($P(DGRP(.13),U,1)]"":$P(DGRP(.13),U,1),1:DGRPU),?44,"Phone: ",$S('DGTMPAD:X,$P(DGRP(.121),U,10)]"":$P(DGRP(.121),U,10),1:DGRPU) K DGTMPAD
  W !?2,"Office: ",$S($P(DGRP(.13),U,2)]"":$P(DGRP(.13),U,2),1:DGRPU)
  W !,"Bad Addr: ",$$EXTERNAL^DILFD(2,.121,"",$$BADADR^DGUTL3(+DFN))
+ W !,"Preferred Name: ",$$GETPREF^AUPNSOGI(+DFN,,1)
  D CA
  I 'DGABBRV W !!?4,"POS: ",$S($D(^DIC(21,+$P(DGRP(.32),"^",3),0)):$P(^(0),"^",1),1:DGRPU),?42,"Claim #: ",$S($P(DGRP(.31),"^",3)]"":$P(DGRP(.31),"^",3),1:"UNSPECIFIED")
  I 'DGABBRV W !?2,"Relig: ",$S($D(^DIC(13,+$P(DGRP(0),"^",8),0)):$P(^(0),"^",1),1:DGRPU),?46,"Sex: ",$S($P(VADM(5),"^",2)]"":$P(VADM(5),"^",2),1:"UNSPECIFIED")
@@ -101,9 +102,11 @@ CA ;Confidential Address
  Q
 HDR I '$D(IOF) S IOP="HOME" D ^%ZIS K IOP
  ;MPI/PD CHANGE
- N SSN
+ N SSN  ;,SOGI
+ ;S SOGI=$P($$GET^AUPNSOGI(DFN),U,1)
  S SSN=$$FMTSSN^BEHOPTCX($P(VADM(2),"^",1))
  W @IOF,!,$P(VADM(1),"^",1),?40,SSN,?65,$P(VADM(3),"^",2) S X="",$P(X,"=",78)="" W !,X,!?15,"COORDINATING MASTER OF RECORD: ",DGCMOR,! Q
+ ;W @IOF,!,SOGI,?40,SSN,?65,$P(VADM(3),"^",2) S X="",$P(X,"=",78)="" W !,X,!?15,"COORDINATING MASTER OF RECORD: ",DGCMOR,! Q
  ;END MPI/PD CHANGE
 INP S VAIP("D")="L" D INP^DGPMV10
  S DGPMT=0

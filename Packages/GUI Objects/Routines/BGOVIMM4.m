@@ -1,0 +1,321 @@
+BGOVIMM4 ;IHS/MSC/MGH  BGO - IMMUNIZATION mgt;08-Dec-2020 13:47;DU
+ ;;1.1;BGO COMPONENTS;**27,28**;Mar 20, 2007
+ ;;IHS/MSC/MGH changes to immunization return
+ ;Retrieve all immunizations from both RPMS and state registries
+GETALL(RET,DFN,STATES) ;
+ ;First retieve the normal set of immunizations
+ N DATA,RSP,NODE,VIMM,IMM,FOUND,ARR,ST,NAME,CNT,GRP,ARR2,ARR3,ARR4,ARR5,CNT3,LST,RON,CNTR
+ N VSIT,VSDTE,PTT,WRONGPT,ENT,ICNT,IMTIME,INME,LOOK,PDTE,ERRCNT
+ S RET=$$TMPGBL^BGOUTL("IMM")
+ D GETLST^XPAR(.LST,"ALL","BGO IMM REGISTRY ON")
+ S STATES=$G(STATES)
+ S RON=0,ST=""
+ N IR S IR=0
+ F  S IR=$O(LST(IR)) Q:'+IR  D
+ .S LOOK=$G(LST(IR))
+ .I $P(LOOK,U,1)="R"&($P(LOOK,U,2)=1) S RON=1
+ S CNT=0,CNT3=0,ERRCNT=0
+ D GET^BGOVIMM(.DATA,DFN_U_"IR")
+ ;Second make the call to get the immunizations from the registry
+ S RSP=""
+ I STATES="" M RET=DATA Q
+ I +RON&(STATES'="") S RSP=$$RESPONSE^BYIMAPI(DFN,.RSP)
+ E  M RET=DATA
+ I $P(RSP,U,1)=-1 D  Q
+ .S MET=DATA
+ .S CNT=CNT+1
+ .S @RET@(CNT)="D^Date Run: "_$$FMTE^XLFDT(DT)
+ .S CNT=CNT+1
+ .S @RET@(CNT)="E^"_$P(RSP,U,2)
+ .S ENT=0 F  S ENT=$O(^TMP("BGO",$J,ENT)) Q:'+ENT  D
+ ..S CNT=CNT+1
+ ..S @RET@(CNT)=$G(^TMP("BGO",$J,ENT))
+ Q:STATES=""
+ ;If no error, loop through the list from RPMS
+ S ENT=0,DTDONE=0
+ D ERROR(.RET,DFN,STATES,"I",.ERRCNT)
+ F  S ENT=$O(^TMP("BGO",$J,ENT)) Q:'+ENT  D
+ .S NODE=$G(^TMP("BGO",$J,ENT))      ;change this to the state registry field
+ .S VIMM=$P(NODE,U,4),NAME=$P(NODE,U,2)
+ .S IMM=$$GET1^DIQ(9000010.11,VIMM,.01,"I")
+ .S GRP=$$GET1^DIQ(9999999.14,IMM,.09)     ;Immunization group
+ .S VSIT=$$GET1^DIQ(9000010.11,VIMM,.03,"I")
+ .S VSDTE=$$GET1^DIQ(9000010,VSIT,.01,"I")
+ .I GRP="" S GRP="OTHER"
+ .;Now check to see if this VIMM number is in the State Registry
+ .N PIEN,X1,STATE,IMIEN,MATCH,REG,FOUND,STLIST
+ .S FOUND=0
+ .S STLIST=$L(STATES,";")
+ .S STATE="",PDTE=99999999,IMIEN=0,FOUND=0,REGDTE=0
+ .S WRONGPT=0
+ .F X1=1:1:STLIST  D
+ ..S STATE=$P(STATES,";",X1)
+ ..S ST=$O(^DIC(5,"C",STATE,""))
+ ..I +ST S ST=$P($G(^DIC(5,ST,0)),U,1)
+ ..E  S ST=STATE
+ ..S PDTE=$O(RSP(DFN,ST,PDTE),-1)  Q:'+PDTE!(FOUND=1)  D
+ ...I DTDONE=0 D
+ ....S DTDONE=1
+ ....S CNT=CNT+1
+ ....S @RET@(CNT)="D"_U_ST_U_"Date run: "_$$FMTE^XLFDT($P(PDTE,".",1))
+ ...S PIEN=0 F  S PIEN=$O(RSP(DFN,ST,PDTE,"IMMS",PIEN)) Q:'+PIEN!(FOUND=1)  D
+ ....S IMIEN=0 F  S IMIEN=$O(RSP(DFN,ST,PDTE,"IMMS",PIEN,IMIEN)) Q:'+IMIEN!(FOUND=1)  D
+ .....S WRONGPT=0
+ .....S REG=$G(RSP(DFN,ST,PDTE,"IMMS",PIEN,IMIEN))
+ .....S PT=$$GET1^DIQ(9000010.11,$P(REG,U,12),.02,"I")
+ .....I +PT&(PT'=DFN) S WRONGPT=1
+ .....Q:+WRONGPT
+ .....S FOUND=$$VAL(NODE,DFN,ST,IMIEN,VSDTE,REG,VIMM)
+ .I FOUND=0 D
+ ..I $P(NODE,U,1)="I" D
+ ...S CNT=CNT+1
+ ...S $P(NODE,U,27)="RPMS"
+ ...I +VSDTE S ARR(GRP,NAME,VSDTE,CNT)=NODE      ;Item is not in the the state registry but is in RPMS
+ ..;Check to see if this item was deleted or refused
+ ..I $P(NODE,U,1)="R" D
+ ...S $P(NODE,U,27)="RPMS"
+ ...S CNT3=CNT3+1
+ ...S ARR3("ZZREFUSED",NAME,$P(NODE,U,9),CNT3)=NODE
+ ;Now go back and loop through the state array and add in any items not in Vimm file
+ N PIEN,PDTE,STATE,IMIEN,NODE,CNT2,IMGRP
+ S STATE="",PIEN=0,IMIEN=0
+ I ST="" D
+ .S ST=$O(^DIC(5,"C",STATES,""))
+ .I +ST S ST=$P($G(^DIC(5,ST,0)),U,1)
+ F  S STATE=$O(RSP(DFN,STATE)) Q:STATE=""  D
+ .Q:STATE'=ST
+ .S PDTE=9999999
+ .S PDTE=$O(RSP(DFN,STATE,PDTE),-1) Q:'+PDTE  D
+ ..F  S PIEN=$O(RSP(DFN,STATE,PDTE,"IMMS",PIEN)) Q:+'PIEN  D
+ ...F  S IMIEN=$O(RSP(DFN,STATE,PDTE,"IMMS",PIEN,IMIEN)) Q:'+IMIEN  D
+ ....S NODE=$G(RSP(DFN,STATE,PDTE,"IMMS",PIEN,IMIEN))
+ ....Q:$D(ARR5(IMIEN))>0  ;Quit if this one is already in the list
+ ....I $P(NODE,U,12)=""!($P(NODE,U,12)=0) D
+ .....D CHANGE(NODE,STATE,.CNT,.ARR)  ;Add it to the list
+ .....S ARR5(IMIEN)=""                ;Set it in array so that is not added again
+ ;Last move the data in the temporary array back to the return array
+ S INME="",IMGRP="",IMTIME=""
+ S CNT2=1+ERRCNT
+ F  S IMGRP=$O(ARR(IMGRP))  Q:IMGRP=""  D
+ .F  S INME=$O(ARR(IMGRP,INME)) Q:INME=""  D
+ ..F  S IMTIME=$O(ARR(IMGRP,INME,IMTIME)) Q:IMTIME=""  D
+ ...S ICNT=0 F  S ICNT=$O(ARR(IMGRP,INME,IMTIME,ICNT)) Q:'+ICNT  D
+ ....S CNT2=CNT2+1
+ ....S @RET@(IMGRP,CNT2)=$G(ARR(IMGRP,INME,IMTIME,ICNT))_"^"
+ S IMGRP="",IMGRP="",IMTIME=""
+ ;Pick up any refusals
+ S IMGRP="" F  S IMGRP=$O(ARR3(IMGRP))  Q:IMGRP=""  D
+ .S INME="" F  S INME=$O(ARR3(IMGRP,INME)) Q:INME=""  D
+ ..S IMTIME="" F  S IMTIME=$O(ARR3(IMGRP,INME,IMTIME)) Q:IMTIME=""  D
+ ...S ICNT=0 F  S ICNT=$O(ARR3(IMGRP,INME,IMTIME,ICNT)) Q:'+ICNT  D
+ ....S CNT2=CNT2+1
+ ....S @RET@(IMGRP,CNT2)=$G(ARR3(IMGRP,INME,IMTIME,ICNT))_"^"
+ Q
+VAL(NODE,DFN,ST,IMIEN,VSDTE,REG,VIMM) ;Check for a match
+ N REGDTE,MATCH,RPMSCVX,RPMS,CNTRL,NODE2
+ S REGDTE=$P(REG,U,3)
+ S MATCH=0
+ ;I $P(REG,U,12)'="" D
+ S RPMS=$$GET1^DIQ(9000010.11,VIMM,.01,"I")
+ S RPMSCVX=$$GET1^DIQ(9999999.14,RPMS,.03,"I")
+ I $P(REG,U,12)=VIMM S MATCH=1
+ E  S MATCH=$$DOUBLE(.REG,VIMM,RPMSCVX)  ;Double check data to make sure its the same
+ I MATCH=1 D
+ .S FOUND=1    ;Move the data to a new temporary array
+ .S CNT=CNT+1
+ .S $P(NODE,U,27)="RPMS+"_STATE
+ .S $P(NODE,U,11)=1
+ .S $P(NODE,U,30)=RPMSCVX
+ .S $P(NODE,U,12)=VIMM
+ .S $P(RSP(DFN,ST,PDTE,"IMMS",PIEN,IMIEN),U,12)=VIMM
+ .;Check to see if this item was deleted or refused
+ .I $P(NODE,U,1)="R" D
+ ..S CNT3=CNT3+1
+ ..S $P(NODE,U,27)="RPMS"
+ ..S ARR3("ZZREFUSED",NAME,$P(NODE,U,9),CNT3)=NODE
+ .E  I +REGDTE S ARR(GRP,NAME,REGDTE,CNT)=NODE
+ I MATCH=2 D
+ .S FOUND=1
+ .S CNTR=$O(ARR(GRP,NAME,REGDTE,""))
+ .I +CNTR D
+ ..S NODE2=$G(ARR(GRP,NAME,REGDTE,CNTR))
+ ..S $P(NODE2,U,11)=1
+ ..S $P(NODE2,U,27)=$P(NODE,U,27)_"+"_ST
+ ..S $P(NODE2,U,30)=RPMSCVX
+ ..;Check to see if this item was deleted or refused
+ ..I $P(NODE,U,1)="R" D
+ ...S CNT3=CNT3+1
+ ...S $P(NODE,U,25)="RPMS"
+ ...S ARR3("ZZREFUSED",NAME,$P(NODE,U,9),CNT3)=NODE
+ ..E  I +REGDTE S ARR(GRP,NAME,REGDTE,CNTR)=NODE2
+ Q FOUND
+DOUBLE(REG,VIMM,RPMSCVX) ;EP double check entry
+ N MATCH,PT,VSDTE,IMM,VSIT,IMDATE,RPMSGRP,VIM,VDATE,VGRP,REGDTE,RPMSDTE,IRDTE,ERR
+ ; CVX of the state registry
+ S MATCH=0,CVXIEN=""
+ S CVX=$P(REG,U,1)
+ I +CVX S CVXIEN=$O(^AUTTIMM("C",+CVX,""))
+ ;Group of the state registry
+ ;S IMM=$$GET1^DIQ(9000010.11,CVXIEN,.01,"I")
+ S VGRP=$$GET1^DIQ(9999999.14,CVXIEN,.09)
+ ;RPMS GRP
+ S RPMSGRP=$$GET1^DIQ(9999999.14,RPMS,.09)
+ ;Dates
+ S REGDTE=$P(REG,U,3)
+ D DT^DILF("",REGDTE,.IRDTE,.ERR)
+ S RPMSDTE=$$GET1^DIQ(9000010.11,VIMM,1201,"I")
+ S VSIT=$$GET1^DIQ(9000010.11,VIMM,.03,"I")
+ S VSDTE=$$GET1^DIQ(9000010,VSIT,.01,"I")
+ S RPMSDTE=$P(RPMSDTE,".",1)
+ S VSDTE=$P(VSDTE,".",1)
+ I +CVX=RPMSCVX&(VGRP=RPMSGRP)&((RPMSDTE=IRDTE)!(VSDTE=IRDTE)) S MATCH=1
+ I MATCH=1 D
+ .I VGRP="" S VGRP="OTHER"
+ .I $D(ARR4(VGRP,CVX,IRDTE))>0 S MATCH=2
+ .E  S ARR4(VGRP,CVX,IRDTE)=""
+ Q MATCH
+ ;Last move the data in the temporary array back to the return array
+CHANGE(REG,STATE,CNT,ARR) ;EP Process the State registry data if not in RPMS
+ N IMM,CVX,CVXIEN,GRP,REGDTE,IRDTE,VIS,VOL,ACTION,REASON
+ S ACTION=$P(REG,U,16)
+ Q:ACTION="NA"
+ S CVXIEN=""
+ S CVX=$P(REG,U,1)
+ I +CVX S CVXIEN=$O(^AUTTIMM("C",CVX,""))
+ S GRP=$$GET1^DIQ(9999999.14,CVXIEN,.09)
+ I GRP="" S GRP="OTHER"
+ S IMM=$P(REG,U,2)
+ I IMM="" D
+ .I +CVXIEN S IMM=$$GET1^DIQ(9999999.14,CVXIEN,.02)
+ .E  S IMM="OTHER"
+ S REGDTE=$P(REG,U,3)
+ S IRDTE=$E(REGDTE,5,6)_"/"_$E(REGDTE,7,8)_"/"_$E(REGDTE,1,4)
+ I ACTION="RE" D
+ .S CNT3=CNT3+1
+ .S GRP="ZZREFUSED"
+ .S ARR3("ZZREFUSED",IMM,REGDTE,CNT3)="R"             ;Immunization
+ .S $P(ARR3(GRP,IMM,REGDTE,CNT3),U,4)="IMMUNIZATION"
+ .S $P(ARR3(GRP,IMM,REGDTE,CNT3),U,6)=IMM
+ .S $P(ARR3(GRP,IMM,REGDTE,CNT3),U,9)=IRDTE         ;Date of immunization
+ .S $P(ARR3(GRP,IMM,REGDTE,CNT3),U,11)="Refused"
+ .S $P(ARR3(GRP,IMM,REGDTE,CNT3),U,12)=$P(REG,U,18)  ;Reason
+ .S $P(ARR3(GRP,IMM,REGDTE,CNT3),U,20)=1
+ .S $P(ARR3(GRP,IMM,REGDTE,CNT3),U,27)=STATE
+ E  D
+ .S CNT=CNT+1
+ .S ARR(GRP,IMM,REGDTE,CNT)="I"_U_IMM             ;Immunization
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,3)=IRDTE         ;Date of immunization
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,11)=$P(REG,U,4)   ;Age
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,5)=$P(REG,U,5)    ;Outside location
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,8)=$P(REG,U,9)    ;Lot number
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,14)=$P(REG,U,10)  ;Injection site
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,27)=STATE
+ .S VOL=$P(REG,U,7)
+ .I VOL=999 S VOL=""                              ;Patch 28 IHS/MSC/MGH
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,15)=VOL           ;Volume
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,27)=$P(REG,U,8)   ;Manufacturer
+ .S VIS=$P(REG,U,11)
+ .I VIS'="" D
+ ..I VIS'["/" D
+ ...S VIS=$E(VIS,5,6)_"/"_$E(VIS,7,8)_"/"_$E(VIS,1,4)  ;Patch 28 IHS/MSC/MGH
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,10)=$P(REG,U,11)  ;VIS date
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,20)=1         ;Set to lock
+ .S $P(ARR(GRP,IMM,REGDTE,CNT),U,27)=STATE
+ Q
+QUERY(RET,DFN) ;Send a query in for a new immunization list
+ N PLIST
+ S RET=0
+ S PLIST(DFN)=""
+ S RET=$$QUERY^BYIMAPI(.PLIST,.LST)
+ I RET=1 S RET=$G(LST(DFN,"QS"))
+ Q
+FORECAST(RET,DFN,STATE) ;Get forecaster for selected state
+ N RSP,PIEN,SEL,IMIEN,CNT,IMM,VGRP,ERRCNT,EARLY,SCHED,ARR2,IMDTE,INTDTE,NODE,RDATE,ST,IMMNAME,DOB,DTERR,DTDONE
+ N IR,LOOK,STOP
+ S RET=$$TMPGBL^BGOUTL("FORE")
+ S CNT=0,ERRCNT=0,STOP=0
+ Q:STATE=""
+ D GETLST^XPAR(.LST,"ALL","BGO IMM REGISTRY ON")
+ S IR=0 F  S IR=$O(LST(IR)) Q:'+IR  D
+ .S LOOK=$G(LST(IR))
+ .I $P(LOOK,U,1)="F"&($P(LOOK,U,2)=0) D
+ ..S STOP=1
+ ..S @RET@(1)="State forecaster is turned off"
+ Q:STOP=1
+ S DOB=$$GET1^DIQ(2,DFN,.03,"I")
+ S STATE=$$UPPER(STATE)
+ I STATE="CA" D
+ .S ST=$O(^DIC(5,"B","CALIFORNIA",""))
+ E  S ST=$O(^DIC(5,"C",STATE,""))
+ I +ST S ST=$P($G(^DIC(5,ST,0)),U,1)
+ E  S ST=STATE
+ S RSP=$$RESPONSE^BYIMAPI(DFN,.RSP,ST)
+ I $P(RSP,U,1)=-1 S @RET@(0)=$P(RSP,U,2)_" for "_ST Q
+ D ERROR(.RET,DFN,STATE,"F",ERRCNT)
+ S PDTE=9999999,PIEN=0,IMIEN=0
+ S PDTE=$O(RSP(DFN,ST,PDTE),-1) Q:'+PDTE  D
+ .;S CNT=CNT+1
+ .;S @RET@(CNT)="Date run: "_$$FMTE^XLFDT($P(PDTE,".",1))
+ .S PIEN=0 F  S PIEN=$O(RSP(DFN,ST,PDTE,"FORECAST",PIEN)) Q:'+PIEN  D
+ ..F  S IMIEN=$O(RSP(DFN,ST,PDTE,"FORECAST",PIEN,IMIEN)) Q:'+IMIEN  D
+ ...S NODE=$G(RSP(DFN,ST,PDTE,"FORECAST",PIEN,IMIEN))
+ ...S IMDTE=$P(NODE,U,5)
+ ...Q:IMDTE=""
+ ...S EARLY=$P(NODE,U,4)
+ ...S SCHED=$P(NODE,U,8)
+ ...S CVX=$P(NODE,U,1)
+ ...Q:$D(ARR2(CVX))
+ ...S ARR2(CVX)=""
+ ...;D DT^DILF("",IMDTE,.INTDTE,.DTERR)
+ ...;N X,X1,X2
+ ...;S X1=DT,X2=365 D C^%DTC
+ ...;Q:INTDTE>X
+ ...;Q:INTDTE<DOB
+ ...I +CVX S CVXIEN=$O(^AUTTIMM("C",CVX,""))
+ ...;Group of the state registry
+ ...I +CVXIEN D
+ ....S IMM=$$GET1^DIQ(9999999.14,CVXIEN,.01,"I")
+ ....S IMMNAME=$$GET1^DIQ(9999999.14,CVXIEN,.02)
+ ....I IMMNAME="" S IMMNAME=$P(NODE,U,2)
+ ...E  S IMMNAME=$P(NODE,U,2)
+ ...S X1=12-$L(IMMNAME)
+ ...S IMMNAME=IMMNAME_$$BLANK(X1)
+ ...S VGRP=$$GET1^DIQ(9999999.14,IMM,.09)
+ ...S SEL=$P(NODE,U,3)
+ ...S SEL1=$E(SEL,1,1)
+ ...S SEL=$S(SEL1="D":"Due",SEL1="O":"Overdue",SEL1="L":"Future",SEL1="C":"Complete",SEL1="F":"Future",1:SEL)
+ ...Q:SEL'="D"   ;Patch 28 IHS/MSC/MGH Only display Due items
+ ...S X1=8-$L(SEL)
+ ...S SEL=SEL_$$BLANK(X1)
+ ...;I IMDTE'="" D
+ ...;.I IMDTE'["/" D
+ ...;..S IMDTE=$E(IMDTE,5,6)_"/"_$E(IMDTE,7,8)_"/"_$E(IMDTE,1,4)
+ ...S CNT=CNT+1
+ ...S @RET@(CNT)=IMMNAME_" "_SEL
+ Q
+ERROR(RET,DFN,STATES,TYPE,ERRCNT) ;Check for errors
+ N STRING,PIEN,STLIST,X1,STATE,ST
+ S STLIST=$L(STATES,";")
+ S STATE="",PIEN=99999999,IMIEN=0,FOUND=0,REGDTE=0
+ F X1=1:1:STLIST  D
+ .S STATE=$P(STATES,";",X1)
+ .S ST=$O(^DIC(5,"C",STATE,""))
+ .I +ST S ST=$P($G(^DIC(5,ST,0)),U,1)
+ .E  S ST=STATE
+ .;Check for errors on this state first
+ .S PIEN=9999999
+ .S PIEN=$O(RSP(DFN,ST,PIEN),-1) Q:'+PIEN  D
+ ..I $D(RSP(DFN,ST,PIEN,"ERROR"))>0 D
+ ...S HL7="" F  S HL7=$O(RSP(DFN,ST,PIEN,"ERROR",HL7)) Q:'+HL7  D
+ ....S STR=$G(RSP(DFN,ST,PIEN,"ERROR",HL7))
+ ....S CNT=CNT+1
+ ....S ERRCNT=ERRCNT+1
+ ....I TYPE="I" S @RET@(CNT)="E^"_STR_" for "_ST_". "
+ ....I TYPE="F" S @RET@(CNT)=STR_" for "_ST_". "
+ Q
+UPPER(DRG) ;Convert lower case to upper case
+ Q $TR(DRG,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+BLANK(NOB) ;Add a number of blanks
+ N BLANK
+ S BLANK="" F I=1:1:NOB S BLANK=BLANK_" "
+ Q BLANK

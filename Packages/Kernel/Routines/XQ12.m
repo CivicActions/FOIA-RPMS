@@ -1,6 +1,7 @@
 XQ12 ;SEA/LUKE,ISD/HGW - MENU MANAGER UTILITIES ;01/10/13  15:09
- ;;8.0;KERNEL;**9,20,46,157,253,593,614**;Jul 10, 1995;Build 12
+ ;;8.0;KERNEL;**9,20,46,157,253,593,614,1019**;Jul 10, 1995;Build 27
  ;Per VHA Directive 2004-038, this routine should not be modified.
+ ; GDIT/HS/BEE 12/18/17 - XU*8.0*1019 - Audit option denied
  ;
 DVARS ;Set up (or reset) necessary variables. From ^XQ1 and ^XQT1.
  S U="^" I '$D(DUZ)#2 S DUZ=^XUTL("XQ",$J,"DUZ")
@@ -61,6 +62,7 @@ UI ;Entry for TaskMan (DUZ may =  0), from ZTSK^XQ1
  S:'$D(XQPSM) XQPSM="P"_XQY
  S:'$D(XQJS)&'$D(ZTQUEUED) XQY0=^DIC(19,XQY,0),^XUTL("XQ",$J,"T")=0,^("DUZ")=DUZ,^("XQM")=XQY,XQPSM="P"_XQY
  S XQCY=XQY D ^XQCHK I XQCY<1 D
+ .D OSLOG^XUSBUSA("XQ1",XQY,1) ; GDIT/HS/BEE 12/18/17 - XU*8.0*1019 - Added line - audit option denied
  .S XQPRMN=1,XQL=0
  .D:'$D(ZTQUEUED) MES^XQCHK,PAUSE^XQ6
  .S XQY=-1

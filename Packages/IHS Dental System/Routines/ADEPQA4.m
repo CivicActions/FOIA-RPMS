@@ -1,6 +1,6 @@
 ADEPQA4 ; IHS/HQT/MJL - REVIEW PARAMETERS ;08:38 PM  [ 03/24/1999   9:04 AM ]
- ;;6.0;ADE;;APRIL 1999
- ;
+ ;;6.0;ADE;**38**;MAR 25, 1999;Build 158
+ ;;IHS/OIT/GAB 11.2022 File 3,6,16 Changes - ADE Patch 38
 CHK() ;EP - Returns 1 if user says parameters ok, otw 0
  W !
  N DIR
@@ -26,10 +26,14 @@ CHK2 W !!,"This search includes dental visits which meet the following specifica
  I ADEAGE W !,"Limited to patients whose AGE AT TIME OF VISIT was between ",$P(ADEAGE,U,2)," and ",$P(ADEAGE,U,3)," (inclusive)."
  I ADEPROV W !,"Limited to the following ATTENDING DENTISTS:",!,?5 D
  . N ADEJ
- . F ADEJ=1:1:$L($P(ADEPROV,U,2),",") W $P(^DIC(16,$P(^DIC(6,$P($P(ADEPROV,U,2),",",ADEJ),0),U),0),U),"  "
+ . ;. F ADEJ=1:1:$L($P(ADEPROV,U,2),",") W $P(^DIC(16,$P(^DIC(6,$P($P(ADEPROV,U,2),",",ADEJ),0),U),0),U),"  "
+ . ;/IHS/OIT/GAB PATCH 38 - Commented above line and added below line for File200 update; PROV NAME
+ . F ADEJ=1:1:$L($P(ADEPROV,U,2),",") W $P(^VA(200,$P($P(ADEPROV,U,2),",",ADEJ),0),U),"  "
  I ADEHYG W !,"Limited to the following HYGIENISTS/THERAPISTS:",!,?5 D
  . N ADEJ
- . F ADEJ=1:1:$L($P(ADEHYG,U,2),",") W $P(^DIC(16,$P(^DIC(6,$P($P(ADEHYG,U,2),",",ADEJ),0),U),0),U),"  "
+ . ;. F ADEJ=1:1:$L($P(ADEHYG,U,2),",") W $P(^DIC(16,$P(^DIC(6,$P($P(ADEHYG,U,2),",",ADEJ),0),U),0),U),"  "
+ . ;/IHS/OIT/GAB PATCH 38 - Commented above line and added below line for File200 update; HYG NAME
+ . F ADEJ=1:1:$L($P(ADEHYG,U,2),",") W $P(^VA(200,$P($P(ADEHYG,U,2),",",ADEJ),0),U),"  "
  I ADELOC W !,"Limited to the following LOCATIONS:",!,?5 D
  . N ADEJ
  . F ADEJ=1:1:$L($P(ADELOC,U,2),",") W $P(^DIC(4,$P($P(ADELOC,U,2),",",ADEJ),0),U),"  "

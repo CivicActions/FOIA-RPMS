@@ -1,5 +1,5 @@
-PSOCAN4 ;BIR/SAB-rx speed dc listman ;05-Jun-2013 15:40;DU
- ;;7.0;OUTPATIENT PHARMACY;**20,24,27,63,88,117,131,1005,259,268,225,1015,1017**;DEC 1997;Build 40
+PSOCAN4 ;BIR/SAB-rx speed dc listman ;30-Nov-2017 15:42;MGH
+ ;;7.0;OUTPATIENT PHARMACY;**20,24,27,63,88,117,131,1005,259,268,225,1015,1017,1023**;DEC 1997;Build 121
  ;External reference to File #200 supported by DBIA 224
  ;External reference NA^ORX1 supported by DBIA 2186
  ;External references to L, UL, PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
@@ -8,6 +8,7 @@ PSOCAN4 ;BIR/SAB-rx speed dc listman ;05-Jun-2013 15:40;DU
  ;External reference to PS(50.606 supported by DBIA 2174
  ; Modified - IHS/MSC/PLS - 11/27/06 - Line PEN+1 Added NEW statement for ORD
  ;                          06/05/13 - Line NOOR+3
+ ; Modified - IHS/MSC/MGH - 05/16/17 SEL+7,RX+4,RX+8,PEN+6 change added for EPCS
 SEL I '$D(^XUSEC("PSORPH",DUZ)) S VALMSG="Unauthorized Action Selection.",VALMBCK="" Q
  N VALMCNT I '$G(PSOCNT) S VALMSG="This patient has no Prescriptions!" S VALMBCK="" Q
  S DFNHLD=PSODFN
@@ -15,6 +16,9 @@ SEL I '$D(^XUSEC("PSORPH",DUZ)) S VALMSG="Unauthorized Action Selection.",VALMBC
  K PSOPLCK S RXCNT=0 K PSOFDR,DIR,DUOUT,DIRUT S DIR("A")="Select Orders by number",DIR(0)="LO^1:"_PSOCNT D ^DIR S LST=Y I $D(DTOUT)!($D(DUOUT)) K DIR,DIRUT,DTOUT,DUOUT S VALMBCK="" D ULP Q
  K DIR,DIRUT,DTOUT,PSOOELSE,DTOUT I +LST S (SPEED,PSOOELSE)=1 D  D KCAN^PSOCAN3
  .S PSOCANRA=1 D RQTEST
+ .;IHS/MSC/MGH change added for EPCS
+ .; The PSOTRIC variable is needed by NOOR, which is called by COM^PSOCAN1, to determine the default Nature of Order.
+ .N PSOTRIC S PSOTRIC=$$ELIG(PSODFN)
  .D FULL^VALM1,COM^PSOCAN1 I '$D(INCOM)!($D(DIRUT)) K SPEED S VALMBCK="R" Q
  .D FULL^VALM1 F ORD=1:1:$L(LST,",") Q:$P(LST,",",ORD)']""  S ORN=$P(LST,",",ORD) D @$S(+PSOLST(ORN)=52:"RX",1:"PEN")
  .S VALMBCK="R"
@@ -28,9 +32,12 @@ RX Q:'$D(^XUSEC("PSORPH",DUZ))
  D PSOL^PSSLOCK($P(PSOLST(ORN),"^",2)) I '$G(PSOMSG) D  D PAUSE^VALM1 K PSOMSG Q
  .I $P($G(PSOMSG),"^",2)'="" W $C(7),!!,$P($G(PSOMSG),"^",2),!,"Rx "_$P(^PSRX($P(PSOLST(ORN),"^",2),0),"^"),! Q
  .W $C(7),!!,"Another person is editing Rx "_$P(^PSRX($P(PSOLST(ORN),"^",2),0),"^"),!
+ ;IHS/MSC/MGH - line added for EPCS
+ I $P($G(^PSRX($P(PSOLST(ORN),"^",2),"PKI")),"^")=1,'$D(^XUSEC("PSDRPH",DUZ)) W $C(7),!!,"Digitally Signed Order - PSDRPH key required" D PAUSE^VALM1 Q
  S RXSP=1 K PSCAN S (EN,X)=$P(^PSRX($P(PSOLST(ORN),"^",2),0),"^") S Y=$P(PSOLST(ORN),"^",2)_"^"_X,Y(0,0)=X,Y(0)=$G(^PSRX($P(PSOLST(ORN),"^",2),0)) D
  .I $P(^PSRX(+Y,"STA"),"^")=1!($P(^("STA"),"^")=4) D  Q
- ..I $P($G(^PSRX(+Y,"PKI")),"^") N PKI,PKI1,PKIR,PKIE,DA S DA=+Y D CER^PSOPKIV1
+ ..;IHS/MSC/MGH Remove for EPCS
+ ..;I $P($G(^PSRX(+Y,"PKI")),"^") N PKI,PKI1,PKIR,PKIE,DA S DA=+Y D CER^PSOPKIV1
  ..S:$G(PSONOOR)'="" PSONOORA=$G(PSONOOR) D DEL S:$G(PSONOORA)'="" PSONOOR=$G(PSONOORA) K PSONOORA Q
  .S YY=Y,YY(0,0)=Y(0,0),(PSODFN,DFN)=$P(Y(0),"^",2) D:$G(DFN) CHK^PSOCAN I DEAD!($P(^PSRX(+YY,"STA"),"^")>11),$P(^("STA"),"^")<16 S PSINV(EN)="" Q
  .S DA=+YY I $P($G(^PSRX(DA,"STA")),"^")=11!($P($G(^(2)),"^",6)<DT) D EXP^PSOCAN
@@ -48,6 +55,8 @@ PEN ;discontinue pending orders
  S ORD=$P(PSOLST(ORN),"^",2) D PSOL^PSSLOCK(+ORD_"S") I '$G(PSOMSG) D  D MEDDIS K PSOMSG G OK
  .I $P($G(PSOMSG),"^",2)'="" W $C(7),!!,$P($G(PSOMSG),"^",2)_"  (Pending order)",! Q
  .W $C(7),!!,"Another person is editing this Pending order.",!
+ ;IHS/MSC/MGH line added for EPCS
+ I $P(^PS(52.41,ORD,0),"^",24),'$D(^XUSEC("PSDRPH",DUZ)) W $C(7),!!,"Digitally Signed Order - PSDRPH key required" D PAUSE^VALM1 G OK
  I $P(^PS(52.41,ORD,0),"^",3)="RF" S DA=ORD,DIK="^PS(52.41," D ^DIK K DA,DIK D PSOUL^PSSLOCK(ORD_"S") Q
  K ^PS(52.41,"AOR",$P(^PS(52.41,ORD,0),"^",2),+$P($G(^PS(52.41,ORD,"INI")),"^"),ORD) S $P(^PS(52.41,ORD,0),"^",3)="DC"
  D EN^PSOHLSN(+^PS(52.41,ORD,0),"OC",INCOM,PSONOOR)
@@ -108,3 +117,17 @@ REF ;CONT. FROM REF^PSOCAN2; PSO*7*259
  .I '$P($G(^PS(52.5,PSOSIEN,"P")),"^") Q  ;SUSPENSE LABEL PRINT
  .S PSONODEL=1   ;REFILL NODE SHOULD NOT BE DELETED
  Q
+ ;IHS/MSC/MGH new entry point for EPCS patch
+ELIG(DFN) ; Return primary eligibility
+ ; Input:
+ ;   DFN: Patient IEN (required)
+ ; Output:
+ ;   "": No DFN passed in, 0: Veteran, 1: TRICARE, 2: CHAMPVA
+ I '$G(DFN) Q ""
+ ; Variables VAEL, VAERR, and I are modified by ELIG^VADPT
+ N VAEL,VAERR,I,ELIG
+ ; ELIG^VADPT assumes DFN is defined and returns arrays VAEL and VAERR
+ D ELIG^VADPT ; Supported by IA 10061
+ ; VAEL(1) contains the primary eligibility
+ S ELIG=$P($G(VAEL(1)),U,2)
+ Q $S(ELIG="TRICARE"!(ELIG="SHARING AGREEMENT"):1,ELIG="CHAMPVA":2,1:0)

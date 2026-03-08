@@ -1,5 +1,7 @@
-DDGFFLDA ;SFISC/MKO-ADD A FIELD ;2:22 PM  13 Sep 1995
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDGFFLDA ;SFISC/MKO-ADD A FIELD ;08:59 AM  14 Feb 1995 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA Fileman;;DEC 28, 1994
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 ADD ;Add a field
  I '$O(^DIST(.403,+DDGFFM,40,DDGFPG,40,0)) D  Q
@@ -40,7 +42,7 @@ ADD ;Add a field
  S DIC="^DIST(.404,"_DDGFBLCK_",40,",DIC(0)="L"
  S DIC("P")=$P(^DD(.404,40,0),U,2)
  S DA(1)=DDGFBLCK,X=DDGFFORD
- K DD,DO D FILE^DICN
+ D FILE^DICN
  I Y=-1 K DIC,DA,Y D MSG^DDGF($C(7)_"Unable to add field.") H 2 D MSG^DDGF() G ADDQ
  ;
  ;Stuff values for field type, data coordinate, and data length

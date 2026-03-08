@@ -107,7 +107,7 @@ QUE ; Add the option to the OPTION SCHEDULING file.
  S DIC=19.2,DIC(0)="L",X="XB PACKAGE TRACKING",DIC("DR")="2////"_$$SCH^XLFDT("1D",DT)_".05;6///30D"
  D ^DIC
  I +Y<0 D BMES^XPDUTL("Entry of ""XB PACKAGE TRACKING"" into OPTION SCHEDULING file failed.") Q
- S DA(1)=+Y,DIC="^DIC(19.2,"_DA(1)_",2,",DIC(0)="",DIC("P")=$P(^DD(19.2,10,0),U,2),XBSYSID(1)="cmbsyb.hqw.DOMAIN.NAME",XBSYSID(2)=$P(^AUTTSITE(1,0),U,14)
+ S DA(1)=+Y,DIC="^DIC(19.2,"_DA(1)_",2,",DIC(0)="",DIC("P")=$P(^DD(19.2,10,0),U,2),XBSYSID(1)="cmbsyb.hqw.ihs.gov",XBSYSID(2)=$P(^AUTTSITE(1,0),U,14)
  KILL DO,DD
  F X="XBSYSID(1)","XBSYSID(2)" S DIC("DR")="1///"""_(@X)_"""" D FILE^DICN
  D BMES^XPDUTL("""XB PACKAGE TRACKING"" has been entered into OPTION SCHEDULING file.")

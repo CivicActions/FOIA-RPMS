@@ -1,6 +1,6 @@
-DIO ;SFISC/GFT,TKW-CALL SORT, ACTUAL OUTPUT ;7:15 AM  27 May 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**2**;Mar 30, 1999
+DIO ;SFISC/GFT,TKW-CALL SORT, ACTUAL OUTPUT ;11/23/94  10:43 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S Y=-1 K:$D(DCL)>9 ^DOSV(0,IO(0)) F Z=0:1 S Y=$O(DCL(Y)) Q:Y=""  S V=DCL(Y),^DOSV(0,IO(0),"F",+V)=Y_U_$P($G(^DD(+Y,+$P(Y,U,2),0)),U,1,2)
  I $G(DIOEND)["M^DIAU"!($G(DIOEND)["L^DIDC") S %X="DPP(",%Y="DIPP(" D %XY^%RCR S DIJS=DJ,DIPQ=DPQ,DIMS=M,DIPP=DPP
@@ -10,7 +10,7 @@ GO ;
  I '$D(DIBTPGM),+$G(DIBT1),$G(^DIBT(DIBT1,"ROU"))]"",DPQ S DIBTPGM=^("ROU") D
  . N DRN,DIERR D NXTNO^DIOZ(.DRN) I $G(DIERR) D QSV^DIOZ Q
  . S DIBTPGM=DIBTPGM_$E("000",1,(4-$L(DRN)))_DRN
- . Q
+ . Q 
  K:$G(DIBTPGM)="" DIBTPGM
  I '$D(DSC),'$G(DIO("SCR"))=1,DD["s",$D(^DD(DP,0,"SCR")) D SCR
  S DD=$P(DJ,U,4),DL="D0",DN=DL,DI=$S('$D(BY(0)):U,$E(BY(0))=U:U,1:"")_$P(DJ,U,2),A=1
@@ -18,7 +18,8 @@ GO ;
  I $D(DIBTPGM) D
  .S (DICNT,DICP,DICDX,DICOV)=1 K DISAVX,DISETP,DISETQ,^TMP("DIBTC",$J)
  .I '$D(DSC),'$G(DIO("SCR")),$D(DIS)>9 D SVSCR
-DIOO1 F Z=1:1:DD-1 S @DL="",DL="DIOO"_Z,DN=DL_","_DN N @DL
+ .Q
+ F Z=DD-1:-1:1 S @DL=-1,DL="D"_DL,DN=DL_C_DN
  S @DL=$S($D(DPP(DJK,"F"))&$D(DPP(DJK,"IX")):$P(DPP(DJK,"F"),U),DD>1:"",1:0),Z=0 D ^DIO0
  I DPQ G ^DIOS
 IX I $D(DPP(DJK,"IX")),$O(^UTILITY($J,99,99))>99,DPP(DJK)-DP,'$D(DSC),DD>1 S X="I $D("_$P(DPP(DJK,"IX"),U,1,2)_DN F %=1:1 S X=X_",D"_% I %+1=DD S DSC(+DPP(DJK))=X_"))" Q

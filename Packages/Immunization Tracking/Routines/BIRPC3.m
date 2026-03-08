@@ -1,5 +1,5 @@
 BIRPC3 ;IHS/CMI/MWR - REMOTE PROCEDURE CALLS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**10**;MAY 30,2015
+ ;;8.5;IMMUNIZATION;**19,25,28**;OCT 24,2011;Build 31
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  ADD/EDIT A VISIT (IMMUNIZATION OR SKIN TEST), DELETE A VISIT.
  ;;  Check validity of data in several fields.
@@ -10,6 +10,8 @@ BIRPC3 ;IHS/CMI/MWR - REMOTE PROCEDURE CALLS; MAY 10, 2010
  ;;  PATCH 5: Ignore 1st piece of zero node; just check for node. ADDEDIT+63
  ;;  PATCH 9: Added save of Admin Date and VIS Presented Date.  ADDEDIT+39
  ;;  PATCH 10: Added save of Skin Test Lot Number.  ADDEDIT+44
+ ;;  PATCH 19: New "e"/"d" flag to mark deletion.  DELETE+1
+ ;;  PATCH 25: added input piece 31 ordering provider to ADDEDIT
  ;
  ;
  ;********** PATCH 5, v8.5, JUL 01,2013, IHS/CMI/MWR
@@ -63,6 +65,9 @@ ADDEDIT(BIERR,BIDATA,BINOM) ;PEP - Add/Edit an V IMMUNIZATION or V SKIN TEST.
  ;********** PATCH 10, v8.5, MAY 30,2015, IHS/CMI/MWR
  ;    30 - (opt) Skin Test Lot Number.
  ;
+ ;********** PATCH 25 v8.5, May 5, 2022, IHS/CMI/LAB
+ ;    31 - (opt) Ordering Provider IEN from file 200
+ ;
  ;---> Define delimiter to pass error and error variable.
  N BI31,BIDUZ2,BIOIEN
  S BI31=$C(31)_$C(31),BIERR=""
@@ -110,7 +115,14 @@ ADDEDIT(BIERR,BIDATA,BINOM) ;PEP - Add/Edit an V IMMUNIZATION or V SKIN TEST.
  ;
  ;---> If this Visit (new or edited) will be a duplicate, set error
  ;---> and quit.
- D DUPTEST^BIUTL8(.BIERR,BIDATA,$G(BIOIEN))
+ ;V8.5 PATCH 28 - FID-106077
+ D:'$G(BIOIEN) DUPTEST^BIUTL8(.BIERR,BIDATA,$G(BIOIEN))
+ D:$G(BIOIEN)
+ .N BIOVAC,BINVAC
+ .S BIOVAC=+$G(^AUPNVIMM(BIOIEN,0))
+ .S BINVAC=+$P(BIDATA,"|",3)
+ .Q:BIOVAC=BINVAC
+ .D DUPTEST^BIUTL8(.BIERR,BIDATA,$G(BIOIEN))
  Q:BIERR]""
  ;
  ;---> Reformat dates to Fileman Internal format.
@@ -179,7 +191,8 @@ ADDEDIT(BIERR,BIDATA,BINOM) ;PEP - Add/Edit an V IMMUNIZATION or V SKIN TEST.
  I BIERR S BIERR=BI31_$P(BIERR,U,2) Q
  ;
  ;---> If this is an Edit of an old Visit, then DELETE the old V File entry.
- I $G(BIOIEN) D DELETE(.BIERR,BIOIEN,BIVTYPE) Q
+ ;---> IHS/CMI/LAB - PATCH 25 do not delete v imm if this is a edit, leave skin test as is
+ I BIVTYPE="S",$G(BIOIEN) D DELETE(.BIERR,BIOIEN,BIVTYPE,"e") Q
  ;
  ;---> Since this was a New Visit (not an Edit), decrement the Lot Total.
  I $G(BILOT) D LOTDECR(BILOT)
@@ -276,17 +289,19 @@ LOTCHK(BILOT,BIVAC,BICAT,BIERR) ;EP
  I $$LOTDUP^BIUTL4(BILOT) D ERRCD^BIUTL2(427,.BIERR)
  ;
  Q
- ;**********
  ;
+ ;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ ;---> New "e"/"d" flag to mark deletion as a result of an edit vs a deletion.
  ;
  ;----------
-DELETE(BIERR,BIDA,BIVTYPE) ;PEP - Delete an Immunization or Skin Test.
+DELETE(BIERR,BIDA,BIVTYPE,BIEDDL) ;PEP - Delete an Immunization or Skin Test.
  ;---> Delete an Immunization or Skin Test.
  ;---> Called by RPC: BI VISIT DELETE.
  ;---> Parameters:
  ;     1 - BIERR   (ret) Text of Error Code if any, otherwise null.
  ;     2 - BIDA    (req) IEN of V IMM or V SKIN entry to be deleted.
  ;     3 - BIVTYPE (req) "I"=Immunization Visit, "S"=Skin Text Visit.
+ ;     4 - BIEDDL  (opt) "e"=result of an edit, "d"=result of a deletion.
  ;
  ;---> Define delimiter to pass error and error variable.
  N BI31 S BI31=$C(31)_$C(31),BIERR=""
@@ -301,5 +316,5 @@ DELETE(BIERR,BIDA,BIVTYPE) ;PEP - Delete an Immunization or Skin Test.
  .D ERRCD^BIUTL2(410,.BIERR) S BIERR=BI31_BIERR
  ;
  ;---> Delete V IMMUNIZATION entry.
- D DELETE^BIVISIT2(BIDA,BIVTYPE,.BIERR) S BIERR=BI31_BIERR
+ D DELETE^BIVISIT2(BIDA,BIVTYPE,$G(BIEDDL),.BIERR) S BIERR=BI31_BIERR
  Q

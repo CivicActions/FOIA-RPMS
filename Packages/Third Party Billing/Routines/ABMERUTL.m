@@ -1,15 +1,18 @@
 ABMERUTL ; IHS/ASDST/DMJ - EMC UTILITIES ;      
- ;;2.6;IHS 3P BILLING SYSTEM;**3,6,9,10,19,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,6,9,10,19,21,35,37**;NOV 12, 2009;Build 739
  ;Original;DMJ;09/21/95 12:47 PM
  ;IHS/SD/SDR 2.5*8 IM14799 EA0 field 15 (pos 54) not populating correctly; Modified BCBS
  ;    line tag to kill possible pre-existing value of ABME("LOC")
  ;IHS/SD/SDR-2.5*9 IM16962 Allow Receiver ID to be longer than 5 chars
  ;IHS/SD/SDR-2.5*10 IM20225/IM20271 Set replacement insurer correctly
+ ;
  ;IHS/SD/SDR-2.6*3 HEAT7574 tribal self-insured changes
  ;IHS/SD/SDR-2.6*6 5010-made changes for multi-insurer GCNs
  ;IHS/SD/SDR-2.6*19 HEAT116949 Translated out spaces for CROSSOVER visit type check
  ;IHS/SD/SDR 2.6*21 HEAT115124 Added code to POS to check export mode 27 for overrides
  ;IHS/SD/SDR 2.6*21 HEAT284071 Added code to POS for ADA (34) overrides
+ ;IHS/SD/SDR 2.6*35 ADO60705 Made 3P Receiver populate all the time
+ ;IHS/SD/SDR 2.6*37 ADO76009 Make sure pymts are kept separate, even when same insurer twice
  ;
 FMT(X,Y) ; EP
  ;Format Variable
@@ -56,17 +59,16 @@ SET ; EP Set up some things
  N I
  F I=0:1:9 D
  .S @("ABMB"_I)=$G(^ABMDBILL(DUZ(2),ABMP("BDFN"),I))
- S ABMP("PDFN")=$P(ABMB0,"^",5)  ;Patient IEN
- S ABMP("LDFN")=$P(ABMB0,"^",3)  ;Visit loc IEN
- S ABMP("BTYP")=$P(ABMB0,"^",2)  ;Bill type
- S ABMP("EXP")=$P(ABMB0,"^",6)  ;Export mode IEN
- S ABMP("INS")=$P(ABMB0,"^",8)  ;Active Ins IEN
- S ABMP("VTYP")=$P(ABMB0,"^",7)  ;Vtyp IEN
- S ABMP("CLIN")=$P(ABMB0,"^",10)  ;Clinic
+ S ABMP("PDFN")=$P(ABMB0,"^",5)
+ S ABMP("LDFN")=$P(ABMB0,"^",3)
+ S ABMP("BTYP")=$P(ABMB0,"^",2)
+ S ABMP("EXP")=$P(ABMB0,"^",6)
+ S ABMP("INS")=$P(ABMB0,"^",8)
+ S ABMP("VTYP")=$P(ABMB0,"^",7)
+ S ABMP("CLIN")=$P(ABMB0,"^",10)
  S ABMP("CLIN")=$P($G(^DIC(40.7,+ABMP("CLIN"),0)),"^",2)
  S ABMP("VDT")=$P(ABMB7,U)  ;Service date from
- ;S ABMP("ITYPE")=$P($G(^AUTNINS(+ABMP("INS"),2)),U)  ;abm*2.6*10 HEAT73780
- S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+ABMP("INS"),".211","I"),1,"I")  ;Type of insurer  ;abm*2.6*10 HEAT73780
+ S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+ABMP("INS"),".211","I"),1,"I")
  D ISET  ;set up insurers
  D PCN
  D SOP
@@ -88,7 +90,6 @@ ISET ; EP
  ..;Quit if insurer unbillable
  ..Q:$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I,0),U,3)="U"
  ..S ABME("INS")=$S($P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I,0),U,11)'="":$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I,0),U,11),1:$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I,0),U))  ;Insurer IEN
- ..;S ABME("ITYPE")=$P(^AUTNINS(ABME("INS"),2),U)  ;abm*2.6*10 HEAT73780
  ..S ABME("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABME("INS"),".211","I"),1,"I")  ;type of insurer  ;abm*2.6*10 HEAT73780
  ..Q:"I"[ABME("ITYPE")  ;Quit if indian patient
  ..;Quit if non-ben and not active insurer
@@ -105,7 +106,6 @@ ISET ; EP
  .Q:$P($G(ABMP("INS",1)),U)=ABMP("INS")  ;61044 is primary
  .Q:$P($G(^AUTNINS($P($G(ABMP("INS",1)),U),0)),U)'["MEDICARE"  ;Medicare isn't primary
  .Q:$$RCID^ABMUTLP($P($G(ABMP("INS",2)),U))'["61044"  ;Medi-Cal is not secondary
- .;Q:$P($G(^ABMDVTYP(ABMP("VTYP"),0)),U)'["CROSSOVER"  ;vtyp must contain CROSSOVER  ;abm*2.6*19 HEAT116949
  .Q:$TR($P($G(^ABMDVTYP(ABMP("VTYP"),0)),U)," ")'["CROSSOVER"  ;vtyp must contain CROSSOVER  ;abm*2.6*19 HEAT116949
  .S ABMP("INS",1)=ABMP("INS",2)  ;move Medi-Cal to primary spot
  .K ABMP("INS",2)  ;remove Medi-Cal from secondary
@@ -145,13 +145,7 @@ RCID(X) ;EP Receiver ID (X=Insurer IEN)
  .S Y="00400"
  .I $G(ABMP("VTYP"))=999!($G(ABMP("BTYP"))=831&($G(ABMP("EXP"))=22)) S Y="00900"
  .I $G(ABMP("EXP"))>20 S Y="C"_Y
- ;start old abm*2.6*10 HEAT74059
- ;I Y=4001 D  Q Y
- ;.S Y="04001"
- ;.;I $G(ABMP("VTYP"))=999!($G(ABMP("BTYP"))=831&($G(ABMP("EXP"))=22)) S Y="04402" ;ASC  ;abm*2.6*9 IHS/SD/AML 3/9/2012
- ;.I $G(ABMP("VTYP"))=999!($G(ABMP("BTYP"))=831&($G(ABMP("EXP"))=22))!($G(ABMP("BTYP"))=831&($G(ABMP("EXP"))=32)) S Y="04402"  ;abm*2.6*9 IHS/SD/AML 3/9/2012 Mods for DSU
- ;.I $G(ABMP("CLIN"))="A3" S Y="04402"  ;abm*2.6*10 IHS/SD/AML HEAT68447
- ;end old start new HEAT74059
+ ;start new HEAT74059
  I "^4001^4311^4211^4111^4411^"[("^"_Y_"^") D  Q Y
  .S Y="0"_Y
  .I $G(ABMP("VTYP"))=999!($G(ABMP("BTYP"))=831&($G(ABMP("EXP"))=22))!($G(ABMP("BTYP"))=831&($G(ABMP("EXP"))=32))!($G(ABMP("CLIN"))="A3"!($G(ABMP("CLN"))="A3")) D
@@ -190,6 +184,7 @@ PAYED ; EP
  ;Build Insurance Payment Array
  K ABMP("PAYED")
  N L
+ N ABMM  ;abm*2.6*37 IHS/SD/SDR ADO76009
  S L=+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U)_" "  ;Bill number
  F  S L=$O(^ABMDBILL(DUZ(2),"B",L)) Q:+L'=+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U)!(L="")  D
  .N I
@@ -197,8 +192,9 @@ PAYED ; EP
  .Q:$P(^ABMDBILL(DUZ(2),I,0),"^",4)="X"  ;Quit if cancelled
  .N K
  .S K=$P(^ABMDBILL(DUZ(2),I,0),"^",8)  ;Active insurer IEN
- .;I $P($G(^ABMNINS(ABMP("LDFN"),K,0)),U,11)="Y"&($P($G(^AUTNINS(ABMP("INS"),2)),U)="R") S (ABMP("PAYED"),ABMP("PAYED",K))=$P(ABMB2,U) Q  ;abm*2.6*3 HEAT7574
- .I $P($G(^ABMNINS(ABMP("LDFN"),K,0)),U,11)="Y"&($P($G(^AUTNINS(ABMP("INS"),2)),U)="R") S (ABMP("PAYED"),ABMP("PAYED",K))=0 Q  ;abm*2.6*10 COB billing
+ .S ABMM=$S(+$P($G(^ABMDBILL(DUZ(2),I,0)),U,26)'=0:$P($G(^ABMDBILL(DUZ(2),I,0)),U,26),1:1)  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .;I $P($G(^ABMNINS(ABMP("LDFN"),K,0)),U,11)="Y"&($P($G(^AUTNINS(ABMP("INS"),2)),U)="R") S (ABMP("PAYED"),ABMP("PAYED",K))=0 Q  ;abm*2.6*10 COB billing  ;abm*2.6*37 IHS/SD/SDR ADO76009
+ .I $P($G(^ABMNINS(ABMP("LDFN"),K,0)),U,11)="Y"&($P($G(^AUTNINS(ABMP("INS"),2)),U)="R") S (ABMP("PAYED"),ABMP("PAYED",K,ABMM))=0 Q  ;abm*2.6*10 COB billing  ;abm*2.6*37 IHS/SD/SDR ADO76009
  .N J
  .S J=0
  .F  S J=$O(^ABMDBILL(DUZ(2),I,3,J)) Q:'J  D
@@ -206,9 +202,15 @@ PAYED ; EP
  ..S ABMZERO=^ABMDBILL(DUZ(2),I,3,J,0)
  ..S ABMPDT=$P(ABMZERO,U)  ;Payment date
  ..S ABMPAY=$P(ABMZERO,"^",2)  ;Amt paid
- ..S ABMP("PAYED",K)=+$G(ABMP("PAYED",K))+ABMPAY  ;Add amt paid per insurer
- ..S ABMP("PDT",K)=ABMPDT
+ ..;start old abm*2.6*37 IHS/SD/SDR ADO76009
+ ..;S ABMP("PAYED",K)=+$G(ABMP("PAYED",K))+ABMPAY  ;Add amt paid per insurer
+ ..;S ABMP("PDT",K)=ABMPDT
+ ..;S ABMP("PAYED")=+$G(ABMP("PAYED"))+ABMPAY  ;Add amt paid
+ ..;end old start new abm*2.6*37 IHS/SD/SDR ADO76009
+ ..S ABMP("PAYED",K,ABMM)=+$G(ABMP("PAYED",K,ABMM))+ABMPAY  ;Add amt paid per insurer
+ ..S ABMP("PDT",K,ABMM)=ABMPDT
  ..S ABMP("PAYED")=+$G(ABMP("PAYED"))+ABMPAY  ;Add amt paid
+ ..;end new abm*2.6*37 IHS/SD/SDR ADO76009
  Q
  ;
 TCR(X) ; EP Total credits for bill
@@ -242,7 +244,7 @@ SLN(X,Y) ; EP Provider state license number
  I 'I S X="" Q X
  S Y=$P(^VA(200,X,"PS1",I,0),U)  ;Licensing state IEN
  S X=$P(^VA(200,X,"PS1",I,0),"^",2)  ;License#
- S X=$P(^DIC(5,Y,0),"^",2)_"-"_X     ;State - License
+ S X=$P(^DIC(5,Y,0),"^",2)_"-"_X  ;State - License
  Q X
  ;
 MCDBFX(X,Y) ;EP Fix BILL Insurance Multiple if broken pointer medicaid
@@ -260,8 +262,8 @@ MCDBFX(X,Y) ;EP Fix BILL Insurance Multiple if broken pointer medicaid
  Q
  ;
 MCDCFX(X,Y) ;EP Fix CLAIM Insurance Multiple if broken pointer, Medicaid
- ; INPUT:  X = IEN (CLAIM OR BILL)
- ;         Y = INSURER IEN UNDER FIELD #13 (INS MULTIPLE)
+ ;INPUT: X = IEN (CLAIM OR BILL)
+ ;       Y = INSURER IEN UNDER FIELD #13 (INS MULTIPLE)
  ;OUTPUT:
  N ABMP
  S ABMP("D0")=X
@@ -334,7 +336,6 @@ TOS(X) ;EP type of service (where x=multiple from 3P Bill File)
  S:X=39 Y="07"
  Q Y
 SOP1(X) ;EP source of pay (x=ien insurer file)
- ;S ABMTYP=$P($G(^AUTNINS(+X,2)),U)  ;abm*2.6*10 HEAT73780
  S ABMTYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+X,".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  S Y=ABMTYP
  I Y'="" D
@@ -392,7 +393,8 @@ GCNMULT(ABMSTAT,ABMREASN) ;
  S DIC("DR")=".02////"_ABMGCN
  S DIC("DR")=DIC("DR")_";.03////"_ABMSTAT
  S DIC("DR")=DIC("DR")_";.04////"_DUZ
- I +$G(ABM("CHIEN"))'=0  S DIC("DR")=DIC("DR")_";.07////"_+$G(ABM("CHIEN"))  ;abm*2.6*6 5010
+ ;I +$G(ABM("CHIEN"))'=0  S DIC("DR")=DIC("DR")_";.07////"_+$G(ABM("CHIEN"))  ;abm*2.6*6 5010  ;abm*2.6*35 IHS/SD/SDR ADO60705
+ I +$G(ABMCH)'=0  S DIC("DR")=DIC("DR")_";.07////"_+$G(ABMCH)  ;abm*2.6*35 IHS/SD/SDR ADO60705
  D ^DIC
  Q:(+Y<0)
  I $G(ABMREASN) D

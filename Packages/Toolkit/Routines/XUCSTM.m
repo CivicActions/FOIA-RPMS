@@ -1,0 +1,48 @@
+XUCSTM ;CLARKSBURG/SO CM - RTHIST TASK MAIN DRIVER ;12/14/94  16:18 [ 04/02/2003   8:47 AM ]
+ ;;7.3;TOOLKIT;**1001**;APR 1, 2003
+ ;;7.3;TOOLKIT;**3,15**;Apr 06, 1995
+AM ; Test to see if $P($H,",",2) is between 8am to 11am
+ I $P($H,",",2)<(3600*8) Q  ; time LT 8am
+ I $P($H,",",2)>(3600*11) Q  ; time GT 11am
+ G TOK ; time o.k.
+PM ; Test to see if $P($H,",",2) is between 1pm to 4pm
+ I $P($H,",",2)<(3600*13) Q  ; time is LT 1pm
+ I $P($H,",",2)>(3600*16) Q  ; time is GT 4pm
+TOK ; Now test for correct MSM Version & day skips
+ S XUCSEND=0 D  I XUCSEND K XUCSEND Q
+ . N X
+ . I +$$OSTYPE^%ZOSV>2 S XUCSEND=1 Q  ; Not a PC or NT OS
+ . I +$E($$VERSION^%ZOSV)'=4 S XUCSEND=1 Q  ; Not Version 4+ of MSM
+ . S X=DT D H^%DTC
+ . I %Y=0 S XUCSEND=1 Q  ; Skip RTHIST on Sunday (Funday)
+ . I %Y=6 S XUCSEND=1 Q  ; Skip RTHIST on Saturday
+ . S DIC=40.5,DIC(0)="MXZ",X=DT D ^DIC K DIC I +Y>1 S XUCSEND=1 ; It's a HOLIDAY!
+ . Q
+ ; Loop thru 8987.13 multiple and build task
+ D SITE^XUCSUTL3 I $D(XUCSEND),XUCSEND K XUCSEND Q
+ ; Get Vol. Group
+ S XUCSX=0 F  S XUCSX=$O(^XUCS(8987.1,1,1,+XUCSX)) Q:+XUCSX<1  S XUCSVG=$P(^(XUCSX,0),U),XUCSTBS=+$P(^(0),U,2),ZTUCI=$P(^(0),U,6) D  H 5
+ACONFIG . I 'XUCSTBS D  ; AUTO-CONFIG RTHIST table size
+ .. D NOW^%DTC S XUCSX1=$S($E($P(%,".",2),1,2)<12:"A",1:"P"),XUCSSDT=%
+ .. I XUCSX1="A",'$D(^XUCS(8987.1,1,1,+XUCSX,1)) S XUCSTBS=1500 K XUCSX1 Q
+ .. I XUCSX1="P",'$D(^XUCS(8987.1,1,1,+XUCSX,2)) S XUCSTBS=1500 K XUCSX1 Q
+ .. S XUCSX1=$S(XUCSX1="A":^XUCS(8987.1,1,1,+XUCSX,1),1:^XUCS(8987.1,1,1,+XUCSX,2))
+ .. I $P(XUCSX1,"~")>$P(XUCSX1,"~",2) S XUCSTBS=$P(XUCSX1,"~") K XUCSX1 Q  ; Table High Water is LESS Than Table Size
+ .. ; TABLE FULL condition - TABLE SIZE = HIGH WATER MARK
+ .. ; add 10% more to TABLE SIZE
+TBLFUL .. S XUCSX2=$P(XUCSX1,"~")*.1,XUCSX2=XUCSX2\1,XUCSTBS=$P(XUCSX1,"~")+XUCSX2 K XUCSX1,XUCSX2
+ .. Q
+ . I +XUCSTBS<700 S XUCSTBS=1500
+ . I $D(XUCSTEST) D TEST ; ***** FOR TESTING ONLY *****
+QUEIT . ; Queue Out RTHIST to ZTUCI,ZTCPU
+ . ; Check for Vol. Group OUT of SERVICE
+ . S XUCSVGX=0,XUCSVGX=$O(^%ZIS(14.7,"B",XUCSVG,+XUCSVGX))
+ . I +XUCSVGX<1 D ALERT^XUCSUTL S XQAMSG="XUCS- Vol. Group "_XUCSVG_", Does NOT Exist!" D SETUP^XQALERT K XQA,XQAMSG,XUCSVGX Q
+ . I +$P(^%ZIS(14.7,+XUCSVGX,0),"^",11)>0 S Y=XUCSSDT D DD^%DT D ALERT^XUCSUTL S XQAMSG="XUCS- Vol. Group "_XUCSVG_", is OUT OF SERVICE, "_Y D SETUP^XQALERT K XQA,XQAMSG,XUCSVGX Q
+ . K XUCSVGX
+ . S ZTCPU=XUCSVG,ZTDESC="C.M. Tasked RTHIST for Node - "_XUCSVG,ZTRTN="RTH^%ZOSV2",ZTSAVE("XUCSSDT")="",ZTSAVE("XUCSTBS")="",ZTSAVE("XUCSVG")="",ZTDTH=$H,ZTIO="" D ^%ZTLOAD
+ . Q
+ Q
+TEST ; ***  TEST DATA ONLY  ***
+ S XUCSDUR=300,XUCSRI=300,XUCSCDI=60,XUCSTBS=200
+ Q

@@ -1,6 +1,7 @@
-DIR3 ;SFISC/DCM,RDS-READER-MAID (PROCESS RANGE/LIST) ;6/28/2009
- ;;22.0;VA FileMan;**30,164**;Mar 30, 1999;Build 21
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIR3 ;SFISC/DCM,RDS-READER-MAID (PROCESS RANGE/LIST);3/15/96  09:41 ;2/24/98  09:30 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**19,41**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;12364;2913754;3396;
  ;
 L ; LIST OR RANGE
@@ -18,7 +19,6 @@ L ; LIST OR RANGE
  . S %W=$P($T(@(%E)),";;",2)
  . I %W[";",%E=1 S %W=$P(%W,";")_+%B1_$P(%W,";",2)_" "_%B2
  . I %W[";",%E=2 S %W=$P(%W,";")_+%B3_$P(%W,";",2)_$S(%B3>1:"s",1:"")
- I $G(%E) K Y S Y="" Q  ; Prevent Erroneous Data
  S Y=Y(0)
  Q
  ;
@@ -45,21 +45,14 @@ L1 I %A["C" D  Q
  I %'<0 S Y=%J X %BA S:$T Y(%C)=Y(%C)_%J_","
  Q
  ;
- ; check one list element
- ;%A = $P#1 "^" of DIR(0)
- ;%B = $P#2 "^" of DIR(0)
- ;%B1 = $P#1 ":" Low Value
- ;%B2 = $P#2 ":" High Value
- ;%B3 = $P#3 ":" Number of Decimals; Null If Undefined
- ;%X = Range Entered, i.e. 2-4
- ;% = End of Range Entered i.e. 4
-LCK I %X["-" D  Q
+LCK ; check one list element
+ I %X["-" D  Q
  . N % S %=$P(%X,"-",2) I '% S %E=4 Q
- . I %A'["I",%<+%X S %E=4 Q
- . I %A["I",%<+%X N %3 S %3=%,%=+%X,$P(%X,"-",2)=%,$P(%X,"-")=%3
+ . I %<+%X N %3 S %3=%,%=+%X,$P(%X,"-",2)=%,$P(%X,"-")=%3
  . I %<%B1!(+%X>%B2) S %E=1 Q
- . I +%X<%B1 S %E=1 Q
- . I +%>%B2 S %E=1 Q
+ . I +%X<%B1 S $P(%X,"-")=%B1
+ . I +%>%B2 S %=%B2,$P(%X,"-",2)=%B2
+ . Q:'%B3
  . I $L($P(+%X,".",2))>%B3!($L($P(+%,".",2))>%B3) S %E=2 Q
  I +%X<%B1!(+%X>%B2) S %E=1 Q
  I %B3,$L($P(+%X,".",2))>%B3 S %E=2 Q
@@ -73,10 +66,11 @@ LCD ; determine increment size for ranges (handle decimals)
 LC ; handle unscreened compressed lists (no DIR("S"))
  ; LC to LIST checks the user's list in X, building ^TMP($J,"DIR")
  I %B3 D LCD
- F %=1:1:$L(X,",") S %1=$P(X,",",%) D LC0 Q:%E
+ F %=1:1:$L(X,",") S %1=$P(X,",",%) D LC0
  Q:'$D(^TMP($J,"DIR"))
+ S %E=0
 LIST ; transfer output list from ^TMP($J,"DIR") to Y
- S %1="",Y(%C)="" D
+ S %1="",Y(%C)="" D 
  . F  S %1=$O(^TMP($J,"DIR",%1)) Q:%1=""  D
  . . S:$D(^(%1))=1 Y(%C)=Y(%C)_%1_","
  . . S:$L(Y(%C))>220 %C=%C+1,Y(%C)=""

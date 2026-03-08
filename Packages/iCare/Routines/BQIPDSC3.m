@@ -1,0 +1,192 @@
+BQIPDSC3 ;GDIT/HCS/ALA-Panel descriptions continued ; 28 Feb 2022  9:37 AM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**3,5,6,7**;Mar 01, 2021;Build 14
+ ;
+NT(FVAL,VALUE) ;EP - Notes
+ S VALUE=""
+ I FNAME="NTHLOC" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="NTAUTH" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="NTDIV" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="NTSTAT" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="NTCOSI" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="NTTIT" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ S VALUE=$$TKO^BQIUL1(VALUE,", ")
+ Q
+ ;
+GETVAL(OWNR,PLIEN,FLD) ;EP - Retrieve Single field value
+ N DECIEN,DA,IEN,IENS
+ S IEN=$O(^BQICARE(OWNR,1,PLIEN,15,"B",FLD,"")) Q:IEN="" ""
+ S DA(2)=OWNR,DA(1)=PLIEN,DA=IEN,IENS=$$IENS^DILF(.DA)
+ Q $$GET1^DIQ(90505.115,IENS,.02,"I")
+ ;
+WL(FVAL,VALUE) ;EP - WaitList
+ S VALUE=""
+ I FNAME="WCLN" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="WPROV" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="WNOPROV" D
+ . I FVAL="Y" S VALUE=" with no designated providers"
+ I FNAME="WAUSR" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="WRUSR" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ S VALUE=$$TKO^BQIUL1(VALUE,", ")
+ Q
+ ;
+VIS(FVAL,VALUE) ; EP
+ S VALUE=""
+ I FNAME="VSCLN" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="VSHLOC" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="VSLOC" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="VSSCAT" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="VSPROV" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ Q
+ ;
+TRIB(FVAL,VALUE) ;EP
+ S VALUE=""
+ I FNAME="TRIBE" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ S VALUE=$$TKO^BQIUL1(VALUE,", ")
+ Q
+ ;
+HRN(FVAL,VALUE) ;EP - Health Record Number description
+ NEW PDO
+ ;Active
+ I FNAME="HRNAC" D
+ . I FVAL="Y" S VALUE="whose HRN is Active for "
+ ;Inactive
+ I FNAME="HRNIN" D
+ . I FVAL="Y" S VALUE="whose HRN is Inactive for "
+ ;Deleted
+ I FNAME="HRNDL" D
+ . I FVAL="Y" S VALUE="whose HRN is Deleted for "
+ ;
+ ;Divisions/Locations
+ I FNAME="HRNDV" D
+ . S VALUE=""
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ ;
+ I FNAME="HRNFD" S VALUE="from "_FVAL
+ I FNAME="HRNTD" S VALUE="thru "_FVAL
+ Q
+ ;
+CONS(FVAL,VALUE) ;EP - Consults description
+ NEW OR,NVAL
+ S VALUE=""
+ I FNAME="CDTSRV" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="CDCAT" D
+ . I FVAL="O" S VALUE=" for Outpatient consult"
+ . I FVAL="I" S VALUE=" for Inpatient consult"
+ . I FVAL="B" S VALUE=" for either Outpatient or Inpatient consult"
+ I FNAME="CDURG" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="CDPLAC" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="CDATTEN" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="CDSNOM" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... I OR?.N S NVAL=$$CID^BQIPDSCF(OR,36),VALUE=VALUE_NVAL_", " Q
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="CDCFRM" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="CDOFAC" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="CDREQT" D
+ . I FVAL="C" S VALUE=" for a Consult"
+ . I FVAL="P" S VALUE=" for a Procedure"
+ . I FVAL="B" S VALUE=" for either a Consult or a Procedure"
+ I FNAME="CDPFRM" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ I FNAME="CDSTAT" D
+ . I $D(FPARMS(PORD,FNAME))>9 D  Q
+ .. S OR="" F  S OR=$O(FPARMS(PORD,FNAME,OR)) Q:OR=""  D
+ ... S VALUE=VALUE_OR_", "
+ . S VALUE=FVAL
+ Q

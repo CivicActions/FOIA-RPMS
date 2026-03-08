@@ -1,5 +1,55 @@
 BSTSRPC1 ;GDIT/HS/BEE - SNOMED Utilities - RPC Calls ; 10 Aug 2012  9:24 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3,5,6**;Dec 01, 2016;Build 5
+ ;
+ Q
+ ;
+SELECT(DATA,CONCID,NMID,DESCID,SUBSET) ;EP - BSTS LOG SELECTED CONCEPT
+ ;
+ ;
+ ;Description
+ ;  Logs the selected concept so it can be later sent to DTS
+ ;  
+ ;Input
+ ;  CONCID - The Concept ID of the selected concept
+ ;    NMID - The Namespace ID of the concept codeset (default - 36)
+ ;  DESCID - The Description ID of the selected concept (optional)
+ ;  SUBSET - The selected subset (optional)
+ ;
+ ;Output
+ ;  ^TMP("BSTSRPC1") - Name of global (passed by reference) in which the data is stored.
+ ;
+ ;Variables Used
+ ;  UID - Unique TMP global subscript.
+ ;
+ N UID,II,%
+ ;
+ I $G(CONCID)="" S BMXSEC="BSTS LOG SELECTED CONCEPT - CONCID is Null" Q
+ S:$G(NMID)="" NMID=36
+ S DESCID=$G(DESCID)
+ S SUBSET=$G(SUBSET)
+ ;
+ S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
+ S DATA=$NA(^TMP("BSTSRPC1",UID))
+ K @DATA
+ S II=0
+ ;
+ NEW $ESTACK,$ETRAP S $ETRAP="D ERR^BSTSRPC1 D UNWIND^%ZTER" ; SAC 2009 2.2.3.17
+ ;
+ ;Define Header
+ S @DATA@(0)="T00001SUCCESS"_$C(30)
+ ;
+ ;Quit if concept selection logging disabled
+ I '$$CENABLE^BSTSAPIL() S II=II+1,@DATA@(II)="1"_$C(30) G XSEL
+ ;
+ D NOW^%DTC
+ ;
+ ;Log the entry
+ D LOG^BSTSAPIL("CSEL",NMID,"SELECT",CONCID_"|"_SUBSET_"|"_DESCID)
+ ;
+ ;Return the entry
+ S II=II+1,@DATA@(II)="1"_$C(30)
+ ;
+XSEL S II=II+1,@DATA@(II)=$C(31)
  ;
  Q
  ;
@@ -209,4 +259,43 @@ ERR ;
  S Y=$$NOW^XLFDT() X ^DD("DD") S ERRDTM=Y
  S BMXSEC="Recording that an error occurred at "_ERRDTM
  I $D(II),$D(DATA) S II=II+1,@DATA@(II)=$C(31)
+ Q
+ICDLK(SVAR,SEARCH) ;Lookup by ICD10
+ ;
+ NEW ICD,ICD10,FICD,CIEN,CONC,RSLT,MAX,NMID,STS,RCNT
+ ;
+ ;Strip suffix off of ICD10 if entered
+ S ICD10=$P(SEARCH,U)
+ S MAX=$P(SEARCH,U,6) S:'MAX MAX=25
+ S NMID=$P(SEARCH,U,3) S:NMID="" NMID=36 S:NMID=30 NMID=36
+ S ICD=ICD10 I $E(ICD,$L(ICD))?1U S ICD=$E(ICD,1,$L(ICD)-1)
+ I $E(ICD,$L(ICD))="." S ICD=$E(ICD,1,$L(ICD)-1)
+ ;
+ ;First look at unconditionals
+ S FICD="" F  S FICD=$O(^BSTS(9002318.4,"UCNDICD",FICD)) Q:FICD=""  D
+ . I FICD'[ICD Q
+ . S CIEN="" F  S CIEN=$O(^BSTS(9002318.4,"UCNDICD",FICD,CIEN)) Q:CIEN=""  D
+ .. S CONC=$P($G(^BSTS(9002318.4,CIEN,0)),U,2) Q:CONC=""
+ .. S RSLT(CONC)=""
+ ;
+ ;Second look at conditionals
+ S FICD="" F  S FICD=$O(^BSTS(9002318.4,"CNDICD",FICD)) Q:FICD=""  D
+ . I FICD'[ICD Q
+ . S CIEN="" F  S CIEN=$O(^BSTS(9002318.4,"CNDICD",FICD,CIEN)) Q:CIEN=""  D
+ .. S CONC=$P($G(^BSTS(9002318.4,CIEN,0)),U,2) Q:CONC=""
+ .. S RSLT(CONC)=""
+ ;
+ ;Put each one in array
+ S RCNT=0,CONC="" F  S CONC=$O(RSLT(CONC)) Q:CONC=""  D
+ . NEW VAR
+ . ;
+ . ;Retrieve the information
+ . S STS=$$CNCLKP^BSTSAPI("VAR",CONC_U_NMID)
+ . ;
+ . ;Filter out inactives
+ . I $G(VAR(1,"INACTIVE"))=1 Q
+ . ;
+ . ;Save the entry
+ . S RCNT=RCNT+1 M @SVAR@(RCNT)=VAR(1)
+ ;
  Q

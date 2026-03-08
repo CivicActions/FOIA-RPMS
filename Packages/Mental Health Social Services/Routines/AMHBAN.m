@@ -1,10 +1,10 @@
-AMHBAN ; IHS/CMI/LAB - Banner for BH ; 18 Sep 2017  11:53 AM
- ;;4.0;IHS BEHAVIORAL HEALTH;**1,2,3,4,5,6,7,8,9,10**;JUN 02, 2010;Build 15
+AMHBAN ; IHS/CMI/LAB - Banner for BH ; 09 Jul 2021  5:16 PM
+ ;;4.0;IHS BEHAVIORAL HEALTH;**1,2,3,4,5,6,7,8,9,19,11,12**;JUN 02, 2010;Build 46
  ;
 EP ;
 V ; GET VERSION
  ;S AMH("VERSION")="",AMH("VERSION")=$O(^DIC(9.4,"C","AMH",AMH("VERSION"))),AMH("VERSION")=^DIC(9.4,AMH("VERSION"),"VERSION")
- S AMH("VERSION")="4.0 (patch 10)"
+ S AMH("VERSION")="4.0 (patch 12)"
  I $G(AMHTEXT)="" S AMHTEXT="TEXT",AMHLINE=3 G PRINT
  S AMHTEXT="TEXT"_AMHTEXT
  F AMHJ=1:1 S AMHX=$T(@AMHTEXT+AMHJ),AMHX=$P(AMHX,";;",2) Q:AMHX="QUIT"!(AMHX="")  S AMHLINE=AMHJ
@@ -116,6 +116,12 @@ TEXTJ ;data entry menu
  ;;**       Depression Screening Reports       **
  ;;**********************************************
  ;;QUIT
+TEXTN ;data entry menu
+ ;;**********************************************
+ ;;**       IHS Behavioral Health System       **
+ ;;**          SDOH Screening Reports          **
+ ;;**********************************************
+ ;;QUIT
 TEXTK ;data entry menu
  ;;**********************************************
  ;;**       IHS Behavioral Health System       **
@@ -134,15 +140,31 @@ TEXTS ;data entry menu
  ;;**      Suicide Risk Assessment Reports     **
  ;;**********************************************
  ;;QUIT
+TEXTU ;data entry menu
+ ;;**********************************************
+ ;;**       IHS Behavioral Health System       **
+ ;;**      Drug Use Risk Screening Reports     **
+ ;;**********************************************
+ ;;QUIT
+TEXTV ;data entry menu
+ ;;***************************************************
+ ;;**         IHS Behavioral Health System          **
+ ;;**  Alcohol and Drug Use Risk Screening Reports  **
+ ;;***************************************************
+ ;;QUIT
 COPYINFO ;EP called from option
- W !!,"*Reprinted with permission from the Diagnostic and Statistical Manual"
- W !,"of Mental Disorders, Fifth Edition. (TM) Copyright 2013 American Psychiatric"
- W !,"Association.  All Rights Reserved. "
- W !!,"Unless authorized in writing by the APA, no part may be reproduced or "
- W !,"used in a manner inconsistent with the APA's copyright. This prohibition"
- W !,"applies to unauthorized uses or reproductions in any form. "
- W !!,"The American Psychiatric Association is not affiliated with and is not "
- W !,"endorsing this product.",!!
+ W !!,"*DSM and DSM-5-TR are registered trademarks of the American Psychiatric"
+ W !,"Association, and are used with permission herein. Use of these terms is"
+ W !,"prohibited without permission of the American Psychiatric Association."
+ W !,"Use of this trademark does not constitute endorsement of this product by"
+ W !,"the American Psychiatric Association."
+ W !!,"*Reprinted with permission from the Diagnostic and Statistical Manual of"
+ W !,"Mental Disorders, Fifth Edition, Text Revision.  Copyright 2022, "
+ W !,"American Psychiatric Association.  All Rights Reserved.  Unless authorized"
+ W !,"in writing by the APA, no part may be reproduced or used in a manner "
+ W !,"inconsistent with the APA's copyright. This prohibition applies to "
+ W !,"unauthorized uses or reproductions in any form.  The American Psychiatric"
+ W !,"Association is not affiliated with and is not endorsing this product.",!!
  K DIR
  S DIR(0)="E",DIR("A")="Press Enter to Continue" D ^DIR
  K DIR

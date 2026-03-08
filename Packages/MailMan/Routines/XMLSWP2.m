@@ -1,11 +1,12 @@
-XMLSWP2 ;(WASH ISC)/CAP-Sliding Window Protocol ;04/17/2002  10:59
- ;;8.0;MailMan;;Jun 28, 2002
+XMLSWP2 ;(WASH ISC)/CAP-SLIDING WINDOW PROTOCOL ;10/27/89 16:14
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;;Jun 02, 1994
 TRAN Q:$S('$D(XM):1,XM'["D":1,1:0)  N I,X,Y,% S X=$P($H,",",2),Y=X\3600_":"_$J(X#3600\60,2)_":"_$J(X#60,2) F I=1:1 Q:Y'[" "  S Y=$P(Y," ")_0_$P(Y," ",2,4)
  S %=$E(Y_" ",1,$L(XMTRAN)<245*99),%=%_$E(XMTRAN,1,245-$L(%)) U IO(0) W !,% I IO'="" U IO
  Q
 PROG ;Statistics
  I '$D(T) S T=$H*86400+$P($H,",",2)-1
- N D,X S D=$S($D(^XMBS(4.2999,XMINST,3))#10:^(3),1:""),$P(D,U,1,6)=$H_U_$S($D(XMZ):XMZ,1:"")_U_I_U_E_U_$J(C/($H*86400+$P($H,",",2)-T),0,2)_U_IO_" SWP" S ^(3)=D,XMLCT=0
+ N D,X S D=$S($D(^XMBS(4.2999,XMINST,3))#10:^(3),1:""),$P(D,U,1,6)=$H_U_$S($D(XMZ):XMZ,1:"")_U_I_U_E_U_$J(C/($H*86400+$P($H,",",2)-T),0,2)_U_IO_" SWP" S:$D(XMLCT) $P(D,U,10-%)=$P(D,U,10-%)+XMLCT S ^(3)=D,XMLCT=0
  Q:$S('$D(XMLIN):1,XMLIN="":1,'G:1,1:0)
  S D="Line: "_$P(D,U,3)_", Speed: "_$P(D,U,5) Q:$S('$D(W):1,+W'=W:1,1:0)
  S D=D_", Window: "_W_", Out: ",A=0

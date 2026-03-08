@@ -1,11 +1,9 @@
-DINIT290 ;SFISC/MKO-FORM AND BLOCK FILES ;10:49 AM  30 Mar 1999
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINIT290 ;SFISC/MKO-SCREENMAN FILES ;11/28/94  11:42 AM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
- F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
- G ^DINIT291
+ F I=1:2 S X=$T(Q+I) G:X="" ^DINIT291 S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
- ;;^DIC(.403,0,"GL")
- ;;=^DIST(.403,
  ;;^DIC("B","FORM",.403)
  ;;=
  ;;^DIC(.403,"%D",0)
@@ -17,7 +15,7 @@ Q Q
  ;;^DIC(.403,"%D",3,0)
  ;;=are contained in this file.
  ;;^DD(.403,0)
- ;;=FIELD^^40^18
+ ;;=FIELD^^6^18
  ;;^DD(.403,0,"DT")
  ;;=2941018
  ;;^DD(.403,0,"ID","WRITE")
@@ -28,7 +26,7 @@ Q Q
  ;;=
  ;;^DD(.403,0,"IX","AC",.4031,1)
  ;;=
- ;;^DD(.403,0,"IX","AY",.403,.01)
+ ;;^DD(.403,0,"IX","AZ",.403,.01)
  ;;=
  ;;^DD(.403,0,"IX","B",.403,.01)
  ;;=
@@ -75,7 +73,7 @@ Q Q
  ;;^DD(.403,.01,1,2,"DT")
  ;;=2910812
  ;;^DD(.403,.01,1,3,0)
- ;;=.403^AY^MUMPS
+ ;;=.403^AZ^MUMPS
  ;;^DD(.403,.01,1,3,1)
  ;;=Q
  ;;^DD(.403,.01,1,3,2)
@@ -83,23 +81,23 @@ Q Q
  ;;^DD(.403,.01,1,3,3)
  ;;=Programmer only
  ;;^DD(.403,.01,1,3,"%D",0)
- ;;=^^7^7^2980924^
+ ;;=^^7^7^2940708^
  ;;^DD(.403,.01,1,3,"%D",1,0)
  ;;=This is a no-op cross reference defined merely to document the data stored
  ;;^DD(.403,.01,1,3,"%D",2,0)
- ;;=under ^DIST(.403,form IEN,"AY").
+ ;;=under ^DIST(.403,form IEN,"AZ").
  ;;^DD(.403,.01,1,3,"%D",3,0)
  ;;= 
  ;;^DD(.403,.01,1,3,"%D",4,0)
- ;;=This global stores the compiled data for a Form. Form compilation occurs
+ ;;=This global stores the compiled data for a Form.  Form compilation occurs
  ;;^DD(.403,.01,1,3,"%D",5,0)
  ;;=automatically whenever a Form is edited through the FileMan supplied
  ;;^DD(.403,.01,1,3,"%D",6,0)
- ;;=options. The compiled data stored in this global is static information
+ ;;=options.  The compiled data stored in this global is static information
  ;;^DD(.403,.01,1,3,"%D",7,0)
  ;;=that is used whenever a Form is run.
  ;;^DD(.403,.01,1,3,"DT")
- ;;=2980904
+ ;;=2940708
  ;;^DD(.403,.01,3)
  ;;=Answer must be 3-30 characters in length.
  ;;^DD(.403,.01,21,0)
@@ -113,7 +111,7 @@ Q Q
  ;;^DD(.403,.01,"DEL",1,0)
  ;;=D EN^DDIOL($C(7)_"You must use the FileMan option to delete forms.") I 1
  ;;^DD(.403,.01,"DT")
- ;;=2980904
+ ;;=2940708
  ;;^DD(.403,1,0)
  ;;=READ ACCESS^FX^^0;2^I DUZ(0)'="@" N DDZ F DDZ=1:1:$L(X) K:DUZ(0)'[$E(X,DDZ) X
  ;;^DD(.403,1,3)
@@ -140,69 +138,3 @@ Q Q
  ;;=Enter the VA FileMan User Number of the form creator.
  ;;^DD(.403,3,21,0)
  ;;=^^2^2^2931020^^
- ;;^DD(.403,3,21,1,0)
- ;;=This is the DUZ of the person who created the form.  The ScreenMan
- ;;^DD(.403,3,21,2,0)
- ;;=options to create the form automatically put a value into this field.
- ;;^DD(.403,4,0)
- ;;=DATE CREATED^D^^0;5^S %DT="ETX" D ^%DT S X=Y K:Y<1 X
- ;;^DD(.403,4,3)
- ;;=Enter the date the form was created.
- ;;^DD(.403,4,21,0)
- ;;=^^2^2^2941018^^
- ;;^DD(.403,4,21,1,0)
- ;;=This is the date the form was created.  The ScreenMan options to create
- ;;^DD(.403,4,21,2,0)
- ;;=the form automatically put a value into this field.
- ;;^DD(.403,4,"DT")
- ;;=2941018
- ;;^DD(.403,5,0)
- ;;=DATE LAST USED^D^^0;6^S %DT="ETX" D ^%DT S X=Y K:Y<1 X
- ;;^DD(.403,5,3)
- ;;=Enter the date and time the form was last used.
- ;;^DD(.403,5,21,0)
- ;;=^^2^2^2941018^^
- ;;^DD(.403,5,21,1,0)
- ;;=This is the date the form was last used.  ScreenMan automatically
- ;;^DD(.403,5,21,2,0)
- ;;=puts a value into this field when the form is invoked.
- ;;^DD(.403,5,"DT")
- ;;=2941018
- ;;^DD(.403,6,0)
- ;;=TITLE^F^^0;7^K:$L(X)>50!($L(X)<1) X
- ;;^DD(.403,6,1,0)
- ;;=^.1
- ;;^DD(.403,6,1,1,0)
- ;;=.403^C
- ;;^DD(.403,6,1,1,1)
- ;;=S ^DIST(.403,"C",$E(X,1,30),DA)=""
- ;;^DD(.403,6,1,1,2)
- ;;=K ^DIST(.403,"C",$E(X,1,30),DA)
- ;;^DD(.403,6,1,1,"DT")
- ;;=2940908
- ;;^DD(.403,6,3)
- ;;=Answer must be 1-50 characters in length.
- ;;^DD(.403,6,21,0)
- ;;=^^4^4^2940908^
- ;;^DD(.403,6,21,1,0)
- ;;=The TITLE property can be used by the form designer to help identify a
- ;;^DD(.403,6,21,2,0)
- ;;=form.  It is cross referenced and need not be unique.  ScreenMan does not
- ;;^DD(.403,6,21,3,0)
- ;;=automatically display the TITLE to the user, but the form designer can
- ;;^DD(.403,6,21,4,0)
- ;;=choose to define a caption-only field that displays the title to the user.
- ;;^DD(.403,6,22)
- ;;=
- ;;^DD(.403,6,"DT")
- ;;=2940908
- ;;^DD(.403,7,0)
- ;;=PRIMARY FILE^RFX^^0;8^K:X'=+$P(X,"E")!(X<2)!($L(X)>16)!'$D(^DIC(X)) X
- ;;^DD(.403,7,1,0)
- ;;=^.1
- ;;^DD(.403,7,1,1,0)
- ;;=.403^F^MUMPS
- ;;^DD(.403,7,1,1,1)
- ;;=X "S %=$P("_DIC_"DA,0),U) S "_DIC_"""F""_X,%,DA)=1"
- ;;^DD(.403,7,1,1,2)
- ;;=X "S %=$P("_DIC_"DA,0),U) K "_DIC_"""F""_X,%,DA)"

@@ -1,0 +1,178 @@
+ABSPCINF ; /IHS/OIT/RAM - CLAIM INFO ROUTINES BEFORE PATCH 53 ; 02 APR 2024 ;
+ ;;1.0;PHARMACY POINT OF SALE;**53**;01 JUN 2001;Build 131
+ ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ ; /IHS/OIT/RAM ; Entire routine
+ ; STATUS , DEFER AND RESTORE INFO FOR ABSP CLAIMS routines for ABSP Patch 53.
+ ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ ;
+ Q
+ ;
+QINFO ; GET INFO ON THE ABSP CLAIM QUEUE DIRECTLY
+ N I,I2,I3,J,J2,J3,K
+ ;
+ K ^BZHCLAIM("COUNT")
+ S I=2,I3=0
+ F  S I=$O(^ABSPT("AD",I)) Q:+I>92  D
+ . S I2=0 F  S I2=$O(^ABSPT("AD",I,I2)) Q:+I2=0  D
+ . . S ^BZHCLAIM("COUNT",I)=$G(^BZHCLAIM("COUNT",I))+1
+ . . ; W I,*9,I2,!
+ ;
+ S I="" F  S I=$O(^BZHCLAIM("COUNT",I)) Q:+I=0  D
+ . W "COUNT FOR STATUS: "_I_" IN ABSP TRANSPORT: "_$G(^BZHCLAIM("COUNT",I)),!
+ ;
+ Q
+ ;
+SINFO ; GET INFO ON THE 'DEFERED' QUEUE
+ N I,I2,I3,J,J2,J3,K,TC,RESENT
+ ;
+ ; PUT IN "LOOP STOPPER" FIRST, JUST IN CASE THE 'DEFER' UTILITY HASN'T BEEN RUN.
+ ; THIS'LL SAVE THE USER FROM A <SUBSCRIPT> ERROR PROMPT.
+ S ^BZHCLAIM("AD",99,9999999999999999)="NOPE"
+ ; NUKE THE LAST STATISTIC COUNT NODE
+ K ^BZHCLAIM("DCOUNT")
+ ; AND GO COUNT THE CLAIMS IN THE DEFERRAL GLOBAL.
+ W !
+ S I=2,TC=0
+ F  S I=$O(^BZHCLAIM("AD",I)) Q:+I>92  D
+ . S I2=0 F  S I2=$O(^BZHCLAIM("AD",I,I2)) Q:+I2=0  D
+ . . S ^BZHCLAIM("DCOUNT",I)=$G(^BZHCLAIM("DCOUNT",I))+1,TC=TC+1
+ . . ; W I,*9,I2,!
+ ;
+ S I="" F  S I=$O(^BZHCLAIM("DCOUNT",I)) Q:+I=0  D
+ . W "COUNT FOR STATUS: "_I_" IN DEFERRED STATUS: "_$G(^BZHCLAIM("DCOUNT",I)),!
+ ;
+ S I=102,RESENT=0
+ F  S I=$O(^BZHCLAIM("AD",I)) Q:+I=0  D
+ . S I2=0 F  S I2=$O(^BZHCLAIM("AD",I,I2)) Q:+I2=0  D
+ . . S RESENT=RESENT+1,TC=TC+1
+ W "COUNT RESUBMITTED INTO THE ACTIVE QUEUE: "_RESENT,!
+ W "TOTAL CLAIMS THAT WERE DEFERRED ON PATCH INSTALL: "_TC,!
+ ;
+ Q
+ ;
+DEFER ; ROUTINE TO 'DEFER'* CLAIMS UNTIL A LATER TIME.                                     
+ ;     (SET THEM TO 99 - COMPLETE) - BUT RECORD THE CURRENT STATUS TO SET THEM BACK LATER.
+ N I,I2,I3,J,J2,J3,K,FDA,MSG
+ ;
+ I $D(^BZHCLAIM("AD",99,9999999999999999)) D BMES^XPDUTL("Claims were already deferred. Skipping.") Q
+ ;
+ ;
+ S I=2,J=0
+ F  S I=$O(^ABSPT("AD",I)) Q:+I<1!(+I>92)  D
+ . S I2=0 F  S I2=$O(^ABSPT("AD",I,I2)) Q:+I2=0  D
+ . . S ^BZHCLAIM("AD",I,I2)=$G(^ABSPT("AD",I,I2))
+ . . K FDA,MSG
+ . . S FDA(9002313.59,I2_",",1)=99
+ . . D FILE^DIE("E","FDA","MSG")
+ . . I $D(MSG) D BMES^XPDUTL("ERROR UPDATING CLAIM #"_I2)
+ . . S J=J+1
+ ;
+ ; NEED 'DUMMY' 99 STATUS CLAIM THAT SHOULD NEVER BE TOUCHED...
+ S ^BZHCLAIM("AD",99,9999999999999999)="NOPE"
+ ;
+ D BMES^XPDUTL("Number of claims deferred: "_J)
+ ;
+ Q
+ ;
+RESTORE(STATUS,QTY) ; ROUTINE TO 'RESTORE'* CLAIMS UNTIL A LATER TIME.
+ ;     (SET THEM TO BACK TO ORIGINAL STATUS) - BUT RECORD THE CURRENT STATUS TO SET THEM BACK LATER.
+ N I,I2,I3,J,J2,J3,K,FDA,MSG
+ ;
+ S I=STATUS,J=0
+ S I2=0 F  S I2=$O(^BZHCLAIM("AD",I,I2)) Q:+I2=0!(J>=QTY)  D
+ . ;
+ . K FDA,MSG
+ . W "ATTEMPTING TO RESTORE CLAIM #"_I2,!
+ . ; W I,*9,STATUS,*9,J,!
+ . S FDA(9002313.59,I2_",",1)=STATUS
+ . ; ZW FDA
+ . ; W !
+ . D FILE^DIE("E","FDA","MSG")
+ . ; ZW FDA W !
+ . ; ZW MSG W !
+ . I $D(MSG) D
+ . . W "ERROR UPDATING CLAIM #"_I2,!
+ . E  D
+ . . W "Recording Claim as resubmitted...",!
+ . . S ^BZHCLAIM("AD",I+100,I2)="STATUS"
+ . . K ^BZHCLAIM("AD",I,I2)
+ . S J=J+1
+ ;
+ D BMES^XPDUTL("  Number of claims restored: "_J)
+ D POKE^ABSPOS2D
+ D BMES^XPDUTL("  ABSP Queues have been POKed.")
+ ;
+ Q
+ ;
+RESTOREM ; MENU OPTION TO RESTORE CLAIMS FROM THE DEFERRED QUEUE.
+ ;
+ N I,I2,I3,J,J2,J3,DIR,DIR1,X,Y,DA,DTOUT,DUOUT,DIRUT,DIROUT,STAT,QTY
+ W !
+ D SINFO
+ W !
+ K DIR,DA S DIR(0)="N^2:98:0",DIR("A")="Please enter status number from listing above"
+ D ^DIR
+ I $D(DUOUT)!($D(DIROUT))!($D(DIRUT))!($D(DTOUT)) Q
+ S STAT=Y
+ W !
+ K DIR,DA S DIR(0)="N^1:500:0",DIR("A")="Please enter quantity of claims to restore"
+ D ^DIR
+ I $D(DUOUT)!($D(DIROUT))!($D(DIRUT))!($D(DTOUT)) Q
+ S QTY=Y
+ W !
+ D RESTORE(STAT,QTY)
+ W !,"Please verify that there were no errors during the restore. If there were,",!
+ W "please put a ticket in with the ABSP team at itsupport@ihs.gov.",!
+ K DIR,DA
+ S DIR("A")="Please press <Enter> to return to the MGR menu. "
+ S DIR(0)="EA"
+ D ^DIR
+ Q
+ ;
+ZERO ; ROUTINE TO 'ZERO OUT'* CLAIMS LESS THAN COMPLETE BUT STUCK IN THE QUEUE.
+ ;     (SET THEM TO 0 - READY TO QUEUE) - ABSP MGR QUEUE IS AUTOMATICALLY 'POK'ed.
+ N I,I2,I3,J,J2,J3,K,FDA,MSG
+ ;
+ S I=2,J=0
+ F  S I=$O(^ABSPT("AD",I)) Q:+I>92  D
+ . S I2=0 F  S I2=$O(^ABSPT("AD",I,I2)) Q:+I2=0  D
+ . . S ^BZHCBKUP("AD",I,I2,$H)=$G(^ABSPT("AD",I,I2)) ; REMEMBER WHAT WAS IN THE QUEUE "JUST IN CASE"
+ . . K FDA,MSG
+ . . S FDA(9002313.59,I2_",",1)=0
+ . . ; ZW FDA
+ . . ; W !
+ . . D FILE^DIE("E","FDA","MSG")
+ . . I $D(MSG) W "ERROR UPDATING CLAIM #"_I2,!
+ . . S J=J+1
+ ;
+ D BMES^XPDUTL(  "Number of claims reset to Zero: "_J)
+ ;
+ D POKE^ABSPOS2D
+ D BMES^XPDUTL("  ABSP Queues have been POKed.")
+ ;
+ Q
+ ;
+NEVRCALL ;
+ ;
+ ; /IHS/OIT/RAM ; THIS SHOULD NEVER BE CALLED IN PRODUCTION, SO IF IT IS NEEDED FOR ANY DEBUGGING
+ ; PURPOSES, UNCOMMENT OUT THE QUIT COMMAND BELOW. BE WARNED, THOUGH: HERE THERE BE DRAGONS!
+ Q
+ ;
+ ;
+ N I,I2,I3,J,J2,J3
+ N FDA,MSG
+ ;
+ S I=1715539.00001,J=0
+ F  S I=$O(^ABSPT(I)) Q:+J>20  D
+ . ; S ^BZHCLAIM("AD",I,I2)=$G(^ABSPT("AD",I,I2))
+ . K FDA,MSG
+ . S FDA(9002313.59,I_",",1)=51
+ . D FILE^DIE("E","FDA","MSG")
+ . I $D(MSG) W "ERROR UPDATING CLAIM #"_I2,!
+ . S J=J+1
+ ;
+ D BMES^XPDUTL("Number of claims deferred: "_J)
+ ;
+ Q
+ ;
+ 

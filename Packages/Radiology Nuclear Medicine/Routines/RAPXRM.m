@@ -1,5 +1,5 @@
-RAPXRM ;HOIFO/SWM - API for Clinical Reminders ;10/1/03  09:33
- ;;5.0;Radiology/Nuclear Medicine;**33,56**;Mar 16, 1998;Build 3
+RAPXRM ;HOIFO/SWM,GJC - API for Clinical Reminders ;04 Mar 2019 12:02 PM
+ ;;5.0;Radiology/Nuclear Medicine;**33,56,153,156,1009**;Mar 16, 1998;Build 21
  ; IA #3731 documents entry point EN1
  ; IA #4113 grants use of rtn PXRMSXRM
  ; IA #4114 grants use of direct Set and Kill, use of ^PXRMINDX(70
@@ -7,6 +7,8 @@ RAPXRM ;HOIFO/SWM - API for Clinical Reminders ;10/1/03  09:33
  ;Supported IA #2052 GET1^DID
  ;Supported IA #10141 BMES^XPDUTL, MES^XPDUTL
  ;Supported IA #10103 NOW^XLFDT
+ ;Supported IA #2171 $$NNT^XUAF4
+ ;
 EN1(RADAS,RARM) ;retrieve data from Clin. Rem.'s new style index "ACR"
  ; Input:
  ; RADAS = last subscript of (required), for example:
@@ -21,12 +23,21 @@ EN1(RADAS,RARM) ;retrieve data from Clin. Rem.'s new style index "ACR"
  ; RARM("INTERPRETING PHYSICIAN") = Primary Staff; else Primary Resident
  ;     If exam node doesn't exist, then RARM is undefined
  ; RARM("RPT STATUS") = Report status name
+ ; RARM("DIV") = Rad/Nuc Med Division Name (file 4) ^ Station #
+ ; RARM("I-LOC") = Imaging Location name
  ;
  K RARM ; clear output var
  ; validate RADAS string
  Q:$P(RADAS,";",2)'="DT"  Q:$P(RADAS,";",4)'="P"  Q:$P(RADAS,";",6)'="0"
- N RA0,RADFN,RADTI,RACNI,X,I,J,RARPT
+ N RA0,RADFN,RADTI,RACNI,X,I,J,RARPT,RAY2
  S RADFN=$P(RADAS,";"),RADTI=$P(RADAS,";",3),RACNI=$P(RADAS,";",5)
+ S RAY2=$G(^RADPT(RADFN,"DT",RADTI,0)) Q:RAY2=""
+ ;* begin P156 *
+ ;RAD/NUC MED DIVISION (#79) pointer --> $P(RAY2,U,3) DINUM'ed RA5P153
+ S RARM("DIV")=$$NNT^XUAF4(+$P(RAY2,U,3)) ;division name (file 4)
+ ;IMAGING LOCATION (#79.1) --> $P(RAY2,U,4)
+ S RARM("I-LOC")=$$GET1^DIQ(79.1,+$P(RAY2,U,4),.01) ;(if X = 0 or null func returns null)
+ ;* end P156/gjc
  S RA0=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))
  Q:RA0=""
  S RARM("EXAM D/T")=9999999.9999-RADTI

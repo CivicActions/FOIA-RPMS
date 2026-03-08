@@ -1,5 +1,5 @@
-AMHBHRP4 ; IHS/CMI/LAB - behavioral health display for GUI ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHBHRP4 ; IHS/OIT/MJL - behavioral health display for GUI ;
+ ;;3.0;IHS BEHAVIORAL HEALTH;**6**;JAN 27, 2003
  ;
  ;
  ;

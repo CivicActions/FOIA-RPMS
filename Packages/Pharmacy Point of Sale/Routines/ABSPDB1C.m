@@ -1,5 +1,5 @@
 ABSPDB1C ; IHS/OIT/CASSevern/Pieran ran 1/19/2011 - Handling of outgoing NCPDP Billing "B1" Claims for D.0 (COB and WORKERS COMP Segments)
- ;;1.0;PHARMACY POINT OF SALE;**42**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**42**;JUN 21, 2001;Build 131
 COB ;EP CALLED FROM ABSPDB1 to set up PRICING SEGMENT -- Segment not yet implemented
  Q:$D(SUPRESSG("COB"))
  N FIELD
@@ -274,7 +274,7 @@ WORKCOMP ;EP CALLED FROM ABSPDB1 to set up WORKERS COMP SEGMENT -- Entire segmen
 119GET I '$D(SPECIAL(119)) S ABSP("X")=""
  ELSE  X SPECIAL(119)
  Q
-119FMT S:ABSP("X")'="" ABSP("X")="TT"_$$ANFF^ABSPECFM($G(ABSP("X")),15)	
+119FMT S:ABSP("X")'="" ABSP("X")="TT"_$$ANFF^ABSPECFM($G(ABSP("X")),15)
  Q
 119SET ;Not Yet Implemented
  Q

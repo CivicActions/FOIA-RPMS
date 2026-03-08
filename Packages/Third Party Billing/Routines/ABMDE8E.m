@@ -1,24 +1,18 @@
-ABMDE8E ; IHS/ASDST/DMJ - Page 8 - LABORATORY ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDE8E ; IHS/SD/SDR - Page 8 - LABORATORY ;  
+ ;;2.6;IHS 3P BILLING SYSTEM;**30**;NOV 12, 2009;Build 585
  ;
- ; IHS/DSD/LSL - 09/01/98 - Patch 2 - NOIS NDA-0898-180038
- ;             0.00 charges on HCFA because version 2.0 does not assume
- ;             1 for units.  Modify code to set units to 1 if not
- ;             already defined.
+ ;IHS/DSD/LSL 09/01/98 Patch 2 NOIS NDA-0898-180038 0.00 charges on HCFA because version 2.0 does not assume
+ ;   1 for units.  Modify code to set units to 1 if not already defined.
  ;
- ; IHS/SD/SDR - V2.5 P2 - 5/9/02 - NOIS HQW-0302-100190
- ;     Modified to display 2nd and 3rd modifiers as well as units
- ; IHS/SD/SDR - V2.5 P8 - IM10618
- ;    Prompt/display provider
- ; IHS/SD/SDR - v2.5 p9 - IM16660
- ;   4-digit revenue codes
- ; IHS/SD/SDR - v2.5 p9 - task 1
- ;   Use new service line provider multiple
- ; IHS/SD/SDR - v2.5 p10 - IM19843
- ;   Added new prompt SERVICE TO DATE/TIME
- ; IHS/SD/SDR - v2.5 p11 - NPI
+ ;IHS/SD/SDR 2.5*2 5/9/02 NOIS HQW-0302-100190 Modified to display 2nd and 3rd modifiers as well as units
+ ;IHS/SD/SDR 2.5*8 IM10618 Prompt/display provider
+ ;IHS/SD/SDR 2.5*9 IM16660 4-digit revenue codes
+ ;IHS/SD/SDR 2.5*9 task 1 Use new service line provider multiple
+ ;IHS/SD/SDR 2.5*10 IM19843 Added new prompt SERVICE TO DATE/TIME
+ ;IHS/SD/SDR 2.5*11 NPI
  ;
- ; IHS/SD/SDR - v2.6 CSV
+ ;IHS/SD/SDR 2.6 CSV
+ ;IHS/SD/SDR 2.6*30 CR8870 Updated display so it won't wrap if units are maxed out, including 3 decimal places
  ;
 DISP K ABMZ S ABMZ("TITL")="LABORATORY SERVICES",ABMZ("PG")="8E"
  I $D(ABMP("DDL")),$Y>(IOSL-9) D PAUSE^ABMDE1 G:$D(DUOUT)!$D(DTOUT)!$D(DIROUT) XIT I 1
@@ -35,14 +29,22 @@ FEE S ABMZ("CAT")=17
  S ABMZ("DIC")="^ICPT(",ABMZ("X")="X",ABMZ("TOTL")=0
  I ^ABMDEXP(ABMMODE(5),0)["UB" S ABMZ("REVN")=";W !;.02//300"
  D HD G LOOP
-HD W !?5,"REVN",?60,"UNIT",?71,"TOTAL"
- W !?5,"CODE",?10,"        CPT - LABORATORY SERVICES",?59,"CHARGE",?66,"QTY",?71,"CHARGE"
- W !?5,"====",?10,"===============================================",?59,"======",?66,"===",?70,"========="
+HD ;
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;W !?5,"REVN",?60,"UNIT",?71,"TOTAL"
+ ;W !?5,"CODE",?10,"        CPT - LABORATORY SERVICES",?59,"CHARGE",?66,"QTY",?71,"CHARGE"
+ ;W !?5,"====",?10,"===============================================",?59,"======",?66,"===",?70,"========="
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ W !?5,"REVN",?54,"UNIT",?71,"TOTAL"
+ W !?5,"CODE",?10,"       CPT - LABORATORY SERVICES",?53,"CHARGE",?62,"QTY",?71,"CHARGE"
+ W !?5,"====",?10,"========================================",?52,"========",?61,"======",?68,"============"
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  Q
 LOOP S (ABMZ("LNUM"),ABMZ("NUM"),ABMZ(1),ABM)=0 F ABM("I")=1:1 S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),37,ABM)) Q:'ABM  S ABM("X")=ABM,ABMZ("NUM")=ABM("I") D PC1
  S ABMZ("MOD")=.06_U_5_U_.07_U_.08
  I $D(ABMP(638)),$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U)>0 S ABMZ("OUTLAB")=$P(^(8),U)
- I ABMZ("NUM")>0 W !?69,"==========",!?69,$J("$"_($FN(ABMZ("TOTL"),",",2)),10)
+ ;I ABMZ("NUM")>0 W !?69,"==========",!?69,$J("$"_($FN(ABMZ("TOTL"),",",2)),10)  ;abm*2.6*30 IHS/SD/SDR CR8870
+ I ABMZ("NUM")>0 W !?67,"=============",!?68,$J("$"_($FN(ABMZ("TOTL"),",",2)),12)  ;abm*2.6*30 IHS/SD/SDR CR8870
  I +$O(ABME(0)) S ABME("CONT")="" D ^ABMDERR K ABME("CONT")
  G XIT
  ;
@@ -65,9 +67,15 @@ EOP I $Y>(IOSL-5) D PAUSE^ABMDE1,HD
  .W !
  W ?5,$$GETREV^ABMDUTL($P(ABM("X0"),U,2))
  W ?10,$P(ABMZ(ABM("I")),U) W:ABMZ("MOD")]"" ABMZ("MOD")
- K ABMU S ABMU(1)="?59"_U_$J($P(ABM("X0"),U,4),6,2)
- S ABMU(2)="?66"_U_$J(ABMZ("UNIT"),2)
- S ABMU(3)="?70"_U_$J($FN((ABMZ("UNIT")*$P(ABM("X0"),U,4)),",",2),9)
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;K ABMU S ABMU(1)="?59"_U_$J($P(ABM("X0"),U,4),6,2)
+ ;S ABMU(2)="?66"_U_$J(ABMZ("UNIT"),2)
+ ;S ABMU(3)="?70"_U_$J($FN((ABMZ("UNIT")*$P(ABM("X0"),U,4)),",",2),9)
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ K ABMU S ABMU(1)="?52"_U_$J($FN($P(ABM("X0"),U,4),",",2),"8R")  ;unit charge
+ S ABMU(2)="?61"_U_$$FMT^ABMERUTL(ABMZ("UNIT"),"6R")  ;quantity/units
+ S ABMU(3)="?67"_U_$J($FN((ABMZ("UNIT")*$P(ABM("X0"),U,4)),",",2),13)  ;total charge
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  S ABMZ("TOTL")=(ABMZ("UNIT")*$P(ABM("X0"),U,4))+ABMZ("TOTL")
  I $P(^ABMDPARM(DUZ(2),1,0),U,14)'="Y" S ABMU("TXT")=$P($$CPT^ABMCVAPI($P(ABM("X0"),U),ABMP("VDT")),U,3)  ;CSV-c
  ;start CSV-c
@@ -80,7 +88,8 @@ EOP I $Y>(IOSL-5) D PAUSE^ABMDE1,HD
  ..Q:($G(ABMZCPTD(ABM("CP")))="")
  ..S ABMU("TXT")=ABMU("TXT")_ABMZCPTD(ABM("CP"))_" "
  ;end CSV-c
- S ABMU("RM")=58,ABMU("LM")=16+$L(ABMZ("MOD")) S:ABMZ("MOD")]"" ABMU("TAB")=3+$L(ABMZ("MOD")) D ^ABMDWRAP
+ ;S ABMU("RM")=58,ABMU("LM")=16+$L(ABMZ("MOD")) S:ABMZ("MOD")]"" ABMU("TAB")=3+$L(ABMZ("MOD")) D ^ABMDWRAP  ;abm*2.6*30 IHS/SD/SDR CR8870
+ S ABMU("RM")=53,ABMU("LM")=16+$L(ABMZ("MOD")) S:ABMZ("MOD")]"" ABMU("TAB")=3+$L(ABMZ("MOD")) D ^ABMDWRAP  ;abm*2.6*30 IHS/SD/SDR CR8870
  Q
  ;
 XIT K ABM,ABMMODE

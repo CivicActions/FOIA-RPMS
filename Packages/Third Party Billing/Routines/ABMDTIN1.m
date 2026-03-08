@@ -1,22 +1,27 @@
 ABMDTIN1 ; IHS/SD/SDR - Maintenance of INSURER FILE part 2 ;   
- ;;2.6;IHS Third Party Billing;**1,6,8,9,10,11,13,14,21,22,23,27**;NOV 12, 2009;Build 486
- ;IHS/SD/SDR-2.6*1-FIXPMS10028 - prompt for UB04 FL38
- ;IHS/SD/SDR-2.6*6-5010 - added code for BHT06
- ;IHS/SD/SDR-2.6*9-HEAT46087 - Added parameter chk for 4 vs 8 DXs
+ ;;2.6;IHS Third Party Billing;**1,6,8,9,10,11,13,14,21,22,23,27,37,39,40**;NOV 12, 2009;Build 785
+ ;IHS/SD/SDR-2.6*1-FIXPMS10028 prompt for UB04 FL38
+ ;IHS/SD/SDR-2.6*6-5010 added BHT06
+ ;IHS/SD/SDR-2.6*9-HEAT46087 Added parameter chk for 4 vs 8 DXs
  ;IHS/SD/SDR-2.6*13 -Added chk for new exp mode 35
  ;IHS/SD/SDR-2.6*14-Changed dt from 10/1/14 to 10/1/15
- ;IHS/SD/SDR 2.6*21 HEAT198159 - Resent routine to get block 28 question added for exp mode 35
+ ;IHS/SD/SDR 2.6*21 HEAT198159 Resent routine to get block 28 question added for exp mode 35
  ;IHS/SD/SDR 2.6*22 HEAT329144 Added prompt for fld 121 to print medication name or not
  ;IHS/SD/SDR 2.6*22 HEAT313777 Added prompt to print decimal in amount for ADA-2012
  ;IHS/SD/SDR 2.6*23 HEAT347035 Added prompt for display print order screen claim editor
  ;IHS/SD/SDR 2.6*27 CR9867 Added prompt for Billing Provider Taxonomy
- ; *****************
+ ;IHS/SD/SDR 2.6*37 ADO89299 Added require DEA# for Controlled Substances prompt
+ ;IHS/SD/SDR 2.6*39 ADO76227 Added DISPLAY COB PAGE
+ ;IHS/SD/SDR 2.6*40 ADO108243 Added Loop2400 DTP*472 range vs single date
+ ;*****************
  W ! K DIC
  S X="`"_ABM("DFN"),DIC="^ABMNINS(DUZ(2),",DIC(0)="LX" D ^DIC Q:+Y<0
  ;S DIE=DIC,DA=+Y,DR=".02;.03;.04;.05;.08;.09;.11;.12//10/1/2013" D ^DIE  ;abm*2.6*10 ICD10 023  ;abm*2.6*13 ICD10 023
  ;S DIE=DIC,DA=+Y,DR=".02;.03;.04;.05;.08;.09;.11;.12//10/1/2014" D ^DIE  ;abm*2.6*13 ICD10 023  ;abm*2.6*14
- S DIE=DIC,DA=+Y,DR=".02;.03;.04;.05;.08;.09;.11;.12//10/1/2015" D ^DIE  ;abm*2.6*14
+ ;S DIE=DIC,DA=+Y,DR=".02;.03;.04;.05;.08;.09;.11;.12//10/1/2015" D ^DIE  ;abm*2.6*14  ;abm*2.6*39 IHS/SD/SDR ADO76227
+ S DIE=DIC,DA=+Y,DR=".02;.03;.04;.05;.08;.09;.11;.15;.12//10/1/2015" D ^DIE  ;abm*2.6*14  ;abm*2.6*39 IHS/SD/SDR ADO76227
  S DR=".13" D ^DIE  ;abm*2.6*13 exp mode 35
+ S DR=".16" D ^DIE  ;abm*2.6*40 IHS/SD/SDR ADO108243
  I $D(^DD(9002274.093)) D
  .W !
  .S DR=".06"
@@ -34,7 +39,6 @@ ABMDTIN1 ; IHS/SD/SDR - Maintenance of INSURER FILE part 2 ;
  .S DA=+Y
  .S DR=".02"
  .D ^DIE
- ;D PROV2^ABMDTIN2  ;abm*2.6*6 5010
 DISP ;DISPLAY VISIT TYPE TABLE
  D DISP^ABMDTIN2
 DIC ;LOOK-UP WITH LAYGO
@@ -49,7 +53,7 @@ DIC ;LOOK-UP WITH LAYGO
  I $P(Y,U,3) S DR=".02////"_$S($P(^AUTNINS(DA(1),2),U,2)="Y":"I",1:"C") D ^DIE K DR  ;icd/cpt?
  S DR=".07Billable (Y/N/E)....:" D ^DIE G XIT:$D(Y)
  I X="N" D INACTVTM(ABM("DFN"),ABM("VTYP"),DT) G DISP
- S DR=".25Reporting purposes only:" D ^DIE G XIT:$D(Y)  ;abm*2.6*6 5010
+ S DR=".25Reporting purposes only:" D ^DIE G XIT:$D(Y)
  D DISPRPL  ;display info about replacement insurer/visit type
  K DIR,X,Y
  S DIR(0)="YO"
@@ -105,16 +109,15 @@ DIC2 S DA=ABM("VTYP")
  S DR=".13Auto Approve?.......:" D ^DIE G XIT:$D(Y)
  S DR=".04Mode of Export......:" D ^DIE
  S DR="123Billing Prv Taxonomy" D ^DIE  ;abm*2.6*27 IHS/SD/AML CR9867
+ I ("^32^35^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR="125DEA# required for controlled substances?" D ^DIE  ;abm*2.6*37 IHS/SD/SDR ADO89299
  I ("^28^35^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR="121Should Medication Name print?" D ^DIE  ;abm*2.6*22 IHS/SD/SDR HEAT329144
  I ($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4)=34) S DR="122Print decimal in dollar amount?" D ^DIE  ;abm*2.6*22 IHS/SD/SDR HEAT313777
  K DR
- ;I ("^11^21^31^51^28^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR=".18Relationship Code?;.12Itemized UB?.....:;115UB-04 Form Locater 38;109ICD PX on Claim?;.125Print meds on 2 lines?"  ;abm*2.6*8 5010  ;abm*2.6*11 IHS/SD/AML HEAT92962
+ ;I ("^11^21^31^51^28^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR=".18Relationship Code?;.12Itemized UB?.....:;115UB-04 Form Locater 38;109ICD PX on Claim?;.125Print meds on 2 lines?" ;2.6*11 IHS/SD/AML HEAT92962
  I ("^11^21^31^51^28^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) D  ;abm*2.6*11 IHS/SD/AML HEAT92962
  .S DR=".18Relationship Code?;.12Itemized UB?.....:;115UB-04 Form Locater 38;109ICD PX on Claim?;.125Print meds on 2 lines?;120UB-04 Block 44 Blank?"  ;abm*2.6*11 IHS/SD/AML HEAT92962
  .I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM("DFN"),".211","I"),1,"I")="D" S DR=DR_";124Display Print Order Screen in Claim Editor?"  ;abm*2.6*23 IHS/SD/SDR HEAT347035
- ;start old abm*2.6*10 HEAT72503
- ;I ("^3^14^22^27^32^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) S DR=".15Block 24K..........:;.17Block 29...........:;.2Block 33 PIN#......:"  ;abm*2.6*8 HEAT32544
- ;end old start new HEAT72503
+ ;start new HEAT72503
  ;I ("^3^14^22^27^32^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) D  ;abm*2.6*13 export mode 35
  I ("^3^14^22^27^32^35^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) D  ;abm*2.6*13 export mode 35
  .S DR=".15Block 24K..........:"
@@ -122,10 +125,8 @@ DIC2 S DA=ABM("VTYP")
  .I "^27^35^"[("^"_$P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4)_"^") S DR=DR_";118Block 28...........:"  ;abm*2.6*13 export mode 35  ;abm*2.6*21 IHS/SD/SDR HEAT198159
  .S DR=DR_";.17Block 29...........:;.2Block 33 PIN#......:"
  ;end new HEAT72503
- ;start new abm*2.6*11 HEAT66367
  I ("^29^"[("^"_($P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4))_"^")) D
  .S DR="119Block 48..........:"
- ;end new HEAT66367
  D:($G(DR)) ^DIE G XIT:$D(Y)
  ;end new FIXPMS10028
  ;I $P($G(^ABMNINS(DUZ(2),ABM("DFN"),1,ABM("VTYP"),0)),U,4)=27 S DR="116//"_$S($$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM("DFN"),".211","I"),1,"I")="R":8,1:4)  D ^DIE G XIT:$D(Y)  ;abm*2.6*10 HEAT73780  ;abm*2.6*13 export mode 35

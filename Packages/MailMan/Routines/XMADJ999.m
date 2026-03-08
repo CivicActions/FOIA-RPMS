@@ -1,0 +1,3 @@
+XMADJ999 ;ISC-SF/GMB- * OBSOLETE * ;01/07/98  14:54
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+ Q

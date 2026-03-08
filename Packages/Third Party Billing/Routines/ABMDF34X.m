@@ -1,10 +1,13 @@
 ABMDF34X ; IHS/SD/SDR - ADA-2012 FORM ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**11,13,21,22**;NOV 12, 2009;Build 418
- ;IHS/SD/SDR - 2.6*13 - VMBP - RQMT_95 - Added code to populated remarks box 35 (line 41)
- ;IHS/SD/SDR - 2.6*21 - HEAT166874 - fix for programming error so test claim will print correctly
- ;IHS/SD/SDR - 2.6*21 - HEAT205579 - Made T1015 print first for ARBOR HEALTH PLAN
- ;IHS/SD/SDR - 2.6*21 - HEAT284071 - Added check for FL override for ADA-2012
+ ;;2.6;IHS 3P BILLING SYSTEM;**11,13,21,22,30,31**;NOV 12, 2009;Build 615
+ ;IHS/SD/SDR 2.6*13 VMBP - RQMT_95 - Added code to populated remarks box 35 (line 41)
+ ;IHS/SD/SDR 2.6*21 HEAT166874 - fix for programming error so test claim will print correctly
+ ;IHS/SD/SDR 2.6*21 HEAT205579 - Made T1015 print first for ARBOR HEALTH PLAN
+ ;IHS/SD/SDR 2.6*21 HEAT284071 - Added check for FL override for ADA-2012
  ;IHS/SD/SDR 2.6*22 HEAT313777 Added check for new parameter that will allow/not allow decimal to print in dollar amounts
+ ;IHS/SD/SDR 2.6*30 CR9375 Fixed programming error <UNDEFINED>FRMT+9^ABMDF34X when using the Test Print option
+ ;IHS/SD/SDR 2.6*30 CR8870 make only whole number part of units print
+ ;IHS/SD/SDR 2.6*31 CR10371 Expanded FL 50 to 12 chars (from 10) and 55 to 12 chars (from 10)
  ;************************************************************************************
  ;
 MARG ;Set left and top margins
@@ -72,7 +75,8 @@ FRMT ;
  .S ABM("LTH")=$P(ABM("LTH"),"$")
  .;S ABM("FLD")=$TR($FN(+ABM("FLD"),"",2),".")  ;abm*2.6*22 IHS/SD/SDR HEAT313777
  .S ABM("FLD")=$FN(+ABM("FLD"),"",2)  ;abm*2.6*22 IHS/SD/SDR HEAT313777
- .S ABM("FLD")=$S($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,22)="Y":ABM("FLD"),1:$TR(ABM("FLD"),"."))  ;abm*2.6*22 IHS/SD/SDR HEAT313777
+ .;S ABM("FLD")=$S($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,22)="Y":ABM("FLD"),1:$TR(ABM("FLD"),"."))  ;abm*2.6*22 IHS/SD/SDR HEAT313777  ;abm*2.6*30 IHS/SD/SDR CR9375
+ .S ABM("FLD")=$S($P($G(^ABMNINS(+$G(ABMP("LDFN")),+$G(ABMP("INS")),1,+$G(ABMP("VTYP")),1)),U,22)="Y":ABM("FLD"),1:$TR(ABM("FLD"),"."))  ;abm*2.6*22 IHS/SD/SDR HEAT313777  ;abm*2.6*30 IHS/SD/SDR CR9375
  .S ABM("RT")=ABM("LTH")-$L(ABM("FLD"))+1
  .I ABM("RT")>1 D
  ..S ABM("BLNK")=""
@@ -101,6 +105,11 @@ FRMT ;
  ..S $P(ABM("BLNK")," ",ABM("RT"))=""
  ..S ABM("FLD")=ABM("BLNK")_ABM("FLD")
  ;
+ ;start new abm*2.6*30 IHS/SD/SDR CR8870
+ ;remove anything after decimal (meant for units specifically)
+ I ABM("LTH")["N" D
+ .S ABM("FLD")=$P(ABM("FLD"),".")
+ ;end new abm*2,.6*30 IHS/SD/SDR CR8870
  W $E(ABM("FLD"),1,ABM("LTH"))
  Q
  ;
@@ -149,7 +158,8 @@ TEXT ;;TABS;;FIELD LENGTH
 20 ;;1;;30
 21 ;;1;;30
 22 ;;1^42^56^59^63;;30^10D^1^1^16
-26 ;;1^12^15^18^30^36^42^47^50^74;;10D^2^2^11^5^5^5^2^23^6$
+26 ;;1^12^15^18^30^36^42^47^50^74;;10D^2^2^11^5^5^5^2N^23^6$
+ ;26 ;;1^12^15^18^30^36^42^47^50^74;;10D^2^2^11^5^5^5^2^23^6$  ;original line abm*2.6*30 IHS/SD/SDR CR8870
 36 ;;47^74;;2^6$
 37 ;;48^59;;8^8
 38 ;;48^59^74;;8^8^6$
@@ -164,8 +174,10 @@ TEXT ;;TABS;;FIELD LENGTH
 50 ;;56^77;;10D^2
 54 ;;2^42^69;;30^25^10D
 55 ;;2;;30
-56 ;;2^48^69;;30^10^10
+56 ;;2^48^68;;30^10^12
+ ;56 ;;2^48^69;;30^10^10  ;original line abm*2.6*31 IHS/SD/SDR CR10351
 57 ;;68;;10
 58 ;;43;;30
-59 ;;1^14^27^43;;10^10^11^30
+59 ;;1^13^27^43;;10^12^11^30
+ ;59 ;;1^14^27^43;;10^10^11^30  ;original line abm*2.6*31 IHS/SD/SDR CR10351
 60 ;;6^28^46^68;;14^14^14^10 

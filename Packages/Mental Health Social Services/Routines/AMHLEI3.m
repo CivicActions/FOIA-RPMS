@@ -1,8 +1,8 @@
-AMHLEI3 ; IHS/CMI/LAB - treatment plan update ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLEI3 ; IHS/CMI/LAB - treatment plan update ; [ 12/01/04  12:47 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4,6**;JAN 27, 2003
  ;
 PRINT ;EP
- I '$G(AMHPAT) W !!,"ERROR - Patient not defined!" Q
+ I '$G(DFN) W !!,"ERROR - Patient not defined!" Q
  D FULL^VALM1
  ;print or browse
  W ! S DIR(0)="S^P:PRINT Output on Paper;B:BROWSE Output on Screen",DIR("A")="Do you wish to",DIR("B")="P" K DA D ^DIR K DIR

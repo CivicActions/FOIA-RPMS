@@ -1,10 +1,10 @@
 XMA2B ;(WASH ISC)/CAP/THM-Send BLOB ;06/22/99  14:44
- ;;8.0;MailMan;;Jun 28, 2002
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Entry points used by MailMan options (not covered by DBIA):
  ; BLOB     XMBLOBSEND - Send Imaging Package message
 BLOB ;Send BLOBs [Other Body Parts] in a message.
  ;Do not allow option to be used if Imaging is not set up.
- I '$O(^MAG(2005,0)) W !!,"Imaging is not installed here.  You can not send multimedia messages.",$C(7) Q
+ I '$O(^MAG(2005,0)) W !!,"Imaging is not installed here.  You can not send multimedia messages.",*7 Q
  ;
  ;First message is created with text.
  K XMA2BT
@@ -37,11 +37,11 @@ CHK K XMA2BT Q:$S($O(^XMB(3.9,XMZ,2005,0)):1,'$O(^XMB(3.9,XMZ,2,0)):1,1:0)
  S Y=$TR(Y,"yesno","YESNO")
  I $L(Y) Q:$E("YES",1,$L(Y))=Y
  I $E("NO",1,$L(Y))=Y G ADD
- W $C(7),"  <<< Please answer 'YES' or 'NO'"
+ W *7,"  <<< Please answer 'YES' or 'NO'"
  G CHK
  ;
 LK S DIC=2005,DIC(0)="NOQFEM",DIC("S")="N % S %=^(0) I $P(%,U,6)'=9,$P(%,U,3)" D ^DIC K DIC Q
-ER W " ??",$C(7) G ADD
+ER W " ??",*7 G ADD
  ;
 HLP ;Help for adding/removing BLOBS
  W !!,"You may add or remove a BLOB from the message.  To add a BLOB"

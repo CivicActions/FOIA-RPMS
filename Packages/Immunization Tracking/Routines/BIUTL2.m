@@ -1,14 +1,6 @@
-BIUTL2 ;IHS/CMI/MWR - UTIL: ZIS, PATH, ERRCODE; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**14**;AUG 01,2017
+BIUTL2 ;IHS/CMI/MWR - UTIL: ZIS, PATH, ERRCODE; MAY 10, 2010 ; 03 Jul 2025  12:02 PM
+ ;;8.5;IMMUNIZATION;**21,29,30,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
- ;;  UTILITY: ZIS, ERROR CODE, VACCINE NAME & GROUP,
- ;;           MAX SERIES#, LOT DFLT, CASE MGR DFLT, VIS DATE DFLT.
- ;;  PATCH 1: Do not provide default Lot Number if Lot Number is restricted
- ;;           to a site and user's DUZ(2) does not match the site.  LOTDEF+19
- ;;  PATCH 7: Changes to accommodate new TCH Forecaster   HL7TX+16
- ;;  PATCH 8: Changes to accommodate new TCH Forecaster   HL7TX+16, MINAGE+6
- ;;  PATCH 14: Update notes.   RISKP+0
- ;
  ;
  ;----------
 ERRCD(BIIEN,BITEXT,BIDISPL,BIABBRV) ;EP
@@ -39,9 +31,7 @@ ERRCD(BIIEN,BITEXT,BIDISPL,BIABBRV) ;EP
  .W:'BICRT @IOF D:BICRT DIRZ^BIUTL3()
  ;
  ;---> Not used for now.
- ;D EN^DDIOL("* "_BITEXT,"","!!?3"),DIRZ^BIUTL3()
  Q
- ;
  ;
  ;----------
 VNAME(IEN,LONG) ;EP
@@ -58,19 +48,20 @@ VNAME(IEN,LONG) ;EP
  Q:$G(LONG)=3 " "_$P(^AUTTIMM(IEN,0),"^",2)_"  ("_$P(^AUTTIMM(IEN,0),"^")_") "
  Q $P(^AUTTIMM(IEN,0),"^",2)
  ;
- ;
  ;----------
 MNAME(IEN,MVX) ;EP
  ;---> Return Manufacturer Name or MVX Code.
  ;---> Parameters:
  ;     1 - IEN (req) IEN of Manufacturer.
- ;     2 - MVX (opt) If MVX=1, return MVX Code
+ ;     2 - MVX (opt) If MVX=1, return MVX Code, MVX=2, return  SYNONYM #1.
  ;
  Q:'$G(IEN) "NO IEN"
  Q:'$D(^AUTTIMAN(IEN,0)) $S($G(MVX):"UNK",1:"UNKNOWN")
  Q:$G(MVX)=1 $P(^AUTTIMAN(IEN,0),"^",2)
+ ;********** PATCH 21, v8.5, APR 01,2021, IHS/CMI/MWR
+ ;---> Return Synonym #1 for prompts in DTS call.
+ Q:$G(MVX)=2 $P(^AUTTIMAN(IEN,0),"^",5)
  Q $P(^AUTTIMAN(IEN,0),"^")
- ;
  ;
  ;----------
 CODE(IEN,TYPE) ;EP
@@ -96,7 +87,6 @@ CODE(IEN,TYPE) ;EP
  N X S X=$P(^AUTTIMM(IEN,0),"^",3)
  I $G(TYPE)=6,$L(X)=1 S X=0_X
  Q X
- ;
  ;
  ;----------
 IMMVG(BIIEN,Z) ;EP
@@ -126,7 +116,6 @@ IMMVG(BIIEN,Z) ;EP
  I Z=2 Q BIVG
  Q $$VGROUP(BIVG,Z)
  ;
- ;
  ;----------
 VGROUP(BIVG,Z) ;EP
  ;---> Return Vaccine Group or ("Series Type") or Information
@@ -142,6 +131,8 @@ VGROUP(BIVG,Z) ;EP
  ;                     If Z=7, return max doses in Adolescent Report.
  ;                     If Z=8, return Vaccine Group Two-Yr-Old Report indicator:
  ;                             1=Yes,include; 0=No, exclude.
+ ;                     If Z=9, return representative CVX for this VMR Vaccine Group Number.
+ ;                     If Z=10, return NOS EQUIVALENT CVX of Vaccine Group.
  ;
  ;---> If null, set Vaccine Group IEN=12: "Other".
  S:'$G(BIVG) BIVG=12
@@ -155,8 +146,29 @@ VGROUP(BIVG,Z) ;EP
  I Z=6 Q $P(BIVG0,U,4)
  I Z=7 Q $P(BIVG0,U,7)
  I Z=8 Q $P(BIVG0,U,8)
+ ;
+ ;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ ;---> Add param to return NOS EQUIVALENT CVX for Vaccine Group.
+ I Z=10 Q $P(BIVG0,U,11)
+ ;
+ ;********** PATCH 18, v8.5, JUL 01,2019, IHS/CMI/MWR
+ ;---> Add param to return representative CVX for VMR Vaccine Group Number.
+ I Z=9 Q $$CODE($P(BIVG0,U,10))
+ ;
  Q $P(BIVG0,U)
  ;
+ ;;********** PATCH 18, v8.5, JUL 01,2019, IHS/CMI/MWR
+ ;---> Return representative CVX for this VMR Vaccine Group Number.
+ ;
+VMRVG(BIVMR) ;EP
+ ;---> Return representative CVX for this VMR Vaccine Group Number.
+ ;---> Parameters:
+ ;     1 - BIVMR (req) VMR Vaccine Group Number
+ ;
+ Q:('$G(BIVMR)) 999
+ N BIVG S BIVG=$O(^BISERT("VMR",BIVMR,0))
+ Q:('$G(BIVG)) 999
+ Q $$VGROUP(BIVG,9)
  ;
  ;----------
 HL7TX(BICVX,BIGRP) ;EP
@@ -165,22 +177,26 @@ HL7TX(BICVX,BIGRP) ;EP
  ;---> Parameters:
  ;     1 - BICVX  (req) CVX Code for this vaccine.
  ;     2 - BIGRP  (opt) If BIGRP=1, return Vaccine Group IEN for this CVX.
+ ;                      If BIGRP=2, return Vaccine Name for this CVX.
  ;
  I '$G(BICVX) S BICVX=999
+ ;---> For lookups where a leading zero CVX has been passed.
+ S BICVX=+BICVX
  I '$D(^AUTTIMM("C",BICVX)) S BICVX=999
- N BIVIEN S BIVIEN=$O(^AUTTIMM("C",BICVX,0))
+ N BIVIEN
+ S BIVIEN=$O(^AUTTIMM("C",BICVX,0))
  S:'BIVIEN BIVIEN=137
  ;---> Return Vaccine IEN for this CVX.
  Q:'$G(BIGRP) BIVIEN
- ;---> Return Vaccine Group for this CVX.
  ;
- ;********** PATCH 8, v8.5, MAR 15,2014, IHS/CMI/MWR
- ;---> If the Vaccine Group is null, return IEN for Group "OTHER".
- ;Q $P(^AUTTIMM(BIVIEN,0),"^",9)
- N X S X=$P(^AUTTIMM(BIVIEN,0),"^",9)
+ ;---> Return Vaccine Name for this CVX.
+ I BIGRP=2 Q ($$VNAME(BIVIEN))
+ ;
+ ;---> Return Vaccine Group IEN for this CVX.
+ N X
+ S X=$P(^AUTTIMM(BIVIEN,0),"^",9)
  S:'X X=12
  Q X
- ;**********
  ;
  ;
  ;----------
@@ -194,7 +210,6 @@ VCOMPS(IEN) ;EP v8.0
  N X S X=$P(^AUTTIMM(IEN,0),"^",21,26)
  S X=$TR(X,"^",";")
  Q X
- ;
  ;
  ;----------
 LOTDEF(IEN) ;EP
@@ -224,7 +239,6 @@ LOTDEF(IEN) ;EP
  ;---> Return Default Lot# IEN.
  Q X
  ;
- ;
  ;----------
 LOTREQ(BIDUZ2) ;EP
  ;---> Return 1 if Lot#'s are required, 0 if not.
@@ -232,7 +246,6 @@ LOTREQ(BIDUZ2) ;EP
  ;     1 - BIDUZ2 (req) User's DUZ(2)
  ;
  Q $P($G(^BISITE(+$G(BIDUZ2),0)),U,9)
- ;
  ;
  ;----------
 LOTLOW(BILIEN,BIDUZ2) ;EP
@@ -242,14 +255,13 @@ LOTLOW(BILIEN,BIDUZ2) ;EP
  ;---> Parameters:
  ;     1 - BILIEN  (req) IEN of Lot Number in ^AUTTIML.
  ;     2 - BIDUZ2 (req) User's DUZ(2)
- ;                                         vvv83
+ ;
  N X
  D
  .S X=$P($G(^AUTTIML(+BILIEN,0)),U,15)  Q:X
  .S X=$P($G(^BISITE(+$G(BIDUZ2),0)),U,25)
  S:(X="") X=50
  Q X
- ;
  ;
  ;----------
 FORECAS(BIDUZ2) ;EP
@@ -259,7 +271,6 @@ FORECAS(BIDUZ2) ;EP
  ;
  Q $P($G(^BISITE(+$G(BIDUZ2),0)),U,11)
  ;
- ;
  ;----------
 INPTCHK(BIDUZ2) ;EP
  ;---> Return 1 if Inpatient Visit Check is enabled.
@@ -268,20 +279,28 @@ INPTCHK(BIDUZ2) ;EP
  ;
  Q $P($G(^BISITE(+$G(BIDUZ2),0)),U,23)
  ;
- ;
  ;********** PATCH 14, v8.5, AUG 01,2017, IHS/CMI/MWR
  ;---> Update notes below.
  ;----------
 RISKP(BIDUZ2) ;EP - Risk Factor check (and smoking).
- ;---> Risk Parameter: 0 - None, 1 - Pneumo for High Risk history,
- ;--->  2 - Hep B for Diabetes Mellitus, 3 - Hep A and Hep B for CLD/Hep C
- ;--->  9 - adds Smoking Factors.
+ ;V8.5 PATCH 29 - FID-106359 Relocate MenB to site parameter
+ ;---> Risk Parameter:
+ ;     0 - None
+ ;     1 - Pneumo for High Risk history
+ ;     2 - Hep B for Diabetes Mellitus
+ ;     3 - Hep A and Hep B for CLD/Hep C
+ ;     4 - COVID Immunocompromised
+ ;     5 - Men B for 16 to 18 yrs
+ ;     6 - RSV for 60 to 74 yrs
+ ;     7 - HPV Early forecast at 9
+ ;     8 - RZV
+ ;     S - add smoking
+ ;
  ;---> Parameters:
  ;     1 - BIDUZ2 (req) User's DUZ(2)
  ;
- Q +$P($G(^BISITE(+$G(BIDUZ2),0)),U,19)
+ Q $P($G(^BISITE(+$G(BIDUZ2),0)),U,19)
  ;**********
- ;
  ;
  ;----------
 IMPCPT(BIDUZ2) ;EP
@@ -290,7 +309,6 @@ IMPCPT(BIDUZ2) ;EP
  ;     1 - BIDUZ2 (req) User's DUZ(2)
  ;
  Q $P($G(^BISITE(+$G(BIDUZ2),0)),U,20)
- ;
  ;
  ;----------
 VISMNU(BIDUZ2) ;EP
@@ -301,7 +319,6 @@ VISMNU(BIDUZ2) ;EP
  ;
  Q +$P($G(^BISITE(+$G(BIDUZ2),0)),U,28)
  ;
- ;
  ;----------
 CMGRACT(BICMGR) ;EP
  ;---> Return 1 if the Case Manager is INACTIVE.
@@ -311,7 +328,6 @@ CMGRACT(BICMGR) ;EP
  Q:'$G(BICMGR) 1
  Q:'$D(^BIMGR(BICMGR,0)) 1
  Q $P(^BIMGR(BICMGR,0),U,2)
- ;
  ;
  ;----------
 CMGRDEF(DUZ2,X) ;EP
@@ -327,7 +343,6 @@ CMGRDEF(DUZ2,X) ;EP
  Q:'$G(X) Y
  Q:$$CMGRACT(Y) $E($$PERSON^BIUTL1(Y),1,20)_" * INACTIVE!"
  Q $$PERSON^BIUTL1(Y)
- ;
  ;
  ;----------
 DEFLET(DUZ2,X,Z) ;EP
@@ -345,7 +360,6 @@ DEFLET(DUZ2,X,Z) ;EP
  Q:'Y ""
  Q $P($G(^BILET(Y,0)),U)
  ;
- ;
  ;----------
 MINDAYS(DUZ2) ;EP
  ;---> Return Default Minimum Days Since Last Letter sent
@@ -358,49 +372,17 @@ MINDAYS(DUZ2) ;EP
  Q:Y="" 60
  Q Y
  ;
- ;
  ;----------
 MINAGE(DUZ2) ;EP
  ;---> Return parameter to forecast immunizations due at either the
  ;---> Minimum Acceptable Age or at the Recommended Age for this site.
+ ;---> 1=Minimum Acceptable, 0=Recommended.
  ;---> Parameters:
  ;     1 - DUZ2 (req) User's DUZ(2)
  ;
- ;********** PATCH 8, v8.5, MAR 15,2014, IHS/CMI/MWR
- ;---> Change returned value to 1 or 0 to accommodate new forecaster.
  Q:'$G(DUZ2) 0
  Q:($P($G(^BISITE(DUZ2,0)),U,7)="A") 1
  Q 0
- ;**********
- ;
- ;
- ;----------
-RULES(DUZ2) ;EP
- ;---> Return parameter indicating which set of Immserve Forecasting
- ;---> Rules is being used (passed to Immserve).
- ;---> Parameters:
- ;     1 - DUZ2 (req) User's DUZ(2)
- ;
- N Y S Y=$$VALIDRUL(DUZ2)
- Q:'Y "IHS_1m18"
- Q "IHS_"_Y
- ;
- ;
- ;----------
-VALIDRUL(DUZ2) ;EP
- ;---> Return whether current Immserve Site Parameter is a valid choice.
- ;---> Return 0 is NOT a valid choice; otherwise return the numeric choice.
- ;---> Parameters:
- ;     1 - DUZ2 (req) User's DUZ(2)
- ;
- Q:'$G(DUZ2) 0
- N X,Y
- S Y=$G(^BISITE(DUZ(2),0)),X=$P(Y,U,8)
- ;---> For a new set of Immserve Rules, change here below and $$RULES+10^BISITE2.
- ;---> Current valid choices are 1,2,3,4,5,11.
- Q:((X<1)!(X>11)) 0
- Q:((X>7)&(X<11)) 0
- Q X_$S($P(Y,U,21):"g",1:"")_$S($P(Y,U,24)=2:"m26",1:"m18")
  ;
  ;
  ;----------
@@ -413,7 +395,6 @@ VISDEF(IEN) ;EP
  Q:'$G(IEN) ""
  Q:'$D(^AUTTIMM(IEN,0)) ""
  Q $P(^AUTTIMM(IEN,0),"^",13)
- ;
  ;
  ;----------
 ZIS(BIPOP,BIQUE,BIDEF,BIPRMPT,BIMES) ;EP
@@ -465,7 +446,6 @@ ZISQ ;EP
  .S ZTIO=ZTIO_";"_IOST_";"_IOM_";"_IOSL
  ;
  ;---> Uncomment next line to suppress "Requested Start Time" question.
- ;S ZTDTH=$H
  D ^%ZTLOAD,^%ZISC
  X:$D(ZTQUEUED) BIMES H 2
  ;
@@ -473,13 +453,11 @@ ZISEXIT ;EP
  K BIMES,ZTDESC,ZTDTH,ZTIO,ZTRTN,ZTSAVE,ZTSK
  Q
  ;
- ;
  ;----------
 DFNCHECK() ;EP
  ;---> If BIDFN not supplied, set Error Code and quit.
  I '$G(BIDFN) D ERRCD^BIUTL2(201,,1) Q 1
  Q 0
- ;
  ;
  ;----------
 DUZCHECK() ;EP
@@ -488,7 +466,6 @@ DUZCHECK() ;EP
  S:'$G(BIDUZ2) BIDUZ2=$G(DUZ(2))
  I '$G(BIDUZ2) D ERRCD^BIUTL2(105,,1) Q 1
  Q 0
- ;
  ;
 VMAX(IEN) ;EP  ;MWRZZZ REMOVE?
  ;---> Return the Maximum Dose# for a Vaccine.

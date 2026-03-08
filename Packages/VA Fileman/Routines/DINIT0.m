@@ -1,11 +1,12 @@
-DINIT0 ;SFISC/GFT,XAK-INITIALIZE VA FILEMAN ;6/28/2009
- ;;22.0;VA FileMan;**164**;Mar 30, 1999;Build 21
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DINIT0 ;SFISC/GFT,XAK-INITIALIZE VA FILEMAN ;2/24/93  11:39 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 DD F I=1:1 S X=$T(DD+I),Y=$P(X," ",3,99) G ^DINIT1:X?.P S @("^DD(0,"_$E($P(X," ",2),3,99)_")=Y")
  ;;0 ATTRIBUTE^N
  ;;"SB",.1,1
  ;;.001,0 NUMBER^N^^ ^K:$L(X)>12 X
- ;;.01,0 LABEL^RF^^0;1^K:$L(X)>30!(X?1E)!(X["""")!(X["=") X
+ ;;.01,0 LABEL^R^^0;1^K:$L(X)>30!(X?1E)!(X["""")!(X["=") X
  ;;.01,1,0 ^.1^1^1
  ;;.01,1,1,0 DA(2)^B
  ;;.01,1,1,1 S @(DIC_"""B"",X,DA)=""""")

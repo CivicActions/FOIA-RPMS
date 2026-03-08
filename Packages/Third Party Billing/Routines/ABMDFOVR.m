@@ -1,16 +1,18 @@
-ABMDFOVR ; IHS/ASDST/DMJ - Set Up Form Override ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**10,13,21**;NOV 12, 2009;Build 379
+ABMDFOVR ; IHS/SD/SDR - Set Up Form Override ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,13,21,30,39**;NOV 12, 2009;Build 776
  ;IHS/DSD/MRS - Added hcfa block 11c 11/25/1998
  ;
- ;IHS/SD/SDR - V2.5 P2 - 4/17/02 - NOIS LUA-0102-160077 - Modified so it wouldn't kick user out after immediately
+ ;IHS/SD/SDR 2.5*2 4/17/02 NOIS LUA-0102-160077 Modified so it wouldn't kick user out after immediately
  ;    editing one line for box 24,32, and 33.  It now asks if you would like to edit another line.
- ;IHS/SD/SDR - V2.5 P2 - 4/17/02 - NOIS NCA-1001-180096 - Modified to correct so block 53 would print correct info
- ;IHS/SD/SDR - v2.5 p8 - task 8 - Added code to correct add/edit prompt for FL override
- ;IHS/SD/SDR - v2.5 p13 - IM25365 - Added FL 32a/32b/33a/33b for export mode 27
+ ;IHS/SD/SDR 2.5*2 4/17/02 NOIS NCA-1001-180096 - Modified to correct so block 53 would print correct info
+ ;IHS/SD/SDR 2.5*8 task 8 Added code to correct add/edit prompt for FL override
+ ;IHS/SD/SDR 2.5*13 IM25365 Added FL 32a/32b/33a/33b for export mode 27
  ;
- ;IHS/SD/SDR - 2.6*13 - Added check for new export mode 35
- ;IHS/SD/AML - 2.6*21 - HEAT132667 - Changed code to use AUTNINS for lookup so identifiers will display when selecting
- ;IHS/SD/SDR - 2.6*21 - HEAT284071 - Added override option,fields for ADA-2012
+ ;IHS/SD/SDR 2.6*13 Added check for new export mode 35
+ ;IHS/SD/AML 2.6*21 HEAT132667 Changed code to use AUTNINS for lookup so identifiers will display when selecting
+ ;IHS/SD/SDR 2.6*21 HEAT284071 Added override option,fields for ADA-2012
+ ;IHS/SD/SDR 2.6*30 CR11171 Added ADA-2019 to work like ADA-2012
+ ;IHS/SD/SDR 2.6*39 ADO99168 Added ADA-2024 to work like ADA-2019
  ;
 START ;start
  K DIC
@@ -30,7 +32,9 @@ FORM ;select form
  S DIC="^ABMDEXP(",DIC(0)="AEMQ"
  ;S DIC("S")="I +Y=3!(+Y=14)!(+Y=27)"  ;abm*2.6*13 export mode 35
  ;S DIC("S")="I +Y=3!(+Y=14)!(+Y=27)!(+Y=35)"  ;abm*2.6*13 export mode 35  ;abm*2.6*21 IHS/SD/SDR HEAT284071
- S DIC("S")="I +Y=3!(+Y=14)!(+Y=27)!(+Y=35)!(+Y=34)"  ;abm*2.6*21 IHS/SD/SDR HEAT284071
+ ;S DIC("S")="I +Y=3!(+Y=14)!(+Y=27)!(+Y=35)!(+Y=34)"  ;abm*2.6*21 IHS/SD/SDR HEAT284071  ;abm*2.6*30 IHS/SD/SDR CR11171
+ ;S DIC("S")="I +Y=3!(+Y=14)!(+Y=27)!(+Y=35)!(+Y=34)!(+Y=36)"  ;abm*2.6*30 IHS/SD/SDR CR11171  ;abm*2.6*39 IHS/SD/SDR ADO99168
+ S DIC("S")="I +Y=3!(+Y=14)!(+Y=27)!(+Y=35)!(+Y=34)!(+Y=36)!(+Y=37)"  ;abm*2.6*30 IHS/SD/SDR CR11171  ;abm*2.6*39 IHS/SD/SDR ADO99168
  D ^DIC K DIC
  Q:+Y<0
  S ABMFORM=+Y
@@ -46,7 +50,9 @@ BOX ;select form locator
  S DIR(0)="S^10:RESERVED FOR LOCAL USE;11:BOX 11C - INSURANCE PLAN/PROGRAM NAME;19:RESERVED FOR LOCAL USE;24:LINE ITEMS;241:LINE 24, LINE 1 ITEM;32:WHERE SERVICES RENDERED;33:BILLING INFO"
  ;start new abm*2.6*10 HEAT64983
  I ABMFORM'=3  S DIR(0)="S^10:RESERVED FOR LOCAL USE;11:BOX 11C - INSURANCE PLAN/PROGRAM NAME;19:RESERVED FOR LOCAL USE;24:LINE ITEMS;241:LINE 24, LINE 1 ITEM;31:SIGNATURE OF PHYSICIAN;32:WHERE SERVICES RENDERED;33:BILLING INFO"
- I ABMFORM=34 D
+ ;I ABMFORM=34 D  ;abm*2.6*30 IHS/SD/SDR CR11171
+ ;I ((ABMFORM=34)!(ABMFORM=36)) D  ;abm*2.6*30 IHS/SD/SDR CR11171  ;abm*2.6*39 IHS/SD/SDR ADO99168
+ I ((ABMFORM=34)!(ABMFORM=36)!(ABMFORM=37)) D  ;abm*2.6*30 IHS/SD/SDR CR11171  ;abm*2.6*39 IHS/SD/SDR ADO99168
  .S DIR(0)="S^16:PLAN/GROUP NUMBER;38:PLACE OF SERVICE;48:BILLING DENTIST OR DENTAL ENTITY ADDRESS;"
  .S DIR(0)=DIR(0)_"49:BILLING DENTIST NPI;50:BILLING DENTIST LICENSE NUMBER;51:SSN/TIN;52:PHONE NUMBER or ADD'L PROVIDER ID;"
  .S DIR(0)=DIR(0)_"53:TREATING DENTIST/LOCATION;54:NPI;55:TREATING DENTIST LICENSE NUMBER;56:TREATING DENTIST ADDRESS or PROVIDER SPECIALTY CODE;57:PHONE NUMBER;58:ADD'L PROVIDER ID"

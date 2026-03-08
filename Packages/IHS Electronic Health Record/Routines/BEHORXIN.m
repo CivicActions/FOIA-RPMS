@@ -1,11 +1,40 @@
-BEHORXIN ;MSC/IND/DKM - Installation Support for Med Management;07-Jul-2015 16:19;PLS
- ;;1.1;BEH COMPONENTS;**009002,009005,009012,009013**;Mar 20, 2007
+BEHORXIN ;MSC/IND/DKM/PLS - Installation Support for Med Management;16-Sep-2020 09:27;PLS
+ ;;1.1;BEH COMPONENTS;**009002,009005,009012,009013,009014,009015,009017,009018**;Mar 20, 2007
  ;=================================================================
 PREINIT ;EP - Preinitialization
  Q
 POSTINIT ;EP - Postinitialization
  D REGNMSP^CIAURPC("APSP","CIAV VUECENTRIC")
  Q
+FIXSS ;-
+ D FIXSS1("PS MEDS"),FIXSS1("PSO OERR")
+ Q
+FIXSS1(PDLG) ;-
+ N PDLGI,DLGI,IEN,VAL
+ S PDLGI=$$FIND1^DIC(101.41,,"XQ",PDLG)
+ Q:'PDLGI
+ F DLG="OR GTX SSRREQIEN","OR GTX SSREFREQ" D
+ .S DLGI=$$FIND1^DIC(101.41,,"XQ",DLG)
+ .Q:'DLGI
+ .S IEN=$O(^ORD(101.41,PDLGI,10,"D",DLGI,0))
+ .Q:'IEN
+ .S VAL=$P($G(^ORD(101.41,PDLGI,10,IEN,2)),U,4)
+ .Q:'$L(VAL)
+ .S $P(VAL," ",1)="SSReq"
+ .S $P(^ORD(101.41,PDLGI,10,IEN,2),U,4)=VAL
+ Q
+ADDQUM(PDLG) ;-
+ N PDLGI,DLGI,IEN,VAL
+ S PDLGI=$$FIND1^DIC(101.41,,"XQ",PDLG)
+ Q:'PDLGI
+ F DLG="OR GTX QUANTITY" D
+ .S DLGI=$$FIND1^DIC(101.41,,"XQ",DLG)
+ .Q:'DLGI
+ .S IEN=$O(^ORD(101.41,PDLGI,10,"D",DLGI,0))
+ .Q:'IEN
+ .S $P(^ORD(101.41,PDLGI,10,IEN,2),U,5)="@ORQTYUNT"
+ Q
+CMF ;-
  N CMFDLG
  S CMFDLG=$$FIND1^DIC(101.41,,"XQ","OR GTX CMF")
  I 'CMFDLG D
@@ -40,8 +69,25 @@ ADDCMF(DLGNAME) ;
  D UPDATE^DIE("","FDA","IEN")
  D:'$G(IEN(1)) BMES^XPDUTL("Unable to add chronic med prompt to "_DLGNAME_" order dialog.")
  Q
+ ; Add Earliest Start Date prompt to order dialog
+ADDESD(PDLGNM,CDLGNM) ;
+ N ORDLG,FDA,IEN,CDLG
+ S CDLG=$$FIND1^DIC(101.41,,"XQ",CDLGNM)
+ Q:'CDLG
+ S ORDLG=$$FIND1^DIC(101.41,,"XQ",PDLGNM)
+ Q:'ORDLG
+ Q:$O(^ORD(101.41,ORDLG,10,"D",CDLG,0))
+ S FDA=$NA(FDA(101.412,"+1,"_ORDLG_","))
+ S @FDA@(.01)=7.5
+ S @FDA@(2)=CDLG
+ S @FDA@(4)="Earliest Fill Date:"
+ S @FDA@(21)=75
+ S @FDA@(24)="Earliest Fill Date:"
+ D UPDATE^DIE("","FDA","IEN")
+ D:'$G(IEN(1)) BMES^XPDUTL("Unable to add earliest start date prompt to "_DLGNAME_" order dialog.")
+ Q
  ;Change name of print formats
-RNMFMT ;EP-
+RNMFMT ;-
  N NM,IEN,DIK,TMPL,LP
  F LP=0:1 S TMPL=$P($T(LTMPL+LP),";;",2) Q:'$L(TMPL)  D
  .S IEN=$O(^BEHORX(90460.07,"B",TMPL,0)) Q:'IEN  D

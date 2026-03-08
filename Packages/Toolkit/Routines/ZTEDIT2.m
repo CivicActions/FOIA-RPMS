@@ -1,5 +1,6 @@
-ZTEDIT2 ;SF/RWF - VA EDITOR ;09/03/2008
- ;;8.0;KERNEL;**9,16,120,499**;Jul 10, 1995;Build 24
+ZTEDIT2 ;SF/RWF - VA EDITOR ;1/19/96  09:45 [ 04/02/2003   8:29 AM ]
+ ;;7.3;TOOLKIT;**1001,1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;7.3;TOOLKIT;;Apr 25, 1995
  F %I=1:1 S %A=$T(%+%I),%T=$P(%A," ",1),%B=$P(%A," ",2,256) Q:%T="END"  I $L(%T) S ^%Z(%T)=%B
  G ^ZTEDIT3
  Q
@@ -28,8 +29,8 @@ SEL3 F %I=1:1 S %L=$T(+%I) Q:%L=""  I $P($P(%L," "),"(")=%D,%D]"" S %I=%I+%E Q
 LN1 S:$P(%L," ")[$C(9) %L=$P(%L,$C(9))_" "_$P(%L,$C(9),2,99) S %T=$P($P(%L," "),"("),%POP=$P(%L," ",2)']"" I '%POP,%T'?.N,%T'?1A.7AN,%T'?1"%".7AN S %POP=1
 LOCAL S %NX="what" S:%X'="*" %LCL=$E(%X,2,99) Q:'$D(%LCL)  Q:'$D(@%LCL)#2  S %T="*"_%LCL,%L=@%LCL X ^%Z("EDITLINE") S @%LCL=%L,%NX=1
 TERM S %NX=1 X ^%Z("TERM1"),^%Z("TERM2"),^%Z("TERM3")
-TERM1 S %S=$O(^%ZIS(2,"B","C-VT100",0)),%S=$G(^VA(200,+$G(DUZ),1.2),%S) I %S'>0 W !,"Terminal Type not found."
+TERM1 S %S=$O(^%ZIS(2,"B","C-VT100",0)),%S=$S('($D(DUZ)#2):%S,$D(^XMB(3.7,DUZ,.2)):^(.2),1:%S) I %S'>0 W !,"Terminal Type not found."
 TERM2 W !,"TERMINAL TYPE: ",$S(%S'>0:"",$D(^%ZIS(2,%S,0)):$P(^(0),"^",1)_"//",1:"") R %X:999 Q:%X=""  S %S=$S($D(^%ZIS(2,"B",%X)):$O(^(%X,0)),1:0)
-TERM3 Q:%S<1  S %ST=$P(^%ZIS(2,%S,0),"^",1),%=^(1),%RM=%-1,%SL=$P(%,"^",3)-4,XY=$G(^("XY")),DX=0,DY=%SL,X=%RM+1,IOT=$G(IOT,"TRM") X ^%ZOSF("RM") X XY W !!!
+TERM3 Q:%S<1  S %ST=$P(^%ZIS(2,%S,0),"^",1),%=^(1),%RM=%-1,%SL=$P(%,"^",3)-4,XY=$P(%,"^",5),DX=0,DY=%SL,X=%RM+1 X ^%ZOSF("RM") X XY W !!!
 MODE W " mode change" S:XY]"" %XY=XY S %NX=1,XY=$S(XY]"":"",1:$S($D(%XY):%XY,1:"")) W !,$S(XY="":"replace-with",1:"line editor"),!
 END ;

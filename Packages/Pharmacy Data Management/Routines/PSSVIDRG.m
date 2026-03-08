@@ -1,29 +1,26 @@
-PSSVIDRG ;BIR/PR,WRT-ADD OR EDIT IV DRUGS ;29-May-2012 15:18;PLS
- ;;1.0;PHARMACY DATA MANAGEMENT;**2,10,32,38,125,1015**;9/30/97;Build 62
+PSSVIDRG ;BIR/PR,WRT-ADD OR EDIT IV DRUGS ; 04/17/98 9:13
+ ;;1.0;PHARMACY DATA MANAGEMENT;**2,10,32**;9/30/97
  ;
  ;Reference to ENIVKV^PSGSETU is supported by DBIA # 2153.
  ;Reference to ^PSIV is supported by DBIA # 2155.
  ;Reference to ^PSIVHLP1 is supported by DBIA # 2156.
  ;Reference to ^PSIVXU is supported by DBIA # 2157.
  ;
- ; Modified - IHS/MSC/PB - 4/25/12 - Line ENS1+1 DR string modified to add Stability Offset Value to the edit
 ENS ;Enter here to enter/edit solutions
- S DRUGEDIT=1,FI=52.7 L +^PS(FI):$S($G(DILOCKTM)>0:DILOCKTM,1:3) E  W $C(7),!!,"Someone else is entering drugs ... try later !",!! G K
+ S DRUGEDIT=1,FI=52.7 L +^PS(FI):1 E  W $C(7),!!,"Someone else is entering drugs ... try later !",!! G K
 ENS1 ;
  N DA,DIC,DLAYGO S DIC=FI,DIC(0)="AEQML",DLAYGO=52.7 D ^DIC I Y<0 G K1
- ;IHS/MSC/PB - 04/04/2012 - next line modified to add Stability Offset Value to the DR string for the second DIE call
- ;S PSSASK="SOLUTIONS",DRUG=+Y,DIE=DIC,(DA,ENTRY)=+Y,DR=".01:.02" D ^DIE,EECK S DIE="^PS(52.7,",DA=ENTRY,DR="1;D GETD^PSSVIDRG;2:8;10:15;17:99999" D ^DIE,MFS^PSSDEE
- S PSSASK="SOLUTIONS",DRUG=+Y,DIE=DIC,(DA,ENTRY)=+Y,DR=".01:.02" D ^DIE,EECK S DIE="^PS(52.7,",DA=ENTRY,DR="1;D GETD^PSSVIDRG;2:8;10:15;17:99999;9999999.01" D ^DIE,MFS^PSSDEE
+ S PSSASK="SOLUTIONS",DRUG=+Y,DIE=DIC,(DA,ENTRY)=+Y,DR=".01:.02" D ^DIE,EECK S DIE="^PS(52.7,",DA=ENTRY,DR="1;D GETD^PSSVIDRG;2:8;10:15;17:99999" D ^DIE,MFS^PSSDEE,SOI
  Q
  ;
 ENA ;Enter here to enter/edit additives.
- S DRUGEDIT=1,FI=52.6 L +^PS(FI):$S($G(DILOCKTM)>0:DILOCKTM,1:3) E  W $C(7),!!,"Someone else is entering drugs ... try later !",!! G K
+ S DRUGEDIT=1,FI=52.6 L +^PS(FI):1 E  W $C(7),!!,"Someone else is entering drugs ... try later !",!! G K
 ENA1 ;
  N DA,DIC,DIE,DLAYGO S DIC=FI,DIC(0)="AEQL",DLAYGO=52.6 D ^DIC I Y<0 G K1
- S PSSASK="ADDITIVES",DRUG=+Y,DIE=DIC,(DA,ENTRY)=+Y,DR=".01" D EECK S DIE="^PS(52.6,",DA=ENTRY,DR="[PSSIV ADD]" D ^DIE,MFA^PSSDEE
+ S PSSASK="ADDITIVES",DRUG=+Y,DIE=DIC,(DA,ENTRY)=+Y,DR=".01" D EECK S DIE="^PS(52.6,",DA=ENTRY,DR="[PSSIV ADD]" D ^DIE,MFA^PSSDEE,ADDOI
  Q
 ENC ;Enter here to enter/edit IV Categories
- ;S X="PSIVXU" X ^%ZOSF("TEST") I  D ^PSIVXU Q:$D(XQUIT)  K DA,DIC,DIE,DR,DLAYGO S DIC="^PS(50.2,",DIC(0)="AEQL",DLAYGO=50.2 D ^DIC G:Y<0 K S DIE=DIC,DR=".01;1",DA=+Y D ^DIE G K
+ S X="PSIVXU" X ^%ZOSF("TEST") I  D ^PSIVXU Q:$D(XQUIT)  K DA,DIC,DIE,DR,DLAYGO S DIC="^PS(50.2,",DIC(0)="AEQL",DLAYGO=50.2 D ^DIC G:Y<0 K S DIE=DIC,DR=".01;1",DA=+Y D ^DIE G K
  Q
  ;
 K1 ;
@@ -39,8 +36,7 @@ ENTDRG ;This module is no longer utilized by the Inpatient Medications applicati
  ;Will print word-processing field in IV add. file (52.6) and
  ;IV sol. file (52.7).
  ;
- Q
- ;S X="PSIV" X ^%ZOSF("TEST") I  D ^PSIV Q:$D(XQUIT)
+ S X="PSIV" X ^%ZOSF("TEST") I  D ^PSIV Q:$D(XQUIT)
  S X="PSIV" X ^%ZOSF("TEST") I  D ^PSIVHLP1 Q:$D(XQUIT)
  N P W !!,"Are you inquiring on" S X="... an IV ADDITIVE or IV SOLUTION (A/S): ^ADDITIVE^^ADDITIVE,SOLUTION" D ENQ^PSIV S X=$E(X) Q:"^"[X  I X["?" S HELP="DRGINQ" D ^PSIVHLP1 G ENTDRG
  S FI=$S(X["A":52.6,1:52.7) N D0,D1,DA,DI,DIE,DP,DR,DQ
@@ -57,9 +53,8 @@ WP W ! I '$D(^PS(FI,PSSIVDRG,4,0)) W !,"*** No information on file. ***"
  Q
 ENT ;
  ;Will print out information on IV DRUGS
- Q
- ;S X="PSIV" X ^%ZOSF("TEST") I  D ^PSIV Q:$D(XQUIT)
- S X="PSIV" X ^%ZOSF("TEST") I  D ^PSIVHLP1 Q:$D(XQUIT)
+ S X="PSIV" X ^%ZOSF("TEST") I  D ^PSIV Q:$D(XQUIT)
+        S X="PSIV" X ^%ZOSF("TEST") I  D ^PSIVHLP1 Q:$D(XQUIT)
  ;
 BEG W !!,"Are you printing drug information from ..." S X="the IV ADDITIVE file or IV SOLUTION file ? ^ADDITIVE^^ADDITIVE,SOLUTION" D ENQ^PSIV G:"^"[X K I X["?" S HELP="DRGINQ" D ^PSIVHLP1 G BEG
  S L=0,DIC="^PS("_$S(X["A":52.6,1:52.7)_"," D EN1^DIP D ^%ZISC G K

@@ -1,0 +1,531 @@
+BYIMRT3 ;IHS/CIM/THL - IMMUNIZATION DATA EXCHANGE;
+ ;;3.0;BYIM IMMUNIZATION DATA EXCHANGE;**1,2,3,4,5,6,7**;AUG 20, 2020;Build 747
+ ;
+ ;REAL-TIME HL7 MESSAGE PROCESSING
+ ;
+ ;=====
+HDR(RSPDA,QRYDA) ;EP;QUERY RESPONSE DISPLAY HEADER
+ ;QRYDA     = QUERY HL7 MESSAGE DA
+ ;RSPDA     = RESPONSE HL7 MESSAGE DA
+ W @IOF
+ W !!,$S(RT="RESP":"Response received",1:"HL7 Message sent"),?31,"Date/State",?42,"File Name/Message ID"
+ W !,"------------------------------",?31,"----------",?42,"------------------------------------"
+ N X0,X1,DOB,HRN,SX
+ S X0=$G(^BYIMRT(QRYDA,0))
+ S DFN=+$P(X0,U,4)
+ I X0["izdata"!(DTYP=3) D
+ .S SX=$G(^BYIMRT(QRYDA,1,2,0))
+ .S:SX["PID|" DFN=$$DFN(SX)
+ .S:X0["vxu" DFN=$P($P(X0,U),"_",3)
+ S (DOB,HRN)=""
+ D:DFN
+ .S X1=$G(^DPT(DFN,0))
+ .W !,$E($P(X1,U),1,25),"  (",$P(X1,U,2),")"
+ .S X1=$P(X1,U,3)
+ .S DOB="DOB: "_$E(X1,4,5)_"/"_$E(X1,6,7)_"/"_($E(X1,1,3)+1700)
+ .S HRN="  HRN: "_$P($G(^AUPNPAT(DFN,41,DUZ(2),0)),U,2)
+ S X1=$P(X0,U,5)
+ W ?31,$E(X1,4,5),"/",$E(X1,6,7),"/",$E(X1,1,3)+1700
+ W ?42,$E($P(X0,U),1,35)
+ S X0=$G(^BYIMRT(RSPDA,0))
+ W !
+ W:DOB]"" DOB,HRN
+ W ?31,$E($P($G(^DIC(5,+$P(X0,U,10),0)),U),1,10),?42,$P(X0,U,6)
+ W !!
+ W:RSPDA'=QRYDA "Response ID: ("_RSPDA_")     "
+ W "Query or VXU ID: (",QRYDA,")"
+ W !,"----------------------------------------------------------------------------"
+ Q
+ ;=====
+ ;
+RSP ;EP;IMMUNIZATION DATA EXCHANGE
+ S BHLDEST="D DEST^INHUSEN"
+ S INDEST("RSPK11")="HL IHS IZV04 RSP IN"
+ X BHLDEST
+ Q
+ ;=====
+ ;
+PARSE(DA) ;EP;TO PARSE MESSAGE WITH XML LINE SEPARATOR INTO SEPARATE LINES
+ ;V3.0 PATCH 5 - FID-88380 UPDATE PARSE PROCESS
+ ;PATCH 4 - FID-79417
+ ;Import from WIR uses XML characters for carriage return line feed
+ N J,P,X,XX,Y,YY
+ S P="&#xd;"
+ Q:$G(^BYIMRT(DA,1,1,0))'[P
+ S X=0
+ F  S X=$O(^BYIMRT(DA,1,X)) Q:'X  S XX=$G(^(X,0)) D
+ .M ^BYIMRT(DA,9,X,0)=^BYIMRT(DA,1,X,0)
+ .K ^BYIMRT(DA,1,X,0)
+ .F J=1:1 S Y=$P(XX,P,J) Q:Y=""  D
+ ..S Z=$E(Y,1,4)
+ ..I "|MSH|MSA|QAK|ERR|QPD|PID|NK1|ORC|RXA|RXR|OBX|"[Z S YY(X,J)=Y Q
+ ..S YY(X,J-1)=$G(YY(X,J-1))_Y
+ S J=0
+ S X=0
+ F  S X=$O(YY(X)) Q:'X  D
+ .S Y=0
+ .F  S Y=$O(YY(X,Y)) Q:'Y   S Z=$G(YY(X,Y)) D:Z]""
+ ..S J=J+1
+ ..S ^BYIMRT(DA,1,J,0)=YY(X,Y)
+ S ^BYIMRT(DA,1,0)="^90480.21^"_J_U_J
+ ;PATCH 4 - FID-79417 END
+ ;V3.0 PATCH 5 - FID-88380 END
+ Q
+ ;=====
+ ;
+RTIN(BYIMRTD) ;EP;CHECK DAILY BATCH RESPONSE FILES FOR ALL STATE EXCHANGES
+ ;V3.0 PATCH 6 - FID-83958 HL7 ERROR MESSAGE PROCESSING
+ ;
+ ;BYIMRTD - CONTROLS DISPLAY DURING RESPONSE PROCESSING
+ ;          1 = DISPLAY EACH HL7 MESSAGE PROCESSED
+ ;          0 = DISPLAY SURPRESSED
+ ;
+ S:'$G(BYIMRTD) BYIMRTD=0
+ D PATH^BYIMIMM6
+ K ^BYIMTMP("ACKDA")
+ K ^BYIMTMP("STATE")
+ N STATE
+ S STATE=0
+ F  S STATE=$O(IPATH(STATE)) Q:'STATE  D
+ .S OPATH=OPATH(STATE)
+ .S P=$S(OPATH["\":"\",1:"/")
+ .S OPATH=$P(OPATH,P,1,$L(OPATH,P)-2)_P_"sent"_P
+ .S IPATH=IPATH(STATE)
+ .D:IPATH]"" RTIN1(IPATH,OPATH,STATE)
+ S DIK="^BYIMRT("
+ S DA=0
+ F  S DA=$O(^BYIMTMP("ACKDA",DA)) Q:'DA  D
+ .I '$D(^BYIMRT(DA,1)) D ^DIK W:'$D(ZTQUEUED)&$G(BYIMRTD) "."
+ K ^BYIMTMP("ACKDA")
+ K ^BYIMTMP("STATE")
+ ;V3.0 PATCH 6 - FID-83958 END
+ Q
+ ;=====
+ ;
+RTIN1(IPATH,OPATH,STATE) ;PROCESS FILES FROM EACH STATE
+ N ACKDA,ILIST,OLIST,FILE,IN,OL
+ S ILIST=$$LIST^%ZISH(IPATH,"izdata*"_($E(DT,1,5)+170000)_"*",.ILIST)
+ S IN=0
+ F  S IN=$O(ILIST(IN)) Q:'IN  S FILE=ILIST(IN) D:FILE]""
+ .Q:$D(^BYIMRT("ACT",$P(FILE,"."),"ACK",STATE))
+ .D RTIMPI(IPATH,FILE,STATE)
+ S OLIST=$$LIST^%ZISH(OPATH,"izdata*"_($E(DT,1,5)+170000)_"*",.OLIST)
+ S OL=0
+ F  S OL=$O(OLIST(OL)) Q:'OL  S FILE=OLIST(OL) D:FILE]""
+ .D RTIMPO(OPATH,FILE,STATE)
+ Q
+ ;=====
+ ;
+RTIMPO(OPATH,FILE,STATE) ;EP;IMPORT RESPONSE MESSAGES
+ ;OPATH = OUTBOUND PATH FOR STATE
+ ;FILE  = NAME OF FILE TO BE PROCESSED
+ ;STATE = STATE WITH WHICH SITE IS EXCHANGING
+ ;
+ K BYIMQUIT
+ N ACT,DFN,ORIG,MSH,MSA,BYIMJ,BYIMX,ACK0,MID
+ S Y=$$OPEN^%ZISH(OPATH,FILE,"R")
+ I Y D NOW^%DTC S ^BYIMTMP("RTIMPO",%,OPATH,FILE)="NO OPEN" Q
+ S (MID,MSH,DFN)=""
+ S (BYIMJ,BYIMK,ACKDA)=0
+ F  U IO R BYIMX:DTIME D:BYIMX="" CLOSE^%ZISH() Q:BYIMX=""  D
+ .I $E(BYIMX,1,4)="MSH|" D  Q
+ ..S MID=$P(BYIMX,"|",10)
+ ..S ACKDA=$O(^BYIMRT("MIDS",MID,STATE,0))
+ ..Q:'ACKDA
+ ..K ARR,CNT
+ ..S BYIMJ=1
+ ..S ^BYIMRT(ACKDA,1,1,0)=BYIMX
+ .Q:'ACKDA
+ .I $E(BYIMX,1,4)["PID|" D  Q
+ ..S DFN=$$DFN(BYIMX)
+ ..Q:'DFN
+ ..D ACKDIE(ACKDA,DFN)
+ ..S ^BYIMRT(ACKDA,1,2,0)=BYIMX,BYIMJ=2
+ .S BYIMJ=BYIMJ+1
+ .S ^BYIMRT(ACKDA,1,BYIMJ,0)=BYIMX
+ Q:'$G(ACKDA)
+ S ^BYIMTMP("STATE",STATE)=ACKDA
+ S ^BYIMRT(ACKDA,1,0)="^90480.21^"_BYIMJ_U_BYIMJ
+ I $G(^BYIMRT(ACKDA,1,1,0))["&#xd;" D PARSE^BYIMRT3(ACKDA)
+ I '$D(ZTQUEUED) W !?3,"VXU Messages from FILE ",FILE," from ",$P($G(^DIC(5,STATE,0)),U)," added"
+ Q
+ ;=====
+ ;
+RTIMPI(IPATH,FILE,STATE) ;EP;IMPORT RESPONSE MESSAGES
+ ;IPATH = INBOUND PATH FOR STATE
+ ;FILE  = NAME OF FILE TO BE PROCESSED
+ ;STATE = STATE WITH WHICH SITE IS EXCHANGING
+ ;
+ K BYIMQUIT
+ N JJ,KK,BYIMX,ACT,DFN,ORIG,MSH,MSA
+ S Y=$$OPEN^%ZISH(IPATH,FILE,"R")
+ I Y D  Q
+ .D NOW^%DTC
+ .S ^BYIMTMP("RTIMPI",%,IPATH,FILE)="NO OPEN"
+ S ACKDA=0
+ S (JJ,KK,BYIMK,BYIML,BYIMTK,BYIMTL)=0
+ F  U IO R BYIMX:DTIME D:BYIMX="" CLOSE^%ZISH() Q:BYIMX=""  D
+ .I BYIMX["MSH|" D  Q
+ ..I ACKDA D  Q
+ ...S ^BYIMRT(ACKDA,2,1,0)=BYIMX
+ ...I BYIMK,$D(^BYIMRT(ACKDA,4,1,0)) S ^BYIMRT(ACKDA,4,0)="^90480.24^"_BYIMK_U_BYIMK
+ ...I BYIML,$D(^BYIMRT(ACKDA,5,1,0)) S ^BYIMRT(ACKDA,4,0)="^90480.25^"_BYIML_U_BYIML
+ ...S (ACKDA,BYIMK,BYIML)=0
+ ..S MDT=$P($P(BYIMX,"|",7),"-")
+ ..S MDT=$E(MDT,1,8)-17000000_$S($E(MDT,9,14):"."_$E(MDT,9,14),1:"")
+ .I BYIMX["MSA|" D  Q
+ ..S MSA=BYIMX
+ ..S MID=$P(BYIMX,"|",3)
+ ..Q:MID=""
+ ..S ACKDA=+$O(^BYIMRT("MIDS",MID,STATE,0))
+ ..Q:ACKDA
+ ..S ACKDA=$$ACKDA(MID,OPATH,STATE,MDT)
+ ..I ACKDA D
+ ...S JJ=2,^BYIMTMP("ACKDA",ACKDA)=""
+ ...S ^BYIMRT(ACKDA,2,2,0)=BYIMX
+ .Q:'ACKDA
+ .S RSPDA=ACKDA
+ .S JJ=JJ+1
+ .S KK=KK+1
+ .S ^BYIMRT(ACKDA,2,JJ,0)=BYIMX
+ .S:$P(BYIMX,"|",5)="E" BYIMK=BYIMK+1,BYIMTK=BYIMTK+1
+ .S:$P(BYIMX,"|",5)="W" BYIML=BYIML+1,BYIMTL=BYIMTL+1
+ .D ERROR^BYIMRT1(BYIMX,JJ,MID,KK)
+ D CLOSE^%ZISH()
+ I '$D(ZTQUEUED)&$G(BYIMRTD) D
+ .W !?5,"Response file ",FILE," from ",$P($G(^DIC(5,STATE,0)),U)," processed"
+ .W !?14
+ .W:$D(^BYIMRT(RSPDA,4)) BYIMTK," errors "
+ .I $D(^BYIMRT(RSPDA,5)) D
+ ..W:$D(^BYIMRT(RSPDA,4)) "and "
+ ..W BYIMTL," warnings"
+ Q
+ ;=====
+ ;
+ACKDA(MID,OPATH,STATE,MDT) ;CREATE NEW ^BYIMRT ENTRY FOR ERROR MESSAGE
+ S ACKDA=0
+ S ACT="ACK"
+ S X=FILE
+ S DIC="^BYIMRT("
+ S DIC(0)="L"
+ S DIC("DR")=".02////"_$G(ACT)_";.03////"_IPATH_";.05////"_MDT_";.06////"_MID_";.1////"_STATE
+ D FILE^DICN
+ S:+Y>0 ACKDA=+Y
+ Q ACKDA
+ ;=====
+ ;
+ACKDIE(DA,DFN) ;CREATE NEW ^BYIMRT ENTRY FOR ERROR MESSAGE
+ S DA=DA
+ S DIE="^BYIMRT("
+ S DR=".04////"_DFN
+ D ^DIE
+ Q
+ ;=====
+ ;
+DFN(BYIMX) ;FIND PATIENT DFN
+ ;BYIMX = PID SEGMENT
+ ;
+ N X,Y,Z
+ S DFN=""
+ S HRN=$P($P(BYIMX,"|",4),U)
+ S ASUFAC=$E(HRN,1,6)
+ S LOC=+$O(^AUTTLOC("C",ASUFAC,0))
+ S HRN=+$E(HRN,7,99)
+ S NAM=$P($P(BYIMX,"|",6),U,1,3)
+ S NAM=$P(NAM,U)_","_$P(NAM,U,2)_$S($P(NAM,U,3)]"":" "_$P(NAM,U,3),1:"")
+ S DOB=$P(BYIMX,"|",8)-17000000
+ S SEX=$P(BYIMX,"|",9)
+ S X=+$O(^AUPNPAT("D",HRN,0))
+ S:$D(^AUPNPAT("D",HRN,X,LOC)) DFN=X
+ D:'DFN
+ .S X=+$O(^DPT("B",NAM,0))
+ .S Y=$G(^DPT(X,0))
+ .I $P(Y,U,2)=SEX,$P(Y,U,3)=DOB S DFN=X
+ .Q:DFN
+ .K DIC,DA,DR
+ .S X=NAM
+ .S DIC="^DPT("
+ .S DIC(0)="MZ"
+ .D ^DIC
+ .S DFN=+Y
+ Q DFN
+ ;=====
+ ;
+ACKDIK(DA) ;EP;TO DISPLAY ACK MESSAGE FROM DAILY BATCH EXPORT
+ S DIK="^BYIMRT("
+ D ^DIK
+ Q
+ ;=====
+ ;
+PAT ;EP;SELECT PATIENTS
+ K ^BYIMTMP($J,"BYIM RT")
+ I RT="VXU" D RTALL^BYIMRT4
+ W !!,"Select patient(s) to send to the State Immunization Registry"
+ F  D P1 Q:$D(BYIMQUIT)
+ K BYIMQUIT
+ Q
+ ;=====
+ ;
+P1 ;SELECT MULTIPE PATIENTS
+ K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
+ S DIC=9000001
+ S DIC("A")="Select "_$S($D(^BYIMTMP($J,"BYIM RT")):"another ",1:"")_"patient: "
+ S DIC(0)="AEQM"
+ W !
+ D ^DIC
+ K DIE,DIC,DINUM,DR,DA,DD,DO,DIK,DLAYGO
+ I Y<1 S BYIMQUIT="" Q
+ S ^BYIMTMP($J,"BYIM RT",+Y)=""
+ D RTPAT
+ Q
+ ;=====
+ ;
+ALL ;EP;TO SPECIFY NEW ONLY OR ALL IMMUNIZATIONS
+ K BYIMALL
+ W !!,"Which immunizations should be included:"
+ K DIR
+ S DIR(0)="SO^1:NEW or EDITED Immunizations in the date range;2:ALL Immunizations for patients with VISIT in the date range"
+ S DIR("A")="Send NEW or ALL Immunizations"
+ S DIR("B")="NEW or EDITED Immunizations"
+ D ^DIR
+ K DIR
+ I 'Y S BYIMQUIT=1 Q
+ S (BYIMALL,BYIMADM)=+Y
+ I Y=2 S BYIMHX=0 Q
+ Q:$G(RT)="VXU"
+ K DIR
+ S DIR(0)="Y0"
+ S DIR("A")="Include HISTORIC Immunizations added to RPMS in the date range"
+ S DIR("B")="NO"
+ W !!
+ D ^DIR
+ K DIR
+ S BYIMHX=+Y
+ Q
+ ;=====
+ ;
+DHL7(DA,QRYDA) ;EP;DISPLAY HL7 MESSAGE
+ ;DA     = DA OF HL7 MESSAGE IN ^BYIMRT
+ I $G(QRYDA),$G(^BYIMRT(QRYDA,0))["izrt_vxu",^(0)["VXU" S DA=QRYDA
+ N XX,DO
+ S DO=0
+ S XX=0
+ F  S XX=$O(^BYIMRT(DA,1,XX)) Q:'XX!$G(BYIMQUIT)  S X=^(XX,0) D
+ .S X2=$G(^BYIMRT(DA,1,XX+1,0))
+ .I $L(X2),"|MSH|MSA|PID|PD1|NK1|IN1|IN2|ORC|RXA|RXR|OBX|QAK|QPD|ERR|RCP|"'[$E(X2,1,4) S X=X_X2,XX=XX+1
+ .;PATCH 4 - FID-76113/CR-12047
+ .;Insure message display is complete, not truncated
+ .W !
+ .W $E(X,1,75)
+ .W:$L($E(X,76,150)) !?4,$E(X,76,150)
+ .W:$L($E(X,151,220)) !?4,$E(X,151,220)
+ .W:$L($E(X,221,290)) !?4,$E(X,221,290)
+ .W:$L($E(X,291,360)) !?4,$E(X,291,360)
+ .W:$L($E(X,361,430)) !?4,$E(X,361,430)
+ .W:$L($E(X,431,500)) !?4,$E(X,431,500)
+ .I IOST["C-",IOSL<($Y+4) D PAUSE^BYIMIMM6 S:$G(BYIMPAUS)[U BYIMQUIT=1 K BYIMPAUS W @IOF S DO=$O(^BYIMRT(DA,1,XX))
+ .;PATCH 4 - FID-76113/CR-12047 END
+ D:'$G(BYIMQUIT) PAUSE^BYIMIMM6
+ Q
+ ;=====
+ ;
+QPURGE ;EP;TO PURGE OLD QUERY/RESPONSE ENTRIES
+ N X,Y,Z,X1,X2,QDAYS,PURGE,DA,DIK
+ S BYIMDUZ=$$DUZ^BYIMIMM()
+ S QDAYS=$S(+$P($G(^BYIMPARA(BYIMDUZ,9)),U,5):$P(^(9),U,5),1:90)
+ S X1=DT
+ S X2=QDAYS*-1
+ D C^%DTC
+ S (FPURGE,PURGE)=X
+ F  S PURGE=$O(^BYIMRT("DT",PURGE),-1) Q:'PURGE  D
+ .S DIK="^BYIMRT("
+ .S DA=0
+ .F  S DA=$O(^BYIMRT("DT",PURGE,DA)) Q:'DA  D
+ ..D ^DIK
+ D PATH^BYIMIMM
+ S STATE=0
+ F  S STATE=$O(IPATH(STATE)) Q:'STATE  S IPATH=IPATH(STATE) D
+ .K DIR
+ .S DIR=$$LIST^%ZISH(IPATH,"izrt*"_(FPURGE+17000000)_"*",.DIR)
+ .S XX=0
+ .F  S XX=$O(DIR(XX)) Q:'XX  S FILE=DIR(XX) D:FILE]""
+ ..S Y=$$DEL^%ZISH(IPATH,FILE)
+ .S X=$S(IPATH["response\":"response\",1:"request")
+ .S SPATH=$P(IPATH,X)_"sent\"
+ .K DIR
+ .S DIR=$$LIST^%ZISH(SPATH,"izrt*"_(FPURGE+17000000)_"*",.DIR)
+ .S XX=0
+ .F  S XX=$O(DIR(XX)) Q:'XX  S FILE=DIR(XX) D:FILE]""
+ ..S Y=$$DEL^%ZISH(SPATH,FILE)
+ .S X=$S(IPATH["response\":"response\",1:"request")
+ .S BPATH=$P(OPATH,X)_"backup\"
+ .K DIR
+ .S DIR=$$LIST^%ZISH(BPATH,"izrt*"_(FPURGE+17000000)_"*",.DIR)
+ .S XX=0
+ .F  S XX=$O(DIR(XX)) Q:'XX  S FILE=DIR(XX) D:FILE]""
+ ..S Y=$$DEL^%ZISH(BPATH,FILE)
+ Q
+ ;=====
+ ;
+RTPAT ;EP;DISPLAY PATIENTS FOR RT QUERY
+ N DFN
+ W !
+ S J=0
+ S DFN=0
+ F  S DFN=$O(^BYIMTMP($J,"BYIM RT",DFN)) Q:'DFN  D
+ .S J=J+1
+ .W !,$J(J,5),?20,$P(^DPT(DFN,0),U)
+ Q
+ ;=====
+ ;
+ARRAY(RSPDA,VXUDA) ;EP;CREATE ARRAY OF SEGMENTS
+ Q:'$G(RSPDA)!'$G(VXUDA)
+ K ^BYIMTMP("ARR",$J),ARR,SCNT,CNT
+ S (SSQ,ORC)=0
+ S XX=0
+ F  S XX=$O(^BYIMRT(VXUDA,1,XX)) Q:'XX  S SEGX=$G(^(XX,0)) D
+ .S SEG=$G(^BYIMRT(VXUDA,1,XX+1,0))
+ .I "|MSH|PID|PD1|NK1|ORC|RXA|RXR|OBX|"'[("|"_$E(SEG,1,3)_"|") S XX=XX+1,SEGX=SEGX_SEG
+ .S SEGN=$E(SEGX,1,3)
+ .S SCNT(SEGN)=$G(SCNT(SEGN))+1
+ .S CNT=SCNT(SEGN)
+ .S SEG=SEGN_"|"_CNT
+ .S LINE=$P(SEGX,"|",1,6)
+ .S SN=$$SC^BYIMRT1(SEG,CNT,LINE)
+ .Q:SN=""
+ .S ^BYIMTMP("ARR",$J,SN,CNT)=SEGX
+ Q
+ ;=====
+ ;
+FOR1(X0) ;EP;CREATE FORCAST DISPLAY ARRAY=====
+ S X1=$P(X0,U)
+ S X2=$P(X0,U,2)
+ S X3=$P(X0,U,3)
+ N DD
+ S DD=$P(^DD(90480.23,.03,0),U,3)
+ S:X3]"" X3=$P($P(DD,(X3_":"),2),";")
+ S X4=$P(X0,U,4)
+ S X5=$P(X0,U,5)
+ S X6=$P(X0,U,6)
+ S X7=$P(X0,U,7)
+ S X8=$P(X0,U,8)
+FOR2 ;EP;
+ S Y=""
+ S JJ=JJ+1
+ S Y=$J(X1,3)
+ S $E(Y,5)=$E(X2,1,11)
+ S $E(Y,17)=$E(X3,1,6)
+ S $E(Y,24)=$$DAT(X5)
+ S $E(Y,35)=$$DAT(X4)
+ S $E(Y,46)=$$DAT(X6)
+ S $E(Y,57)=$G(X8)
+ S DISF(JJ)=Y
+ Q
+ ;=====
+ ;
+DAT(X) ;FORMAT DATE FOR DISPLAY
+ S OUT=""
+ S:$L(X)=7 X=X+17000000
+ S:X]"" OUT=$E(X,5,6)_"/"_$E(X,7,8)_"/"_$E(X,1,4)
+ Q OUT
+ ;=====
+ ;
+EXPST ;EP;SPECIFY STATES FOR WHICH TO CREATE EXPORT FILE
+ ;V3.0 PATCH 6 - FID-83363 EXPORT FOR SELECTED STATES
+ ;V3.0 PATCH 7 - FID-91807 EXPORT FOR SELECTED PATIENTS
+ K BYIMEXST,EXST
+ N X,Y,Z,END,EXST,J,OPATH,ST,NM
+ S BYIMEXST=""
+ S BYIMDUZ=$$DUZ^BYIMIMM()
+ Q:'$O(^BYIMPARA(BYIMDUZ,3,0))
+ W @IOF
+ W !!?5,"Export file can be sent to selected states instead of to all states"
+ W !?5,"Select which state(s) or press <ENTER> to send to all states"
+ D SLIST
+ W !!,"Which State(s) should export file be sent to: "
+ K DIR
+ S DIR(0)="LO^1:"_J
+ S DIR("A")="Select State(s) to send export file"
+ W !
+ D ^DIR
+ K DIR
+ I X[U S BYIMQUIT=1 Q
+ S EXST=Y
+ I 'EXST D
+ .S EXST=""
+ .S END=J
+ .F J=1:1:END S EXST=EXST_J_","
+ S BYIMEXST=","
+ S X=0
+ S END=$L(EXST,",")-1
+ F J=1:1:END S Y=$P(EXST,",",J),Z=+$G(EXST(Y)) S BYIMEXST=BYIMEXST_Z_","
+ S END=$L(BYIMEXST,",")-1
+ Q:'END
+ D PATH^BYIMIMM
+ W !!?5,"Exports will be created in the following folders:",!
+ F J=2:1:END D
+ .S Y=+$P(BYIMEXST,",",J)
+ .S NM=$P($G(^BYIMPARA(BYIMDUZ,3,Y,0)),U)
+ .S:Y'=BYIMDUZ ST=+$P($G(^BYIMPARA(BYIMDUZ,3,Y,0)),U,14)
+ .S:Y=BYIMDUZ ST=+$P($G(^BYIMPARA(BYIMDUZ,0)),U,14)
+ .S (NM,STNM)=$P($G(^DIC(5,ST,0)),U)
+ .S OPATH=$G(OPATH(ST))
+ .W !?10,NM,?25,OPATH,"  ",$S(NM'=STNM:"("_STNM_")",1:"")
+ S ^BYIMTMP("EXST")=BYIMEXST
+ Q
+ ;=====
+ ;
+SLIST ;LIST EXPORT STATES
+ W !
+ S BYIMDUZ=$$DUZ^BYIMIMM()
+ N X,Y,Z
+ S J=0
+ S X=0
+ F  S X=$O(^BYIMPARA(BYIMDUZ,3,X)) Q:'X  S Y=$G(^(X,0)) D:$P(Y,U)]""
+ .S Z=$P(Y,U)
+ .S ST=+$P(Y,U,14)
+ .S STNM=$P($G(^DIC(5,ST,0)),U)
+ .S J=J+1
+ .W !?15,J,?20,Z,?40,$S(Z'=STNM:"("_STNM_")",1:"")
+ .S EXST(J)=X_U_Z
+ S J=J+1
+ S Z=+$P(^BYIMPARA(BYIMDUZ,0),U,14)
+ S Z=$P($G(^DIC(5,Z,0)),U)
+ S EXST(J)=BYIMDUZ_U_Z
+ W !?15,J,?20,Z,?40,"(Primary State)"
+ Q
+ ;V3.0 PATCH 6 - FID 83363 END
+ ;V3.0 PATCH 7 - FID-91807  END
+ ;=====
+ ;
+VXURSP ;EP;PROCESS QUERY VXU RESPONSE
+ S X1=DT
+ S X2=-1
+ D C^%DTC
+ S BDT=X
+ S EDT=DT
+ F  S BDT=$O(^BYIMRT("DT",BDT)) Q:'BDT!(BDT'[EDT)  D
+ .S RTDA=0
+ .F  S RTDA=$O(^BYIMRT("DT",BDT,RTDA)) Q:'RTDA  D
+ ..S RT0=$G(^BYIMRT(RTDA,0))
+ ..Q:$P(RT0,U)'["vxu"
+ ..Q:$P(RT0,U,2)'="RSP"
+ Q
+ ;=====
+ ;
+DPID(DFN) ;EP;S PID variable for query vxu responses
+ S DFN=+$G(DFN)
+ S P0=$G(^DPT(DFN,0))
+ S NAME=$P(P0,U)
+ S DOB=$P(P0,U,3)+17000000
+ S:$G(ASUFAC)="" ASUFAC="000000"
+ S LOC=+$O(^AUTTLOC("C",ASUFAC,0))
+ S HRN=$P($G(^AUPNPAT(DFN,41,LOC,0)),U,2)
+ S HRN=$E("000000",1,6-$L(HRN))
+ S PID="PID"
+ S $P(PID,"|",6)=NAME
+ S $P(PID,"|",8)=DOB
+ S $P(PID,"|",4)=ASUFAC_HRN
+ Q PID
+ ;=====
+ ;

@@ -1,5 +1,5 @@
 BEDDPCC ;GDIT/HS/BEE-BEDD Admit - Create a Visit ; 08 Nov 2011  12:00 PM
- ;;2.0;BEDD DASHBOARD;**2,3**;Jun 04, 2014;Build 12
+ ;;2.0;BEDD DASHBOARD;**2,3,4**;Jun 04, 2014;Build 19
  ;
  ;GDIT/HS/BEE 05/10/2018;CR#10213 - BEDD*2.0*3 - Allow different hospital locations
  ;

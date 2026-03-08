@@ -1,5 +1,5 @@
 BSTSAPID ;GDIT/HS/BEE-Standard Terminology API Program ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;**1**;Dec 01, 2016;Build 36
+ ;;2.0;IHS STANDARD TERMINOLOGY;**1,3,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
@@ -22,7 +22,7 @@ I10ADV(OUT,IN) ;EP - Returns Formatted ICD-10 mapping information for a specifie
  ;
  ; OUT(#) - Array of formatted information to display for the concept
  ;
- NEW CONCID,LOCAL,DEBUG,STS,MADV,I10ADV,LCNT,II,GRP,PRI,RULE
+ NEW CONCID,LOCAL,DEBUG,STS,MADV,I10ADV,LCNT,II,GRP,PRI,RULE,IGRP,NGRP
  ;
  S CONCID=$P(IN,U) I CONCID="" Q "0^Invalid Concept Id"
  S LOCAL=$P(IN,U,2)
@@ -35,6 +35,7 @@ I10ADV(OUT,IN) ;EP - Returns Formatted ICD-10 mapping information for a specifie
  S STS=$$MPADVICE^BSTSAPI("MADV",CONCID_U_LOCAL_U_U_DEBUG)
  ;
  ;Sort by group and priority
+ S (IGRP,NGRP)=""
  S II="" F  S II=$O(MADV(II)) Q:II=""  D
  . ;
  . S GRP=+$G(MADV(II,"MPGRP","VAL"))
@@ -44,16 +45,27 @@ I10ADV(OUT,IN) ;EP - Returns Formatted ICD-10 mapping information for a specifie
  ;Loop through and process
  S RULE=0,GRP="" F  S GRP=$O(I10ADV(GRP)) Q:GRP=""  S PRI="" F  S PRI=$O(I10ADV(GRP,PRI)) Q:PRI=""  S II="" F  S II=$O(I10ADV(GRP,PRI,II)) Q:II=""  D
  . ;
- . NEW TGT,TRL,MPA,MPCNT,MPAV,MGRP
+ . NEW TGT,TRL,MPA,MPCNT,MPAV,MGRP,TGTN
  . ;
  . ;BSTS*2.0*1;Added Map Group
  . S MGRP=$G(I10ADV(GRP,PRI,II,"MPGRP","VAL")) S:MGRP="" MGRP="N/A"
  . ;
+ . ;Populate header
+ . I IGRP="",$G(I10ADV(GRP,PRI,II,"MTYPE","VAL"))="IHS" D
+ .. S LCNT=LCNT+1,@OUT@(LCNT)="IHS Mapping Advice: "
+ .. S IGRP=1
+ . I NGRP="",$G(I10ADV(GRP,PRI,II,"MTYPE","VAL"))="NLM" D
+ .. I IGRP=1 S LCNT=LCNT+1,@OUT@(LCNT)=" "
+ .. S LCNT=LCNT+1,@OUT@(LCNT)="NLM Mapping Advice: "
+ .. S NGRP=1,RULE=0
+ . ;
  . ;Get Target
  . S TGT=$G(I10ADV(GRP,PRI,II,"MPTGT","VAL")) S:TGT="" TGT="N/A"
+ . S TGTN=$G(I10ADV(GRP,PRI,II,"MPTGTN","VAL"))
  . I LCNT>0 S LCNT=LCNT+1,@OUT@(LCNT)=" "
  . S RULE=RULE+1
  . S LCNT=LCNT+1,@OUT@(LCNT)="Rule #"_RULE_$S($L(RULE)=1:"   ",1:"  ")_"Map Group: "_MGRP_"  Target Code: "_TGT
+ . S LCNT=LCNT+1,@OUT@(LCNT)=$S($L(RULE)=1:"             ",1:"            ")_"Target Name: "_TGTN
  . ;
  . ;Get Advice
  . S MPA=$G(I10ADV(GRP,PRI,II,"MPADV","VAL"))

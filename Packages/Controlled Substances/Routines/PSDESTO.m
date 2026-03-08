@@ -1,9 +1,10 @@
-PSDESTO ;BIR/BJW-Add CS Non-Inv Drug to Holding file ;29-May-2012 14:25;PLS
- ;;3.0; CONTROLLED SUBSTANCES ;**8,32,66,1015**;13 Feb 97;Build 62
+PSDESTO ;BIR/BJW-Add CS Non-Inv Drug to Holding file ; 28 Feb 98
+ ;;3.0; CONTROLLED SUBSTANCES ;**8,32,66,69**;13 Feb 97;Build 13
  ;**Y2K compliance**;display 4 digit year on va forms
- ; Modified - IHS/CIA/PLS - 01/28/04 - Removed references to VA FORM
+ ;References to ^PSD(58.86, supported by DBIA4472
+ ;
  I '$D(PSDSITE) D ^PSDSET Q:'$D(PSDSITE)
- I '$D(^XUSEC("PSJ RPHARM",DUZ)) W !!,"Please contact your Pharmacy Coordinator for access to",!,"destroy Controlled Substances.",!!,"PSJ RPHARM security key required.",! G END
+ I '$D(^XUSEC("PSJ RPHARM",DUZ)),'$D(^XUSEC("PSD TECH ADV",DUZ)) W !!,"Please contact your Pharmacy Coordinator for access to",!,"destroy Controlled Substances.",!!,"PSJ RPHARM or PSD TECH ADV security key required.",! G END
  S PSDUZ=DUZ D NOW^%DTC S PSDT=+$E(%,1,12)
  W !!,?5,"NOTE: This Holding for Destruction transaction WILL NOT update your",!,?5,"Controlled Substances inventory balance.",!!
 ASKD ;ask disp location
@@ -26,7 +27,7 @@ DIR2 K DA,DIR,DIRUT,DTOUT,DUOUT,PSD,PSDANS F PSDANS=2,4,11,12,18 S DIR(0)="58.86
  .S PSD(PSDANS)=Y
  .K DIRUT,DTOUT,DUOUT
  ;DIR was added for E3R# 3771
-DIR ;enter free-text information
+DIR ;enter free-text information 
  W !!,"You may enter free-text info regarding drug placed on hold for destruction."
 COM K DA,DIR,DIRUT S DIR(0)="58.86,14" D ^DIR K DA,DIR
  I $D(DTOUT)!($D(DUOUT)) D MSG G END
@@ -55,9 +56,7 @@ TEMPX ;build temp file added june 96
  S ^TMP("PSDESTO",$J,PSDHLD)=PSDHLD_"^"_RECDT_"^"_PSDRN_"^"_RQTY_"^"_PSDCOMS G DRUG
 RPTCPY ;ask # of report copies
  I '$G(PSDHLD) G END
- ;IHS/CIA/PLS - 01/28/04 - Removed reference to VA FORM
- ;W !!,"Number of copies of VA FORM 10-2321? " R NUM:DTIME I '$T!(NUM="^")!(NUM="") W !!,"No copies printed!!",!! G END
- W !!,"Number of copies of form? " R NUM:DTIME I '$T!(NUM="^")!(NUM="") W !!,"No copies printed!!",!! G END
+ W !!,"Number of copies of VA FORM 10-2321? " R NUM:DTIME I '$T!(NUM="^")!(NUM="") W !!,"No copies printed!!",!! G END
  I $G(NUM) D ^PSDGSRV2 G END
  I NUM'?1N!(NUM=0)  W !!,"Enter a whole number between 1 and 9",! G RPTCPY
 END ;kill variables

@@ -1,10 +1,13 @@
-BLRUTIL3 ;IHS/OIT/MKK - MISC IHS LAB UTILITIES (Cont) ; 04-Apr-2016 14:28 ; MKK
- ;;5.2;IHS LABORATORY;**1025,1027,1030,1031,1033,1039**;NOV 01, 1997;Build 38
+BLRUTIL3 ;IHS/OIT/MKK - MISC IHS LAB UTILITIES (Cont) ;07-Mar-2019 13:35;MKK
+ ;;5.2;IHS LABORATORY;**1025,1027,1030,1031,1033,1039,1054**;NOV 01, 1997;Build 20
+ ;
+ ;
+ ; ADO 79349 - LR*5.2*1054 - Accession Lookup not to Fail with hyphenated Accession Area abbreviation.
  ;
  Q
  ;
  ; ----- BEGIN IHS/OIT/MKK LR*5.2*1025
-GETACCCP(LRAS,LRAA,LRAD,LRAN) ; EP -- Take Accession # & break apart
+GETACCCP(LRAS,LRAA,LRAD,LRAN,UID) ; EP -- Take Accession # & break apart
  ; Parse and process user input.  Cloned from LRWU4.
  NEW LRIDIV,LRQUIT,LRX,X1,X2,X3
  S LRX=LRAS
@@ -13,7 +16,8 @@ GETACCCP(LRAS,LRAA,LRAD,LRAN) ; EP -- Take Accession # & break apart
  ;
  S (X1,X2,X3)="",X1=$P(LRX," ",1),X2=$P(LRX," ",2),X3=$P(LRX," ",3)
  S:X3=""&(+X2=X2) X3=X2,X2=""
- I X1'?1A.AN Q 0
+ ; I X1'?1A.AN Q 0
+ I X1'?1AP.ANP Q 0 ; IHS/MSC/MKK - LR*5.2*1054
  ;
  S LRAA=$O(^LRO(68,"B",X1,0))
  I LRAA<1 Q 0
@@ -34,7 +38,7 @@ GETACCCP(LRAS,LRAA,LRAD,LRAN) ; EP -- Take Accession # & break apart
  . S LRAD=Y
  ;
  ; Convert middle value to FileMan date
- ; Adjust for monthly and quarterly formats (MM00) if user enters 4 digit 
+ ; Adjust for monthly and quarterly formats (MM00) if user enters 4 digit
  ; number as middle part of accession then convert to appropriate date.
  I +$G(LRAD)<1 D
  . N %DT
@@ -61,6 +65,7 @@ GETACCCP(LRAS,LRAA,LRAD,LRAN) ; EP -- Take Accession # & break apart
  ;
  I X3="",$D(LRACC) Q 0
  S LRAN=+X3
+ I LRAA,LRAD,LRAN S UID=$$GET1^DIQ(68.02,LRAN_","_LRAD_","_LRAA,16)
  Q 1
  ;
 DATE ; EP
@@ -154,7 +159,7 @@ ALERT ; EP
  W "        TEST:",$P(XQADATA,"^",3),!!
  Q
  ; ----- END IHS/OIT/MKK LR*5.2*1027
- ; 
+ ;
  ; ----- BEGIN IHS/OIT/MKK -- LR*5.2*1030
 REVBLINK(STR) ; EP - Print string in Bold, Blinking, Reverse Video
  W *27,"[1;7;5m",STR,*27,"[0m"
@@ -171,7 +176,7 @@ BULTNS ; EP - Send PCC Bulletin
  D BULTX("BLRTXLOGERR")
  Q
  ;
-BULTX(BULLETIN)     ; EP - SEND BULLETIN IF PCC ERROR IN FILING
+BULTX(BULLETIN) ; EP - SEND BULLETIN IF PCC ERROR IN FILING
  K XMB                  ; Initialize array
  S Y=""                 ; Initialize variable
  ;
@@ -197,7 +202,7 @@ BULTX(BULLETIN)     ; EP - SEND BULLETIN IF PCC ERROR IN FILING
  Q
  ;
  ; Set bulletin parameters from ^BLRTXLOG global
-BULTXSET ; EP 
+BULTXSET ; EP
  NEW COLLDT,LABTIEN,PTPTR
  ;
  S PTPTR=+$P($G(^BLRTXLOG(BLRLOGDA,0)),"^",4)    ; Patient Pointer
@@ -391,7 +396,7 @@ NINLMI(CHKDUZ) ; EP -- Check to see if DUZ is NOT part of LMI Mail Group
  Q $S($T=1:0,1:1)
  ;
  ; Send MailMan E-mail to LMI group AND User (if User is not a member of LMI Mail Group)
-SENDMAIL(MAILMSG,MAILARRY,FROMWHOM,NOUSER) ; EP 
+SENDMAIL(MAILMSG,MAILARRY,FROMWHOM,NOUSER) ; EP
  NEW DIFROM
  ;
  K XMY
@@ -411,13 +416,14 @@ SENDMAIL(MAILMSG,MAILARRY,FROMWHOM,NOUSER) ; EP
  ;
  I $G(XMMG)'=""!(XMZ="NOT OKAY") D
  . NEW SUBSCRPT,ARRAY
- . S SUBSCRPT="MailMan Message Failure^"_+$H_"^"_$J
+ . ; S SUBSCRPT="MailMan Message Failure^"_+$H_"^"_$J
+ . S SUBSCRPT="LR MailMan Message Failure^"_+$H_"^"_$J     ; IHS/MSC/MKK - LR*5.2*1054
  . ; S ^XTEMP(SUBSCRPT,0)=$$FMADD^XLFDT($$DT^XLFDT,90)_"^"_$$DT^XLFDT_"^"_"Lab Package MailMan Message."
  . ; S ^XTEMP(SUBSCRPT,1)="MailMan Message was not sent."
  . ; S ^XTEMP(SUBSCRPT,2)="  Message that should have been sent follows:"
  . ; S ARRAY=0
  . ; F  S ARRAY=$O(MAILARRY(ARRAY))  Q:ARRAY<1  D
- .. ; S ^XTEMP(SUBSCRPT,(ARRAY+3))="     "_$G(MAILARRY(ARRAY))
+ . ; . S ^XTEMP(SUBSCRPT,(ARRAY+3))="     "_$G(MAILARRY(ARRAY))
  . ;
  . ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1039 - Use ^XTMP not ^XTEMP, per SAC
  . S ^XTMP(SUBSCRPT,0)=$$FMADD^XLFDT($$DT^XLFDT,90)_"^"_$$DT^XLFDT_"^"_"Lab Package MailMan Message."

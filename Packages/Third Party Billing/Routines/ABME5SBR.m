@@ -1,7 +1,8 @@
-ABME5SBR ; IHS/ASDST/DMJ - 837 SBR Segment 
- ;;2.6;IHS Third Party Billing System;**6,8,9,14,21**;NOV 12, 2009;Build 379
+ABME5SBR ; IHS/SD/SDR - 837 SBR Segment 
+ ;;2.6;IHS Third Party Billing System;**6,8,9,14,21,30**;NOV 12, 2009;Build 585
  ;Transaction Set Header
- ;IHS/SD/SDR - 2.6*21 - HEAT107645 - Added code to look at segment override
+ ;IHS/SD/SDR 2.6*21 HEAT107645 Added code to look at segment override
+ ;IHS/SD/SDR 2.6*30 CR8876 Added check to report the correct relationship code when loop 2320
  ;
 EP(X) ;EP
  ;x=1 (primary), 2 (secondary) or 3 (tertiary)
@@ -28,7 +29,8 @@ LOOP ;LOOP HERE
 30 ;SBR02 - Individual Relationship Code
  S ABMR("SBR",30)=$G(ABMP("REL",ABMPST))
  ;I $G(ABMHL)=32 D  ;abm*2.6*9 NOHEAT
- I $G(ABMHL)=22 D  ;abm*2.6*9 NOHEAT
+ ;I $G(ABMHL)=22 D  ;abm*2.6*9 NOHEAT  ;abm*2.6*30 IHS/SD/SDR CR8876
+ I (($G(ABMHL)=22)&(ABMLOOP'="2320")) D  ;abm*2.6*9 NOHEAT  ;abm*2.6*30 IHS/SD/SDR CR8876
  .I $G(ABMCHILD)=0 S ABMR("SBR",30)=18
  .I $G(ABMCHILD)=1 S ABMR("SBR",30)=""
  Q

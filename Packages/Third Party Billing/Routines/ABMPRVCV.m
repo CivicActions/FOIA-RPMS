@@ -1,5 +1,5 @@
-ABMPRVCV ; IHS/SD/SDR-Move Service Line provider to multiple ; 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMPRVCV ; IHS/SD/SDR-Move Service Line provider to multiple ; [ 02/03/2003  12:24 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**9**;JAN 11, 2006
  ;
  ; Loop through multiples and move provider over to be rendering
  ; on the service lines

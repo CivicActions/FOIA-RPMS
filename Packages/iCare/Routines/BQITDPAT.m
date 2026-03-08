@@ -1,5 +1,5 @@
 BQITDPAT ;PRXM/HC/ALA - Calculate DX Cat for single patient ; 26 Jul 2006  10:35 AM
- ;;2.4;ICARE MANAGEMENT SYSTEM;;Apr 01, 2015;Build 41
+ ;;1.1;ICARE MANAGEMENT SYSTEM;**3**;Apr 03, 2008
  ;
  Q
  ;
@@ -27,11 +27,11 @@ PAT(DATA,DFN) ;EP -- BQI POPULATE DX CAT BY PATIENT
  ;
  S @DATA@(II)="I00010RESULT"_$C(30)
  ;
- NEW BQTN,BQDEF,BQORD,BQEXEC,BQPRG,BQTGLB,PRGM
+ NEW BQTN,BQDEF,BQORD
  S BQORD=""
  F  S BQORD=$O(^BQI(90506.2,"AC",BQORD)) Q:BQORD=""  D
- . S BQTN=""
- . F  S BQTN=$O(^BQI(90506.2,"AC",BQORD,BQTN)) Q:BQTN=""  D
+ . S BQTN=0
+ . F  S BQTN=$O(^BQI(90506.2,"AC",BQORD,BQTN)) Q:'BQTN  D
  .. ; If the category is marked as inactive, ignore it
  .. I $$GET1^DIQ(90506.2,BQTN_",",.03,"I") Q
  .. ; If the category is a subdefinition, ignore it
@@ -42,19 +42,17 @@ PAT(DATA,DFN) ;EP -- BQI POPULATE DX CAT BY PATIENT
  .. ;
  .. S BQTGLB=$NA(^TMP("BQIPDXC",UID))
  .. K @BQTGLB
+ .. NEW DA,DIK
+ .. S DA(1)=DFN,DA=BQTN,DIK="^BQIPAT("_DA(1)_",20," D ^DIK
  .. ;
  .. ; Call the individual patient dx category code
  .. S PRGM="S VOK=""$$PAT^""_BQPRG_""(BQDEF,.BQTGLB,DFN)"""
  .. X PRGM
  .. ;
  .. ; File the returned data
- .. D CHK(BQTGLB,DFN)
- .. K @BQTGLB
- .. K TAX,VSDT,TIEN,TDXN,PLFLG,N,BQIRY,BQITRY,ARRAY,BCLN,BMI,BGDT,BQDREF,BQDXN,BQGLB
- .. K BDATE,EDATE,FLAG,GREF,FREF,PLFLG,BQGLB1,BQGLBT,BQIREF,BTYP,CIRCUM,CRDATA,DATE
- .. K ENDT,EXDT,GFDATA,IEN,IENS,MFL,MIENS,PROB,QFL,RESULT,RESULTS,STDT,TMDATA,TMGLB2
- .. K TMREF,TPRGL,TREF,TYP,VSDTM
- .. Q
+ .. I @VOK D FIL^BQI1POJB(BQTGLB)
+ .. K TAX,VSDT,TIEN,TDXN,PLFLG,N,BQIRY,BQITRY
+ .. K BDATE,EDATE,FLAG,GREF,FREF,PLFLG
  ;
  S BQIUPD(90507.5,DFN_",",.06)=$$NOW^XLFDT()
  D FILE^DIE("","BQIUPD","ERROR")
@@ -70,22 +68,6 @@ ERR ;
  NEW Y,ERRDTM
  S Y=$$NOW^XLFDT() X ^DD("DD") S ERRDTM=Y
  S BMXSEC="Recording that an error occurred at "_ERRDTM
- I $D(II),$D(DATA) S II=II+1,@DATA@(II)="-1"_$C(30)
- I $D(II),$D(DATA) S II=II+1,@DATA@(II)=$C(31)
- Q
- ;
-CHK(BQTGLB,DFN) ; Check whether met criteria or not
- ;
- ; Yes, met criteria
- I @VOK D FIL^BQITASK(BQTGLB,DFN) Q
- ; No, didn't meet criteria
- D NCR^BQITDUTL(DFN,BQTN)
- ; Remove previous criteria
- NEW DA,DIK
- S DA(2)=DFN,DA(1)=BQTN,DA=0,DIK="^BQIPAT("_DA(2)_",20,"_DA(1)_",1,"
- F  S DA=$O(^BQIPAT(DFN,20,BQTN,1,DA)) Q:'DA  D ^DIK
- K ^BQIPAT(DFN,20,BQTN,1,"B")
- Q
- ;
-FIL(BQGLB,DFN) ;EP - File diagnosis category
+ S II=II+1,@DATA@(II)="-1"_$C(30)
+ S II=II+1,@DATA@(II)=$C(31)
  Q

@@ -1,5 +1,5 @@
 PSOHLNE1 ;BIR/RTR-Parsing out segments from OERR ;01/20/95
- ;;7.0;OUTPATIENT PHARMACY;**1,9,46,71,98,111,117,131,157,181,143,235,239,225**;DEC 1997;Build 29
+ ;;7.0;OUTPATIENT PHARMACY;**1,9,46,71,98,111,117,131,157,181,143,235,239,225**;DEC 1997;Build 121
  ;External reference to EN^ORERR supported by DBIA 2187
  ;External reference to PS(50.607 supported by DBIA 2221
  ;External reference to OR(100 supported by DBIA 2219

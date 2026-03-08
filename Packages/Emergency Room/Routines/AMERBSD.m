@@ -1,5 +1,5 @@
 AMERBSD ;GDIT/HS/BEE - AMER - BSD Appointment Scheduling/Clinic and HL set ; 07 Oct 2013  11:33 AM
- ;;3.0;ER VISIT SYSTEM;**10**;MAR 03, 2009;Build 23
+ ;;3.0;ER VISIT SYSTEM;**10,13**;MAR 03, 2009;Build 36
  ;
 CKHLOC(VIEN,ECLIN) ;Handle possible hospital location changes
  ;
@@ -284,3 +284,64 @@ GCLIN(ECLIN) ;Return the clinic code and hospital location for the ER OPTION CIE
  S:CLIN="" CLIN=$$GET1^DIQ(44,HLOC_",",8,"I")
  ;
  Q CLIN_U_HLOC
+ ;
+ ;GDIT/HS/BEE;Feature#75089;AMER*3.0*13;Check out of PIMS
+CO(SDV) ;EP; called to ask check-out date/time
+ ;
+ ;Adapted from CO^BSDCO1
+ ;
+ ;  Called by
+ ;  SDV = VISIT IEN
+ ;
+ NEW DIE,DA,DR,SDN,SDOE,AUPNVSIT,SDCL,DFN,SDT,AMERLOC,AMERCO,ERIEN,DPDTTM
+ ;
+ S AMERLOC=+$G(DUZ(2))
+ ;
+ ;Make sure site parameters have been set up for this DUZ(2)
+ I '$D(^AMER(2.5,AMERLOC,0)) D ^%ZTER Q
+ ;
+ ;Check if check-out parameter set to ON
+ S AMERCO=+$$GET1^DIQ(9009082.5,AMERLOC_",",.09,"I") Q:'AMERCO
+ ;
+ ;Trap an error if no visit passed in
+ I '$G(SDV) D ^%ZTER Q
+ ;
+ ;Retrieve visit information
+ S SDCL=$$GET1^DIQ(9000010,SDV_",",.22,"I") Q:SDCL=""
+ S DFN=$$GET1^DIQ(9000010,SDV_",",.05,"I") Q:DFN=""
+ S SDT=$$GET1^DIQ(9000010,SDV_",",.01,"I") Q:SDT=""
+ ;
+ ;Locate existing V EMERGENCY VISIT RECORD entry
+ S ERIEN=$O(^AUPNVER("AD",SDV,"")) Q:ERIEN=""
+ ;
+ ;Get the departure date/time
+ S DPDTTM=$$GET1^DIQ(9000010.29,ERIEN_",",.13,"I")
+ S:DPDTTM="" DPDTTM=$$NOW^XLFDT
+ ;
+ S DIE="^SC("_SDCL_",""S"","_SDT_",1,"
+ S DA(2)=SDCL,DA(1)=SDT,(DA,SDN)=$$SCIEN^BSDU2(DFN,SDCL,SDT)
+ I 'DA Q
+ ;
+ ;Quit if not checked in
+ I $P($G(^SC(+SDCL,"S",SDT,1,SDN,"C")),U)="" Q
+ ;
+ ;Update HOSPITAL LOCATION entry
+ S DR="303////"_DPDTTM_";304////"_DUZ_";306////"_$$NOW^XLFDT
+ D ^DIE
+ ;
+ ;If checked out and status not updated, do it now
+ I $P($G(^SC(+SDCL,"S",SDT,1,DA,"C")),U,3)]"" D
+ . S SDOE=$O(^SCE("AVSIT",SDV,"")) Q:'SDOE
+ . Q:$$GET1^DIQ(409.68,SDOE,.12)="CHECKED OUT"
+ . S DIE=409.68,DA=SDOE,DR=".12////2;.07////"_$$NOW^XLFDT
+ . D ^DIE
+ . ;
+ . ; if visit pointer stored, update visit checkout date/time
+ . S SDV=$$GET1^DIQ(409.68,SDOE,.05,"I") Q:'SDV
+ . Q:'$D(^AUPNVSIT(SDV,0))  Q:$$GET1^DIQ(9000010,SDV,.05,"I")'=DFN
+ . Q:$$GET1^DIQ(9000010,SDV,.11,"I")=1    ;deleted
+ . ;
+ . S DIE="^AUPNVSIT(",DA=SDV
+ . S DR=".18////"_$P($G(^SC(+SDCL,"S",SDT,1,SDN,"C")),U,3)
+ . D ^DIE S AUPNVSIT=SDV D MOD^AUPNVSIT
+ Q

@@ -1,5 +1,6 @@
-PXRMDNVA ;SLC/PKR - Handle non-VA med findings. ;07/08/2010
- ;;2.0;CLINICAL REMINDERS;**4,6,17,18**;Feb 04, 2005;Build 152
+PXRMDNVA ;SLC/PKR - Handle non-VA med findings. ;10-Apr-2025 06:50
+ ;;2.0;CLINICAL REMINDERS;**4,6,17,18,1016**;Feb 04, 2005;Build 32
+ ;IHS/MSC/MIR 04/10/2025 Patch 1016  DOSEUN was added
  ;
  ;===============================================
 GETDATA(DAS,FIEVT) ;Return data for an non-VA med finding.
@@ -8,6 +9,11 @@ GETDATA(DAS,FIEVT) ;Return data for an non-VA med finding.
  S FIEVT("VALUE")=FIEVT("STATUS")
  I $G(FIEVT("START DATE"))="" S FIEVT("START DATE")=FIEVT("DOCUMENTED DATE")
  S FIEVT("DURATION")=$$DURATION^PXRMDATE(FIEVT("START DATE"),FIEVT("DISCONTINUED DATE"))
+ N IND1,IND2,IND3,IND4,DOSE,DOSEUN
+ S IND1=$P(DAS,";",1),IND2=$P(DAS,";",2),IND3=$P(DAS,";",3),IND4=$P(DAS,";",4)
+ S DOSE=$P($G(^PS(55,IND1,IND2,IND3,IND4)),U,3) Q:DOSE=+DOSE!DOSE=""
+ S DOSEUN="" F I=$L(DOSE):-1:1 Q:$E(DOSE,I)=" "!($E(DOSE,I)?1N)  S DOSEUN=$E(DOSE,I)_DOSEUN
+ S FIEVT("DOSE UNIT")=DOSEUN
  Q
  ;
  ;===============================================

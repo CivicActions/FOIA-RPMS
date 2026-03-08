@@ -1,5 +1,5 @@
 ABSPOSJ1 ;IHS/SD/lwj - NCPDP 5.1 pre and post init for V1.0 patch 3 [ 10/31/2002  10:58 AM ]
- ;;1.0;Pharmacy Point of Sale;**3,6,12,14,16,17,24,28,29,31,32,36,37,38,39,42,43,44,45,46,47,48**;Jun 21,2001;Build 27
+ ;;1.0;Pharmacy Point of Sale;**3,6,12,14,16,17,24,28,29,31,32,36,37,38,39,42,43,44,45,46,47,48**;Jun 21,2001;Build 131
  ;
  ; Pre and Post init routine use in absp0100.03k
  ;------------------------------------------------------------------
@@ -204,13 +204,13 @@ POST24 ;EP - 02/28/08 - Patch 24 - RLT
  S DIALIEN=$O(^ABSP(9002313.55,"B","ENVOY DIRECT VIA T1 LINE",0))
  I 'DIALIEN D
  . D MES^XPDUTL("ENVOY DIRECT VIA TO LINE NOT FOUND, NOT updated")
- . D MES^XPDUTL("from 999.999.999.9 to emdeonserver.ihs.gov")
+ . D MES^XPDUTL("from 199.244.222.6 to emdeonserver.ihs.gov")
  I DIALIEN D
  . S NEWIP="emdeonserver.ihs.gov"
  . S IP=$P($G(^ABSP(9002313.55,DIALIEN,"SERVER")),U)
  . I IP'="199.244.222.6"&(IP'="emdeonserver.ihs.gov") D
  .. D MES^XPDUTL("ENVOY DIRECT VIA TO LINE has NOT been updated")
- .. D MES^XPDUTL("origninal IP is not 999.999.999.9")
+ .. D MES^XPDUTL("origninal IP is not 199.244.222.6")
  .. D MES^XPDUTL("origninal IP is "_IP)
  . I IP="emdeonserver.ihs.gov" D
  .. D MES^XPDUTL("ENVOY DIRECT VIA TO LINE has all ready")
@@ -224,10 +224,10 @@ POST24 ;EP - 02/28/08 - Patch 24 - RLT
  .. S IP=$P($G(^ABSP(9002313.55,DIALIEN,"SERVER")),U)
  .. I IP="emdeonserver.ihs.gov" D
  ... D MES^XPDUTL("ENVOY DIRECT VIA TO LINE has been updated")
- ... D MES^XPDUTL("from 999.999.999.9 to emdeonserver.ihs.gov")
+ ... D MES^XPDUTL("from 199.244.222.6 to emdeonserver.ihs.gov")
  .. I IP'="emdeonserver.ihs.gov" D
  ... D MES^XPDUTL("ENVOY DIRECT VIA TO LINE has NOT been updated")
- ... D MES^XPDUTL("from 999.999.999.9 to emdeonserver.ihs.gov")
+ ... D MES^XPDUTL("from 199.244.222.6 to emdeonserver.ihs.gov")
  D POST17  ;cumulative patches - let's call the rest
  Q
 POST17 ;EP - 6/13/06 Patch 17 RLT

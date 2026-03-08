@@ -1,7 +1,9 @@
 BMCFDRS ; IHS/PHXAO/TMJ - DRIVER TO PRINT ROUTING SLIP ;  
- ;;4.0;REFERRED CARE INFO SYSTEM;**3**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**3,15,16**;JAN 09, 2006;Build 168
  ;IHS/ITSC/FCJ MOD ADDL DOC SECTION WAS NOT FORMATING CORRECTLY
  ;4.0*3 3.19.2007 IHS/OIT/FCJ REMOVED KILL OF BMCCHSA VAR IN KILL LINE
+ ;4.0*15 4.20.2023 IHS.OIT.FCJ ADD PREFERRED NAME FOR SCREEN DISPLAYS
+ ;4.0*16 12.15.2023 IHS.OIT.FCJ ADD "C1" SUFFIX FOR CALLIN AND MOD CONTRACT HEALTH
  ;
  ; This program prints a routing slip that lists the
  ; additional documentation which will accompany a referral.
@@ -13,7 +15,7 @@ START ;EP - ENTRY POINT FROM OPTION LIST
  S BMCQUIT=0
 GETREF ;
  W !! S BMCREF=""
- S DIC="^BMCREF(",DIC(0)="AEMQ",DIC("A")="Select Referral by Patient Name, Date of Referral or Referral #: " D ^DIC K DA,DIC
+ S DIC="^BMCREF(",DIC(0)="AEMQS",DIC("A")="Select Referral by Patient Name, Date of Referral or Referral #: " D ^DIC K DA,DIC  ;BMC*4.0*15 ADDED "S" TO DIC(0)
  G:Y=-1 XIT
  S BMCREF=+Y
 ZIS ;     
@@ -33,13 +35,15 @@ PRINT ;EP - PRINT ROUTING SLIP
  S BMCR0=^BMCREF(BMCREF,0),BMCPG=0,BMCDFN=$P(BMCR0,U,3)
  D @("HEAD"_(2-($E(IOST,1,2)="C-")))
  S BMCQUIT=0
- S X="Routing Slip for Contract Health",C=1,N=1,T=0 D W Q:BMCQUIT
+ ;S X="Routing Slip for Contract Health",C=1,N=1,T=0 D W Q:BMCQUIT  ;BMC*4.0*16
+ S X="Routing Slip for Purchase Referred Care",C=1,N=1,T=0 D W Q:BMCQUIT   ;BMC*4.0*16
  D S
  Q:BMCQUIT
 DEMO ;Demographic Data
  S X="Patient Name:  "_$$VAL^XBDIQ1(90001,BMCREF,.03),C=0,N=1,T=3 D W Q:BMCQUIT
  S X="ID Number:  "_$$HRN^AUPNPAT($P(BMCR0,U,3),DUZ(2),2),C=0,N=0,T=55 D W Q:BMCQUIT
- S X="Referral Number:  "_$$VAL^XBDIQ1(90001,BMCREF,.02)_" "_$P($G(^BMCREF(BMCREF,1)),U),C=0,N=1,T=0 D W Q:BMCQUIT
+ ;S X="Referral Number:  "_$$VAL^XBDIQ1(90001,BMCREF,.02)_" "_$P($G(^BMCREF(BMCREF,1)),U),C=0,N=1,T=0 D W Q:BMCQUIT       ;BMC*4.0*16
+ S X="Referral Number:  "_$$VAL^XBDIQ1(90001,BMCREF,.02)_$P($G(^BMCREF(BMCREF,1)),U) S:$P($G(^BMCREF(BMCREF,1)),U)="" X=X_$$CALLIN^BMCRLU(BMCREF),C=0,N=1,T=0 D W Q:BMCQUIT       ;BMC*4.0*16
  S X="Date Initiated:  "_$$VAL^XBDIQ1(90001,BMCREF,.01),C=0,N=0,T=50 D W
  ;
 DATE ;

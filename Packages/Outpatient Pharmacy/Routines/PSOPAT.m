@@ -1,5 +1,5 @@
-PSOPAT ;BHAM ISC/SAB - update pharmacy patient data ;03/08/93 8:35
- ;;7.0;OUTPATIENT PHARMACY;**74,117,149,233,268,326**;DEC 1997;Build 11
+PSOPAT ;BHAM ISC/SAB - update pharmacy patient data ;24-Apr-2019 10:40;DU
+ ;;7.0;OUTPATIENT PHARMACY;**74,117,149,233,268,326,1024**;DEC 1997;Build 68
  ;Reference to ^PS(55, is supported by IA 2228
  I '$D(PSOPAR) D ^PSOLSET I '$D(PSOPAR) W $C(7),!,"Site Parameters must be Defined!",! G EX
 2 W ! S PSOFROM=1,DIC("A")="Select Patient: ",DIC(0)="AEQMZ" D EN^PSOPATLK S Y=PSOPTLK G:"^"[Y EX G:Y<0 2 S DFN=+Y S PSOLOUD=1 D:$P($G(^PS(55,DFN,0)),"^",6)'=2 EN^PSOHLUP(DFN) K PSOLOUD
@@ -19,3 +19,13 @@ EX L -^PS(55,+$G(DA)),-^DPT(+$G(DA))
  K DIC,X,Y,DIE,D0,DA,DFN,PI,DR,%,%Y,%X,C,DI,DIPGM,DQ,PSOFROM,PSOPTLK
  Q
 MSG W $C(7),!,"Patient Data is Being Edited by Another User!",! Q
+CHKP55(OR0) ;IHS/MSC/MGH Patch 1024 check to see if there is an entry in file 55
+ N PSODFN,PSOUPD
+ S PSODFN=+$P(OR0,U,2)
+ I '$D(^PS(55,PSODFN,0)) D
+ .L +^PS(55,PSODFN)
+ .S PSOUPD=2
+ .K DIC S DIC="^PS(55,",DIC(0)="L",(X,DINUM)=PSODFN,DIC("DR")="52.1///"_PSOUPD
+ .K DD,DO D FILE^DICN K DD,DO,DIE,X,DINUM
+ .L -^PS(55,PSODFN)
+ Q

@@ -1,5 +1,5 @@
 BQICMLST ;VNGT/HS/ALA-Care Management List ; 28 May 2008  6:59 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**4,5,7**;Mar 01, 2021;Build 14
  ;
  Q
  ;
@@ -83,6 +83,8 @@ RET ; Data retrieval
  F  S ORD=$O(^BQI(90506.1,"AD",TTYPE,ORD)) Q:ORD=""  D
  . S IEN=""
  . F  S IEN=$O(^BQI(90506.1,"AD",TTYPE,ORD,IEN)) Q:IEN=""  D GET(IEN)
+ ;
+ S IEN="" F  S IEN=$O(^BQI(90506.1,"AC",TTYPE,IEN)) Q:IEN=""  D GET(IEN)
  Q
  ;
 GET(IEN) ;EP - Get data values
@@ -135,8 +137,10 @@ CMGT ; Additional Care Mgmt columns
  F  S DXCL=$O(^BQI(90506.5,CMCOD,10,DXCL)) Q:'DXCL  D
  . S FDATA=^BQI(90506.5,CMCOD,10,DXCL,0)
  . I $P(FDATA,U,9)=1 Q
+ . I $P(FDATA,"^",1)["HIDE_"!($P(FDATA,"^",1)["HIDDEN") Q
  . S FTY=$P(FDATA,U,2),CAT="",CLIN="",SCLIN=""
  . S CAT=$P($G(^BQI(90506.5,CMCOD,10,DXCL,5)),"^",2),CLIN=$P($G(^BQI(90506.5,CMCOD,10,DXCL,5)),"^",1)
+ . S SIZE=$P(^BQI(90506.5,CMCOD,10,DXCL,0),"^",10)
  . I FTY'="" D
  .. I CAT'=""!(CLIN'="") Q
  .. S CAT=$$GET1^DIQ(90621.1,FTY_",",.07,"E")
@@ -145,7 +149,7 @@ CMGT ; Additional Care Mgmt columns
  . S REQ=$S($P(FDATA,U,6)'="":$P(FDATA,U,6),1:"O")
  . S SCAT=$S(CAT="":"@",1:CAT),SCLIN=$S(CLIN="":"@",1:CLIN)
  . S SRC=$S($$GET1^DIQ(90506.5,CMCOD_",",.06,"E")'="":$$GET1^DIQ(90506.5,CMCOD_",",.06,"E"),1:$$GET1^DIQ(90506.5,CMCOD_",",.01,"E"))
- . S BQISORT(SRC,SCAT,SCLIN,$P(FDATA,U,3),DXCL)=DXCL_U_SRC_U_CAT_U_CLIN_U_$P(FDATA,U,3)_U_$P(FDATA,U,1)_U_REQ_U_U_U_U_U_U_$C(30)
+ . S BQISORT(SRC,SCAT,SCLIN,$P(FDATA,U,3),DXCL)=DXCL_U_SRC_U_CAT_U_CLIN_U_$P(FDATA,U,3)_U_$P(FDATA,U,1)_U_REQ_U_U_U_SIZE_U_U_U_$C(30)
  . ;
  ;Get locally created care management columns if associated with a dx tag
  NEW DXTN

@@ -1,5 +1,5 @@
 BSTSDSP ;GDIT/HSCD/BEE-Display BSTS information ; 27 Mar 2015  11:35 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;**1**;Dec 01, 2016;Build 36
+ ;;2.0;IHS STANDARD TERMINOLOGY;**1,3,4,8**;Dec 01, 2016;Build 27
  ;
 DSP(SERV) ; EP
  ;
@@ -19,8 +19,12 @@ DSP1 W:$G(IOF)]"" @IOF
  S DIR("A",3)="3.  Current BSTS processing queue"
  S DIR("A",4)="4.  BSTS process history"
  S DIR("A",5)="5.  BSTS error listing"
- S DIR("A",6)="6.  All of the above information"
+ S DIR("A",6)="6.  All of the above information (1-5)"
  S DIR("A",7)=" "
+ I $D(^XUSEC("BSTSZCRPT",+DUZ)) D
+ . S DIR(0)="LO^1:7"
+ . S DIR("A",7)="7.  Concept/Subset Report Menu"
+ . S DIR("A",8)=" "
  D ^DIR
  I Y="" Q
  I $G(DTOUT)!$G(DUOUT)!$G(DIRUT)!$G(DIROUT) Q
@@ -34,6 +38,9 @@ DSP1 W:$G(IOF)]"" @IOF
  ;
  ;Get maximum errors to display
  I (ANS=5)!(ANS=6) S ERMAX=$$EMAX() Q:'ERMAX
+ ;
+ ;Add Concept/Subset Report Menu
+ I (ANS=7) D EN^BSTSCRPT G DSP1
  ;
  ;Get device
  S POP="" D ^%ZIS I POP Q
@@ -74,7 +81,10 @@ DSP1 W:$G(IOF)]"" @IOF
  ;
 VRSN(BSTSRPT) ;Display current codeset version information
  ;
- NEW CT,CODE,IEN,SPACE
+ NEW CT,CODE,IEN,SPACE,VNAM,II,TXT
+ ;
+ ;Retrieve namespaces to display
+ F II=1:1 S TXT=$T(NAM+II) Q:TXT["END"  S VNAM=$P(TXT,";",2) I VNAM]"" S VNAM(VNAM)=""
  ;
  S $P(SPACE," ",80)=" "
  ;
@@ -85,19 +95,26 @@ VRSN(BSTSRPT) ;Display current codeset version information
  S CT=CT+1,BSTSRPT(CT)=" "
  S CT=CT+1,BSTSRPT(CT)="Current BSTS Codeset Version Information:"
  S CT=CT+1,BSTSRPT(CT)=" "
- S CT=CT+1,BSTSRPT(CT,"F")="!?0",BSTSRPT(CT)=$E(SPACE,1,6)_$E(SPACE,1,20)_$E("CURRENT"_SPACE,1,12)_$E("COMPLETED"_SPACE,1,14)_$E("SUBSET"_SPACE,1,12)
- S CT=CT+1,BSTSRPT(CT,"F")="!?0",BSTSRPT(CT)=$E("CODE"_SPACE,1,6)_$E("CODESET"_SPACE,1,20)_$E("VERSION"_SPACE,1,12)_$E("CHECKS"_SPACE,1,14)_$E("RUN"_SPACE,1,12)
+ ;
+ ;GDIT/HS/BEE;FEATURE#120458;BSTS*2.0*8;Remove subset last run column
+ S CT=CT+1,BSTSRPT(CT,"F")="!?0",BSTSRPT(CT)=$E(SPACE,1,6)_$E(SPACE,1,50)_$E("CURRENT"_SPACE,1,12)_$E("COMPLETED"_SPACE,1,14)
+ S CT=CT+1,BSTSRPT(CT,"F")="!?0",BSTSRPT(CT)=$E("CODE"_SPACE,1,6)_$E("CODESET"_SPACE,1,50)_$E("VERSION"_SPACE,1,12)_$E("CHECKS"_SPACE,1,14)
+ S CT=CT+1,BSTSRPT(CT,"F")="!"
  ;
  S CODE="" F  S CODE=$O(^BSTS(9002318.1,"B",CODE)) Q:CODE=""  D
  . S IEN="" F  S IEN=$O(^BSTS(9002318.1,"B",CODE,IEN)) Q:IEN=""  D
  .. NEW NAME,CVRSN,LVCHK,LSCHK
  .. ;
- .. S NAME=$$GET1^DIQ(9002318.1,IEN_",",.02) Q:NAME=""
+ .. ;GDIT/HS/BEE;FEATURE#120459;BSTS*2.0*8;Remove unused namespaces
+ .. I '$D(VNAM(CODE)) Q
+ .. ;
+ .. S NAME=$$GET1^DIQ(9002318.1,IEN_",",.03) Q:NAME=""
  .. S CVRSN=$$GET1^DIQ(9002318.1,IEN_",",.04)
  .. S LVCHK=$$GET1^DIQ(9002318.1,IEN_",",.05,"I") S:LVCHK]"" LVCHK=$$FMTE^XLFDT(LVCHK,"2ZD")
  .. S LSCHK=$$GET1^DIQ(9002318.1,IEN_",",.1,"I") S:LSCHK]"" LSCHK=$$FMTE^XLFDT(LSCHK,"2ZD")
  .. ;
- .. S CT=CT+1,BSTSRPT(CT,"F")="!?0",BSTSRPT(CT)=$E(CODE_SPACE,1,6)_$E(NAME_SPACE,1,20)_$E(CVRSN_SPACE,1,12)_$E(LVCHK_SPACE,1,14)_$E(LSCHK_SPACE,1,12)
+ .. ;GDIT/HS/BEE;FEATURE#120458;BSTS*2.0*8;Remove subset last run column
+ .. S CT=CT+1,BSTSRPT(CT,"F")="!?0",BSTSRPT(CT)=$E(CODE_SPACE,1,6)_$E(NAME_SPACE,1,50)_$E(CVRSN_SPACE,1,12)_$E(LVCHK_SPACE,1,14)
  ;
  Q
  ;
@@ -267,6 +284,12 @@ PRCENTRY(BSTSRPT,QIEN,TYPE) ;Format one BSTS task entry
  E  M ENTRY=^XTMP("BSTSPROCQ","P",QIEN)  ;Completed entry
  ;
  S UPDATE=$G(ENTRY("RTN")) I $TR(UPDATE," ")="" Q
+ I UPDATE="SUB^BSTSVRSN" D
+ . NEW PTYPE,NM
+ . S PTYPE=$G(ENTRY("TYPE"))
+ . I $E(PTYPE,1)="S" D
+ .. S NM=$E(PTYPE,2,999)
+ .. S:NM?1N.N UPDATE=UPDATE_":"_NM
  S SCHED=$G(ENTRY("SCHED")) S:SCHED]"" SCHED=$$FMTE^XLFDT(SCHED,"2ZM")
  S START=$G(ENTRY("START")) S:START]"" START=$$FMTE^XLFDT(START,"2ZM")
  S END=$G(ENTRY("END")) S:END]"" END=$$FMTE^XLFDT(END,"2ZM")
@@ -391,3 +414,20 @@ SET(SERV,BSTSRPT) ;Return site/server settings
  . S CT=CT+1,BSTSRPT(CT,"F")="?32",BSTSRPT(CT)=$$GET1^DIQ(9002318.2,SERV_",",FLD,"E")
  ;
  Q
+ ;
+NAM ;CODESET;
+ ;36;
+ ;1552;
+ ;5180;
+ ;5190;
+ ;32770;
+ ;32771;
+ ;32772;
+ ;32773;
+ ;32777;
+ ;32779;
+ ;32780;
+ ;32781;
+ ;32782;
+ ;32783;
+ ;END;

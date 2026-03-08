@@ -1,5 +1,5 @@
 BSDAM10 ; IHS/ANMC/LJF - IHS CALLS FROM SDAM10 ;  [ 08/26/2004  2:10 PM ]
- ;;5.3;PIMS;**1001**;APR 26, 2002
+ ;;5.3;PIMS;**1001,1022**;MAY 28, 2004;Build 18
  ;Mods to VA code: added "deceased" to patient status display
  ;                 added community to patient header
  ;                 added last reg update to message line
@@ -11,9 +11,11 @@ HDR ;EP; -- list screen header
  ;
  N VAERR,VA,X
  S DFN=SDFN D PID^VADPT
- S VALMHDR(1)=$E($P("Patient: "_$G(IORVON)_$G(^DPT(SDFN,0)),U),1,46)_$G(IORVOFF)_" ("_VA("BID")_")"
+ ;202307 77892 maw p1022 PPN
+ S VALMHDR(1)="Patient: "_$G(IORVON)_$$GETPREF^AUPNSOGI(DFN,"E",1)_$G(IORVOFF)_" ("_VA("BID")_")"  ;for proper display of patient name for SD*5.3*189
+ ;S VALMHDR(1)=$E($P("Patient: "_$G(IORVON)_$G(^DPT(SDFN,0)),U),1,46)_$G(IORVOFF)_" ("_VA("BID")_")"
  S X=$P($$FMT^SDUTL2(SDFN),U,2),X=$S(X]"":"MT: "_X,1:"")
- S X=$$GET1^DIQ(9000001,SDFN,1118)                ;community
+ ;S X=$$GET1^DIQ(9000001,SDFN,1118)                ;community
  ;IHS/ITSC/WAR 7/15/2004 PATCH #1001 Mod to handle long Pt names & chrt# etc.
  ;S VALMHDR(1)=$$SETSTR^VALM1(X,VALMHDR(1),47,15)
  S VALMHDR(1)=$$SETSTR^VALM1(X,VALMHDR(1),$L(VALMHDR(1))+2,15)

@@ -1,12 +1,12 @@
 BQIPTDMG ;VNGT/HS/ALA-iCare Demographics RPCs ; 14 Jan 2009  12:47 PM
- ;;2.6;ICARE MANAGEMENT SYSTEM;;Jul 07, 2017;Build 72
+ ;;2.0;ICARE MANAGEMENT SYSTEM;**2**;May 29, 2009
  ;
  ;
 GET(DATA,DFN) ; EP -- BQI PATIENT EDIT DATA
  ; Input
  ;    DFN    - Patients DFN or internal entry number
  ;
- NEW UID,II,HEADR,BN,RACE,METH
+ NEW UID,II,HDR,BN,RACE,METH
  S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
  S DATA=$NA(^TMP("BQIPTDMG",UID))
  K @DATA
@@ -19,13 +19,13 @@ GET(DATA,DFN) ; EP -- BQI PATIENT EDIT DATA
  I VFIEN="" S BMXSEC="RPC Call Failed: Patient Edit Definition does not exist." Q
  S FILE=$P(^BQI(90506.3,VFIEN,0),U,2)
  ;
- S ORD="",HEADR="",VALUE=""
+ S ORD="",HDR="",VALUE=""
  F  S ORD=$O(^BQI(90506.3,VFIEN,10,"C",ORD)) Q:ORD=""  D
  . S IEN=""
  . F  S IEN=$O(^BQI(90506.3,VFIEN,10,"C",ORD,IEN)) Q:IEN=""  D
  .. I $P(^BQI(90506.3,VFIEN,10,IEN,0),U,11)=1 Q
  .. S TYPE=$P($G(^BQI(90506.3,VFIEN,10,IEN,1)),U,1)
- .. S HEADR=HEADR_$P(^BQI(90506.3,VFIEN,10,IEN,0),U,2)_U
+ .. S HDR=HDR_$P(^BQI(90506.3,VFIEN,10,IEN,0),U,2)_U
  .. I TYPE="M" S VAL="",VALUE=VALUE_VAL_U Q
  .. S FLD=$P($G(^BQI(90506.3,VFIEN,10,IEN,3)),U,1)
  .. S CODE=$P(^BQI(90506.3,VFIEN,10,IEN,0),U,7)
@@ -37,11 +37,11 @@ GET(DATA,DFN) ; EP -- BQI PATIENT EDIT DATA
  ... I STVW="",EXEC="" Q
  ... D GVAL^BQIPLVWP
  .. I FLD'="" D
- ... I TYPE'="T",TYPE'="C" S VAL=$$GET1^DIQ(FILE,DFN_",",FLD,"E") Q
+ ... I TYPE'="T" S VAL=$$GET1^DIQ(FILE,DFN_",",FLD,"E") Q
  ... S VAL=$$GET1^DIQ(FILE,DFN_",",FLD,"I")_$C(28)_$$GET1^DIQ(FILE,DFN_",",FLD,"E")
  .. S VALUE=VALUE_VAL_U
- S HEADR=$$TKO^BQIUL1(HEADR,"^"),VALUE=$$TKO^BQIUL1(VALUE,"^")
- S @DATA@(II)=HEADR_$C(30)
+ S HDR=$$TKO^BQIUL1(HDR,"^"),VALUE=$$TKO^BQIUL1(VALUE,"^")
+ S @DATA@(II)=HDR_$C(30)
  S II=II+1,@DATA@(II)=VALUE_$C(30)
  ;
  G DONE
@@ -82,15 +82,6 @@ ETHN(DFN,FLD) ; EP - Patient's Ethnicity
  . S VAL=$$GET1^DIQ(2.06,IENS,FLD,"I")_$C(28)_$$GET1^DIQ(2.06,IENS,FLD,"E")
  Q VAL
  ;
-ET(DFN) ; EP - List of patient's ethinicities
- NEW BN,VAL
- S BN=0,VAL=""
- F  S BN=$O(^DPT(DFN,.06,BN)) Q:'BN  D
- . NEW DA,IENS
- . S DA(1)=DFN,DA=BN,IENS=$$IENS^DILF(.DA)
- . S VAL=VAL_$$GET1^DIQ(2.06,IENS,.01,"E")_$C(10)_$C(13)
- Q $$TKO^BQIUL1(VAL,$C(10)_$C(13))
- ;
 RCE(DFN,FLD) ; EP - Patient's Race
  NEW BN,VAL
  S BN=0,VAL=""
@@ -99,12 +90,3 @@ RCE(DFN,FLD) ; EP - Patient's Race
  . S DA(1)=DFN,DA=BN,IENS=$$IENS^DILF(.DA)
  . S VAL=$$GET1^DIQ(2.02,IENS,FLD,"I")_$C(28)_$$GET1^DIQ(2.02,IENS,FLD,"E")
  Q VAL
- ;
-RC(DFN) ; EP - List of patient's race(s)
- NEW BN,VAL
- S BN=0,VAL=""
- F  S BN=$O(^DPT(DFN,.02,BN)) Q:'BN  D
- . NEW DA,IENS
- . S DA(1)=DFN,DA=BN,IENS=$$IENS^DILF(.DA)
- . S VAL=VAL_$$GET1^DIQ(2.02,IENS,.01,"E")_$C(10)_$C(13)
- Q $$TKO^BQIUL1(VAL,$C(10)_$C(13))

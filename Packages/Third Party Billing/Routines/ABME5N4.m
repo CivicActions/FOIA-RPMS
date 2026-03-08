@@ -1,6 +1,8 @@
 ABME5N4 ; IHS/ASDST/DMJ - 837 N4 Segment 
- ;;2.6;IHS Third Party Billing System;**6,8,9**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing System;**6,8,9,35**;NOV 12, 2009;Build 659
  ;City/State/Zip
+ ;
+ ;IHS/SD/SDR 2.6*35 ADO60702 Added check for FT ambulance destination field
  ;
 EP(X,Y) ;EP - START HERE
  ;x=file
@@ -42,6 +44,7 @@ LOOP ;LOOP HERE
  .I ABMR("F")["AUPNPAT" S ABMR("N4",20)=$P($G(^DPT(ABMR("IEN"),.11)),U,4)
  .I ABMR("F")["AUTTLOC" S ABMR("N4",20)=$P($G(^DIC(4,ABMR("IEN"),1)),U,3)
  .I ABMR("F")["AUTTVNDR" S ABMR("N4",20)=$P($G(^AUTTVNDR(ABMR("IEN"),13)),U,2)
+ .I $G(ABMR("N4",20))="" S ABMR("N4",20)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),16)),U,3)  ;abm*2.6*35 IHS/SD/SDR ADO60702
  .;end new code HEAT45242
  Q
 30 ;N402 - State or Province
@@ -65,7 +68,8 @@ LOOP ;LOOP HERE
  .I ABMR("F")["AUPNPAT" S ABMR("N4",30)=$P($G(^DPT(ABMR("IEN"),.11)),U,5)
  .I ABMR("F")["AUTTLOC" S ABMR("N4",30)=$P($G(^DIC(4,ABMR("IEN"),0)),U,2)
  .I ABMR("F")["AUTTVNDR" S ABMR("N4",30)=$P($G(^AUTTVNDR(ABMR("IEN"),13)),U,3)
- .;end new codes HEAT45242
+ .I $G(ABMR("N4",30))="" S ABMR("N4",30)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),16)),U,4)  ;abm*2.6*35 IHS/SD/SDR ADO60702
+ .;end new code HEAT45242
  S ABMR("N4",30)=$P($G(^DIC(5,+ABMR("N4",30),0)),"^",2)
  Q
 40 ;N403 - Postal Code
@@ -90,6 +94,7 @@ LOOP ;LOOP HERE
  .I ABMR("F")["AUPNPAT" S ABMR("N4",40)=$P($G(^DPT(ABMR("IEN"),.11)),U,6)
  .I ABMR("F")["AUTTLOC" S ABMR("N4",40)=$P($G(^DIC(4,ABMR("IEN"),1)),U,4)
  .I ABMR("F")["AUTTVNDR" S ABMR("N4",40)=$P($G(^AUTTVNDR(ABMR("IEN"),13)),U,4)  ;abm*2.6*9 NOHEAT IHS/SD/AML 1/17/2012
+ .I $G(ABMR("N4",40))="" S ABMR("N4",40)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),16)),U,5)  ;abm*2.6*35 IHS/SD/SDR ADO60702
  .;end new code HEAT45242
  ;S:(+ABMR("N4",40)'=0) ABMR("N4",40)=$$FMT^ABMERUTL($TR(ABMR("N4",40)," -"),"9N")  ;abm*2.6*9 NOHEAT IHS/SD/AML 12/23/2011
  S ABMR("N4",40)=$TR(ABMR("N4",40)," -")  ;abm*2.6*9 NOHEAT - IHS/SD/AML 12/23/2011 - Pt address only needs to be 5 characters

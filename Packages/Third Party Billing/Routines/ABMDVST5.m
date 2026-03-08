@@ -1,17 +1,29 @@
 ABMDVST5 ; IHS/ASDST/DMJ - PCC VISIT STUFF - PART 6 (PHARMACY) ;   
- ;;2.6;IHS Third Party Billing System;**2,4**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**2,4,36,37,38**;NOV 12, 2009;Build 756
  ;Original;TMD;08/19/96 5:01 PM
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 57
- ;    Removed check for OTC drugs and no entry in fee schedule.  Also
+ ;IHS/SD/SDR 2.5*8 task 57 Removed check for OTC drugs and no entry in fee schedule.  Also
  ;    added code to populate dt disc. and RTS if flag is set.
- ; IHS/SD/SDR - v2.5 p9 - IM19140 - <SUBSCRIPT>ABMDVST5+29^ABMDVST5
- ; IHS/SD/SDR - v2.5 p10 - IM21500 - Added code to check new V Med field
- ;    POINT OF SALE BILLING STATUS and only bill if blank or rejected
+ ;IHS/SD/SDR 2.5*9 IM19140 <SUBSCRIPT>ABMDVST5+29^ABMDVST5
+ ;IHS/SD/SDR 2.5*10 IM21500 Added code to check new V Med field POINT OF SALE BILLING STATUS and only bill if blank or rejected
+ ;
+ ;IHS/SD/SDR 2.6*36 ADO76247 Smartened up the check so if a V Med POINT OF SALE BILLING STATUS is NOT 'POS BILLED' it will include on the claim
+ ;IHS/SD/SDR 2.6*37 ADO89299 Capture DEA_VA_USPHS for ordering provider
+ ;IHS/SD/SDR 2.6*38 ADO97221 Put code back so if the RX BILLING STATUS is 'P' no medications will cross over to claim
  ;
  I $G(ABMP("RXDONE")) Q
  I $G(ABMP("INS"))'="",($P($G(^AUTNINS(ABMP("INS"),2)),U,3)="U") Q
- I $G(ABMP("INS"))'="",($P($G(^AUTNINS(ABMP("INS"),2)),"^",3)="P") Q
+ I $G(ABMP("INS"))'="",($P($G(^AUTNINS(ABMP("INS"),2)),"^",3)="P") Q  ;abm*2.6*36 IHS/SD/SDR ADO76247  ;abm*2.6*38 IHS/SD/SDR ADO97221 put this line back
+ ;start old abm*2.6*38 IHS/SD/SDR ADO97221
+ ;;start new abm*2.6*36 IHS/SD/SDR ADO76247
+ ;S ABMPSFLG=1
+ ;S ABMVMIEN=0
+ ;F  S ABMVMIEN=$O(^AUPNVMED("AD",ABMVDFN,ABMVMIEN)) Q:+ABMVMIEN=0  D  Q:$G(ABMPSFLG)=0  ;there's still an RX to bill
+ ;.I $P($G(^AUPNVMED(ABMVMIEN,11)),U,6)="" S ABMPSFLG=0  ;POINT OF SALE BILLING STATUS blank so we should try billing it
+ ;;if active insurer RX BILLING STATUS is 'P' for 'BILLED POINT OF SALE' and there's only meds that were all billed POS
+ ;I ($G(ABMP("INS"))'="")&($P($G(^AUTNINS(ABMP("INS"),2)),U,3)="P")&($G(ABMPSFLG)=1) Q
+ ;;end new abm*2.6*36 IHS/SD/SDR ADO76247
+ ;end old abm*2.6*38 IHS/SD/SDR ADO97221
  S (ABM("TIME"),ABMR("TIME"))=$P(ABMP("V0"),U)
  ;
 MED ;
@@ -20,6 +32,7 @@ MED ;
  S ABM=0 F  S ABM=$O(^AUPNVMED("AD",ABMVDFN,ABM)) Q:'ABM  D
  .Q:'$D(^AUPNVMED(ABM,0))
  .Q:$P(^AUPNVMED(ABM,0),"^",8)&($G(ABMRXFLG)'=1)
+ .Q:$P($G(^AUPNVMED(ABM,11)),U,6)=1  ;POS BILLED so skip it  ;abm*2.6*36 IHS/SD/SDR ADO76247
  .S X=$P(^AUPNVMED(ABM,0),U)
  .S ABMSRC="14|"_ABM_"|RX"
  .D MEDCHK
@@ -35,6 +48,7 @@ MEDCHK ;
  S ABMR("RX")=$P($G(^PSRX(ABMR("X"),0)),U)
  I ABMR("RX")="" D NORX Q
  S ABMR("DTWR")=$P(^PSRX(ABMR("X"),0),"^",13)
+ S ABMR("DEA")=$P($G(^PSRX(ABMR("X"),999999931)),U,7)  ;DEA_VA_USPHS  ;abm*2.6*37 IHS/SD/SDR ADO89299
  S ABMR("REF")=$O(^PSRX("APCC",ABM,ABMR("X"),0))
  I ABMR("REF")="" D
  .S ABMR0=$G(^PSRX(ABMR("X"),0))
@@ -69,6 +83,7 @@ MEDSET ;FILE
  .K DD,DO D FILE^DICN
  .K DIC("DR")
  .S DA=+Y
+ S ABMT("SV")=DA  ;abm*2.6*37 IHS/SD/SDR ADO89299
  Q:DA<0  S DIE=DIC
  S ABMR("SURC")=$S(ABMP("VTYP")'=111:$P(^ABMDPARM(DUZ(2),1,0),U,3),1:$P($G(^ABMDPARM(DUZ(2),1,4)),U,6))
  ;X is the drug ien.  ABMDFEE is dinumed in this mult
@@ -85,8 +100,8 @@ MEDSET ;FILE
  D ^DIE
  S DR=".22////"_ABMR("X")
  D ^DIE
- S DR=".23////"_$G(ABMR("PROV"))
- D ^DIE
+ ;S DR=".23////"_$G(ABMR("PROV"))  ;abm*2.6*37 IHS/SD/SDR ADO89299
+ ;D ^DIE  ;abm*2.6*37 IHS/SD/SDR ADO89299
  S DR=".24////"_$G(ABMR("NDC"))
  D ^DIE
  S DR=".2////"_$G(ABMR("DAYS"))
@@ -100,6 +115,24 @@ MEDSET ;FILE
  .S DR=".26////"_$P($G(^AUPNVMED(ABM,0)),U,8)
  .S DR=DR_";.27////"_$G(ABMR("RTS"))
  .D ^DIE
+ S DR="23////"_$G(ABMR("DEA"))  ;abm*2.6*37 IHS/SD/SDR ADO89299
+ D ^DIE  ;abm*2.6*37 IHS/SD/SDR ADO89299
+ ;start new abm*2.6*37 IHS/SD/SDR ADO89299
+PROV ;
+ I +$G(ABMR("PROV"))=0 Q  ;no ordering provider
+ S ABMT("DIC")=DIC
+ K DIC,DIE,DA,X,Y,DR
+ S DA(2)=ABMP("CDFN"),DA(1)=ABMT("SV")
+ S DIC="^ABMDCLM(DUZ(2),"_DA(2)_",23,"_DA(1)_",""P"","
+ S DIC(0)="LM"
+ S DIC("P")=$P(^DD(9002274.3023,.18,0),U,2)
+ S DIC("DR")=".02////D"
+ S X="`"_ABMR("PROV")
+ D ^DIC
+ K DA
+ S DA(1)=ABMP("CDFN")
+ S DIC=ABMT("DIC")
+ ;end new abm*2.6*37 IHS/SD/SDR ADO89299
  Q
  ;
 MED3 ;EP

@@ -1,0 +1,54 @@
+BARP1831 ; IHS.OIT.FCJ - Post init for V1.8 Patch 30;02/01/2020
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**31**;OCT 26,2005;Build 90;Build 22
+ ;
+ ;IHS.OIT.FCJ BAR*1.8*31 Post install routine.
+ Q
+ ; ********************************************************************
+ ;
+ ;
+POST ;EP
+ N %,BARABORT,XPDABORT,BARMSG,DIC,DIE,D0,DA
+ S %=$$NEWCP^XPDUTL("BARP1831A","POST1^BARP1831")
+ Q
+ ;
+POST1   ;
+ ;NEED TO ADD MENU OPTION RTSK-Tasked Reports [BAR TASKED REPORTS] TO MAN Manager [BAR MANAGER]
+ D BMES^XPDUTL("Adding new option Tasked Reports to the Manager Option.")
+ I $$ADD^XPDMENU("BAR MANAGER","BAR TASKED REPORTS","RTSK") D MES^XPDUTL($J("",5)_"Tasked Reports Menu added to Manager Menu")
+ D MES^XPDUTL("END updating option.")
+ ;
+ ;SCHEDULE TASK - BAR RPTS MONTHLY TASKED
+ N TST
+ S TST=0
+ W !
+ D MES^XPDUTL("Scheduling Monthly Tasked Report Option in Task Manager.")
+ W !
+ D RESCH^XUTMOPT("BAR RPTS MONTHLY TASKED","11PM","","1M(L)","L")
+ D OPTSTAT^XUTMOPT("BAR RPTS MONTHLY TASKED",.TST)
+ I TST=1 D MES^XPDUTL("The Monthly Tasked Reports Option has been scheduled")
+ ;
+TSKRPT ;ADD ENTRIES TO THE PARAMETER FILE FOR THE TASKED REPORTS
+ ;Q:$$INSTALLD^BARENVCK("BAR*1.8*31")
+ ;LOOKUP NEW TASKMAN OPTION
+ S BAROIEN=""
+ S DIC(0)="MZ",DIC="^DIC(19,"
+ S X="BAR RPTS MONTHLY TASKED"
+ D ^DIC
+ I Y>0 S BAROIEN=+Y
+ ;SET REPORTS IN PARAMETER FILE
+ S DA(2)=0 F  S DA(2)=$O(^BAR(90052.06,DA(2))) Q:DA(2)'?1N.N  D
+ .S DA(1)=0,CT=0 F  S DA(1)=$O(^BAR(90052.06,DA(2),DA(1))) Q:DA(1)'?1N.N  D
+ ..Q:$D(^BAR(90052.06,DA(2),DA(1),12,0))
+ ..S ^BAR(90052.06,DA(2),DA(1),12,0)="^90052.0612^4^4"
+ ..F X="PERIOD SUMMARY REPORT","AGED SUMMARY REPORT","UFMS AGED SUMMARY REPORT","BATCH STATISTICAL LISTING" D
+ ...S CT=CT+1
+ ...S ^BAR(90052.06,DA(2),DA(1),12,CT,0)=X_"^^^"_BAROIEN_"^^"_$P($T(@CT),";",2)
+ ...S ^BAR(90052.06,DA(2),DA(1),12,"B",X,CT)=""
+ ...S ^BAR(90052.06,DA(2),DA(1),12,"AC",BAROIEN,CT)=""
+ Q
+ ;
+CT ;REPORT EP
+1 ;PSR
+2 ;ASM
+3 ;USM
+4 ;BSL

@@ -1,5 +1,5 @@
 BIOUTPT2 ;IHS/CMI/MWR - PROMPTS FOR REPORTS.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**25**;OCT 24, 2011;Build 22
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  PROMPTS FOR REPORT PARAMETERS.
  ;
@@ -302,3 +302,19 @@ HELPTX(BILINL,BITAB) ;EP
  F I=1:1 S X=$T(@BILINL+I) Q:X'[";;"  S DIR("?",I)=T_$P(X,";;",2)
  S DIR("?")=DIR("?",I-1) K DIR("?",I-1)
  Q
+ ;
+TEXT9 ;EP
+ ;;The "Ending Date" should be the last day being reported
+ ;;on. However, you may enter any date you choose and the
+ ;;report will generate immunization statistics based on the
+ ;;date entered.  NOTE: The patient ages (3 months, 
+ ;;5 months, 91 years, etc.) will be calculated as of
+ ;;the Ending Date you enter here.
+ ;;
+ ;;For convenience's sake, if you enter only month/year, such as 9/98,
+ ;;the program will automatically assign the report to the last day
+ ;;of that month, such as 9/30/1998.
+ ;;
+ D PRINTX("TEXT9")
+ Q
+ ;

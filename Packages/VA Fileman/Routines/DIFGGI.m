@@ -1,5 +1,6 @@
-DIFGGI ;SFISC/XAK,EDE(OHPRD)-FILEGRAM INITIALIZATION ;1/19/93  9:45 AM
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFGGI ;SFISC/XAK,EDE(OHPRD)-FILEGRAM INITIALIZATION ;1/19/93  9:45 AM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ; DIFGER values: 1 = required variable not passed
  ;                2 = variable form invalid

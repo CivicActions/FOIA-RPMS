@@ -1,0 +1,3 @@
+XMA11B ;(WASH ISC)/CAP/XXX - * OBSOLETE * ;12/15/97  10:02
+ ;;7.1;MailMan;**39,50**;Jun 02, 1994
+ Q

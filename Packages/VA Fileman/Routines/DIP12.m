@@ -1,11 +1,12 @@
-DIP12 ;SFISC/TKW-PROCESS FROM-TO (CONT.) ;06:54 PM  18 Feb 2002 [ 12/09/2003  4:17 PM ]
- ;;22.0;VA FileMan;**97,1002**;Mar 30, 1999
+DIP12 ;SFISC/TKW-PROCESS FROM-TO (CONT.) ;11/7/97  08:52 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**2,9,16,44**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 OPT ;Build code to extract field & test sort criteria, build sort description.
  N S,F,X,%,F1,F2,F3,T1,T2,T3,N,DIRANGE
  S S=$P(DPP(DJ),U),F=$P(DPP(DJ),U,2),N=$P(DPP(DJ),U,3) S:N["""" N=$$CONVQQ^DILIBF(N),DIRANGE=""
  S X="DISX("_DJ_")",DPP(DJ,"GET")=""
- I +$P(S,"E")=S,F D GET^DIOU(S,F,X,.%) I $D(%)#10 S DPP(DJ,"GET")=%
+ I +$P(S,"E")=S,F D GET^DIOU(S,F,X,.%) S DPP(DJ,"GET")=%
  I $D(DPP(DJ,"CM")) S DPP(DJ,"GET")=DPP(DJ,"CM")
  I $G(DPP(DJ,"SRTTXT"))="SORT" S DPP(DJ,"GET")=DPP(DJ,"GET")_" S:"_X_"]"""" "_X_"="_""" ""_"_X
  I +$P(S,"E")=S,F,$P(DPP(DJ),U,10)=2 D
@@ -15,7 +16,9 @@ OPT ;Build code to extract field & test sort criteria, build sort description.
  I $P(DPP(DJ),U,4)["@B" S %=X,DPP(DJ,"TXT")=N G O2
  I S,F=0 D BIJ^DIOU(S,.01,.%,.F) S X="D"_$G(%(S)) K %,F
  I '$D(DPP(DJ,"F")) S %=$$NULL^DIOC(X,"'"),DPP(DJ,"TXT")=N_" not null" G O2
-RANGE D FT S DIRANGE="" S:$G(DPP(DJ,"SRTTXT"))="RANGE" DIRANGE=""" ""_"
+ S %=$G(DPP(DJ,"F")),F1=$P(%,U),F2=$P(%,U,2),F3=$P(%,U,3) S:F3="" F3=F2 S:$E(F1,1)="""" F1=""""_F1
+ S %=$G(DPP(DJ,"T")),T1=$P(%,U),T2=$P(%,U,2),T3=$P(%,U,3) S:T3="" T3=T2
+ S DIRANGE="" S:$G(DPP(DJ,"SRTTXT"))="RANGE" DIRANGE=""" ""_"
  S %=""
  I F1="?z" D  G O2
  . I T1="z" S %="1",DPP(DJ,"TXT")="All "_N_" (includes nulls)" Q
@@ -34,15 +37,8 @@ RANGE D FT S DIRANGE="" S:$G(DPP(DJ,"SRTTXT"))="RANGE" DIRANGE=""" ""_"
 O2 S DPP(DJ,"QCON")="I "_%
  K DITYP Q
  ;
-FT ;ALSO CALLED BY DIP1
- S %=$G(DPP(DJ,"F")) I %="" S %=$G(DIPP(+$G(DIJ),"F"))
- S F1=$P(%,U),F2=$P(%,U,2),F3=$P(%,U,3) S:F3="" F3=F2 S:$E(F1)="""" F1=""""_F1
- S %=$G(DPP(DJ,"T")) I %="" S %=$G(DIPP(+$G(DIJ),"T"))
- S T1=$P(%,U),T2=$P(%,U,2),T3=$P(%,U,3) S:T3="" T3=T2
- Q
- ;
 CK ;VALIDATE FIELDS/DATA
- G QQ:X[U I X="@" S Y=X K DPP(DJ,"IX"),DPP(DJ,"PTRIX") Q
+ G QQ:X[""""!(X[U) I X="@" S Y=X K DPP(DJ,"IX"),DPP(DJ,"PTRIX") Q
  I DITYP=1 S %DT="" D  D ^%DT K %DT G:Y=-1 QQ S Y(0)=$$FMTE^DILIBF(Y,5) Q
  . S:$G(DITYP("D"))["T" %DT="T"
  . S:$G(DITYP("D"))["S" %DT=%DT_"S"

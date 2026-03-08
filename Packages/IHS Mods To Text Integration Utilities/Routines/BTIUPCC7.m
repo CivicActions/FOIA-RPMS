@@ -1,8 +1,9 @@
-BTIUPCC7 ; IHS/MSC/MGH - IHS PCC PERSONAL HEALTH OBJECTS ;28-Jun-2017 14:15;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1008,1009,1013,1018**;NOV 04, 2004;Build 4
+BTIUPCC7 ; IHS/MSC/MGH - IHS PCC PERSONAL HEALTH OBJECTS ;05-Feb-2019 13:42;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1008,1009,1013,1018,1021**;NOV 04, 2004;Build 11
  ;This routine creates objects for the personal health
  ;data entered
  ;Patch 1018 added ER admission objects
+ ;Patch 1021 Added code to check 30 visits
  ;==============================================================
 CVD(DFN,TARGET) ;EP
  N ARRAY,CNT,I,J
@@ -24,14 +25,14 @@ LABRES(DFN,TIUTST,TIUCNT) ;EP; -- returns last # of current lab result for singl
  S LAB=$O(^LAB(60,"B",TIUTST,0)) I LAB="" Q ""
  S CAPTION=$E(TIUTST,1,30)_":"
  S (VDT,CNT)=0,ARR=""
- F  S VDT=$O(^AUPNVLAB("AA",DFN,LAB,VDT)) Q:('VDT)!(CNT=TIUCNT)  D
+ F  S VDT=$O(^AUPNVLAB("AA",DFN,LAB,VDT)) Q:('VDT)!(CNT>30)  D
  . S IEN=0
- . F  S IEN=$O(^AUPNVLAB("AA",DFN,LAB,VDT,IEN)) Q:'IEN!(CNT=TIUCNT)  D
+ . S CNT=CNT+1
+ . F  S IEN=$O(^AUPNVLAB("AA",DFN,LAB,VDT,IEN)) Q:'IEN  D
  .. K TIU D ENP^XBDIQ1(9000010.09,IEN,".03:.05;1109;1201","TIU(","I")
  .. Q:TIU(.04)=""                       ;skip if not resulted
- .. S CNT=CNT+1                         ;increment counter
  .. S DATE=$S(TIU(1201,"I")]"":TIU(1201,"I"),1:$$GET1^DIQ(9000010,TIU(.03,"I"),.01,"I"))
- .. S ARR(DATE,IEN)=$J(TIU(.04),8)_" "_TIU(.05),CNT=CNT+1
+ .. S ARR(DATE,IEN)=$J(TIU(.04),8)_" "_TIU(.05)
  S CNT=0,DATE=""
  F  S DATE=$O(ARR(DATE),-1) Q:DATE=""!(CNT>=TIUCNT)  D
  . S IEN="" F  S IEN=$O(ARR(DATE,IEN),-1)  Q:'IEN!(CNT>=TIUCNT)  D
@@ -101,7 +102,7 @@ WHY(DFN,CAP) ;ER COMPLAINT and ER COMPLAINT W/CAPTION - Return the presenting co
  S RET=$$GETER(DFN,23,1) I $P(RET,U)=-1 Q $P(RET,U,2)
  I CAP=1 S RET="Presenting Complaint: "_RET
  Q RET
-NURSE(DFN,CAP) ;ER TRIAGE NURSE and ER TRIAGE NURSE W/CAPTION - Return the Triage Nurse 
+NURSE(DFN,CAP) ;ER TRIAGE NURSE and ER TRIAGE NURSE W/CAPTION - Return the Triage Nurse
  N RET
  S CAP=$G(CAP)
  S RET=$$GETER(DFN,19,.07) I $P(RET,U)=-1 Q $P(RET,U,2)

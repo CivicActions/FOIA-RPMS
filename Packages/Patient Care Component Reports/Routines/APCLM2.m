@@ -1,5 +1,5 @@
-APCLM2 ; IHS/CMI/LAB - ADULT IMMUNIZATION NEEDS ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLM2 ; IHS/OHPRD/TMJ - ADULT IMMUNIZATION NEEDS ;  [ 02/06/02  9:51 AM ]
+ ;;3.0;IHS PCC REPORTS;**4,11**;FEB 05, 1997
  ;
  ;IHS/CMI/LAB - patch 4 1/5/1999 for new immunization package
  ;
@@ -25,13 +25,10 @@ COMM ;
  .Q:Y=-1
  .S APCLCOMM($P(^AUTTCOM(+Y,0),U))=""
  S X="COMMUNITY",DIC="^AMQQ(5,",DIC(0)="FM",DIC("S")="I $P(^(0),U,14)" D ^DIC K DIC,DA I Y=-1 W "OOPS - QMAN NOT CURRENT - QUITTING" G XIT
- D PEP^AMQQGTX0(+Y,"APCLCOMM(")
+ D ^AMQQGTX0(+Y,"APCLCOMM(")
  I '$D(APCLCOMM) G COMM
  I $D(APCLCOMM("*")) K APCLCOMM
 ZIS ;call to XBDBQUE
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G COMM
  S XBRP="PRN^APCLM2",XBRC="PROC^APCLM2",XBRX="XIT^APCLM2",XBNS="APCL"
  D ^XBDBQUE
  D XIT
@@ -50,7 +47,6 @@ PROC ;
  Q
 PROC1 ;
  Q:$P($G(^DPT(DFN,.35)),U)]""  ;don't include deceased patients
- Q:$$DEMO^APCLUTL(DFN,$G(APCLDEMO))
  I $O(^AUTTIMM(0))<100 Q:$D(^AMCH(85,"B",DFN))  ;skip if on MCH register (mch pt) ;IHS/CMI/LAB - changed for new imm package patch 4
  I $O(^AUTTIMM(0))>99 Q:$D(^BIP("B",DFN))  ;IHS/CMI/LAB - new line for new imm package patch 4
  I $D(APCLCOMM),$$COMMRES^AUPNPAT(DFN,"E")="" Q  ;quit if want a particular community and patient's community is blank

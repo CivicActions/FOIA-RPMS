@@ -1,5 +1,5 @@
-ABMFOFS ; IHS/ASDST/DMJ - UPDATE FEE TABLE FROM FOREIGN FILE ; 
- ;;2.6;IHS Third Party Billing;**1,2,27**;NOV 12, 2009;Build 486
+ABMFOFS ; IHS/SD/SDR - UPDATE FEE TABLE FROM FOREIGN FILE ; 
+ ;;2.6;IHS Third Party Billing;**1,2,27,29,31**;NOV 12, 2009;Build 615
  ;
  ;IHS/SD/SDR 2.5*10 IM20355 Modified default to be Read
  ;
@@ -7,6 +7,12 @@ ABMFOFS ; IHS/ASDST/DMJ - UPDATE FEE TABLE FROM FOREIGN FILE ;
  ;IHS/SD/SDR 2.6*2 3PMS10003A Effective dates added to fee sched
  ;IHS/SD/SDR 2.6*27 CR8894 Change FILE and DFILE tags to file entries correctly using DINUM to CPT instead of first found IEN for CPT.
  ;   Issue results from multiple entries in CPT file for a CPT code.
+ ;IHS/SD/SDR 2.6*29 CR10860 Correction for Category III codes that end with 'F'; F becomes .70 causing an issue because of the trailing
+ ;   zero; added '+' to resolve
+ ;IHS/SD/SDR 2.6*31 CR11077 fix to correct <SUBSCR>RANGE+44^ABMFEAPI; occurs when there isn't a 'G' line for
+ ;   the CPT but is a 'TC' and/or '26'
+ ;IHS/SD/SDR 2.6*31 CR11216 Fixed so it will find the active entry for the CPT, not the first entry, or the wrong entry because
+ ;   the API can't do the CPT correctly, only the IEN
  ;
 START ;START HERE
  W !!,"FEE SCHEDULE UPDATE FROM FOREIGN FILE"
@@ -129,10 +135,17 @@ FILE ;FILE CODE
  ;S:ABMIVAL="G"!(ABMIVAL="") ^ABMDFEE(ABMTB,ABMSC,ABMPTR,0)=ABMPTR_"^"_ABMPRICE_"^"_DT  ;abm*2.6*2 3PMS10003A
  ;S ^ABMDFEE(ABMTB,ABMSC,"B",ABMPTR,ABMPTR)=""
  ;end old start new abm*2.6*27 IHS/SD/SDR CR8894
- S ABMPTR=$P($$CPT^ABMCVAPI(ABMCODE,ABMEDT),U)  ;returns CPT active at time of effective date
+ ;S ABMPTR=$P($$CPT^ABMCVAPI(ABMCODE,ABMEDT),U)  ;returns CPT active at time of effective date  ;abm*2.6*31 IHS/SD/SDR CR11216
+ ;start new abm*2.6*31 IHS/SD/SDR CR11216
+ S ABMIEN=0,ABMPTR=0
+ F  S ABMIEN=$O(^ICPT("B",ABMCODE,ABMIEN)) Q:'ABMIEN  D  Q:(+ABMPTR'=0)
+ .I $P($$CPT^ABMCVAPI(ABMIEN,ABMEDT),U,7)=0 Q  ;inactive - skip this entry
+ .S ABMPTR=ABMIEN
+ ;end new abm*2.6*31 IHS/SD/SDR CR11216
  Q:+ABMPTR=0
  S ABMCD=$$DINUM(ABMCODE)  ;abm*2.6*27 IHS/SD/SDR CR8894
- S:ABMIVAL="G"!(ABMIVAL="") ^ABMDFEE(ABMTB,ABMSC,ABMCD,0)=ABMPTR_"^"_ABMPRICE_"^"_DT  ;abm*2.6*2 3PMS10003A
+ ;S:ABMIVAL="G"!(ABMIVAL="") ^ABMDFEE(ABMTB,ABMSC,ABMCD,0)=ABMPTR_"^"_ABMPRICE_"^"_DT  ;abm*2.6*2 3PMS10003A  ;abm*2.6*31 IHS/SD/SDR CR11077
+ I ($G(^ABMDFEE(ABMTB,ABMSC,ABMCD,0))="") S ^ABMDFEE(ABMTB,ABMSC,ABMCD,0)=ABMPTR_"^"_ABMPRICE_"^"_DT  ;abm*2.6*2 3PMS10003A  ;abm*2.6*31 IHS/SD/SDR CR11077
  S ^ABMDFEE(ABMTB,ABMSC,"B",ABMCODE,ABMPTR)=""
  ;end new abm*2.6*27 IHS/SD/SDR CR8894
  S ABMCNT(ABMSC)=+$G(ABMCNT(ABMSC))+1  ;abm*2.6*1 NO HEAT
@@ -142,7 +155,8 @@ FILE ;FILE CODE
 DINUM(ABMCODE) ;PEP - DINUM CPT for fee table
  I +$G(ABMCODE)=ABMCODE D  Q ABMCODE  ;5-digit code, leave it
  I (($A($E(ABMCODE))>64)&($A($E(ABMCODE))<91)) S ABMCD=$A($E(ABMCODE))_$E(ABMCODE,2,5) Q ABMCD
- I (($A($E(ABMCODE,5))>64)&($A($E(ABMCODE,5))<91)) S ABMCD=$E(+ABMCODE,1,4)_"."_$A($E(ABMCODE,5)) Q ABMCD
+ ;I (($A($E(ABMCODE,5))>64)&($A($E(ABMCODE,5))<91)) S ABMCD=$E(+ABMCODE,1,4)_"."_$A($E(ABMCODE,5)) Q ABMCD  ;abm*2.6*29 IHS/SD/SDR CR10860
+ I (($A($E(ABMCODE,5))>64)&($A($E(ABMCODE,5))<91)) S ABMCD=$E(+ABMCODE,1,4)_"."_$A($E(ABMCODE,5)) Q +ABMCD  ;abm*2.6*29 IHS/SD/SDR CR10860
  S ABMCD=+$G(ABMCODE) Q ABMCD
  Q ABMCODE
  ;end new abm*2.6*27 IHS/SD/SDR CR8894
@@ -150,7 +164,8 @@ DFILE ;FILE ADA CODE IN DENTAL SECTION
  S ABMPTR=$O(^AUTTADA("B",ABMCODE,0))
  Q:'ABMPTR
  ;S ^ABMDFEE(ABMTB,21,1_ABMCODE,0)=ABMPTR_"^"_ABMPRICE_"^"_ABMCODE_"^"_DT  ;abm*2.6*2 3PMS10003A
- S:ABMIVAL="G"!(ABMIVAL="") ^ABMDFEE(ABMTB,21,1_ABMCODE,0)=ABMPTR_"^"_ABMPRICE_"^"_ABMCODE_"^"_DT  ;abm*2.6*2 3PMS10003A
+ ;S:ABMIVAL="G"!(ABMIVAL="") ^ABMDFEE(ABMTB,21,1_ABMCODE,0)=ABMPTR_"^"_ABMPRICE_"^"_ABMCODE_"^"_DT  ;abm*2.6*2 3PMS10003A  ;abm*2.6*31 IHS/SD/SDR CR11077
+ I ($G(^ABMDFEE(ABMTB,21,1_ABMCODE,0))="") S ^ABMDFEE(ABMTB,21,1_ABMCODE,0)=ABMPTR_"^"_ABMPRICE_"^"_DT  ;abm*2.6*2 3PMS10003A  ;abm*2.6*31 IHS/SD/SDR CR11077
  S ^ABMDFEE(ABMTB,21,"B",ABMPTR,1_ABMCODE)=""
  S ABMCNT(21)=+$G(ABMCNT(21))+1  ;abm*2.6*1 NO HEAT
  D EFFDT  ;abm*2.6*2 3PMS10003A

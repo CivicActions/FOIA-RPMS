@@ -1,5 +1,5 @@
-BAREDPZ1 ; IHS/SD/LSL - AHCCCS IMPORT ROUTINE ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+BAREDPZ1 ; IHS/SD/LSL - AHCCCS IMPORT ROUTINE ; 
+ ;;1.7;IHS ACCOUNTS RECEIVABLE;**1,5**;MAY 2, 2003
  ;
  ; IHS/SD/LSL - 06/26/2002 - V1.6 Patch 2 - NOIS XXX-0602-200032
  ;     Modified to be FM22 compliant
@@ -64,7 +64,10 @@ ADJREA ;EP Process reason and amount into claim impda,clmda
  S VADJCAT=$E(VADJCAT)
  I VADJCAT="A" Q
  I VADJCAT'="R" D  Q
+ . ; Begin coding change IM12514 V1.7 Patch 5
+ . ; S VADJREA=VADJCAT_"| "_$P(VADJREA,SE,2)
  . S VADJREA=VADJCAT_" | "_$P(VADJREA,SE,2)
+ . ; End coding change IM12514 V1.7 Patch 5
  . D SET1ADJ
  ; process reason code(s)
  S XXX=$P(VADJREA,": ",2)

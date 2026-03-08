@@ -1,5 +1,5 @@
-BTIUPDD2 ; IHS/MSC/MGH - Problem Objects by entry date ;24-May-2016 08:55;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1017**;MAR 20, 2013;Build 7
+BTIUPDD2 ; IHS/MSC/MGH - Problem Objects by entry date ;03-Mar-2020 17:22;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1017,1022**;MAR 20, 2013;Build 11
  ;
  Q
  ;
@@ -33,10 +33,14 @@ GETPRB ;Get problems to update
  D ADDITMS(.ARRAY)
  Q
 GETDATA(ARRAY,PRIEN,VIEN) ;Get data for a problem
- N NARR,STATUS,ICD
+ N NARR,STATUS,ICD,LINE
  Q:'+PRIEN
  S NARR=$$POV^BTIUPDD(VIEN,PRIEN)
  Q:$P(NARR,U,1)=""!($P(NARR,U,2)="")!($P(NARR,U,3)="")
+ S LINE=$P(NARR,U,1)
+ S LINE=$TR(LINE,"|","-")
+ I $P(LINE,"-",2)="" S LINE=$P(LINE,"-",1)
+ S $P(NARR,U,1)=LINE
  S ARRAY($P(NARR,U,2),$P(NARR,U,3),$P(NARR,U,1),PRIEN)=""
  Q
  ;S NARR=$$GET1^DIQ(9000010.07,POV,.04)

@@ -1,5 +1,8 @@
-XPDIL ;SFISC/RSD - load Distribution Global ;05/05/2008
- ;;8.0;KERNEL;**15,44,58,68,108,422,525**;Jul 10, 1995;Build 16
+XPDIL ;SFISC/RSD - load Distribution Global ;05/17/2006
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007,1016**;APR 1, 2003;Build 5
+ ;;8.0;KERNEL;**15,44,58,68,108,422**;Jul 10, 1995;Build 2
+ ;This routine has the changes made for patch 345 but was released as 422 to fix a read HFS problem
+ ;THIS ROUTINE CONTAINS AN IHS MODIFICATION BY TASSC/MFD
  ;
 EN1 N POP,XPDA,XPDST,XPDIT,XPDT,XPDGP,XPDQUIT,XPDREQAB,XPDSKPE
  S:'$D(DT) DT=$$DT^XLFDT S:'$D(U) U="^"
@@ -21,21 +24,28 @@ EN1 N POP,XPDA,XPDST,XPDIT,XPDT,XPDGP,XPDQUIT,XPDREQAB,XPDSKPE
  ..S $P(XPDSKPE,U,2)=1
  ..N DIR,DIRUT
  ..S DIR(0)="Y",DIR("A")="Want to RUN the Environment Check Routine",DIR("B")="YES"
- ..S DIR("A",1)="Build "_$P(XPDT(XPDIT),U,2)_" has an Environmental Check Routine"
- ..D ^DIR I $D(DIRUT) S XPDQUIT=1 Q
+ ..S DIR("A",1)="Build "_$P(XPDT(XPDIT),U,2)_" has an Enviromental Check Routine"
+ ..;p345-rename AND* to XPD*
+ ..I '$G(XPDAUTO) D ^DIR I $D(DIRUT) S XPDQUIT=1 Q
+ ..I $G(XPDAUTO) S Y=1
  ..S:'Y XPDSKPE="1^1"
  .D PKG^XPDIL1(XPDA)
  ;Global Package
  G:$D(XPDGP) ^XPDIGP
- I $D(XPDT),$D(^XPD(9.7,+XPDST,0)) W !,"Use INSTALL NAME: ",$P(^(0),U)," to install this Distribution.",!
+ ;p345-rename AND* to XPD*
+ I $D(XPDT),$D(^XPD(9.7,+XPDST,0)) S:$G(XPDAUTO) XPDANM=$P(^(0),U) W:'$G(XPDAUTO) !,"Use INSTALL NAME: ",$P(^(0),U)," to install this Distribution.",!
  Q
 ST ;global input
  N DIR,DIRUT,GR,IOP,X,Y,Z,%ZIS
  G:'$D(^DD(3.5,0)) OPEN
  I '$D(^%ZIS(1,"B","HFS")) W !!,"You must have a device called 'HFS' in order to load a distribution!",*7 S XPDQUIT=1 Q
- D HOME^%ZIS
+ ;p345-rename AND* to XPD*
+ I '$G(XPDAUTO) D HOME^%ZIS
+ I $G(XPDAUTO) S IO(0)=XPDDEV
  S DIR(0)="F^3:75",DIR("A")="Enter a Host File",DIR("?")="Enter a filename and/or path to input Distribution."
- D ^DIR I $D(DIRUT) S XPDQUIT=1 Q
+ ;p345-rename AND* to XPD*
+ I '$G(XPDAUTO) D ^DIR I $D(DIRUT) S XPDQUIT=1 Q
+ I $G(XPDAUTO) S (X,Y)=XPDFTPF
  S %ZIS="",%ZIS("HFSNAME")=Y,%ZIS("HFSMODE")="R",IOP="HFS"
  D ^%ZIS I POP W !,"Couldn't open file or HFS device!!",*7 S XPDQUIT=1 Q
  ;don't close device if we have a global package, we need to bring in the globals now
@@ -44,7 +54,7 @@ ST ;global input
  ;
  ;if no device file, Virgin Install
 OPEN ;use open command
- N IO,IOPAR,DIR,DIRUT,DTOUT,DUOUT
+ N IO,IOPAR,DIR,DIRUT
  S DIR(0)="F^1:79",DIR("A")="Device Name"
  S DIR("?",1)="Device Name is either the name of the HFS file or the name of the HFS Device.",DIR("?",2)="i.e.  for MSM enter  51",DIR("?")="      for DSM enter  DISK$USER::[ANONYMOUS]:KRN8.KID"
  D ^DIR I $D(DIRUT) S POP=1 Q
@@ -76,25 +86,60 @@ GI N X,XPDSEQ,Y,Z
  W !,"Distribution OK!",!
  D:$D(XPDGP) DISP^XPDIGP
  S DIR(0)="Y",DIR("A")="Want to Continue with Load",DIR("B")="YES"
- D ^DIR I $D(DIRUT)!'Y S XPDQUIT=1 Q
+ ;p345-rename AND* to XPD*
+ I '$G(XPDAUTO) D ^DIR I $D(DIRUT)!'Y S XPDQUIT=1 Q
+ I $G(XPDAUTO) S Y=1
  W !,"Loading Distribution...",!
  ;reset expiration date to T+7 on transport global
  S ^XTMP("XPDI",0)=$$FMADD^XLFDT(DT,7)_U_DT
  ;start reading the HFS again
- U IO R X:10,Y:10 ;rwf was :0
+ ;----- BEGIN IHS MODIFICATION - XU*8.0*1007
+ ;THE LINE BELOW WAS COMMENTED OUT AND REPLACED BY THE NEXT LINE TO 
+ ;REMOVE THE TIMEOUTS IN THE READ SYNTAX TO PREVENT A TIMING
+ ;PROBLEM IN CACHE.  ORIGINAL MODIFICATION BY ITSC/AEF PER DIMITRI FANE
+ ;AT INTERSYSTEMS
+ ;U IO R X:0,Y:0
+ U IO R X,Y
+ ;----- END IHS MODIFICATION
  ;the next read must be the INSTALL NAME
  I X'="**INSTALL NAME**"!'$D(XPDT("NM",Y)) U IO(0) W !!,"ERROR in HFS file format!" S XPDQUIT=1 Q
  ;XPDSEQ is the disk sequence number
  S %=XPDT("NM",Y),GR="^XTMP(""XPDI"","_+XPDT(%)_",",XPDSEQ=1
- ;X=global ref, Y=global value. DIRUT is when user aborts
- ;rwf next line was :0
- F  R X:10,Y:10 Q:X="**END**"  D  I $D(DIRUT) S XPDQUIT=1 Q
+ ;X=global ref, Y=global value. DIRUT is when user is prompted for next disk in NEXTD and they abort
+ ;----- BEGIN IHS MODIFICATION - XU*8.0*1007
+ ;THE LINE BELOW WAS COMMENTED OUT AND REPLACED BY THE NEXT LINE TO
+ ;REMOVE THE TIMEOUTS IN THE READ SYNTAX TO PREVENT A TIMING
+ ;PROBLEM IN CACHE.  ORIG MOD BY ITSC/AEF PER DIMITRI FANE
+ ;AT INTERSYSTEMS
+ ;F  R X:0,Y:0 Q:X="**END**"  D  I $D(DIRUT) S XPDQUIT=1 Q
+ F  R X,Y Q:X="**END**"  D  I $D(DIRUT) S XPDQUIT=1 Q
+ .;----- END IHS MODIFICATION
  .I X="**INSTALL NAME**" D  Q
  ..S %=+$G(XPDT("NM",Y)) I '% S DIRUT=1 Q
  ..S GR="^XTMP(""XPDI"","_+XPDT(%)_","
+ .;I X="**CONTINUE**" D NEXTD Q
  .S @(GR_X)=Y
  U IO(0)
  Q
+ ;
+NEXTD I ^%ZOSF("OS")'["MSM" U IO(0) W !!,"Error in disk, ABORTING load!!" S XPDQUIT=1 Q
+ N DIR
+ ;close current device
+ C IO U IO(0)
+ S XPDSEQ=XPDSEQ+1,DIR(0)="E",DIR("A")="Insert the next diskette, #"_XPDSEQ_", and Press the return key",DIR("?")="This distribution is continued on another diskette"
+ D ^DIR Q:$D(DIRUT)
+ W "  OK",!
+ ;MSM specific code to open HFS
+ O @(""""_IO_""":"_IOPAR) U IO
+ R X:10,Y:10 ;rwf was :0
+ ;quit if comments are not the same on each diskette
+ G:Y'=XPDST("H") NEXTQ
+ ;quit if not the expected sequence, Z is for the blank line
+ R Y:10,Z:10 G:Y'=("**SEQ**:"_XPDSEQ) NEXTQ ;rwf was :0
+ Q
+NEXTQ U IO(0) W !!,"This is NOT the correct diskette!!  The comment on this diskette is:",!,X,!!
+ S XPDSEQ=XPDSEQ-1
+ G NEXTD
  ;
 NONE W !!,"**NOTHING LOADED**",!
  Q

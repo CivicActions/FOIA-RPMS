@@ -1,5 +1,5 @@
 AMHRDE2 ; IHS/CMI/LAB - list refusals ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**6**;JUN 02, 2010;Build 10
+ ;;4.0;IHS BEHAVIORAL HEALTH;**6,11**;JUN 02, 2010;Build 27
  ;
  ;
 INFORM ;
@@ -42,13 +42,14 @@ DATES K AMHRED,AMHRBD
 TALLY ;which items to tally
  K AMHRTALL
  W !!,"Please select which items you wish to tally on this report:",!
- W !?3,"0)  Do not include any Tallies",?40,"6)  Date of Screening"
- W !?3,"1)  Type/Result of Screening",?40,"7)  Primary Provider on Visit"
- W !?3,"2)  Gender",?40,"8)  Designated MH Provider"
- W !?3,"3)  Age of Patient",?40,"9)  Designated SS Provider"
- W !?3,"4)  Provider who Screened",?40,"10) Designated ASA/CD Provider"
- W !?3,"5)  Clinic",?40,"11) Designated Primary Care Provider"
- K DIR S DIR(0)="L^0:11",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
+ W !?3,"0)  Do not include any Tallies",?40,"7)  Primary Provider on Visit"
+ W !?3,"1)  Result of Screening",?40,"8)  Designated MH Provider"
+ W !?3,"2)  Gender",?40,"9)  Designated SS Provider"
+ W !?3,"3)  Age of Patient",?40,"10) Designated ASA/CD Provider"
+ W !?3,"4)  Provider who Screened",?40,"11) Designated Primary Care Provider"
+ W !?3,"5)  Clinic",?40,"12) Race"
+ W !?3,"6)  Date of Screening",?40,"13) Ethnicity"
+ K DIR S DIR(0)="L^0:13",DIR("A")="Which items should be tallied",DIR("B")="" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G DATES
  I Y="" G DATES
  S AMHRTALL=Y
@@ -69,7 +70,7 @@ LIST ;
 LIST1 ;
  S AMHRSORT=""
  W !
- S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN"
+ S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN;Q:Race;E:Ethnicity"
  S DIR("A")="How would you like the list to be sorted",DIR("B")="H"
  KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G LIST
@@ -78,9 +79,16 @@ DEMO ;
  D DEMOCHK^AMHUTIL1(.AMHDEMO)
  I AMHDEMO=-1 G LIST
 ZIS ;
- S XBRP="PRINT^AMHRDE2P",XBRC="PROC^AMHRDE2",XBRX="XIT^AMHRDE2",XBNS="AMHR"
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
+ I $D(DIRUT) G XIT
+ I $G(Y)="B" D BROWSE,XIT Q
+ S XBRP="PRINT^AMHRDE2P",XBRC="PROC^AMHRDE2",XBRX="XIT^AMHRDE2",XBNS="AMH"
  D ^XBDBQUE
  D XIT
+ Q
+BROWSE ;
+ S XBRP="VIEWR^XBLM(""^AMHRDE2P"")"
+ S XBNS="AMH",XBRC="PROC^AMHRDE2",XBRX="XIT^AMHRDE2",XBIOP=0 D ^XBDBQUE
  Q
 XIT ;
  D EN^XBVK("AMHR")
@@ -109,6 +117,8 @@ PROC ;
  ..S AMHRCNT=AMHRCNT+1
  ..S ^XTMP("AMHRDE2",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)=""
  ..S ^XTMP("AMHRDE2",AMHRJ,AMHRH,"VSTS",AMHRCNT)=AMHSCR
+ ..S $P(^XTMP("AMHRDE2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ ..S $P(^XTMP("AMHRDE2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
 PCC ;
  Q:'AMHREXPC
  S AMHRSD=$$FMADD^XLFDT(AMHRBD,-1),AMHRSD=AMHRSD_".9999"
@@ -129,6 +139,8 @@ PCC ;
  ..S AMHRCNT=AMHRCNT+1
  ..S ^XTMP("AMHRDE2",AMHRJ,AMHRH,"PTS",DFN,AMHRDATE)=""
  ..S ^XTMP("AMHRDE2",AMHRJ,AMHRH,"VSTS",AMHRCNT)=AMHSCR
+ ..S $P(^XTMP("AMHRDE2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ ..S $P(^XTMP("AMHRDE2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
  ;now go through refusals in pcc
  S AMHRRIEN=0 F  S AMHRRIEN=$O(^AUPNPREF(AMHRRIEN)) Q:AMHRRIEN'=+AMHRRIEN  D
  .Q:'$D(^AUPNPREF(AMHRRIEN,0))
@@ -158,6 +170,8 @@ PCC ;
  .S $P(T,U,15)=DFN
  .S $P(T,U,20)="PCC"
  .S ^XTMP("AMHRDE2",AMHRJ,AMHRH,"VSTS",AMHRCNT)=T
+ .S $P(^XTMP("AMHRDE2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,25)=$$RACE^AMHUTIL2(DFN)
+ .S $P(^XTMP("AMHRDE2",AMHRJ,AMHRH,"VSTS",AMHRCNT),U,26)=$$ETHN^AMHUTIL2(DFN)
  Q
  ;
 BHSCR(V) ;EP - is there a screening?  return in R

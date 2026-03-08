@@ -1,5 +1,5 @@
-XMUT1A ;(WASH ISC)/CAP-Recover msgs for a user (cont.) ;04/17/2002  11:50
- ;;8.0;MailMan;;Jun 28, 2002
+XMUT1A ;(WASH ISC)/CAP-RECOVER MESSAGES ;06/22/99  15:28
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Entry points used by MailMan options (not covered by DBIA):
  ; DEL      XMUT-REC-DELETE
  ; LIST     XMUT-REC-RPT
@@ -21,7 +21,7 @@ TABLE ;;;DESCRIPTION^PROGRAM OR TAG^PROGRAM
 LIST ;LIST MESSAGES FOUND
  N J,C,F,I,X,XME0
  S (J,C,F)="" W !!,"CHOOSE FROM:",!
- F I=0:0 S I=$O(^TMP("XMUT1",I)) Q:'I  I $D(^VA(200,I,0)) W !,$J(I,8),"   ",$$NAME^XMXUTIL(I) I 'J S J=I
+ F I=0:0 S I=$O(^TMP("XMUT1",I)) Q:'I  I $D(^VA(200,I,0)) W !,$J(I,8),"   ",$P(^(0),"^") I 'J S J=I
  I 'J G NO
 L W !!,"WHICH ONE: ",J,"//" R X:DTIME I X="" S X=J
  Q:"^"[$E(X)  I X="?" D H1 G L
@@ -32,7 +32,7 @@ L W !!,"WHICH ONE: ",J,"//" R X:DTIME I X="" S X=J
  Q
 ZTSK ;
  D NOW^%DTC S Y=%,XMF0=^DD("DD") K %,%I,%H X XMF0
- S XMC0=0,XMB0=0 S XMA0=$$NAME^XMXUTIL(XME0)_" - "_Y D H
+ S XMC0=0,XMB0=0 S XMA0=$P(^VA(200,XME0,0),"^")_" - "_Y D H
 N S XMC0=$O(^TMP("XMUT1",XME0,XMC0)) G NQ:'XMC0
  S I=$G(^XMB(3.9,XMC0,0))
  I I="" W !!,"Message removed from list - no longer in 3.9 file.",! K ^TMP("XMUT1",XME0,XMC0) G N
@@ -52,16 +52,16 @@ NQ K XMA0,XMB0,XMD0,XMC0,XME0,XMF0
  ;
 DEL ;DELETE LIST FROM ^TMP("XMUT1"...
  S (J,C,F)="" W !!,"CHOOSE FROM:",!
- F I=0:0 S I=$O(^TMP("XMUT1",I)) Q:'I  I $D(^VA(200,I,0)) W !,$J(I,8),"   ",$$NAME^XMXUTIL(I) I 'J S J=I
+ F I=0:0 S I=$O(^TMP("XMUT1",I)) Q:'I  I $D(^VA(200,I,0)) W !,$J(I,8),"   ",$P(^(0),"^") I 'J S J=I
  I 'J G NO
 D W !!,"WHICH ONE ",J,"//" R X:DTIME I X="" S X=J
  Q:"^"[$E(X)  I X="?" D H1 G D
  I X="??" D H1 G DEL
  I '$D(^TMP("XMUT1",X)) D H1 G DEL
  S XME0=X,XMB0=$G(^VA(200,XME0,0))
- I XMB0="" W !,"  NO SUCH USER !!!",$C(7) G DQ
- S DIR(0)="Y",DIR("B")="NO",DIR("A")="DO YOU MEAN '"_$$NAME^XMXUTIL(XME0)_"' "
+ I XMB0="" W !,"  NO SUCH USER !!!",*7 G DQ
+ S DIR(0)="Y",DIR("B")="NO",DIR("A")="DO YOU MEAN '"_$P(XMB0,"^")_"' "
  D ^DIR K DIR,DIRUT Q:"^"[X!("yY"'[X)
 DQ K ^TMP("XMUT1",XME0) W "  << DELETED !!!" K XME0 Q
-H1 W !!,"Choose NUMBER from list.  Or enter '??' for a list.",!,$C(7) Q
+H1 W !!,"Choose NUMBER from list.  Or enter '??' for a list.",!,*7 Q
 NO W !!!,"NO MESSAGES RECOVERED FOR ANYBODY !!!" Q

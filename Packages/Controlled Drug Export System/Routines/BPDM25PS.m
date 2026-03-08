@@ -1,0 +1,156 @@
+BPDM25PS ;ihs/cmi/maw - PDM 2.0 Patch 5 Post Init ; 03 Nov 2021  3:13 PM
+ ;;2.0;CONTROLLED DRUG EXPORT SYSTEM;**5**;NOV 15, 2011;Build 11
+ ;
+ENV ;-- environment check
+ ; The following line prevents the "Disable Options..." and "Move
+ ; Routines..." questions from being asked during the install.
+ I $G(XPDENV)=1 S (XPDDIQ("XPZ1"),XPDDIQ("XPZ2"))=0
+ F X="XPO1","XPZ1","XPZ2","XPI1" S XPDDIQ(X)=0
+ I '$$INSTALLD("BPDM*2.0*4") D SORRY(2) Q
+ Q
+ ;
+POST ;-- post init calls
+ N FLDS
+ D ADDNOPTS
+ D PAT01
+ D DSP13  ;V4.2 AND V4.2A
+ D RIDXPEL
+ Q
+ ;
+PAT01 ;--populate pat01
+ ;ihs/cmi/maw 09132018 patch 4 CR9257
+ N ENT,ENTA
+ S ENT=$O(^BPDMRECB("B","PAT",0))
+ Q:'ENT
+ S ENTA=$O(^BPDMRECB(ENT,11,"B","PAT01",0))
+ Q:'ENTA
+ S ^BPDMRECB(ENT,11,ENTA,11)="S X=99"
+ S ENT=$O(^BPDMRECA("B","PAT",0))
+ Q:'ENT
+ S ENTA=$O(^BPDMRECA(ENT,11,"B","PAT01",0))
+ Q:'ENTA
+ S ^BPDMRECA(ENT,11,ENTA,11)="S X=99"
+ S ENT=$O(^BPDMREC("B","PAT",0))
+ Q:'ENT
+ S ENTA=$O(^BPDMREC(ENT,11,"B","PAT01",0))
+ Q:'ENTA
+ S ^BPDMREC(ENT,11,ENTA,11)="S X=99"
+ Q
+DSP13 ;PARTIAL FILL INDICATOR V4.2 AND V4.2A
+ N ENT,ENTA
+ S ENT=$O(^BPDMRECA("B","DSP",0))
+ Q:'ENT
+ S ENTA=$O(^BPDMRECA(ENT,11,"B","DSP13",0))
+ Q:'ENTA
+ S ^BPDMRECA(ENT,11,ENTA,11)="S X=$$DSP13^BPDMUTL(BPDMPART,$G(BPDMPFI))"
+ ;V4.2A
+ S ENT=$O(^BPDMRECB("B","DSP",0))
+ Q:'ENT
+ S ENTA=$O(^BPDMRECB(ENT,11,"B","DSP13",0))
+ Q:'ENTA
+ S ^BPDMRECB(ENT,11,ENTA,11)="S X=$$DSP13^BPDMUTL(BPDMPART,$G(BPDMPFI))"
+ Q
+ ;
+RIDXPEL ;-- reindex the ABF cross reference on the PDM EXPORT LOG file
+ ;Q:$D(^BPDMLOG("ABF"))  ;dont index if already present
+ S DIK="^BPDMLOG("
+ S DIK(1)=".1"
+ D ENALL^DIK
+ Q
+ ;
+DSP01 ;-- remove minnesota specific code
+ N ENT,ENTA
+ S ENT=$O(^BPDMRECA("B","DSP",0))
+ Q:'ENT
+ S ENTA=$O(^BPDMRECA(ENT,11,"B","DSP01",0))
+ Q:'ENTA
+ S ^BPDMRECA(ENT,11,ENTA,11)="S X=BPDMSTAT"
+ Q
+ ;
+PRE08 ;-- setup the phone number field for all sites
+ N PRE,PREA
+ S PRE=$O(^BPDMRECA("B","PRE",0))
+ Q:'PRE
+ S PREA=$O(^BPDMRECA(PRE,11,"B","PRE08",0))
+ Q:'PREA
+ S ^BPDMRECA(PRE,11,PREA,11)="S X=$$PRE08^BPDMUTL(BPDMPROV,BPDMSTE)"
+ Q
+ ;
+MKREQ(STE,FLD) ;-- make the fields required
+ N FDA,SEG,SIEN,FIEN,STII,STI
+ S STI=$O(^DIC(5,"B",STE,0))
+ Q:'STI
+ S FDA=0 F  S FDA=$O(FLD(FDA)) Q:FDA=""  D
+ . S SEG=$E(FDA,1,3)
+ . S SIEN=$O(^BPDMRECA("B",SEG,0))
+ . Q:'SIEN
+ . S FIEN=$O(^BPDMRECA(SIEN,11,"B",FDA,0))
+ . Q:'FIEN
+ . S STII=$O(^BPDMRECA(SIEN,11,FIEN,12,"B",STI,0))
+ . Q:'STII
+ . I $P($G(^BPDMRECA(SIEN,11,FIEN,12,STII,0)),U,2)="N" D
+ .. S $P(^BPDMRECA(SIEN,11,FIEN,12,STII,0),U,2)="RR"
+ Q
+ ;
+INSTALLD(BPDMSTAL) ;EP - Determine if patch BPDMSTAL was installed, where
+ ; BPDMSTAL is the name of the INSTALL.  E.g "AG*6.0*11".
+ ;
+ NEW BPDMY,DIC,X,Y
+ S X=$P(BPDMSTAL,"*",1)
+ S DIC="^DIC(9.4,",DIC(0)="FM",D="C"
+ D IX^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",22,",X=$P(BPDMSTAL,"*",2)
+ D ^DIC
+ I Y<1 D IMES Q 0
+ S DIC=DIC_+Y_",""PAH"",",X=$P(BPDMSTAL,"*",3)
+ D ^DIC
+ S BPDMY=Y
+ D IMES
+ Q $S(BPDMY<1:0,1:1)
+IMES ;
+ D MES^XPDUTL($$CJ^XLFSTR("Patch """_BPDMSTAL_""" is"_$S(Y<1:" *NOT*",1:"")_" installed.",IOM))
+ Q
+SORRY(X) ;
+ KILL DIFQ
+ I X=3 S XPDQUIT=2 Q
+ S XPDQUIT=X
+ W *7,!,$$CJ^XLFSTR("Sorry....FIX IT!",IOM)
+ Q
+ ;
+ADDNOPTS      ; EP - ADD New OPTionS
+ Q:$G(DEBUG)
+ ;
+ S TAB=$G(TAB,$J("",5))
+ ;
+ ;D NEWOPT("BPDMMENU","BPDM EXPORT TRANSACTIONS NEW","EPDN",995)
+ ;D NEWOPT("BPDMMENU","BPDM EXPORT DATE RANGE NEW","EXDN",996)
+ ;D NEWOPT("BPDMMENU","BPDM EXPORT DATE RANGE TST NEW","TESN",997)
+ D NEWOPT("BPDMMENU","BPDM TESTING ON/OFF","BETA",98)
+ D NEWOPT("BPDMMENU","BPDM SSH KEY GENERATION","SSH",99)
+ ;
+ Q
+ ;
+NEWOPT(MENU,NEWOPTN,NEWSYNM,NEWORD) ; EP - Add Option to a Menu
+ NEW BLRIEN,TAB
+ ;
+ S TAB=$J("",5)
+ ;
+ S BLRIEN=$$LKOPT^XPDMENU(MENU)
+ Q:$$FIND1^DIC(19.01,","_BLRIEN_",",,NEWSYNM,"C")    ; Don't add if already on MENU
+ ;
+ D BMES^XPDUTL("Adding '"_NEWOPTN_"' option to "_MENU_".")
+ ;
+ S X=$$ADD^XPDMENU(MENU,NEWOPTN,NEWSYNM,$G(NEWORD,""))
+ ;
+ I X=1 D MES^XPDUTL(TAB_"'"_NEWOPTN_"' added to "_MENU_". OK."),BLANK  Q
+ ;
+ D MES^XPDUTL(TAB_"Error in adding '"_NEWOPTN_"' option to "_MENU_".")
+ D MES^XPDUTL(TAB_TAB_"Error Message: "_$$UP^XLFSTR($P(X,"^",2))),BLANK
+ ;
+ Q
+ ;
+BLANK ; EP - Blank Line
+ D MES^XPDUTL(" ")
+ Q
+ ;

@@ -1,10 +1,12 @@
-XMA21C ;(WASH ISC)/CAP- Input Transform (3.7,.3) Mail Name ;04/17/2002  07:14
- ;;8.0;MailMan;;Jun 28, 2002
+XMA21C ;(WASH ISC)/CAP - MailMan Miscelaneous NAME code
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;;Jun 02, 1994
  ;
  ;Input transform for field .3 in file 3.7 (Mail Name)
 MNAME ;Change to all upper case
  I '$D(XMDUZ) N XMDUZ S XMDUZ=DUZ
- S X=$$UP^XLFSTR(X)
+ S X=$TR(X,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+ ;
  I $L(X)<7!($L(X)>30) S %="Name cannot be "_$S($L(X)<7:"LESS THAN 7",1:"GREATER THAN 30")_" characters long." G QQ
  I X'?1.AN1"."1.AN1".".E,X'?1.AN,X'?1.AN1"."1.AN S %="Name must not contain punctuation other than a '.' and a maximum of two '.'s." G QQ
  ;
@@ -21,7 +23,7 @@ MNAME ;Change to all upper case
  S ^XMB(3.7,"C",X,XMDUZ)=""
  ;
  G Q
-QQ D Q K X Q:$D(ZTQUEUED)!$D(XMCHAN)  W !!,$C(7),%,!! Q
+QQ D Q K X Q:$D(ZTQUEUED)!$D(XMCHAN)  W !!,*7,%,!! Q
 Q L -^XMB(3.7,"C",X) Q
  ;
  ;EXECUTABLE HELP

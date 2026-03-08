@@ -1,5 +1,5 @@
 AUPNSICA ; IHS/CMI/LAB - Screen Purpose of Visit/ICD9 codes 24-MAY-1993 ; 
- ;;2.0;IHS PCC SUITE;**2,10,11**;MAY 14, 2009;Build 58
+ ;;2.0;IHS PCC SUITE;**2,10,11,25**;MAY 14, 2009;Build 37
  ;IHS/TUCSON/LAB - added checks for filegram and CHS, do not
  ;execute screen if in chs or filegrams 03/18/96 PATCH 4
  I $$CHK(Y)
@@ -78,6 +78,7 @@ CHKDX1 ;CODING SYSTEM 1 - ICD9
 CSEX ; IF 'USE WITH SEX' FIELD HAS A VALUE CHECK THAT VALUE AGAINST AUPNSEX
  I '$D(AUPNSEX) Q 1
  ;I $P(^ICD9(Y,0),U,10)]"",$P(^ICD9(Y,0),U,10)'=AUPNSEX Q 0
+ I $G(APCDEIN) Q 1  ;in data entry so ask user
  I $P(%,U,11)]"",$P(%,U,11)'=AUPNSEX Q 0
  Q 1
  ;

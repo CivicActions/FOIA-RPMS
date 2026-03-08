@@ -1,5 +1,6 @@
-%ZOSV ;SFISC/AC - View commands & special functions. ;12:48 PM  30 Sep 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+%ZOSV ;SFISC/AC-View commands & special functions. ;03:29 PM  21 Dec 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 ACTJ() ; # active jobs
  Q $P($$JOBS^%SY,",",2)
@@ -22,7 +23,7 @@ NOPASS ;
 PRGMODE ;
  W ! S ZTPAC=$S($D(^VA(200,+DUZ,.1))#10:$P(^(.1),"^",5),1:""),XUVOL=^%ZOSF("VOL")
  S X="" X ^%ZOSF("EOFF") R:ZTPAC]"" !,"PAC: ",X:60 D LC^XUS X ^%ZOSF("EON") I X'=ZTPAC W "??",*7 Q
- K XMB,XMTEXT,XMY S XMB="XUPROGMODE",XMB(1)=DUZ,XMB(2)=$I D ^XMB:$L($T(^XMB)) D BYE^XUSCLEAN K ZTPAC,X,XMB
+ S XMB="XUPROGMODE",XMB(1)=DUZ,XMB(2)=$I D ^XMB:$D(^XMB(3.7,0)) K ^XMB(3.7,+DUZ,100,$I),^XUSEC(0,"CUR",DUZ,+^XUTL("XQ",$J,0)),ZTPAC,X,XMB
  I '$$PROGMODE() D UCI S XUCI=Y,XQZ="PRGM^ZUA[MGR]",XUSLNT=1 D DO^%XUCI ZESCAPE
  E  S $ECODE=",<<PROG>>,"
  ;
@@ -40,7 +41,7 @@ UCICHECK(X) ;
  Q Y
  ;
 PRIORITY ;
- Q  ;Q:X>10!(X<1)  S X=(X+1)\2-1,Y=$ZC(%SETPRI,X) Q  ;Let VSM do it's thing.
+ Q:X>10!(X<1)  S X=(X+1)\2-1,Y=$ZC(%SETPRI,X) Q
  ;
 PRIINQ() ;
  Q $ZC(%GETJPI,0,"PRIB")*2+2
@@ -80,24 +81,15 @@ RES G RES^%ZOSV1
  ;
 GETENV ;Get environment Return Y='UCI^VOL/DIR^NODE^BOX LOOKUP'
  S Y=$P($ZU(0),",",1)_"^"_$P($ZU(0),",",2)_"^"_$P($ZC(%GETSYI),",",4)
- S $P(Y,"^",4)=$P(Y,"^",2)_":"_$P(Y,"^",3)
- Q
-VERSION(X) ;return OS version, X=1 - return OS
- Q $S($G(X):$P($ZV," V"),1:$P($ZV," V",2))
- ;
-SETNM(X) ;Set name, Trap dup's, Fall into SETENV
- N $ETRAP S $ETRAP="S $ECODE="""" Q"
+ S $P(Y,"^",4)=$P(Y,"^",2)_":"_$P(Y,"^",3) Q
 SETENV ;Set environment X='PROCESS NAME^ '
  S %=$ZC(%SETPRN,$P(X,"^")) Q
  ;
 ZHDIF ;Display dif of two $ZH's
  W !," CPU=",$J($P(%ZH1,",")-$P(%ZH0,","),6,2),?14," ET=",$J($P(%ZH1,",",2)-$P(%ZH0,",",2),6,1),?27," DIO=",$J($P(%ZH1,",",7)-$P(%ZH0,",",7),5),?40," BIO=",$J($P(%ZH1,",",8)-$P(%ZH0,",",8),5),! Q
- ;
-LOGRSRC(OPT) ;record resource usage in ^XTMP("XUCP"
- N %,%D,%H,%M,%Y,C,H,U,X S C=",",U="^",%=$ZH,H=$P(%,C,3) S:$E($ZV,10,12)>5.1 H=$E(H,13,23) S H=$P($H,C)_C_($P(H,":")*3600+($P(H,":",2)*60)+$P(H,":",3))
- S ^XTMP("XUCP",$P($ZC(%GETSYI),C,4),$P(H,C),$J,$P(H,C,2))=$P(%,C)_U_$P(%,C,7)_U_$P(%,C,8)_U_$P(%,C,4)_U_OPT_U_$P(%,C,3)
- S %H=$H I $P(%H,C,2)#1000=0 S %=(%H>21608)+(%H>94657)+%H-.1,%Y=%\365.25+141,%=%#365.25\1,%D=%+306#(%Y#4=0+365)#153#61#31+1,%M=%-%D\29+1,X=%Y_"00"+%M_"00"+%D,^XTMP("XUCP",0)=X+10000_U_X
- Q
+LOGRSRC(OPT) ;record resource usage in ^XUCP
+ N C,H,U S C=",",U="^",%=$ZH,H=$P(%,C,3) S:$E($ZV,10,12)>5.1 H=$E(H,13,23) S H=$P($H,C)_C_($P(H,":")*3600+($P(H,":",2)*60)+$P(H,":",3))
+ S ^XUCP($P($ZC(%GETSYI),C,4),$P(H,C),$J,$P(H,C,2))=$P(%,C)_U_$P(%,C,7)_U_$P(%,C,8)_U_$P(%,C,4)_U_OPT_U_$P(%,C,3) Q
  ;
 SETTRM(X) ;Turn on specified terminators.
  U $I:TERM=X

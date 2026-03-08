@@ -1,11 +1,16 @@
-BIPRE ;IHS/CMI/MWR - PRE-INIT ROUTINE; OCT 15, 2010
- ;;8.5;IMMUNIZATION;**9**;OCT 01,2014
+BIPRE ;IHS/CMI/MWR - PRE-INIT ROUTINE;
+ ;;8.5;IMMUNIZATION;**26,27,28,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  PRE-INIT TO REMOVE PREVIOUS ^DD's, RPC's, Forms, List Templates,
  ;;  and Protocols in the 9002084-9002084.9999 and BI* Spaces.
  ;;  PATCH 1: Change DIU(0)="T" to DIU(0)="S" to preserve local templates: DD+7
  ;;  PATCH 3: Clear BIMAN global for updates.
  ;;  PATCH 9: Delete all previous BI TABLE DATA ELEMENTS.
+ ;;  PATCH 19: Clear V Imm and V Imm Deleted ^DD's.
+ ;;  PATCH 21: Clear BI PACKAGE CLASS TRANSPORT global.
+ ;;  PATCH 22: COMMENT OUT PREVIOUS TASKS.
+ ;;  PATCH 24: COMMENT OUT PREVIOUS TASKS
+ ;;  PATCH 25: rename function BI MAILING ADD-STREET-2
  ;
  ;----------
 MAIN ;EP
@@ -13,6 +18,11 @@ MAIN ;EP
  ;
  D SETVARS^BIUTL5 S BIPOP=0
  S BIPTITL="v"_$$VER^BILOGO_" PRE-INIT PROGRAM"
+ ;RENAME FUNTION BI MAILING ADD-STREET-2 TO BI MAILING ADD-STREET 2
+ ;NEW DA,DIE,DR
+ ;S DA=$O(^DD("FUNC","B","BI MAILING ADD-STREET-2",0))
+ ;I DA S DIE=.5,DR=".01///BI MAILING ADD-STREET 2" D ^DIE
+ ;
  ;D PERMISS(.BIPOP) I BIPOP D EXIT Q
  ;S DUZ(0)="@"
  ;
@@ -25,11 +35,18 @@ MAIN ;EP
  ;
  ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
  ;---> Delete all previous BI TABLE DATA ELEMENTS.
- D ZGBL^BIUTL8("^BIEXPDD")
+ ;D ZGBL^BIUTL8("^BIEXPDD")
  ;
- ;W !!,"DO SOMETHING HERE?" R ZZZ
+ ;********** PATCH 21, v8.5, APR 01,2021, IHS/CMI/MWR
+ ;---> Per Brian Everett, DTS:
+ ;---> Preinstallation code to clear BI PACKAGE CLASS TRANSPORT File.
+ ;NEW II,DA,DIK
+ ;S II=0 F  S II=$O(^BICLASS(II)) Q:'II  S DA=II,DIK="^BICLASS(" D ^DIK
+ ;
+ ;
+ ;W !!,"DO SOMETHING ELSE HERE?" R ZZZ
+ ;
  Q
- ;
  ;
  D DD
  D RPCS
@@ -53,17 +70,28 @@ PERMISS(BIPOP) ;EP
  ;
  ;----------
 DD ;EP
- ;---> Delete all BI Package Data Dictionaries.
- N N
- D TITLE^BIUTL5(BIPTITL)
- D TEXT2
+ ;---> Delete V IMMUNIZATION and BI V IMMUNIZATIONS DELETED Data Dictionaries.
+ N DIU S DIU(0)=""
+ S DIU=9000010.11 D EN^DIU2
+ S DIU(0)=""
+ S DIU=9002084.118 D EN^DIU2
+ K DIU
+ ;
+ ;N N
+ ;D TITLE^BIUTL5(BIPTITL)
+ ;D TEXT2
  ;---> BY DD#.
  ;
  ;********** PATCH 1, v8.2.1, FEB 01,2008, IHS/CMI/MWR
  ;---> PATCH 1: Change DIU(0)="T" to DIU(0)="S" to preserve local templates.
  ;S N=9002083.99999,DIU(0)="T"
- S N=9002083.99999,DIU(0)="S"
+ ;S N=9002083.99999,DIU(0)="S"
  ;**********
+ ;
+ ;N DIU
+ ;S N=9999999.41,DIU=N W !?6,N D EN^DIU2
+ Q
+ ;
  ;
  F  S N=$O(^DD(N)) Q:'+N  Q:N'<9002085  D
  .W !?6,N
@@ -194,3 +222,15 @@ EXIT ;EP
  ;---> End of job cleanup.
  D KILLALL^BIUTL8(1)
  Q
+V85P28 ;EP;V 8.5 PATCH 28
+ Q
+ ;=====
+ ;
+V85P29 ;EP;V 8.5 PATCH 29
+ Q
+ ;=====
+ ;
+V85P30 ;EP;V 8.5 PATCH 30
+ Q
+ ;=====
+ ;

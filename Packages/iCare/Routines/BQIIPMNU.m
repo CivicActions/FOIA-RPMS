@@ -1,5 +1,5 @@
 BQIIPMNU ;GDIT/HS/ALA-Update Monthly ; 24 Jun 2013  8:43 AM
- ;;2.7;ICARE MANAGEMENT SYSTEM;**1**;Dec 19, 2017;Build 12
+ ;;2.7;ICARE MANAGEMENT SYSTEM;**1,2**;Dec 19, 2017;Build 10
  ;
 EN ;EP - IPC calculations
  ; 
@@ -54,6 +54,8 @@ EN ;EP - IPC calculations
  D PROV^BQIIPCMF
  ; Measure List
  D MEAS^BQIIPCMF
+ ; Team List
+ ;D TEAM^BQIIPCMF
  ; Data
  D RET^BQIIPCME(.DATA,BQDATE,"")
  ;
@@ -107,7 +109,12 @@ PROC ;EP - Process the data
  . S BQIPROV=$P($G(^BQI(90508,1,11)),U,3)
  . S TDEN=0,TNUM=0
  . F  S BQIPROV=$O(^AUPNPAT("AK",BQIPROV)) Q:BQIPROV=""  D
- .. I $P(^VA(200,BQIPROV,0),U,13)'="" Q
+ .. NEW TFLG,TMDT
+ .. I $P(^VA(200,BQIPROV,0),U,13)'="" S TFLG=0 D  Q:TFLG
+ ... I $P($G(^VA(200,BQIPROV,0)),U,11)'="",$P($G(^VA(200,BQIPROV,0)),U,11)<DT S TFLG=1 Q
+ ... S TMDT=$P($G(^VA(200,BQIPROV,1.1)),U,1)\1
+ ... ; If last login date is less than 120 days from today, inactive provider
+ ... I TMDT<$$FMADD^XLFDT(DT,-120) S TFLG=1
  .. S MSNN=MSN
  .. D EN^BQIIPSNG(BQIPROV,BQDATE,CRIPC)
  .. S $P(^BQI(90508,1,11),U,3)=BQIPROV,MSN=MSNN
@@ -122,9 +129,15 @@ PROC ;EP - Process the data
  . I $P(IDATA,U,7)=1 Q
  . ; If type is CRS, update the facility
  . ;I TYP'="G" Q
+ . I CODE="IPC_PEMP" Q
  . S PRV="",TDEN=0,TNUM=0
  . F  S PRV=$O(^AUPNPAT("AK",PRV)) Q:PRV=""  D
- .. I $P(^VA(200,PRV,0),U,13)'="" Q
+ .. NEW TFLG,TMDT
+ .. I $P(^VA(200,PRV,0),U,13)'="" S TFLG=0 D  Q:TFLG
+ ... I $P($G(^VA(200,PRV,0)),U,11)'="",$P($G(^VA(200,PRV,0)),U,11)<DT S TFLG=1 Q
+ ... S TMDT=$P($G(^VA(200,PRV,1.1)),U,1)\1
+ ... ; If last login date is less than 120 days from today, inactive provider
+ ... I TMDT<$$FMADD^XLFDT(DT,-120) S TFLG=1
  .. S IPRN=$O(^BQIPROV(PRV,30,"B",CODE,"")) I IPRN="" Q
  .. S IPRD=$O(^BQIPROV(PRV,30,IPRN,1,"B",BQDATE,"")) I IPRD="" Q
  .. S DEN=$P(^BQIPROV(PRV,30,IPRN,1,IPRD,0),U,2),NUM=$P(^(0),U,3)
@@ -155,7 +168,12 @@ PROC ;EP - Process the data
  ... X EXEC
  .. S TDEN=0,TNUM=0
  .. S TMM="" F  S TMM=$O(^BSDPCT(TMN,1,"B",TMM)) Q:TMM=""  I $O(^AUPNPAT("AK",TMM,""))'="" D
- ... I $P(^VA(200,TMM,0),U,13)'="" Q
+ ... NEW TFLG,TMDT
+ ... I $P(^VA(200,TMM,0),U,13)'="" S TFLG=0 D  Q:TFLG
+ .... I $P($G(^VA(200,TMM,0)),U,11)'="",$P($G(^VA(200,TMM,0)),U,11)<DT S TFLG=1 Q
+ .... S TMDT=$P($G(^VA(200,TMM,1.1)),U,1)\1
+ .... ; If last login date is less than 120 days from today, inactive provider
+ .... I TMDT<$$FMADD^XLFDT(DT,-120) S TFLG=1
  ... S IPRN=$O(^BQIPROV(TMM,30,"B",CODE,"")) I IPRN="" Q
  ... S IPRD=$O(^BQIPROV(TMM,30,IPRN,1,"B",BQDATE,"")) I IPRD="" Q
  ... S DEN=$P(^BQIPROV(TMM,30,IPRN,1,IPRD,0),U,2),NUM=$P(^(0),U,3)
@@ -170,7 +188,12 @@ TOT ;EP total up values for MU
  .. NEW PRV,TDEN,TNUM,IPRN,IPRD,DEN,NUM
  .. S PRV="",TDEN=0,TNUM=0
  .. F  S PRV=$O(^AUPNPAT("AK",PRV)) Q:PRV=""  D
- ... I $P(^VA(200,PRV,0),U,13)'="" Q
+ ... NEW TFLG,TMDT
+ ... I $P(^VA(200,PRV,0),U,13)'="" S TFLG=0 D  Q:TFLG
+ .... I $P($G(^VA(200,PRV,0)),U,11)'="",$P($G(^VA(200,PRV,0)),U,11)<DT S TFLG=1 Q
+ .... S TMDT=$P($G(^VA(200,PRV,1.1)),U,1)\1
+ .... ; If last login date is less than 120 days from today, inactive provider
+ .... I TMDT<$$FMADD^XLFDT(DT,-120) S TFLG=1
  ... S IPRN=$O(^BQIPROV(PRV,30,"B",MCOD,"")) I IPRN="" Q
  ... S IPRD=$O(^BQIPROV(PRV,30,IPRN,1,"B",BQDATE,"")) I IPRD="" Q
  ... S DEN=$P(^BQIPROV(PRV,30,IPRN,1,IPRD,0),U,2),NUM=$P(^(0),U,3)

@@ -1,13 +1,13 @@
-BSTSWSV ;GDIT/HS/BEE-Standard Terminology Web Service Handling ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+BSTSWSV ;GDIT/HS/BEE-Standard Terminology WS Handling ; 5 Nov 2012  9:53 AM
+ ;;2.0;IHS STANDARD TERMINOLOGY;**3**;Dec 01, 2016;Build 46
  ;
  Q
  ;
-SEARCH(OUT,IN,DEBUG) ;EP - Perform a Web Service Search
+SEARCH(OUT,IN,DEBUG) ;EP - Perform Search
  ;
  ;Input
  ;OUT-Output variable/global to ret data in (VAR)
- ;IN Array-List of search parms
+ ;IN Array-search parms
  ;DEBUG-1:DEBUG mode
  ;
  ;Output
@@ -55,10 +55,10 @@ SEARCH(OUT,IN,DEBUG) ;EP - Perform a Web Service Search
  ;
  Q STS
  ;
-CNCSR(OUT,IN,DEBUG) ;EP - Perform Web Service Concept Id Search
+CNCSR(OUT,IN,DEBUG) ;EP - Perform WS Concept Id Search
  ;
  ;Input
- ;OUT-Output variable/global to return information in (VAR)
+ ;OUT-Output variable/global to return info in (VAR)
  ;IN Array-List of search parameters
  ;DEBUG-1:DEBUG mode
  ;
@@ -107,10 +107,10 @@ CNCSR(OUT,IN,DEBUG) ;EP - Perform Web Service Concept Id Search
  ;
  Q STS
  ; 
-ICD2SMD(OUT,IN,DEBUG) ;EP - Perform Web Service ICD9 to SNOMED mapping retrieval
+ICD2SMD(OUT,IN,DEBUG) ;EP - Perform WS ICD9 to SNOMED mapping retrieval
  ;
  ;Input
- ;OUT-Output variable/global to return information in (VAR)
+ ;OUT-Output variable/global to return info in (VAR)
  ;IN Array-List of search parameters
  ;DEBUG - 1:DEBUG mode
  ;
@@ -159,10 +159,10 @@ ICD2SMD(OUT,IN,DEBUG) ;EP - Perform Web Service ICD9 to SNOMED mapping retrieval
  ;
  Q STS
  ;
-DSCLKP(OUT,IN,DEBUG) ;EP - Perform a Web Service Description Id Search
+DSCLKP(OUT,IN,DEBUG) ;EP - Perform a WS Description Id Search
  ;
  ;Input
- ;OUT-Output variable/global to return information in (VAR)
+ ;OUT-Output variable/global to return info in (VAR)
  ;IN Array-List of search parameters
  ;DEBUG-1:DEBUG mode
  ;
@@ -211,10 +211,10 @@ DSCLKP(OUT,IN,DEBUG) ;EP - Perform a Web Service Description Id Search
  ;
  Q STS
  ;
-SUBLST(DLIST,IN,DEBUG) ;EP - Perform a Web Service Subset Listing
+SUBLST(DLIST,IN,DEBUG) ;EP - Perform a WS Subset Listing
  ;
  ;Input
- ; OUT - Output variable/global to return information in (VAR)
+ ; OUT - Output variable/global to return info in (VAR)
  ; IN Array - List of search parameters
  ; DEBUG - 1:DEBUG mode
  ;
@@ -261,10 +261,10 @@ SUBLST(DLIST,IN,DEBUG) ;EP - Perform a Web Service Subset Listing
  ;
  Q STS
  ;
-DTSSR(OUT,IN,DEBUG) ;EP - Perform a Web Service DTS Id Lookup
+DTSSR(OUT,IN,DEBUG) ;EP - Perform a WS DTS Id Lookup
  ;
  ;Input
- ; OUT - Output variable/global to return information in (VAR)
+ ; OUT - Output variable/global to return info in (VAR)
  ; IN Array - List of search parameters
  ; DEBUG - 1:DEBUG mode
  ;
@@ -313,7 +313,7 @@ DTSSR(OUT,IN,DEBUG) ;EP - Perform a Web Service DTS Id Lookup
  ;
  Q STS
  ;
-GCDSET(DEBUG) ;EP - Poll server(s) for codeset information
+GCDSET(DEBUG) ;EP - Poll server(s) for codeset info
  ;
  ;Input
  ; DEBUG - 1:DEBUG mode
@@ -356,7 +356,7 @@ GCDSET(DEBUG) ;EP - Poll server(s) for codeset information
  ;
  Q STS
  ;
-GVRSET(NMID,DEBUG) ;EP - Poll server(s) for codeset information
+GVRSET(NMID,DEBUG) ;EP - Poll server(s) for codeset info
  ;
  ;Input
  ; NMID - Namespace ID
@@ -401,7 +401,7 @@ GVRSET(NMID,DEBUG) ;EP - Poll server(s) for codeset information
  ;
  Q STS
  ;
-SUBSET(OUT,NMID,DEBUG) ;EP - Poll server(s) for subset information
+SUBSET(OUT,NMID,DEBUG) ;EP - Poll server(s) for subset info
  ;
  ;Input
  ; NMID - Namespace ID
@@ -446,10 +446,10 @@ SUBSET(OUT,NMID,DEBUG) ;EP - Poll server(s) for subset information
  ;
  Q STS
  ;
-TEST(OUT,IN,DEBUG) ;EP - Perform a Test Web Service Search
+TEST(OUT,IN,DEBUG) ;EP - Perform a Test WS Search
  ;
  ;Input
- ; OUT - Output variable/global to return information in (VAR)
+ ; OUT - Output variable/global to return info in (VAR)
  ; IN Array - List of search parameters
  ; DEBUG - 1:DEBUG mode
  ;
@@ -472,7 +472,7 @@ TEST(OUT,IN,DEBUG) ;EP - Perform a Test Web Service Search
  ;
  M BSTSWS=IN
  ;
- ;Retrieve Web Service Information
+ ;Retrieve WS info
  S STS=$$GETWSV(BSTSWS("SERVICE"),.BSTSSRV,DEBUG)
  ;
  ;Make sure service was found
@@ -486,14 +486,14 @@ TEST(OUT,IN,DEBUG) ;EP - Perform a Test Web Service Search
  ;
  Q CSTS
  ;
-WSERVER(BSTSSRV,DEBUG) ;P - Retrieve array of Web Server Information
+WSERVER(BSTSSRV,DEBUG) ;P - Retrieve array of Web Server info
  ;
  ;Input
  ; DEBUG - 1:DEBUG mode
  ;
  ;Output
  ; Function - 0:No Data Returned, 1:Data Returned
- ; BSTSSRV - Array of web service connection information
+ ; BSTSSRV - Array of WS connection info
  ;
  ;Quit if install is running
  L +^TMP("BSTSINSTALL"):1 E  Q 0
@@ -509,16 +509,16 @@ WSERVER(BSTSSRV,DEBUG) ;P - Retrieve array of Web Server Information
  .. S IEN="" F  S IEN=$O(^BSTS(9002318,NMIEN,1,"C",PRI,IEN)) Q:'IEN  D
  ... N WSIEN,STS,DA,IENS
  ... ;
- ... ;Pull Web Service IEN
+ ... ;Pull WS IEN
  ... S DA(1)=NMIEN,DA=IEN,IENS=$$IENS^DILF(.DA)
  ... S WSIEN=$$GET1^DIQ(9002318.01,IENS,".01","I") Q:WSIEN=""
  ... ;
- ... ;Retrieve Web Service Information
+ ... ;Retrieve WS info
  ... S STS=$$GETWSV(WSIEN,.BSTSSRV,DEBUG)
  ;
  Q $S($O(BSTSSRV(""))]"":"1",1:"0")
  ;
-GETWSV(WSIEN,BSTSSRV,DEBUG) ;EP - Retrieve Single Web Service Connection Info
+GETWSV(WSIEN,BSTSSRV,DEBUG) ;EP - Retrieve Single WS Connection Info
  ;
  ;Input
  ; WSIEN - Pointer to 9002318.2
@@ -526,11 +526,11 @@ GETWSV(WSIEN,BSTSSRV,DEBUG) ;EP - Retrieve Single Web Service Connection Info
  ;
  ;Output
  ; Function - 0:No Data Returned, 1:Data Returned
- ; BSTSSRV - Array of web service connection information
+ ; BSTSSRV - Array of WS connection info
  ;
- N DA,IENS,URLRT,PORT,TYPE,TIME,USER,PASS,II,SPATH,IADT,SSL,CTIME,MSTM,RETRY,MFAIL,FWAIT
+ N DA,IENS,URLRT,PORT,TYPE,TIME,USER,PASS,II,SPATH,IADT,SSL,CTIME,MSTM,RETRY,MFAIL,FWAIT,PSTRT
  ;
- ;Pull Server information
+ ;Pull Server info
  S IADT=$$GET1^DIQ(9002318.2,WSIEN_",",".1","I")
  I IADT]"",IADT<DT Q 0
  S URLRT=$$GET1^DIQ(9002318.2,WSIEN_",",".02","E")
@@ -548,6 +548,8 @@ GETWSV(WSIEN,BSTSSRV,DEBUG) ;EP - Retrieve Single Web Service Connection Info
  S MSTM=$$GET1^DIQ(9002318.2,WSIEN_",",.15,"I") S:MSTM="" MSTM=60
  S MFAIL=$$GET1^DIQ(9002318.2,WSIEN_",","4.02","E") S:MFAIL="" MFAIL=10
  S FWAIT=$$GET1^DIQ(9002318.2,WSIEN_",","4.03","E") S:FWAIT="" FWAIT=7200
+ ;GDIT/HS/BEE 06/11/19;BSTS*2.0*3;CR#9306;Return process start time
+ S PSTRT=$$GET1^DIQ(9002318.2,WSIEN_",",".17","E") S:PSTRT="" PSTRT="18:02"
  S II=$O(BSTSSRV(""),-1)+1
  S BSTSSRV(II,"URLROOT")=URLRT
  S BSTSSRV(II,"PORT")=PORT
@@ -564,5 +566,7 @@ GETWSV(WSIEN,BSTSSRV,DEBUG) ;EP - Retrieve Single Web Service Connection Info
  S BSTSSRV(II,"RETRY")=RETRY
  S BSTSSRV(II,"MFAIL")=MFAIL
  S BSTSSRV(II,"FWAIT")=FWAIT
+ ;GDIT/HS/BEE 06/11/19;BSTS*2.0*3;CR#9306;Return process start time
+ S BSTSSRV(II,"PSTRT")=PSTRT
  ;
  Q 1

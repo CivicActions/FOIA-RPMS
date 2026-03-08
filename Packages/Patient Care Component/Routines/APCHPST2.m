@@ -1,5 +1,5 @@
-APCHPST2 ; IHS/CMI/LAB - Patient Health Summary - Post Visit ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHPST2 ; IHS/CMI/GRL Patient Health Summary - Post Visit ;  [ 03/15/2005  3:57 PM ]
+ ;;2.0;IHS RPMS/PCC Health Summary;**14**;JUN 24, 1997
  ;
  ;
  ;

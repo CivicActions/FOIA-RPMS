@@ -1,5 +1,5 @@
 APCLVLU1 ; IHS/CMI/LAB - GEN RETR UTILITIES ; 27 Aug 2014  10:52 AM
- ;;2.0;IHS PCC SUITE;**2,4,5,7,11,20,21**;MAY 14, 2009;Build 34
+ ;;2.0;IHS PCC SUITE;**2,4,5,7,11,20,21,25**;MAY 14, 2009;Build 37
 RACESCR ;
  NEW Y,Z
  K Z
@@ -367,3 +367,48 @@ HOMEL(P,D) ;EP
  I L="" Q "R"
  I $P(^AUPNPAT(P,85,L,0),U,2)="N" Q "N"
  Q "H"
+  ;
+PHRHOP(P,D) ;EP
+ ;GET LAST VALUE BEFORE END OF TIME PERIOD
+ I '$O(^AUPNPAT(P,89,"AHD",0)) Q 0
+ NEW X,Y,Z,L
+ S L=""
+ S X=0 F  S X=$O(^AUPNPAT(P,89,X)) Q:X'=+X  D
+ .Q:X>D
+ .I $P($G(^AUPNPAT(P,89,X,0)),U,2)="" Q
+ .S L=1
+ I L="" Q "No PHR Handout"
+ I L Q "Yes PHR Handout"
+ Q Z
+PHRHO(P,D) ;EP
+ ;GET LAST VALUE WITH A YES BEFORE END OF TIME PERIOD
+ I '$O(^AUPNPAT(P,89,"AHD",0)) Q 0
+ S L=""
+ S X=0 F  S X=$O(^AUPNPAT(P,89,X)) Q:X'=+X  D
+ .Q:X>D
+ .I $P($G(^AUPNPAT(P,89,X,0)),U,2)="" Q
+ .S L=1
+ I L="" Q 0
+ Q 1
+PHRACP(P,D) ;EP
+ ;GET LAST VALUE BEFORE END OF TIME PERIOD
+ I '$O(^AUPNPAT(P,88,"ACT",0)) Q 0
+ NEW X,Y,Z,L
+ S L=""
+ S X=0 F  S X=$O(^AUPNPAT(P,88,X)) Q:X'=+X  D
+ .Q:X>D
+ .I '$P($G(^AUPNPAT(P,88,X,0)),U,2) Q
+ .S L=1
+ I L="" Q "No PHR Access"
+ I L Q "Yes PHR Access"
+ Q Z
+PHRAC(P,D) ;EP
+ ;GET LAST VALUE WITH A YES BEFORE END OF TIME PERIOD
+ I '$O(^AUPNPAT(P,88,"ACT",0)) Q 0
+ S L=""
+ S X=0 F  S X=$O(^AUPNPAT(P,88,X)) Q:X'=+X  D
+ .Q:X>D
+ .I '$P($G(^AUPNPAT(P,88,X,0)),U,2) Q
+ .S L=1
+ I L="" Q 0
+ Q 1

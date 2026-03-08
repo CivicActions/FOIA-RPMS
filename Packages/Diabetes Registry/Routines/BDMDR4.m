@@ -1,5 +1,5 @@
 BDMDR4 ; IHS/CMI/LAB - patients w/o TB TX ; 05 Mar 2015  1:11 PM
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**6,8,9,10**;JUN 14, 2007;Build 12
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**6,8,9,10,19**;JUN 14, 2007;Build 159
  ;
  ;
 START ;
@@ -44,7 +44,7 @@ A ;
  Q
 ZIS ;
  S BDMTEMP=""
- S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="P" KILL DA D ^DIR KILL DIR
+ S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="B" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) D EXIT Q
  S BDMTEMP=Y
  ;call to XBDBQUE

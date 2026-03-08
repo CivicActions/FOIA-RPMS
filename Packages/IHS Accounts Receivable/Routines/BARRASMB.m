@@ -1,5 +1,5 @@
 BARRASMB ; IHS/SD/LSL - Age Summary Report Print Logic ;08/20/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**7,28**;OCT 26, 2005;Build 92
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**7,28,30,31**;OCT 26, 2005;Build 90
  ; MODIFIED XTMP FILE NAME TO TMP TO MEET SAC REQUIREMENTS;MRS:BAR*1.8*7 IM29892
  ;IHS/ASDS/LSL - 11/24/03 - Routine created
  ;     Called from BARRASM
@@ -13,10 +13,13 @@ BARRASMB ; IHS/SD/LSL - Age Summary Report Print Logic ;08/20/2008
  ;
  ;IHS/SD/SDR 1.8*28 CR8350 HEAT295594 - Made call for EISS report conditional on BARA.  BARA is set when running the USM report.
  ;  we don't want the EISS run if running the USM report.
+ ;IHS/SD/CPC BAR*1.8*30 CR 4976/11205 Extensive changes to add counts/delimited/xml reports. 
+ ;BAR*1.8*31;IHS/OIT/FCJ 1/5/2021 CR#6369 Tasked reports to create a file 
  Q
  ; *********************************************************************
 PRINT ; EP
  ; Print reports
+ I $D(BARFILN) D OPEN^%ZISH("FILE",BARPTH,BARFILN,"W") U IO  ;BAR*1.8*31 IHS/OIT/FCJ 1/5/2021 CR#6369
  F I=1:1:6 K BAR(I)
  K BAR("SUB0")
  K BAR("SUB1"),BAR("SUB2"),BAR("SUB3"),BARTMP,BARTMPS,BARTMPS2,BARNAME
@@ -55,6 +58,7 @@ STANDARD ;
  .F  S BAR("SUB1")=$O(^TMP($J,"BAR-ASM",BAR("SUB0"),BAR("SUB1"))) Q:BAR("SUB1")=""  D  Q:$G(BAR("F1"))
  ..I $Y>(IOSL-5),'$D(BARA),(XQY0'["UFMS") D EOP^BARUTL(0) D HD Q:$G(BAR("F1"))    ;-NO PAUSE IHS/DIT/CPC - 20180502 CR8350
  ..S BARTMP=$G(^TMP($J,"BAR-ASM",BAR("SUB0"),BAR("SUB1")))
+ ..S BARTMP2=$G(^TMP($J,"BAR-ASMC",BAR("SUB0"),BAR("SUB1")))
  ..S BARNAME=BAR("SUB1")
  ..W !,$E(BARNAME,1,19)            ; clinic/vis typ/A/R acct/discharge svc
  ..W ?20,$J($P(BARTMP,U),9,2)      ; CURRENT
@@ -63,11 +67,14 @@ STANDARD ;
  ..W ?50,$J($P(BARTMP,U,4),9,2)    ; 90-120
  ..W ?60,$J($P(BARTMP,U,5),9,2)    ; 120+
  ..W ?70,$J($P(BARTMP,U,6),10,2)   ; BALANCE
+ ..W !
+ ..D CNTW^BARRASMC  ;LIST COUNTS
  .;
  .; Visit Location Totals
  .Q:$G(BAR("F1"))
  .W !,BARDASH
  .S BARTMP=$G(^TMP($J,"BAR-ASM",BAR("SUB0")))
+ .S BARTMP2=$G(^TMP($J,"BAR-ASMC",BAR("SUB0")))
  .W !,"*** VISIT loc Total"
  .W ?20,$J($P(BARTMP,U),9,2)      ; CURRENT
  .W ?30,$J($P(BARTMP,U,2),9,2)     ; 31-60
@@ -75,17 +82,23 @@ STANDARD ;
  .W ?50,$J($P(BARTMP,U,4),9,2)     ; 90-120
  .W ?60,$J($P(BARTMP,U,5),9,2)     ; 120+
  .W ?70,$J($P(BARTMP,U,6),10,2)    ; BALANCE
+ .W !
+ .D CNTW^BARRASMC
  Q:$G(BAR("F1"))
  ;
  ; Report Totals
  W !,BAREQUAL
  S BARTMP=$G(^TMP($J,"BAR-ASM"))
+ S BARTMP2=$G(^TMP($J,"BAR-ASMC"))
+ W !,"*** Report Total"
  W !?20,$J($P(BARTMP,U),9,2)       ; CURRENT
  W ?30,$J($P(BARTMP,U,2),9,2)      ; 31-60
  W ?40,$J($P(BARTMP,U,3),9,2)      ; 61-90
  W ?50,$J($P(BARTMP,U,4),9,2)      ; 90-120
  W ?60,$J($P(BARTMP,U,5),9,2)      ; 120+
  W ?70,$J($P(BARTMP,U,6),10,2)     ; BALANCE
+ W !
+ D CNTW^BARRASMC
  ;D EOP^BARUTL(0) ;-NOW WANT PAUSE IHS/DIT/CPC - 20180502 CR8350
  I '$D(BARA),(XQY0'["UFMS") D EOP^BARUTL(0)  ;If not USM Pause IHS/DIT/CPC - 20180502 BAR*1.8*28 CR8350
  Q
@@ -113,13 +126,18 @@ SUMMARY ;
  ..S BARTMP=$G(^TMP($J,"BAR-ASMT",BAR("SUB0"),BAR("SUB1")))
  ..W !,$E(BAR("SUB1"),1,19)        ; Billing Entity/Allowance Category/Insurer Type
  ..D SUM2
+ ..S BARTMP=$G(^TMP($J,"BAR-ASMC",BAR("SUB0"),BAR("SUB1"))) W !,$E("# of Claims",1,19)  ; /IHS/BEM/RAM - 10 JUN 14- SUM CLAIM #'S
+ ..D SUM3^BARRASMC  W ! ; /IHS/BEM/RAM - 10 JUN 14- SUM CLAIM #'S
  .Q:$G(BAR("F1"))
  .S BARTMP=$G(^TMP($J,"BAR-ASMT",BAR("SUB0")))
  .W !,BARDASH,!,"*** VISIT Loc Total"
  .D SUM2
+ .S BARTMP=$G(^TMP($J,"BAR-ASMC",BAR("SUB0"))) W !,$E("# of Claims",1,19) ; /IHS/BAO/RAM - 10 JUN 14- PRINT CLAIM #'S
+ .D SUM3^BARRASMC  W ! ; /IHS/BEM/RAM - 10 JUN 14- SUM CLAIM #'S
  Q:$G(BAR("F1"))
  W !
  D TOTAL                           ; Report Totals
+ D TOTAL3^BARRASMC            ; /IHS/BEM/RAM - 10 JUN 14 ; Report Claim # Totals
  ;I BARY("STCR")=5,'$D(BARY("ALL")) D ASM^BAREISS  ;bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594
  I BARY("STCR")=5,'$D(BARY("ALL")),'$D(BARA) D ASM^BAREISS  ;BARA is defined in the USM report; if started there, it shouldn't run the EISS report  ;bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594
  ;D EOP^BARUTL(0)  ;bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594 -NOW WANT PAUSE IHS/DIT/CPC - 20180502 CR8350
@@ -241,6 +259,7 @@ ACCOUNT ;
  W ?50,$J($P(BARTMPS,U,4),9,2)    ; 90-120
  W ?60,$J($P(BARTMPS,U,5),9,2)    ; 120+
  W ?70,$J($P(BARTMPS,U,6),10,2)   ; BALANCE
+ ;ADD COUNT LINE HERE FOR SUB3
  Q
  ; ********************************************************************
  ;
@@ -270,6 +289,7 @@ TOTAL ;
  ;
 HD ; EP
  ;D PAZ^BARRUTL  ;bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594  IHS/DIT/CPC CR8350 BAR*1.8*28 20180502 Now they want the pause. 
+ Q:$D(BARFILN)  ;BAR*1.8*31;IHS/OIT/FCJ CR#6369 DO NOT PAUSE FOR TASKED REPORTS
  I XQY0'["UFMS" D PAZ^BARRUTL  ;only do pause for ASM, not USM  ;bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594
  I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) S BAR("F1")=1 Q
  ; -------------------------------

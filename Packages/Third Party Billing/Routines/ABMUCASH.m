@@ -1,13 +1,13 @@
 ABMUCASH ; IHS/SD/SDR - 3PB/UFMS Cashiering Options   
- ;;2.6;IHS 3P BILLING SYSTEM;**9,11**;NOV 12, 2009;Build 133
- ; New routine - v2.5 p12 SDD item 4.9.1
- ; Cashiering Sign In/Out option
+ ;;2.6;IHS 3P BILLING SYSTEM;**9,11,40**;NOV 12, 2009;Build 785
+ ;New routine 2.5*12 SDD item 4.9.1
+ ;IHS/SD/SDR 2.6*40 ADO75369 Removed missing bill check; Updated msg if session isn't opened
+ ;Cashiering Sign In/Out option
 EP ;EP
- ;start new abm*2.6*9 NOHEAT - ensure UFMS setup
+ ;ensure UFMS setup
  I $P($G(^ABMDPARM(DUZ(2),1,4)),U,15)="" D  Q
  .W !!,"* * UFMS SETUP MUST BE DONE BEFORE ANY BILLING FUNCTIONS CAN BE USED! * *",!
  .S DIR(0)="E",DIR("A")="Enter RETURN to Continue" D ^DIR K DIR
- ;end new
  S ABMFD=$$FINDOPEN^ABMUCUTL(DUZ)
  S ABMTRIBL=$P($G(^ABMDPARM(ABMLOC,1,4)),U,14)  ;export flag
  S $P(ABMLINE,"-",80)=""
@@ -16,7 +16,8 @@ EP ;EP
  .D SIG^XUSESIG  ;ask esig
  .Q:X1=""  ;esig test
  .S ABMSNUM=$$CR8SESS^ABMUCUTL()  ;create sess
- .I ABMSNUM=0 W !,"NEW SESSION COULD NOT BE CREATED" Q
+ .;I ABMSNUM=0 W !,"NEW SESSION COULD NOT BE CREATED" Q  ;abm*2.6*40 ADO75369
+ .I ABMSNUM=0 W !!,"A SESSION HAS ALREADY BEEN CREATED IN ANOTHER WINDOW",! Q  ;abm*2.6*40 ADO75369
  .W !!,"YOU ARE SIGNING *IN* FOR BILLING",!
  .W !?10,$$EN^ABMVDF("ULN"),"Billing Activity",$$EN^ABMVDF("ULF")
  .W ?40,$$EN^ABMVDF("ULN"),"COUNT",$$EN^ABMVDF("ULF")
@@ -29,7 +30,7 @@ EP ;EP
  ;open sess found
  I ABMFD'=0 D
  .W !!,"YOU ARE SIGNING *OUT* FOR BILLING",!
- .D UFMSCK^ABMUMISS
+ .;D UFMSCK^ABMUMISS  ;removed; it was causing duplicate bills if multiple open cashering sessions  ;abm*2.6*40 ADO75369
  .W !?10,$$EN^ABMVDF("ULN"),"Billing Activity",$$EN^ABMVDF("ULF")
  .W ?32,$$EN^ABMVDF("ULN"),"COUNT",$$EN^ABMVDF("ULF")
  .W ?45,$$EN^ABMVDF("ULN"),"TOTAL",$$EN^ABMVDF("ULF"),!
@@ -39,8 +40,7 @@ EP ;EP
  .S ABMBA=""
  .I '$D(ABMBAL) W !?5,"AT THIS TIME THERE IS NO BILLING ACTIVITY FOR THIS SESSION.",!
  .F  S ABMBA=$O(ABMBAL(ABMBA)) Q:ABMBA=""  D
- ..;W !?5,$P($T(@ABMBA),";;",2)  ;abm*2.6*11 insurer type
- ..W !?5,$$INSTYP(ABMBA)  ;abm*2.6*11 insurer type
+ ..W !?5,$$INSTYP(ABMBA)  ;insurer type
  ..W !?10,"- Cancelled Claims",?33,+$G(ABMBAL(ABMBA,"CCLMS"))
  ..W !?10,"- Approved Bills",?33,+$G(ABMBAL(ABMBA,"ABILLS")),?40,"$",$J($FN(+$G(ABMBAL(ABMBA,"ABAMT")),",",2),10)
  ..I ABMTRIBL=1,(+$G(ABMBAL(ABMBA,"EBILLS"))>0) D
@@ -126,11 +126,11 @@ CASHTOT(ABMDUZ) ;EP - cnt claims/bills & amts for sess
  ..S ABMBAL(ABMBDAC,"ABAMT")=+$G(ABMBAL(ABMBDAC,"ABAMT"))+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))
  ..S ABMSATOT=(+$G(ABMSATOT))+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))
  ..S ABMABAMT=$G(ABMABAMT)+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))  ;tot appr bill amt
- ..;now check if bill is part of 3P UFMS Exclusion Table
+ ..;check if bill is part of 3P UFMS Exclusion Table
  ..Q:$$BILL^ABMUEAPI(ABMDUZ2,$P($G(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMFD,11,ABMBA,2,ABMCDFN,0)),U,3))=1
  ..S ABMBAL(ABMBDAC,"EBILLS")=+$G(ABMBAL(ABMBDAC,"EBILLS"))+1
  ..S ABMEBILL=+$G(ABMEBILL)+1  ;session tot
- ..S ABMTEBIL=+$G(ABMTEBIL)+1  ;tot bills (multiple sessions)
+ ..S ABMTEBIL=+$G(ABMTEBIL)+1  ;tot bills (mult. sessions)
  ..S ABMBAL(ABMBDAC,"EBAMT")=+$G(ABMBAL(ABMBDAC,"EBAMT"))+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))
  ..S ABMEBAMT=+$G(ABMEBAMT)+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))  ;sess tot
  ..S ABMTEBAM=+$G(ABMTEBAM)+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))  ;tot amt (mult. sess)
@@ -149,7 +149,7 @@ CASHTOT(ABMDUZ) ;EP - cnt claims/bills & amts for sess
  ..S ABMBDFN=$P($G(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMFD,11,ABMBA,3,ABMCDFN,0)),U,3)
  ..S ABMBAL(ABMBDAC,"CBAMT")=+$G(ABMBAL(ABMBDAC,"CBAMT"))+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))
  ..S ABMCBAMT=+$G(ABMCBAMT)+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))  ;session tot
- ..S ABMTCBAM=+$G(ABMTCBAM)+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))  ;tot amt (multiple sessions)
+ ..S ABMTCBAM=+$G(ABMTCBAM)+($P($G(^ABMDBILL(ABMDUZ2,ABMBDFN,2)),U))  ;tot amt (mult. sessions)
  ;
  ;cnt any requeued bills or batches (no detail)
  K ABMBLCNT,ABMBTCNT
@@ -159,7 +159,7 @@ CASHTOT(ABMDUZ) ;EP - cnt claims/bills & amts for sess
  ..I ABMI=12 S ABMBLCNT=+$G(ABMBLCNT)+1
  ..I ABMI=13 S ABMBTCNT=+$G(ABMBTCNT)+1
  Q
-CASHTOTP ;EP - cnt POS claims
+CASHTOTP ;EP - cnt POS clms
  D CASHTOTP^ABMUUTL
  Q
 SEL ;EP
@@ -181,12 +181,11 @@ PRINT ;EP
  I $D(IO("S")) D ^%ZISC
  K ABME
  Q
-DETAIL ;EP - view session detail
- ;
+DETAIL ;EP - view sess dtl
  I $G(ABMDUZ)="" S ABMDUZ=DUZ
  K ABMCCLMS,ABMBAOUT
  S ABMLOC=$$FINDLOC^ABMUCUTL
- ;"regular" claims
+ ;"regular" clms
  I +$G(ABMDUZ)'=0 D
  .S ABMBA=0
  .F  S ABMBA=$O(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMFD,11,ABMBA)) Q:+ABMBA=0  D
@@ -196,8 +195,7 @@ DETAIL ;EP - view session detail
  ...F  S ABMCDFN=$O(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMFD,11,ABMBA,ABMLOOP,ABMCDFN)) Q:+ABMCDFN=0  D
  ....S ABMCREC=$G(^ABMUCASH(ABMLOC,10,ABMDUZ,20,ABMFD,11,ABMBA,ABMLOOP,ABMCDFN,0))
  ....S ABMB(ABMBAOUT,ABMLOOP,ABMCDFN)=$P(ABMCREC,U)_"^"_$P(ABMCREC,U,2)_"^"_$P(ABMCREC,U,3)
- .;
- .;cnt any requeued bills or batches (no detail)
+ .;cnt any requeued bills or batches (no dtl)
  .K ABMBLCNT,ABMBTCNT
  .F ABMI=12,13 D
  ..S ABMIEN=0
@@ -235,8 +233,7 @@ DTAILPRT ;
  S ABMBAOUT=""
  F  S ABMBAOUT=$O(ABMB(ABMBAOUT)) Q:ABMBAOUT=""  D  Q:+$G(Y)=0&(IOST["C")
  .Q:ABMBAOUT=12!(ABMBAOUT=13)  ;skip requeued bills/exports for now
- .;W !!,$P($T(@ABMBAOUT^ABMUCASH),";;",2)  ;abm*2.6*11 insurer type
- .W !!,$$INSTYP(ABMBAOUT)  ;abm*2.6*11 insurer type
+ .W !!,$$INSTYP(ABMBAOUT)  ;abm*2.6*11 ins type
  .F ABMI=1:1:3 D  Q:+$G(Y)=0&(IOST["C")
  ..I ABMI=1,(+$G(ABMBAL(ABMBAOUT,"CCLMS"))'=0) W !?2,"-CANCELLED CLAIMS - ",+$G(ABMBAL(ABMBAOUT,"CCLMS"))
  ..I ABMI=2,(+$G(ABMBAL(ABMBAOUT,"ABILLS"))'=0) D
@@ -322,12 +319,9 @@ QUE ;QUE TO TASKMAN
  D ^%ZTLOAD
  W:$G(ZTSK) !,"Task # ",ZTSK," queued.",!
  Q
- ;
- ;start new code abm*2.6*11 insurer type
-INSTYP(X) ;PEP - returns insurer type name
- ; X = CODE (1)
+INSTYP(X) ;PEP - returns ins type name
+ ;X = CODE (1)
  N ABMINS,ABMITYP
  S ABMINS=$O(^AUTTINTY("C",X,0))
  S ABMITYP=$$GET1^DIQ(9999999.181,ABMINS,".01","E")
  Q ABMITYP
- ;end new code insurer type

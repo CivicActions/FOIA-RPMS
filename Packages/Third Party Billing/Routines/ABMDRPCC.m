@@ -1,6 +1,9 @@
-ABMDRPCC ; IHS/ASDST/DMJ - View PCC Visit ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**11,21**;NOV 12, 2009;Build 379
- ;IHS/SD/SDR -2.6*21 HEAT210601 - Added Q to stop LOOP if timeout or '^'; was causing <SUBSCR>LOOP+20^ABMDRPCC error
+ABMDRPCC ; IHS/SD/SDR - View PCC Visit ;  
+ ;;2.6;IHS 3P BILLING SYSTEM;**11,21,33,37,38**;NOV 12, 2009;Build 756
+ ;IHS/SD/SDR 2.6*21 HEAT210601 Added Q to stop LOOP if timeout or '^'; was causing <SUBSCR>LOOP+20^ABMDRPCC error
+ ;IHS/SD/SDR 2.6*33 ADO60185/CR11502 SOGI updated to include preferred name; also changed SSN to only print last 4
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
+ ;IHS/SD/SDR 2.6*38 ADO99134 Removed SSN from display
  ;
 START ;START HERE
  K APCDVDSP
@@ -8,7 +11,8 @@ START ;START HERE
  S AUPNLK("ALL")=""  ;universal lookup  ;abm*2.6*11 NOHEAT6
  S DIC="^AUPNPAT(",DIC(0)="AEMQ" D ^DIC Q:Y<0  S APCDPAT=+Y
  S ABM("PNM")=$P(^DPT(APCDPAT,0),U),ABM("SSN")=$P(^(0),"^",9)
- S ABM("SSN")=$E(ABM("SSN"),1,3)_"-"_$E(ABM("SSN"),4,5)_"-"_$E(ABM("SSN"),6,9)
+ ;S ABM("SSN")=$E(ABM("SSN"),1,3)_"-"_$E(ABM("SSN"),4,5)_"-"_$E(ABM("SSN"),6,9)  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;S ABM("SSN")="***-**-"_$E(ABM("SSN"),6,9)  ;abm*2.6*33 IHS/SD/SDR ADO60185  ;abm*2.6*38 IHS/SD/SDR ADO99134
  S $P(ABM("EQ"),"=",80)="",ABM("I")=0 D HDR
 LOOP ;LOOP HERE
  S ABM("VDT")=0 F  S ABM("VDT")=$O(^AUPNVSIT("AA",APCDPAT,ABM("VDT"))) Q:'ABM("VDT")!($G(ABM("QUIT")))  D
@@ -44,7 +48,15 @@ TM ;TASKMAN COME HERE
 HDR ;HEADER
  K ABMN
  S ABM("PST")=ABM("I")+1
- W $$EN^ABMVDF("IOF"),!,"PATIENT: ",ABM("PNM"),?40,"SSN: ",ABM("SSN")
+ ;W $$EN^ABMVDF("IOF"),!,"PATIENT: ",ABM("PNM"),?40,"SSN: ",ABM("SSN")  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ W $$EN^ABMVDF("IOF"),!,"PATIENT: ",ABM("PNM")
+ ;I $$GETPREF^AUPNSOGI(APCDPAT,"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ I $$GETPREF^AUPNSOGI(APCDPAT,"I",1)'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .;W "* - ",$$EN^ABMVDF("RVN"),$$GETPREF^AUPNSOGI(APCDPAT,""),$$EN^ABMVDF("RVF")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .W " - "_$$GETPREF^AUPNSOGI(APCDPAT,"I",1)_"*"  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;W ?60,"SSN: ",ABM("SSN")  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  W !,?9,"VISIT DATE/TIME",?30,"VISIT LOCATION",?50,"SERVICE CATEGORY",!,ABM("EQ"),!
  Q
 QUE ;QUE TO TASKMAN

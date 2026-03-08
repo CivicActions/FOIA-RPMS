@@ -1,17 +1,15 @@
-AMQQATL ; IHS/CMI/THL - ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
- ;-----
+AMQQATL ; OHPRD/DG - ; [ 01/31/2008   5:08 PM ]
+ ;;2.0;PCC QUERY UTILITY;**8,14,18,20,21**;FEB 07, 2007
+ ;IHS/CMI/LAB - patch 14 for WH interface
  I $D(AMQQXX) Q
  S Q=AMQQQ
  I +Q=33,Q[";;;NULL" D STD Q
  I +Q=256 S ^UTILITY("AMQQ",$J,"LIST",200)="W !,?6,""Secondary chart numbers will be displayed if they exist""" Q
- I +Q=454 S ^UTILITY("AMQQ",$J,"LIST",200)="W !,?6,""Only CURRENT Private Insurers will be displayed if they EXIST""" Q
+ I +Q=454 S ^UTILITY("AMQQ",$J,"LIST",200)="W !,?6,""Only CURRENT Private Insurers will be displayed if they EXIST""" Q  ; IHS/OHPRD/TMJ 10/1/95
  I $P(Q,U,9)["NULL" S Z=": NONE EXIST" D NULL G EXIT
  I $P(Q,U,9)["EXIST"!($P(Q,U,9)[";ALL") S Z=" EXISTS" D NULL I '$P(Q,U,4) G EXIT
  I $P(Q,U,9)[";ANY" S Z=" ANY VALUE INCLUDING NULL" D NULL Q
- S %=$P(AMQQQ,U,9)
- S %=$P(%,";",4)
- I %[">:-888"!(%["'<:NEG")!(%["|||") S Z=" ALL VALUES" D NULL Q
+ S %=$P(AMQQQ,U,9),%=$P(%,";",4) I %[">:-888"!(%["'<:NEG")!(%["|||") S Z=" ALL VALUES" D NULL Q
  I $P(Q,U,4) D SQ G EXIT
  I $P(Q,U,17)'="" D TATT G EXIT
  D LATT
@@ -24,23 +22,20 @@ LATT I $P(Q,U,2)="ALIVE" D ALIVE,L1 Q
  I $P(Q,U,2)="FILE ENTRY" D FILE,L1 Q
  S %="W ?6"
  I $P(Q,U,7)="EQUAL TO" S $P(Q,U,7)="="
- S %=%_","""
- I $P(Q,U,2)'=$E($P(Q,U,7),1,$L($P(Q,U,2))) D
+ S %=%_",""" I $P(Q,U,2)'=$E($P(Q,U,7),1,$L($P(Q,U,2))) D  ; IHS/CMI/GIS 3/5/98
  . S %=%_$P(Q,U,2)
  . I $P(Q,U,3)="S",$P(Q,U,7)="IS" S %=%_": """ Q
  . S %=%_" "
- I $P(Q,U,3)'="S"!($P(Q,U,7)'="IS") S %=%_$P(Q,U,7)_" """
- S AMQQFTYP=$P(Q,U,3)
- S AMQQVCL=$P(Q,U,10)
+ . Q
+ I $P(Q,U,3)'="S"!($P(Q,U,7)'="IS") S %=%_$P(Q,U,7)_" """ ; IHS/CMI/GIS 3/5/98
+ S AMQQFTYP=$P(Q,U,3),AMQQVCL=$P(Q,U,10)
  I AMQQFTYP="Y" S %="W ?6,""PROVIDER ATTRIBUTES AS SPECIFIED""" G LSER
  I $P(Q,U,3)="B" D BLOOD G LSER
- S X=$P(Q,U,9)
- S Y=$P(X,";")
- D TRANS
+ S X=$P(Q,U,9),Y=$P(X,";") D TRANS
  I X[";",$P(X,";")'=$P(X,";",2) S %=%_","" and """,Y=$P(X,";",2) D TRANS
 LSER S $P(AMQQQ,U,12)=%
-L1 S AMQQILIN=AMQQILIN+1
- S ^UTILITY("AMQQ",$J,"LIST",AMQQILIN)=%
+ ;I $P(Q,U,11)'="" S %=%_",""     [SER = "_+$P(Q,U,11)_"]""" ;IHS/CIM/THL  PATCH 18
+L1 S AMQQILIN=AMQQILIN+1,^UTILITY("AMQQ",$J,"LIST",AMQQILIN)=%
  Q
  ;
 TRANS I AMQQFTYP="D" X ^DD("DD") G SETA
@@ -48,15 +43,14 @@ TRANS I AMQQFTYP="D" X ^DD("DD") G SETA
  I AMQQFTYP="F",$P(Q,U,8)="<>" S Y=$S(Y=" ":"FIRST ENTRY",Y="|||||":"LAST ENTRY",1:Y) G SETA
  I AMQQFTYP="L" D LOOK G SETA
  I AMQQFTYP="S" S Z=$P(^DD($P(AMQQVCL,","),$P(AMQQVCL,",",2),0),U,3),Z=";"_Z,Y=$F(Z,(";"_X_":")),Y=$E(Z,Y,99),Y=$P(Y,";")
- I +$G(Q)>764,+$G(Q)<768 S Y=Y-1
+ I +$G(Q)>764,+$G(Q)<768 S Y=Y-1 ;IHS/CIM/THL PATCH 20
 SETA S %=%_","""_Y_""""
- I +$G(Q)>764,+$G(Q)<768 S %=%_","""_" days"""
+ I +$G(Q)>764,+$G(Q)<768 S %=%_","""_" days""" ;IHS/CIM/THL PATCH 20
  Q
  ;
-LOOK S (Z,DIC)=$P(^AMQQ(1,+Q,0),U,3)
- S DIC(0)="",X="`"_$P(Q,U,9)
- D ^DIC
- K DIC
+LOOK ;N (DT,DTIME,DUZ,IO,IOF,IOM,IOSL,IOXY,U,XQDIC,XQPSM,XQY,XQY0,ZTQUEUED,Q,Y)
+ S (Z,DIC)=$P(^AMQQ(1,+Q,0),U,3),DIC(0)="",X="`"_$P(Q,U,9)
+ D ^DIC K DIC
  S Y=$P(Y,U,2)
  I Y'["," Q
  I Z'=2,Z'=6,Z'=16,Z'=9000001 Q
@@ -64,67 +58,59 @@ LOOK S (Z,DIC)=$P(^AMQQ(1,+Q,0),U,3)
  Q
  ;
 TATT S %="W ?6,"""_$P(Q,U,2)
- S X=$P(Q,U,9)
- S X=$P(X,";",4)
- S Z=" AS SPECIFIED"
- D ZSET^AMQQATL1
+ S X=$P(Q,U,9),X=$P(X,";",4)
+ S Z=" AS SPECIFIED" D ZSET^AMQQATL1 ; IHS/CMI/GIS 11/19/98
  S %=%_$S($D(AMQQONE):"",X="NULL":" IS 'NULL'",X="EXISTS":" EXISTS",1:Z)
  S %=%_""""
- D TT1
- D L1
+ D TT1,L1
  Q
  ;
 TT1 S $P(AMQQQ,U,12)=%
+ ;I $P(Q,U,11)[":"!($P(Q,U,17)'="") S %=%_",""   [SER = "_+$P(Q,U,11)_"]""" ;IHS/CIM/THL PATCH 18
  Q
  ;
 SQ D SQ^AMQQATSQ
  Q
  ;
 SQ1 ; - EP -
- N %,X
- F %=0:0 S %=$O(^UTILITY("AMQQ",$J,"SQL",AMQQLSQF,%)) Q:'%  S AMQQILIN=AMQQILIN+1,X=^(%),^UTILITY("AMQQ",$J,"LIST",AMQQILIN)=X I $D(^UTILITY("AMQQ",$J,"SQXL",AMQQLSQF,%)) S AMQQSQLN=$O(^(%,"")) D SQ2
+ N %,X F %=0:0 S %=$O(^UTILITY("AMQQ",$J,"SQL",AMQQLSQF,%)) Q:'%  S AMQQILIN=AMQQILIN+1,X=^(%),^UTILITY("AMQQ",$J,"LIST",AMQQILIN)=X I $D(^UTILITY("AMQQ",$J,"SQXL",AMQQLSQF,%)) S AMQQSQLN=$O(^(%,"")) D SQ2
  Q
  ;
-SQ2 N AMQQLSQF
- S AMQQLSQF=AMQQSQLN
+SQ2 N AMQQLSQF S AMQQLSQF=AMQQSQLN
  D SQ1
  Q
  ;
 NULL I $P(Q,U,4),'$D(AMQQGVF),"GL"[$P(Q,U,3) Q
  S AMQQATNM=$P(Q,U,2)
- S AMQQILIN=AMQQILIN+1,^UTILITY("AMQQ",$J,"LIST",AMQQILIN)="W ?6,"""_AMQQATNM_Z_""""
+ ;S AMQQILIN=AMQQILIN+1,^UTILITY("AMQQ",$J,"LIST",AMQQILIN)="W ?6,"""_AMQQATNM_Z_"   [SER = "_+$P(Q,U,11)_"]"""
+ S AMQQILIN=AMQQILIN+1,^UTILITY("AMQQ",$J,"LIST",AMQQILIN)="W ?6,"""_AMQQATNM_Z_"""" ;IHS/CIM/THL PATCH 18
  S $P(AMQQQ,U,12)="W ?6,"""_AMQQATNM_""""
  Q
  ;
-STD S AMQQILIN=AMQQILIN+1,^UTILITY("AMQQ",$J,"LIST",AMQQILIN)="W ?6,""ALIVE TODAY"""
+STD ;S AMQQILIN=AMQQILIN+1,^UTILITY("AMQQ",$J,"LIST",AMQQILIN)="W ?6,""ALIVE TODAY   [SER = "_+$P(Q,U,11)_"]"""
+ S AMQQILIN=AMQQILIN+1,^UTILITY("AMQQ",$J,"LIST",AMQQILIN)="W ?6,""ALIVE TODAY""" ;IHS/CIM/THL PATCH 18
  Q
  ;
-ALIVE S Y=$P(Q,U,9)
- X ^DD("DD")
- S %="W ?6,""ALIVE AS OF "_Y_""""
+ALIVE S Y=$P(Q,U,9) X ^DD("DD")
+ ;S %="W ?6,""ALIVE AS OF "_Y_"   [SER = "_$P(Q,U,11)_"]"""
+ S %="W ?6,""ALIVE AS OF "_Y_"""" ;IHS/CIM/THL PATCH 18
  Q
  ;
-COHORT S Y=+$P(Q,U,9)
- S Y=$P(^DIBT(Y,0),U)
- S %="W ?6,"""_$S(((+Q=151)!(+Q=85)):"NOT A MEMBER",((+Q=166)!(+Q=86)):"RANDOM SAMPLE",1:"MEMBER")_" OF '"_Y_"' COHORT"""
+COHORT S Y=+$P(Q,U,9),Y=$P(^DIBT(Y,0),U)
+ ;S %="W ?6,"""_$S(((+Q=151)!(+Q=85)):"NOT A MEMBER",((+Q=166)!(+Q=86)):"RANDOM SAMPLE",1:"MEMBER")_" OF '"_Y_"' COHORT   [SER = "_$P(Q,U,11)_"]"""
+ S %="W ?6,"""_$S(((+Q=151)!(+Q=85)):"NOT A MEMBER",((+Q=166)!(+Q=86)):"RANDOM SAMPLE",1:"MEMBER")_" OF '"_Y_"' COHORT""" ;IHS/CIM/THL PATCH 18
  Q
  ;
-FILE S %=$P(Q,U,9)
- S Y=$P(%,";")
- S Y=@(U_Y_"0)")
- S Y=$P(Y,U)
- I +Q=176,Y="BW PATIENT" S %="W ?6,""REGISTERED IN THE WOMEN'S HEALTH DATABASE""" Q
- S %="W ?6,"""_$S(+Q=176:"ENTERED",+Q=177:"NOT ENTERED",1:"RANDOM SAMPLE OF PATIENTS")_" IN THE '"_Y_"' FILE"""
+FILE S %=$P(Q,U,9),Y=$P(%,";"),Y=@(U_Y_"0)"),Y=$P(Y,U)
+ ;I +Q=176,Y="BW PATIENT" S %="W ?6,""REGISTERED IN THE WOMEN'S HEALTH DATABASE   [SER = "_$P(Q,U,11)_"]""" Q  ; IHS/CMI/GIS  3/1/98
+ I +Q=176,Y="BW PATIENT" S %="W ?6,""REGISTERED IN THE WOMEN'S HEALTH DATABASE""" Q  ; IHS/CMI/GIS  3/1/98 ;IHS/CIM/THL PATCH 18
+ ;S %="W ?6,"""_$S(+Q=176:"ENTERED",+Q=177:"NOT ENTERED",1:"RANDOM SAMPLE OF PATIENTS")_" IN THE '"_Y_"' FILE   [SER = "_$P(Q,U,11)_"]"""
+ S %="W ?6,"""_$S(+Q=176:"ENTERED",+Q=177:"NOT ENTERED",1:"RANDOM SAMPLE OF PATIENTS")_" IN THE '"_Y_"' FILE""" ;IHS/CIM/THL PATCH 18
  Q
  ;
 BLOOD N Y,X
- S Y=$P(Q,U,9)
- S X=$P(Y,";")
- D TRANS^AMQQAVB
- S X(1)=X
- S X=$P(Y,";",2)
- D:X'="" TRANS^AMQQAVB
- S X(2)=X
+ S Y=$P(Q,U,9) S X=$P(Y,";") D TRANS^AMQQAVB S X(1)=X
+ S X=$P(Y,";",2) D:X'="" TRANS^AMQQAVB S X(2)=X
  S $P(AMQQQ,U,9)=X(1)_";"_X(2)
  S %=%_","""_$P(Y,";")_"""" I $P(Y,";",2)'="" S %=%_","" and "_$P(Y,";",2) S %=%_""""
  Q

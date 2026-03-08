@@ -1,5 +1,6 @@
-DIDX ;SFISC/XAK-BRIEF DD ;06:18 PM  20 Mar 2001 [ 12/09/2003  4:31 PM ]
- ;;22.0;VA FileMan;**76,1002**;Mar 30, 1999
+DIDX ;SFISC/XAK-BRIEF DD ;11/3/93  15:29 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S D1=D0,DINM=1,DDRG=1,DDL1=14,DDL2=32 G B
  ;
@@ -12,7 +13,7 @@ A I DIDX D  G:D1>0 A:^DD(F(Z),"B",DJ(Z),D1)
 B I $D(DIGR),D1-.01!'DID X DIGR E  G END
  S N=^DD(F(Z),D1,0) D HD:$Y+9>IOSL Q:M=U  W !!?Z+Z-2,$P(N,U,1),?30,S,F(Z),",",D1,S,S
  S X=$P(N,U,2) I X W ?M,$J(+X,8) I $D(^DD(+X,.01,0)),$P(^(0),U,2)["W" W "  WORD-PROCESSING" S X=""
- W ?M,S,S F W="BOOLEAN","COMPUTED","FREE TEXT","SET","DATE","NUMBER","POINTER","VARIABLE POINTER","K","p" I X[$E(W) S:W="K" W="MUMPS" S:W="p" W="POINTER" D W1 I X["V" D VP0
+ W ?M,S,S F W="BOOLEAN","COMPUTED","FREE TEXT","SET","DATE","NUMBER","POINTER","VARIABLE POINTER","K" I X[$E(W) S:W="K" W="MUMPS" D W1 I X["V" D VP0
  G T:X'["P"!X S Y=$P(N,U,3) I Y]"",@("$D(^"_Y_"0))") S W="TO "_$P(^(0),U,1)_" FILE (#"_+$P(X,"P",2)_")" D W1 G T
  S W="***** TO A FILE THAT IS UNDEFINED *******" D W1
 T ;
@@ -46,7 +47,6 @@ VP3 ;
  W !?(Z+Z+12),"SCREEN"_$S('$D(DINM):" ON FILE "_$P(%,U)_":",1:" EXPLANATION ON FILE "_$P(%,U)_":") S W=" "_$S('$D(DINM):^(1),1:$S($D(^(2)):^(2),1:"")) D W^DID1:'$D(DINM),W^DIDH:$D(DINM)
  Q
 RT F W="Required","Add New Entry without Asking","Multiply asked","audited" I X[$E(W,1) S W=" ("_W_")" W:($L(W)+$X)'<IOM ! D W^DID1 G ND^DID1:M=U
- I $D(^DD("KEY","F",F(Z),DJ(Z))) S W=" (Key field)" W:($L(W)+$X)'<IOM ! D W^DID1 G ND^DID1:M=U
  W ! I $D(^DD(F(Z),DJ(Z),.1)),^(.1)]"" W !?(Z+Z+12),^(.1),"   ",?M
  Q
 AH W !,"ALPHABETICALLY BY LABEL" D YN^DICN Q:%<0  S:%=1 DIDX=1,BY="@.01"

@@ -1,7 +1,11 @@
 ABMDEOK1 ; IHS/SD/SDR - Charge Print Order Screen
- ;;2.6;IHS 3P BILLING SYSTEM;**23**;NOV 12, 2009;Build 427
+ ;;2.6;IHS 3P BILLING SYSTEM;**23,29,30**;NOV 12, 2009;Build 585
  ;
  ;IHS/SD/SDR 2.6*23 CR9730 New Routine. Added call for new charge print order screen where user can sequence how charges print on claim.
+ ;IHS/SD/SDR 2.6*29 CR10888 Units wrong or missing on charge print order screen
+ ;IHS/SD/SDR 2.6*30 CR8870 Updated display so it won't wrap if units are maxed out, including 3 decimal places; also fixed so 'G' would show for 8G;
+ ;    Also fixed display labels for 8E and 8F, they were backwards
+ ;IHS/SD/SDR 2.6*30 CR9872 Corrections to charge summary display-modifiers were missing; anesth charge was wrong
  ;
  ; *********************************************************************
  ;
@@ -67,27 +71,42 @@ GATHER ;EP
  S $P(ABMP("CHGS",ABMRC,ABMLCNT),U,3)=ABMRC  ;rev code
  ;service code
  S ABMCODE=$S(ABMI=25:$P(ABMREC,U,7),1:$P(ABMREC,U))  ;service code (CPT or med or whatever)
- I ABMI=23 S ABMSCODE=$$GET1^DIQ(50,ABMCODE,31,"E")
+ ;I ABMI=23 S ABMSCODE=$$GET1^DIQ(50,ABMCODE,31,"E")  ;abm*2.6*30 IHS/SD/SR CR9872
+ ;start new abm*2.6*30 IHS/SD/SDR CR9872
+ I ABMI=23 D  ;pharmacy
+ .S ABMSCODE=$$GET1^DIQ(50,ABMCODE,31,"E")  ;NDC
+ .I $G(ABMSCODE)="" S ABMSCODE=$P($$CPT^ABMCVAPI($P(ABMREC,U,29),ABMP("VDT")),U,2)  ;CPT
+ .I $G(ABMSCODE)["NO CODE" S ABMSCODE="*NO NDC*"  ;default
+ ;end new abm*2.6*30 IHS/SD/SDR CR9872
  I ABMI=33 S ABMSCODE=$$GET1^DIQ(9999999.31,ABMCODE,".01","E")
  I ABMI'=23&(ABMI'=33) S ABMSCODE=$$GET1^DIQ(81,ABMCODE,".01","E")
  I ABMI=25,+ABMSCODE=0 S ABMSCODE="*NO CPT*"
  I ABMI=45 S ABMSCODE=$P($G(^ABMCM(+ABMREC,0)),U)
+ S (ABMM1,ABMM2,ABMM3)=""  ;abm*2.6*30 IHS/SD/SDR CR9872
  I "^27^43^47"[("^"_ABMI_"^") S ABMM1=$P(ABMREC,U,5),ABMM2=$P(ABMREC,U,8),ABMM3=$P(ABMREC,U,9)
- S (ABMM1,ABMM2,ABMM3)=""
+ ;S (ABMM1,ABMM2,ABMM3)=""  ;abm*2.6*30 IHS/SD/SDR CR9872
  I ABMI=21 S ABMM1=$P(ABMREC,U,9),ABMM2=$P(ABMREC,U,11),ABMM3=$P(ABMREC,U,12)
  I ABMI=23 S ABMM1=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMI,ABMJ,2)),U,3),ABMM2=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMI,ABMJ,2)),U,4),ABMM3=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),ABMI,ABMJ,2)),U,5)
  I ABMI=35 S ABMM1=$P(ABMREC,U,5),ABMM2=$P(ABMREC,U,6),ABMM3=$P(ABMREC,U,7)
  I ABMI=37 S ABMM1=$P(ABMREC,U,6),ABMM2=$P(ABMREC,U,7),ABMM3=$P(ABMREC,U,8)
  I ABMI=39 S ABMM1=$P(ABMREC,U,6),ABMM2=$P(ABMREC,U,14),ABMM3=$P(ABMREC,U,19)
  I ABMI=21 S ABMM1=$P(ABMREC,U,9),ABMM2=$P(ABMREC,U,11),ABMM3=$P(ABMREC,U,12)
+ I ABMI=33 S ABMM1=$P(ABMREC,U,13),ABMM2=$P(ABMREC,U,14),ABMM3=$P(ABMREC,U,15)  ;abm*2.6*30 IHS/SD/SDR CR9872
  S ABMSCODE=ABMSCODE_$S(ABMM1'="":"-"_ABMM1,1:"")_$S(ABMM2'="":"-"_ABMM2,1:"")_$S(ABMM3'="":"-"_ABMM3,1:"")
  S $P(ABMP("CHGS",ABMRC,ABMLCNT),U,4)=ABMSCODE
- ;
  S ABMCHRG=($S(ABMI=21:$P(ABMREC,U,7),ABMI=25:$P(ABMREC,U,3),ABMI=33:$P(ABMREC,U,8),1:$P(ABMREC,U,4)))  ;charge amount
  S ABMUNTS=$S(ABMI=21:$P(ABMREC,U,13),ABMI=25:$P(ABMREC,U,2),ABMI=33:$P(ABMREC,U,9),1:$P(ABMREC,U,3))
  S $P(ABMP("CHGS",ABMRC,ABMLCNT),U,6)=ABMUNTS*ABMCHRG  ;total charges
+ I ABMI=39 S $P(ABMP("CHGS",ABMRC,ABMLCNT),U,6)=ABMCHRG  ;anesthesia total charges  ;abm*2.6*30 IHS/SD/SDR CR9872
  I ABMI=23 S $P(ABMP("CHGS",ABMRC,ABMLCNT),U,6)=$P(ABMP("CHGS",ABMRC,ABMLCNT),U,6)+$P(ABMREC,U,5)
- S $P(ABMP("CHGS",ABMRC,ABMLCNT),U,5)=$S(+$P(ABMP("CHGS",ABMRC,ABMLCNT),U,6)'=0:ABMUNTS,1:0)  ;units
+ ;S $P(ABMP("CHGS",ABMRC,ABMLCNT),U,5)=$S(+$P(ABMP("CHGS",ABMRC,ABMLCNT),U,6)'=0:ABMUNTS,1:0)  ;units  ;abm*2.6*29 IHS/SD/SDR CR10888
+ ;start new abm*2.6*29 IHS/SD/SDR CR10888
+ S $P(ABMP("CHGS",ABMRC,ABMLCNT),U,5)=ABMUNTS
+ I ABMI=39 D
+ .S ABMMTS=$$FMDIFF^XLFDT($P(ABMREC,U,8),$P(ABMREC,U,7),2)
+ .S ABMMTS=ABMMTS\60
+ .S $P(ABMP("CHGS",ABMRC,ABMLCNT),U,5)=ABMMTS_"*"
+ ;end new abm*2.6*29 IHS/SD/SDR CR10888
  ;dos
  I "^27^33^39^43^47^"[("^"_ABMI_"^") S ABMDOS=$P(ABMREC,U,7)
  I "^21^37^"[("^"_ABMI_"^") S ABMDOS=$P(ABMREC,U,5)
@@ -138,6 +157,7 @@ PROMPT ;EP
  D DATACHK2,DATACHK3
  I ABMCFLG=0 S ABMCMPLT=1
  Q
+ ;
 DATACHK ;EP
  S ABMC1=0
  S ABMCFLG=0
@@ -192,9 +212,16 @@ HDR ;EP
  W $$EN^ABMVDF("IOF")
  W !
  D CENTER^ABMUCUTL("* * * CHARGE PRINT ORDER SCREEN * * *")
- W !!,"Complete list of charges on claim for "_$$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")_":",!!
- W !?5,"Revenue",?31,"Serv",?70,"Total",!
- W ?5,"Code Description",?28,"PG",?31,"Code",?54,"DOS",?63,"Units",?70,"Charges",!
+ ;W !!,"Complete list of charges on claim for "_$$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")_":",!!  ;abm*2.6*29 IHS/SD/SDR CR10888
+ W !!,"Complete list of charges on claim for "_$$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")_":",!  ;abm*2.6*29 IHS/SD/SDR CR10888
+ I +$G(ABMANESF)'=0 W !,"* - Indicates time (minutes) instead of units",!  ;abm*2.6*29 IHS/SD/SDR CR10888
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;W !?5,"Revenue",?31,"Serv",?70,"Total",!
+ ;W ?5,"Code Description",?28,"PG",?31,"Code",?54,"DOS",?63,"Units",?70,"Charges",!
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ W !?5,"Revenue",?31,"Serv",?68,"Total",!
+ W ?5,"Code Description",?28,"PG",?31,"Code",?48,"DOS",?57,"Units",?68,"Charges",!
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  F I=1:1:80 W "-"
  W !
  Q
@@ -204,13 +231,24 @@ DISPLAY ;EP
  .S ABMREC=$G(ABMP("CHGS",ABMLCNT))
  .W !?1,$J(ABMLCNT,3)_". "_$P(ABMREC,U,3)_" "_$E($$GET1^DIQ(9999999.72,$P(ABMREC,U,3),"1","E"),1,10)  ;rev code and desc
  .S ABMI=$P(ABMREC,U)
- .S ABMPG="8"_$S(ABMI=21:"B",ABMI=23:"D",ABMI=25:"C",ABMI=27:"A",ABMI=35:"E",ABMI=37:"F",ABMI=43:"H",ABMI=45:"I",ABMI=47:"K",1:"")
+ .;S ABMPG="8"_$S(ABMI=21:"B",ABMI=23:"D",ABMI=25:"C",ABMI=27:"A",ABMI=35:"E",ABMI=37:"F",ABMI=43:"H",ABMI=45:"I",ABMI=47:"K",1:"")  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .S ABMPG="8"_$S(ABMI=21:"B",ABMI=23:"D",ABMI=25:"C",ABMI=27:"A",ABMI=35:"F",ABMI=37:"E",ABMI=39:"G",ABMI=43:"H",ABMI=45:"I",ABMI=47:"K",1:"")  ;abm*2.6*30 IHS/SD/SDR CR8870
  .I ABMI=33 S ABMPG="6"
  .W ?28,ABMPG  ;claim editor page
- .W ?31,$P(ABMREC,U,4)  ;service code
- .W ?54,$$SDTO^ABMDUTL($P(ABMREC,U,7))  ;DOS
- .W ?63,$P(ABMREC,U,5)  ;units
- .W ?69,"$"_$J($FN(($P(ABMREC,U,5)*$P(ABMREC,U,6)),",",2),10)  ;total charges
+ .;start old abm*2.6*30 IHS/SD/SDR CR8870
+ .;W ?31,$P(ABMREC,U,4)  ;service code
+ .;W ?54,$$SDTO^ABMDUTL($P(ABMREC,U,7))  ;DOS
+ .;W ?63,$P(ABMREC,U,5)  ;units
+ .;;W ?69,"$"_$J($FN(($P(ABMREC,U,5)*$P(ABMREC,U,6)),",",2),10)  ;total charges  ;abm*2.6*29 IHS/SD/SDR CR10888
+ .;W ?69,"$"_$J($FN(($P(ABMREC,U,6)),",",2),10)  ;total charges  ;abm*2.6*29 IHS/SD/SDR CR10888
+ .;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ .W ?31,$E($P(ABMREC,U,4),1,14)  ;service code
+ .W ?47,$$SDTO^ABMDUTL($P(ABMREC,U,7))  ;DOS
+ .;W ?56,$$FMT^ABMERUTL($P(ABMREC,U,5),"9R")  ;units  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .I ABMPG["G" W ?56,$$FMT^ABMERUTL($P(ABMREC,U,5),"9R")  ;units  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .E  W ?55,$$FMT^ABMERUTL($P(ABMREC,U,5),"9R")  ;units  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .W ?66,"$"_$J($FN(($P(ABMREC,U,6)),",",2),13)  ;total charges  ;abm*2.6*29 IHS/SD/SDR CR10888
+ .;end new abm*2.6*30 IHS/SD/SDR CR8870
  I +$G(ABMDFLG)=1 W !!,"Nothing was selected so it will default to display on screen"
  I +$G(ABMPOFLG) W !!,"THIS DISPLAY REFLECTS A PRINT ORDER THAT'S ALREADY BEEN DONE, but can be", !," changed if necessary"
  I +$G(ABMCFLG)&($G(ABMANS)'="") W !!?3,"THERE IS AN ISSUE with the print order selected.  You entered:",!?3,ABMANS,!!?3,"Please try again."

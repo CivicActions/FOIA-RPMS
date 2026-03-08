@@ -1,0 +1,6 @@
+PSSP32 ;BIR/TTH-INACTIVE DATE FIELD IDENTIFIER ; 4-FEB-2000 14:17
+ ;;1.0;PHARMACY DATA MANAGEMENT;**32**;9/30/97
+ ;
+ID ;In the ORDERABLE ITEM file (#50.7), set the INACTIVE DATE field (#.04) as an identifier. 
+ S ^DD(50.7,0,"ID",.04)="W ""   "",$$FMTE^DILIBF($P(^(0),U,4),6)"
+ Q

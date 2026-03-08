@@ -1,5 +1,5 @@
-DGXTS1 ; ;10/15/12
- D DE G BEGIN
+DGXTS1 ; ;02/09/12
+ D DE G BEGIN;;;;;;Build 21
 DE S DIE="^DG(40.8,D0,""TS"",",DIC=DIE,DP=40.806,DL=2,DIEL=1,DU="" K DG,DE,DB Q:$O(^DG(40.8,D0,"TS",DA,""))=""
  I $D(^(0)) S %Z=^(0) S %=$P(%Z,U,3) S:%]"" DE(2)=% S %=$P(%Z,U,4) S:%]"" DE(3)=%
  K %Z Q

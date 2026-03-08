@@ -1,6 +1,8 @@
 BAR50PCS ; IHS/SD/SDR - ERA Check Summary Report ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**20,21**;OCT 26,2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**20,21,30**;OCT 26,2005;Build 55
  ; new routine
+ ; 
+ ;IHS/SD/CPC - Expanded check number field BAR*1.8*30 CR10550
  ; *******************************************************************
 EN ;
  D SELFL^BAR50P00  ;prompt for Import name/Check/EFT trace
@@ -109,7 +111,8 @@ DETAIL ;
  .S BARTCD=$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCK,0)),U,4)  ;trans handling code
  .S BARDT=$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCK,0)),U,5)  ;check issue date
  .S BARPYR=$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCK,0)),U,6)  ;payer
- .W !,$E(BARST,($L(BARST)-3),$L(BARST)),?6,$E(BARPYR,1,18),?26,BARTCD,?28,$J($FN(BARAMT,",",2),12),?41,BARCHK,?71,$$SHDT^BARDUTL(BARDT)
+ .I $L(BARCHK)<28 W !,$E(BARST,($L(BARST)-3),$L(BARST)),?6,$E(BARPYR,1,18),?26,BARTCD,?28,$J($FN(BARAMT,",",2),12),?41,BARCHK,?71,$$SHDT^BARDUTL(BARDT)   ;IHS/SD/CPC BAR*1.8*30 - CR10550
+ .I $L(BARCHK)>27 W !,$E(BARST,($L(BARST)-3),$L(BARST)),?6,$E(BARPYR,1,18),?26,BARTCD,?28,$J($FN(BARAMT,",",2),12),?41,$$PRTFMT^BARCHKU1(BARCHK,26),?71,$$SHDT^BARDUTL(BARDT),!,?2,"Full Check #: ",BARCHK,!        ;IHS/SD/CPC BAR*1.8*30 - CR10550
  .S BARTCHKS=+$G(BARTCHKS)+1  ;count # of ERA checks
  .S BARTAMT=+$G(BARTAMT)+BARAMT  ;count total ERA amount
  Q

@@ -1,5 +1,5 @@
-BTIULO2 ; IHS/ITSC/LJF - MORE TIU OBJECTS ;06-Aug-2018 16:28;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1001,1002,1006,1020**;NOV 04, 2004;Build 7
+BTIULO2 ; IHS/ITSC/LJF - MORE TIU OBJECTS ;19-Jan-2021 09:39;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1001,1002,1006,1023**;NOV 04, 2004;Build 12
  ;IHS/IHTSC/LJF 4/28/2005 PATCH 1002 added EP; to MCR and MCD entry points
  ;1006 check for invalid visit
  ;1020 added new lookup for medicare and railroad numbers
@@ -35,7 +35,7 @@ FOODADR(DFN) ;EP; returns food allergies and ADRs
 LASTIMM(DFN,TIUIMM,TIUNM) ;EP -- returns last immunization date
  ; TIUIMM=HL7 codes separated by ^ then generic name at end after ;
  ;        example TIUIMM="2^10^89;Polio Vax"
- ; TIUNM=1 to return imm name; =0 to just return date
+ ; TIUNM=1 to return imm name; =0 to just return date,2=Return short name+date
  ; TIUDE will be set to iens in BI Table Data Elements file
  ; TIUDATA "|" pieces within each "^" will be
  ;     IEN  PIECE
@@ -44,7 +44,7 @@ LASTIMM(DFN,TIUIMM,TIUNM) ;EP -- returns last immunization date
  ;---> 25     3 = HL7 code for immunization
  ;---> 56     4 = Date of Visit Fileman format (YYYMMDD).
  ;
- NEW I,TIUDE,TIUANS,X,TIUCODE,TIUDATA
+ NEW I,TIUDE,TIUANS,X,TIUCODE,TIUDATA,TIUIEN,TIUSNME
  Q:'$G(DFN)  Q:'$G(TIUIMM)
  ; -- set all codes sent into array
  F I=1:1 S X=$P(TIUIMM,U,I) Q:'X  S TIUCODE(+X)=""
@@ -58,9 +58,13 @@ LASTIMM(DFN,TIUIMM,TIUNM) ;EP -- returns last immunization date
  . Q:'$D(TIUCODE($P(X,"|",3)))                ;not in imm set sent
  . I '$D(TIUANS) S TIUANS=X Q                 ;set first imm found
  . I $P(TIUANS,"|",4)<$P(X,"|",4) S TIUANS=X  ;keep latest date
+ I TIUNM=2&($D(TIUANS)) D
+ .S TIUSNME=""
+ .S TIUIEN=$O(^AUTTIMM("C",$P(TIUANS,"|",3),""))
+ .I +TIUIEN S TIUSNME=$P($G(^AUTTIMM(TIUIEN,0)),U,2)
  ; -- return results
  I '$D(TIUANS) Q $S(TIUNM:"Last "_$P(TIUIMM,";",2)_": ",1:"")_"None Recorded"
- Q $S(TIUNM:"Last "_$P(TIUANS,"|",2)_": ",1:"")_$$FMTE^XLFDT($P(TIUANS,"|",4))
+ Q $S(TIUNM=1:"Last "_$P(TIUANS,"|",2)_": ",TIUNM=2:"Last "_TIUSNME_": ",1:"")_$$FMTE^XLFDT($P(TIUANS,"|",4))
  ;
  ;
 IMMDUE(DFN,TARGET) ;EP; -- returns immunizations due (via Immunization app)

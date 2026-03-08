@@ -1,36 +1,32 @@
-ABMDVST1 ; IHS/ASDST/DMJ - PCC VISIT STUFF - PART 2 (PURPOSE OF VISIT) ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**10,14,16,18,21**;NOV 12, 2009;Build 379
+ABMDVST1 ; IHS/SD/SDR - PCC VISIT STUFF - PART 2 (PURPOSE OF VISIT) ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,14,16,18,21,30,34,37**;NOV 12, 2009;Build 739
  ;Original;TMD;03/26/96 12:11 PM
  ;
- ;IHS/ASDS/DMJ - 10/31/00 - V2.4 Patch 3 - NOIS NDA-0500-180002
- ;     Modify code to pick up e-codes from PCC if exist
+ ;IHS/ASDS/DMJ 10/31/00 2.4*3 NOIS NDA-0500-180002 Modify code to pick up e-codes from PCC if exist
  ;
- ;IHS/SD/SDR - 11/4/02 - V2.5 P2 - NDA-0500-180002
- ;    Modified to pick up all e-codes from PCC
- ;IHS/SD/SDR - v2.5 p9 - IM18472
- ;   Modified to make sure there aren't two of the same priority ICD
- ;IHS/SD/SDR - v2.5 p10 - IM21619
- ;  Added code to populate claim number from Workman's Comp file
- ;IHS/SD/SDR - v2.5 p13 - IM25840
- ;  <UNDEF>DX+39^ABMDEMLC caused when there is a primary code with
- ;  an E-code and a secondary (E-code s/b secondary)
- ;IHS/SD/SDR - v2.5 p13 - POA changes
+ ;IHS/SD/SDR 11/4/02 2.5*2 NDA-0500-180002 Modified to pick up all e-codes from PCC
+ ;IHS/SD/SDR 2.5*9 IM18472 Modified to make sure there aren't two of the same priority ICD
+ ;IHS/SD/SDR 2.5*10 IM21619 Added code to populate claim number from Workman's Comp file
+ ;IHS/SD/SDR 2.5*13 IM25840 <UNDEF>DX+39^ABMDEMLC caused when there is a primary code with an E-code and a secondary (E-code s/b secondary)
+ ;IHS/SD/SDR 2.5*13 POA changes
  ;
- ;IHS/SD/SDR - v2.6
- ;IHS/SD/SDR - 2.6*14 - Populated .06 field of 17 multiple if ICD10 code.  002F
- ;IHS/SD/SDR - 2.6*14 - ICD10 SNOMED - populate SNOMED and dual coding fields from V POV file.
- ;IHS/SD/SDR - 2.6*14 - ICD10 ICD Indicator - Added code to check for 3P Claim .021 field to see if it has been set for claim;
+ ;IHS/SD/SDR v2.6
+ ;IHS/SD/SDR 2.6*14 Populated .06 field of 17 multiple if ICD10 code.  002F
+ ;IHS/SD/SDR 2.6*14 ICD10 SNOMED - populate SNOMED and dual coding fields from V POV file.
+ ;IHS/SD/SDR 2.6*14 ICD10 ICD Indicator - Added code to check for 3P Claim .021 field to see if it has been set for claim;
  ;  acts as override for ICD-10 Effective Date
- ;IHS/SD/SDR - 2.6*14 - Updated DX^ABMCVAPI to be numeric
- ;IHS/SD/SDR - 2.6*14 - Made change for E-codes if there are any for ICD-10 and to keep ICD9 and ICD10 separate.
- ;IHS/SD/SDR - 2.6*14 - CR3445 - Made change for sequencing; with ICD10 changes, if there were E-codes present the sequencing was getting
- ;  messed up.
- ;IHS/SD/SDR - 2.6*16 - HEAT200359 - Made changes so CASE NUMBER will populated with the claim number from Reg if it is
- ;  a workman's comp claim.  Wasn't doing lookup correctly (data needed wasn't defined).
- ;IHS/SD/SDR - 2.6*16 - HEAT217211 - Added code to populated External Cause 2, External Cause 3, Place of Occurrence, and Place of Occurrence (E849)
- ;IHS/SD/SDR - 2.6*18 - HEAT239392 - Correction for E-code not crossing over from PCC Visit.
- ;IHS/SD/SDR - 2.6*21 - HEAT234796 - Made change so only visits with a Service Category of 'H' for Hospitalization will have the Present on Admission (POA)
+ ;IHS/SD/SDR 2.6*14 Updated DX^ABMCVAPI to be numeric
+ ;IHS/SD/SDR 2.6*14 Made change for E-codes if there are any for ICD-10 and to keep ICD9 and ICD10 separate.
+ ;IHS/SD/SDR 2.6*14 CR3445 Made change for sequencing; with ICD10 changes, if there were E-codes present the sequencing was getting messed up.
+ ;IHS/SD/SDR 2.6*16 HEAT200359 Made changes so CASE NUMBER will populated with the claim number from Reg if it is a workman's comp claim.
+ ;   Wasn't doing lookup correctly (data needed wasn't defined).
+ ;IHS/SD/SDR 2.6*16 HEAT217211 Added code to populated External Cause 2, External Cause 3, Place of Occurrence, and Place of Occurrence (E849)
+ ;IHS/SD/SDR 2.6*18 HEAT239392 Correction for E-code not crossing over from PCC Visit.
+ ;IHS/SD/SDR 2.6*21 HEAT234796 Made change so only visits with a Service Category of 'H' for Hospitalization will have the Present on Admission (POA)
  ;   indicator cross over onto the claim in TPB.
+ ;IHS/SD/SDR 2.6*30 CR8868 If DXs have PRIMARY/SECONDARY field populated use that for sequence; otherwise use the order entered
+ ;IHS/SD/SDR 2.6*34 ADO60694 CR7384 Added DRG logic; placing it here will make it also work for the RBCL option as well as the CG
+ ;IHS/SD/SDR 2.6*37 ADO75953 Updated to capture External Cause 2 and External Cause 3
  ;
  ;
  Q:ABMIDONE
@@ -42,6 +38,17 @@ ABMDVST1 ; IHS/ASDST/DMJ - PCC VISIT STUFF - PART 2 (PURPOSE OF VISIT) ;
  I +$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,21)=9 S ABMP("ICD10")=(ABMP("VDT")+1)  ;abm*2.6*14 ICD10 ICD Indicator
  I +$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,21)=10 S ABMP("ICD10")=(ABMP("VDT")-1)  ;abm*2.6*14 ICD10 ICD Indicator
  I (+$G(ABMP("INS"))'=0)&(+$G(ABMP("ICD10"))=0) S ABMP("ICD10")=$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),0)),U,12)  ;abm*2.6*14 ICD10 002F
+ ;
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60694
+ D:'$D(ABMP("BTYP")) BTYP^ABMDEVAR
+ I (ABMP("VTYP")=111!($G(ABMP("BTYP"))=111)!($G(ABMP("BTYP"))=121)!(ABMP("VTYP")=831)!($G(ABMP("BTYP"))=181)!(ABMP("VTYP")=999&(ABMP("BTYP")=731)&($P($G(^AUTNINS(+ABMP("INS"),0)),U)["MONTANA MEDICAID"))) D
+ .N DA,DIE,X,Y
+ .S DIE="^ABMDCLM(DUZ(2),"
+ .S DA=ABMP("CDFN")
+ .S DR=".513////"_$P(ABMP("V0"),U,34)
+ .D ^DIE
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60694
+ ;
  N BP,ABMPRI
  S ABM=0
  F  S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),17,ABM)) Q:'ABM  D
@@ -62,7 +69,18 @@ ABMDVST1 ; IHS/ASDST/DMJ - PCC VISIT STUFF - PART 2 (PURPOSE OF VISIT) ;
  .F  S ABM=$O(^AUPNVPOV("AD",BP,ABM)) Q:'ABM  K DR,DIC("DR") D POVCHK
  .K DIC
  S ABM=0
-POV F  S ABM=$O(^AUPNVPOV("AD",ABMVDFN,ABM)) Q:'ABM  K DR,DIC("DR") D POVCHK
+POV ;
+ ;F  S ABM=$O(^AUPNVPOV("AD",ABMVDFN,ABM)) Q:'ABM  K DR,DIC("DR") D POVCHK   ;abm*2.6*30 IHS/SD/SDR CR8868
+ ;start new abm*2.6*30 IHS/SD/SDR CR8868
+ F  S ABM=$O(^AUPNVPOV("AD",ABMVDFN,ABM)) Q:'ABM  K DR,DIC("DR") D
+ .S ABMSORT=$S($P($G(^AUPNVPOV(ABM,0)),U,12)'="":$P(^AUPNVPOV(ABM,0),U,12),1:"S")  ;use what's there; default to secondary if blank
+ .S ABMP("PVSORT",ABMSORT,ABM)=""
+ S ABMSORT=""
+ F  S ABMSORT=$O(ABMP("PVSORT",ABMSORT)) Q:($G(ABMSORT)="")  D
+ .S ABM=0
+ .F  S ABM=$O(ABMP("PVSORT",ABMSORT,ABM)) Q:'ABM  K DR,DIC("DR") D POVCHK
+ ;end new abm*2.6*30 IHS/SD/SDR CR8868
+ ;
  I $D(ABMPRI),'$O(ABMPRI($O(ABMPRI("")))) S ABMP("CORRSDIAG")=$O(ABMPRI(""))
  K DIC
  Q
@@ -86,8 +104,15 @@ POVCHK ;POV is dinumed.  Each POV is only entered once.
  S ABM("ECODE")=0
  ;I ABMP("VDT")<ABMP("ICD10") S ABM("ECODE")=+$P(ABMPOV0,U,25)
  ;I (ABMP("VDT")>ABMP("ICD10"))!(ABMP("VDT")=ABMP("ICD10")) S ABM("ECODE")=+$P(ABMPOV0,U,9)
- I ((ABMP("VDT")'<ABMP("ICD10"))&($P($$DX^ABMCVAPI(+$P(ABMPOV0,U,9),ABMP("VDT")),U,20)=30)) S ABM("ECODE")=+$P(ABMPOV0,U,9)
- I ((ABMP("VDT")<ABMP("ICD10"))&($P($$DX^ABMCVAPI(+$P(ABMPOV0,U,9),ABMP("VDT")),U,20)'=30)) S ABM("ECODE")=+$P(ABMPOV0,U,9)
+ ;start old abm*2.6*37 IHS/SD/SDR ADO75953
+ ;I ((ABMP("VDT")'<ABMP("ICD10"))&($P($$DX^ABMCVAPI(+$P(ABMPOV0,U,9),ABMP("VDT")),U,20)=30)) S ABM("ECODE")=+$P(ABMPOV0,U,9)
+ ;I ((ABMP("VDT")<ABMP("ICD10"))&($P($$DX^ABMCVAPI(+$P(ABMPOV0,U,9),ABMP("VDT")),U,20)'=30)) S ABM("ECODE")=+$P(ABMPOV0,U,9)
+ ;end old start new abm*2.6*37 IHS/SD/SDR ADO75953
+ I ((ABMP("VDT")'<ABMP("ICD10"))&($P($$DX^ABMCVAPI(+$P(ABMPOV0,U,9),ABMP("VDT")),U,20)=30)) D
+ .S ABM("ECODE")=+$P(ABMPOV0,U,9)  ;external cause
+ .S ABM("ECODE2")=+$P(ABMPOV0,U,18)  ;external cause2
+ .S ABM("ECODE3")=+$P(ABMPOV0,U,19)  ;external cause3
+ ;end new abm*2.6*37 IHS/SD/SDR ADO75953
  I ((ABMP("VDT")<ABMP("ICD10"))&(+$P(ABMPOV0,U,25)'=0)) S ABM("ECODE")=+$P(ABMPOV0,U,25)
  ;end new abm*2.6*18 IHS/SD/SDR HEAT239392
  ;Through the use of the ABMPRI array it would be possible to change
@@ -202,20 +227,39 @@ POVCHK ;POV is dinumed.  Each POV is only entered once.
  ;..K ABMPRI(ABMOPRI,DA)
  ;..S ABMR("P")=ABMR("P")-1
  ;end old CR3445
- S ABMR("P")=ABMR("P")+1  ;abm*2.6*14 CR3445
- S (DINUM,X)=ABMECD
- S DA(1)=ABMP("CDFN")
- S DIC="^ABMDCLM(DUZ(2),"_DA(1)_",17,"
- S DIC(0)="LE" K DD,DO
- S DIC("P")=$P(^DD(9002274.3,17,0),U,2)
- ;S DIC("DR")=".02////"_ABMR("P")_";.03////"_ABMR("NAR")  ;abm*2.6*14 ICD10 002F
- I ABMP("ICD10")<ABMP("VDT")!(ABMP("ICD10")=ABMP("VDT"))&(ABMTYP="ICD10") S DIC("DR")=".02////"_ABMR("P")  ;abm*2.6*14 ICD10 002F
- I (ABMP("ICD10")>ABMP("VDT")&(ABMTYP="ICD9")) S DIC("DR")=".02////"_ABMR("P")  ;abm*2.6*14 ICD10 002F
- S DIC("DR")=$S($G(DIC("DR"))'="":DIC("DR")_";",1:"")_".03////"_ABMR("NAR")  ;abm*2.6*14 ICD10 002F
- S DIC("DR")=DIC("DR")_";.05////"_$P($G(ABMPOV0),U,22)
- I ABMTYP="ICD10" S DIC("DR")=DIC("DR")_";.06////1"  ;abm*2.6*14 E-codes ICD Indicator
- S ABMPRI(ABMR("P"),ABMECD)=""
- K DD,DO D FILE^DICN
- ;I ABMR("PX")>0 S ABMR("P")=ABMR("P")+1  ;abm*2.6*14 CR3445
+ ;start old abm*2.6*37 IHS/SD/SDR ADO75953
+ ;S ABMR("P")=ABMR("P")+1  ;abm*2.6*14 CR3445
+ ;S (DINUM,X)=ABMECD
+ ;S DA(1)=ABMP("CDFN")
+ ;S DIC="^ABMDCLM(DUZ(2),"_DA(1)_",17,"
+ ;S DIC(0)="LE" K DD,DO
+ ;S DIC("P")=$P(^DD(9002274.3,17,0),U,2)
+ ;;S DIC("DR")=".02////"_ABMR("P")_";.03////"_ABMR("NAR")  ;abm*2.6*14 ICD10 002F
+ ;I ABMP("ICD10")<ABMP("VDT")!(ABMP("ICD10")=ABMP("VDT"))&(ABMTYP="ICD10") S DIC("DR")=".02////"_ABMR("P")  ;abm*2.6*14 ICD10 002F
+ ;I (ABMP("ICD10")>ABMP("VDT")&(ABMTYP="ICD9")) S DIC("DR")=".02////"_ABMR("P")  ;abm*2.6*14 ICD10 002F
+ ;S DIC("DR")=$S($G(DIC("DR"))'="":DIC("DR")_";",1:"")_".03////"_ABMR("NAR")  ;abm*2.6*14 ICD10 002F
+ ;S DIC("DR")=DIC("DR")_";.05////"_$P($G(ABMPOV0),U,22)
+ ;I ABMTYP="ICD10" S DIC("DR")=DIC("DR")_";.06////1"  ;abm*2.6*14 E-codes ICD Indicator
+ ;S ABMPRI(ABMR("P"),ABMECD)=""
+ ;K DD,DO D FILE^DICN
+ ;;I ABMR("PX")>0 S ABMR("P")=ABMR("P")+1  ;abm*2.6*14 CR3445
+ ;end old start new abm*2.6*37 IHS/SD/SDR ADO75953
+ F ABMRC=1:1:3 D
+ .I ABMRC=2,(ABM("ECODE2")=0) Q
+ .I ABMRC=3,(ABM("ECODE3")=0) Q
+ .S ABMR("P")=ABMR("P")+1
+ .S (DINUM,X)=$S(ABMRC=2:ABM("ECODE2"),ABMRC=3:ABM("ECODE3"),1:ABMECD)
+ .S DA(1)=ABMP("CDFN")
+ .S DIC="^ABMDCLM(DUZ(2),"_DA(1)_",17,"
+ .S DIC(0)="LE" K DD,DO
+ .S DIC("P")=$P(^DD(9002274.3,17,0),U,2)
+ .I ABMP("ICD10")<ABMP("VDT")!(ABMP("ICD10")=ABMP("VDT"))&(ABMTYP="ICD10") S DIC("DR")=".02////"_ABMR("P")
+ .I (ABMP("ICD10")>ABMP("VDT")&(ABMTYP="ICD9")) S DIC("DR")=".02////"_ABMR("P")
+ .S DIC("DR")=$S($G(DIC("DR"))'="":DIC("DR")_";",1:"")_".03////"_ABMR("NAR")
+ .S DIC("DR")=DIC("DR")_";.05////"_$P($G(ABMPOV0),U,22)
+ .I ABMTYP="ICD10" S DIC("DR")=DIC("DR")_";.06////1"  ;E-codes ICD Indicator
+ .S ABMPRI(ABMR("P"),ABMECD)=""
+ .K DD,DO D FILE^DICN
+ ;end new abm*2.6^*37 IHS/SD/SDR ADO75953
  K DIC,X,Y
  Q

@@ -1,8 +1,10 @@
 ABMDF35E ; IHS/SD/SDR - Set HCFA1500 (02/12) Print Array - Part 5 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**13,21,22**;NOV 12, 2009;Build 418
- ;IHS/SD/SDR - 2.6*21 - HEAT223194 - Fixed EPSDT field so it will print either the second character from the referral
+ ;;2.6;IHS 3P BILLING SYSTEM;**13,21,22,28,32**;NOV 12, 2009;Build 621
+ ;IHS/SD/SDR 2.6*21 HEAT223194 Fixed EPSDT field so it will print either the second character from the referral
  ;  or an 'U' for no referral.
  ;IHS/SD/SDR 2.6*22 HEAT335246 Added code to print the appropriate CPT based on if the NDC prompt is answered or not.
+ ;IHS/SD/SDR 2.6*28 CR10648 made CPT Narrative print if populated
+ ;IHS/SD/SDR 2.6*32 CR10210 remove ALL INCLUSIVE PRINT NDC prompt
  ;
  ; *********************************************************************
  ;
@@ -64,9 +66,9 @@ PROC ;EP for setting the procedure portion of the ABMF array
  ..S $P(ABMR(ABMS,ABMLN),U,3)=23
  ;
  ; Set CPT/HCPCS                        ; Form locator 24D
- I $P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y" S $P(ABMR(ABMS,ABMLN),U,5)=$P(ABMS(ABMS),U,4)  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;I $P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y" S $P(ABMR(ABMS,ABMLN),U,5)=$P(ABMS(ABMS),U,4)  ;abm*2.6*22 IHS/SD/SDR HEAT335246  ;abm*2.6*32 IHS/SD/SDR CR10210
  I $P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,16)]"" D
- .I $P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y" Q  ;don't write default CPT if they want NDC to print  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ .;I $P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y" Q  ;don't write default CPT if they want NDC to print  ;abm*2.6*22 IHS/SD/SDR HEAT335246  ;abm*2.6*32 IHS/SD/SDR CR10210
  .S $P(ABMR(ABMS,ABMLN),U,5)=$P($$CPT^ABMCVAPI($P(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0),U,16),ABMP("VDT")),U,2)  ;CSV-c
  E  I $P($G(ABMS(ABMS)),U,4)]"" D  I 1
  .S $P(ABMR(ABMS,ABMLN),U,5)=" "_$P(ABMS(ABMS),U,4)
@@ -78,6 +80,7 @@ PROC ;EP for setting the procedure portion of the ABMF array
  E  D
  .I $P($G(^AUTNINS(ABMP("INS"),0)),U)["PHC MEDICAID" S $P(ABMS(ABMS),U,8)=$TR($P(ABMS(ABMS),U,8),"-")
  S:$P(ABMR(ABMS,ABMLN),U,5)["NO CODE SELECTED" $P(ABMR(ABMS,ABMLN),U,5)=""
+ ;
  I $L($P(ABMS(ABMS),U,8))>16,($E($P(ABMS(ABMS),U,8),1,2)="N4") D
  .S ABMU("LNG")=60
  .S ABMU("TXT")=$P(ABMS(ABMS),U,8)
@@ -114,5 +117,13 @@ PROC ;EP for setting the procedure portion of the ABMF array
  .S $P(ABMR(ABMS,ABMLN-1),U,3)=$P(ABMS(ABMS),U,9)
  I $G(ABMP("ITYPE"))="R"&($G(ABMP("BTYP"))="831") S $P(ABMR(ABMS,ABMLN-1),U,3)=""
  S:$P(ABMS(ABMS),U,11) $P(ABMR(ABMS,ABMLN),U,11)=$P(ABMS(ABMS),U,11)  ;Form Locator 24K (2)
+ ;
+ ;start new abm*2.6*28 IHS/SD/SDR CR10648
+ I $P(ABMS(ABMS),U,12)'="" D
+ .I $P($G(ABMR(ABMS,ABMLN-1)),U,1)["N4" S $P(ABMR(ABMS,ABMLN-1),U,1)=$$FMT^ABMERUTL($P($G(ABMR(ABMS,ABMLN-1))," ",1),"24L")_$P(ABMS(ABMS),U,12) Q
+ .S $P(ABMR(ABMS,ABMLN-1),U,1)=$$FMT^ABMERUTL($P($G(ABMR(ABMS,ABMLN-1)),U,1),"24L")_$P(ABMS(ABMS),U,12)
+ ;end new abm*2.6*28 IHS/SD/SDR CR10648
+ ;
  K ABMS(ABMS),ABMPTR,ABMCORDX
+ ;
  Q

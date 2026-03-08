@@ -1,5 +1,5 @@
 BDPLINKI ; IHS/CMI/TMJ - LINK ROUTINE ON PARM PASS FROM THE DESG PROV PKG ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**27**;MAY 14, 2009;Build 64
  ;
  ;
  ;
@@ -156,6 +156,7 @@ CDKILL ;Chemical Dependency Kill
  Q
  ;
 WHKILL ;Womens Health Kill
+ Q  ;IHS/CMI/LAB PATCH 27 WH DOESN'T ALLOW DELETION.
  S BDPWHIEN=$O(^BWP("B",BDPPAT,"")) ;WHIEN RECORD
  Q:BDPWHIEN=""  ;Quit if no Record found for this patient
  S BDPPRVCK=$P($G(^BWP(BDPWHIEN,0)),U,10) ;Existing MH Prov

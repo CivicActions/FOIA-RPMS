@@ -1,10 +1,10 @@
-BRAPCC ; IHS/ITSC/PDW,CLS - RADIOLOGY PCC LINK ; 17 Aug 2011  2:05 PM
- ;;5.0;Radiology/Nuclear Medicine;**1001,1003**;Nov 01, 2010;Build 3
+BRAPCC ; IHS/ITSC/PDW,CLS - RADIOLOGY PCC LINK ; 06 Dec 2016  8:19 AM
+ ;;5.0;Radiology/Nuclear Medicine;**1001,1003,1007,1009**;Mar 16, 1998;Build 21
  ; RA*4*2 IHS/ADC/GTH 01/21/98 If the conversion has not been done, walk back to file 6.
  ;
  ;
 CREATE ;EP---> CREATE OR MODIFY A VISIT FILE ENTRY, CREATE A NEW V RAD ENTRY.
- ;S DUZ(0)="@" MWR >>No longer needed IHS/ISD/EDE 1/6/97
+ NEW APCDALVR,AUPNTALK,APCDANE   ;IHS/CMI/LAB - ADDED SO AS NOT TO LEAVE APCDALVR AROUND
  K APCDALVR N I,N,X
  ;---> QUIT IF PCC IS NOT PRESENT AT THIS SITE (RPMS SITE FILE).
  Q:$P(^AUTTSITE(1,0),U,8)'="Y"
@@ -28,9 +28,6 @@ CREATE ;EP---> CREATE OR MODIFY A VISIT FILE ENTRY, CREATE A NEW V RAD ENTRY.
  S Y=$P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"PCC"),U)
  I Y>% Q
  ;End Patch
- ;
- ;I interactive S variable D EN^BSDAPI3 I IEN S APCDVSIT=IEN D VRAD Q  ;IHS/ITSC/CLS 05/11/2004
- ;
 VISIT ;---> CREATE OR MODIFY VISIT IN VISIT FILE.
  ;---> SET BRATEST=1 TO DISPLAY VISIT AND V RAD PTRS AFTER SET.
  S BRATEST=0
@@ -71,14 +68,11 @@ VISIT ;---> CREATE OR MODIFY VISIT IN VISIT FILE.
  .;IHS/ANMC/LJF 11/28/2001 end of new code
  S APCDALVR("APCDCAT")=X K X
  ;
- ;---> CLINIC
- ;modified for correct clinic identification  IHS/HQW/PMF-4/25/01**8**
- ;S X=$P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),U,8)
- ;S X=$P($G(^SC(+X,0)),U,7)
- ;S X=$S(X:X,APCDALVR("APCDCAT")="A":57,1:0)
+ D CLINIC^BRAPCC1   ;IHS/HQW/PMF - 4/25/01 **8**
  ;
- D CLINIC   ;IHS/HQW/PMF - 4/25/01 **8**
- ;
+ ;IHS/CMI/LAB - PATCH 1009 ADD OPTION USED TO CREATE 04/13/21 TO SUPPORT CR# 8978
+ S APCDALVR("APCDOPT")=$P($G(XQY0),U) I APCDALVR("APCDOPT")]"" S APCDALVR("APCDOPT")=$O(^DIC(19,"B",APCDALVR("APCDOPT"),0))
+ ;end addition of option used to create
  ;---> REQUESTING PROVIDER/ORDERING PROVIDER
  ;---> I $P(^AUTTSITE(1,0),U,22)) SEND 200 PTR.
  S X=$P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),U,14)
@@ -149,6 +143,33 @@ VRAD ;---> CREATE (ADD) VISIT TO V RADIOLOGY FILE.
  .S I=$$SETIMP  ;IHS/ITSC/CLS 01/08/2004
  .I $L(I) S APCDALVR("APCDTIMP")=I
  ;
+ ;IHS/BJI/DAY/LAB 04/12/2021 - Patch 1009 CR# 09010 & 8970- Add Accession Number to V Rad and pass CPT and Procedure Modifiers
+ NEW BRACASE,BRAEXDT
+ S BRAEXDT=$P($G(^RADPT(RADFN,"DT",RADTI,0)),U)
+ S BRAEXDT=$P(BRAEXDT,".")
+ S BRAEXDT=$E(BRAEXDT,4,5)_$E(BRAEXDT,6,7)_$E(BRAEXDT,2,3)
+ S BRACASE=$P($G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0)),U)
+ I BRAEXDT]"",BRACASE]"" S APCDALVR("APCDTACC")=BRAEXDT_"-"_BRACASE
+ ;IHS/CMI/LAB - add CPT modifiers when exam is first passed to PCC
+ NEW BRAI,BRAC,BRACPTI
+ S (BRAI,BRAC)=0
+ F  S BRAI=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"CMOD",BRAI)) Q:BRAI'=+BRAI!(BRAC>1)  D
+ .S BRACPTI=$P($G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"CMOD",BRAI,0)),U,1)
+ .I BRACPTI="" Q
+ .S BRAC=BRAC+1  ;first one
+ .I BRAI=1 S APCDALVR("APCDTMOD")="`"_BRACPTI
+ .I BRAI=2 S APCDALVR("APCDTMD2")="`"_BRACPTI
+ ;
+ ;IHS/CMI/LAB - add PROCEDURE modifiers when exam is first passed to PCC
+ S (BRAI,BRAC)=0
+ F  S BRAI=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"M",BRAI)) Q:BRAI'=+BRAI!(BRAC>1)  D
+ .S BRACPTI=$P($G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"M",BRAI,0)),U,1)
+ .I BRACPTI="" Q
+ .S BRAC=BRAC+1  ;first one
+ .I BRAI=1 S APCDALVR("APCDTPM1")="`"_BRACPTI
+ .I BRAI=2 S APCDALVR("APCDTPM2")="`"_BRACPTI
+ ;End Patch
+ ;
  ;---> TEMPLATE TO ADD VISIT TO V RADIOLOGY FILE.
  S APCDALVR("APCDATMP")="[APCDALVR 9000010.22 (ADD)]"
  D ^APCDALVR
@@ -168,33 +189,7 @@ EXIT ;
  K I,N,BRATEST,X
  Q
  ;
-CLINIC ;
- ; Identify radiology clinic rather than stuff a value
- ;IHS/HQW/PMF - 05/30/01 **8**
- ;
- ;retrieve the clinic number
- N RACLINIC
- ;first get the hospital location pointer from the rad patient file
- S RACLINIC=$P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),U,8)
- ;if that pointer is not null, get the stop code number from the
- ;hospital location file, if it's there.
- ;if not there, clinic will be null
- I RACLINIC'="" S RACLINIC=$P($G(^SC(+RACLINIC,0)),U,7)
- ;
- ;if we got one, set the arrays and stop.
- ;
- I RACLINIC S (APCDALVR("APCDTCLN"),APCDALVR("APCDCLN"))="`"_RACLINIC Q
- ;
- ;if that didn't work, and this is NOT a category A, stop
- ;
- I APCDALVR("APCDCAT")'="A" Q
- ;if we got this far, use the ein of the Radiology clinic stop
- S RACLINIC=$O(^DIC(40.7,"B","RADIOLOGY",""))
- I RACLINIC S (APCDALVR("APCDTCLN"),APCDALVR("APCDCLN"))="`"_RACLINIC
- Q
- ;End changes to identify correct clinic -IHS/HWQ/PWF -05/30/01 **8**
- ;
-STORE(RAFLD,RAVALUE) ;---> STORE VISIT AND V RAD IEN'S IN RADIOLOGY EXAMS FILE #70
+STORE(RAFLD,RAVALUE) ;EP ---> STORE VISIT AND V RAD IEN'S IN RADIOLOGY EXAMS FILE #70
  N RAFDA,RAOK
  S RAOK=1
  S:'RAVALUE RAOK=0 ; If pointer fields were defined for the PCC node, this kludge would not be needed.
@@ -256,6 +251,7 @@ DISPLAY3 ;---> DISPLAY VISIT AND V RAD GLOBAL NODES AND FILE#70 IENS.
  Q
  ;
 UPDTIMP(RADFN,RADTI) ;EP ---> Called from BRAPRAD and VRAD above
+ ;Q
  ;Updates V RAD file with impression after a visit has been sent to PCC
  ;at EXAMINED with "NO IMPRESSION." in V RAD file 
  ;IHS/HQW/SCR - 07/20/01 **8**
@@ -272,13 +268,22 @@ UPDTIMP(RADFN,RADTI) ;EP ---> Called from BRAPRAD and VRAD above
  ;
  ;Use the RAXM to identify the IEN of the V RAD file for this visit
  ;IHS/HQW/SCR - 7/20/01 **8**
- S PCCVRAD=$P(^RADPT(RADFN,"DT",RADTI,"P",RAXM,"PCC"),U,2)  ;IHS/HQW/SCR - 07/20/01 **8**
+ S PCCVRAD=$P($G(^RADPT(RADFN,"DT",RADTI,"P",RAXM,"PCC")),U,2)  ;IHS/HQW/SCR - 07/20/01 **8**
  I $G(PCCVRAD)="" W !,"NO PCC data available for this exam." D CLN Q  ;IHS/HQW/SCR - 8/15/01 **8**
+ ;
+ ;
+ ;IHS/CMI/LAB - patch 1009 04/12/21 CR #10047, lets fix visit ien in Radiology if it doesn't match PCC
+ D FIXVP^BRAPCC2(RADFN,RADTI,RAXM,PCCVRAD)
+ ;
  ;
  ;If report is Unverified (ORDSTS="ZU"), revert back to "NO IMPRESSION."
  ;If report has been deleted, report pointer is null.
  ;
  I ORDSTS="ZU" S I="NO IMPRESSION." D CDIE Q  ;IHS/ITSC/CLS 01/08/2004 if report unverified, reset impression
+ ;
+ ;IHS/CMI/DAY - Patch 1007 - Add call to file Proc and CPT Modifiers
+ D EN^BRAPCC2
+ ;End Patch
  ;
  ;If the impression field of the VRAD file holds "NO IMPRESSION.", update the
  ;field with the impression that is now stored in the Radiology Reports file.
@@ -300,7 +305,7 @@ UPDTIMP(RADFN,RADTI) ;EP ---> Called from BRAPRAD and VRAD above
  ;
 CDIE ;CALL DIE   
  ;S DIE="^AUPNVRAD(",DA=PCCVRAD,DR="1101///"_I
- S DIE="^AUPNVRAD(",DA=PCCVRAD,DR="1101///"_I_";.06///"_$G(DC)  ;IHS/ITSC/CLS 01/09/2004
+ S DIE="^AUPNVRAD(",DA=PCCVRAD,DR="1101///"_I_";.06///"_$G(DC)_";1218////"_$$NOW^XLFDT  ;IHS/ITSC/CLS 01/09/2004 ;IHS/CMI/LAB - ADDED 1218 04/12/21 
  L +^AUPNVRAD(PCCVRAD):0 I '$T W !,"Can not update IMPRESSION in V RAD file. File being edit by another user." Q   ;IHS/HQW/SCR - 07/20/01 **8**
  D ^DIE                            ;IHS/HQW/SCR - 07/20/01 **8**
  L -^AUPNVRAD(PCCVRAD)             ;IHS/HQW/SCR - 07/20/01 **8**
@@ -330,4 +335,5 @@ SETIMP() ;moved set impression string to function call  ;IHS/ITSC/CLS 01/08/2004
  I $E(I)=" " S I=$E(I,2,999)
  I $E(I)=" " S I=$E(I,2,999)
  S I=$TR(I,";",",")
+ S I=$TR(I,"^","")  ;filter uphat
  Q I

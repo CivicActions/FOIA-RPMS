@@ -1,161 +1,72 @@
-DIC1 ;SFISC/GFT/TKW-READ X, SHOW CHOICES ;29SEP2010
- ;;22.0;VA FileMan;**1,4,17,20,31,48,78,86,70,122,165**;Mar 30, 1999;Build 34
- ;Per VHA Directive 2004-038, this routine should not be modified.
- K DUOUT,DTOUT N DD,DIY,DISUB,DIPRMT
- D GETFA(.DIC,.DO)
- N DIPRMT D GETPRMT^DIC11(.DIC,.DO,.DINDEX,.DIPRMT)
-B I $D(DIC("B")) D
- . N B S B(1)=$G(DIC("B")) M B=DIC("B")
- . N DIGBL,DINONULL S DIGBL=DIC_""""_DINDEX_"""",DINONULL=1
- . F DISUB=1:1:DINDEX("#") D  S:B]"" DIY(DISUB)=B
- . . S B=$G(B(DISUB)) I B="" S DINONULL=0 Q
- . . S X="" S:DINONULL X=$O(@(DIGBL_",B)"))
- . . S B=$S($D(^(B)):B,$F(X,B)-1=$L(B):X,$D(@(DIC_"B,0)")):$P(^(0),U),1:B)
- . . N B1 S B1=B I "VPD"[DINDEX(DISUB,"TYPE") D
- . . . I B D  Q:$D(DIY(DISUB,"EXT"))
- . . . . N TYPE S TYPE=DINDEX(DISUB,"TYPE")
- . . . . I TYPE="D" Q:B'?7N.1".".N
- . . . . I TYPE="P" Q:B'?.N.1".".N
- . . . . I TYPE="V" Q:B'?1.N.1".".N1";".E
- . . . . S DIY(DISUB,"EXT")=$$EXT^DIC2(DINDEX(DISUB,"FILE"),DINDEX(DISUB,"FIELD"),B)
- . . . . S:TYPE="P" B=DIY(DISUB,"EXT") Q
- . . . D CHK^DIE(DINDEX(DISUB,"FILE"),DINDEX(DISUB,"FIELD"),"",B,.B1,"DIERROR") S:$G(DIERROR) B1=B
- . . . K DIERROR,DIERR Q
- . . S:DINONULL DIGBL=DIGBL_","_$S(+$P(B1,"E")=B1:B1,1:""""_B1_"""")
- . . Q
- . Q
-PROMPT ; Prompt user for lookup values
- D PROMPT^DIC11
- Q
+DIC1 ;SFISC/GFT-READ X, SHOW CHOICES ;2/17/98  05:48 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**29,41**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+ ;12373;7448670;3285;
  ;
- ;
-GETFA(DIC,DO) ; Get file attributes
- ; DIC is open global reference, output same as documented in DO^DIC1.
- D DO Q
- ;
+ K DUOUT,DTOUT I $D(DIC("A")) S DD=DIC("A") G B
+ D DO S Y=$P(DO,U) I D="B",DO(2)>1.9 S X=$P(^DD(+DO(2),.01,0),U) I X'[Y,Y'[X S Y=Y_" "_X
+ S DD=$$EZBLD^DIALOG(8042,Y)
+B I $D(DIC("B")),DIC("B")]"" S Y=DIC("B"),X=$O(@(DIC_"D,Y)")),DIY=$S($D(^(Y)):Y,$F(X,Y)-1=$L(Y):X,$D(@(DIC_"Y,0)")):$P(^(0),U),1:Y) W DD D WR^DIC2 R "// ",X:$S($D(DTIME):DTIME,1:300) G T:'$T,DO:X]"" S X=DIY S:DIC(0)'["O" DIC(0)=DIC(0)_"O" G DO
+ W DD R X:$S($D(DTIME):DTIME,1:300) E  G T
 DO ; GET FILE ATTR
- Q:$D(DO(2))  I $D(@(DIC_"0)")) S DO=^(0)
+ Q:$D(DO)  I $D(@(DIC_"0)")) S DO=^(0)
  E  S DO="0^-1" I $D(DIC("P")) S DO=U_DIC("P"),^(0)=DO
 DO2 S DO(2)=$P(DO,U,2) I DO?1"^".E S DO=$O(^DD(+DO(2),0,"NM",0))_DO
  I DO(2)["s",$D(^DD(+DO(2),0,"SCR")) S DO("SCR")=^("SCR")
- Q:$D(DIC("W"))  Q:DO(2)'["I"  Q:'$D(^DD(+DO(2),0,"ID"))
- S DIC("W")=""
-P ; Add code to DIC("W") to display identifiers on pointed-to files
- I DO(2)["P" D WOV,PTRID^DIC5(.DO,.DIC) Q
- N % S %=0
- ;
-W F  S %=$O(^DD(+DO(2),0,"ID",%)) D:%]""  Q:%=""
- . N X S X=^DD(+DO(2),0,"ID",%) Q:X="W """""
- . I $L(DIC("W"))+$L(X)>224 D WOV S %="" Q
- . I DIC("W")="" S DIC("W")="N C,DINAME"
- . S DIC("W")=DIC("W")_" W ""  "" "_X
- . Q
+ Q:DO(2)'["I"!$D(DIC("W"))  Q:'$D(^DD(+DO(2),0,"ID"))  S %=0,DIC("W")="" I DO(2)["P" D WOV S %=+DO(2),%Y=DIC G P
+W ;
+ S %=$O(^DD(+DO(2),0,"ID",%)) I %]"" G WOV:$L(DIC("W"))+$L(^(%))>224 S:^(%)'="W """"" DIC("W")=DIC("W")_" W ""   "" "_^(%) G W
+ S DIC("W")=$E(DIC("W"),2,999) Q
+P I %,$D(^DD(%,.01,0)) S %=+$P($P(^(0),U,2),"P",2) I $D(^DIC(%,0,"GL")) S %W=^("GL") D Q:%W]"" G P
  Q
- ;
-WOV S DIC("W")="N DIFILEI,DIEN,DIGBL S DIFILEI=+DO(2),DIEN=Y,DIGBL=DIC D WOV^DICQ1"
- Q
+Q S %W1=%W
+ I %W[$C(34) S %W1=$P(%W,$C(34))_$C(34,34)_$P(%W,$C(34),2)_$C(34,34)_$P(%W,$C(34),3,9)
+ I $L(DIC("W"))<200 S DIC("W")=DIC("W")_" I '$D(DICR) S %Y=+"_%Y_"%Y,0) I $D("_%W_"%Y,0)) S %W="_%_",%Z="""_%W1_""" D WOV^DICQ1",%Y=%W
+ K %W1 Q
+WOV S DIC("W")="S %W=+DO(2),%Y=Y,%Z=DIC D WOV^DICQ1" Q
  ;
 RENUM ;
- D GETFA(.DIC,.DO)
- I '$D(DF),X?.NP,^DD(+DO(2),.01,0)["DINUM",$D(@(DIC_"X)")) D  Q:Y>0
- . S Y=X D S^DIC3 I $T N DZ D ADDKEY^DIC3,GOT^DIC2 Q
- . S Y=-1 Q
- D F^DIC Q
+ D DO I '$D(DF),X?.NP,^DD(+DO(2),.01,0)["DINUM",$D(@(DIC_"X)")) S Y=X G 1^DIC
+ G F^DIC
  ;
 DT S DST=DST_$$FMTE^DILIBF(%,"7S")
  I '$D(DDS) W DST S DST=""
  Q
- ;
-Y ; Display a list of entries
- N DD,DDD,DDC,DDH,DIOUT S DIY="",DIOUT=0,DD=DS("DD")
- I DD=0,DIC(0)["T",DIC(0)["E" D DSPH^DIC0
- F  S DD=$O(DS(DD)) Q:'DD  D  Q:DIOUT
- . S DDH=DD-1,DIYX=0,DS("DD")=DD
- . I DIC(0)["E" W:'$D(DDS) !?5,DD,?9 D
- . . N Y S Y=+DS(DD)
- . . D E Q
- . I DIC(0)["Y" Q:DD<DS  D
- . . F Y=DS:-1 Q:'$G(DS(Y))  S Y(+DS(Y))=""
- . . Q
- . I DIC(0)'["E"!(DIC(0)["Y") S DS(0)="1^",DIOUT=1,DIY="" Q
- . I DS>DD Q:DD#5
- . S DIOUT=1
- . I $D(DDS) S DDD=2,DDC=5 D LIST^DDSU K DDD,DDC
- . I '$D(DDS) D
- . . I DS>DD W !,"Press <RETURN> to see more, '^' to exit this list,"_$S(DIC(0)["T":" '^^' to exit all lists,",1:"")_" OR" ;**122**
- . . W !,"CHOOSE "_$O(DS(0))_"-"_DD R ": ",DIY:$S($D(DTIME):DTIME,1:300) S:'$T DTOUT=1 Q
- . I $G(DTOUT) W $C(7) S X="" Q
- . I DIY[U!($G(DUOUT)) S DUOUT=1,X=U D  Q
- . . I DIY?1"^^".E,DIC(0)["T" S DIROUT=1 Q
- . . I DIY?1"^".E,DIC(0)["E",DIC(0)'["T" S DIROUT=1 Q
- . Q
- I DIY?1.N.1".".N D  I DIY,DIY'>DD,$G(DS(DIY)) S Y=+DS(DIY) D GOT S DS(0)=1_"^"_+Y Q
- . S:($L($P(DIY,"."))>25!($L($P(DIY,".",2))>25)) DIY="-1" Q
- I $L(DIY)>25 S DIY=-1
- N I S I=$S($G(DUOUT):"1^U",$G(DTOUT):"1^T",DIY?1."?":"1^?",DIY:1,1:"")
- I 'I,DIY]"",+$P(DIY,"E")'=DIY,'$G(DICR),DINDEX("#")=1 S I="2^"_DIY
- Q:'I
- S DS(0)=I,Y=-1
- I DIY?1."?" D
- . I (DIC(0)_$G(DICR(1,0)))'["A",$D(DICRS) Q
- . N X,Y,DS D DSPHLP^DICQ(.DIC,.DIFILEI,.DINDEX,"?",1)
- K DIY,DIYX Q
- ;
-E S DST="" D
- . Q:DIC(0)["U"
- . I $O(DS(DD,0)) S DST=$$BLDDSP(.DS,DD) Q
- . S %=$S($G(DILONGX):DICR(DILONGX,"ORG"),$G(DINDEX("IXTYPE"))'="S":$P(X,U),1:"")
- . S %=%_$P(DS(DD),U,2,9)_$S($G(DIYX(DD)):DIY(DD),1:"")
- . I ($G(DITRANX)!($G(DICRS))),$G(DINDEX(1,"TRANOUT"))]"",%]"" D  Q
- . . N X S X=% X DINDEX(1,"TRANOUT") S DST=$G(X) Q
- . I +$P(%,"E")=%,$D(DIDA) D DT Q
- . I $G(DICRS),$G(DINDEX("IXTYPE"))="R" D
- . . N F1,F2 S F1=$G(DINDEX(1,"FILE")),F2=$G(DINDEX(1,"FIELD"))
- . . I F1,F2 S %=$$EXT^DIC2(F1,F2,%,"h")
- . . Q
- . S DST=% Q
- I DIC(0)["s" S DIC(0)=$TR(DIC(0),"s")
- I $D(DS(DD,"K")) S %=$G(DIX) M DIX=DS(DD) S DIX=%
- S DIY=$S($G(DIYX(DD)):"",1:DIY(DD)) D WO^DIC2 Q
- ;
-BLDDSP(DS,DD,DINDXFL,DIYX,DIY,DICRS) ; Build display of index values
- N X,I S X=""
- F I=0:0 S I=$O(DS(DD,I)) Q:'I  D
- . I $L(X)+$L(DS(DD,I))>240 Q
- . I I=1,$G(DINDXFL) S X=$P(DS(1),U,2,99)_$S($G(DIYX(1)):$G(DIY(1)),1:"") Q
- . I I=1,$G(DICRS) Q
- . S X=X_$P("  ^",U,I>1)_DS(DD,I) Q
- Q X
- ;
-GOT ; Set data for single entry selected by user.
- N I,J,K
- I DIY(DIY)="" S DIY(DIY)=$P($G(@(DIC_"Y,0)")),U)
+Y ;
+ S DZ=Y,DD=$O(DS(DD)),DDH=DD-1,Y=+DS(DD),DIYX=0
+ I DIC(0)["E" W:'$D(DDS) !?5,DD,?9 D E
+ S Y=DZ I DIC(0)["Y" G Y:DD<DS F Y=DS:-1 G Q^DIC2:'Y S Y(+DS(Y))=""
+ G N:DIC(0)'["E" I DS>DD G Y:DD#5 W:'$D(DDS) !,"Press <RETURN> to see more, '^' to exit this list, OR"
+ I $D(DDS) S DDD=2,DDC=5 D LIST^DDSU K DDD,DDC I $D(DTOUT) D T G N
+ I '$D(DDS) W !,"CHOOSE "_$O(DS(0))_"-"_DD R ": ",DIY:$S($D(DTIME):DTIME,1:300) E  D T G N
+ I DIY=""!(U[DIY)!$D(DUOUT) S:DIY=U DUOUT=1 G:DD=DS L^DICM:DO(2)["O"&(DO(2)'["A"),A^DIC G Y^DIC:DIY="" S X=U G A^DIC
+ I DIY?1."?" S DIC1Q=1 I DIC(0)_$G(DICR(1,0))'["A" D
+ . S DIY=X I '$D(DICRS) N DIY,X,D,DZ S D=$S($D(DF):DF,1:"B"),DZ="?" D DQ^DICQ
+ I DIY'?1.N&'$D(DICRS)!$D(DIC1Q) S D=$S($D(DF):DF,1:"B"),X=DIY K DIC1Q,DIY,DS,DDH("ID") G X^DIC
+ G BAD:'$D(DS(DIY))!(DIY>DD) S Y=+DS(DIY) K DIVP1
+ S DIY(DIY)=$P($G(@(DIC_"Y,0)")),U)
  S:$D(DDS) DST=X_$P(DS(DIY),U,2,9)_$S($G(DIYX(DIY)):$G(DIY(DIY)),1:"")
- S K=$O(DIVPSEL("A"),-1) I K]"" S DIVPSEL(K)=Y
- I $G(DIFINDR) D  Q
- . S:$D(DDS) DS(0,"DST")=DST
- . S DS(0,"Y")=+DS(DIY),DS(0,"X")=X_$P(DS(DIY),"^",2),DS(0,"DIYX")=$G(DIYX(DIY)),DS(0,"DIY")=DIY(DIY)
- . M DS(0,1)=DS(DIY)
- . Q
- I $G(DIYX(DIY)) K DIYX S DIY(DIY)=$P($G(@(DIC_"Y,0)")),U)
- D C^DIC2 Q
+ G C^DIC
  ;
+E S DST=""
+ S %=$P(X,U,'$D(DICRS))_$P(DS(DD),U,2,9),DIY=$S(%=DIY(DD):"",DO(2)["D"&($D(DIDA)!(DIY(DD)="")):%,1:"")_DIY(DD)
+ S:DO(2)'["D"&'$D(DIDA) DST=DST_%
+ S:$G(DIYX(DD)) DST=DST_DIY(DD),DIY=""
+ D DT:D'="B"&$D(DIDA),WO^DIC2
+ Q
+ ;
+T W $C(7) S X="",DTOUT=1 Q
 OK ;
- S %=1 I $G(DS)=1 S DST="         ...OK" D Y^DICN W:'$D(DDS) !
- I %>0 Q:%=1  D  S X=$G(DIX),Y=-1 Q  ;%=1=Yes, %=2=No
- . I $G(DICR) S DICR(DICR,31.2)=+Y ;Preserve IEN for future reference
- . I +$G(DS) K DS S (DS,DS(0),DS("DD"))=0 ;ReInit Display array
- . Q
- I %=0 W !?4,$$EZBLD^DIALOG(8040),! G OK ;User asked for Help
- I %=-1,$D(DTOUT) S DIROUT=1 ;User TIMED Out; DTOUT set in DICN
- I %=-1,'$D(DTOUT) S (DUOUT,DIROUT)=1 ;User single up-arrowed out
-BAD S Y=-1
- I $G(%Y)?1"^^".E S (DIROUT,DUOUT)=1
- S DS(0)=$S($G(DTOUT):"1^T",$G(DUOUT):"1^U",$G(%)=-1:"1^U",1:"1^") Q
+ S %=1 I $D(DS),DS=1 S DST="         ...OK" D Y^DICN
+ I %>0 G R^DIC2:%=1 S X=DIX G L^DICM
+O ;
+BAD I DIC(0)["Q" D
+ . W:'$D(DUOUT) $C(7)_$S('$D(DDS):" ??",1:"")
+ . I $D(Y),Y[U S Y=-1
+ Q:$D(DTOUT)  G A^DIC
+N G NO^DIC
 MIX ;
- N DID S DID=D_"^-1",DID(1)=2
- N D S D=$P(DID,U)
- G IX^DIC
+ S DID=D_"^-1",DID(1)=2,D=$P(DID,U) G IX^DIC
  ;
  ;#8042  Select |filename|:
- ;#8040   Answer with 'Yes' or 'No'

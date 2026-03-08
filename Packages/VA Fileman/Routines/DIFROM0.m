@@ -1,11 +1,12 @@
-DIFROM0 ;SFISC/XAK-GATHER PCS TO SEND ;2:59 PM  25 Sep 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROM0 ;SFISC/XAK-GATHER PCS TO SEND ;02:07 PM  28 Nov 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S %=2,DIT=0,DIH=""
  I DPK<0,$O(F(0))>0 K DIR S DIR(0)="Y",DIR("A")="Do you want to include all the templates and forms",DIR("B")="NO",DIR("??")="^D NOPKG^DIFROMH" D ^DIR G Q:$D(DIRUT) S DIT=Y=1
  W ! S DIR(0)="YA",DIR("??")="^D ^DIFROMH",DIR("B")="YES"
  ;NOTE: I removed 9.8 (ROUTINE FILE) from this list for V19 but none of the supporting code. (tkw)
- F DL=19,3.6,19.1,.5,9.2,8994 I $D(^DIC(DL,0)) S X=$P(^(0),U),DIR("A")="Would you like to include "_X_"S?"_$J("",17-$L(X)) D ^DIR G Q:$D(DIRUT) I Y=1 S DL(DL)=DL,DIFC=1
+ F DL=19,3.6,19.1,.5,9.2 I $D(^DIC(DL,0)) S X=$P(^(0),U),DIR("A")="Would you like to include "_X_"S?"_$E("       ",1,13-$L(X)) D ^DIR G Q:$D(DIRUT) I Y=1 S DL(DL)=DL,DIFC=1
  G:$D(F(-1))&('$D(DIFC)) Q
 S W ! S DIR("A")="Would you like security codes sent along: ",DIR("B")="NO"
  S DIR("??")="^D S^DIFROMH" D ^DIR G Q:$D(DIRUT) S DSEC=Y=1 K ^UTILITY("DI",$J)
@@ -14,8 +15,8 @@ M ;
  S DIR("??")="^D M^DIFROMH" D ^DIR G Q:$D(DIRUT) S DIFRM=Y
 GO W ! D WAIT^DICD
  D:DPK>0 PKG^DIFROM12
- D  I DTL="DI" S DTL="DD" D  S DTL="DM" D  S DTL="DI"
- .F Y=19,3.6,19.1,.5,9.8,9.2,8994 I $D(DL(Y)) S X=$S(Y=19:"OPT",Y=3.6:"BUL",Y=19.1:"SE",Y=.5:"FUN",Y=9.8:"ROU",Y=9.2:"HEL",Y=8994:"REM") D ADD,A:'Y
+ D  I DTL="DI" S DTL="DD" D  S DTL="DI"
+ .F Y=19,3.6,19.1,.5,9.8,9.2 I $D(DL(Y)) S X=$S(Y=19:"OPT",Y=3.6:"BUL",Y=19.1:"SE",Y=.5:"FUN",Y=9.8:"ROU",Y=9.2:"HEL") D ADD,A:'Y
  D SBF
  K DL,DIR S DL=DRN,DRN=1 G ^DIFROM1
 ADD ;

@@ -1,5 +1,6 @@
-DIPKI001 ; ; 30-MAR-1999
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIPKI001 ; ; 22-DEC-1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q:'DIFQ(9.4)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
 Q Q
@@ -46,11 +47,11 @@ Q Q
  ;;^DIC(9.4,"%D",15,0)
  ;;=fields are simply for documentation.
  ;;^DD(9.4,0)
- ;;=FIELD^NL^15007^41
+ ;;=FIELD^NL^1946^40
  ;;^DD(9.4,0,"DDA")
  ;;=N
  ;;^DD(9.4,0,"DT")
- ;;=2941020
+ ;;=2940607
  ;;^DD(9.4,0,"ID",1)
  ;;=W:$D(^("0")) "   ",$P(^("0"),U,2)
  ;;^DD(9.4,0,"IX","AMRG",9.402,.01)
@@ -63,8 +64,6 @@ Q Q
  ;;=
  ;;^DD(9.4,0,"IX","D",9.42,.01)
  ;;=
- ;;^DD(9.4,0,"IX","E",9.415007,.01)
- ;;=
  ;;^DD(9.4,0,"NM","PACKAGE")
  ;;=
  ;;^DD(9.4,0,"PT",.84,1.2)
@@ -73,18 +72,12 @@ Q Q
  ;;=
  ;;^DD(9.4,0,"PT",4.332,.01)
  ;;=
- ;;^DD(9.4,0,"PT",9.6,1)
- ;;=
- ;;^DD(9.4,0,"PT",9.7,1)
+ ;;^DD(9.4,0,"PT",15.01101,.01)
  ;;=
  ;;^DD(9.4,0,"PT",19,12)
  ;;=
- ;;^DD(9.4,0,"PT",101,12)
- ;;=
  ;;^DD(9.4,0,"PT",8989.332,.01)
  ;;=
- ;;^DD(9.4,0,"VRPK")
- ;;=KERNEL
  ;;^DD(9.4,.01,0)
  ;;=NAME^RF^^0;1^K:$L(X)>30!($L(X)<4)!'(X'?1P.E) X
  ;;^DD(9.4,.01,1,0)
@@ -165,67 +158,3 @@ Q Q
  ;;=These are the globals which make up this Package.  This multiple is used
  ;;^DD(9.4,5,21,2,0)
  ;;=for documentation purposes only.
- ;;^DD(9.4,5,"DT")
- ;;=2940603
- ;;^DD(9.4,6,0)
- ;;=*FILE^9.44PA^^4;0
- ;;^DD(9.4,6,21,0)
- ;;=^^3^3^2920513^^^^
- ;;^DD(9.4,6,21,1,0)
- ;;=Any FileMan files which are part of this Package are documented
- ;;^DD(9.4,6,21,2,0)
- ;;=here.  This multiple controls what files (Data Dictionaries and
- ;;^DD(9.4,6,21,3,0)
- ;;=Data) are sent in an INIT built from this Package entry.
- ;;^DD(9.4,6,"DT")
- ;;=2940603
- ;;^DD(9.4,7,0)
- ;;=*PRINT TEMPLATE^9.46^^DIPT;0
- ;;^DD(9.4,7,21,0)
- ;;=^^4^4^2921202^^^^
- ;;^DD(9.4,7,21,1,0)
- ;;=The names of Print Templates being sent with this Package.
- ;;^DD(9.4,7,21,2,0)
- ;;=This multiple is used to send non-namespaced templates in an INIT.
- ;;^DD(9.4,7,21,3,0)
- ;;=Namespaced templates are sent automatically and need not be listed
- ;;^DD(9.4,7,21,4,0)
- ;;=separately.
- ;;^DD(9.4,7,"DT")
- ;;=2940603
- ;;^DD(9.4,8,0)
- ;;=*INPUT TEMPLATE^9.47^^DIE;0
- ;;^DD(9.4,8,21,0)
- ;;=^^4^4^2920513^^^
- ;;^DD(9.4,8,21,1,0)
- ;;=The names of the Input Templates being sent with this Package
- ;;^DD(9.4,8,21,2,0)
- ;;=This multiple is used to send non-namespaced templates in an INIT.
- ;;^DD(9.4,8,21,3,0)
- ;;=Namespaced templates are sent automatically and need not be listed
- ;;^DD(9.4,8,21,4,0)
- ;;=separately.
- ;;^DD(9.4,8,"DT")
- ;;=2940603
- ;;^DD(9.4,9,0)
- ;;=*SORT TEMPLATE^9.48^^DIBT;0
- ;;^DD(9.4,9,21,0)
- ;;=^^4^4^2920513^^^
- ;;^DD(9.4,9,21,1,0)
- ;;=The names of the Sort Templates being sent with this Package.
- ;;^DD(9.4,9,21,2,0)
- ;;=This multiple is used to send non-namespaced templates in an INIT.
- ;;^DD(9.4,9,21,3,0)
- ;;=Namespaced templates are sent automatically and need not be listed
- ;;^DD(9.4,9,21,4,0)
- ;;=separately.
- ;;^DD(9.4,9,"DT")
- ;;=2940603
- ;;^DD(9.4,9.1,0)
- ;;=*SCREEN TEMPLATE (FORM)^9.485^^DIST;0
- ;;^DD(9.4,9.1,21,0)
- ;;=^^2^2^2920513^^^
- ;;^DD(9.4,9.1,21,1,0)
- ;;=The names of Screen Templates (from the FORM file) associated with
- ;;^DD(9.4,9.1,21,2,0)
- ;;=this package.

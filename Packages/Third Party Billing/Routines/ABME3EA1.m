@@ -1,6 +1,9 @@
-ABME3EA1 ; IHS/ASDST/DMJ - HFCA-1500 NSF 3.01 EA1 (Claim Record) ;     
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME3EA1 ; IHS/ASDST/DMJ - HFCA-1500 NSF 3.01 EA1 (Claim Record) ;     [ 02/26/2003  12:43 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**2,3**;APR 05, 2002
  ;Original;DMJ;
+ ;
+ ; IHS/ASDS/DMJ - V2.4 P7 - 9/6/01 NOIS HQW-0701-100066
+ ;     This is a new routine related to Medicare Part B.
  ;
  ; IHS/SD/SDR - v2.5 p3 - 2/26/2003 - NDA-0402-180192
  ;     Added new block 19 stuff

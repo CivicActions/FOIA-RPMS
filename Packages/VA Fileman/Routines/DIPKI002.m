@@ -1,8 +1,73 @@
-DIPKI002 ; ; 30-MAR-1999
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIPKI002 ; ; 22-DEC-1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q:'DIFQ(9.4)  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) X NO E  S @X=Y
 Q Q
+ ;;^DD(9.4,5,"DT")
+ ;;=2940603
+ ;;^DD(9.4,6,0)
+ ;;=*FILE^9.44PA^^4;0
+ ;;^DD(9.4,6,21,0)
+ ;;=^^3^3^2920513^^^^
+ ;;^DD(9.4,6,21,1,0)
+ ;;=Any FileMan files which are part of this Package are documented
+ ;;^DD(9.4,6,21,2,0)
+ ;;=here.  This multiple controls what files (Data Dictionaries and
+ ;;^DD(9.4,6,21,3,0)
+ ;;=Data) are sent in an INIT built from this Package entry.
+ ;;^DD(9.4,6,"DT")
+ ;;=2940603
+ ;;^DD(9.4,7,0)
+ ;;=*PRINT TEMPLATE^9.46^^DIPT;0
+ ;;^DD(9.4,7,21,0)
+ ;;=^^4^4^2921202^^^^
+ ;;^DD(9.4,7,21,1,0)
+ ;;=The names of Print Templates being sent with this Package.
+ ;;^DD(9.4,7,21,2,0)
+ ;;=This multiple is used to send non-namespaced templates in an INIT.
+ ;;^DD(9.4,7,21,3,0)
+ ;;=Namespaced templates are sent automatically and need not be listed
+ ;;^DD(9.4,7,21,4,0)
+ ;;=separately.
+ ;;^DD(9.4,7,"DT")
+ ;;=2940603
+ ;;^DD(9.4,8,0)
+ ;;=*INPUT TEMPLATE^9.47^^DIE;0
+ ;;^DD(9.4,8,21,0)
+ ;;=^^4^4^2920513^^^
+ ;;^DD(9.4,8,21,1,0)
+ ;;=The names of the Input Templates being sent with this Package
+ ;;^DD(9.4,8,21,2,0)
+ ;;=This multiple is used to send non-namespaced templates in an INIT.
+ ;;^DD(9.4,8,21,3,0)
+ ;;=Namespaced templates are sent automatically and need not be listed
+ ;;^DD(9.4,8,21,4,0)
+ ;;=separately.
+ ;;^DD(9.4,8,"DT")
+ ;;=2940603
+ ;;^DD(9.4,9,0)
+ ;;=*SORT TEMPLATE^9.48^^DIBT;0
+ ;;^DD(9.4,9,21,0)
+ ;;=^^4^4^2920513^^^
+ ;;^DD(9.4,9,21,1,0)
+ ;;=The names of the Sort Templates being sent with this Package.
+ ;;^DD(9.4,9,21,2,0)
+ ;;=This multiple is used to send non-namespaced templates in an INIT.
+ ;;^DD(9.4,9,21,3,0)
+ ;;=Namespaced templates are sent automatically and need not be listed
+ ;;^DD(9.4,9,21,4,0)
+ ;;=separately.
+ ;;^DD(9.4,9,"DT")
+ ;;=2940603
+ ;;^DD(9.4,9.1,0)
+ ;;=*SCREEN TEMPLATE (FORM)^9.485^^DIST;0
+ ;;^DD(9.4,9.1,21,0)
+ ;;=^^2^2^2920513^^^
+ ;;^DD(9.4,9.1,21,1,0)
+ ;;=The names of Screen Templates (from the FORM file) associated with
+ ;;^DD(9.4,9.1,21,2,0)
+ ;;=this package.
  ;;^DD(9.4,9.1,"DT")
  ;;=2940603
  ;;^DD(9.4,9.5,0)
@@ -83,119 +148,3 @@ Q Q
  ;;=Please enter the name of the Alpha Test site.
  ;;^DD(9.4,11.5,21,0)
  ;;=^^1^1^2920513^^^
- ;;^DD(9.4,11.5,21,1,0)
- ;;=The name of this Package's Alpha Test site.
- ;;^DD(9.4,11.5,"DT")
- ;;=2940603
- ;;^DD(9.4,11.6,0)
- ;;=*BETA^P4'^DIC(4,^9;2^Q
- ;;^DD(9.4,11.6,3)
- ;;=Please enter the name of the Beta Test site.
- ;;^DD(9.4,11.6,21,0)
- ;;=^^1^1^2920513^^^
- ;;^DD(9.4,11.6,21,1,0)
- ;;=The name of this Package's Beta Test site.
- ;;^DD(9.4,11.6,"DT")
- ;;=2940603
- ;;^DD(9.4,11.7,0)
- ;;=*DELTA^9.409P^^10;0
- ;;^DD(9.4,11.7,21,0)
- ;;=^^1^1^2920706^^
- ;;^DD(9.4,11.7,21,1,0)
- ;;=The names of the Delta Test sites for this Package.
- ;;^DD(9.4,11.7,"DT")
- ;;=2940603
- ;;^DD(9.4,12,0)
- ;;=*PRIMARY HELP FRAME^P9.2'^DIC(9.2,^0;4^Q
- ;;^DD(9.4,12,3)
- ;;=
- ;;^DD(9.4,12,21,0)
- ;;=^^1^1^2920416^^^
- ;;^DD(9.4,12,21,1,0)
- ;;=This is the primary Help Frame for this Package.
- ;;^DD(9.4,12,"DT")
- ;;=2940603
- ;;^DD(9.4,13,0)
- ;;=CURRENT VERSION^F^^VERSION;1^K:$L(X)>8!($L(X)<1)!'(X?1N.ANP) X
- ;;^DD(9.4,13,3)
- ;;=Enter the version of this package currently running, (1-8 characters).
- ;;^DD(9.4,13,21,0)
- ;;=^^5^5^2920702^
- ;;^DD(9.4,13,21,1,0)
- ;;=This field holds the version number of the package currently running
- ;;^DD(9.4,13,21,2,0)
- ;;=at this site.  When a package initialization has been run, this field
- ;;^DD(9.4,13,21,3,0)
- ;;=will be updated with the version number most recently installed.
- ;;^DD(9.4,13,21,4,0)
- ;;=This can be either using the old format (1.0, 16.04, etc.) or the new
- ;;^DD(9.4,13,21,5,0)
- ;;=format (18.0T4, 19.1V2, etc.)
- ;;^DD(9.4,13,"DT")
- ;;=2860221
- ;;^DD(9.4,20,0)
- ;;=AFFECTS RECORD MERGE^9.402P^^20;0
- ;;^DD(9.4,20,21,0)
- ;;=^^2^2^2940627^
- ;;^DD(9.4,20,21,1,0)
- ;;=This Multipule lists the files that will impact this package if a Record
- ;;^DD(9.4,20,21,2,0)
- ;;=Merge is done on any of the files in the list.
- ;;^DD(9.4,22,0)
- ;;=VERSION^9.49I^^22;0
- ;;^DD(9.4,22,21,0)
- ;;=^^1^1^2930415^^^^
- ;;^DD(9.4,22,21,1,0)
- ;;=The version numbers of this Package.
- ;;^DD(9.4,200.1,0)
- ;;=*USER TERMINATE TAG^F^^200;1^K:$L(X)>8!($L(X)<1)!'((X?1U.UN)!(X?1N.N)) X
- ;;^DD(9.4,200.1,3)
- ;;=Enter the entry TAG for the routine in field 200.2
- ;;^DD(9.4,200.1,21,0)
- ;;=^^3^3^2920306^^^
- ;;^DD(9.4,200.1,21,1,0)
- ;;=This field holds the entry point into the routine that will be called at
- ;;^DD(9.4,200.1,21,2,0)
- ;;=the time that a USER (File 200 entry with access/verify codes) is
- ;;^DD(9.4,200.1,21,3,0)
- ;;=terminated. See field 200.2
- ;;^DD(9.4,200.1,"DT")
- ;;=2940603
- ;;^DD(9.4,200.2,0)
- ;;=*USER TERMINATE ROUTINE^F^^200;2^K:$L(X)>8!($L(X)<2)!'(X?2U.UN) X
- ;;^DD(9.4,200.2,3)
- ;;=Enter a 2-8 character routine name.
- ;;^DD(9.4,200.2,21,0)
- ;;=^^7^7^2920306^^^
- ;;^DD(9.4,200.2,21,1,0)
- ;;=This field holds the name of a routine that will be called at the time
- ;;^DD(9.4,200.2,21,2,0)
- ;;=that a USER (File 200 entry with access/verify codes) is terminated.
- ;;^DD(9.4,200.2,21,3,0)
- ;;=ie. has their access/verify codes removed.
- ;;^DD(9.4,200.2,21,4,0)
- ;;=This is to allow each package to do their own clean-up.
- ;;^DD(9.4,200.2,21,5,0)
- ;;= 
- ;;^DD(9.4,200.2,21,6,0)
- ;;=At the time the call is made DA will hold the IFN of the user being
- ;;^DD(9.4,200.2,21,7,0)
- ;;=terminated. This normally runs in the background without an IO device.
- ;;^DD(9.4,200.2,"DT")
- ;;=2940603
- ;;^DD(9.4,913,0)
- ;;=*ENVIRONMENT CHECK ROUTINE^F^^PRE;1^K:$L(X)>8!($L(X)<3) X
- ;;^DD(9.4,913,.1)
- ;;=DEVELOPERS ROUTINE RUN BEFORE 'INIT' QUESTIONS ASKED
- ;;^DD(9.4,913,3)
- ;;=Enter name of developer's environment check routine (3-8 characters) that runs before any user questions are asked.  This routine should be used for environment check only and should not alter data.
- ;;^DD(9.4,913,21,0)
- ;;=^^4^4^2921202^
- ;;^DD(9.4,913,21,1,0)
- ;;=The name of the developer's routine which is run at the beginning of
- ;;^DD(9.4,913,21,2,0)
- ;;=the NAMESPACE_INIT routine.  This should just check the environment
- ;;^DD(9.4,913,21,3,0)
- ;;=and should not alter any data, since the user has no way to exit out of
- ;;^DD(9.4,913,21,4,0)
- ;;=the INIT process until this program runs to completion.

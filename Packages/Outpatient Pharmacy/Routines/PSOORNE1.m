@@ -1,5 +1,5 @@
-PSOORNE1 ;BIR/SAB - Display new orders from backdoor ;29-May-2012 14:58;PLS
- ;;7.0;OUTPATIENT PHARMACY;**11,21,27,32,37,46,71,94,104,117,133,1005,148,279,1015**;DEC 1997;Build 62
+PSOORNE1 ;BIR/SAB - Display new orders from backdoor ;05-Nov-2020 11:33;MGH
+ ;;7.0;OUTPATIENT PHARMACY;**11,21,27,32,37,46,71,94,104,117,133,1005,148,279,1015,1027**;DEC 1997;Build 31
  ;External reference to ^PS(55 is supported by DBIA 2228
  ; Modified - IHS/CIA/PLS - 01/27/04 - Added ability to select 0 for IHS Fields
 EN(PSONEW) D DSPL^PSOORNE3,^PSOLMPO2
@@ -10,7 +10,8 @@ EDT ;N FLD,LST K DIR,DUOUT,DIRUT S DIR("A")="Select Field to Edit by number",DIR
 EDTSEL S:'$G(COPY) PSOEDIT=1 S (PSONEW("DFLG"),PSONEW("FIELD"),PSONEW3)=0
  ; IHS/CIA/PLS - 01/27/04 - Changed to $L to include zero value
  ;I +Y S LST=Y D HLDHDR^PSOLMUTL D  Q:$G(PSORX("DFLG"))!($G(PSORX("QFLG")))  S VALMBCK="R" G DSPL^PSOORNE3
- I $L(Y) S LST=Y D HLDHDR^PSOLMUTL D  Q:$G(PSORX("DFLG"))!($G(PSORX("QFLG")))  S VALMBCK="R" G DSPL^PSOORNE3
+ ;IHS/MSC/MGH Patch 1027 added resetting the "DFLG" if a field was edited
+ I $L(Y) S LST=Y D HLDHDR^PSOLMUTL D  Q:$G(PSORX("DFLG"))!($G(PSORX("QFLG")))  S PSONEW("DFLG")=0 S VALMBCK="R" G DSPL^PSOORNE3
  .F FLD=1:1:$L(LST,",") Q:$P(LST,",",FLD)']""  D @(+$P(LST,",",FLD)) Q:$G(PSODIR("DFLG"))!($G(PSODIR("QFLG")))
  E  S VALMBCK="" D FULL^VALM1
  D RDSPL G DSPL^PSOORNE3

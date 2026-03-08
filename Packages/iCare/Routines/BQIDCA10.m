@@ -1,0 +1,302 @@
+BQIDCA10 ;GDIT/HCSD/ALA-Ad Hoc Logic ; 18 Nov 2022  5:22 PM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**4,5,6,7**;Mar 01, 2021;Build 14
+ ;
+CPT(FGLOB,TGLOB,CPT,CPTTX,FDT,TDT,CNOT,MPARMS) ;EP - CPT test search
+ NEW CPPT,CTAX,TREF,NGLOB,LCT,CT,IEN
+ S NGLOB=$NA(^TMP("BQIDCCPT",$J)) K @NGLOB
+ I $G(TGLOB)="" Q
+ I $G(CPT)'="" D CP
+ I $G(CPTTX)'="" D
+ . S TREF=$NA(MPARMS("CPT"))
+ . K @TREF
+ . S CTAX=$P(@("^"_$P(CPTTX,";",2)_$P(CPTTX,";",1)_",0)"),"^",1)
+ . D BLD^BQITUTL(CTAX,TREF)
+ I CPOP="!" D
+ . I $D(MPARMS("CPT")) S CPT="" F  S CPT=$O(MPARMS("CPT",CPT)) Q:CPT=""  D CP
+ I CPOP="&" D
+ . K CPPT
+ . S CPT="",CT=0 F  S CPT=$O(MPARMS("CPT",CPT)) Q:CPT=""  D CP S CT=CT+1
+ . S IEN=""
+ . F  S IEN=$O(CPPT(IEN)) Q:IEN=""  D
+ .. S LCT=0,LB=""
+ .. F  S LB=$O(CPPT(IEN,LB)) Q:LB=""  S LCT=LCT+1
+ .. I LCT'=CT K CPPT(IEN),@CRIT@("CPT",IEN) Q
+ .. I LCT=CT,'CNOT S @TGLOB@(IEN)="" Q
+ .. I LCT=CT,CNOT S @NGLOB@(IEN)="" K @CRIT@("CPT",IEN)
+ ;
+ I CNOT,$G(FGLOB)'="" D
+ . S IEN="" F  S IEN=$O(@FGLOB@(IEN)) Q:IEN=""  D
+ .. I '$D(@NGLOB@(IEN)) S @TGLOB@(IEN)=""
+ I CNOT,$G(FGLOB)="" D
+ . S IEN=0 F  S IEN=$O(^AUPNPAT(IEN)) Q:'IEN  I '$D(@NGLOB@(IEN)) S @TGLOB@(IEN)=""
+ K @NGLOB
+ Q
+ ;
+CP ;EP
+ NEW DFN,IEN
+ S TDT=$S(TDT'="":TDT,1:DT)
+ I $G(FGLOB)'="" D  Q
+ . NEW IEN
+ . S IEN=""
+ . F  S IEN=$O(@FGLOB@(IEN)) Q:'IEN  D
+ .. I $O(^AUPNVCPT("AA",IEN,CPT,""))="" Q
+ .. I FDT="" D
+ ... S BDT=""
+ ... F  S BDT=$O(^AUPNVCPT("AA",IEN,CPT,BDT)) Q:BDT=""  D CPDT
+ .. I FDT'="" D
+ ... S BGT=9999999-FDT,ENT=9999999-TDT,BDT=ENT-1
+ ... F  S BDT=$O(^AUPNVCPT("AA",IEN,CPT,BDT)) Q:BDT=""!(BDT>BGT)  D CPDT
+ ;
+ S IEN=""
+ F  S IEN=$O(^AUPNVCPT("B",CPT,IEN)) Q:IEN=""  D
+ . I $G(^AUPNVCPT(IEN,0))="" Q
+ . S DFN=$P($G(^AUPNVCPT(IEN,0)),U,2),VIS=$P(^AUPNVCPT(IEN,0),U,3) I VIS="" Q
+ . I $G(^AUPNVSIT(VIS,0))="" Q
+ . Q:"DXCT"[$P(^AUPNVSIT(VIS,0),U,7)
+ . S VSDTM=$P(^AUPNVSIT(VIS,0),U,1)\1
+ . I FDT'="",VSDTM<FDT!(VSDTM>TDT) Q
+ . I DFN'="",CPOP="!",'CNOT S @TGLOB@(DFN)="",@CRIT@("CPT",DFN,IEN)="" Q
+ . I DFN'="",CPOP="!",CNOT S @NGLOB@(DFN)="" Q
+ . I DFN'="",CPOP="&" S CPPT(DFN,CPT)=IEN
+ ;
+ Q
+ ;
+CPDT ;EP
+ S LIEN=""
+ F  S LIEN=$O(^AUPNVCPT("AA",IEN,CPT,BDT,LIEN)) Q:LIEN=""  D
+ . S VIS=$P($G(^AUPNVCPT(LIEN,0)),U,3) I VIS="" Q
+ . I $G(^AUPNVSIT(VIS,0))="" Q
+ . Q:"DXCT"[$P(^AUPNVSIT(VIS,0),U,7)
+ . I CPOP="!",'CNOT S @TGLOB@(IEN)=LIEN,@CRIT@("CPT",IEN,LIEN)="" Q
+ . I CPOP="!",CNOT S @NGLOB@(IEN)="" Q
+ . I CPOP="&" S CPPT(IEN,CPT)=LIEN
+ Q
+ ;
+WLT(FGLOB,TGLOB,WCLN,WAFROM,WCFROM,WRFROM,WPROV,WAUSR,WRUSR,WPRI,WAREAD,WREAS,MPARMS) ;EP - Waitlist
+ NEW WLGLOB,WIEN,WCNT,WDFN,CLN,DATE,NCT,OCT
+ S WLGLOB=$NA(^TMP("BQIWLIST",$J)) K @WLGLOB
+ K @CRIT@("WLIST")
+ I $G(TGLOB)="" Q
+ ;
+ S WCNT=0
+ ; Determine populate count
+ D
+ . I $G(WPROV)'=""!($G(WNOPROV)=1)!($D(MPARMS("WPROV"))) S WCNT=WCNT+1
+ . I $G(WRREAS)'=""!($D(MPARMS("WRREAS"))) S WCNT=WCNT+1
+ . I $G(WAREAS)'=""!($D(MPARMS("WAREAS"))) S WCNT=WCNT+1
+ . I $G(WCLN)'=""!($D(MPARMS("WCLN"))) S WCNT=WCNT+1
+ . I $G(WPRI)'=""!($D(MPARMS("WPRI"))) S WCNT=WCNT+1
+ . I $G(WAUSR)'=""!($D(MPARMS("WAUSR"))) S WCNT=WCNT+1
+ . I $G(WRUSR)'=""!($D(MPARMS("WRUSR"))) S WCNT=WCNT+1
+ . I $G(WAFROM)'="",$G(WATHRU)'="" S WCNT=WCNT+1
+ . I $G(WCFROM)'="",$G(WCTHRU)'="" S WCNT=WCNT+1
+ . I $G(WRFROM)'="",$G(WRTHRU)'="" S WCNT=WCNT+1
+ . I $G(WARANGE)="Ever" S WCNT=WCNT+1
+ . I $G(WCRANGE)="Ever" S WCNT=WCNT+1
+ . I $G(WRRANGE)="Ever" S WCNT=WCNT+1
+ ;
+ I $G(FGLOB)'="" D  Q
+ . NEW WDFN
+ . S WDFN=""
+ . F  S WDFN=$O(@FGLOB@(WDFN)) Q:'WDFN  D
+ .. S CLN="" F  S CLN=$O(^BSDWL("AB",WDFN,CLN)) Q:CLN=""  D
+ ... S WIEN="" F  S WIEN=$O(^BSDWL("AB",WDFN,CLN,WIEN)) Q:WIEN=""  D
+ .... I $G(WAFROM)'="" S DATE=$P(^BSDWL(CLN,1,WIEN,0),"^",3) I DATE'<WAFROM,DATE'>WATHRU D WFL(5)
+ .... I $G(WARANGE)="Ever",$P(^BSDWL(CLN,1,WIEN,0),"^",3)'="" D WFL(5)
+ .... I $G(WCFROM)'="" S DATE=$P(^BSDWL(CLN,1,WIEN,0),"^",5) I DATE'<WCFROM,DATE'>WCTHRU D WFL(6)
+ .... I $G(WCRANGE)="Ever",$P(^BSDWL(CLN,1,WIEN,0),"^",5)'="" D WFL(6)
+ .... I $G(WRFROM)'="" S DATE=$P(^BSDWL(CLN,1,WIEN,0),"^",7) I DATE'<WRFROM,DATE'>WRTHRU D WFL(7)
+ .... I $G(WRRANGE)="Ever",$P(^BSDWL(CLN,1,WIEN,0),"^",7)'="" D WFL(7)
+ .... D WCK
+ I $G(FGLOB)="" D WDT
+ ;
+ ;what was found and put into TGLOB should be good
+ K @TGLOB
+ S WDFN="" F  S WDFN=$O(@CRIT@("WLIST",WDFN)) Q:WDFN=""  D
+ . S WIEN="" F  S WIEN=$O(@CRIT@("WLIST",WDFN,WIEN)) Q:WIEN=""  D
+ .. S NCNT=0 F I=1:1:10 S:$P(@CRIT@("WLIST",WDFN,WIEN),"^",I)=1 NCNT=NCNT+1
+ .. I NCNT'=WCNT K @CRIT@("WLIST",WDFN,WIEN)
+ S WDFN="" F  S WDFN=$O(@CRIT@("WLIST",WDFN)) Q:WDFN=""  S @TGLOB@(WDFN)=""
+ Q
+ ;
+WCK ;EP
+ ; Waitlist clinic
+ I $G(WCLN)'="",$G(CLN)=WCLN D WFL(1)
+ I $D(MPARMS("WCLN")),$D(MPARMS("WCLN",CLN)) D WFL(1)
+ ; WaitList provider
+ I $G(WNOPROV)=1,$P(^BSDWL(CLN,1,WIEN,0),"^",6)="" D WFL(2)
+ I $G(WPROV)'="",$P(^BSDWL(CLN,1,WIEN,0),"^",6)=WPROV D WFL(2)
+ I $D(MPARMS("WPROV")) S PRV=$P(^BSDWL(CLN,1,WIEN,0),"^",6) D
+ . I PRV="" Q
+ . I $D(MPARMS("WPROV",PRV)) D WFL(2)
+ ; Waitlist Reasons
+ I $G(WAREAS)'="" D
+ . I $P(^BSDWL(CLN,1,WIEN,0),"^",9)=WAREAS D WFL(3) Q
+ I $D(MPARMS("WAREAS")) D
+ . S REAS=$P(^BSDWL(CLN,1,WIEN,0),"^",9) I $D(MPARMS("WAREAS",REAS)) D WFL(10)
+ I $G(WRREAS)'="" D
+ . I $P(^BSDWL(CLN,1,WIEN,0),"^",8)=WRREAS D WFL(3) Q
+ I $D(MPARMS("WRREAS")) D
+ . S REAS=$P(^BSDWL(CLN,1,WIEN,0),"^",8) D
+ .. I REAS="" Q
+ .. I $D(MPARMS("WRREAS",REAS)) D WFL(10)
+ ; Waitlist priority
+ I $G(WPRI)'="",$P(^BSDWL(CLN,1,WIEN,0),"^",2)=WPRI D WFL(4)
+ I $D(MPARMS("WPRI")) S PRI=$P(^BSDWL(CLN,1,WIEN,0),"^",2) I PRI'="",$D(MPARMS("WPRI",PRI)) D WFL(4)
+ ; Waitlist Users
+ I $G(WAUSR)'="",$P(^BSDWL(CLN,1,WIEN,0),"^",4)=WAUSR D WFL(8)
+ I $D(MPARMS("WAUSR")) S BUS="" F  S BUS=$O(MPARMS("WAUSR",BUS)) Q:BUS=""  I $P(^BSDWL(CLN,1,WIEN,0),"^",4)=BUS D WFL(8)
+ I $G(WRUSR)'="",$P(^BSDWL(CLN,1,WIEN,0),"^",11)=WRUSR D WFL(9)
+ I $D(MPARMS("WRUSR")) S BUS="" F  S BUS=$O(MPARMS("WRUSR",BUS)) Q:BUS=""  I $P(^BSDWL(CLN,1,WIEN,0),"^",11)=BUS D WFL(9)
+ Q
+ ;
+WFL(POS) ;file record in temp global
+ S @WLGLOB@(WDFN)=""
+ NEW DA,IENS
+ S DA(1)=CLN,DA=WIEN,IENS=$$IENS^DILF(.DA)
+ I '$D(@CRIT@("WLIST",WDFN,IENS)) S @CRIT@("WLIST",WDFN,IENS)="0^0^0^0^0^0^0^0^0^0"
+ S $P(@CRIT@("WLIST",WDFN,IENS),"^",POS)=1
+ Q
+ ;
+WDT ;
+ I $G(WARANGE)="Ever" D
+ . S CLN=0 F  S CLN=$O(^BSDWL(CLN)) Q:'CLN  D
+ .. S WIEN=0 F  S WIEN=$O(^BSDWL(CLN,1,WIEN)) Q:'WIEN  D
+ ... S WDFN=$P(^BSDWL(CLN,1,WIEN,0),"^",1)
+ ... I $P(^BSDWL(CLN,1,WIEN,0),"^",3)'="" D WFL(5)
+ ... D WCK
+ I $G(WCRANGE)="Ever" D
+ . S CLN=0 F  S CLN=$O(^BSDWL(CLN)) Q:'CLN  D
+ .. S WIEN=0 F  S WIEN=$O(^BSDWL(CLN,1,WIEN)) Q:'WIEN  D
+ ... S WDFN=$P(^BSDWL(CLN,1,WIEN,0),"^",1)
+ ... I $P(^BSDWL(CLN,1,WIEN,0),"^",5)'="" D WFL(6)
+ ... D WCK
+ I $G(WRRANGE)="Ever" D
+ . S CLN=0 F  S CLN=$O(^BSDWL(CLN)) Q:'CLN  D
+ .. S WIEN=0 F  S WIEN=$O(^BSDWL(CLN,1,WIEN)) Q:'WIEN  D
+ ... S WDFN=$P(^BSDWL(CLN,1,WIEN,0),"^",1)
+ ... I $P(^BSDWL(CLN,1,WIEN,0),"^",7)'="" D WFL(7)
+ ... D WCK
+ ;
+ NEW BDT,EDT
+ ; Date added to waitlist
+ I $G(WAFROM)'="" D
+ . S BDT=WAFROM-.0001,EDT=WATHRU
+ . F  S BDT=$O(^BSDWL("AC",BDT)) Q:BDT=""!(BDT\1>EDT)  D
+ .. S CLN="" F  S CLN=$O(^BSDWL("AC",BDT,CLN)) Q:CLN=""  D
+ ... S WIEN="" F  S WIEN=$O(^BSDWL("AC",BDT,CLN,WIEN)) Q:WIEN=""  D
+ .... S WDFN=$P(^BSDWL(CLN,1,WIEN,0),"^",1)
+ .... D WFL(5)
+ .... I $G(WCFROM)'="" S DATE=$P(^BSDWL(CLN,1,WIEN,0),"^",5) I DATE'<WCFROM,DATE'>WCTHRU D WFL(6)
+ .... I $G(WRFROM)'="" S DATE=$P(^BSDWL(CLN,1,WIEN,0),"^",7) I DATE'<WRFROM,DATE'>WRTHRU D WFL(7)
+ .... D WCK
+ ; Recall Date
+ I $G(WCFROM)'="" D
+ . S BDT=WCFROM-.0001,EDT=WCTHRU
+ . F  S BDT=$O(^BSDWL("AD",BDT)) Q:BDT=""!(BDT\1>EDT)  D
+ .. S CLN="" F  S CLN=$O(^BSDWL("AD",BDT,CLN)) Q:CLN=""  D
+ ... S WIEN="" F  S WIEN=$O(^BSDWL("AD",BDT,CLN,WIEN)) Q:WIEN=""  D
+ .... S WDFN=$P(^BSDWL(CLN,1,WIEN,0),"^",1)
+ .... D WFL(6)
+ .... I $G(WAFROM)'="" S DATE=$P(^BSDWL(CLN,1,WIEN,0),"^",3) I DATE'<WAFROM,DATE'>WATHRU D WFL(5)
+ .... I $G(WRFROM)'="" S DATE=$P(^BSDWL(CLN,1,WIEN,0),"^",7) I DATE'<WRFROM,DATE'>WRTHRU D WFL(7)
+ .... D WCK
+ ; Removed Date
+ I $G(WRFROM)'="" D
+ . S BDT=WRFROM-.0001,EDT=WRTHRU
+ . F  S BDT=$O(^BSDWL("AE",BDT)) Q:BDT=""!(BDT\1>EDT)  D
+ .. S CLN="" F  S CLN=$O(^BSDWL("AE",BDT,CLN)) Q:CLN=""  D
+ ... S WIEN="" F  S WIEN=$O(^BSDWL("AE",BDT,CLN,WIEN)) Q:WIEN=""  D
+ .... S WDFN=$P(^BSDWL(CLN,1,WIEN,0),"^",1)
+ .... D WFL(7)
+ .... I $G(WAFROM)'="" S DATE=$P(^BSDWL(CLN,1,WIEN,0),"^",3) I DATE'<WAFROM,DATE'>WATHRU D WFL(5)
+ .... I $G(WCFROM)'="" S DATE=$P(^BSDWL(CLN,1,WIEN,0),"^",5) I DATE'<WCFROM,DATE'>WCTHRU D WFL(6)
+ .... D WCK
+ Q
+ ;
+REF(FGLOB,TGLOB,RFFROM,RFTHRU,RFTYPE,RFPRI,RFVIS,RFFAC,RFSTAT,RFPROV,RFICD,RFPAY,RFSNOM,RFVEN,MPARMS) ; EP
+ S RFGLOB=$NA(^TMP("BQIRFRL",$J)) K @RFGLOB
+ K @CRIT@("REFR")
+ I $G(TGLOB)="" Q
+ ;
+ S RCNT=0
+ ; Determine populate count
+ D
+ . I $G(RFTYPE)'=""!($D(MPARMS("RFTYPE"))) S RCNT=RCNT+1
+ . I $G(RFPRI)'=""!($D(MPARMS("RFPRI"))) S RCNT=RCNT+1
+ . I $G(RFVIS)'=""!($D(MPARMS("RFVIS"))) S RCNT=RCNT+1
+ . I $G(RFFAC)'=""!($D(MPARMS("RFFAC"))) S RCNT=RCNT+1
+ . I $G(RFSTAT)'=""!($D(MPARMS("RFSTAT"))) S RCNT=RCNT+1
+ . I $G(RFPROV)'=""!($D(MPARMS("RFPROV"))) S RCNT=RCNT+1
+ . I $G(RFICD)'=""!($D(MPARMS("RFICD"))) S RCNT=RCNT+1
+ . I $G(RFPAY)'=""!($D(MPARMS("RFPAY"))) S RCNT=RCNT+1
+ . I $G(RFSNOM)'=""!($D(MPARMS("RFSNOM"))) S RCNT=RCNT+1
+ . I $G(RFVEN)'=""!($D(MPARMS("RFVEN"))) S RCNT=RCNT+1
+ . I $G(RFFROM)'="",$G(RFTHRU)'="" S RCNT=RCNT+1
+ . I $G(RFRANGE)="Ever" S RCNT=RCNT+1
+ ;
+ I $G(FGLOB)="" D RFDT
+ I $G(FGLOB)'="" D
+ . S RDFN="" F  S RDFN=$O(@FGLOB@(RDFN)) Q:RDFN=""  D
+ .. I $G(RFRANGE)="Ever" S BDT="" F  S BDT=$O(^BMCREF("AA",RDFN,BDT)) Q:BDT=""  D  Q
+ ... S RIEN="" F  S RIEN=$O(^BMCREF("AA",RDFN,BDT,RIEN)) Q:RIEN=""  D RFL(1),RCK
+ .. I $G(RFFROM)'="" D
+ ... S BDT="" F  S BDT=$O(^BMCREF("AA",RDFN,BDT)) Q:BDT=""  D
+ .... I BDT<RFFROM!(BDT>RFTHRU) Q
+ .... S RIEN="" F  S RIEN=$O(^BMCREF("AA",RDFN,BDT,RIEN)) Q:RIEN=""  D RFL(1),RCK
+ ;
+ ;what was found and put into TGLOB should be good
+ K @TGLOB
+ S RDFN="" F  S RDFN=$O(@CRIT@("REFR",RDFN)) Q:RDFN=""  D
+ . S RIEN="" F  S RIEN=$O(@CRIT@("REFR",RDFN,RIEN)) Q:RIEN=""  D
+ .. S NCNT=0 F I=1:1:11 S:$P(@CRIT@("REFR",RDFN,RIEN),"^",I)=1 NCNT=NCNT+1
+ .. I NCNT'=RCNT K @CRIT@("REFR",RDFN,RIEN)
+ S RDFN="" F  S RDFN=$O(@CRIT@("REFR",RDFN)) Q:RDFN=""  S @TGLOB@(RDFN)=""
+ Q
+ ;
+RFL(POS) ;
+ S @RFGLOB@(RDFN)=""
+ I '$D(@CRIT@("REFR",RDFN,RIEN)) S @CRIT@("REFR",RDFN,RIEN)="0^0^0^0^0^0^0^0^0^0^0"
+ S $P(@CRIT@("REFR",RDFN,RIEN),"^",POS)=1
+ Q
+ ;
+RFDT ;
+ I $G(RFRANGE)="Ever" D  Q
+ . S RIEN=0 F  S RIEN=$O(^BMCREF(RIEN)) Q:'RIEN  D
+ .. S RDFN=$P(^BMCREF(RIEN,0),"^",3)
+ .. D RFL(1)
+ .. D RCK
+ ;
+ S BDT=RFFROM-1,EDT=RFTHRU
+ F  S BDT=$O(^BMCREF("B",BDT)) Q:BDT=""!(BDT>EDT)  D
+ . S RIEN="" F  S RIEN=$O(^BMCREF("B",BDT,RIEN)) Q:RIEN=""  D
+ .. S RDFN=$P(^BMCREF(RIEN,0),"^",3)
+ .. D RFL(1)
+ .. D RCK
+ Q
+ ;
+RCK ;
+ I $G(RFTYPE)'="",$P(^BMCREF(RIEN,0),"^",4)=RFTYPE D RFL(2)
+ I $D(MPARMS("RFTYPE")) S RT="" F  S RT=$O(MPARMS("RFTYPE",RT)) Q:RT=""  I $P(^BMCREF(RIEN,0),"^",4)=RT D RFL(2)
+ I $G(RFPRI)'="",$P(^BMCREF(RIEN,0),"^",32)=RFPRI D RFL(3)
+ I $D(MPARMS("RFPRI")) S RT="" F  S RT=$O(MPARMS("RFPRI",RT)) Q:RT=""  I $P(^BMCREF(RIEN,0),"^",32)=RT D RFL(3)
+ I $G(RFVIS)'="" D
+ . I RFVIS="B" D RFL(4) Q
+ . I $P(^BMCREF(RIEN,0),"^",14)=RFVIS D RFL(4)
+ I $G(RFFAC)'="",$P(^BMCREF(RIEN,0),"^",5)=RFFAC D RFL(5)
+ I $D(MPARMS("RFFAC")) S RT="" F  S RT=$O(MPARMS("RFFAC",RT)) Q:RT=""  I $P(^BMCREF(RIEN,0),"^",5)=RT D RFL(5)
+ I $G(RFSTAT)'="",$P(^BMCREF(RIEN,0),"^",15)=RFSTAT D RFL(6)
+ I $D(MPARMS("RFSTAT")) S RT="" F  S RT=$O(MPARMS("RFSTAT",RT)) Q:RT=""  I $P(^BMCREF(RIEN,0),"^",15)=RT D RFL(6)
+ I $G(RFPROV)'="",$P(^BMCREF(RIEN,0),"^",6)=RFPROV D RFL(7)
+ I $D(MPARMS("RFPROV")) S RT="" F  S RT=$O(MPARMS("RFPROV",RT)) Q:RT=""  I $P(^BMCREF(RIEN,0),"^",6)=RT D RFL(7)
+ I $G(RFICD)'="",$P(^BMCREF(RIEN,0),"^",12)=RFICD D RFL(8)
+ I $D(MPARMS("RFICD")) S RT="" F  S RT=$O(MPARMS("RFICD",RT)) Q:RT=""  I $P(^BMCREF(RIEN,0),"^",12)=RT D RFL(8)
+ I $G(RFPAY)'="",$P(^BMCREF(RIEN,0),"^",11)=RFPAY D RFL(9)
+ I $D(MPARMS("RFPAY")) S RT="" F  S RT=$O(MPARMS("RFPAY",RT)) Q:RT=""  I $P(^BMCREF(RIEN,0),"^",11)=RT D RFL(9)
+ I $G(RFVEN)'="",$P(^BMCREF(RIEN,0),"^",7)=RFVEN D RFL(10)
+ I $D(MPARMS("RFVEN")) S RT="" F  S RT=$O(MPARMS("RFVEN",RT)) Q:RT=""  I $P(^BMCREF(RIEN,0),"^",7)=RT D RFL(10)
+ I $G(RFSNOM)'=""!($D(MPARMS("RFSNOM"))) D
+ . S VRF=$P($G(^BMCREF(RIEN,13)),"^",3) I VRF="" Q
+ . I $G(RFSNOM)'="",$P(^AUPNVREF(VRF,0),"^",1)=RFSNOM D RFL(11) Q
+ . S RT="" F  S RT=$O(MPARMS("RFSNOM",RT)) Q:RT=""  I $P(^AUPNVREF(VRF,0),"^",1)=RT D RFL(11)
+ Q

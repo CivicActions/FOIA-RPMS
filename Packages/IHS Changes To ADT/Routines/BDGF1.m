@@ -1,5 +1,5 @@
 BDGF1 ; IHS/ANMC/LJF - INPT DATA FUNCTION CALLS ;  [ 09/23/2004  5:04 PM ]
- ;;5.3;PIMS;**1001,1004,1006**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1004,1006,1022**;MAY 28, 2004;Build 18
  ;IHS/ITSC/WAR 09/23/2004 PATCH 1001 use attending provider in PCC if there
  ;IHS/OIT/LJF  07/15/2005 PATCH 1004 fixed inverse date code
  ;             09/09/2005 PATCH 1004 added SRVCHK subroutine
@@ -239,6 +239,7 @@ DESC ;EP; called by executable help on Admission Source field in file 405
  S (BDGC,BDGL,BDGSTOP)=0
  F  S BDGC=$O(^AUTTASRC("C",BDGC)) Q:BDGC=""  Q:BDGSTOP  D
  . S BDGN=0 F  S BDGN=$O(^AUTTASRC("C",BDGC,BDGN)) Q:'BDGN  Q:BDGSTOP  D
+ . . Q:$P($G(^AUTTASRC(BDGN,.1)),U)  ;20230623 62170 p1022 maw screen inactives
  . . W !!,BDGC,?4,$P(^AUTTASRC(BDGN,0),U) S BDGL=BDGL+1
  . . S BDGD=0 F  S BDGD=$O(^AUTTASRC(BDGN,1,BDGD)) Q:'BDGD  Q:BDGSTOP  D
  . . . W !,?6,^AUTTASRC(BDGN,1,BDGD,0) S BDGL=BDGL+1

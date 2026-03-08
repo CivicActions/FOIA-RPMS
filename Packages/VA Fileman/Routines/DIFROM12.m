@@ -1,5 +1,6 @@
-DIFROM12 ;SFISC/XAK-CREATES RTN ENDING IN INIT1 ;12:50 PM  28 Sep 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIFROM12 ;SFISC/XAK-CREATES RTN ENDING IN INIT1 ;6/20/91  11:54 AM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 VER ;
  W !!?5,"Now you must enter the information that goes on the second line",!?5,"of the INIT routines.",!
@@ -12,7 +13,6 @@ V2 K DIR S DIR(0)="F^4:30",DIR("A")="Package Name",DIR("?")="^D PNM^DIFROMH1" D 
  K DIR S DIR(0)="D^::EX",DIR("A")="Date Distributed",DIR("?")="^D VDT^DIFROMH1" D ^DIR Q:$D(DIRUT)  D DD^%DT S DILN2=DILN2_Y
  W !! Q
 PKG ;
- Q:DTL="DIPK"!(DTL="DI")
  S %Y="^UTILITY(U,$J,""PKG"",DPK,",%X="^DIC(9.4,"_DPK_","
  W !,"Moving "_$P(^DIC(9.4,DPK,0),U)_" Entry into Init's."
  S D=%X_"""22""," D %XY^%RCR K DR S:$D(^DISV(DUZ,D)) DR=^(D)

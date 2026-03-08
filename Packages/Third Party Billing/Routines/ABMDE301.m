@@ -1,17 +1,20 @@
 ABMDE301 ; IHS/ASDST/DMJ - Page 3 - QUESTIONS - Display (cont) ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**6,13,14**;NOV 12, 2009;Build 238
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,13,14,31,39,40**;NOV 12, 2009;Build 785
  ; Split from ABMDE30 due to routine size
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - Added Hearing and Vision Prescription Date
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - Added start/end disability dates
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - Added Assumed/Relinquished Care dates
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - Added property/casualty date of 1st contact
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - Added Patient Paid Amount
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - Added Spinal Manipulation Cond Code Ind
- ; IHS/SD/SDR - abm*2.6*6 - 5010 - Added Vision Condition Info
- ;IHS/SD/SDR - 2.6*13 - Added Inital Treatment Date for exp mode 35
- ;IHS/SD/SDR - 2.6*13 - Added Acute Manifestation Date to Spinal Manipulation Code
- ;IHS/SD/SDR - 2.6*13 - Added EXP35 FL17 provider questions
- ;IHS/SD/SDR - 2.6*14 - HEAT163697 - Added message NO NPI ENTERED for question 44
+ ;IHS/SD/SDR 2.6*6 5010 - Added Hearing and Vision Prescription Date
+ ;IHS/SD/SDR 2.6*6 5010 - Added start/end disability dates
+ ;IHS/SD/SDR 2.6*6 5010 - Added Assumed/Relinquished Care dates
+ ;IHS/SD/SDR 2.6*6 5010 - Added property/casualty date of 1st contact
+ ;IHS/SD/SDR 2.6*6 5010 - Added Patient Paid Amount
+ ;IHS/SD/SDR 2.6*6 5010 - Added Spinal Manipulation Cond Code Ind
+ ;IHS/SD/SDR 2.6*6 5010 - Added Vision Condition Info
+ ;IHS/SD/SDR 2.6*13 Added Inital Treatment Date for exp mode 35
+ ;IHS/SD/SDR 2.6*13 Added Acute Manifestation Date to Spinal Manipulation Code
+ ;IHS/SD/SDR 2.6*13 Added EXP35 FL17 provider questions
+ ;IHS/SD/SDR 2.6*14 HEAT163697 - Added message NO NPI ENTERED for question 44
+ ;IHS/SD/SDR 2.6*31 CR8881 Removed #44
+ ;IHS/SD/SDR 2.6*39 ADO99168 Added #45
+ ;IHS/SD/SDR 2.6*40 ADO111599 Added #46
  ;
  ; *********************************************************************
 W30 ;EP Hospice Employed Provider
@@ -114,14 +117,30 @@ W43 ;Initial Treatment Date
  S ABM(43)=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,23)
  W:$G(ABM(43))'="" $$SDT^ABMDUTL(ABM(43))
  Q
-W44 ;EXP35 FL17 Provider
- W "Ord/Ref/Sup Phys (FL17).: "
- S ABM(44)=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,24)  ;name
- W:$G(ABM(44))'="" ABM(44)
- I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,25)'="" D
- .S ABMPT=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,25)
- .W " ("_$S(ABMPT="DN":"referring",ABMPT="DK":"ordering",ABMPT="DQ":"supervising",1:"")_")"
- I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,26)'="" W "  "_$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,26)
- I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,26)=""&($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,24)'="") W " <NO NPI ENTERED>"  ;abm*2.6*14 HEAT163697
- Q
+ ;start old abm*2.6*31 IHS/SD/SDR CR8881
+ ;W44 ;EXP35 FL17 Provider
+ ;W "Ord/Ref/Sup Phys (FL17).: "
+ ;S ABM(44)=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,24)  ;name
+ ;W:$G(ABM(44))'="" ABM(44)
+ ;I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,25)'="" D
+ ;.S ABMPT=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,25)
+ ;.W " ("_$S(ABMPT="DN":"referring",ABMPT="DK":"ordering",ABMPT="DQ":"supervising",1:"")_")"
+ ;I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,26)'="" W "  "_$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,26)
+ ;I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,26)=""&($P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),8)),U,24)'="") W " <NO NPI ENTERED>"  ;abm*2.6*14 HEAT163697
+ ;Q
  ;end new code abm*2.6*13
+ ;end old abm*2.6*31 IHS/SD/SDR CR8881
+ ;start new abm*2.6*39 IHS/SD/SDR ADO99168
+W45 ; Date Last SRP (Scaling and Root Planing)
+ W "Date Last SRP...........: "
+ S ABM(45)=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,26)
+ W:$G(ABM(45))'="" $$SDT^ABMDUTL(ABM(45))
+ Q
+ ;end new abm*2.6*39 IHS/SD/SDR ADO99168
+ ;start new abm*2.6*40 IHS/SD/SDR ADO111599
+W46 ; VA Contract Number
+ W "VA Contract Number......: "
+ S ABM(46)=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),9)),U,27)
+ W:$G(ABM(46))'="" ABM(46)
+ Q
+ ;end new abm*2.6*39 IHS/SD/SDR ADO111599

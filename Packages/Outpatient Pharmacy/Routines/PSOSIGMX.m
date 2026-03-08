@@ -1,5 +1,5 @@
-PSOSIGMX ;BIR/RTR-Utility routine to calculate Max Refills for CPRS ;29-May-2012 15:15;PLS
- ;;7.0;OUTPATIENT PHARMACY;**46,78,108,131,1008,222,206,1015**;DEC 1997;Build 62
+PSOSIGMX ;BIR/RTR-Utility routine to calculate Max Refills for CPRS ;31-Jan-2024 13:12;DU
+ ;;7.0;OUTPATIENT PHARMACY;**46,78,108,131,1008,222,206,1015,1035**;DEC 1997;Build 39
  ;External reference to PS(55 supported by DBIA 2228
  ;External reference to PSDRUG( supported by DBIA 221
  ;External reference to YSCL(603.01 supported by DBIA 2697
@@ -16,6 +16,7 @@ PSOSIGMX ;BIR/RTR-Utility routine to calculate Max Refills for CPRS ;29-May-2012
  ; Modified - IHS/CIA/PLS - 09/03/04 - Line EN+27
  ;            IHS/MSC/PLS - 01/28/09 - Changes for max refills to 15
  ;                        - 03/20/12 - Change for refills to 15
+ ;                        - 01/31/2024 - Added # of refills for 91 days supply EN+
 EN ;
  S PSOQX("MAX")=11
  S PSOQX("MAX")=15  ;IHS/MSC/PLS - 01/28/09
@@ -49,7 +50,7 @@ EN ;
  .; IHS/CIA/PLS - 09/03/04 - Adjust max days supply from VA (90) to IHS (365)
  .;S PSODYX=$G(PSOQX("DAYS SUPPLY")),PSODYX1=$S(PSODYX<60:11,PSODYX'<60&(PSODYX'>89):5,PSODYX=90:3,1:0) S PSOQX("MAX")=$S(PSOQX("MAX")'>PSODYX1:PSOQX("MAX"),1:PSODYX1)
  .;S PSODYX=$G(PSOQX("DAYS SUPPLY")),PSODYX1=$S(PSODYX<60:11,PSODYX<90:5,PSODYX=90:3,PSODYX<168:2,PSODYX<365:1,1:0) S PSOQX("MAX")=$S(PSOQX("MAX")'>PSODYX1:PSOQX("MAX"),1:PSODYX1)
- .S PSODYX=$G(PSOQX("DAYS SUPPLY")),PSODYX1=$S(PSODYX<60:15,PSODYX<90:5,PSODYX=90:3,PSODYX<168:2,PSODYX<365:1,1:0) S PSOQX("MAX")=$S(PSOQX("MAX")'>PSODYX1:PSOQX("MAX"),1:PSODYX1)  ;p1014
+ .S PSODYX=$G(PSOQX("DAYS SUPPLY")),PSODYX1=$S(PSODYX<60:15,PSODYX<90:5,PSODYX=90:3,PSODYX=91:3,PSODYX<168:2,PSODYX<365:1,1:0) S PSOQX("MAX")=$S(PSOQX("MAX")'>PSODYX1:PSOQX("MAX"),1:PSODYX1)  ;p1014 ;P1035 added 91:3
  I $P($G(^PSDRUG(+$G(PSOQX("DRUG")),"CLOZ1")),"^")="PSOCLO1" D  Q
  .S PSOMXPAT=$O(^YSCL(603.01,"C",+$G(PSOQX("PATIENT")),0)) I 'PSOMXPAT S PSOQX("MAX")=0 Q
  .S PSOMXPAT=$P($G(^YSCL(603.01,PSOMXPAT,0)),"^",3)

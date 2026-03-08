@@ -1,5 +1,5 @@
 ABMCVAPI ; IHS/SD/SDR - 3PB CPT/ICD/MODIFIER API   
- ;;2.6;IHS 3P BILLING SYSTEM;**4,9,10,14,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS 3P BILLING SYSTEM;**4,9,10,14,27,31**;NOV 12, 2009;Build 615
  ;
  ; New routine - v2.6
  ;IHS/SD/SDR 2.6*14 002F - replaced ICDDX^ICDCODE with ICDDX^ICDEX for ICD-10
@@ -8,6 +8,7 @@ ABMCVAPI ; IHS/SD/SDR - 3PB CPT/ICD/MODIFIER API
  ;IHS/SD/SDR 2.6*27 CR8894 Updated to call CPT^ICPTCOD as many times as necessary to find the active CPT based on the CODE sent;
  ;   currently the CPT can be in the CPT file multiple times with different IENs.  If the CPT is DINUMed, CPT^ICPTCOD will return
  ;   the DINUMed entry which may not be the active entry.
+ ;IHS/SD/SDR 2.6*31 CR11624 Added copy of CPTD^ICPTCOD with fix for <SUBSCR>VLTCP+8^ICPTCOD
  ;
 CPT(CODE,CDT,SRC,DFN) ;PEP - returns info about requested CPT entry
  I $$VERSION^XPDUTL("BCSV")>0 S A=$$CPT^ICPTCOD(CODE,CDT,"","") Q A  ;abm*2.6*27 IHS/SD/SDR CR8894
@@ -78,8 +79,10 @@ IHSCPT(CODE,CDT) ;EP - return IHS-numberspaced fields in string
  .S ABMCPT=ABMCPT_"^"_$$GET1^DIQ(81,CODE_",",8,"I")  ;date deleted (p8)
  .;end new code HEAT59419
  Q ABMCPT
+ ;
 IHSCPTD(CODE,OUTARR,DFN,CDT) ;PEP - returns info about requested ICD entry
- I $$VERSION^XPDUTL("BCSV")>0 D CPTD^ICPTCOD(CODE,OUTARR,DFN,CDT) Q OUTARR
+ ;I $$VERSION^XPDUTL("BCSV")>0 D CPTD^ICPTCOD(CODE,OUTARR,DFN,CDT) Q OUTARR  ;abm*2.6*31 IHS/SD/SDR CR11624
+ I $$VERSION^XPDUTL("BCSV")>0 D CPTD^ABMCVAPI(CODE,OUTARR,DFN,CDT) Q OUTARR  ;abm*2.6*31 IHS/SD/SDR CR11624
  E  D  Q OUTARR
  .D GET1^DIQ(81,CODE,50,"IE",OUTARR,"ABMZE")
  ;****************************************************************
@@ -177,3 +180,79 @@ NUM(CODE) ;EP - returns numeric value for ICD DX
  Q:ERR -1  S:+OUT>0 OUT="1"_OUT
  Q OUT
  ;end new HEAT165197
+ ;
+ ;start new abm*2.6*31 IHS/SD/SDR CR11624
+ ;this is a copy of CPTD^ICPTCOD with a correction for the "ADS" cross reference look up in VLTCP
+CPTD(CODE,OUTARR,DFN,CDT) ; Returns CPT description
+ ;
+ ; Input:   CODE   CPT/HCPCS code or IEN (Required)
+ ;          OUTARR Output Array Name for description
+ ;                   e.g. "ABC" or "ABC("TEST")" 
+ ;                   Default = ^TMP("ICPTD",$J)
+ ;          DFN    Not in use, future need
+ ;          CDT    Date (default = TODAY)
+ ; 
+ ; Output:  #  Number of lines in description
+ ;          @OUTARR(1:n) - Versioned Description (lines 1-n) (from the 62 multiple)
+ ;          @OUTARR(n+1) - blank
+ ;          @OUTARR(n+1) - a message stating: CODE TEXT MAY BE INACCURATE
+ ; 
+ ;           or
+ ; 
+ ;          -1^Error Description
+ ;
+ ; ** NOTE - User must initialize ^TMP("ICPTD",$J), if used **
+ ;
+ N ARR,END,I,N,CTV
+ I $G(CODE)="" S N="-1^NO CODE SELECTED" G CPTDQ
+ I $G(OUTARR)="" S OUTARR="^TMP(""ICPTD"",$J,"
+ I OUTARR'["(" S OUTARR=OUTARR_"("
+ I OUTARR[")" S OUTARR=$P(OUTARR,")")
+ S END=$E(OUTARR,$L(OUTARR)) I END'="("&(END'=",") S OUTARR=OUTARR_","
+ I OUTARR="^TMP(""ICPTD"",$J," K ^TMP("ICPTD",$J)
+ S CODE=$S(CODE?1.N:+CODE,1:$$CODEN(CODE)),I=0,N=0
+ I CODE<1!'$D(^ICPT(CODE)) S N="-1^NO SUCH CODE" G CPTDQ
+ S CDT=$S($G(CDT)="":$$DT^XLFDT,1:$$DTBR^ICPTSUPT(CDT))
+ D VLTCP(+CODE,CDT,.CTV) S (N,I)=0 F  S I=$O(CTV(I)) Q:+I=0  D
+ . S N=N+1,ARR=OUTARR_N_")",@ARR=$$TRIM($G(CTV(I)))
+ I +N>0 S N=N+1,ARR=OUTARR_N_")",@ARR=" ",N=N+1,ARR=OUTARR_N_")",@ARR=$$MSG^ICPTSUPT(CDT,1)
+ I +N'>0 S N="-1^VERSIONED DESCRIPTION NOT FOUND FOR MODIFIER "_$P($G(^DIC(81.3,+CODE,0)),"^",1)
+CPTDQ Q N
+ ;
+CODEN(CODE) ; Rreturn the IEN of a CPT/HCPCS code
+ ;
+ ;   Input:  CPT/HCPCS code
+ ;  Output:  ien of code
+ ;
+ I $G(CODE)="" Q -1
+ N COD
+ S COD=+$O(^ICPT("B",CODE,0))
+ Q $S(COD>0:COD,1:-1)
+ ;
+VLTCP(IEN,VDATE,ARY) ; Versioned Description - Long Text (CPT Procedure)
+ N CPT0,CPTC,CPTI,CPTSTD,CPTSTI,CPTVDT,CPTTXT,CPTD,CPTT,CPTE
+ S CPTI=+($G(IEN)) Q:+CPTI'>0  Q:'$D(^ICPT(+CPTI))
+ S CPTVDT=$G(VDATE) S:'$L(CPTVDT)!(+CPTVDT'>0) CPTVDT=$$DT^XLFDT Q:CPTVDT\1'?7N
+ S CPT0=$G(^ICPT(+CPTI,0)),CPTC=$P(CPT0,"^",1) Q:'$L(CPTC)
+ ;
+ ;S CPTSTD=$O(^ICPT("ADS",(CPTC_" "),(CPTVDT+.000001)),-1)
+ S CPTSTD=CPTVDT+.000001
+ F  S CPTSTD=+$O(^ICPT("ADS",(CPTC_" "),CPTSTD),-1) Q:CPTSTD=0  D  Q:($D(^ICPT(+CPTI,62,"B",CPTSTD))>0)
+ ;
+ I +CPTSTD>0 D  Q:+($O(ARY(0)))>0
+ .S CPTSTI=$O(^ICPT("ADS",(CPTC_" "),CPTSTD,+CPTI," "),-1)
+ .S (CPTD,CPTT)=0 F  S CPTD=$O(^ICPT(+CPTI,62,CPTSTI,1,CPTD)) Q:+CPTD=0  D
+ ..S CPTT=CPTT+1,ARY(CPTT)=$$TRIM($G(^ICPT(+CPTI,62,+CPTSTI,1,+CPTD,0))),ARY(0)=CPTT
+ S CPTSTD=$O(^ICPT(+CPTI,62,"B",0)) I +CPTSTD>0 D  Q:+($O(ARY(0)))>0
+ .S CPTSTI=$O(^ICPT(+CPTI,62,"B",CPTSTD,0))
+ .S (CPTD,CPTT)=0 F  S CPTD=$O(^ICPT(+CPTI,62,CPTSTI,1,CPTD)) Q:+CPTD=0  D
+ ..S CPTT=CPTT+1,ARY(CPTT)=$$TRIM($G(^ICPT(+CPTI,62,+CPTSTI,1,+CPTD,0))),ARY(0)=CPTT
+ K ARY S (CPTD,CPTT)=0 F  S CPTD=$O(^ICPT(CPTI,"D",CPTD)) Q:+CPTD=0  D
+ .S CPTT=CPTT+1,ARY(CPTT)=$$TRIM($G(^ICPT(CPTI,"D",CPTD,0))),ARY(0)=CPTT
+ Q
+TRIM(X) ; Trim Spaces
+ S X=$G(X) Q:X="" X F  Q:$E(X,1)'=" "  S X=$E(X,2,$L(X))
+ F  Q:$E(X,$L(X))'=" "  S X=$E(X,1,($L(X)-1))
+ F  Q:X'["  "  S X=$P(X,"  ",1)_" "_$P(X,"  ",2,229)
+ Q X
+ ;end new abm*2.6*31 IHS/SD/SDR CR11624

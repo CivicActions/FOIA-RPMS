@@ -1,0 +1,30 @@
+AUM2104M ;IHS/ASDST/GTH - SCB UPDATE 2001 DEC 14 ; [ 01/29/2002   4:01 PM ]
+ ;;02.1;TABLE MAINTENANCE;**4**;SEP 28,2001
+ ;
+VAL(X,%,Y) ;EP - return background info.
+ I X["AREA" Q $T(@%)
+ S Y=0
+ I X["SU" D  Q Y
+ . NEW C,T
+ . F C=1:1 S T=$P($T(SU+C),";",3) Q:T="END"  I $P(T,U,1,2)=($E(%,1,2)_U_$E(%,3,4)) S Y=1_";;"_T Q
+ .Q
+ I '(X["CTY") Q 0
+ NEW C,T
+ F C=1:1 S T=$P($T(COUNTY+C),";",3) Q:T="END"  I $P(T,U,1,2)=($E(%,1,2)_U_$E(%,3,4)) S Y=1_";;"_T Q
+ Q Y
+ ;
+ ;
+AREA ; CODE^NAME^PREFIX/REGION^CAN PREFIX
+20 ;;20^ALBUQUERQUE^Q^J53
+75 ;;75^PORTLAND TRIBE/638^P^J64
+ ;;END
+ ;
+SU ; AREA^SU^NAME
+2026 ;;20^26^SOUTHERN COLORADO
+7585 ;;75^85^COEUR D'ALENE
+ ;;END
+ ;
+COUNTY ; STATE^COUNTY^NAME
+1629 ;;16^29^LATAH
+ ;;END
+ ;

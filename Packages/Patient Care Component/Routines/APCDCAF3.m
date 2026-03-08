@@ -1,7 +1,40 @@
 APCDCAF3 ; IHS/CMI/LAB - MENTAL HLTH ROUTINE 16-AUG-1994 ;
- ;;2.0;IHS PCC SUITE;**2,5,7,8,11,20**;MAY 14, 2009;Build 25
+ ;;2.0;IHS PCC SUITE;**2,5,7,8,11,20,25,27**;MAY 14, 2009;Build 64
  ;; ;
  ;
+PVCK ;EP
+ ;CHECK POV
+ NEW X,Y,Z,SEX,AGE,APCDX,APCDY,APCDZ,DIR
+ I $$VALI^XBDIQ1(9001001.2,DUZ(2),.41)="N" G AS
+ S X=$$PRIMPOV^APCLV(APCDVSIT,"I") I X D
+ .S Y=X  ;$$VAL^XBDIQ1(9000010.07,X,.01)  ;IEN OF ICD CODE IN ICD FILE
+ .S Z=$$ICDDX^ICDEX(Y,$$VD^APCLV(APCDVSIT)) I $P(Z,U,5) D
+ ..W !!,"WARNING: The Primary Purpose of Visit: ",$P(Z,U,2)," cannot be used as a principal",!,"diagnosis. Please review and re-sequence the Purpose of Visits, if appropriate,",!,"before marking the visit Reviewed/Complete.",! D PAUSE^APCDALV1
+AS ;AGE/SEX CHECK
+ S SEX=$$VALI^XBDIQ1(2,$$VALI^XBDIQ1(9000010,APCDVSIT,.05),.02)  ;patient sex
+ S AGE=$$AGE^APCDUTL($$VALI^XBDIQ1(9000010,APCDVSIT,.05),$$VD^APCLV(APCDVSIT))
+ ;
+ S APCDX=0 F  S APCDX=$O(^AUPNVPOV("AD",APCDVSIT,APCDX)) Q:APCDX'=+APCDX  D PVCK1
+ Q
+AGECHECK(AGE,APCDZ) ;EP
+ I AGE]"",$P(APCDZ,U,15)]"",AGE<$P(APCDZ,U,15) Q 1
+ I AGE]"",$P(APCDZ,U,16)]"",AGE>$P(APCDZ,U,16) Q 1
+ Q 0
+PVCK1 ;EP
+ NEW X,APCDZ,APCDY,DIR
+ S APCDY=$$VALI^XBDIQ1(9000010.07,APCDX,.01)  ;IEN OF ICD CODE IN ICD FILE
+ S APCDZ=$$ICDDX^ICDEX(APCDY,$$VD^APCLV(APCDVSIT))
+ I $P(APCDZ,U,11)]"",$P(APCDZ,U,11)'=SEX D
+ .W !!,"WARNING: The diagnosis ",$P(APCDZ,U,2)," is only to be used by ",$S($P(APCDZ,U,11)="F":"FEMALES",1:"MALES"),"."
+ .W !,"This patient is ",$$VAL^XBDIQ1(2,$$VALI^XBDIQ1(9000010,APCDVSIT,.05),.02),". Please review this Purpose of Visit"
+ .W !,"prior to marking the visit Reviewed/Complete.  If it is not being used"
+ .W !,"appropriately, edit the visit and correct it.",! D PAUSE^APCDALV1
+ I $$AGECHECK(AGE,APCDZ) D
+ .W !!,"WARNING: The AGE RANGE for diagnosis ",$P(APCDZ,U,2)," is ",+$P(APCDZ,U,15),"-",$P(APCDZ,U,16)," years of age."
+ .W !,"This patient is ",AGE," years old. Please review this Purpose of Visit"
+ .W !,"prior to marking the visit Reviewed/Complete.  If it is not being used"
+ .W !,"appropriately, edit the visit and correct it.",! D PAUSE^APCDALV1
+ Q
 DISP ;
  K DIR
  S DIR(0)="NO^1:"_APCDRCNT,DIR("A")="Which Visit"
@@ -12,6 +45,8 @@ DISP ;
  ;RELINKER?
  D ^XBFMK
  S APCDCAFV=APCDVSIT,APCDCAF="IN CAF" D EP^APCDKDE D ^APCDVD S APCDVSIT=APCDCAFV
+ ;CHECK POV
+ D PVCK
  ;K DIR S DIR(0)="Y",DIR("A")="Do you want to update the Chart Audit Status for this visit",DIR("B")="Y" KILL DA D ^DIR KILL DIR
  ;I $D(DIRUT) G DISPX
  ;I 'Y G DISPX
@@ -106,9 +141,11 @@ UPDATE ;EP
  D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I Y="" W !,"No VISIT selected." D EOP G UPDATEX
  I $D(DIRUT) W !,"No VISIT selected." D EOP G UPDATEX
- S APCDVSIT=^TMP("APCDCAF OP",$J,"IDX",Y,Y)
+ S (AUPNVSIT,APCDVSIT)=^TMP("APCDCAF OP",$J,"IDX",Y,Y)
  D MOD^AUPNVSIT
 UPD0 ;EP
+ ;CHECK POV
+ D PVCK
  K DIC,DD,D0,DO
  S X=$$NOW^XLFDT,DIC="^AUPNVCA(",DIC(0)="L",DIADD=1,DLAYGO=9000010.45
  S DIC("DR")=".02////"_$P(^AUPNVSIT(APCDVSIT,0),U,5)_";.03////"_APCDVSIT_";.05////"_DUZ_";1216////"_$$NOW^XLFDT D FILE^DICN
@@ -140,7 +177,7 @@ R ;
 UPDATEX ;
  K DIADD,DLAYGO
  D ^XBFMK
- K APCDCAR,APCDCVA,APCDVSIT
+ K APCDCAR,APCDCVA,APCDVSIT,AUPNVSIT
  D BACK
  Q
  ;

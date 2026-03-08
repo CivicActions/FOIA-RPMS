@@ -1,6 +1,5 @@
-XUSNPIDA ;FO-OAKLAND/JLI - SPECIFIED TAXONOMY VALUES FOR NPI RECIPIENTS ;4/8/08  18:18
- ;;8.0;KERNEL;**420,410,480**;Jul 10, 1995;Build 38
- ;;Per VHA Directive 2004-038, this routine should not be modified
+XUSNPIDA ;FO-OAKLAND/JLI - SPECIFIED TAXONOMY VALUES FOR NPI RECIPIENTS ;8/22/06  11:37
+ ;;8.0;KERNEL;**420,410**;Jul 10, 1995;Build 27
  Q
  ;
 CHKGLOB() ;  returns global location of TAXONOMY values also rebuilds if they are missing
@@ -341,5 +340,4 @@ VALUES ;
  ;;367500000X
  ;;367A00000X
  ;;367H00000X
- ;;390200000X
  ;;

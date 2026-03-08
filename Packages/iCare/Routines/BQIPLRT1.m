@@ -1,5 +1,5 @@
 BQIPLRT1 ;PRXM/HC/DB-Retrieve Panel Related Tables ; 19 Oct 2005  12:26 PM
- ;;2.1;ICARE MANAGEMENT SYSTEM;;Feb 07, 2011
+ ;;1.1;ICARE MANAGEMENT SYSTEM;**3**;Jun 17, 2008
  Q
  ;
 SRCTYP(DATA,FAKE) ; EP -- BQI GET SOURCE TYPE LIST
@@ -44,7 +44,7 @@ ERRSRC ;Error trap for Source Type
  NEW Y,ERRDTM
  S Y=$$NOW^XLFDT() X ^DD("DD") S ERRDTM=Y
  S BMXSEC="Recording that an error occurred at "_ERRDTM
- I $D(BQII),$D(DATA) S BQII=BQII+1,@DATA@(BQII)=$C(31)
+ S BQII=BQII+1,@DATA@(BQII)=$C(31)
  Q
  ;
 PP(DATA,FAKE) ; EP -- BQI GET PREDEF PANEL LIST
@@ -88,7 +88,7 @@ ERRPP ;Error trap for PreDefined Panel
  NEW Y,ERRDTM
  S Y=$$NOW^XLFDT() X ^DD("DD") S ERRDTM=Y
  S BMXSEC="Recording that an error occurred at "_ERRDTM
- I $D(BQII),$D(DATA) S BQII=BQII+1,@DATA@(BQII)=$C(31)
+ S BQII=BQII+1,@DATA@(BQII)=$C(31)
  Q
  ;
 USRQLST(DATA,FAKE) ; EP -- BQI GET QMAN TEMPLATE LIST
@@ -157,44 +157,6 @@ USRQLST(DATA,FAKE) ; EP -- BQI GET QMAN TEMPLATE LIST
  S BQII=BQII+1,@DATA@(BQII)=$C(31)
  Q
  ;
-QMG(DATA,FAKE) ;EP -- BQI GET QMAN TEMPLATE GRID
- ; Variables
- ;  UID      - Unique ID for passing data to and from the GUI
- ;  CLINKEY  - IEN for AMQQZCLIN key
- ;  SRTTEMP  - Sort template IEN
- ;  TEMPUSER - User associated with a template
- ;  BQII     - Increment variable for setting Output nodes
- ;  FILE     - Used to hold the file number for the Patient and Visit files
- ;  TEMPNM   - Template Name
- ;  CHKTEMP  - Used to check if the template has any patients associated with them.
- ;  
- N UID,CLINKEY,SRTTEMP,TEMPUSER,BQII,FILE,TEMPNM,CHKTEMP,USER,CREATBY,SCOMPDT,FILNM
- S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J),BQII=0,U="^"
- S DATA=$NA(^TMP("BQIPLRT1",UID,"QT"))
- K @DATA
- ;
- NEW $ESTACK,$ETRAP S $ETRAP="D ERRQT^BQIPLRT1 D UNWIND^%ZTER" ; SAC 2006 2.2.3.3.2
- ;
- S @DATA@(BQII)="I00010QMAN_IEN^T00030QMAN_TEMPLATE_NAME^T00001TEMPLATE_TYPE^T00035CREATED_BY^D00015COMPLETED_DATE"_$C(30)
- ; If this user does have the AMQQZCLIN security key, create a list of ALL
- ; sort templates.
- ; 
- F FILE="F9000001","F9000010"  D
- .S TEMPNM=""
- .F  S TEMPNM=$O(^DIBT(FILE,TEMPNM)) Q:TEMPNM=""  D
- ..S SRTTEMP=0
- ..F  S SRTTEMP=$O(^DIBT(FILE,TEMPNM,SRTTEMP)) Q:'SRTTEMP  D
- ...; Check if there are any patients in the template, if not, quit
- ...S CHKTEMP=$O(^DIBT(SRTTEMP,1,"")) I 'CHKTEMP Q
- ...S USER=$$GET1^DIQ(.401,SRTTEMP,5,"I")
- ...S FILNM=$E($$GET1^DIQ(.401,SRTTEMP,4,"E"),1)
- ...S CREATBY=$$GET1^DIQ(200,USER,.01,"E")
- ...S SCOMPDT=$$GET1^DIQ(.401,SRTTEMP,9,"I"),SCOMPDT=$$FMTMDY^BQIUL1($P($G(SCOMPDT),"."))
- ...S BQII=BQII+1
- ...S @DATA@(BQII)=SRTTEMP_U_TEMPNM_U_FILNM_U_CREATBY_U_SCOMPDT_$C(30)
- S BQII=BQII+1,@DATA@(BQII)=$C(31)
- Q
- ;
 PAD(STRING,FLDLNGTH) ;EP
  ; Input
  ;  STRING - string of data passed by reference
@@ -207,11 +169,10 @@ PAD(STRING,FLDLNGTH) ;EP
  F SPACE=$L(STRING):1:FLDLNGTH S SPACESTR=$G(SPACESTR)_" "
  S STRING=$G(STRING)_$G(SPACESTR)
  Q
- ;
 ERRQT ; Error trap for Q-Man Template
  D ^%ZTER
  NEW Y,ERRDTM
  S Y=$$NOW^XLFDT() X ^DD("DD") S ERRDTM=Y
  S BMXSEC="Recording that an error occurred at "_ERRDTM
- I $D(BQII),$D(DATA) S BQII=BQII+1,@DATA@(BQII)=$C(31)
+ S BQII=BQII+1,@DATA@(BQII)=$C(31)
  Q

@@ -1,5 +1,5 @@
 BGP8D41 ; IHS/CMI/LAB - measure 3 ;
- ;;18.1;IHS CLINICAL REPORTING;;MAY 25, 2018;Build 66
+ ;;18.0;IHS CLINICAL REPORTING;**1**;NOV 21, 2017;Build 62
  ;
  ;IHS/CMI/LAB - patch 1 7-7-03 added HDL and Triglyceride check to 30-1
 I0302 ;EP

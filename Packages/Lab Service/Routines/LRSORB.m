@@ -1,5 +1,5 @@
 LRSORB ;DALOI/RWF/RLM-SCAN PART OF LRSORA ;7/3/86 12:47 PM [ 04/14/2003  1:27 PM ]
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**272**;Sep 27, 1994
  ; Reference to $$FMTE^XLFDT supported by IA #10103
  ; Reference to $$NOW^XLFDT supported by IA #10103

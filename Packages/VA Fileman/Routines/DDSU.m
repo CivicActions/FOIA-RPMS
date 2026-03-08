@@ -1,6 +1,7 @@
-DDSU ;SFISC/MLH-PROCESS HELP ;10:48 AM  6 Sep 2006
- ;;22.0;VA FileMan;**4,3,54,151**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DDSU ;SFISC/MLH-PROCESS HELP ;12:53 PM  25 May 1995
+ ;;21.0;VA FileMan;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**13**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
 LIST ;
  D FM:'$D(DDS),SC:$D(DDS)
  Q
@@ -10,7 +11,7 @@ SC ;Screen Help
  K DTOUT,DUOUT
  ;
  W $P(DDGLVID,DDGLDEL,9) S X=$G(IOM,80)-1 X ^%ZOSF("RM")
- I $D(DDQ)#2,DDQ<(IOSL-1),DDQ>DDSHBX!$P(DDQ,U,2)!$D(DDIOL) S DY=$P(DDQ,U),DX=$P(DDQ,U,2)
+ I $D(DDQ)#2,DDQ>DDSHBX!$D(DDSID) S DY=$P(DDQ,U),DX=$P(DDQ,U,2)
  E  D CLRMSG^DDS S DY=DDSHBX
  X DDXY
  ;
@@ -42,8 +43,7 @@ SC1 S A6=A0,A0=$O(DDH(A0)) S:A6="" A6=A0-1
  I A4'="X"!(DY'>DDSHBX) S DY=DY+1 X DDXY
  I A4="E" D SC2 Q
  ;
- I $D(DDSCTRL) S:+DDSCTRL'=DDSCTRL!(DDSCTRL>3)!(DDSCTRL<1)!(DDSCTRL?.E1"."1N.N) DDSCTRL=2 ;DI*151
- I $Y'<(IOSL-($G(DDSCTRL,2)))!'A0 D SC2 Q:DDO'<1!(X=U)!'A0!DIY!$D(DTOUT)!$D(DUOUT)  S DY=DDSHBX+1,DX=0 X DDXY ;DI*151
+ I $Y'<(IOSL-1)!'A0 D SC2 Q:DDO'<1!(X=U)!'A0!DIY!$D(DTOUT)!$D(DUOUT)  S DY=DDSHBX+1,DX=0 X DDXY
  Q:A4=""
  ;
  D WR
@@ -100,22 +100,18 @@ FM ;FileMan help - Non screen
  N A0,A1,A2,A3,A4,DDSDIW,DDSDIY,Y
  S A0=""
  F  S A0=$O(DDH(A0)) Q:'A0  S DDSDIW=$X,DDSDIY=$Y D W I $G(DDD)>2,DDSDIW-$X!(DDSDIY-$Y) D STP Q:$D(DTOUT)
- I $G(DIPGM)="DICQ1",$G(DP),$G(DIC("?N",DP)) D
- . N DIZ S DIZ=0 D T Q
  ;
-Q I '$D(DTOUT) D SV S DDH=0 Q
- K DDH D:'DTOUT  Q
- . K DTOUT N % S %=$G(DIPGM) I %'="DICQ1",%'="DIEQ" Q
- . S DUOUT=1 Q
+Q I '$D(DTOUT) D SV S DDH=0
+ E  K DDH K:'DTOUT DTOUT
  Q
  ;
-STP Q:$D(DD)[0!($D(DIY)[0)  I DD+DIY'>79 W ?DD S DD=DD+DIY Q
+STP I DD+DIY'>79 W ?DD S DD=DD+DIY Q
  ;
 T W !?3 S DD=DIY+3
  I $Y>DIZ!'$Y D
  . R "'^' TO STOP: ",%Y:$G(DTIME,300)
  . E  S DTOUT=1 K DDD
- . W $C(13),$J("",15),$C(13) Q:$D(DTOUT)
+ . W *13,$J("",15),*13 Q:$D(DTOUT)
  . I %Y[U S DTOUT=0 K DDD
  . D Y W ?3
  Q
@@ -128,7 +124,7 @@ WR I A4["X" D  Q
  . N DDD,DIY,DDSXEC
  . S DDSXEC=DDH(A0,A4)
  . N DDH
- . I $D(DDS) N DDSID S DDSID=1 S DDQ=$S(DY>(IOSL-1):IOSL-1,1:DY)_U_DX
+ . I $D(DDS) N DDSID S DDSID=1
  . X DDSXEC
  ;
  I A4["Q" D  Q
@@ -144,18 +140,17 @@ WR I A4["X" D  Q
  .. S DDH(A0,A4)=$TR(DDH(A0,A4),$C(0),"")
  . W DDH(A0,A4)
  ;
- I '$D(DDS),$G(DDD)'["J",A4'=+A4 Q
- I $D(DDS),$G(DDD)=2!($G(DDD)["J") W A0,?7
+ I '$D(DDS),DDD'["J",A4'=+A4 Q
+ I $D(DDS),DDD=2!(DDD["J") W A0,?7
  ;
  W DDH(A0,A4)
- I $D(DDH("ID")) D  S:$D(DUOUT) DIY=U
+ D:$D(DDH("ID"))
  . N DDD,DIY,DDSID
  . S DDSID=DDH("ID")
  . S:$D(DDH("ID",1))#2 DDSID(1)=DDH("ID",1)
  . N DDH
  . S:$D(DDSID(1))#2 DDH("ID",1)=DDSID(1) K DDSID(1)
  . S Y=A4
- . S:$D(DDS) DDQ=$S(DY>(IOSL-1):IOSL-1,1:DY)_U_$X
  . X DDSID
  Q
  ;

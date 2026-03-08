@@ -1,5 +1,5 @@
-RADLQ1 ;HISC/GJC AISC/MJK,RMO-Delq Status/Incomplete Rpt's ;10/30/97  15:02
- ;;5.0;Radiology/Nuclear Medicine;**15,97,47**;Mar 16, 1998;Build 21
+RADLQ1 ;HISC/GJC AISC/MJK,RMO-Delq Status/Incomplete Rpt's ;30 Mar 2018 1:20 PM
+ ;;5.0;Radiology/Nuclear Medicine;**15,97,47,137,124,1009**;Mar 16, 1998;Build 21
  ;'RALL' will be defined in the entry action of RA INCOMPLETE
  I $D(DUZ),($O(RACCESS(DUZ,""))']"") D CHECK^RADLQ3(DUZ)
  S X=$$DIVLOC^RAUTL7() K ^TMP($J,"RADLQ")
@@ -47,7 +47,9 @@ START ; start processing here
  . S RAXIT=$$EOS^RAUTL5() Q:RAXIT  S RAFLAG="" D HDR^RADLQ2
  . D:'RAXIT LIST^RADLQ3
  . Q
- S RAXIT=$$EOS^RAUTL5() ;cause screen pause for user
+ ; is RAXIT set to one? If yes, skip $$EOS call /p124/
+ S:RAXIT=0 RAXIT=$$EOS^RAUTL5() ;cause screen pause for user
+ ;
  D EXIT^RADLQ3
  Q
 RADFN ; $ order through rad patients ien's
@@ -101,6 +103,7 @@ SORT ; sort logic
  I $D(ZTQUEUED) D STOPCHK^RAUTL9 S:$G(ZTSTOP)=1 RAXIT=1 Q:RAXIT
  ;S ^TMP($J,"RADLQ",RADIV,RAITYPE,RAVAR,$S(RASORT2="P":RANME,1:$P(RADTE,".")),$S(RASORT2="P":$P(RADTE,"."),1:RANME),RACN)=RACN_"^"_RAPRC_"^"_RAST_"^"_RADT_"^"_RAWHE_"^"_RARP_"^"_RASSN_"^"_RAVRFIED_"^"_RAIPHY_"^"_RATECH
  N RASSAN,RACNDSP S RASSAN=$$SSANVAL^RAHLRU1(RADFN,RADTI,RACNI)
+ I ($O(^RARPT(RA(17),2005,0))) S RACN=RACN_" i" I RASSAN]"" S RASSAN=RASSAN_"i" ;Images captured indicator -P137/KLM
  S RACNDSP=$S((RASSAN'=""):RASSAN,1:RACN)
  I $$USESSAN^RAHLRU1() D
  .S ^TMP($J,"RADLQ",RADIV,RAITYPE,RAVAR,$S(RASORT2="P":RANME,1:$P(RADTE,".")),$S(RASORT2="P":$P(RADTE,"."),1:RANME),RACN)=RACNDSP_"^"_RAPRC_"^"_RAST_"^"_RADT_"^"_RAWHE_"^"_RARP_"^"_RASSN_"^"_RAVRFIED_"^"_RAIPHY_"^"_RATECH

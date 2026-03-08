@@ -1,8 +1,7 @@
 ACHS31E1 ;IHS/OIT/FCJ - ACHS 3.1 PATCH ENV CHECK ;
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**27**;JUN 11,2001;Build 43
- ;3.1*14 1/11/2008;IHS/OIT/FCJ
- ; CHANGE INTROE SECTION WITH EACH PATCH and requirements
- ;
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**33**;JUN 11,2001;Build 39
+ ; CHANGE INTROE SECTION WITH EACH PATCH and Patch Requirements
+ ; ADDED PATCH HISTORY
  ;
  I '$G(IOM) D HOME^%ZIS
  I '$G(DUZ) W !,"DUZ UNDEFINED OR 0." D SORRY(2) Q
@@ -25,16 +24,16 @@ AR ;
  I $D(DTOUT)!$D(DUOUT)!$D(DIRUT) W !,"User stopped environment check." Q
  S ACHSAR=+Y
 CHK ;
- I '$$INSTALLD("ACHS*3.1*20") S XPDQUIT=2
+ I '$$INSTALLD("ACHS*3.1*29") S XPDQUIT=2
  I $$VCHK("DI","22.0",2,"<")
- I '$$INSTALLD("XU*8.0*1017") S XPDQUIT=2
- I '$$INSTALLD("AUPN*99.1*26") S XPDQUIT=2
- I '$$INSTALLD("AG*7.1*13") S XPDQUIT=2
- I '$$INSTALLD("AUT*98.1*20") S XPDQUIT=2
- I $$VCHK("ATX","5.1",2,"<")
+ I '$$INSTALLD("XU*8.0*1018") S XPDQUIT=2
+ I '$$INSTALLD("AUPN*99.1*29") S XPDQUIT=2
+ I '$$INSTALLD("AUT*98.1*31") S XPDQUIT=2
  I ACHSAR=0 D
- .I '$$INSTALLD("LEX*2.0*1003") S BMCQUIT=2 D SORRY(BMCQUIT)
+ .I $$VCHK("ATX","5.1",2,"<")
+ .I '$$INSTALLD("LEX*2.0*1008") S BMCQUIT=2 D SORRY(BMCQUIT)
  .I $$VCHK("AICD","4.0",2,"<")
+ .I '$$INSTALLD("AG*7.1*15") S XPDQUIT=2
  ;
  NEW DA,DIC
  S X="ACHS",DIC="^DIC(9.4,",DIC(0)="",D="C"
@@ -82,26 +81,16 @@ INSTALLD(ACHS) ;EP; Determine if patch ACHS was installed, where ACHS is
  D ^DIC
  I Y<1 S P=DIC_"""B"","_X_")" I $O(@P)'="" S Y=1
  I $D(P),$P(ACHS,"*")["XU" I '$D(@P) S Y=-1
- I Y>0 W !,$$CJ^XLFSTR("Need at least "_ACHS_"....."_ACHS_" Present",IOM)
- I Y<0 W !,$$CJ^XLFSTR("Need at least "_ACHS_".....",IOM)
+ I '$G(ACHSPOST) D
+ .I Y>0 W !,$$CJ^XLFSTR("Need at least "_ACHS_"....."_ACHS_" Present",IOM)
+ .I Y<0 W !,$$CJ^XLFSTR("Need at least "_ACHS_".....",IOM)
  Q $S(Y<1:0,1:1)
  ; -------------------------------------------
 INTROE ; Intro text during KIDS Environment check.
  ;;In this distribution:
- ;;Modifications New MBI: 
- ;;  1. Denial Letters/Fact Sheets (DEN)
- ;;  2. Enter New Denial (ADD)
- ;;  3. Master Delivery Order Report (MDOL)
- ;;  4. Print Documents (PD)
- ;;  5. Re-Print Documents (REP)
- ;;  6. Initial Document (ID)
- ;;  7. CHS data - prepare for export (CDPE)
- ;;  8. Re-Export CHS Transmission Data (RETD)
- ;;  9. Mark Patient for Export (XPT)
- ;; 10. Display Individual CHS Documents
- ;; 11. Print a CHEF Request
- ;;   
- ;; See Notes file for specific options
+ ;;Modifications: 
+ ;;  1. ADO-121137 Fix for the ACON option for the FI transmission file
+ ;;
  ;;
  ;;###
  ;
@@ -114,3 +103,31 @@ INTROI ; Intro text during KIDS Install.
  ;;this update, and remember not to Q to the HOME device.
  ;;###
  ;
+HIST ;PATCH HISTORY UPDATE
+ D MES^XPDUTL("Begin adding patches to package file.")
+ S DDLM=";;",DLM="|",TAG="CHS"
+ S PKGNM="CONTRACT HEALTH MGMT SYSTEM"
+ I '$D(^DIC(9.4,"B",PKGNM)) D MES^XPDUTL("Problem with package name.") Q
+ S PKGIEN=$O(^DIC(9.4,"B",PKGNM,0))
+ F I=1:1  D  Q:TEXT["END"
+ .S TEXT=$T(@TAG+I) Q:TEXT["END"
+ .S DATA=$P(TEXT,DDLM,2)
+ .S VERSION=$P(DATA,DLM,2),PATCH=$P(DATA,DLM,3)
+ .S VSB=$O(^DIC(9.4,PKGIEN,22,"B",VERSION,0))       ;DO NOT CHANGE 22, THIS IS THE NODE
+ .Q:'VSB
+ .K FDA
+ .; Do not update if the patch is already in the patch history
+ .Q:$D(^DIC(9.4,PKGIEN,22,VSB,"PAH","B",PATCH))     ;DO NOT CHANGE 22, THIS IS THE NODE
+ .S FDA(9.4901,"+1,"_VSB_","_PKGIEN_",",.01)=$G(PATCH)
+ .S FDA(9.4901,"+1,"_VSB_","_PKGIEN_",",.02)=DT
+ .S FDA(9.4901,"+1,"_VSB_","_PKGIEN_",",.03)=DUZ
+ .D UPDATE^DIE(,"FDA")
+ .D:$G(DIERR)'="" MES^XPDUTL("Error adding patch "_PATCH_" to package file.")
+ D MES^XPDUTL("Completed adding patches to package file.")
+ Q
+ ;;;;FORMAT - Package name|Version|Patch|Sequence
+CHS ;
+ ;;CONTRACT HEALTH MGMT SYSTEM|3.1|30
+ ;;CONTRACT HEALTH MGMT SYSTEM|3.1|31
+ ;;CONTRACT HEALTH MGMT SYSTEM|3.1|32
+ ;END

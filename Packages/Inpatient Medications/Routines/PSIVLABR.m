@@ -1,5 +1,5 @@
-PSIVLABR ;BIR/PR-REPRINT LABELS ;03-Apr-2013 14:21;PLS
- ;;5.0; INPATIENT MEDICATIONS ;**58,82,178,184,1010,1015**;16 DEC 97;Build 62
+PSIVLABR ;BIR/PR-REPRINT LABELS ;05-Feb-2025 13:58;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**58,82,178,184,1010,1015,1035**;16 DEC 97;Build 39
  ;
  ; Reference to ^%ZIS(2 is supported by DBIA 3435.
  ; Reference to ^PS(52.6 is supported by DBIA 1231.
@@ -17,6 +17,7 @@ PSIVLABR ;BIR/PR-REPRINT LABELS ;03-Apr-2013 14:21;PLS
  ; Modified - IHS/MSC/PB - 4/25/12 to add expiration date to the iv label. Added line tag OFFSET,
  ;            IHS/MSC/PB - 12/10/12 check for the existance of the variable TEXT1
  ;          - IHS/MSC/PB - 2/13/13 modified line RE+6 to set TEXT1 = "_______" if the offset is not greater than zero
+ ;            IHS/MSC/PLS - 02/01/2024 - Added references to GETHLOC - p1035 FID 99318
  ;
 DEM ;Get demographics and see if label is example only
  N X0,PSJIO,I
@@ -24,7 +25,10 @@ DEM ;Get demographics and see if label is example only
  S PSJIO=$S('$D(PSJIO):0,1:1)
  ; IHS/CIA/PLS - 03/31/04 - Change SSN to HRN
  ;D ENIV^PSJAC,NOW^%DTC S PSIVNOW=$$ENDTC^PSGMI(%),VADM(2)=$E(VADM(2),6,9),PSIVWD=$S(+VAIN(4):$P(VAIN(4),U,2),1:"Opt. IV") I $D(PSIVEXAM) G ENX
- D ENIV^PSJAC,NOW^%DTC S PSIVNOW=$$ENDTC^PSGMI(%),VADM(2)=$G(VA("BID")),PSIVWD=$S(+VAIN(4):$P(VAIN(4),U,2),1:"Opt. IV") I $D(PSIVEXAM) G ENX
+ ; IHS/MSC/PLS - 02/01/2024 - Added call to GETHLOC
+ ;D ENIV^PSJAC,NOW^%DTC S PSIVNOW=$$ENDTC^PSGMI(%),VADM(2)=$G(VA("BID")),PSIVWD=$S(+VAIN(4):$P(VAIN(4),U,2),1:"Opt. IV") I $D(PSIVEXAM) G ENX
+ D SETP  ;p1035
+ D ENIV^PSJAC,NOW^%DTC S PSIVNOW=$$ENDTC^PSGMI(%),VADM(2)=$G(VA("BID")),PSIVWD=$S(+VAIN(4):$P(VAIN(4),U,2),1:$$GETHLOC(.P)) I $D(PSIVEXAM) G ENX  ;p1035
  ;
  ;;NEW PSIVNOL,PSIV1 S (PSIVNOL,PSIV1)=1
  NEW PSIV1 S PSIV1=1
@@ -158,3 +162,12 @@ BARCODE D PSET^%ZISP
  . W PSJBCID
  . F I="EBF","EB" I $G(PSJIO(I))]"" X PSJIO(I)
  Q
+ ;Return default or clinic location - p1035
+GETHLOC(ARY) ;-
+ N RES,RET
+ S RET="Opt. IV"  ;default
+ I ''$D(ARY) D
+ .I $G(ARY(22))=.5 D
+ ..I $G(ARY("CLIN")) S RES=$$GET1^DIQ(44,ARY("CLIN"),.01)
+ ..E  I +$G(ARY(21)) S RES=$$GET1^DIQ(100,+ARY(21),6)
+ Q $S($L($G(RES)):RES,1:RET)

@@ -1,5 +1,5 @@
-AMHBHDSP ; IHS/CMI/LAB - behavioral health display for GUI ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHBHDSP ; IHS/OIT/MJL - behavioral health display for GUI ;
+ ;;3.0;IHS BEHAVIORAL HEALTH;**6**;JAN 27, 2003
  ;
  ;
 TESTREC ;
@@ -20,7 +20,7 @@ ENSFDSP ;
  S AMHSF=AMHIEN
  K ^XTMP("AMHSF",JOB)
  S ^XTMP("AMHSFRUN",JOB)=""
- ;D ^XBKSET
+ D ^XBKSET
  D GUIR^XBLM("PRINT^AMHLESF1","^XTMP(""AMHSF"",JOB)")
  S ^XTMP("AMHSF",JOB,.5)=$O(^XTMP("AMHSF",JOB,""),-1)+1
  S ^XTMP("AMHSFRUN",JOB)="DONE"
@@ -38,14 +38,10 @@ ENCFORM(AMHARRY,AMHR,AMHEFT) ;EP called to get encounter form in array
  S AMHARRY=$NA(@"^TMP(""AMHS"",$J,""DCS"")")
  K ^TMP("AMHS",$J,"DCS")
  I $G(AMHEFT)="" S AMHEFT="F"
- I "FSB"'[AMHEFT Q
- S AMHGUI=1
- D GUIR^XBLM("^AMHLEFP2","^XTMP(""AMHGEF"",$J)")
- ;D ^AMHLEFP2
- ;D EP2^AMHLEFP2(AMHR,1)
+ I "FS"'[AMHEFT Q
+ D EP2^AMHLEFP2(AMHR,1)
  NEW AMHCTR,X S (X,AMHCTR)=0 F  S X=$O(^TMP("AMHS",$J,"DCS",X)) Q:X'=+X  S AMHCTR=AMHCTR+1
  S ^TMP("AMHS",$J,"DCS",.5)=AMHCTR+1 K ^TMP("AMHS",$J,"DCS",0)
- K AMHGUI
  Q
 RECDISP(AMHARRY,AMHR) ;EP - called to display one BH record
  ;retval=array containg data, AMHR=ien of behavioral health record
@@ -54,17 +50,6 @@ RECDISP(AMHARRY,AMHR) ;EP - called to display one BH record
  S AMHARRY=$NA(@"^TMP(""AMHVDSG"",$J)")
  K ^TMP("AMHVDSG",$J)
  K X D EN^AMHVDSG1(AMHARRY,AMHR)
- NEW AMHCTR S (X,AMHCTR)=0 F  S X=$O(^TMP("AMHVDSG",$J,X)) Q:X'=+X  S AMHCTR=AMHCTR+1,^TMP("AMHVDSG",$J,X)=^TMP("AMHVDSG",$J,X,0) K ^TMP("AMHVDSG",$J,X,0)
- S ^TMP("AMHVDSG",$J,.5)=AMHCTR+1
- Q
- ;
-NRECDISP(AMHARRY,AMHR) ;EP - called to display one BH record
- ;retval=array containg data, AMHR=ien of behavioral health record
- ;array returned is ^TMP("AMHVDSG",$J)
- NEW X
- S AMHARRY=$NA(@"^TMP(""AMHVDSG"",$J)")
- K ^TMP("AMHVDSG",$J)
- K X D EN^AMHGBDSP(AMHARRY,AMHR)
  NEW AMHCTR S (X,AMHCTR)=0 F  S X=$O(^TMP("AMHVDSG",$J,X)) Q:X'=+X  S AMHCTR=AMHCTR+1,^TMP("AMHVDSG",$J,X)=^TMP("AMHVDSG",$J,X,0) K ^TMP("AMHVDSG",$J,X,0)
  S ^TMP("AMHVDSG",$J,.5)=AMHCTR+1
  Q

@@ -1,6 +1,8 @@
-PSBODL1 ;BIRMINGHAM/VRN-DUE LIST ;Mar 2004
- ;;3.0;BAR CODE MED ADMIN;**5,9,32,28**;Mar 2004;Build 9
- ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified. 
+PSBODL1 ;BIRMINGHAM/VRN-DUE LIST ;31-Mar-2023 09:21;DU
+ ;;3.0;BAR CODE MED ADMIN;**5,9,32,28,1033**;Mar 2004;Build 34
+ ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
+ ;
+ ; Modified - IHS/MSC/PLS - 03/31/2023 - EN+10
  ;
 EN ;
  S PSBFOHDR=0
@@ -12,7 +14,9 @@ EN ;
  ..I PSBX="",PSBONX["V",PSBIVT'="P" S PSBFLAG=0
  ..S (PSBYES,PSBODD)=0
  ..S:$$PSBDCHK1^PSBVT1(PSBSCH) PSBYES=1
- ..F I=1:1 Q:$P(PSBSCH,"-",I)=""  I $P(PSBSCH,"-",I)?2N!($P(PSBSCH,"-",I)?4N) S PSBYES=1
+ ..;IHS/MSC/PLS - p1033
+ ..;F I=1:1 Q:$P(PSBSCH,"-",I)=""  I $P(PSBSCH,"-",I)?2N!($P(PSBSCH,"-",I)?4N) S PSBYES=1
+ ..F I=1:1 Q:$P($TR(PSBSCH,",","-"),"-",I)=""  I $P($TR(PSBSCH,",","-"),"-",I)?2N!($P($TR(PSBSCH,",","-"),"-",I)?4N) S PSBYES=1
  ..I PSBYES,PSBADST="",PSBSCHT'="O",PSBSCHT'="OC",PSBSCHT'="P"  Q
  ..I PSBFREQ="O" S PSBFREQ=1440
  ..I 'PSBYES,PSBADST="",PSBFREQ<1 Q

@@ -72,7 +72,7 @@ GREET ;;To add to mail message.
  ;;Do not respond to this message.
  ;;  
  ;;Questions about this patch may be directed to
- ;;the ITSC Support Center, at 999-999-9999,
+ ;;the ITSC Support Center, at 505-248-4297,
  ;;refer to patch "ACHS*3.1*27".
  ;;  
  ;;###;NOTE: This line end of text.

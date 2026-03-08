@@ -1,5 +1,6 @@
-DIP5 ;SFISC/GFT-INITIALIZE TO PROCESS THE PRINT ;01:09 PM  13 Feb 2002 [ 12/09/2003  4:17 PM ]
- ;;22.0;VA FileMan;**32,97,1002**;Mar 30, 1999
+DIP5 ;SFISC/GFT-INITIALIZE TO PROCESS THE PRINT ;4/11/96  08:01 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**2,21**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S %H=$H D YMD^%DTC S DT=X K %H,^UTILITY($J),^("DIL",$J)
  I $G(DIFIXPT)=1 D  G GO
@@ -7,9 +8,9 @@ DIP5 ;SFISC/GFT-INITIALIZE TO PROCESS THE PRINT ;01:09 PM  13 Feb 2002 [ 12/09/2
  . Q
  U IO
  S Z=IOM-33,DIOSL=IOSL,M=$P("I 1 S Y=1,DIFF=1 W:DC?.N $C(7) R:DC?.N Y:DTIME S:'$T Y=U S:Y=U (DN,S)=0 I Y'=U ",U,IOST?1"C".E)
- I M]"",DHD="@@" S M=M_"S $Y=0 "
+ I M]"",DHD="@@" S M=M_"S IOX=$X,IOY=0 "_^DD("OS",DISYS,"XY")_" "
  S ^UTILITY($J,1)=M_"S DC=$P(DC,"","",2)+DC+1",M=DHD?1"W ".E
- I DHD'="@@" S ^UTILITY($J,1)=^(1)_" W:$D(DIFF)&($Y) "_IOF_$P(",#",U,IOF'["#"),A1="S DIFF=1,$X=0,$Y=0" S:$L(^UTILITY($J,1))+$L(A1)>200 ^(1.3)=A1,A1="X ^(1.3)" S ^(1)=^(1)_" "_A1 K A1
+ I DHD'="@@" S ^UTILITY($J,1)=^(1)_" W:$D(DIFF)&($Y) "_IOF_$P(",#",U,IOF'["#"),A1="S DIFF=1,IOX=0,IOY=0 "_^DD("OS",DISYS,"XY") S:$L(^UTILITY($J,1))+$L(A1)>200 ^(1.3)=A1,A1="X ^(1.3)" S ^(1)=^(1)_" "_A1 K A1
  I W S ^(1)=^(1)_" W $C(7)"_$S(F:"",1:" U """_IO(0)_"""")_" R Y"_$S(F:"",1:" U IO")_" W """""
  I M S ^(1)=^(1)_" X ^(1.5)",^(1.5)=DHD G GO
  I DHD'?.P1"[".E1"]",DHD'?1"@".E D
@@ -43,10 +44,10 @@ CAL .I $D(DPP(Y,"PTRIX")) D
  .. I (T*(1-%)*N)>F S X=% K DPP(Y,"IX"),DPP(Y,"PTRIX")
  .. Q
  . Q:%=""  Q:X=""  S X=X_U_%,DPP(Y,"SER")=X
- . I $G(DIBT1),$D(^DIBT(DIBT1,2,Y)) S ^DIBT(DIBT1,2,Y,"SER")=X
+ . I $G(DIBT1) S %=Y-$G(DPP(0)) I $D(^DIBT(DIBT1,2,%)) S ^DIBT(DIBT1,2,%,"SER")=X
  . Q
  S X=0 F Y=1:1:DPP I $P(DPP(Y),U,4)["!" S X=1,DRK=1 Q
-FIELDS K R G DIPZ:$D(DIPZ) D INIT S R=DE,DJ=-1 I X S (X,W)="",Y=",DRK",DRJ=0,DLN=3 K DNP D O^DIL
+ G DIPZ:$D(DIPZ) D INIT S R=DE,DJ=-1 I X S (X,W)="",Y=",DRK",DRJ=0,DLN=3 K DNP D O^DIL
 DIL D ^DIL:R]"" S DJ=$S(DIPT:+$O(^DIPT(DIPT,"F",DJ)),1:+$O(^UTILITY("DIP2",$J,DJ))) I DJ S R=^(DJ) G DIL
  D UNSTACK^DIL:DM,A^DIL G ^DIL2
  ;
@@ -55,7 +56,6 @@ AS S:X]"" ^UTILITY($J,D)="W"_$P(":DIPCRIT^",U,DIPCRIT)_" !,?"_$S(S=1:"0,"_""""_$
  ;
 INIT ;
  D:'$D(DISYS) OS^DII K DIL,DIWR S DN=-2,(DIL,DIL0,DIWL,DIO,DIO("SCR"),DM,DG,DX,DHT,DLN)=0,DY="D0",DI=DK_DY,@("DP=+$P("_DK_"0),U,2)"),M(DP)=1,DP(0)=DP,F="",Y=$S($D(^DD("OS"))[0!'$D(^DD("OS",DISYS,0)):0,1:$P(^(0),U,2)),DISMIN=99999
- S DISEARCH=0 ; Initialize SEARCH Switch SO-2/24/2000
  Q
  ;
 DIPZ I $S('$D(^DIPT(DIPZ,"ROU")):1,^("ROU")'[U:1,'$D(^("IOM")):1,1:^("IOM")>IOM)!X S Y=DIPZ D F^DIP21 K DIPZ G GO

@@ -1,314 +1,109 @@
-APCLSILI ; IHS/CMI/LAB - ILI surveillance export ; 27 Jun 2017  2:26 PM
- ;;3.0;IHS PCC REPORTS;**22,23,24,25,26,27,28,29,30,31**;FEB 05, 1997;Build 32
+APCLSILI ; IHS/CMI/LAB - education delimted file for use in excel ;
+ ;;1.0;IHS PCC SUITE;**2**;MAR 14, 2008
  ;
  ;
 START ;
- ;ili surveillance export, runs nightly, see design doc from ILI team for
- ;details
+ ;This report will create a comma delimited output file of all visits on from March 21, 2009
+ ;through the date run for which the visit meets this criteria
+ ;     clinic is in SURVEILLANCE ILI CLINICS taxonomy
+ ;     at least 1 POV is in SURVEILLANCE ILI taxonomy
+ ;     visit is AMBULATORY, OBSERVATION, DAY SURGERY OR NURSING HOME (outpatient in service category)
+ ;after the file is generated it will call sendto with ZISH SEND PARAMETER SURVEILLANCE ILI SEND
  ;
- ;
- D EN^XBVK("APCL")
- S D=""
- S X=$O(^APCLCNTL("B","ILI STOP DATE",0))
- I X,$P(^APCLCNTL(X,0),U,3) S D=$P(^APCLCNTL(X,0),U,3)   ;if there is a stop date then use it
- I D,DT>D Q
+ ;STOP IF TODAY IS AFTER JUL 1 2009
+ Q:DT>3090701  ;AUTO STOP DATE
  ;
  D EXIT
  ;
- ;
 PROC ;EP - called from xbdbque
- S APCL1ST="",APCLSCOM=""
- I $E(DT,6,7)="01" S APCL1ST=1
- ;I $P($G(^APCLILIC(1,0)),U,2) S APCL1ST=1  ;need to send data first time through after the patch is installed
- ;if this is between the 15th and 27th then check to see if the user pop export has been run
- ;if it has run since the 1st of the month then run it.
- ;get the 1st of this month
- S APCL1OM=$E(DT,1,5)_"01"
- ;get date last one finished.
- S (X,L)="" F  S X=$O(^APCLILIC(1,11,"B",X)) Q:X'=+X  S L=X
- I 'L S APCL1ST=1  ;hasn't run before after patch 27 so run it
- I 'APCL1ST,$E(DT,6,7)>14,$E(DT,6,7)<27,L<APCL1OM S APCL1ST=1  ;if last time run was before the 1st then run it
- I $E(DT,4,7)="0710"!($E(DT,4,7)="1210") S APCLSCOM=1
- K APCLLOCT,APCLALLT,APCLHTOT,APCLALL1
- K ^TMP($J)
- K ^APCLDATA($J)
- S APCLCTAX=$O(^ATXAX("B","SURVEILLANCE ILI CLINICS",0))
+ K APCLLOCT
+ K ^APCLDATA($J)  ;export global
+ S APCLCTAX=$O(^ATXAX("B","SURVEILLANCE ILI CLINICS",0))  ;clinic taxonomy
  S APCLDTAX=$O(^ATXAX("B","SURVEILLANCE ILI",0))  ;dx taxonomy
- S APCLTTAX=$O(^ATXAX("B","SURVEILLANCE ILI NO TMP NEEDED",0))
  I 'APCLCTAX D EXIT Q
  I 'APCLDTAX D EXIT Q
  ;
- I '$P($G(^APCLILIC(1,0)),U,4) D  I 1
- .S (APCLSD,APCLDELD)=3081231.9999,$P(^APCLILIC(1,0),U,4)=1,APCLBDAT=3090101,APCLFLF=1,APCL1ST=1,APCLSCOM=1
- E  S (APCLSD,APCLDELD)=$$FMADD^XLFDT(DT,-91)_".9999",APCLBDAT=$$FMADD^XLFDT(DT,-90)
+ S APCLSD=3090320.9999  ;start with 3/21/09 visits
  S APCLED=$$FMADD^XLFDT(DT,-1)
- S APCLZHSD=DT
-EP1 ;EP - called from on demand option
- ;wipe out log? - yes per Deborah
- I $G(APCLFLF) D
- .S APCLX=0 F  S APCLX=$O(^APCLILIL(APCLX)) Q:APCLX'=+APCLX  S DA=APCLX,DIK="^APCLILIL(" D ^DIK
- D UNFOLDTX^APCLSILU
- K ^XTMP("APCLILIV",$J)
- I $G(APCLWEXP)="P" G MONUP
- S APCLVTOT=0
- S APCLBT=$H
- S APCLDELD=APCLSD
+ S APCLVTOT=0  ;visit counter
  F  S APCLSD=$O(^AUPNVSIT("B",APCLSD)) Q:APCLSD'=+APCLSD!($P(APCLSD,".")>APCLED)  D
- .S APCLV=0 F  S APCLV=$O(^AUPNVSIT("B",APCLSD,APCLV)) Q:APCLV'=+APCLV  D PROC1
- ;now go through ADLM and if exported before and not already dealt with d proc1 SKIP IF THIS IS A FULL BACKLOAD
- I $G(APCLFLF) G S
- S APCLSD=APCLDELD
- F  S APCLSD=$O(^AUPNVSIT("ADLM",APCLSD)) Q:APCLSD'=+APCLSD!($P(APCLSD,".")>APCLED)  D
- .S APCLV=0 F  S APCLV=$O(^AUPNVSIT("ADLM",APCLSD,APCLV)) Q:APCLV'=+APCLV  D
- ..Q:$D(^XTMP("APCLILIV",$J,APCLV))  ;already processed
- ..Q:$$VD^APCLV(APCLV)<3090101  ;only want visits after 1/1/09
- ..;I '$D(^APCLILIL(APCLV)) Q  ;;never sent so no need to process
- ..D PROC1
- ;NOW GO THROUGH AVDEL XREF FOR DELETES SKIP IF THIS IS A FULL EXPORT
- S APCLSD=APCLDELD
- F  S APCLSD=$O(^AUPNVSIT("AVDEL",APCLSD)) Q:APCLSD'=+APCLSD!($P(APCLSD,".")>APCLED)  D
- .S APCLV=0 F  S APCLV=$O(^AUPNVSIT("AVDEL",APCLSD,APCLV)) Q:APCLV'=+APCLV  D
- ..I '$D(^APCLILIL(APCLV)) Q  ;never exported so no need to send delete
- ..I $P(^AUPNVSIT(APCLV,0),U,11),$D(^APCLILIL("B",APCLV)) S APCLSTAT="D" D SR("VISIT HAS BEEN DELETED")
- ..S DFN=$P(^AUPNVSIT(APCLV,0),U,5)
- ..S APCLLOC=$P(^AUPNVSIT(APCLV,0),U,6)
- ..S APCLKV=0,APCLH1N1=0,(APCLILI,APCLHVAC,APCLIVAC,APCLADVE,APCLSRD,APCLAVM,APCLAV9)=""
- ..S APCLLOC=$P(^AUPNVSIT(APCLV,0),U,6) Q:APCLLOC=""
+ .S APCLV=0 F  S APCLV=$O(^AUPNVSIT("B",APCLSD,APCLV)) Q:APCLV'=+APCLV  D
+ ..Q:'$D(^AUPNVSIT(APCLV,0))  ;no zero node
+ ..Q:$P(^AUPNVSIT(APCLV,0),U,11)  ;deleted visit
+ ..Q:"AORS"'[$P(^AUPNVSIT(APCLV,0),U,7)  ;just want outpatient
+ ..S APCLCLIN=$$CLINIC^APCLV(APCLV,"I")  ;get clinic code
+ ..Q:APCLCLIN=""
+ ..Q:'$D(^ATXAX(APCLCTAX,21,"B",APCLCLIN))  ;not in clinic taxonomy
+ ..S APCLLOC=$P(^AUPNVSIT(APCLV,0),U,6)  Q:APCLLOC=""  ;no location ???
  ..S APCLDATE=$P($P(^AUPNVSIT(APCLV,0),U),".")
+ ..S DFN=$P(^AUPNVSIT(APCLV,0),U,5)
+ ..Q:DFN=""
+ ..Q:'$D(^DPT(DFN,0))
+ ..Q:$P(^DPT(DFN,0),U)["DEMO,PATIENT"
  ..S APCLASUF=$P($G(^AUTTLOC(APCLLOC,0)),U,10)
- ..D SETREC^APCLSIL2
-S ;NOW SET TOTAL IN PIECE 13
+ ..I APCLASUF="" Q  ;no ASUFAC????
+ ..S APCLLOCT(APCLASUF,$$JDATE(APCLDATE))=$G(APCLLOCT(APCLASUF,$$JDATE(APCLDATE)))+1   ;total number of visits on this date/location
+ ..S G=0
+ ..S X=0 F  S X=$O(^AUPNVPOV("AD",APCLV,X)) Q:X'=+X  S T=$P(^AUPNVPOV(X,0),U) I $$ICD^ATXCHK(T,APCLDTAX,9) S G=1
+ ..Q:'G  ;no diagnosis
+ ..;
+ ..;set delimited record
+ ..S C=","
+ ..S APCLREC=$$UID(DFN)
+ ..S $P(APCLREC,",",2)=$S($$HRN^AUPNPAT(DFN,APCLLOC)]"":$$HRN^AUPNPAT(DFN,APCLLOC),1:$$HRN^AUPNPAT(DFN,DUZ(2)))   ;hrn at location of encounter, if none, then hrn at duz(2)
+ ..S $P(APCLREC,",",3)=$P(^DPT(DFN,0),U,2)
+ ..S $P(APCLREC,",",4)=$$JDATE($P(^DPT(DFN,0),U,3))
+ ..S $P(APCLREC,",",5)=$$COMMRES^AUPNPAT(DFN,"C")
+ ..S $P(APCLREC,",",6)=$P(^AUTTLOC(APCLLOC,0),U,10)
+ ..S $P(APCLREC,",",7)=$$JDATE(APCLDATE)
+ ..S $P(APCLREC,",",12)=$S($P($G(^AUPNVSIT(APCLV,11)),U,14)]"":$P($G(^AUPNVSIT(APCLV,11)),U,14),1:$$UIDV^AUPNVSIT(APCLV))
+ ..S $P(APCLREC,",",14)=$$JDATE($P(^AUPNVSIT(APCLV,0),U,13))
+ ..;povs
+ ..S X=0,APCLC=7 F  S X=$O(^AUPNVPOV("AD",APCLV,X)) Q:X'=+X!(APCLC>9)  D
+ ...S T=$P(^AUPNVPOV(X,0),U)
+ ...Q:'$$ICD^ATXCHK(T,APCLDTAX,9)  ;not one of interest
+ ...S APCLC=APCLC+1  ;piece #
+ ...S $P(APCLREC,",",APCLC)=$$VAL^XBDIQ1(9000010.07,X,.01)
+ ..;temperature
+ ..S APCLTEMP=""
+ ..S X=0 F  S X=$O(^AUPNVMSR("AD",APCLV,X)) Q:X'=+X  D
+ ...Q:$$VAL^XBDIQ1(9000010.01,X,.01)'="TMP"  ;not a temperature
+ ...S V=$P(^AUPNVMSR(X,0),U,4)
+ ...S APCLTEMP=$S(V>APCLTEMP:V,1:APCLTEMP)
+ ..S $P(APCLREC,",",11)=APCLTEMP
+ ..S APCLVTOT=APCLVTOT+1
+ ..S ^APCLDATA($J,APCLVTOT)=APCLREC
+ ;NOW SET TOTAL IN PIECE 13
  S X=0 F  S X=$O(^APCLDATA($J,X)) Q:X'=+X  D
- .I $P(^APCLDATA($J,X),",",8)="" Q
- .Q:$P(^APCLDATA($J,X),",",15)="H"
  .S L=$P(^APCLDATA($J,X),",",6),D=$P(^APCLDATA($J,X),",",7)
- .S $P(^APCLDATA($J,X),",",13)=+$G(^TMP($J,"APCLLOCT",L,D))
+ .S $P(^APCLDATA($J,X),",",13)=$G(APCLLOCT(L,D))
  .Q
- ;NOW SET TOTAL IN PIECE 20
- S X=0 F  S X=$O(^APCLDATA($J,X)) Q:X'=+X  D
- .Q:$P(^APCLDATA($J,X),",",15)'="H"
- .I $P(^APCLDATA($J,X),",",8)="",$P(^APCLDATA($J,X),U,43)=""
- .S L=$P(^APCLDATA($J,X),",",6),D=$P(^APCLDATA($J,X),",",7)
- .S $P(^APCLDATA($J,X),",",20)=+$G(^TMP($J,"APCLHTOT",L,D))
- .Q
- ;NOW SET TOTAL IN PIECE 42
- S X=0 F  S X=$O(^APCLDATA($J,X)) Q:X'=+X  D
- .Q:$P(^APCLDATA($J,X),",",15)="H"
- .I $P(^APCLDATA($J,X),",",43)="" Q    ;not an H1N1/ili visit
- .S L=$P(^APCLDATA($J,X),",",6),D=$P(^APCLDATA($J,X),",",7)
- .S $P(^APCLDATA($J,X),",",42)=+$G(^TMP($J,"APCLALLT",L,D))
- .Q
- ;NOW SET A RECORD FOR EACH DATE and populate 13, 20, 42
- ;NOW SEND A RECORD FOR EACH APCLALLT, SET PIECE 42,DATE AND LOCATION ONLY
- ;NOW SET A ZERO FOR EVERY DAY IN THE TIME PERIOD FOR EACH LOCATION IF IT DOESN'T EXIST
- S APCLSD=$$FMADD^XLFDT(APCLBDAT,-1)
- S L="" F  S L=$O(^TMP($J,"APCLALL1",L)) Q:L=""  D
- .S D=APCLSD
- .F  S D=$$FMADD^XLFDT(D,1) Q:D>APCLED  D
- ..I '$D(^TMP($J,"APCLALL1",L,D)) S ^TMP($J,"APCLALL1",L,D)=0
- ;now reorder by date
- S L="" F  S L=$O(^TMP($J,"APCLALL1",L)) Q:L=""  S D="" F  S D=$O(^TMP($J,"APCLALL1",L,D)) Q:D=""  S ^TMP($J,"APCLX",D,L)=^TMP($J,"APCLALL1",L,D)
- S X=0,C=0 F  S X=$O(^APCLDATA($J,X)) Q:X'=+X  S L=X
- S C=L
- S D=APCLSD F  S D=$O(^TMP($J,"APCLX",D)) Q:D=""  D   ;IHS/CMI/LAB - "" to APCLSD PATCH 31 06/14/17
- .S L="" F  S L=$O(^TMP($J,"APCLX",D,L)) Q:L=""  D
- ..S C=C+1
- ..S ^APCLDATA($J,C)="" D
- ...S $P(^APCLDATA($J,C),",",6)=L,$P(^APCLDATA($J,C),",",7)=D
- ...S $P(^APCLDATA($J,C),",",42)=+$G(^TMP($J,"APCLALLT",L,D))
- ...S $P(^APCLDATA($J,C),",",13)=+$G(^TMP($J,"APCLLOCT",L,D))
- ...S $P(^APCLDATA($J,C),",",20)=+$G(^TMP($J,"APCLHTOT",L,D))
- D ILI^APCLSIHL("ILI")  ;parse out the APCLDATA global and create a message
- K ^APCLDATA($J),^TMP($J)
- K ^XTMP("APCLILIV",$J)
-MONUP ;monthly user pop if today is the 1st
- I $G(APCLSCOM) D COMM^APCLSILU
- I $G(APCL1ST) D
- .;create entry with start date of DT
- . N APCLFDA,APCLIENS,APCLERR
- . S APCLIENS="+2,"_1_","
- . S APCLFDA(9001003.311,APCLIENS,.01)=DT
- . D UPDATE^DIE("","APCLFDA","APCLIENS","APCLERR(1)")
- . ;I $D(APCLERR) S APCLER="0~Add Education Topic" Q
- . S APCLEIEN=$G(APCLIENS(2))
- . D MONUP^APCLSIL1
- . ;ADD END DATE TO MULTIPLE
- . S $P(^APCLILIC(1,11,APCLEIEN,0),U,2)=DT
- D PURGE
+ ;send file
+WRITE ; use XBGSAVE to save the temp global (APCLDATA) to a delimited
+ ; file that is exported to the IE system
+ ;
+ N XBGL,XBQ,XBQTO,XBNAR,XBMED,XBFLT,XBUF,XBFN
+ S XBGL="APCLDATA",XBMED="F",XBQ="N",XBFLT=1,XBF=$J,XBE=$J
+ S XBNAR="ILI SURVEILLANCE EXPORT"
+ S APCLASU=$P($G(^AUTTLOC($P(^AUTTSITE(1,0),U),0)),U,10)  ;asufac for file name
+ S XBFN="FLU_"_APCLASU_"_"_$$DATE(DT)_".txt"
+ S XBS1="SURVEILLANCE ILI SEND"
+ ;
+ D ^XBGSAVE
+ ;
+ I XBFLG'=0 D
+ . I XBFLG(1)="" W:'$D(ZTQUEUED) !!,"VISIT audit file successfully created",!!
+ . I XBFLG(1)]"" W:'$D(ZTQUEUED) !!,"VISIT audit file NOT successfully created",!!
+ . W:'$D(ZTQUEUED) !,"File was NOT successfully transferred to the data warehouse",!,"you will need to manually ftp it.",!
+ . W:'$D(ZTQUEUED) !,XBFLG(1),!!
  D EXIT
+ K ^APCLDATA($J)
  Q
-PROC1 ;
- S ^XTMP("APCLILIV",$J,APCLV)=""
- S APCLSTAT="A",APCLREAS=""
- S APCLPRVE=0 I $D(^APCLILIL("B",APCLV)) S APCLPRVE=1,APCLSTAT="C"  ;SET PREVIOUS EXPORT FIELD
- Q:'$D(^AUPNVSIT(APCLV,0))
- I $P(^AUPNVSIT(APCLV,0),U,11),'$D(^APCLILIL("B",APCLV)) Q  ;DELETED AND NEVER SENT TO DON'T BOTHER
- I $P(^AUPNVSIT(APCLV,0),U,11),$D(^APCLILIL("B",APCLV)) S APCLSTAT="D" D SR("VISIT HAS BEEN DELETED")
- S DFN=$P(^AUPNVSIT(APCLV,0),U,5)
- Q:DFN=""
- Q:'$D(^DPT(DFN,0))
- Q:$P(^DPT(DFN,0),U)["DEMO,PATIENT"
- Q:$$DEMO^APCLUTL(DFN,"E")
- S G=0,X=0 F  S X=$O(^BGPSITE(X)) Q:X'=+X  I $P($G(^BGPSITE(X,0)),U,12) I $D(^DIBT($P(^BGPSITE(X,0),U,12),1,DFN)) S G=1
- Q:G
- S APCLKV=0,APCLH1N1=0,(APCLILI,APCLHVAC,APCLIVAC,APCLADVE,APCLSRD,APCLAVM,APCLAV9)=""
- S APCLLOC=$P(^AUPNVSIT(APCLV,0),U,6) Q:APCLLOC=""
- S APCLDATE=$P($P(^AUPNVSIT(APCLV,0),U),".")
- S APCLASUF=$P($G(^AUTTLOC(APCLLOC,0)),U,10)
- Q:APCLASUF=""
- S ^TMP($J,"APCLALL1",APCLASUF,APCLDATE)=""
- I "AORS"[$P(^AUPNVSIT(APCLV,0),U,7) S ^TMP($J,"APCLALLT",APCLASUF,APCLDATE)=$G(^TMP($J,"APCLALLT",APCLASUF,APCLDATE))+1   ;total number of visits 
- ;keep visit?
- S G=0 D ILIDX I G S APCLKV=1,APCLILI=G D SR("ILI DX")
- S G=0 D H1N1DX I G S APCLKV=1,APCLH1N1=G D SR("H1N1 DX")
- S APCLHVAC=$$HASVAC(APCLV) I APCLHVAC S APCLKV=1 D SR("H1N1 VACCINE")
- S APCLIVAC=$$HASIVAC(APCLV) I APCLIVAC S APCLKV=1 D SR("SEASONAL FLU VACCINE")
- S APCLPVAC=$$HASPVAC^APCLSIL4(APCLV) I APCLPVAC S APCLKV=1 D SR("PNEUMOCOCCAL VACCINE")
- S APCLNVAC=$$HASNVAC^APCLSIL4(APCLV) I APCLNVAC S APCLKV=1 D SR("PANDEMIC VACCINE")
- I APCLIVAC!(APCLHVAC)!(APCLNVAC) S APCLADVE=$$HASADVN6^APCLSIL4(APCLV,$P(APCLIVAC,U,5),$P(APCLHVAC,U,5))  ;this was changed in patch 29 to only put on flu/h1n1 vaccine records
- S APCLOVAC="" I APCLADVE!(APCLPVAC) S APCLOVAC=$$OTHVAC^APCLSIL1(DFN,APCLDATE)
- S APCLSRD=$$HASSRD7(APCLV) I APCLSRD S APCLKV=1 D SR("SEVERE RESP DISEASE")
- S APCLAVM=$$HASAVM^APCLSIL4(APCLV) I APCLAVM S APCLKV=1 D SR("ANTIVRIAL MEDICATION")
- ;S APCLAV9=$$HASAV9(APCLV) I APCLAV9 S APCLKV=1
- S APCLPCVF="" I APCLPVAC S APCLPCVF=$$PCVFEB^APCLSIL4(APCLV,$P(APCLPVAC,U,5))
- S APCLPCVE="" I APCLPVAC S APCLPCVE=$$PCVECPEH^APCLSIL4(APCLV,$P(APCLPVAC,U,5))
- S APCLPCVA="" I APCLPVAC S APCLPCVA=$$PCVANGIO^APCLSIL4(APCLV,$P(APCLPVAC,U,5))
- S APCLPCVS="" I APCLPVAC S APCLPCVS=$$PCVASTH^APCLSIL4(APCLV,$P(APCLPVAC,U,5))
- S APCLPCVI="" I APCLPVAC S APCLPCVI=$$PCVIMMUN^APCLSIL4(APCLV,$P(APCLPVAC,U,5))
- I 'APCLKV,'$D(^APCLILIL("B",APCLV)) Q  ;not a visit to export and never sent
- I 'APCLKV,$D(^APCLILIL("B",APCLV)) S APCLSTAT="D" D SR("NO LONGER MEETS CRITERIA") ;DELETE AS PREVIOUSLY SENT AND NO LONGER TO BE SENT
- D SETREC^APCLSIL2  ;set record
- Q
-SR(R) ;
- Q:APCLREAS
- S APCLREAS=$O(^APCLILIR("B",R,0))
- Q
-HASVAC(V) ;EP - get h1n1 vaccine
- NEW C,X,Y,Z,T,L,M
- S T=$O(^ATXAX("B","SURVEILLANCE H1N1 CVX CODES",0))
- S C=0,X=0 F  S X=$O(^AUPNVIMM("AD",V,X)) Q:X'=+X!(C)  S Y=$P($G(^AUPNVIMM(X,0)),U) D
- .Q:'Y
- .Q:'$D(^AUTTIMM(Y,0))
- .S Z=$P(^AUTTIMM(Y,0),U,3)
- .Q:'$D(^ATXAX(T,21,"B",Z))
- .S C=1_U_Z_U_$$VAL^XBDIQ1(9000010.11,X,.05) I $P(^AUPNVIMM(X,0),U,5),$D(^AUTTIML($P(^AUPNVIMM(X,0),U,5),0)) S C=C_U_$$VAL^XBDIQ1(9999999.41,$P(^AUPNVIMM(X,0),U,5),.02)
- .S Z=$$VALI^XBDIQ1(9000010.11,X,1201)
- .S $P(C,U,5)=$S(Z:$P(Z,".",1),1:$$VD^APCLV(V))
- .Q
- I C Q C
- S T=$O(^ATXAX("B","SURVEILLANCE CPT H1N1",0))
- S C=0,X=0 F  S X=$O(^AUPNVCPT("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVCPT(X,0)),U) D
- .Q:'Y
- .Q:'$$ICD^APCLSILU(Y,T,1)
- .S C=1_U_$$VAL^XBDIQ1(9000010.18,X,.01)
- Q C
-HASIVAC(V) ;EP - get flu iz
- NEW C,X,Y,Z,T
- S T=$O(^ATXAX("B","SURVEILLANCE FLU CVX CODES",0))
- S C=0,X=0 F  S X=$O(^AUPNVIMM("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVIMM(X,0)),U) D
- .Q:'Y
- .Q:'$D(^AUTTIMM(Y,0))
- .S Z=$P(^AUTTIMM(Y,0),U,3)
- .Q:'$D(^ATXAX(T,21,"B",Z))
- .;
- .S C=1_U_Z_U_$$VAL^XBDIQ1(9000010.11,X,.05) I $P(^AUPNVIMM(X,0),U,5),$D(^AUTTIML($P(^AUPNVIMM(X,0),U,5),0)) S C=C_U_$$VAL^XBDIQ1(9999999.41,$P(^AUPNVIMM(X,0),U,5),.02)
- .S Z=$$VALI^XBDIQ1(9000010.11,X,1201)
- .S $P(C,U,5)=$S(Z:$P(Z,".",1),1:$$VD^APCLV(V))
- .Q
- I C Q C
- S T=$O(^ATXAX("B","BGP FLU IZ CVX CODES",0))
- S C=0,X=0 F  S X=$O(^AUPNVIMM("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVIMM(X,0)),U) D
- .Q:'Y
- .Q:'$D(^AUTTIMM(Y,0))
- .S Z=$P(^AUTTIMM(Y,0),U,3)
- .Q:'$D(^ATXAX(T,21,"B",Z))
- .;
- .S C=1_U_Z_U_$$VAL^XBDIQ1(9000010.11,X,.05) I $P(^AUPNVIMM(X,0),U,5),$D(^AUTTIML($P(^AUPNVIMM(X,0),U,5),0)) S C=C_U_$$VAL^XBDIQ1(9999999.41,$P(^AUPNVIMM(X,0),U,5),.02)
- .S Z=$$VALI^XBDIQ1(9000010.11,X,1201)
- .S $P(C,U,5)=$S(Z:$P(Z,".",1),1:$$VD^APCLV(V))
- .Q
- I C Q C
- S T=$O(^ATXAX("B","SURVEILLANCE CPT FLU",0))
- S T1=$O(^ATXAX("B","BGP CPT FLU",0))
- S C=0,X=0 F  S X=$O(^AUPNVCPT("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVCPT(X,0)),U) D
- .Q:'Y
- .I '$$ICD^APCLSILU(Y,T,1),'$$ICD^APCLSILU(Y,T1,1) Q
- .S C=1_U_$$VAL^XBDIQ1(9000010.18,X,.01)
- I C Q C
- S T=$O(^ATXAX("B","BGP FLU IZ PROCEDURES",0))
- S C=0,X=0 F  S X=$O(^AUPNVPRC("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVPRC(X,0)),U) D
- .Q:'Y
- .Q:'$$ICD^APCLSILU(Y,T,0)
- .S C=1_U_$$VAL^XBDIQ1(9000010.08,X,.01)
- I C Q C
- S T=$O(^ATXAX("B","BGP FLU IZ DXS",0))
- S C=0,X=0 F  S X=$O(^AUPNVPOV("AD",V,X)) Q:X'=+X  S Y=$P($G(^AUPNVPOV(X,0)),U) D
- .Q:'Y
- .Q:'$$ICD^APCLSILU(Y,T,9)
- .S C=1_U_$$VAL^XBDIQ1(9000010.07,X,.01)
- I C Q C
- Q C
-ILIDX ;
- Q:"AORSH"'[$P(^AUPNVSIT(APCLV,0),U,7)
- I $P(^AUPNVSIT(APCLV,0),U,7)="H" S ^TMP($J,"APCLHTOT",APCLASUF,APCLDATE)=$G(^TMP($J,"APCLHTOT",APCLASUF,APCLDATE))+1
- S APCLCLIN=$$CLINIC^APCLV(APCLV,"I")  ;
- S X=0,P=0 F  S X=$O(^AUPNVPRV("AD",APCLV,X)) Q:X'=+X!(P)  D
- .Q:'$D(^AUPNVPRV(X,0))
- .S Y=$P(^AUPNVPRV(X,0),U)
- .S Z=$$VALI^XBDIQ1(200,Y,53.5)
- .Q:'Z
- .I $P($G(^DIC(7,Z,9999999)),U,1)=13 S P=1
- I P G ILIDX1
- I $P(^AUPNVSIT(APCLV,0),U,7)'="H" Q:APCLCLIN=""
- I $P(^AUPNVSIT(APCLV,0),U,7)'="H" Q:'$D(^ATXAX(APCLCTAX,21,"B",APCLCLIN))  ;not in clinic taxonomy
-ILIDX1 ;
- I $P(^AUPNVSIT(APCLV,0),U,7)'="H" S ^TMP($J,"APCLLOCT",APCLASUF,APCLDATE)=$G(^TMP($J,"APCLLOCT",APCLASUF,APCLDATE))+1   ;total number of visits
- ;CHECK SURVEILLANCE ILI NO TMP NEEDED FIRST
- ;THEN CHECK SURVEILLANCE ILI AND SEE IF TMP >=100
- S C=0
- K G,Y,Z S G="",Z=""
- S X=0 F  S X=$O(^AUPNVPOV("AD",APCLV,X)) Q:X'=+X  D
- .S T=$P(^AUPNVPOV(X,0),U)
- .I $$ICD^APCLSILU(T,APCLTTAX,9) S C=C+1,Y(C)=$$VAL^XBDIQ1(9000010.07,X,.01) Q
- .I $$ICD^APCLSILU(T,APCLDTAX,9),$$TMP100(APCLV) S C=C+1,Y(C)=$$VAL^XBDIQ1(9000010.07,X,.01)
- Q:'$D(Y)
- S X=0 F  S X=$O(Y(X)) Q:X'=+X  S G=G_U_Y(X)
- S $P(G,U,1)=1
- Q
-TMP100(V) ;EP
- NEW %,M,J
- S %=""
- S M=0 F  S M=$O(^AUPNVMSR("AD",V,M)) Q:M'=+M  D
- .Q:$P($G(^AUPNVMSR(M,2)),U,1)
- .Q:$$VAL^XBDIQ1(9000010.01,M,.01)'="TMP"
- .S J=$P(^AUPNVMSR(M,0),U,4)
- .Q:J<100
- .S %=1
- Q %
  ;
-H1N1DX ;
- Q:"AORSH"'[$P(^AUPNVSIT(APCLV,0),U,7)  ;just want outpatient with dx
- S APCLCLIN=$$CLINIC^APCLV(APCLV,"I")
- S G=0
- S X=0 F  S X=$O(^AUPNVPOV("AD",APCLV,X)) Q:X'=+X!(G)  S T=$P(^AUPNVPOV(X,0),U) I $$ICD^APCLSILU(T,$O(^ATXAX("B","SURVEILLANCE H1N1 DX",0)),9) S G=1,D=$$VAL^XBDIQ1(9000010.07,X,.01)
- Q:'G
- S G=1_U_D
- Q
-HASSRD7(APCLV) ;EP
- NEW X,P,D,Y,Z,APCLCLIN,T,G,C
- I "AORSH"'[$P(^AUPNVSIT(APCLV,0),U,7) Q ""  ;just want outpatient with dx
- S C=0
- K G,Y S G=""
- S X=0 F  S X=$O(^AUPNVPOV("AD",APCLV,X)) Q:X'=+X  S T=$P(^AUPNVPOV(X,0),U) I $$ICD^APCLSILU(T,$O(^ATXAX("B","SURVEILLANCE SEV RESP DIS DXS",0)),9) S C=C+1,Y(C)=$$VAL^XBDIQ1(9000010.07,X,.01)
- I '$D(Y) Q ""
- S X=0 F  S X=$O(Y(X)) Q:X'=+X  S G=G_U_Y(X)
- S $P(G,U,1)=1
- Q G
- ;
-DATE(D) ;EP
+DATE(D) ;
  Q (1700+$E(D,1,3))_$E(D,4,5)_$E(D,6,7)
  ;
-JDATE(D) ;EP - get date
+JDATE(D) ;
  I $G(D)="" Q ""
  NEW A
  S A=$$FMTE^XLFDT(D)
@@ -323,12 +118,113 @@ UID(APCLA) ;Given DFN return unique patient record id.
 EXIT ;clean up and exit
  D EN^XBVK("APCL")
  D ^XBFMK
- K ^XTMP("APCLILITAX",$J)
- K ^XTMP("APCLILIV",$J)
  Q
  ;
 EP ;EP - called from option to create search template using ILI logic
- G ^APCLSIL3
+INFORM ;
+ W:$D(IOF) @IOF
+ W !,$$CTR($$LOC)
+ W !,$$CTR($$USR)
+ W !!,"This report will create a search template of visits that meet the "
+ W !,"Surveillance ILI criteria.  You will be asked the provide the date"
+ W !,"range of visits, a name for the visit search template to be created, and"
+ W !,"the device to which the cover page/summary will be printed.",!
+ W !,"The visits must meet the following criteria:"
+ W !?5," - must be in the date range selected by the user"
+ W !?5," - must have a service category of A, O, R or S (outpatient)"
+ W !?5," - must have at least one diagnosis that is contained in the "
+ W !?8,"SURVEILLANCE ILI taxonomy"
+ W !?5," - must be to a clinic in the SURVEILLANCE ILI CLINICS taxonomy"
+ W !?5," - the patient's name must not contain 'DEMO,PATIENT' (demo patients"
+ W !?8,"skipped)"
+ W !
+ D EXIT
+ S APCLCTAX=$O(^ATXAX("B","SURVEILLANCE ILI CLINICS",0))  ;clinic taxonomy
+ S APCLDTAX=$O(^ATXAX("B","SURVEILLANCE ILI",0))  ;dx taxonomy
+ I 'APCLCTAX W !!,"SURVEILLANCE ILI icd-9 taxonomy missing...cannot continue." D EXIT Q
+ I 'APCLDTAX W !!,"SURVEILLANCE ILI CLINICS taxonomy missing...cannot continue." D EXIT Q
+ ;
+DATES K APCLED,APCLBD
+ K DIR W ! S DIR(0)="DO^::EXP",DIR("A")="Enter Beginning Visit Date"
+ D ^DIR G:Y<1 EXIT S APCLBD=Y
+ K DIR S DIR(0)="DO^:DT:EXP",DIR("A")="Enter Ending Visit Date"
+ D ^DIR G:Y<1 EXIT S APCLED=Y
+ ;
+ I APCLED<APCLBD D  G DATES
+ . W !!,$C(7),"Sorry, Ending Date MUST not be earlier than Beginning Date."
+ S APCLSD=$$FMADD^XLFDT(APCLBD,-1)_".9999"
+ ;
+STMP ;
+ S APCLSTMP=""
+ D ^APCLSTMV
+ I APCLSTMP="" G DATES
+ ;
+ZIS ;call to XBDBQUE
+ S XBRP="PRINT^APCLSILI",XBRC="PROC1^APCLSILI",XBRX="EXIT^APCLSILI",XBNS="APCL"
+ D ^XBDBQUE
+ D EXIT
+ Q
+ ;
+PROC1 ;
+ S APCLJ=$J,APCLH=$H
+ S APCLCTAX=$O(^ATXAX("B","SURVEILLANCE ILI CLINICS",0))  ;clinic taxonomy
+ S APCLDTAX=$O(^ATXAX("B","SURVEILLANCE ILI",0))  ;dx taxonomy
+ I 'APCLCTAX D EXIT Q
+ I 'APCLDTAX D EXIT Q
+ ;
+ S APCLVTOT=0,APCLPTOT=0  ;visit counter
+ F  S APCLSD=$O(^AUPNVSIT("B",APCLSD)) Q:APCLSD'=+APCLSD!($P(APCLSD,".")>APCLED)  D
+ .S APCLV=0 F  S APCLV=$O(^AUPNVSIT("B",APCLSD,APCLV)) Q:APCLV'=+APCLV  D
+ ..Q:'$D(^AUPNVSIT(APCLV,0))  ;no zero node
+ ..Q:$P(^AUPNVSIT(APCLV,0),U,11)  ;deleted visit
+ ..Q:"AORS"'[$P(^AUPNVSIT(APCLV,0),U,7)  ;just want outpatient
+ ..S APCLCLIN=$$CLINIC^APCLV(APCLV,"I")  ;get clinic code
+ ..Q:APCLCLIN=""
+ ..Q:'$D(^ATXAX(APCLCTAX,21,"B",APCLCLIN))  ;not in clinic taxonomy
+ ..S APCLLOC=$P(^AUPNVSIT(APCLV,0),U,6)  Q:APCLLOC=""  ;no location ???
+ ..S APCLDATE=$P($P(^AUPNVSIT(APCLV,0),U),".")
+ ..S DFN=$P(^AUPNVSIT(APCLV,0),U,5)
+ ..Q:DFN=""
+ ..Q:'$D(^DPT(DFN,0))
+ ..Q:$P(^DPT(DFN,0),U)["DEMO,PATIENT"
+ ..S APCLASUF=$P($G(^AUTTLOC(APCLLOC,0)),U,10)
+ ..I APCLASUF="" Q  ;no ASUFAC????
+ ..S APCLLOCT(APCLASUF,$$JDATE(APCLDATE))=$G(APCLLOCT(APCLASUF,$$JDATE(APCLDATE)))+1   ;total number of visits on this date/location
+ ..S G=0
+ ..S X=0 F  S X=$O(^AUPNVPOV("AD",APCLV,X)) Q:X'=+X  S T=$P(^AUPNVPOV(X,0),U) I $$ICD^ATXCHK(T,APCLDTAX,9) S G=1
+ ..Q:'G  ;no diagnosis
+ ..;
+ ..D SET
+ ..Q
+ .Q
+ K ^XTMP("APCLSILI",APCLJ,APCLH)
+ Q
+PRINT ;EP - called from xbdbque
+ S APCLPG=0
+ D HEADER
+ W !!,"Search Template Created: ",$P(^DIBT(APCLSTMP,0),U)
+ W !!,"Total # of visits meeting criteria and placed in the template:  ",APCLVTOT
+ W !!,"Total # of patients for these visits:  ",APCLPTOT,!
+ D EOP
+ Q
+SET ;
+ S APCLVTOT=APCLVTOT+1
+ S ^DIBT(APCLSTMP,1,APCLV)=""
+ Q:$D(^XTMP("APCLSILI",APCLJ,APCLH,"PATS",DFN))
+ S APCLPTOT=APCLPTOT+1
+ S ^XTMP("APCLSILI",APCLJ,APCLH,"PATS",DFN)=""
+ Q
+HEADER ;
+ I 'APCLPG G HEAD1
+ I $E(IOST)="C",IO=IO(0) W ! S DIR(0)="EO" D ^DIR K DIR I Y=0!(Y="^")!($D(DTOUT)) S APCLQ="" Q
+HEAD1 ;
+ W:$D(IOF) @IOF S APCLPG=APCLPG+1
+ W $P(^VA(200,DUZ,0),U,2),?72,"Page ",APCLPG,!
+ W ?(80-$L($P(^DIC(4,DUZ(2),0),U))/2),$P(^DIC(4,DUZ(2),0),U),!
+ W !,$$CTR("SURVEILLANCE ILI VISIT SEARCH"),!
+ W !,$$CTR("DATE RANGE: "_$$FMTE^XLFDT(APCLBD)_"-"_$$FMTE^XLFDT(APCLED),80),!
+ W !,$$REPEAT^XLFSTR("-",79)
+ Q
 CTR(X,Y) ;EP - Center X in a field Y wide.
  Q $J("",$S($D(Y):Y,1:IOM)-$L(X)\2)_X
  ;----------
@@ -343,12 +239,6 @@ EOP ;EP - End of page.
 USR() ;EP - Return name of current user from ^VA(200.
  Q $S($G(DUZ):$S($D(^VA(200,DUZ,0)):$P(^(0),U),1:"UNKNOWN"),1:"DUZ UNDEFINED OR 0")
  ;----------
-LOC() ;EP - 
+LOC() ;EP - Return location name from file 4 based on DUZ(2).
  Q $S($G(DUZ(2)):$S($D(^DIC(4,DUZ(2),0)):$P(^(0),U),1:"UNKNOWN"),1:"DUZ(2) UNDEFINED OR 0")
  ;----------
-STOPD ;EP
- D STOPD^APCLSIL3
- Q
-PURGE ;
- D PURGE^APCLSIL3
- Q

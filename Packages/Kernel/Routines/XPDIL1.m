@@ -1,6 +1,5 @@
-XPDIL1 ;SFISC/RSD - cont. of load Distribution Global ;05/05/2008
- ;;8.0;KERNEL;**15,17,39,41,44,66,68,76,85,100,108,229,525**;Jul 10, 1995;Build 16
- ; Per VHA Directive 2004-038, this routine should not be modified.
+XPDIL1 ;SFISC/RSD - cont. of load Distribution Global ;11/14/2002  07:35 [ 03/19/2004  12:04 PM ]
+ ;;8.0;KERNEL;**15,17,39,41,44,66,68,76,85,100,108,229,1009**;Jul 10, 1995
  ;
 PKG(XPDA) ;check Package file
  N XPD,XPDCP,XPDNM,XPDNOQUE,XPDPKG,X,Y,%
@@ -19,8 +18,8 @@ PKG(XPDA) ;check Package file
  .N D,DIC
  .S DIC="^DIC(9.4,",DIC(0)="X",X=$P(XPDPKG(0),U)
  .D ^DIC Q:Y>0
- .;if lookup fails try C & C2 x-ref
- .S X=$P(XPDPKG(0),U,2),DIC(0)="MX",D="C^C2" D MIX^DIC1
+ .;if lookup fails try Prefix, C x-ref
+ .S X=$P(XPDPKG(0),U,2),D="C" D IX^DIC
  ;add package to Install file
  I XPDPKG>0 S XPD(9.7,XPDA_",",1)=+XPDPKG D FILE^DIE("","XPD")
  ;XPDSKPE= does site want to run Environ. Check
@@ -71,7 +70,7 @@ INST(XPDNM) ;add to Install file
  ;XPDQUIT(package) quit package install, 1=kill, 2=leave
  ;XPDABORT quit the entire distribution, 1=kill, 2=leave
  ;XPDENV 0=loading distribution, 1=installing
-ENV(XPDENV) ;environment check & version check
+ENV(XPDENV) ;enviroment check & version check
  ;returns 0=ok, 1=rejected kill global, 2=rejected leave global
  N %,DIR,XPDI,XPDQUIT,XPDABORT,XPDDONE,XPDGREF,XPDMBREQ
  M X=DUZ N DUZ M DUZ=X S DUZ(0)="@" ;See that ENV check has full FM priv.

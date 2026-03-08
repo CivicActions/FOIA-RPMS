@@ -1,6 +1,7 @@
-DIPZ ;SFISC/XAK,TKW-COMPILE PRINT TEMPLATES ;18JAN2010
- ;;22.0;VA FileMan;**163**;Mar 30, 1999;Build 30
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIPZ ;SFISC/XAK,TKW-COMPILE PRINT TEMPLATES ;4/14/95  09:19 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**5**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  I $G(DUZ(0))'="@" W $C(7),$$EZBLD^DIALOG(101) Q
 EN1 N DNM,X,Y,Z D K I '$D(DISYS) N DISYS D OS^DII
  I '$D(^DD("OS",DISYS,"ZS")) W $C(7),$$EZBLD^DIALOG(820) Q
@@ -24,7 +25,7 @@ EN ;
  ;
 ENZ S (R,DCL,DPP)=0 F %=0:0 S R=$O(^DIPT(+Y,"DCL",R)) Q:R=""  F %=1:1 Q:%>$L(^(R))  S Z=$E(^(R),%) I Z?1P S DCL(R)=$G(DCL(R))_Z
 ENDIP ;
- W:'$G(DIPZS) ! K ^UTILITY($J),^("DIL",$J),^UTILITY("DIPZ",$J),DIPZ,DNP,DIPZLR,DRN,DIPZL,DX,DXS,R N DIPZQ S DIPZQ=0 D DELETROU^DIEZ(X)
+ W:'$G(DIPZS) ! K ^UTILITY($J),^("DIL",$J),^UTILITY("DIPZ",$J),DIPZ,DNP,DIPZLR,DRN,DIPZL,DX,DXS,R N DIPZQ S DIPZQ=0
  S DNM=X,DIPZ=+Y,DRD=0,DP=$P(^DIPT(DIPZ,0),U,4),DHD=$S(^("H")="@":"@",1:3) S:$D(^("DNP")) DNP=1
  S DK=^DIC(DP,0,"GL"),DMAX=DMAX-$S($D(DCL)>9:1600,1:1300),DRN=0,R="",L=0,DINC=1
  I '$D(IOM) Q:$D(^DIPT(DIPZ,"IOM"))[0  S IOM=^("IOM")

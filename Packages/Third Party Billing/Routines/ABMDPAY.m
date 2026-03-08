@@ -1,5 +1,6 @@
 ABMDPAY ; IHS/ASDST/DMJ - Payment of Bill ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,38**;NOV 12, 2009;Build 756
+ ;IHS/SD/SDR 2.6*38 ADO99134 Removed SSN from display
  ;
  S Y=1 I $L($T(TPB^BARUP)) D  Q:'Y
  .W !!,$$EN^ABMVDF("RVN"),"NOTE:",$$EN^ABMVDF("RVF")
@@ -14,10 +15,12 @@ SEL K DIC,ABMP S U="^",ABMP("I")=0
  G XIT:$D(DIRUT)!$D(DIROUT)
  K ABMP("BDFN") D ^ABMDBDIC G XIT:'$G(ABMP("BDFN"))
  L +^ABMDBILL(DUZ(2),ABMP("BDFN"),0):1 I '$T W *7,!!,"Record is in USE by another User, try Later!" G XIT
- I $P($G(^AUTNINS(+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8),2)),U)="I" W *7,!!,"Payment can't be Posted for BENEFICIARY PATIENT Bills!" K DIR S DIR(0)="E" D ^DIR G XIT
+ ;I $P($G(^AUTNINS(+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8),2)),U)="I" W *7,!!,"Payment can't be Posted for BENEFICIARY PATIENT Bills!" K DIR S DIR(0)="E" D ^DIR G XIT  ;abm*2.6*10 HEAT73780
+ I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8),".211","I"),1,"I")="I" W *7,!!,"Payment can't be Posted for BENEFICIARY PATIENT Bills!" K DIR S DIR(0)="E" D ^DIR G XIT  ;abm*2.6*10 HEAT73780
  S ABMP("SPAY")=0
  I "AR"[$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,4) D  G SEL:'ABMP("SPAY")
- .I $P($G(^AUTNINS(+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8),2)),U)'="N" W *7,!!,"Payment can only be Posted for Bills that have been Printed!" Q
+ .;I $P($G(^AUTNINS(+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8),2)),U)'="N" W *7,!!,"Payment can only be Posted for Bills that have been Printed!" Q  ;abm*2.6*10 HEAT73780
+ .I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8),".211","I"),1,"I")'="N" W *7,!!,"Payment can only be Posted for Bills that have been Printed!" Q  ;abm*2.6*10 HEAT73780
  .S ABMP("SPAY")=1
  .W *7,!!,"Although this Bill has not yet been Printed, since the Patient is Self Pay,"
  .W !,"payment can still be posted. If payment is posted the Bill will be removed",!,"from the batch print queue.",!
@@ -31,7 +34,8 @@ DISP K ABM W $$EN^ABMVDF("IOF")
  S ABMP="",$P(ABMP,"~",32)="",ABMP("I")=ABMP("I")+1
  W !,ABMP," PAYMENT POSTING ",ABMP
  W !,"Patient: ",$P(^DPT(ABMP("PDFN"),0),U,1)," ",$$HRN^ABMDUTL(ABMP("PDFN"))
- W ?55,$P(^DPT(ABMP("PDFN"),0),U,2),?59,$$HDT^ABMDUTL($P(^(0),U,3)),?70,$P(^(0),U,9)
+ ;W ?55,$P(^DPT(ABMP("PDFN"),0),U,2),?59,$$HDT^ABMDUTL($P(^(0),U,3)),?70,$P(^(0),U,9)  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ W ?55,$P(^DPT(ABMP("PDFN"),0),U,2),?59,$$HDT^ABMDUTL($P(^(0),U,3))  ;abm*2.6*38 IHS/SD/SDR ADO99134
  S ABMP="",$P(ABMP,".",80)="" W !,ABMP
  W !,"Visit: ",$$HDT^ABMDUTL(ABMP("VDT"))
  W ?17,$E($P(^DIC(4,ABMP("LDFN"),0),U),1,30)

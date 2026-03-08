@@ -61,7 +61,7 @@ SORRY ;
  W *7,!!!,$$C^XBFUNC("Sorry....something is wrong with your enviroment")
  W !,$$C^XBFUNC("Aborting Electronic Signature Plug-in install!")
  W !,$$C^XBFUNC("Please print/capture this screen and notify")
- ;W !,$$C^XBFUNC("the Help Desk") 
+ ;W !,$$C^XBFUNC("the Support Team at 505-248-4371") 
  W !!,LINE
  Q
  ;

@@ -1,189 +1,148 @@
-DINIT00P ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS ;11:33 AM  5 Dec 2012
- ;;22.0;VA FileMan;**169**;Mar 30, 1999;Build 28
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DINIT00P ; SFISC/TKW-DIALOG & LANGUAGE FILE INITS  [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  F I=1:2 S X=$T(Q+I) Q:X=""  S Y=$E($T(Q+I+1),4,999),X=$E(X,4,999) S:$A(Y)=126 I=I+1,Y=$E(Y,2,999)_$E($T(Q+I+1),5,99) S:$A(Y)=61 Y=$E(Y,2,999) S @X=Y
 Q Q
- ;;^UTILITY(U,$J,.84,9117,3,1,0)
- ;;=1^The prefix for a variable pointer file.
- ;;^UTILITY(U,$J,.84,9117,3,2,0)
- ;;=2^The message for a variable pointer file.
- ;;^UTILITY(U,$J,.84,9201,0)
- ;;=9201^3^^5
- ;;^UTILITY(U,$J,.84,9201,1,0)
- ;;=^^1^1^2950511^^
- ;;^UTILITY(U,$J,.84,9201,1,1,0)
- ;;=Browser help
- ;;^UTILITY(U,$J,.84,9201,2,-1,"DATE")
- ;;=62796,32024
- ;;^UTILITY(U,$J,.84,9201,2,-1,"TITLE")
- ;;=9201
- ;;^UTILITY(U,$J,.84,9201,2,0)
- ;;=^^221^221^3121205^
- ;;^UTILITY(U,$J,.84,9201,2,1,0)
- ;;=
- ;;^UTILITY(U,$J,.84,9201,2,2,0)
- ;;=                                 HELP SUMMARY
- ;;^UTILITY(U,$J,.84,9201,2,3,0)
- ;;=                                 ============
- ;;^UTILITY(U,$J,.84,9201,2,4,0)
- ;;=
- ;;^UTILITY(U,$J,.84,9201,2,5,0)
- ;;=NAVIGATION:
- ;;^UTILITY(U,$J,.84,9201,2,6,0)
- ;;============
- ;;^UTILITY(U,$J,.84,9201,2,7,0)
- ;;=     Scroll Down (one line)                  ARROW DOWN
- ;;^UTILITY(U,$J,.84,9201,2,8,0)
- ;;=     Scroll Up (one line)                    ARROW UP
- ;;^UTILITY(U,$J,.84,9201,2,9,0)
- ;;=     Page Down                               <PF1>ARROW DOWN
- ;;^UTILITY(U,$J,.84,9201,2,10,0)
- ;;=     Page Up                                 <PF1>ARROW UP
- ;;^UTILITY(U,$J,.84,9201,2,11,0)
- ;;=     Scroll Right (default 22 columns)       ARROW RIGHT
- ;;^UTILITY(U,$J,.84,9201,2,12,0)
- ;;=     Scroll Left (default 22 columns)        ARROW LEFT
- ;;^UTILITY(U,$J,.84,9201,2,13,0)
- ;;=     Scroll Horizontally to the end          <PF1>ARROW RIGHT
- ;;^UTILITY(U,$J,.84,9201,2,14,0)
- ;;=     Scroll Horizontally to the end          <PF1>ARROW LEFT
- ;;^UTILITY(U,$J,.84,9201,2,15,0)
- ;;=     Jump to the Top                         <PF1>T
- ;;^UTILITY(U,$J,.84,9201,2,16,0)
- ;;=     Jump to the Bottom                      <PF1>B
- ;;^UTILITY(U,$J,.84,9201,2,17,0)
- ;;=     Goto                                    <PF1>G
- ;;^UTILITY(U,$J,.84,9201,2,18,0)
- ;;=
- ;;^UTILITY(U,$J,.84,9201,2,19,0)
- ;;=SEARCH:
- ;;^UTILITY(U,$J,.84,9201,2,20,0)
- ;;========
- ;;^UTILITY(U,$J,.84,9201,2,21,0)
- ;;=     Find text                               <PF1>F
- ;;^UTILITY(U,$J,.84,9201,2,22,0)
- ;;=     Next (occurrence)                       <PF1>N
- ;;^UTILITY(U,$J,.84,9201,2,23,0)
- ;;=
- ;;^UTILITY(U,$J,.84,9201,2,24,0)
- ;;=     Direction-terminate find text with:
- ;;^UTILITY(U,$J,.84,9201,2,25,0)
- ;;=     -----------------------------------
- ;;^UTILITY(U,$J,.84,9201,2,26,0)
- ;;=     Down                                    ARROW DOWN
- ;;^UTILITY(U,$J,.84,9201,2,27,0)
- ;;=     Up                                      ARROW UP
- ;;^UTILITY(U,$J,.84,9201,2,28,0)
- ;;=
- ;;^UTILITY(U,$J,.84,9201,2,29,0)
- ;;=BRANCH:
- ;;^UTILITY(U,$J,.84,9201,2,30,0)
- ;;========
- ;;^UTILITY(U,$J,.84,9201,2,31,0)
- ;;=     Switch to another document              <PF1>S
- ;;^UTILITY(U,$J,.84,9201,2,32,0)
- ;;=     Return to previous document(s)          R
- ;;^UTILITY(U,$J,.84,9201,2,33,0)
- ;;=
- ;;^UTILITY(U,$J,.84,9201,2,34,0)
- ;;=SCREEN:
- ;;^UTILITY(U,$J,.84,9201,2,35,0)
- ;;========
- ;;^UTILITY(U,$J,.84,9201,2,36,0)
- ;;=     Repaint screen                          <PF1>P
- ;;^UTILITY(U,$J,.84,9201,2,37,0)
- ;;=     Print document                          <PF1><PF1>P
- ;;^UTILITY(U,$J,.84,9201,2,38,0)
- ;;=     Split screen                            <PF2>S
- ;;^UTILITY(U,$J,.84,9201,2,39,0)
- ;;=     restore Full screen                     <PF2>F
- ;;^UTILITY(U,$J,.84,9201,2,40,0)
+ ;;^UTILITY(U,$J,.84,8082,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,8082,5,1,0)
+ ;;=DIT^TRNMRG
+ ;;^UTILITY(U,$J,.84,8083,0)
+ ;;=8083^2^^11
+ ;;^UTILITY(U,$J,.84,8083,1,0)
+ ;;=^^2^2^2940318^^^^
+ ;;^UTILITY(U,$J,.84,8083,1,1,0)
+ ;;=Used to build error prompts in the TRANSFER/MERGE routine ^DIT3.  Could be
+ ;;^UTILITY(U,$J,.84,8083,1,2,0)
+ ;;=used elsewhere, however, so I didn't put it into the ERROR category.
+ ;;^UTILITY(U,$J,.84,8083,2,0)
+ ;;=^^1^1^2940318^
+ ;;^UTILITY(U,$J,.84,8083,2,1,0)
+ ;;=Transfer TO
+ ;;^UTILITY(U,$J,.84,8083,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,8083,5,1,0)
+ ;;=DIT^TRNMRG
+ ;;^UTILITY(U,$J,.84,8084,0)
+ ;;=8084^2^^11
+ ;;^UTILITY(U,$J,.84,8084,1,0)
+ ;;=^^1^1^2940318^
+ ;;^UTILITY(U,$J,.84,8084,1,1,0)
+ ;;=The words 'file number' to be used in any dialog.
+ ;;^UTILITY(U,$J,.84,8084,2,0)
+ ;;=^^1^1^2940318^
+ ;;^UTILITY(U,$J,.84,8084,2,1,0)
+ ;;=file number
+ ;;^UTILITY(U,$J,.84,8084,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,8084,5,1,0)
+ ;;=DIT^TRNMRG
+ ;;^UTILITY(U,$J,.84,8085,0)
+ ;;=8085^2^^11
+ ;;^UTILITY(U,$J,.84,8085,1,0)
+ ;;=^^1^1^2940426^^
+ ;;^UTILITY(U,$J,.84,8085,1,1,0)
+ ;;=The words 'IEN string' to be used in any dialog.
+ ;;^UTILITY(U,$J,.84,8085,2,0)
+ ;;=^^1^1^2940426^^
+ ;;^UTILITY(U,$J,.84,8085,2,1,0)
+ ;;=IEN string
+ ;;^UTILITY(U,$J,.84,8085,5,0)
+ ;;=^.841^1^1
+ ;;^UTILITY(U,$J,.84,8085,5,1,0)
+ ;;=DIT^TRNMRG
+ ;;^UTILITY(U,$J,.84,8086,0)
+ ;;=8086^2^^11
+ ;;^UTILITY(U,$J,.84,8086,1,0)
+ ;;=^^1^1^2940608^^^^
+ ;;^UTILITY(U,$J,.84,8086,1,1,0)
+ ;;=Warning to use the merge only during non-peak times.
+ ;;^UTILITY(U,$J,.84,8086,2,0)
+ ;;=^^5^5^2940608^
+ ;;^UTILITY(U,$J,.84,8086,2,1,0)
  ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,41,0)
- ;;=     Split Screen Mode Navigation:
- ;;^UTILITY(U,$J,.84,9201,2,42,0)
- ;;=     -----------------------------
- ;;^UTILITY(U,$J,.84,9201,2,43,0)
- ;;=     Navigate to bottom screen              <PF2>ARROW DOWN
- ;;^UTILITY(U,$J,.84,9201,2,44,0)
- ;;=     Navigate to top screen                 <PF2>ARROW UP
- ;;^UTILITY(U,$J,.84,9201,2,45,0)
+ ;;^UTILITY(U,$J,.84,8086,2,2,0)
+ ;;=NOTE: Use this option ONLY DURING NON-PEAK HOURS if merging entries in a
+ ;;^UTILITY(U,$J,.84,8086,2,3,0)
+ ;;=file that is pointed-to either by many files, or by large files.
+ ;;^UTILITY(U,$J,.84,8086,2,4,0)
  ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,46,0)
- ;;=     Resize Split Screen:
- ;;^UTILITY(U,$J,.84,9201,2,47,0)
- ;;=     --------------------
- ;;^UTILITY(U,$J,.84,9201,2,48,0)
- ;;=     Top/Bottom screen larger/smaller       <PF2><PF2>ARROW DOWN
- ;;^UTILITY(U,$J,.84,9201,2,49,0)
- ;;=     Bottom/Top screen larger/smaller       <PF2><PF2>ARROW UP
- ;;^UTILITY(U,$J,.84,9201,2,50,0)
+ ;;^UTILITY(U,$J,.84,8086,2,5,0)
+ ;;=MERGE ENTRIES AFTER COMPARING THEM 
+ ;;^UTILITY(U,$J,.84,8086,4,0)
+ ;;=^.847P^^0
+ ;;^UTILITY(U,$J,.84,9002,0)
+ ;;=9002^3^y^11^
+ ;;^UTILITY(U,$J,.84,9002,1,0)
+ ;;=^^1^1^2930617^^
+ ;;^UTILITY(U,$J,.84,9002,1,1,0)
+ ;;=Help for entering maximum routine size for compiled routines.
+ ;;^UTILITY(U,$J,.84,9002,2,0)
+ ;;=^^4^4^2930629^^^^
+ ;;^UTILITY(U,$J,.84,9002,2,1,0)
+ ;;=This number will be used to determine how large to make the generated
+ ;;^UTILITY(U,$J,.84,9002,2,2,0)
+ ;;=compiled |1| routines.  The size must be a number greater
+ ;;^UTILITY(U,$J,.84,9002,2,3,0)
+ ;;=than 2400, the larger the better, up to the maximum routine size for
+ ;;^UTILITY(U,$J,.84,9002,2,4,0)
+ ;;=your operating system.
+ ;;^UTILITY(U,$J,.84,9002,3,0)
+ ;;=^.845^1^1
+ ;;^UTILITY(U,$J,.84,9002,3,1,0)
+ ;;=1^Will be the word 'TEMPLATE' when compiling templates, or 'cross-reference' when compiling CROSS-REFERENCES.
+ ;;^UTILITY(U,$J,.84,9002,4,0)
+ ;;=^.847P^^0
+ ;;^UTILITY(U,$J,.84,9002,5,0)
+ ;;=^.841^3^3
+ ;;^UTILITY(U,$J,.84,9002,5,1,0)
+ ;;=DIEZ^ 
+ ;;^UTILITY(U,$J,.84,9002,5,2,0)
+ ;;=DIPZ^ 
+ ;;^UTILITY(U,$J,.84,9002,5,3,0)
+ ;;=DIKZ^ 
+ ;;^UTILITY(U,$J,.84,9004,0)
+ ;;=9004^3^y^11^
+ ;;^UTILITY(U,$J,.84,9004,1,0)
+ ;;=^^2^2^2931110^^^^
+ ;;^UTILITY(U,$J,.84,9004,1,1,0)
+ ;;=Help asking the user whether they wish to UNCOMPILE previously compiled
+ ;;^UTILITY(U,$J,.84,9004,1,2,0)
+ ;;=templates or cross-references.
+ ;;^UTILITY(U,$J,.84,9004,2,0)
+ ;;=^^4^4^2931110^^
+ ;;^UTILITY(U,$J,.84,9004,2,1,0)
+ ;;=  Answer YES to UNCOMPILE the |1|.
+ ;;^UTILITY(U,$J,.84,9004,2,2,0)
+ ;;=The compiled routine will no longer be used.
+ ;;^UTILITY(U,$J,.84,9004,2,3,0)
  ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,51,0)
- ;;=CLIPBOARD:
- ;;^UTILITY(U,$J,.84,9201,2,52,0)
- ;;===========
- ;;^UTILITY(U,$J,.84,9201,2,53,0)
- ;;=     Copy to VA FileMan's Clipboard         <PF1>C
- ;;^UTILITY(U,$J,.84,9201,2,54,0)
- ;;=     View VA FileMan's Clipboard            <PF1>V
- ;;^UTILITY(U,$J,.84,9201,2,55,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,56,0)
- ;;=TITLE BAR:
- ;;^UTILITY(U,$J,.84,9201,2,57,0)
- ;;===========
- ;;^UTILITY(U,$J,.84,9201,2,58,0)
- ;;=     Change content of title bar,           <PF1><PF1>ARROW DOWN
- ;;^UTILITY(U,$J,.84,9201,2,59,0)
- ;;=     Or                                     <PF1><PF1>ARROW UP
- ;;^UTILITY(U,$J,.84,9201,2,60,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,61,0)
- ;;=HELP:
- ;;^UTILITY(U,$J,.84,9201,2,62,0)
- ;;======
- ;;^UTILITY(U,$J,.84,9201,2,63,0)
- ;;=     Browse Key Summary                     <PF1>H
- ;;^UTILITY(U,$J,.84,9201,2,64,0)
- ;;=     More Help                              <PF1><PF1>H
- ;;^UTILITY(U,$J,.84,9201,2,65,0)
- ;;=     Print this help text                   <PF1><PF1><PF1>H
- ;;^UTILITY(U,$J,.84,9201,2,66,0)
- ;;=     To Return to document from this help   R
- ;;^UTILITY(U,$J,.84,9201,2,67,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,68,0)
- ;;=EXIT:
- ;;^UTILITY(U,$J,.84,9201,2,69,0)
- ;;======
- ;;^UTILITY(U,$J,.84,9201,2,70,0)
- ;;=     Exit Browser or help text              <PF1>E or "EXIT"
- ;;^UTILITY(U,$J,.84,9201,2,71,0)
- ;;=     Quit                                   <PF1>Q
- ;;^UTILITY(U,$J,.84,9201,2,72,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,73,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,74,0)
- ;;=                                  MORE HELP
- ;;^UTILITY(U,$J,.84,9201,2,75,0)
- ;;=                                  =========
- ;;^UTILITY(U,$J,.84,9201,2,76,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,77,0)
- ;;=     To EXIT the VA FileMan Browser, press <PF1> followed by the letter
- ;;^UTILITY(U,$J,.84,9201,2,78,0)
- ;;=     'E'.  This is also true for this HELP document which is being
- ;;^UTILITY(U,$J,.84,9201,2,79,0)
- ;;=     presented by the Browser.
- ;;^UTILITY(U,$J,.84,9201,2,80,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,81,0)
- ;;=     To SCROLL DOWN one line at a time, press the ARROW DOWN key.
- ;;^UTILITY(U,$J,.84,9201,2,82,0)
- ;;= 
- ;;^UTILITY(U,$J,.84,9201,2,83,0)
- ;;=     To SCROLL UP one line at a time, press the ARROW UP key.
- ;;^UTILITY(U,$J,.84,9201,2,84,0)
- ;;=
+ ;;^UTILITY(U,$J,.84,9004,2,4,0)
+ ;;=  Answer NO to recompile the |1| at this time.
+ ;;^UTILITY(U,$J,.84,9004,3,0)
+ ;;=^.845^1^1
+ ;;^UTILITY(U,$J,.84,9004,3,1,0)
+ ;;=1^Will contain either the word 'TEMPLATE' or 'CROSS-REFERENCES.
+ ;;^UTILITY(U,$J,.84,9004,4,0)
+ ;;=^.847P^^0
+ ;;^UTILITY(U,$J,.84,9004,5,0)
+ ;;=^.841^3^3
+ ;;^UTILITY(U,$J,.84,9004,5,1,0)
+ ;;=DIEZ^ 
+ ;;^UTILITY(U,$J,.84,9004,5,2,0)
+ ;;=DIPZ^ 
+ ;;^UTILITY(U,$J,.84,9004,5,3,0)
+ ;;=DIKZ^ 
+ ;;^UTILITY(U,$J,.84,9006,0)
+ ;;=9006^3^y^11^
+ ;;^UTILITY(U,$J,.84,9006,1,0)
+ ;;=^^2^2^2931105^^^^
+ ;;^UTILITY(U,$J,.84,9006,1,1,0)
+ ;;=Help for prompting for compiled routine name, when compiling templates
+ ;;^UTILITY(U,$J,.84,9006,1,2,0)
+ ;;=or cross-references.
+ ;;^UTILITY(U,$J,.84,9006,2,0)
+ ;;=^^2^2^2931109^
+ ;;^UTILITY(U,$J,.84,9006,2,1,0)
+ ;;=Enter a valid MUMPS routine name of from 3 to |1| characters.  This must

@@ -1,5 +1,5 @@
-APCLDMAS ; IHS/CMI/LAB - print hs for dm patients with appts ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLDMAS ;IHS/CMI/LAB - print hs for dm patients with appts [ 02/06/02  11:03 AM ]
+ ;;3.0;IHS PCC REPORTS;**11,16**;FEB 05, 1997
  ;
  ;
  ;this routine will go through the Diabetes Register
@@ -29,9 +29,6 @@ HSTYPE ;get hs type
  S DIC("B")=X
  D ^DIC I Y>0 S APCLTYPE=+Y
 ZIS ;
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G HSTYPE
  S XBRP="PRINT^APCLDMAS",XBRC="",XBRX="EOJ^APCLDMAS",XBNS="APCH;APCL"
  D ^XBDBQUE
  Q
@@ -49,7 +46,6 @@ PRINT ;EP - called from xbdbque
  S APCLDMX=0 F  S APCLDMX=$O(^ACM(41,"B",APCLREG,APCLDMX)) Q:APCLDMX'=+APCLDMX  D
  .;check to see if patient has an appt
  .S DFN=$P(^ACM(41,APCLDMX,0),U,2)
- .Q:$$DEMO^APCLUTL(DFN,$G(APCLDEMO))
  .Q:$D(^TMP($J,"APCLDMAS",DFN))  ;already printed one for this pat
  .S ^TMP($J,"APCLDMAS",DFN)=""
  .S APCLDMY=APCLSDAT F  S APCLDMY=$O(^DPT(DFN,"S",APCLDMY)) Q:APCLDMY=""!($P(APCLDMY,".")>APCLDATE)  D

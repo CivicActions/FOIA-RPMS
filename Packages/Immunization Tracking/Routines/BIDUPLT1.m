@@ -1,7 +1,8 @@
-BIDUPLT1 ;IHS/CMI/MWR - BI PRINT LETTERS.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+BIDUPLT1 ;IHS/CMI/MWR - BI PRINT LETTERS.
+ ;;8.0;IMMUNIZATION;**1**;MAY 1,2004
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  PRINT LETTERS FROM ^TMP LIST OF PATIENTS.
+ ;;  PATCH 1: $O CHECKS FOR ALPHA SUBSCRIPT INTEAD OF NUMBERIC ONLY.
  ;
  ;
  ;----------
@@ -21,7 +22,13 @@ PRINT(BILET,BIDLOC,BIIOP,BIFDT) ;EP
  I '$G(BIFDT) D ERROR(616) Q
  S BICRT=$S(($E(IOST)="C")!(IOST["BROWSER"):1,1:0)
  ;
- ;---> Quit if no patients retrieved. (Next line was v8.0 patch 1.)
+ ;---> Quit if no patients retrieved.
+ ;
+ ;---> Patch 1, 5/1/2004  ;IHS/CMI/MWR 05/01/2004
+ ;---> Check for $O of alpha subscript instead of numeric.  For some Orders,
+ ;---> next subscript will be Community Name or Case Mgr Name.
+ ;I '$O(^TMP("BIDUL",$J,0)) D  Q
+ ;
  I $O(^TMP("BIDUL",$J,0))="" D  Q
  .U IO
  .W !!?3,"NOTE: Based on the criteria you selected, no Immunization Due"

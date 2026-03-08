@@ -1,6 +1,6 @@
-DMSQP5 ;SFISC/EZ-DD LISTING USING SQLI ;10/30/97  17:46
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQP5 ;SFISC/EZ-DD LISTING USING SQLI ;10/30/97  17:46 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
 EN ; for a single file or number range, display DD information
  I '$O(^DMSQ("S",0)) W !?5,"Sorry, SQLI files are empty.",! Q
  I $$WAIT^DMSQT1 D  Q

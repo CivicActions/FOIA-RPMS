@@ -1,5 +1,5 @@
-AMHEYDI3 ; IHS/CMI/LAB - initialization part III AUGUST 14, 1992 ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHEYDI3 ; IHS/CMI/LAB - initialization part III AUGUST 14, 1992 ; [ 11/01/04  12:36 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4**;JAN 27, 2003
 INFORM ;EP - INFORM OPERATOR WHAT IS GOING TO HAPPEN
  Q:$D(ZTQUEUED)
  W !!,"This routine will generate BH transactions to be sent to HQ.",!,"The transactions are for records posted since the last time you did an",!,"export up until yesterday.",!,"Both BH visit records and Suicide forms will be exported.",!

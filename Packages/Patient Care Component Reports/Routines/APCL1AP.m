@@ -1,5 +1,5 @@
-APCL1AP ; IHS/CMI/LAB - print apc report 1A ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCL1AP ; IHS/OHPRD/TMJ - print apc report 1A ;  [ 09/15/02  10:22 PM ]
+ ;;3.0;IHS PCC REPORTS;**3,7,12,20**;;FEB 05, 1997
  ;CMI/TUCSON/LAB - patch 3
 START ;
  S APCL132="__________________________________________________________________________________________________________________________________"

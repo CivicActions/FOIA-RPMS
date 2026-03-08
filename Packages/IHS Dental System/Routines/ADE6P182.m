@@ -119,7 +119,7 @@ MODADA ;
  ;;D6067^74^implant supported metal crown (titanium, titanium alloy, high noble metal)^
  ;;A single cast metal or milled crown restoration that is retained, supported and 
  ;;stabilized by an implant; may be screw retained or cemented.
- ;;D7310^96^alveoloplasty in conjunction with extractions – four or more teeth or tooth spaces, per quadrant^
+ ;;D7310^96^alveoloplasty in conjunction with extractions Â– four or more teeth or tooth spaces, per quadrant^
  ;;The alveoloplasty is distinct (separate procedure) from extractions and/or 
  ;;surgical extractions.  Usually in preparation for a prosthesis or other 
  ;;treatments such as radiation therapy and transplant surgery.
@@ -127,7 +127,7 @@ MODADA ;
  ;;The alveoloplasty is distinct (separate procedure) from extractions and/or 
  ;;surgical extractions.  Usually in preparation for a prosthesis or other 
  ;;treatments such as radiation therapy and transplant surgery.
- ;;D7320^99^alveoloplasty not in conjunction with extractions –four or more teeth or tooth spaces, per quadrant^
+ ;;D7320^99^alveoloplasty not in conjunction with extractions Â–four or more teeth or tooth spaces, per quadrant^
  ;;No extractions performed in an edentulous area.  See D7310 if teeth are 
  ;;being extracted concurrently with the alveoloplasty.  Usually in 
  ;;preparation for a prosthesis or other treatments such as radiation therapy 

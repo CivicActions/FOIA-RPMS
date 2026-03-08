@@ -1,7 +1,8 @@
-DICE4 ;SFISC/GFT-TRIGGER LOGIC ;26NOV2004
- ;;22.0;VA FileMan;**6,37,157**;Mar 30, 1999;Build 9
- ;Per VHA Directive 2004-038, this routine should not be modified.
- D SET S DTAG="S DIH=$G("_DREF_DSUB_")),DIV=X "_$P("I $D(^(0)) ","""",A>99)_X_",DIH="_DIN_",DIG="_DENEW_" D ^DICR",X=""
+DICE4 ;SFISC/GFT-TRIGGER LOGIC ;2/17/93 12:08 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
+ D SET S DTAG="S DIH=$S($D("_DREF_DSUB_")):^("_DSUB_"),1:""""),DIV=X "_$P("I $D(^(0)) ",Q,A>99)_X_",DIH="_DIN_",DIG="_DENEW_" D ^DICR:$O(^DD(DIH,DIG,1,0))>0",X=""
  S:$L(DE)+$L(DTAG)>160&($L(DE)>30) ^UTILITY("DICE",$J,DIK+.1)=DE,DE="X "_DA_DIK_".1)" S X=DE
 F ;
  S DB=DA_DIK
@@ -23,7 +24,7 @@ Q Q
  ;
 CC ;
  S DA=DA_(DIK+5)
-R W !!,"DO YOU WANT TO MAKE THE "_DCOND_" CONDITIONAL" K DICOMPX S %=2,DICOMPX="",DICOMP="?",D="ENTER AN EXPRESSION FOR THE CONDITION: " D YN^DICN I %-1 K DCOND Q
+R W !!,"DO YOU WANT TO MAKE THE "_DCOND_" CONDITIONAL" K DICOMPX S %=2,DICOMPX="",DICOMP="?X",D="ENTER AN EXPRESSION FOR THE CONDITION: " D YN^DICN I %-1 K DCOND Q
  I DIK=1 S DICOMPX("Y(0)")="Y(0)",DICOMPX(1,DI,DL)="Y(0)",DICOMPX("Y(0)",U)=DI_U_DL
  E  W ! D OLD^DICE2 S Y="CREATE CONDITION" I $D(^UTILITY("DICE",$J,Y)) W !,D_^(Y)_"// " R X:DTIME S:'$T DTOUT=1 G Q:X=U!'$T S:X="" X=^(Y) G X
  W !,D R X:DTIME S:'$T DTOUT=1 G Q:X=U!'$T

@@ -1,9 +1,9 @@
 BAR50P00 ; IHS/SD/LSL - AR ERA AUTO-POSTIEG ; 01/30/2009
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,5,6,7,10,17,20,23,28**;OCT 26,2005;Build 92
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,5,6,7,10,17,20,23,28,29**;OCT 26,2005;Build 66
  ;P23: JAN 2013 P.OTTIS: AUTO-SELECT THE TRANSPORT TYPE ($$FORMAT)
  ;IHS/DIT/CPC CR9572 ADD REVIEW FLAG WHEN ENTERING REVIEW EP  - BAR*1.8*28
  Q
-TSEL ;EP TRANSPORT SELECT (DEFUNTC)
+TSEL ;EP TRANSPORT SELECT (DEFUNCT)
  W !
  K DIC,DA
  S DIC=$$DIC^XBDIQ1(90056.01)
@@ -14,6 +14,7 @@ TSEL ;EP TRANSPORT SELECT (DEFUNTC)
  S TRNAME=$P(Y,U,2)
  Q
 INSTALL ;EP - Load New Import (DEFUNCT)
+ ;D INSTALL^BAREDP00 Q  ;IHS/DIT/CPC - BAR*1.8*29
  K ^TMP($J,"ERA")
  S DIR(0)="F"
  S DIR("A")="Enter the directory path for the transport file"
@@ -30,7 +31,7 @@ INSTALL ;EP - Load New Import (DEFUNCT)
  Q:HSTFILE=""
  ;PER EMAILS MOVE FORMAT CHECK BEFORE FILE LOAD BAR*1.8*21
  W !!,"CHECKING FILE FORMAT....."
- S BARCTRL=0
+ ;S BARCTRL=0
  D READ^BAR50PA1(XBDIR,HSTFILE)  ;Read file into ^TMP($J,"ERA")
  Q:+$G(POP)
  S BARHIPAA=$$FORMAT
@@ -99,7 +100,7 @@ INSTALL ;EP - Load New Import (DEFUNCT)
  . S DIK=$$DIC^XBDIQ1(90056.02)
  . S DA=IEN
  . D ^DIK
- S BARCTRL=0
+ S BARCTRL=0  ;Causes non printable delimiters to be ignored - needs to be removed OR run test for delimiters again (FORMAT^BAR50P00) after this. IHS/SD/CPC - CR11726 
  D READ^BAR50PA1(XBDIR,HSTFILE)
  Q:+$G(POP)
  D EOP^BARUTL(1)
@@ -121,7 +122,6 @@ INSTALL ;EP - Load New Import (DEFUNCT)
  S X=HSTFILE
  S:$G(FILE) DINUM=($P(FILE,"_")-1000)  ;bar*1.8*20
  K DD,DO
- ;;;w !,"------------------------------" zw  w !,"-----------------------------------"
  D FILE^DICN
  S IMPDA=+Y
  K DIC
@@ -157,10 +157,10 @@ INSTALL ;EP - Load New Import (DEFUNCT)
  . S BARTMP=^TMP($J,"ERA",X)
  . I +BARCTRL D  ;Separators=ctrl char
  . . F I=1:1:$L(BARTMP) D
- . . . I (($A($E(BARTMP,I))<32)!($A($E(BARTMP,I))>126)),$A(BARTMP,I)=BARSSEP S BARTMP=$E(BARTMP,1,I-1)_"~"_$E(BARTMP,I+1,999) Q
- . . . I (($A($E(BARTMP,I))<32)!($A($E(BARTMP,I))>126)),$A(BARTMP,I)=BARESEP S BARTMP=$E(BARTMP,1,I-1)_"*"_$E(BARTMP,I+1,999) Q
- . . . I (($A($E(BARTMP,I))<32)!($A($E(BARTMP,I))>126)),$A(BARTMP,I)=BARCSEP S BARTMP=$E(BARTMP,1,I-1)_":"_$E(BARTMP,I+1,999) Q
- . . . I ($A($E(BARTMP,I))<32)!($A($E(BARTMP,I))>126) S BARTMP=$E(BARTMP,1,I-1)_$E(BARTMP,I+1,999)
+ . . .I (($A($E(BARTMP,I))<32)!($A($E(BARTMP,I))>126)),$A(BARTMP,I)=BARSSEP S BARTMP=$E(BARTMP,1,I-1)_"~"_$E(BARTMP,I+1,999) Q
+ . . .I (($A($E(BARTMP,I))<32)!($A($E(BARTMP,I))>126)),$A(BARTMP,I)=BARESEP S BARTMP=$E(BARTMP,1,I-1)_"*"_$E(BARTMP,I+1,999) Q
+ . . .I (($A($E(BARTMP,I))<32)!($A($E(BARTMP,I))>126)),$A(BARTMP,I)=BARCSEP S BARTMP=$E(BARTMP,1,I-1)_":"_$E(BARTMP,I+1,999) Q
+ . . .I ($A($E(BARTMP,I))<32)!($A($E(BARTMP,I))>126) S BARTMP=$E(BARTMP,1,I-1)_$E(BARTMP,I+1,999)
  . I '+BARCTRL D
  . . F I=1:1:$L(BARTMP) D
  . . . I ($A($E(BARTMP,I))<32)!($A($E(BARTMP,I))>126) S BARTMP=$E(BARTMP,1,I-1)_$E(BARTMP,I+1,999)
@@ -178,18 +178,18 @@ REDO ;EP entry for mid stream testing
  W !,"PROCESSING",!,"TRANSPORT FILE: ",?20,XBFN
  W !,"IMPORT NAME: ",?20,TNAME,!!
  ; Split image into segmts
- W !,"Starting stage 1 of 3 -> Extract data from transport to segments"  ;bar*1.8*20 REQ1
+ W !,"Starting stage 1 of 3 -> Extract data from transport to segments"
  D EN^BAR50P01(TRDA,IMPDA)
  W !,"Stage 1 -> Complete"
- ; Parse segmts into elemts & valueS
- W !!,"Starting stage 2 of 3 -> Parse segments into elements & values"  ;bar*1.8*20 REQ1
+ ; Parse segmts into elemts & vals
+ W !!,"Starting stage 2 of 3 -> Parse segments into elements & values"
  D EN^BAR50P02(TRDA,IMPDA)
  D CHKS^BAR50P02(IMPDA)  ;bar*1.8*20 REQ2
- W !," Stand by to print TRN - Check Number/Check Amount Report..."  ;bar*1.8*20 REQ4
+ W !," Stand by to print TRN - Check Number/Check Amount Report..."
  D EN1^BAR50PCS  ;bar*1.8*20 REQ2
  W !,"Stage 2 -> Complete"
  ; Build postable clms
- W !!,"Starting stage 3 of 3 -> Build postable claims"  ;bar*1.8*20 REQ1
+ W !!,"Starting stage 3 of 3 -> Build postable claims"
  H 1
  D EN^BAR50P03(TRDA,IMPDA)
  W !,"Stage 3 -> Complete"
@@ -197,6 +197,13 @@ REDO ;EP entry for mid stream testing
  Q
 PLB ;Chk for PLB/Pymt Reversals
  S BARCNT=0,I=0
+ K ^TMP($J,DUZ(2),"BLMT")
+ S BARDBGCN1=$G(BARDBGCN1)+1,BARTMFIL=IMPDA   ;;DEBUG
+ K ^BARTMP("BARTIME",BARTMFIL)  ;;DEBUG
+ I $D(^BARTMP("BARTIME",BARTMFIL,"OFF")) K ^BARTMP("BARTIME",BARTMFIL,"OFF") S ^BARTMP("BARTIME",BARTMFIL,"ON")="" ;;DEBUG
+ I $D(^BARTMP("BARTIME","ON")) S ^BARTMP("BARTIME",BARTMFIL,"ON")=""  ;;DEBUG
+ S:$D(^BARTMP("BARTIME",BARTMFIL,"ON")) ^BARTMP("BARTIME",BARTMFIL,"PLB",BARDBGCN1,1)=$NOW()_U_$H  ;;DEBUG
+ S:$P(XQY0,U,2)["A/R Bill Matching" BAROPT="BLMT"
  F  S I=$O(^BAREDI("I",DUZ(2),IMPDA,5,I)) Q:'I  D
  .S BARCNT=BARCNT+1
  I BARCNT=1 S BARCKIEN=$O(^BAREDI("I",DUZ(2),IMPDA,5,0)),BARCHK=$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCKIEN,0)),U)
@@ -206,7 +213,7 @@ PLB ;Chk for PLB/Pymt Reversals
  I $D(^BAREDI("I",DUZ(2),IMPDA,30,"AC","M")) D
  . S CLMDA=0
  . F  S CLMDA=$O(^BAREDI("I",DUZ(2),IMPDA,30,"AC","M",CLMDA)) Q:'CLMDA  D  Q:BARQT
- . . I $P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,2)),U)=BARCHK S BARQT=1
+ . .I $P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,2)),U)=BARCHK S BARQT=1
  . Q:'BARQT
  . W !!,"Bill matching for this check has already been done."
  . K DIR
@@ -215,16 +222,35 @@ PLB ;Chk for PLB/Pymt Reversals
  . D ^DIR K DIR
  . S BARQUIT=+Y
  Q:'BARQUIT
- I $P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCKIEN,0)),U,7)="" W !!,"NOTE: This check has NOT been matched to a batch/item",!
+ S BARQUIT=0
+ I $P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCKIEN,0)),U,7)="" D
+ .S BARNOCHECKNUM=1   ;BAR*1.8*29 Internal Testing
+ .W !!,"NOTE: This check has NOT been matched to a batch/item",!
+ .W !,"Please run the 'Review & Match ERA to Collection Batch' option.",!  ;BAR*1.8*29 Internal Testing
+ .S DIR(0)="Y"
+ .S DIR("A")="Do you want to proceed"
+ .S DIR("B")="N"
+ .S DIR("?")="Enter 'Y' to begin matching: "
+ .D ^DIR
+ .K DIR
+ .S:$D(DIRUT)!'+Y BARQUIT=1
+ Q:BARQUIT
  W !,"I will begin bill matching..."
  H 1
  D EN^BAR50P04(TRDA,IMPDA)
- I '+$G(QFLG) W !!,"Matching complete"  ;bar*1.8*20 REQ4
- I +$G(QFLG) W !!,"Matching NOT complete"  ;bar*1.8*20 REQ4
- S DIE=$$DIC^XBDIQ1(90056.02)
- S DA=IMPDA
- S DR=".08////M"
- D ^DIE
+ I '+$G(QFLG) D
+ .W !!,"Matching complete"  ;bar*1.8*20 REQ4
+ .S DIE=$$DIC^XBDIQ1(90056.02)
+ .S DA=IMPDA
+ .S DR=".08////M"
+ .D ^DIE
+ I +$G(QFLG) D
+ .W !!,"Matching NOT complete"   ;bar*1.8*29
+ .S DIE=$$DIC^XBDIQ1(90056.02)
+ .S DA=IMPDA
+ .S DR=".08////@"
+ .D ^DIE
+ S:$D(^BARTMP("BARTIME",BARTMFIL,"ON")) ^BARTMP("BARTIME",BARTMFIL,"PLB",BARDBGCN1,2)=$NOW()_U_$H ;;DEBUG
  K DIR
  S DIR(0)="E"
  S DIR("A")="<CR> - Continue"
@@ -259,6 +285,9 @@ FORMAT() ;REWRITTEN BT P.OTT
  Q 1
 REVIEW ;EP
  D ERACHECK^BAR50P09
+ S BARDBGCN1=$G(BARDBGCN1)+1,BARTMFIL=IMPDA   ;;DEBUG
+ I $D(^BARTMP("BARTIME",BARTMFIL,"ON")) S ^BARTMP("BARTIME",BARTMFIL,"OFF")="" K ^BARTMP("BARTIME",BARTMFIL,"ON") ;;DEBUG
+ S BAROPT="REVAREV"
  I $O(BARCHK(9999),-1)=1 S BARCKIEN=$O(^BAREDI("I",DUZ(2),IMPDA,5,0)),BARCHK=$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCKIEN,0)),U)
  I $O(BARCHK(9999),-1)>1 D SELCK
  I +$G(BARCKIEN)'>0 Q
@@ -266,47 +295,48 @@ REVIEW ;EP
  S BARRVW=1   ;IHS/DIT/CPC - BAR*1.8*28 
  D EN^BAR50P05
  I TRNAME["HIPAA" D  ;Mark chk as reviewed
- . D NOW^%DTC
- . S BARDTREV=%
- . K DIE,DIC,DA,DR,X,Y
- . S DIE="^BARECHK("
- . S DA=$P(BARCHK(BARCKIEN),U,5)
- . S DR=".05///^S X=BARDTREV"
- . S DR=DR_";.06////^S X=DUZ"
- . D ^DIE
+ .D NOW^%DTC
+ .S BARDTREV=%
+ .K DIE,DIC,DA,DR,X,Y
+ .S DIE="^BARECHK("
+ .S DA=$P(BARCHK(BARCKIEN),U,5)
+ .S DR=".05///^S X=BARDTREV"
+ .S DR=DR_";.06////^S X=DUZ"
+ .D ^DIE
  D CLNUP
  Q
 POST ; EP
+ I TRNAME'[("5010") D POST^BAREDP00  Q
  I TRNAME["HIPAA" D  Q
- . S BARCKIEN=$$CHKSEL^BAREUTL(IMPDA,"POST")
- . Q:'+BARCKIEN
- . D POST^BAR50P08(BARCKIEN)
+ .S BARCKIEN=$$CHKSEL^BAREUTL(IMPDA,"POST")
+ .Q:'+BARCKIEN
+ .D POST^BAR50P08(BARCKIEN)
  ;Get batch/item info
  I NOBTCH D BTCHCHK
  I 'NOBTCH D
- . D BTCHDISP
- . W !
- . S DIR(0)="Y"
- . S DIR("A")="Do you want to select a different batch"
- . S DIR("B")="N"
- . S DIR("?")="Enter 'Y' to select a different batch "
- . D ^DIR
- . K DIR
- . Q:$D(DIRUT)
- . S NOBTCH=1
- . I X="Y" D BTCHCHK
+ .D BTCHDISP
+ .W !
+ .S DIR(0)="Y"
+ .S DIR("A")="Do you want to select a different batch"
+ .S DIR("B")="N"
+ .S DIR("?")="Enter 'Y' to select a different batch "
+ .D ^DIR
+ .K DIR
+ .Q:$D(DIRUT)
+ .S NOBTCH=1
+ .I X="Y" D BTCHCHK
  D CLEAR^VALM1
  I 'NOBTCH D BTCHDISP
  I +$G(BARCOL),+$G(BARITM)
  E  D
- . W !,"Batch & Item not selected ",!,"Adjustments only will be made,",!!
- . H 2
- . K BARCOL,BARITM
- . K DR,DIE,DA,DIC
- . S DIE=$$DIC^XBDIQ1(90056.02)
- . S DA=IMPDA
- . S DR=".06///@;.07///@"
- . D ^DIE
+ .W !,"Batch & Item not selected ",!,"Adjustments only will be made,",!!
+ .H 2
+ .K BARCOL,BARITM
+ .K DR,DIE,DA,DIC
+ .S DIE=$$DIC^XBDIQ1(90056.02)
+ .S DA=IMPDA
+ .S DR=".06///@;.07///@"
+ .D ^DIE
 POSTA ;EP  POST
  W !
  S DIR(0)="Y"
@@ -320,10 +350,10 @@ POSTA ;EP  POST
  Q:$D(DIRUT)
  ;user posts ea batch & status of clms go from 'M' to 'P'
  I X="Y" D
- . D EN^BAR50P06(TRDA,IMPDA)
- . S BARRAYGO=0  ;"Roll-over as you go" flag set to no
- . D EN^BARROLL  ;Loops BARROLL array & marks for rollback
- . K BARROLL
+ .D EN^BAR50P06(TRDA,IMPDA)
+ .S BARRAYGO=0  ;"Roll-over as you go" flag set to no
+ .D EN^BARROLL  ;Loops BARROLL array & marks for rollback
+ .K BARROLL
  D CLNUP
  Q
 VIEW ; EP
@@ -407,20 +437,20 @@ CLNUP ;Cleanup vars
  K XBDIR,X,Y,HSTFILE,ANS,IMPDA,TRDA,DATM,SEQ,TNAME
  K HSTIME,BARCOL,BARITM
  ; Added below IHS/DIT/CPC BAR*1.8*28 
- K ACAT,ADJDA,ALMCOFF,ALMCON,AREA,BAR,BAR1,BAR3PIEN,BAR3PLOC,BARAMT
+ K ACAT,ADJDA,AFLD,AFN,ALIST,ARECORD,ALMCOFF,ALMCON,AREA,BAR,BAR1,BAR3PIEN,BAR3PLOC,BARAMT
  K BARANS,BARANS1,BARBAL,BARBDT,BARBIEN,BARBILL,BARBL,BARBLIEN,BARBSTAT,BARBTCH
  K BARCAT,BARCATN,BARCDT,BARCHK,BARCKIEN,BARCNT,BARCNT2,BARDONE,BAREIENS,BARFLG
  K BARHOLD,BARITEM,BARL1,BARL2,BARL3,BARL3DD,BARL3FMT,BARL3MM,BARL3YY,BARL4
- K BARL5,BARL6,BARMM,BARMMCNT,BARMMFLG,BARMMVAL,BARNTPR,BARQT,BARQTR,BARRADT
- K BARRCHK,BARSAVE,BARSEL,BARSTAT,BARTABT,BARTBTCH,BARTEST,BARTFLG,BARTITEM,BARTMP
+ K BARL5,BARL6,BARMMTCH,BARMMCNT,BARMMFLG,BARMMVAL,BARNTPR,BARQT,BARQTR,BARRADT
+ K BARRCHK,BARREPRC,BARSAVE,BARSEL,BARSTAT,BARTABT,BARTBTCH,BARTEST,BARTFLG,BARTITEM,BARTMP
  K BARTMP2,BARTOT2,BARTR,BARVDF,BARX,BARYYY,BARYYY2,BARYYY3,BILMATCH,BPOSTBAL
- K CHKREASN,CLMCNT,CLMDA,CLMFLG,CLMPYMT,CNT,D,D0,DA,DDER
- K DI,DIC,DIE,DIQ,DR,EAMT,EBILL,EDA,EFLD,EFN,ELIST,ERECORD,ESTAT,FHDR,HSTFILE,HSTIME,I
- K IENS,IMPDA,INDEX,MAMT,MATCH,MDA,MTCHAMT,NEWSTAT,NOBTCH,PLBAMT,POP
- K QFLG,REVAMT,REASDA,RECNM,REVDA,RHEADER,RN,RPT,RRECORD,SHOWMSG,STATUS
+ K CHDR,CHKREASN,CLAIM,CLMCNT,CLMDA,CLMFLG,CLMPYMT,CNT,D,D0,DA,DDER
+ K DI,DIC,DIE,DIQ,DR,EAMT,EBILL,EDA,EFLD,EFN,ELIST,ERABILL,ERADOSE,ERECORD,ESTAT,FHDR,HSTFILE,HSTIME,I
+ K IENS,IMPDA,INDEX,J,LINE,MAMT,MATCH,MDA,MTCHAMT,NEWSTAT,NOBTCH,PLBAMT,POP
+ K QFLG,QCHSN,REVAMT,REASDA,RECNM,REVDA,RHEADER,RN,RPT,RRECORD,SHOWMSG,STATUS
  K THDR,TRDA,TRNAME,VALMIOXY,VALMSGR,VALMWD,VALMY,WHOLELST
  K ^XTMP("BAR-LIST",$J),^XTMP("BAR-LIST_DETAIL",$J),^XTMP("BAR-MBAMT",$J),^XTMP("BAR-REV",$J)
- K ^TMP($J,"A"),^TMP($J,"E"),^TMP($J,"LVL1"),^TMP("VALM DATA",$J)
+ K ^TMP($J,"A"),^TMP($J,"E"),^TMP($J,"LVL1"),^TMP("VALM DATA",$J),^TMP($J,DUZ(2),"BLMT")
  Q
 VIEWLIST ;EP
  ;Display all chks tied to file when looking for files

@@ -1,5 +1,5 @@
-ABMDTFED ; IHS/ASDST/DMJ - REPORT OF 3P FEE SCHEDULES ; 
- ;;2.6;IHS Third Party Billing System;**3,8,27**;NOV 12, 2009;Build 486
+ABMDTFED ; IHS/SD/SDR - REPORT OF 3P FEE SCHEDULES ; 
+ ;;2.6;IHS Third Party Billing System;**3,8,27,31**;NOV 12, 2009;Build 615
  ;
  ;IHS/SD/SDR 2.5*9 IM11865 - Made change so it will print to printer
  ;
@@ -7,6 +7,8 @@ ABMDTFED ; IHS/ASDST/DMJ - REPORT OF 3P FEE SCHEDULES ;
  ;   effective dates that were introduced in patch 2.
  ;IHS/SD/SDR 2.6*27 CR8897 Fixed header when Charge Master selected; made NDC print for drugs; made sure
  ;   display works with changes to IENs in 3P Fee Table
+ ;IHS/SD/SDR 2.6*31 CR11077 Fixed so an a CPT that's not DINUMed will display the short description correctly;
+ ;   was blank because it was using the CPT (not the IEN) to look up the description
  ;
  S U="^"
 FEE W ! K DIC
@@ -113,8 +115,15 @@ S2 ;start old code abm*2.6*3 FIXPMS10008
  .;I "^19^11^15^17^23^13^"[("^"_ABM("CAT")_"^") S ABMDESC=$P($$CPT^ABMCVAPI($P(^TMP("ABM-FS",$J,ABMCD),U),ABM("EFFDT")),U,3)  ;abm*2.6*27 IHS/SD/SDR CR8894
  .;start new abm*2.6*27 IHS/SD/SDR CR8894
  .I "^19^11^15^17^23^13^"[("^"_ABM("CAT")_"^") D
- ..S ABMDESC=$P($$CPT^ABMCVAPI(ABMCD,ABM("EFFDT")),U,3)
- ..I ABMDESC="" S ABMDESC=$P($$CPT^ABMCVAPI(ABMCD,DT),U,3)
+ ..;start old abm*2.6*31 IHS/SD/SDR CR11077
+ ..;S ABMDESC=$P($$CPT^ABMCVAPI(ABMCD,ABM("EFFDT")),U,3)
+ ..;I ABMDESC="" S ABMDESC=$P($$CPT^ABMCVAPI(ABMCD,DT),U,3)
+ ..;end old start new abm*2.6*31 IHS/SD/SDR CR11077
+ ..S ABMCDE=$P(^TMP("ABM-FS",$J,ABMCD),U)
+ ..S ABM("CPTIEN")=$P($G(^ABMDFEE(ABM("FEE"),ABM("CAT"),ABMCDE,0)),U)
+ ..S ABMDESC=$P($$CPT^ABMCVAPI(ABM("CPTIEN"),ABM("EFFDT")),U,3)
+ ..I ABMDESC="" S ABMDESC=$P($$CPT^ABMCVAPI(ABM("CPTIEN"),DT),U,3)
+ ..;end new abm*2.6*31 IHS/SD/SDR CR11077
  .;end new abm*2.6*27 IHS/SD/SDR CR8894
  .I ABM("CAT")=21 S ABMDESC=$P($G(^AUTTADA($P($G(^TMP("ABM-FS",$J,ABMCODE)),U),0)),U,2)
  .I ABM("CAT")=31 S ABMDESC=$P($G(^AUTTREVN(ABMCD,0)),U,2)

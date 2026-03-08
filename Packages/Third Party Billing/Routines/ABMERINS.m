@@ -1,5 +1,5 @@
 ABMERINS ; IHS/ASDST/DMJ - UB92 EMC Set up Insurer Information ;   
- ;;2.6;IHS Third Party Billing System;**3,10,26,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS Third Party Billing System;**3,10,26,27,37**;NOV 12, 2009;Build 739
  ;Original;DMJ;06/25/96 12:43 PM
  ;IHS/SD/SDR V2.5 P3 1/24/03 - NEA-0301-180044 Modified to display patient info when workers comp
  ;IHS/SD/SDR v2.5 p8 IM14799 Modified BCBS line tag to kill possible pre-existing calue of ABME("LOC")
@@ -13,6 +13,7 @@ ABMERINS ; IHS/ASDST/DMJ - UB92 EMC Set up Insurer Information ;
  ;IHS/SD/SDR 2.6*26 CR9265 and CR9863 Changed to use AUPN API for MBI or default to HIC number
  ;IHS/SD/SDR 2.6*27 CR10170 Check if there's a replacement insurer; use that insurer type to drive what linetag it goes to;
  ;   policy# wasn't printing because it was in wrong linetag for elig entry (like replacement PI when elig is in MCD file).
+ ;IHS/SD/SDR 2.6*37 ADO80078 Added to track pymts/adjs by insurer and multiple
  ; *********************************************************************
  ;
 START ;START HERE
@@ -33,6 +34,7 @@ ISET ;SET UP DEPENDING ON INSURER
  ..I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABME("INSIEN"),0)),U)=ABME("INS") S ABMIF=1 Q
  ..I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABME("INSIEN"),0)),U,11)=ABME("INS") S ABMIF=1 Q
  I '$G(ABME("INSIEN")) S ABME("INSIEN")=ABME("INS")
+ S ABMM=$S(+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABME("INSIEN"),0)),U,8)'=0:+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABME("INSIEN"),0)),U,8),1:1)  ;abm*2.6*37 IHS/SD/SDR ADO80078
  ;type of insurer
  I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABME("INSIEN"),0)),U)'=ABME("INS") S ABME("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABME("INSIEN"),0)),U),".211","I"),1,"I")
  E  S ABME("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABME("INS"),".211","I"),1,"I")

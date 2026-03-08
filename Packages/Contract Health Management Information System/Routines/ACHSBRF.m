@@ -1,5 +1,5 @@
 ACHSBRF ; IHS/ITSC/TPF/PMF - FIX CHS REGISTER BALANCES ;  
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**22**;JUN 11, 2001;Build 43
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**22,28**;JUN 11, 2001;Build 86
  ;
  ; Prompt user for FY and register number.
  ; Check to see if the register balances are correct.
@@ -118,7 +118,8 @@ EXIT ;
  ;
 BDT(F,R) ; Given FY and Reg #, return the Beginning date of the Register.
  I R>1 Q $P($G(^ACHS(9,DUZ(2),"FY",F,"W",R-1,0)),U,2)
- Q ((F-1700)_$P($G(^ACHSF(DUZ(2),0)),U,6))-1
+ ;Q ((F-1700)_$P($G(^ACHSF(DUZ(2),0)),U,6))-1
+ Q $S($$PARM^ACHS(0,7)=1:((F-1701)_$P($G(^ACHSF(DUZ(2),0)),U,6))-1,1:((F-1700)_$P($G(^ACHSF(DUZ(2),0)),U,6))-1) ;ACHS*3.1*28 ADDED PARM TEST
  ;
 EDT(F,R) ; Given FY and Reg #, return the Ending date of the Register.
  S X=$P($G(^ACHS(9,DUZ(2),"FY",F,"W",R,0)),U,2)

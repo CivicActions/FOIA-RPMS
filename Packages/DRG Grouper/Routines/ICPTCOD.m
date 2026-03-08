@@ -1,5 +1,5 @@
-ICPTCOD ;ALB/DEK/KER - CPT CODE APIS ; 04/18/2004
- ;;6.0;CPT/HCPCS;**6,12,13,14,16,19**;May 19, 1997;Build 44
+ICPTCOD ;ALB/DEK/KER - CPT CODE APIS ;11/29/2007
+ ;;6.0;CPT/HCPCS;**6,12,13,14,16,19,40**;May 19, 1997;Build 9
  ;
  ; External References
  ;   DBIA  10103  $$DT^XLFDT
@@ -126,7 +126,9 @@ CODM(CODE,OUTARR,SRC,CDT,DFN) ; returns list of modifiers for a code
  S BR="" F  S BR=$O(^DIC(81.3,"M",BR)) Q:BR>CODA!'BR  D
  .S ER="" F  S ER=$O(^DIC(81.3,"M",BR,ER)) Q:'ER  I CODA'>ER D
  ..S MI=0 F  S MI=$O(^DIC(81.3,"M",BR,ER,MI)) Q:'MI  D
+ ...N MDPS
  ...S MDST=$G(^DIC(81.3,MI,0)) Q:'$L(MDST)
+ ...S MDPS=$$MODP^ICPTMOD(CODE,+MI,"I",$G(CDT),$G(SRC)) Q:+MDPS'>0
  ...I '$G(SRC) Q:$P(MDST,"^",4)="V"
  ...I $G(CDT) S ACTMD="",ACTMD=$$MOD^ICPTMOD(MI,"I",CDT,$G(SRC)) Q:($P(ACTMD,"^")=-1)!($P(ACTMD,"^",7)=0)
  ...S MD=$P(MDST,"^",1,2),MN=$P(MD,"^")

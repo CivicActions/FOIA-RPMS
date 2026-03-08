@@ -1,5 +1,7 @@
-BLRRLEVN ;cmi/anch/maw - BLR Reference Lab Non LEDI Manifest Build ; 12-Apr-2016 14:25 ; MAW
- ;;5.2;IHS LABORATORY;**1034,1036,1037,1039**;NOV 01, 1997;Build 38
+BLRRLEVN ;cmi/anch/maw - BLR Reference Lab Non LEDI Manifest Build ; 01-Apr-2022 07:32 ; MKK
+ ;;5.2;IHS LABORATORY;**1034,1036,1037,1039,1043,1051**;NOV 01, 1997;Build 19
+ ;
+ ; MSC/MKK - LR*5.2*1051 - 01-Apr-2022 - Item 74820 - Fix for AM Lab Collection and Reference Lab Orders
  ;
  Q
  ;
@@ -38,6 +40,7 @@ SHIPMAN(ORD,RE,SHP) ;-- get data needed for HL7 message and manifest
  . S OPI=+$P($G(^LRO(69,OA,1,ON,0)),U,6)
  . S AREA=$P($G(^LAB(60,TEST,8,$S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),0)),U,2)
  . S RL=$P($G(^BLRSITE($S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),"RL")),U)
+ . I $$TESTING(LOC) S RL=$S($P($G(^BLRSITE(DUZ(2),"RLA")),U,13):$P(^BLRSITE(DUZ(2),"RLA"),U,13),1:RL)  ;maw p1042 for testing another reference lab 
  . Q:'$$NOMAP^BLRRLEVT(RL,TEST,LOC)  ;p1036 dont ship or print a non mapped test
  . D BLRVARS(BLROI,ORD,AC,ACC,CDT,TEST,SAMP,SPEC,ORDP,AREA,URG,ODT,LOC,OPI)
  . I '$G(RE) S X="BLR REFLAB ACCESSION A TEST",DIC=101 D EN^XQOR
@@ -81,6 +84,7 @@ BLRVARS(OI,OR,UID,ACC,CD,TS,SM,SP,OP,AR,UG,OD,LC,PI)   ; Setup the variables for
  S BLRRL("SAMP")=SM  ;collection sample
  I SP S BLRRL("SRC")=$P($G(^LAB(61,SP,0)),U)  ;specimen
  S BLRRL("RL")=+$G(^BLRSITE($S($G(BLRALTDZ):BLRALTDZ,1:DUZ(2)),"RL"))  ;ref lab site
+ I $$TESTING(LC) S BLRRL("RL")=$S($P($G(^BLRSITE(DUZ(2),"RLA")),U,13):$P(^BLRSITE(DUZ(2),"RLA"),U,13),1:BLRRL("RL"))  ;maw p1042 for testing another reference lab
  S BLRRL("RLE")=$P($G(^BLRRL(BLRRL("RL"),0)),U)  ;external name
  S BLRRL("TNAME")=$P($G(^LAB(60,TS,0)),U)  ;get test name
  S BLRRL("ABBR")=$P($G(^LRO(68,AR,0)),U,11)  ;get area abbr
@@ -95,6 +99,7 @@ BLRVARS(OI,OR,UID,ACC,CD,TS,SM,SP,OP,AR,UG,OD,LC,PI)   ; Setup the variables for
  S BLRRL("URG")=UG  ;urgency
  S BLRRL("ODT")=OD  ;order date
  S BLRRL("ORD")=OR  ;order
+ S BLRRL("LOCI")=$G(LC)  ;ien of ordering location
  S BLRRL("LOC")=$$GET1^DIQ(44,LC,.01)  ;ordering location
  S BLRRL("CLIENT")=$P($G(^BLRRLO(OI,0)),U,3)
  S BLRRL("BILL TYPE")=$$GET1^DIQ(9009026.3,OI,.05)
@@ -161,7 +166,8 @@ KVAR  ;-- kill off remaining variables not needed
  ;
 PRTLC(ORD,ACC,DF,LOC,ODT,PRV,TST) ;-- printout the lab collect information
  N NM,CHT,RLOC,ORDT,PRVE,TSTE,ICD,ICDE,OI,RDX
- S OI=$O(^BLRRLO("ACC",ACC,0))
+ ; S OI=$O(^BLRRLO("ACC",ACC,0))
+ S OI=+$O(^BLRRLO("ACC",ACC,0))   ; MSC/MKK - LR*5.2*1051 - Item 74820 - 01-Apr-2022
  S NM=$$GET1^DIQ(2,DF,.01)
  S CHT=$$HRN^AUPNPAT(DF,DUZ(2))
  S RLOC=LOC
@@ -173,6 +179,7 @@ PRTLC(ORD,ACC,DF,LOC,ODT,PRV,TST) ;-- printout the lab collect information
  I $D(^ICDS(0)),ICD]"" S RDX=$$ICDDX^ICDEX(ICD,DT)
  I '$D(^ICDS(0)),ICD]"" S RDX=$$ICDDX^ICDCODE(ICD,DT)
  S ICDE=$P(RDX,U,2)_"-"_$P(RDX,U,4)
+ S:OI=0 ICDE=""    ; MSC/MKK - LR*5.2*1051 - Item 74820 - 01-Apr-2022
  U IO
  W !!,"Information for this accession:"
  W !,NM,?35,CHT,?50,"Requesting Loc: "_RLOC
@@ -238,4 +245,9 @@ WORD() ;-- reship which order
  Q:$D(DIRUT) 0
  I Y<0 Q 0
  Q +$G(Y)
+ ;
+TESTING(LC) ;-- check to see if testing is turned on and what location
+ I '$G(LC) Q 0
+ I $P($G(^BLRSITE(DUZ(2),"RLA")),U,13),$P($G(^BLRSITE(DUZ(2),"RLA")),U,14)=LC Q 1
+ Q 0
  ;

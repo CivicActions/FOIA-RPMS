@@ -1,5 +1,5 @@
-PSODRDU1 ;BIR/SAB - dup drug class checker for pending orders ;1/3/05 11:33am
- ;;7.0;OUTPATIENT PHARMACY;**4,27,32,56,63,130,132,192**;DEC 1997
+PSODRDU1 ;BIR/SAB - dup drug class checker for pending orders ;01-Mar-2019 15:40;MGH
+ ;;7.0;OUTPATIENT PHARMACY;**4,27,32,56,63,130,132,192,1023**;DEC 1997;Build 121
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(50.606 supported by DBIA 2174
  ;External reference to ^PS(51.2 supported by DBIA 2226
@@ -7,6 +7,8 @@ PSODRDU1 ;BIR/SAB - dup drug class checker for pending orders ;1/3/05 11:33am
  ;External reference to ^SC supported by DBIA 10040
  ;External reference to ^PS(56 supported by DBIA 2229
  ;External references PSOL and PSOUL^PSSLOCK supported by DBIA 2789
+ ;Modified  IHS/MSC/MGH 04/16/2018 DUP+1 EPCS call for multiple C2 drugs
+ ;
  S RXREC=$P(PSOSD(STA,DNM),"^",10)
  Q:'$D(^PS(52.41,RXREC,0))
  Q:$P($G(^PS(52.41,RXREC,0)),"^",3)="RF"
@@ -26,7 +28,10 @@ PSODRDU1 ;BIR/SAB - dup drug class checker for pending orders ;1/3/05 11:33am
  D:PSODRUG("NAME")=$P(DNM,"^")&($D(^XUSEC("PSORPH",DUZ))) DUP Q:$G(PSORX("DFLG"))
  I $G(PSODRUG("VA CLASS"))]"",$E($G(PSODRUG("VA CLASS")),1,4)=$E($P($G(PSOSD(STA,DNM)),"^",5),1,4),$G(PSODRUG("NAME"))'=$P(DNM,"^") D CLS
  K FSIG Q
-DUP S DUP=1 W !,PSONULN,!,$C(7),"DUPLICATE DRUG "_$P(DNM,"^")_" in a Pending Order"
+DUP ; IHS/MSC/MGH Added call to allow multiple C2 orders
+ I '$G(ORD) S ORD=RXREC
+ Q:+$$DUPCII^APSPFNC6(ORD)
+ S DUP=1 W !,PSONULN,!,$C(7),"DUPLICATE DRUG "_$P(DNM,"^")_" in a Pending Order"
  S MSG="Discontinued During "_$S('$G(PSONV):"New Prescription Entry",1:"Verification")_" - Duplicate Drug."
 DATA S DUPRX0=^PS(52.41,RXREC,0),RFLS=$P(DUPRX0,"^",11),ISSD=$P(DUPRX0,"^",6)
  S RXRECLOD=RXREC

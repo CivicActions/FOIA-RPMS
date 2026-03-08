@@ -1,5 +1,6 @@
-APCHS ; IHS/CMI/LAB - PCC HEALTH SUMMARY ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCHS ; IHS/TUCSON/LAB - PCC HEALTH SUMMARY ;  [ 02/23/04  3:20 PM ]
+ ;;2.0;IHS RPMS/PCC Health Summary;**4,5,7,14**;JUN 24, 1997
+ ;IHS/CMI/LAB - added PEP to SELPT
  ;fixed CMS display
  ;
 VERSION ;;2.0
@@ -14,7 +15,7 @@ SELTYP K DIC S DIC=9001015,DIC("A")="Select health summary type: ",DIC(0)="AEQM"
  S DIC("B")=X
  D ^DIC K DIC I Y>0 S APCHSTYP=+Y D SELPT W ! G SELTYP
  G END
-SELPT ;PEP-select patients
+SELPT ;PEP
  K DIC S DIC=9000001,DIC("A")="Select patient: ",DIC(0)="AEQM" D ^DIC K DIC I Y>0 S APCHSPAT=+Y W:$D(^AUPNPAT(APCHSPAT,41,DUZ(2),0)) !,"Patient's chart number is ",$P(^(0),U,2),! D HSOUT G SELPT
  ;
 END ;

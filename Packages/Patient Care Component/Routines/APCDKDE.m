@@ -1,8 +1,8 @@
-APCDKDE ; IHS/CMI/LAB - POST DATA ENTRY RELINKER ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDKDE ; IHS/CMI/TUCSON - POST DATA ENTRY RELINKER ; 
+ ;;1.0;IHS PCC SUITE;**1**;MAR 14, 2008
  ;
  ;
-EP ;EP find v file entries to re-link to this visit
+EP ;EP find v file entries to relink to this visit
  I '$D(APCDVSIT) Q  ;quit if visit not passed
  I '$D(^AUPNVSIT(APCDVSIT)) Q  ;quit if not valid visit
  I "AORSX"'[$P(^AUPNVSIT(APCDVSIT,0),U,7) Q
@@ -55,7 +55,7 @@ CHECK ;
  Q:APCDK12N=""
 ENCPROV ;
  S APCDKVFP=""
- ;if both v record encounter provider and any provider in V Provider for this visit match, re-link and quit (both must have a value)
+ ;if both v record encounter provider and any provider in V Provider for this visit match, relink and quit (both must have a value)
  G:$P(APCDK12N,U,4)="" ORDPROV
  I $P(^DD(9000010.06,.01,0),U,2)[6,$P(^DD(APCDKVFL,1204,0),U,2)[200 S APCDKVFP=$P(^VA(200,$P(APCDK12N,U,4),0),U,16)
  I $P(^DD(9000010.06,.01,0),U,2)[6,$P(^DD(APCDKVFL,1204,0),U,2)[6 S APCDKVFP=$P(APCDK12N,U,4)
@@ -77,7 +77,7 @@ ORDPROV ;
  ;I $G(APCDKDPP)=$P(APCDK12N,U,2) D RELINK Q
  ;S X=0 F I=1:1 S X=$P(APCDKDSP,U,I) Q:X=""  I $P(APCDK12N,U,2)=X D RELINK Q
 CLIN ;check clinic
- ;if both v record clinic and visit record clinic are not null, and they match, re-link v record and quit
+ ;if both v record clinic and visit record clinic are not null, and they match, relink v record and quit
  ;Q  ;quit per Linda - 1/6/04 - don't quit per Linda's document of 9/28/03 Check site parameter per Chris
  ;I '$P($G(^APCDSITE(DUZ(2),0)),U,27) Q
  ;I $P(APCDK12N,U,3)]"",$P(V,U,8)]"",$P(APCDK12N,U,3)=$P(V,U,8) D RELINK Q
@@ -89,7 +89,6 @@ RELINK ;repoint v file entry
  W:'$D(ZTQUEUED) "  ",$P(^DIC(APCDKVFL,0),U)
  K DIE,DR,DA,DIU,DIV S DITC="",DA=APCDVDFN,DIE=APCDKVDG,DR=".03////"_APCDVSIT D ^DIE K DIE,DA,DR,DIU,DIV,DITC
  I (APCDKVFL=9000010.09)!(APCDKVFL=9000010.25)!(APCDKVFL=9000010.31) D LABLRO
- D UPDLOG^APCDK(APCDKVFL,APCDVDFN,APCDVSIT,APCDKXVS,DT,"D")
  Q
 LABLRO ;
  ;if this is a v lab go fix LR(68.999999901 for backwards compatibility with ALR and LAB

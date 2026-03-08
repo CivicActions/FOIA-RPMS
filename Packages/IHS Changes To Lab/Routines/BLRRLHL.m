@@ -1,5 +1,8 @@
-BLRRLHL ;cmi/anch/maw - BLR HL7 Utilities for Reference Lab ;27-Jul-2015 06:10;MKK
- ;;5.2;IHS LABORATORY;**1027,1028,1031,1034,1036**;NOV 01, 1997;Build 10
+BLRRLHL ;cmi/anch/maw - BLR HL7 Utilities for Reference Lab ; 01-Apr-2022 07:59 ; MKK
+ ;;5.2;IHS LABORATORY;**1027,1028,1031,1034,1036,1051**;NOV 01, 1997;Build 19
+ ;
+ ; MSC/MKK - LR*5.2*1051 - 01-Apr-2022 - Item 74820 - Fix for AM Lab Collection and Reference Lab Orders
+ ;
  Q
  ;
 CLIENT N BLRCLCNT
@@ -18,7 +21,8 @@ CLIENT N BLRCLCNT
  . D ^DIR
  . Q:$D(DIRUT)
  . S BLRRL("CLIENT")=$G(BLRCLA(+Y))
- S BLRRLCLT=BLRRL("CLIENT")
+ ; S BLRRLCLT=BLRRL("CLIENT")
+ S BLRRLCLT=$G(BLRRL("CLIENT"))   ; MSC/MKK - LR*5.2*1051 - Item 74820 - 01-Apr-2022
  I $G(BLRRL("CLIENT"))="" G CLIENT
  S BLRRLCLA=BLRRLCLT
  ;cmi/maw 2/25/2008 end of mods for multiple account numbers

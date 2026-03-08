@@ -1,5 +1,6 @@
-DDMPSM ;SFISC/DPC-IMPORT SCREENMAN CALLS ;9/20/96  10:07
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDMPSM ;SFISC/DPC-IMPORT SCREENMAN CALLS ;9/20/96  10:07 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**30**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 FILESEL ;
  ; Called form Post-actin on change of Primary File prompt

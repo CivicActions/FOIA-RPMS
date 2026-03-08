@@ -1,5 +1,5 @@
-XQARPRT2 ;DCN/BUF,JLI/OAK-OIFO - LOOKUP PROVIDER ALERTS ;4/9/07  10:16
- ;;8.0;KERNEL;**316,443**;Jul 10, 1995;Build 4
+XQARPRT2 ;DCN/BUF,JLI/OAK-OIFO - LOOKUP PROVIDER ALERTS 25 SEP 98 ;9/3/03  11:15 [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**316**;Jul 10, 1995
  ;  Based on the original routine AEKALERT
  Q
 EN ; OPT - interactive lists alerts from start date for a single user based on contents of alert tracking file
@@ -12,14 +12,12 @@ EN1 ;
 DQ1 ;
  N XQANWID,XQAIEN,XQADATE,XQANODE0,XQACTR,HEADERID,XQATOT
  S HEADERID="User "_$$GET1^DIQ(200,XQADOC_",",.01)_" (DFN="_XQADOC_")"
- U IO
  D HEADER(HEADERID,1)
  S XQAIEN=$O(^XTV(8992.1,"D",XQASDATE-.0000001)) I XQAIEN>0 S XQAIEN=$O(^(XQAIEN,0)) ; find starting point instead of having to work up through x-ref
  I XQAIEN>0 F  S XQAIEN=$O(^XTV(8992.1,"R",XQADOC,XQAIEN)) Q:XQAIEN'>0  D  Q:$D(DIRUT)!(XQADATE>XQAEDATE)
  . S XQANODE0=$G(^XTV(8992.1,XQAIEN,0)),XQADATE=$P(XQANODE0,"^",2) Q:(XQADATE<XQASDATE)!(XQADATE>XQAEDATE)
  . D PRNTATRK(XQAIEN)
  D HEADER(HEADERID,0)
- D ^%ZISC
  K XQADATE,XQACTR,DATA,DIR,DIRUT,XQADOC,XQAIEN,XQANODE0,XQASDATE,Y
  Q
  ;
@@ -46,7 +44,7 @@ WORDS(TYPE) ; Allow user to select alerts containing only certain words
  . K DIR,DIRUT
  . Q
  ;
- I $D(XQAWORDS)>1,$G(TYPE)="" D
+ I $D(XQAWORDS)>1,$G(TYPE)="" D 
  . S DIR(0)="SO^1:Both Action and Info Only;2:Action Alerts;3:Info Only Alerts",DIR("?",1)="Select whether alerts listed should be alerts involving actions (2), info",DIR("?")="only or text only alerts (3), or both (1)."
  . S DIR("A")="Select Alert Type(s) desired",DIR("B")=1 D ^DIR K DIR S:Y'>0 Y=1 K DIRUT S XQADISP=+Y
  . Q
@@ -81,8 +79,7 @@ PRNTATRK(IEN) ; Print data for an entry from the alert tracking file
  W !,$E(XQAMSG,1,IOM-1) W !?35,XQANEN S XQATOT=XQATOT+1
  S XQACTR=XQACTR+2 I XQACTR>(IOSL-4) D  Q:$D(DIRUT)  S XQACTR=0
  . I $D(ZTQUEUED) W @IOF
- . E  U IO(0) S DIR(0)="E" D ^DIR K DIR W !
- . U IO
+ . E  S DIR(0)="E" D ^DIR K DIR W !
  . Q
  Q
  ;

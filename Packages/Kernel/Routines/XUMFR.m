@@ -1,5 +1,5 @@
-XUMFR ;OIFO-OAK/RAM - pre/post update subroutines;04/15/02 ;10/12/05  12:12
- ;;8.0;KERNEL;**335,383**;Jul 10, 1995
+XUMFR ;OIFO-OAK/RAM - pre/post update subroutines;04/15/02
+ ;;8.0;KERNEL;**335**;Jul 10, 1995
  ;
  Q
  ;
@@ -88,6 +88,3 @@ XM(X,XUMFKEY) ; -- MailMan notification
  ;
  Q
  ;
-MD5 ;MD5 Hash value
- D EN^XUMF5I(IEN)
- Q

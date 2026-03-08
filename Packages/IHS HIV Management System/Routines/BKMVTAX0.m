@@ -1,0 +1,448 @@
+BKMVTAX0 ;PRXM/HC/BWF - DMS TAXONOMY MANAGEMENT UTILITY ;  [ 11/24/03  9:25 AM ]
+ ;;1.0;HIV MANAGEMENT SYSTEM;**2**;Sep 08, 2006
+ ;UTILITY PROGRAM TO MANAGE TAXONOMY CREATION AND EDITING
+TAX ;EP - TAXONOMY MANAGEMENT
+ I '$$VALID^BKMIXX3(DUZ) D EN^DDIOL("You are not a valid HMS user.") H 2 Q
+ I '$D(^XUSEC("BGPZ TAXONOMY EDIT",DUZ)) D EN^DDIOL("You not have the BGPZ TAXONOMY EDIT key") H 2 Q
+ F  I '$$TAX1() Q
+ D TAXEXIT
+ Q
+ ;
+TAX1() ;PROCESS TAXONOMIES
+ D TAXEXIT ; Initialize variables
+ D HDR^BKMIXX3
+ S DIR(0)="SO^1:Edit Site-Populated Taxonomies;2:View All Taxonomies"
+ S DIR("A")="Select one"
+ D DIR^BKMVDIC
+ I Y<1 Q 0
+ S BKMVTYPE=$S(Y=1:"EDIT",1:"VIEW")
+ F  I '$$TAXRX1(BKMVTYPE) Q
+ Q 1
+ ;
+TAXRX1(BKMVTYPE) ;
+ N BKMVADA,BKMVOUT,BKMVQUIT
+ W @IOF
+ ; Screen header
+ D HDR^BKMIXX3
+ W !!?28,"HMS Taxonomy Categories"
+ I BKMVTYPE="EDIT" S DIR(0)="SO^1:Medications;2:Lab Tests"
+ I BKMVTYPE="VIEW" S DIR(0)="SO^1:Diagnoses;2:Education;3:Immunizations;4:Medications;5:Procedures and Exams;6:Screening;7:Lab Tests;8:Other;9:ALL"
+ S DIR("A")="Select one"
+ D DIR^BKMVDIC
+ I Y<1 Q 0
+ S BKMVNAM1=Y(0)
+ ;
+ I BKMVTYPE="VIEW" D  Q 1
+ .S BKMVNAM2=$S(Y=1:"DX",Y=2:"ED",Y=3:"IZ",Y=4:"M",Y=5:"P",Y=6:"S",Y=7:"T",Y=8:"O",1:"ALL")
+ .D VALM("BKMV TAXONOMY VIEW")
+ .Q
+ ;
+ I BKMVTYPE="EDIT" D  Q 1
+ .I Y=1 D  Q
+ ..S (BKMVANAM,BKMVNAM2)="RX",BKMVWHCH="NONLAB"
+ ..S BKMVADA=$O(^AMQQ(5,"B",BKMVANAM,""))
+ ..S BKMVTF=U_$P(^AMQQ(5,BKMVADA,0),U,18) ; Taxonomy lookup information
+ ..D VALM("BKMV TAXONOMY DISPLAY")
+ ..Q
+ .I Y=2 D  Q
+ ..S (BKMVANAM,BKMVNAM2)="LAB",BKMVWHCH="LAB"
+ ..D VALM("BKMV LAB TAXONOMY LIST")
+ ..Q
+ ; Code below is no longer called, but is left in for later use if needed.
+ S BKMVADA=$O(^AMQQ(5,"B",BKMVANAM,""))
+ I 'BKMVADA D  Q 1
+ .W !!,"A taxonomy can not be created for this attribute.  Ask your"
+ .W !,"system manager to add ",BKMVANAM," as an attribute then try again." H 2
+ .Q
+ S BKMVTF=U_$P(^AMQQ(5,BKMVADA,0),U,18) ; Taxonomy lookup information
+ ;I BKMVINK0=""!(BKMVTFF="")!'BKMVINK Q 1
+ D VALM("BKMV TAXONOMY "_$S(BKMVTYPE="VIEW":"VIEW",1:"DISPLAY"))
+ Q 1
+ ;
+HEADER ;EP;Sets up the "header" line for the user-editable part of the page
+ ;S VALMSG="'-' Previous Page  'QU' Quit  ?? for More Actions"
+ ;S VALMHDR(1)=" "_BKMVANAM_" Taxonomies"
+ N DA,IENS,SITE,TAXTYPE
+ S DA=$G(DUZ(2)),IENS=$$IENS^DILF(.DA),SITE=$$GET1^DIQ(4,IENS,.01,"E")
+ S VALMHDR(1)=$$PAD^BKMIXX4("",">"," ",(80-($L(SITE)+2))\2)_"["_$G(SITE)_"]"
+ S TAXTYPE=BKMVNAM1_" Taxonomies"
+ S VALMHDR(2)=$$PAD^BKMIXX4("",">"," ",(80-$L(TAXTYPE))\2)_$G(TAXTYPE)
+ ; This line does not display for the Taxonomy list intentionally
+ S VALMHDR(3)=" "_$$GET1^DIQ($S($G(NAME)["BKMV LAB TAXONOMY ":9002228,1:9002226),$G(BKMVTDA),".01","E")
+ ;S VALMHDR(2)="     No.  Taxonomy"
+ Q
+ ;
+TAXEDIT ;EP;EDIT AN EXISTING TAXONOMY
+ D SELECT
+ I $D(BKMVQUIT) K BKMVQUIT D BACK("TAX") Q
+ D TE1
+ Q
+ ;
+TE1 ;EP
+ D TILIST
+ D BACK("TAX")
+ Q
+ ;
+SELECT ;SELECT AN EXISTING TAXONOMY
+ S DIR(0)="NO^1:"_BKMVJ
+ S DIR("A")="Select Taxonomy"
+ W !
+ D DIR^BKMVDIC
+ I Y<1 S BKMVQUIT="" Q
+ Q:'$D(BKMVJ(Y))
+ S BKMVTDA=+BKMVJ(Y)
+ S BKMVTNAM=$$GET1^DIQ(9002226,+BKMVTDA,.01,"E")
+ ; Check if the Taxonomy is really stored in ^ATXAX or ^ATXLAB.
+ I BKMVTNAM=$P(BKMVJ(Y),U,2) D  Q
+ .S Y=$$GET1^DIQ(9002226,+BKMVTDA,.15,"I")
+ .S BKMVANAM=$S(Y=81:"CPT",Y=80:"DIAGNOSIS",Y=80.1:"PRC",Y=9999999.31:"DEN",Y=9999999.09:"ET",Y=9999999.64:"HF",Y=9999999.14:"HMS IMMUNIZATION",Y=2:"NDC",Y=50:"RX",Y=95.3:"LOINC",1:"OTHER")
+ .S BKMVWHCH="NONLAB"
+ .Q
+ S BKMVTNAM=$$GET1^DIQ(9002228,+BKMVTDA,.01,"E")
+ I BKMVTNAM=$P(BKMVJ(Y),U,2) D  Q
+ .S Y=$$GET1^DIQ(9002228,+BKMVTDA,.09,"I")
+ .S BKMVANAM=$S(Y=60:"LAB",1:"OTHER")
+ .S BKMVWHCH="LAB"
+ .Q
+ Q
+ ;
+TAXINIT ;EP - INITIALIZE ARRAY FOR TAXONOMY DISPLAY
+ K ^TMP("BKMVVR",$J),^TMP("BKMVTMP",$J)
+ K BKMVJ S VALMCNT=0
+ D PROCESS^BKMVTAX4(BKMVNAM2,.BKMVTAX)
+ Q:'$D(BKMVTAX)
+ N A,X,Y,Z,TEXT
+ S Z=0
+ S X=""
+ F  S X=$O(BKMVTAX(X)) Q:X=""  D
+ .S Z=Z+1
+ .S A="    "_Z
+ .S:$L(A)=5 A=" "_A
+ .S A=A_"   "
+ .S A=A_X
+ .S VALMCNT=$G(VALMCNT)+1
+ .S TEXT=""
+ .S TEXT=$$SETFLD^VALM1($$PAD^BKMIXX4(VALMCNT_")","<"," ",4),TEXT,"Item")
+ .S TEXT=$$SETFLD^VALM1(X,TEXT,"Taxonomy")
+ .D
+ ..N IEN,FILE
+ ..S IEN=$O(^ATXLAB("B",X,"")) I IEN="" Q
+ ..S FILE=$$GET1^DIQ(9002228,IEN,.09,"I")
+ ..S TEXT=$$SETFLD^VALM1($S(FILE=60:"LAB",1:"OTHER"),TEXT,"Type")
+ ..S TEXT=$$SETFLD^VALM1($$GET1^DIQ(9002228,IEN,.02,"E"),TEXT,"Description")
+ .D
+ ..N IEN,FILE
+ ..S IEN=$O(^ATXAX("B",X,"")) I IEN="" Q
+ ..S FILE=$$GET1^DIQ(9002226,IEN,.15,"I")
+ ..I FILE<100 S TEXT=$$SETFLD^VALM1($S(FILE=81:"CPT",FILE=80:"DIAGNOSES",FILE=80.1:"ICD PROCEDURES",FILE=2:"NDC CODES",FILE=50:"DRUGS",FILE=95.3:"LOINC CODES",1:"OTHER"),TEXT,"Type")
+ ..E  S TEXT=$$SETFLD^VALM1($S(FILE=9999999.31:"ADA CODE",FILE=9999999.09:"EDUCATION TOPICS",FILE=9999999.64:"HEALTH FACTORS",FILE=9999999.14:"IMMUNIZATION",1:"OTHER"),TEXT,"Type")
+ ..S TEXT=$$SETFLD^VALM1($$GET1^DIQ(9002226,IEN,.02,"E"),TEXT,"Description")
+ .D SET^VALM10(VALMCNT,TEXT)
+ .;D Z(A)
+ .S BKMVJ(Z)=+BKMVTAX(X)_U_X
+ I '$D(^TMP("BKMVVR",$J)) D
+ .;S X="NO TAXONOMIES ON FILE FOR "_BKMVX
+ .;D Z(X)
+ .S VALMCNT=$G(VALMCNT)+1
+ .S TEXT="NO TAXONOMIES ON FILE FOR "_BKMVX
+ .D SET^VALM10(VALMCNT,TEXT)
+ S BKMVJ=Z
+ Q
+ ;
+TAXEXIT ; Taxonomy Setup cleanup
+ K BKMVJ,BKMVX,BKMVY,BKMVTDA,BKMVTNAM,BKMVINK,BKMVINK0
+ K BKMVLDA,BKMVWHCH,BKMVANAM,BKMVTF,BKMVTFF,BKMVCANN,BKMVGO
+ K BKMVTFDA,BKMVHIGH,BKMVLOW,BKMVTYPE,APCKANAM,BKMVCANN,BKMVFILE
+ K BKMVILE,APLCGO,APLCJ,BKMVRXDA,BKMVRXVC,BKMVTDA,BKMVTNAM
+ K BKMVTAX,BKMCHK,VALMCC,VALMSG,VALMBCK,BKMVNAM1,BKMVNAM2
+ K ^TMP("BKMVVR",$J)
+ Q
+ ;
+VALM(BKMVX) ;EP - VALM INTERFACE
+ S VALMCC=1 ;1=screen mode, 0=scrolling mode
+ D TERM^VALM0
+ D EN^VALM(BKMVX)
+ D CLEAR^VALM1
+ Q
+ ;
+LABADD ;EP;ADD LAB TO LAB TAXONOMY
+ F  D L1 Q:$D(BKMVQUIT)
+ D BACK("LAB")
+ Q
+ ;
+L1 ;
+ D CLEAR^VALM1
+ W !,"Lab tests currently in this taxonomy:"
+ NEW X S X=0
+ F  S X=$O(^ATXLAB(BKMVTDA,21,X)) Q:X'=+X  D
+ .W !,$P(^LAB(60,$P(^ATXLAB(BKMVTDA,21,X,0),U),0),U)
+ .Q
+ ;
+ W !!?5,"Select an item to ADD to the"
+ W !?10,BKMVTNAM," Taxonomy"
+ S DIC="^LAB(60,"
+ S DIC(0)="AEMQZ"
+ S DIC("A")="Select Lab Tests: "
+ W !
+ D DIC^BKMVDIC
+ I +Y<1 S BKMVQUIT="" Q
+ I $D(^ATXLAB(BKMVTDA,21,"B",+Y)) D  Q
+ .S BKMVLDA=$O(^ATXLAB(BKMVTDA,21,"B",+Y,0))
+ .W !!,Y(0,0)," already selected for this taxonomy." H 2
+ I '$D(^ATXLAB(BKMVTDA,21,"B",Y(0,0))),'$D(^ATXLAB(BKMVTDA,21,"B",+Y)) D
+ .S DA(1)=BKMVTDA
+ .S X=+Y
+ .S $P(^ATXLAB(DA(1),21,0),U,2)="9002228.02101PA"
+ .S DIC="^ATXLAB("_DA(1)_",21,"
+ .S DIC(0)="L"
+ .D FILE^BKMVDIC
+ .S BKMVLDA=+Y
+LE S DA=BKMVLDA
+ S DA(1)=BKMVTDA
+ S DIE="^ATXLAB("_DA(1)_",21,"
+ S DR="1101;"
+ D DIE^BKMVDIC
+ Q
+ ;
+LABEDIT ;EP;EDIT LAB IN LAB TAXONOMY
+ S DIR("A")="EDIT "
+ D SLAB
+ I $D(BKMVQUIT) K BKMVQUIT D BACK("LAB") Q
+ D LE
+ D BACK("LAB")
+ Q
+ ;
+SLAB ;SELECT EXISTING LAB TEST FROM A LAB TAXONOMY
+ S DIR(0)="NO^1:"_BKMVJ
+ S DIR("A")=$G(DIR("A"))_"Which Lab Test"
+ W !
+ D DIR^BKMVDIC
+ I Y<1 S BKMVQUIT="" Q
+ I '$D(BKMVJ(BKMVTDA,Y)) S BKMVQUIT="" Q
+ S BKMVLDA=+BKMVJ(BKMVTDA,Y)
+ Q
+ ;
+DLAB ;EP;DELETE LAB FROM LAB TAXONOMY
+ I +$G(BKMVJ)=0 D EN^DDIOL("No items to select") H 1 Q
+ S DIR("A")="DELETE "
+ D SLAB
+ I $D(BKMVQUIT) K BKMVQUIT D BACK("LAB") Q
+ S DA(1)=BKMVTDA
+ S DA=BKMVLDA
+ S DIK="^ATXLAB("_DA(1)_",21,"
+ D DIK^BKMVDIC
+ D BACK("LAB")
+ Q
+ ;
+TILIST ;EP;TO DISPLAY ITEMS ON TAXONOMY LIST
+ I BKMVWHCH="NONLAB" D VALM("BKMV TAXONOMY ITEMS "_$S(BKMVTYPE="VIEW":"VIEW",1:"DISPLAY")) Q
+ D VALM("BKMV LAB TAXONOMY "_$S(BKMVTYPE="VIEW":"VIEW",1:"DISPLAY"))
+ Q
+ ;
+TIINIT ;EP;TO LIST ITEMS IN A TAXONOMY
+ K BKMVY
+ K ^TMP("BKMVVR",$J),BKMVJ
+ S VALMCNT=0
+ ;PRXM/HC/BHS - Removed 9/22 - captions in listman header
+ ;S X="     "_$P(^ATXAX(BKMVTDA,0),U)
+ ;D Z(X)
+ ;S X="--------------------------------------"
+ ;D Z(X)
+ N A,B,X,Y,Z,BKMVX,BKMVLDA,BKMVLOW,BKMVHIGH,TEXT
+ S BKMVX=""
+ F  S BKMVX=$O(^ATXAX(BKMVTDA,21,"B",BKMVX)) Q:BKMVX=""  D
+ .S BKMVLDA=0
+ .F  S BKMVLDA=$O(^ATXAX(BKMVTDA,21,"B",BKMVX,BKMVLDA)) Q:'BKMVLDA  D
+ ..S X=$G(^ATXAX(BKMVTDA,21,BKMVLDA,0))
+ ..Q:X=""
+ ..D Y^BKMVTAX1
+ ..S BKMVY(BKMVLOW_" ")=BKMVHIGH_U_BKMVLDA
+ ;
+ S BKMVJ=0,BKMVLOW=""
+ F  S BKMVLOW=$O(BKMVY(BKMVLOW)) Q:BKMVLOW=""  D
+ .S BKMVHIGH=$P(BKMVY(BKMVLOW),U)
+ .S BKMVJ=BKMVJ+1
+ .S A=""
+ .S $E(A,5)=BKMVJ
+ .S:$L(A)=5 A=" "_A
+ .S A=A_"   "
+ .S A=A_BKMVLOW_$E($J(" ",30),1,30-$L(BKMVLOW))
+ .S A=A_BKMVHIGH_$E($J(" ",30),1,30-$L(BKMVHIGH))
+ .S VALMCNT=$G(VALMCNT)+1
+ .S TEXT=""
+ .S TEXT=$$SETFLD^VALM1($$PAD^BKMIXX4(VALMCNT,"<"," ",4),TEXT,"Item")
+ .S TEXT=$$SETFLD^VALM1(BKMVLOW,TEXT,"Low")
+ .S TEXT=$$SETFLD^VALM1(BKMVHIGH,TEXT,"High")
+ .D SET^VALM10(VALMCNT,TEXT)
+ .;D Z(A)
+ .S BKMVLDA=$P(BKMVY(BKMVLOW),U,2)
+ .S BKMVJ(BKMVTDA,BKMVJ)=BKMVLDA_U_A
+ Q
+ ;
+TIADD ;EP;TO ADD ITEM TO TAXONOMY
+ F  D TI1 Q:$D(BKMVQUIT)
+ K BKMVQUIT
+ Q
+ ;
+TI1 ;
+ K BKMV
+ N X,Y,Z,D
+ ; Diagnoses Taxonomies use separate code
+ I BKMVANAM="DIAGNOSIS" D  Q
+ .S X=0
+ .F  S X=$O(^ATXAX(BKMVTDA,21,X)) Q:'X  D
+ ..S Y=$G(^ATXAX(BKMVTDA,21,X,0))
+ ..S:$P(Y,U)]"" BKMV(X)=$P(Y,U)_U_$S($P(Y,U,2)]"":$P(Y,U,2),1:$P(Y,U))
+ .D ^BKMVTAX1
+ .Q
+ ; All other Taxonomies except Diagnoses use the following code
+ D CLEAR^VALM1
+ ; Only display data for Medication Taxonomies as they are the only type currently allowed.
+ ; If other Taxonomy types eventually are allowed, will need to add code for each.
+ I BKMVANAM="RX" D
+ .W !,"Medications currently in this taxonomy:"
+ .NEW X S X=0
+ .F  S X=$O(^ATXAX(BKMVTDA,21,X)) Q:X'=+X  D
+ ..W !,$P(^PSDRUG($P(^ATXAX(BKMVTDA,21,X,0),U),0),U)
+ ..Q
+ .Q
+ W !!?5,"Select an item to ADD to the"
+ W !?10,BKMVTNAM," Taxonomy"
+ I BKMVANAM="NDC" D  G TI2
+ .S DIR(0)="FO^1:14^K:X'?1.6N1""-""1.4N1""-""1.2N X"
+ .S DIR("A")="DRUG"
+ .S DIR("A",1)="Please enter an NDC code in NDC format, e.g. 00001-1234-12"
+ .D DIR^BKMVDIC
+ .I +Y<1 S BKMVQUIT="" Q
+ .Q
+ ; If this is not an "NDC" Taxonomy
+ S DIC=BKMVTF
+ S DIC(0)="AEMQZ"
+ S DIC("A")="Select "_BKMVNAM1_": "
+ W !
+ ; Force Immunizations to use the "C" x-ref, disallow multiple x-ref lookup
+ I BKMVANAM="HMS IMMUNIZATION" S D="C",DIC(0)="AEQZ" D IX^BKMVDIC
+ ; For LOINC code lookups, strip off the dash and trailing checksum digit
+ I BKMVANAM="LOINC" D
+ .S DIC("A")="LOINC code"
+ .S DIC("A",1)="Please enter a LOINC code without the dash or checkum digit:"
+ .Q
+ I BKMVANAM'="HMS IMMUNIZATION" D DIC^BKMVDIC
+ I +Y<1 S BKMVQUIT="" Q
+ D X^BKMVTAX1
+ I $D(^ATXAX(BKMVTDA,21,"B",X)) D  Q
+ .S BKMVLDA=$O(^ATXAX(BKMVTDA,21,"B",X,0))
+ .W !!,Y(0,0)," already selected for this taxonomy." H 2
+ .Q
+TI2 ;
+ Q:$D(BKMVQUIT)
+ S BKMV("LOW")=X
+ S BKMV("HIGH")=""
+ I $D(BKMVQUIT) D BACK("TI") Q
+ S X=$P(BKMV("LOW"),U)
+ S DA(1)=BKMVTDA
+ S DIC="^ATXAX("_BKMVTDA_",21,"
+ S DIC(0)="L"
+ S DIC("DR")=".02////"_$S($P(BKMV("HIGH"),U)]"":$P(BKMV("HIGH"),U),1:X)
+ I '$D(^ATXAX(BKMVTDA,21,0)) S ^ATXAX(BKMVTDA,21,0)="^9002226.02101A"
+ I '$D(^ATXAX(BKMVTDA,21,"B",X)) D FILE^BKMVDIC
+ D BACK("TI")
+ Q
+ ;
+TIREMOVE ;EP;TO REMOVE ITEM FROM TAXONOMY
+ ;EP;Select existing item from a taxonomy
+ S DIR(0)="LO^1:"_BKMVJ
+ S DIR("A")="Delete Which Taxonomy Item(s)"
+ W !
+ D DIR^BKMVDIC
+ I Y<1 D BACK("TI") Q
+ S BKMVY=Y
+ N BKMVI,BKMVX,DIK
+ F BKMVI=1:1 S BKMVX=$P(BKMVY,",",BKMVI) Q:BKMVX=""  D
+ .Q:'$D(BKMVJ(BKMVTDA,BKMVX))
+ .S BKMVLDA=+BKMVJ(BKMVTDA,BKMVX)
+ .S DA(1)=BKMVTDA
+ .S DA=BKMVLDA
+ .S DIK="^ATXAX("_DA(1)_",21,"
+ .D DIK^BKMVDIC
+ D BACK("TI")
+ Q
+ ;
+BACK(BKMVGO) ;EP - SETUP FOR RETURN TO LISTMAN
+ S BKMVGO=$G(BKMVGO)
+ S VALMBCK="R"
+ I BKMVGO="LAB" D LABINIT^BKMVTAX4 Q
+ I BKMVGO="TAX" D TAXINIT
+ I BKMVGO="TI" D TIINIT
+ D TERM^VALM0
+ Q
+ ;
+Z(X) ;SET TMP NODE
+ S VALMCNT=$G(VALMCNT)+1
+ S ^TMP("BKMVVR",$J,VALMCNT,0)=X
+ Q
+ ;
+LADD ;EP
+ S DIR(0)="FO^3:30"
+ S DIR("A")="Taxonomy Name"
+ W !
+ D DIR^BKMVDIC
+ I Y["^"!(Y<0) S BKMVQUIT="" D BACK("TAX") Q
+ I Y="" S BKMVQUIT="" D BACK("TAX") Q
+ I $D(^ATXLAB("B",Y)) W !!,"The ",Y," taxonomy already exists." G LADD
+ S (X,BKMVTNAM)=Y
+ S DIC="^ATXLAB("
+ S DIC(0)="L"
+ S DIC("DR")=".02////"_($P(BKMVTNAM," TAX")_" TEST TAX")_";.05////"_DUZ_";.06////"_DT_";.08////B;.09////60"
+ D FILE^BKMVDIC
+ S BKMVTDA=+Y
+ Q:'BKMVTDA
+ D LABTEST^BKMVTAX1
+ Q
+ ;
+ ;
+ ;
+ ;
+TAXADD ;EP - ENTER A NEW TAXONOMY
+ ; *** NOT USED ***
+ D:'$G(BKMVADA) ATTRIB^BKMVTAX2
+ Q:'$G(BKMVADA)
+ S BKMVTF=U_$P(^AMQQ(5,BKMVADA,0),U,18) ; Taxonomy lookup information
+ ;D BKMVTF
+ S BKMVCANN=0
+ I BKMVANAM="DIAGNOSIS" S BKMVCANN=0 ;CANONIC/NON-CANONIC
+ I BKMVANAM="HMS IMMUNIZATION" S BKMVCANN=1
+ ;I Y=5 S BKMVANAM="LAB" D LAB^BKMVTAX1 Q
+ I BKMVANAM="NDC" S BKMVCANN=0
+ ;I BKMVANAM="PATIENT ED TOPIC" S BKMVCANN=0
+ S DIR(0)="FO^3:30"
+ S DIR("A")="Taxonomy Name"
+ W !
+ D DIR^BKMVDIC
+ I Y=""!(Y["^")!(Y<0) S BKMVQUIT="" D BACK("TAX") Q
+ I $D(^ATXAX("B",Y)) W !!,"The ",Y," taxonomy already exists." G TAXADD
+ S (X,BKMVTNAM)=Y
+ S DIC="^ATXAX("
+ S DIC(0)="L"
+ S DIC("DR")=".02////"_Y_";.05////"_DUZ_";.08////0;.09////"_DT_";.12////"_BKMVINK_";.13////"_BKMVCANN_";.15////"_+BKMVTFDA
+ D FILE^BKMVDIC
+ S BKMVTDA=+Y
+ I BKMVTDA D TILIST
+ D BACK("TAX")
+ Q
+ ;
+TERM(BKMVADA) ;EP - SET QMAN DICTIONARY OF TERMS VALUES
+ S BKMVTF=U_$P(^AMQQ(5,BKMVADA,0),U,18) ; Taxonomy lookup information
+ ;S BKMVINK=$P($G(^AMQQ(5,BKMVADA,0)),U,5) ; Link to Qman Dictionary of Links (file 9009071 in ^AMQQ(1))
+ ;S BKMVINK0=$G(^AMQQ(1,+BKMVINK,0))
+ ;BKMVTF ;EP;
+ Q
+ ;
+BKMVTF1 ;EP
+ ;S BKMVTFF=""
+ ;S:$E(BKMVTF,$L(BKMVTF))="(" BKMVTFF=$E(BKMVTF,1,$L(BKMVTF)-1)
+ ;S:$E(BKMVTF,$L(BKMVTF))="," BKMVTFF=$E(BKMVTF,1,$L(BKMVTF)-1)_")"
+ ;I BKMVTFF="" Q
+ ;S (BKMVFILE,BKMVTFDA)=+$P($G(@BKMVTFF@(0)),U,2) ; File number
+ ;S BKMVTFNA=$P($G(@BKMVTFF@(0)),U) ; File name
+ Q

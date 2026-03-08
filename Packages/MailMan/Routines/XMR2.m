@@ -1,59 +1,77 @@
-XMR2 ;ISC-SF/GMB-SMTP Receiver (non-standard) ;04/17/2002  11:15
- ;;8.0;MailMan;;Jun 28, 2002
- ; *** Note that this command (MESS <what:parm>) is not standard.
- ; *** MESS ID, in particular, may return 'RSET', which is supposed
- ;     to be sent only by the sender, not by the receiver.
-MESS ; CHECK IF DUPLICATE MESSAGE / USERS...
- N XMWHAT,XMPARM
- I XMP="" D ERRCMD^XMR Q
- S XMWHAT=$E($P(XMP,":"),1,6),XMPARM=$P(XMP,":",2,99)
- I $T(@XMWHAT)="" D ERRCMD^XMR Q
- D @XMWHAT
+XMR2 ;(WASH ISC)/THM-SMTP HELP PROCESSOR ;02/11/98  10:04
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+HELP ;
+ S:XMP="" XMP="HHHH" G:$L(XMP)=4&("HHHH HELO MAIL RCPT"'[XMP) H2^XMR3
+ I $L(XMP)=4 D H3 G H4
+ G:XMP'="ALL" HE F XMP="HHHH","HELO","MAIL","RCPT" D H3
+ G ALL^XMR3
+H3 Q:$T(@XMP)=""  F J=0:1 S XMSG="214-"_$P($T(@XMP+J),";",3,99) Q:$L(XMSG)=4  X XMSEN Q:ER
  Q
-BLOB ;; MESS BLOB
- D BLOB^XMR0BLOB(XMPARM)
+H4 S XMSG="214 " X XMSEN Q
  Q
-CLOSED ;; MESS CLOSED
- S XMZFDA(3.9,XMZIENS,1.95)="y"
- S XMSG="250 OK" X XMSEN
- Q
-CONFID ;; MESS CONFIDENTIAL
- S XMZFDA(3.9,XMZIENS,1.96)="y"
- S XMSG="250 OK" X XMSEN
- Q
-CONFIR ;; MESS CONFIRMATION
- S XMZFDA(3.9,XMZIENS,1.3)="y"
- S XMSG="250 OK" X XMSEN
- Q
-ID ;;
- N XMZCHK
- S XMREMID=XMPARM
- S XMZCHK=$$LOCALXMZ^XMR3A(XMREMID)
- I 'XMZCHK S XMSG="250 OK" X XMSEN Q
- I $P(XMZCHK,U,2,3)="1^P" S XMSG="250 OK" X XMSEN Q
- ;Message originated here.  /  Previously received message.
- D DOTRAN^XMC1($S($P(XMZCHK,U,2):42305,1:42306))
- S XMRXMZ=+XMZCHK
- I $P(XMZCHK,U,3)'="E"!(XMRXMZ=XMZ) D  Q
- . I $P(XMZCHK,U,3)="P" D DOTRAN^XMC1(42307) ;Already purged.
- . I $P(XMZCHK,U,3)="R" D DOTRAN^XMC1(42308) ;Already purged & replaced with a different message.
- . S XMSG="RSET:"_XMRXMZ_"@"_^XMB("NETNAME")_":Duplicate purged" X XMSEN
- D DOTRAN^XMC1(42309) ;Delivering to additional recipients.
- S XMSG="RSET:"_XMRXMZ_"@"_^XMB("NETNAME")_":Previously received" X XMSEN
- Q
-INFO ;; MESS INFORMATION 
- S XMZFDA(3.9,XMZIENS,1.97)="y"
- S XMSG="250 OK" X XMSEN
- Q
-LINES ;; MESS LINES
- N XMLINES,XMLIMIT
- S XMLIMIT=$P($G(^XMB(1,1,"NETWORK-LIMIT")),U,2)
- S XMLINES=XMPARM
- I 'XMLIMIT!(XMLINES'>XMLIMIT) S XMSG="250 OK" X XMSEN Q
- S XMSG="RSET:"_XMLIMIT_":Max lines exceeded" X XMSEN
- S XM2LONG=1
- Q
-TYPE ;; MESS TYPE
- S XMZFDA(3.9,XMZIENS,1.7)=XMPARM
- S XMSG="250 OK" X XMSEN
- Q
+HE S XMP="HHHH" G HELP
+HHHH ;; 
+ ;;This is the simple mail transfer protocol receiver
+ ;;Commands currently understood are: 
+ ;;HELO <domain> (which initiates a transaction)
+ ;;MAIL FROM: <reverse-path>
+ ;;RCPT TO: <forward-path>  (which names a recipient)
+ ;;DATA (terminated with a single line of '.')
+ ;;HELP (which displays this text)
+ ;;NOOP (which does nothing)
+ ;;RSET <reason for> which stops transmission of message
+ ;;STAT (which displays the current status of the receiver)
+ ;;VRFY <user> (which verifies the existence of a user)
+ ;;TURN (Which turns around the line; Sender becomes receiver)
+ ;;EXPN <mail group> (which lists the members of a group)
+ ;;QUIT (which terminates the connection)
+ ;; 
+ ;;CHRS <domain> initialize a remote domain
+ ;;Extensions:
+ ;;MESS ID:XMREMID Sending message remote ID to allow processing to stop
+ ;; 
+ ;;Enter HELP ALL to see further discussion on all commands, or
+ ;;HELP <command> to see further discussion of <command>.
+ ;;
+HELO ;; 
+ ;;The HELO command is used to identify the sending host to the receiver:
+ ;; 
+ ;;   HELO <domain>
+ ;; 
+ ;; Where <domain> is the name of the sending host.
+ ;; 
+ ;;If the receiver will accept mail, it responds with its name.
+ ;; 
+ ;;The HELO command must be the first command of a mail sequence.
+ ;;
+MAIL ;; 
+ ;;The MAIL command is used after a HELO command to ask a receiver to
+ ;;accept a mail message.  The format is:
+ ;; 
+ ;;  MAIL FROM: <user>@<site>
+ ;; 
+ ;;where <user> is the name of the user sending the message, and <site>
+ ;;is the name of the site sending the mail, in Internet domain
+ ;;format.
+ ;;
+ ;;The receiver will respond with "250 OK" if accepted, and "501 Invalid
+ ;;Reverse path specification" if not.
+ ;; 
+ ;;This command is followed with RCPT and DATA commands to name
+ ;;and transfer the data, respectively.
+ ;;
+RCPT ;; 
+ ;;This command is used to identify the recipients of the mail.
+ ;;Its format is:
+ ;; 
+ ;;   RCPT TO: <user>
+ ;; 
+ ;;If the user is found, the receiver will respond with "250 OK";
+ ;;Otherwise, it will say "501 Invalid forward path specification".
+ ;; 
+ ;;Each recipient of the message is named individually.  The VRFY
+ ;;command can be used to confirm the existence of a user without
+ ;;actually putting him on the recipient list. 
+ ;;After recipients are specified, the DATA command is used to transfer
+ ;;the body of the message.
+ ;;

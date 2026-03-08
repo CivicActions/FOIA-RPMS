@@ -1,6 +1,6 @@
-DMSQP ;SFISC/EZ-PRINT SQLI TABLE POINTERS ;10/30/97  16:49
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;Per VHA Directive 10-93-142, this routine should not be modified.
+DMSQP ;SFISC/EZ-PRINT SQLI TABLE POINTERS ;10/30/97  16:49 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**38**;July 28, 1997
  Q
 EN1 ; in pointers (to this table from others)
  D DT^DICRW S DMQ="" D  D EXIT

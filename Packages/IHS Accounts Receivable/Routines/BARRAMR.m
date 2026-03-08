@@ -1,5 +1,5 @@
 BARRAMR ; IHS/SD/LSL - Aging management report ;08/20/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**7,24**;OCT 26, 2005;Build 69
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**7,24,29**;OCT 26, 2005;Build 66
  ;
  ; IHS/ASDS/LSL - 08/29/00 - Routine created
  ;     Really Age Detail and Bills Listing Reports

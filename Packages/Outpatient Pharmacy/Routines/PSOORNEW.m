@@ -1,5 +1,5 @@
-PSOORNEW ;BIR/SAB-display orders from oerr ;04-Jun-2013 12:54;DU
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,55,46,71,90,94,106,131,133,1005,1008,1013,143,237,222,258,206,225,1015,1017**;DEC 1997;Build 40
+PSOORNEW ;BIR/SAB-display orders from oerr ;12-Feb-2020 13:13;DU
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,55,46,71,90,94,106,131,133,1005,1008,1013,143,237,222,258,206,225,1015,1017,1023,1025**;DEC 1997;Build 33
  ;^PS(50.7 -2223
  ;^PSDRUG -221
  ;^PS(50.606 -2174
@@ -12,6 +12,8 @@ PSOORNEW ;BIR/SAB-display orders from oerr ;04-Jun-2013 12:54;DU
  ;                          01/23/09 - Line PT+43 Cash Due
  ;                          10/31/11 - Line ACP+17
  ;                          06/04/13 - Added Discharge Medication
+ ;            IHS/MSC/MGH   05/18/17 - PT+21,PT+30,13+1,10+1 Changed for EPCS
+ ;            IHS/MSC/PLS   02/12/20 - ACP+16 Added $G
 DSPL I $G(PSODSPL) S VALMBCK="Q" K PSODSPL,PSOANSQD Q
  Q:'$D(PSOLMC)  K ^TMP("PSOPO",$J) S PSOLMC=PSOLMC+1
  I $D(CLOZPAT) S PSONEW("DAYS SUPPLY")=$S($G(PSONEW("DAYS SUPPLY")):PSONEW("DAYS SUPPLY"),1:7) G OI
@@ -50,11 +52,17 @@ PT D DOSE2^PSOORFI4
  I $P($G(^PSDRUG(+$G(PSODRUG("IEN")),5)),"^")]"" D
  .S $P(RN," ",79)=" ",IEN=IEN+1
  .S ^TMP("PSOPO",$J,IEN,0)=$E(RN,$L("QTY DSP MSG: "_$P(^PSDRUG(PSODRUG("IEN"),5),"^"))+1,79)_"QTY DSP MSG: "_$P(^PSDRUG(PSODRUG("IEN"),5),"^") K RN
- S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="       Provider ordered "_+$P(OR0,"^",11)_" refills"
+ ;IHS/MSC/MGH - changed for EPCS
+ ;S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="       Provider ordered "_+$P(OR0,"^",11)_" refills"
+ S IEN=IEN+1
+ I $P(OR0,"^",24) S ^TMP("PSOPO",$J,IEN,0)="   Provider ordered: days supply "_+$P(OR0,"^",22)_", quantity "_+$P(OR0,"^",10)_" & refills "_+$P(OR0,"^",11)
+ E  S ^TMP("PSOPO",$J,IEN,0)="       Provider ordered "_+$P(OR0,"^",11)_" refills"
  D:$D(CLOZPAT) PQTY^PSOORFI4
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="(10)   # of Refills: "_$S($G(PSONEW("# OF REFILLS"))]"":PSONEW("# OF REFILLS"),1:$P(OR0,"^",11))_"               (11)   Routing: "_$S($G(PSONEW("MAIL/WINDOW"))="M":"MAIL",1:"WINDOW")
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="(12)         Clinic: "_PSORX("CLINIC")
  S IEN=IEN+1,^TMP("PSOPO",$J,IEN,0)="(13)       Provider: "_PSONEW("PROVIDER NAME")
+ ;IHS/MSC/MGH - changed for EPCS
+ D:$P(OR0,"^",24)!((+$G(PSODRUG("DEA"))>1)&(+$G(PSODRUG("DEA"))<6)) PRV^PSOORFI5($G(PSONEW("PROVIDER")),$G(PSODRUG("IEN")),$P(OR0,"^"))
  I $P($G(^VA(200,$S($G(PSONEW("PROVIDER")):PSONEW("PROVIDER"),1:$P(OR0,"^",5)),"PS")),"^",7)&($P($G(^("PS")),"^",8)) D
  .S IEN=IEN+1,PSONEW("COSIGNING PROVIDER")=$S($G(PSONEW("COSIGNING PROVIDER")):PSONEW("COSIGNING PROVIDER"),1:$P(^("PS"),"^",8))
  .S ^TMP("PSOPO",$J,IEN,0)="       Cos-Provider: "_$P(^VA(200,PSONEW("COSIGNING PROVIDER"),0),"^")
@@ -103,8 +111,35 @@ ACP ;
  . S DIR("A",3)=""
  . S DIR(0)="Y",DIR("A")="Unflag Order",DIR("B")="NO"
  . W ! D ^DIR I $D(DIRUT)!'Y S VALMBCK="Q"
+ S PSORX("DFLG")=""
  I $G(ORD),+$P($G(^PS(52.41,+ORD,0)),"^",23)=1 Q
  ;
+ ;IHS/GDIT/MSC/MGH If the drug is a CS but has not been digitally signed
+ N ANS,APSPQ,OIEN,APSPVER,EARLY,PLACER,MAX
+ S PLACER=+$P(OR0,U)
+ S PICKUP=$P(OR0,U,17)
+ S PSODRUG("HARDCPY")=""
+ I +$G(PSODRUG("DEA"))=2 D  Q:+$G(PSORX("DFLG"))
+ .S EARLY=$$VALUE^ORCSAVE2(PLACER,"EARLIEST")
+ .I DT<EARLY D  S PSORX("DFLG")=1,VALMBCK="Q"
+ ..S VALMSG="Too early to fill this RX"
+ ..W !,"This RX cannot be filled until "_$$FMTE^XLFDT(EARLY) H 5
+ .S MAX=$$GET^XPAR("ALL","APSP CS II ORDER DATE MAX")
+ .N X1,X2,X,ISSUE
+ .S ISSUE=$P(OR0,U,6)
+ .;I +EARLY S X1=EARLY
+ .S X1=ISSUE
+ .S X2=+MAX D C^%DTC I X<DT D  S PSORX("DFLG")=1,VALMBCK="Q"
+ ..S VALMSG="Order past last processing date of "_$$FMTE^XLFDT(X)
+ ..W !,"Last date to finish this order was "_$$FMTE^XLFDT(X) H 5
+ I +$G(PSODRUG("DEA"))>1&(+$G(PSODRUG("DEA"))<6)&(+$G(PSODRUG("DIG"))=0)&(PICKUP'="C") D  Q:'+APSPVER!('+ANS)
+ .S ANS=0,APSPVER=0
+ .S OIEN=$P(OR0,U,1)
+ .S ANS=$$DIR^APSPUTIL("Y","Order requires Hardcopy Printed Prescription Do you want to Continue","Yes",,.APSPQ)
+ .I +ANS S APSPVER=$$ESIG^APSPFUNC
+ .I +APSPVER D EDIT^APSPCSA(OIEN,"HS")
+ .E  D EDIT^APSPCSA(OIEN,"HF")
+ .S PSODRUG("HARDCPY")=APSPVER
  I $D(CLOZPAT),+$G(PSONEW("QTY"))=0 S VALMSG="Unable to calculate the quantity, enter a quantity" G DSPL
  S (PSODIR("DFLG"),PSORX("DFLG"),PSODIR("QFLD"))=0,ACP=1 D ORCHK
  G:$G(PSONEW("QFLG")) DSPL
@@ -115,6 +150,12 @@ ACP ;
  I '$D(PSONEW("RX #")) S PSOFROM="NEW",RTN=$S($P($G(PSOPAR),"^",7):"AUTO^PSONRXN",1:"MANUAL^PSONRXN") D @RTN Q:PSONEW("QFLG")  I '$P($G(PSOPAR),"^",7) S PSOX=PSONEW("RX #") D CHECK^PSONRXN
  D RXNCHK^PSOORNE1 I $G(PSONEW("QFLG")) S PSONEW("DFLG")=1 Q
  I DT>$$FMADD^XLFDT($P(OR0,"^",6),365) D EXPR^PSONEW2 G DSPL
+ ;IHS/MSC/PLS - 04/19/2018
+ I +$G(PSODRUG("DEA"))=2 D
+ .S EARLY=$$VALUE^ORCSAVE2(PLACER,"EARLIEST")
+ .I EARLY="" S EARLY=$P(OR0,"^",6)
+ .I DT>$$FMADD^XLFDT(EARLY,$$CS2DAYS^PSONEW2()) D CSEXPR^PSONEW2($$CS2DAYS^PSONEW2()) G DSPL
+ I "34"[$G(PSODRUG("DEA")),(DT>$$FMADD^XLFDT($P(OR0,"^",6),180)) D CSEXPR^PSONEW2(180) G DSPL
  D STOP^PSONEW2,DISPLAY^PSONEW2,^PSONEWF
  I $G(PSOCPZ("DFLG")) W !!,"No action taken!",! K DIR S DIR(0)="E",DIR("A")="Press Return to continue" D ^DIR,KV K PSOCPZ("DFLG"),DRET,PSOANSQD S VALMBCK="Q" Q
  ;
@@ -150,7 +191,11 @@ REF D REF^PSOORFI4
  ;
 5 D 3^PSOORNW2 Q  ;pstat
  ;
-13 D 12^PSOORNW2 Q  ;doc
+13 ;D 12^PSOORNW2 Q  ;doc
+ ;IHS/MSC/MGH changed for EPCS
+ I $P($G(OR0),"^",24) D  Q
+ . W !!,"Digitally Signed Order - Provider cannot be changed",! D PZ
+ D 12^PSOORNW2 Q  ;doc
  ;
 12 D 11^PSOORNW2 Q  ;cli
  ;
@@ -163,7 +208,11 @@ REF D REF^PSOORFI4
  ;
 8 D 7^PSOORNW2 Q  ;ds
  ;
-10 D 9^PSOORNW2 Q  ;#rfs
+10 ;D 9^PSOORNW2 Q  ;#rfs
+ ;IHS/MSC/MGH changed for EPCS
+ I $P($G(OR0),"^",24) D  Q
+ . W !!,"Digitally Signed Order - Refills cannot be changed",! D PZ
+ D 9^PSOORNW2 Q  ;#rfs
  ;
 14 D 13^PSOORNW2 Q  ;cop
  ;
@@ -175,3 +224,6 @@ DRGMSG ;
  F SG=1:1:$L($P(^PSDRUG(PSODRUG("IEN"),0),"^",10)) S:$L(^TMP("PSOPO",$J,IEN,0)_" "_$P($P(^PSDRUG(PSODRUG("IEN"),0),"^",10)," ",SG))>80 IEN=IEN+1,$P(^TMP("PSOPO",$J,IEN,0)," ",20)=" " D
  .S:$P($P(^PSDRUG(PSODRUG("IEN"),0),"^",10)," ",SG)'="" ^TMP("PSOPO",$J,IEN,0)=$G(^TMP("PSOPO",$J,IEN,0))_" "_$P($P(^PSDRUG(PSODRUG("IEN"),0),"^",10)," ",SG)
  K SG Q
+PZ ;
+ N DIR S DIR(0)="E",DIR("A")="Press Return to Continue" D ^DIR W !
+ Q

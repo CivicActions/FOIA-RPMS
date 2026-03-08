@@ -1,5 +1,5 @@
 BDGPI1 ; IHS/ANMC/LJF - PI EXPANDED DEMOGRAPHICS ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
 EN ; -- main entry point for BDG PI - DEMOGRAPHICS
  NEW VALMCNT D TERM^VALM0,CLEAR^VALM1
@@ -32,21 +32,28 @@ BASIC ; -- set up demographic data for display
  ; very similar code to SECTION1^BDGPI
  NEW LINE,BDGR
  ; name, cwad display, chart # and date of birth
- S LINE=$$GET1^DIQ(2,DFN,.01)_" "_$TR($$CWAD^BDGF2(DFN)," ","")
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S LINE=$E($G(PRF),1,30)_" "_$TR($$CWAD^BDGF2(DFN)," ","")
  S LINE=$$PAD(LINE,32)_"HRCN: "_$$HRCN^BDGF2(DFN,DUZ(2))
- S LINE=$$PAD(LINE,54)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
+ S LINE=$$PAD(LINE,64)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
+ ;S LINE=$$GET1^DIQ(2,DFN,.01)_" "_$TR($$CWAD^BDGF2(DFN)," ","")
+ ;S LINE=$$PAD(LINE,32)_"HRCN: "_$$HRCN^BDGF2(DFN,DUZ(2))
+ ;S LINE=$$PAD(LINE,54)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
  D SET(LINE,.VALMCNT)
  ;
  ; street address, home phone and primary care provider
  S LINE=$$PAD($$GET1^DIQ(2,DFN,.111),32)
  S LINE=LINE_"HOME: "_$$GET1^DIQ(2,DFN,.131)
- S LINE=$$PAD(LINE,54)_"SEX: "_$$GET1^DIQ(2,DFN,.02)
+ S LINE=$$PAD(LINE,64)_"SEX: "_$$GET1^DIQ(2,DFN,.02)
+ ;S LINE=$$PAD(LINE,54)_"SEX: "_$$GET1^DIQ(2,DFN,.02)
  D SET(LINE,.VALMCNT)
  ;
  ; city, state, eligibility, office phone
  S LINE=$$GET1^DIQ(2,DFN,.114)_", "_$$STATE^BDGPI(DFN)
  S LINE=$$PAD(LINE,30)_"OFFICE: "_$$GET1^DIQ(2,DFN,.132)
- S LINE=$$PAD(LINE,53)_"ELIG: "_$$GET1^DIQ(9000001,DFN,1112)
+ S LINE=$$PAD(LINE,63)_"ELIG: "_$$GET1^DIQ(9000001,DFN,1112)
+ ;S LINE=$$PAD(LINE,53)_"ELIG: "_$$GET1^DIQ(9000001,DFN,1112)
  D SET(LINE,.VALMCNT)
  ;
  ; service unit based on community of residence

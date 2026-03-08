@@ -1,5 +1,5 @@
 BDWDLOG ; IHS/CMI/LAB - DISPLAY DW EXPORT LOG DATA AUGUST 14, 1992 ;
- ;;1.0;IHS DATA WAREHOUSE;;JAN 23, 2006
+ ;;1.0;IHS DATA WAREHOUSE;**11**;JAN 24, 2006;Build 14
  ;
 EN1 ;
  W:$D(IOF) @IOF
@@ -36,6 +36,7 @@ PRINT ;
  W !?29,"Run Location:",?45,$$VAL^XBDIQ1(90213,BDWLOG,.09)
  W !?30,"Export Type:",?45,$$VAL^XBDIQ1(90213,BDWLOG,.07)
  W !?22,"Transmission Status:",?45,$$VAL^XBDIQ1(90213,BDWLOG,.15)
+ W !?19,"Production/Test System:",?45,$$VAL^XBDIQ1(90213,BDWLOG,.24)
  W !!,"Total Number of Registration + Encounter Messages Exported:  ",$$VAL^XBDIQ1(90213,BDWLOG,.06)
  W !?5,"Number of Registration Messages Sent:",?45,$$VAL^XBDIQ1(90213,BDWLOG,.11)
  W !?5,"Total Number of Encounters Processed:",?45,$$VAL^XBDIQ1(90213,BDWLOG,.08)

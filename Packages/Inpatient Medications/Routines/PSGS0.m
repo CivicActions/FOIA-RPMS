@@ -1,8 +1,10 @@
-PSGS0 ;BIR/CML3-SCHEDULE PROCESSOR ; 6/22/09 7:12am
- ;;5.0; INPATIENT MEDICATIONS ;**12,25,26,50,63,74,83,116,110,111,133,138,174,134,213,207,190**;16 DEC 97;Build 12
+PSGS0 ;BIR/CML3-SCHEDULE PROCESSOR ;05-Apr-2023 18:35;DU
+ ;;5.0; INPATIENT MEDICATIONS ;**12,25,26,50,63,74,83,116,110,111,133,138,174,134,213,207,190,1033**;16 DEC 97;Build 34
  ;
  ; Reference to ^PS(51.1 is supported by DBIA 2177
  ; Reference to ^PS(55   is supported by DBIA 2191
+ ;
+ ; Modified - IHS/MSC/PLS - 03/31/2023 - Line DW+6,DW+13
  ;
 ENA ; entry point for train option
  D ENCV^PSGSETU Q:$D(XQUIT)
@@ -96,7 +98,7 @@ ENCHK ;
  K:$D(X) X(1),X(2),X(3) Q
  ;
 DIC ; Check for schedule's existence in ADMINISTRATION SCHEDULE file (#51.1)
- ; Input:    
+ ; Input:
  ;           X = Schedule Name
  ;     PSJSLUP = If $G(PSJSLUP), perform interactive fileman lookup (optional).
  ;     PSGSFLG = If $G(PSGSFLG), return schedule IEN in PSGSCIEN variable (optional)
@@ -108,7 +110,7 @@ DIC ; Check for schedule's existence in ADMINISTRATION SCHEDULE file (#51.1)
  ;     PSGS0XT = Frequency of validated schedule.
  ;     PSGS0Y  = Default Admin Times of validated schedule.
  ;    PSGSCIEN = IEN of validated schedule, if PSGSLFG is passed in and is evaluated to TRUE.
- ;     
+ ;
  ;
  K Y0,PSJXI N Y,PSGS0ST
  S Z=0 F PSJXI=0:1 S Z=$O(^PS(51.1,"AC","PSJ",X,Z)) Q:'Z
@@ -152,11 +154,14 @@ DW ;
  N AT I X["@" S AT=$P(X,"@",2)
  S SWD="SUNDAYS^MONDAYS^TUESDAYS^WEDNESDAYS^THURSDAYS^FRIDAYS^SATURDAYS",SDW=X,X=$P(X,"@",2) N XABB S XABB=""
  I X]"" D ENCHK Q:'$D(X)
- S X=$P(SDW,"@"),X(1)="-" I X?.E1P.E,X'["-"  ;F QX=1:1:$L(X) I $E(X,QX)?1P S X(1)=$E(X,QX) Q
+ ;IHS/MSC/PLS - p1033
+ ;S X=$P(SDW,"@"),X(1)="-" I X?.E1P.E,X'["-"  ;F QX=1:1:$L(X) I $E(X,QX)?1P S X(1)=$E(X,QX) Q
+ S X=$P($TR(SDW,",","-"),"@"),X(1)="-" I X?.E1P.E,X'["-"  ;F QX=1:1:$L(X) I $E(X,QX)?1P S X(1)=$E(X,QX) Q
  F Q=1:1:$L(X,X(1)) K:SWD="" X Q:SWD=""  S Z=$P(X,X(1),Q) D DWC Q:'$D(X)
  I $D(X) F II=1:1:$L(X,X(1)) S XABB=$G(XABB)_$E($P(X,X(1),II),1,2)_"-"
  K X(1) S:$D(X) X=SDW I $G(X)]"" I $TR(XABB,"-")]"" S X=$E($G(XABB),1,$L(XABB)-1)
  I $G(AT) S PSGS0Y=AT
+ I $D(X),SDW["," S X=$TR(X,"-",",")  ;p1033
  Q
 DWC I $L(Z)<2 K X Q
  F QX=1:1:$L(SWD,"^") S Y=$P(SWD,"^",QX) I $P(Y,Z)="" S SWD=$P(SWD,Y,2) S:$L(SWD) SWD=$E(SWD,2,50) Q

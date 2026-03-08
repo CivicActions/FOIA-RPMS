@@ -1,5 +1,5 @@
-XUMFPMFS ;CIOFO-SF/RAM - Master File Param GENERIC ;8/14/06
- ;;8.0;KERNEL;**262,369**;Jul 10, 1995;Build 27
+XUMFPMFS ;CIOFO-SF/RAM - Master File Param GENERIC ;06/28/00 [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**262**;Jul 10, 1995
  ;
  ; This routine sets up the parameters required by the ZL7
  ; for the Master File server mechanism.
@@ -30,7 +30,6 @@ XUMFPMFS ;CIOFO-SF/RAM - Master File Param GENERIC ;8/14/06
  .I IFN=4.11 S TABLE="ZAG" Q
  .I IFN=5 S TABLE="Z05" Q
  .I IFN=49 S TABLE="Z49" Q
- .I IFN=9.8 S TABLE="ZRN" Q
  .S TABLE="NOTAB" Q
  ;
  I QUERY D QRD
@@ -71,13 +70,6 @@ GROUP ; -- query group
  F  S IEN=$O(^TMP("XUMF MFS",$J,"PARAM","IEN",IEN)) Q:'IEN  D
  .S PKV=$P(@ROOT@(IEN,0),U)_HLCS_TABNAM_HLCS_"B"
  .S ^TMP("XUMF MFS",$J,"PARAM",IEN,"PKV")=PKV
- .I IFN=9.8 D
- ..N X S X=$O(^DIC(9.8,IEN,8,0)) Q:'X
- ..S ^TMP("XUMF MFS",$J,"PARAM",IEN,"IENS","ZL7",5)=X_","_IEN_","
- ..S ^TMP("XUMF MFS",$J,"PARAM",IEN,"IENS","ZL7",6)=X_","_IEN_","
- ..F  S X=$O(^DIC(9.8,IEN,8,X)) Q:'X  D
- ...S ^TMP("XUMF MFS",$J,"PARAM",IEN,"ROUTINE",5,X)=X_","_IEN_","
- ...S ^TMP("XUMF MFS",$J,"PARAM",IEN,"ROUTINE",6,X)=X_","_IEN_","
  ;
  Q
  ;

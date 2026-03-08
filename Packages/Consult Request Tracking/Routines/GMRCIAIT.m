@@ -1,5 +1,7 @@
-GMRCIAIT ;SLC/JFR - PRINT ALL INC. IFC TRANSACTIONS; 12/18/02 09:11
- ;;3.0;CONSULT/REQUEST TRACKING;**30**;DEC 27, 1997
+GMRCIAIT ;SLC/JFR - PRINT ALL INC. IFC TRANSACTIONS; 10/25/22 09:11
+ ;;3.0;CONSULT/REQUEST TRACKING;**30,1006**;DEC 27, 1997;Build 3
+ ; Modified for Patch 1006 - IHS/MSC/MIR - 07/15/2022 
+ ;              Lines RPTLOG+18 and RPTLOG+24 -  Modified to print HRCN instead of SSN
 EN ; get the device to use
  N %ZIS,POP
  S %ZIS="QM" D ^%ZIS
@@ -61,13 +63,13 @@ PRTLOG(LOG,CSLT,ACTVT) ;print the formatted entry
  S GMRCSER=$$GET1^DIQ(123,CSLT,1)
  S GMRCPT=$$GET1^DIQ(123,CSLT,.02,"I")
  S GMRCDTR=$$FMTE^XLFDT($$GET1^DIQ(123,CSLT,.01,"I"),2)
- S GMRCSSN=$$GET1^DIQ(2,GMRCPT,.09)
+ S GMRCSSN=$$HRCN^GMRCMP(GMRCPT,+$G(DUZ(2)))  ;$$GET1^DIQ(2,GMRCPT,.09)
  S GMRCPT=$$GET1^DIQ(2,GMRCPT,.01)
  W !!,?2,"Date/Time last transmitted: ",GMRCDT
  W ?51,"Trans. attempts: ",GMRCTRAN
  W !,?2,"Facility: ",GMRCFAC,?51,"Message: ",GMRCMSG
  W !,?2,"Consult #: ",CSLT,?51,"Activity: ",ACTVT
- W !,?2,"Patient name: ",GMRCPT,?51,"SSN: ",GMRCSSN
+ W !,?2,"Patient name: ",GMRCPT,?51,"HRN: ",GMRCSSN
  W !,?2,"Ordered Service: ",$E(GMRCSER,1,31),?51,"Req. date: ",GMRCDTR
  W !,?2,"Error: ",GMRCERR
  Q

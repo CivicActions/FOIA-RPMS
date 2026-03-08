@@ -1,12 +1,6 @@
-LEXPRNT ;ISL/KER - Print Utilities for the Lexicon ;04/21/2014
- ;;2.0;LEXICON UTILITY;**80**;Sep 23, 1996;Build 10
- ;               
- ; Global Variables
- ;    ^TMP("XTLKHITS")    SACC 2.3.2.5.1
- ;               
- ; External References
- ;    None
- ;               
+LEXPRNT ; ISL Print Utilities for the Lexicon      ; 09-23-96
+ ;;2.0;LEXICON UTILITY;;Sep 23, 1996;Build 15
+ ;
 XTLK ; XTLK  Display format for MTLU 
  ; Uses   XTLKH, XTLKMULT, XTLKREF0, LEXSHOW
  N LEXIFN,LEXEXP,LEXCODE,LEXSOID

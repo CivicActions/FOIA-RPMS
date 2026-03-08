@@ -1,8 +1,10 @@
-ABME5L4 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS Third Party Billing;**6,8,10,11,13,21**;NOV 12, 2009;Build 379
+ABME5L4 ; IHS/SD/SDR - Header 
+ ;;2.6;IHS Third Party Billing;**6,8,10,11,13,21,29,40**;NOV 12, 2009;Build 785
  ;Header Segments
- ;IHS/SD/SDR - 2.6*13 - Added DTP segments for Initial Treatment Date and Acute Manifestation Date
- ;IHS/SD/SDR - 2.6*21 - HEAT136508 - Made change so CLIA segment would print if lab code started with 'G'
+ ;IHS/SD/SDR 2.6*13 Added DTP segments for Initial Treatment Date and Acute Manifestation Date
+ ;IHS/SD/SDR 2.6*21 HEAT136508 Made change so CLIA segment would print if lab code started with 'G'
+ ;IHS/SD/SDR 2.6*29 CR10404 Don't print REF*X4 segment if there's no CLIA# to print; also made check new field in 3P Insurer 4 multiple to require CLIA
+ ;IHS/SD/SDR 2.6*40 ADO111599 Added NTE segment for VA CONTRACT#
  ;
 START ;START HERE
  K ABMOUTLB
@@ -110,15 +112,24 @@ START ;START HERE
  ..S ABMK=0
  ..F  S ABMK=$O(ABMRV(ABMI,ABMJ,ABMK)) Q:ABMK=""  D
  ...;I $P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999,($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000) S ABMCHK=1  ;abm*2.6*21 IHS/SD/SDR HEAT136508
- ...I ($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000))!($E($P(ABMRV(ABMI,ABMJ,ABMK),U,2))="G") S ABMCHK=1  ;abm*2.6*21 IHS/SD/SDR HEAT136508
+ ...;I ($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000))!($E($P(ABMRV(ABMI,ABMJ,ABMK),U,2))="G") S ABMCHK=1  ;abm*2.6*21 IHS/SD/SDR HEAT136508  ;abm*2.6*29 IHS/SD/SDR CR10404
+ ...;start new abm*2.6*29 IHS/SD/SDR CR10404
+ ...S ABMP("CPTIEN")=+$$CPT^ABMCVAPI($P(ABMRV(ABMI,ABMJ,ABMK),U,2),ABMP("VDT"))
+ ...S ABMP("CLIAREQ")=0
+ ...D CLIANUM^ABMDEMLB(ABMP("CPTIEN"))
+ ...I ($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000))!(ABMP("CLIAREQ")=1) S ABMCHK=1
+ ...;end new abm*2.6*29 IHS/SD/SDR CR10404
  I ABMCHK=1 D
  .S ABMCLIA="CLM"
+ .I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),U,22)="" Q  ;skip segment if no In-House CLIA# ;abm*2.6*29 IHS/SD/SDR CR10404
  .D EP^ABME5REF("X4","1CLM","1CLM")
  .D WR^ABMUTL8("REF")
  .K ABMCLIA,ABMCHK
  D EP^ABME5REF("EA")
  D WR^ABMUTL8("REF")
- I $D(^ABMDBILL(DUZ(2),ABMP("BDFN"),61))!($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),10)),U)'="") D
+ ;I $D(^ABMDBILL(DUZ(2),ABMP("BDFN"),61))!($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),10)),U)'="") D  ;abm*2.6*40 IHS/SD/SDR ADO11159
+ S ABMP("INSNAME")=$P($G(^AUTNINS(ABMP("INS"),0)),U)  ;abm*2.6*40 IHS/SD/SDR ADO11159
+ I $D(^ABMDBILL(DUZ(2),ABMP("BDFN"),61))!($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),10)),U)'="")!((ABMP("INSNAME")="VA MEDICAL BENEFIT (VMBP)")&($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),U,27)'="")) D  ;abm*2.6*40 IHS/SD/SDR ADO11159
  .D EP^ABME5NTE("ADD")
  .Q:$TR($G(ABMR("NTE",30))," ")=""  ;don't write NTE if no data except spaces
  .D WR^ABMUTL8("NTE")

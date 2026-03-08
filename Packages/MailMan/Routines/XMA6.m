@@ -1,0 +1,3 @@
+XMA6 ;(WASH ISC)/CAP/THM- * OBSOLETE * ;12/12/97  14:46
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+ Q

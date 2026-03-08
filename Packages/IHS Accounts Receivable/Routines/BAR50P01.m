@@ -1,11 +1,12 @@
 BAR50P01 ; IHS/SD/LSL - EDI PARSING ; 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,3,21,26**;OCT 26, 2005;Build 17
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**1,3,21,26,29**;OCT 26,2005;Build 66
  ;;
  ; IHS/ASDS/LSL - O6/15/2001 - V1.5 Patch 1 - HQW-0201-100027 - FM 22 issue.  Modified to include E in DIC(0).
  ;
  ; IHS/SD/LSL - 08/19/2002 - V1.7 Patch 4 - HIPAA - Modified FILE and LOOP to accomodate X12 loops on segments with the same ID.
  ;
  ;IHS/SD/POT - 1.8*26 - HEAT158770 04/09/2014 Allow more than 1 SVC segment per claim to avoid <SUBSCRIPT>IDENT+32^BAR50P01 *SEGID("SVC","")
+ ;IHS/SD/CPC - 1.8*29 - CR9022 DTM PARSING SKIPPING 3-050.A-DTM SEGMENT leading to <SUBSCRIPT>IDENT+25^BAR50P01 when coverage expiration included in ERA.
  ; *********************************************************************
  ;
 EN(TRDA,IMPDA)     ; EP -- Process the file loaded into Image
@@ -152,7 +153,12 @@ IDENT ; logic to locate segment from ID
  . . S LOOPID1=$P($P(LSTSEG,".",2),"-")
  . . S CURSEG=$O(SEGID(CURID,LSTSEG))
  . . S LOOPID2=$P($P(CURSEG,".",2),"-")
- . . S:LOOPID1="B"&(LOOPID2="A") CURSEG=$O(SEGID(CURID,CURSEG))
+ . . S LOOPID3=$P($P(LSTSEG,".",2),"-",2)  ;DTM PARSING SKIPPING 3-050.A-DTM SEGMENT ;IHS/SD/CPC - 20170306
+ . . S LOOPID4=$P($P(CURSEG,".",2),"-",2)  ;DTM PARSING SKIPPING 3-050.A-DTM SEGMENT ;IHS/SD/CPC - 20170306
+ . . ;DTM PARSING SKIPPING 3-050.A-DTM SEGMENT ;IHS/SD/CPC - BEGIN CR9022
+ . . ;S:LOOPID1="B"&(LOOPID2="A") CURSEG=$O(SEGID(CURID,CURSEG))
+ . . S:LOOPID1="B"&(LOOPID2="A")&(LOOPID3=LOOPID4) CURSEG=$O(SEGID(CURID,CURSEG))
+ . . K LOOPID1,LOOPID2,LOOPID3,LOOPID4 ; CLEANUP IHS/SD/CPC - END CR9022
  . . ;END BAR*1.8*1 SRS PATCH 1 ADDENDUM
  . ;IHS/SD/TPF 12/16/2005 IM19044
  . I $G(CURSEG)="",($G(CURID)="ISA") W !,"File contains more than one ISA/IEA pair at "_$G(^BAREDI("I",DUZ(2),IMPDA,15,SEGDA))_" . Inform payor and request new file." H 3 Q

@@ -1,5 +1,5 @@
 BSDPVW ; IHS/ANMC/LJF - PROVIDER WEEKLY SCHEDULE ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
 WEEK ; -- select week by picking any date within that week    
  NEW BSDDT
@@ -57,7 +57,11 @@ INIT ; -- init variables and list array
  ... S ENDTM=$P($$FMTE^XLFDT($$FMADD^XLFDT(DATE,0,0,$P(DATA,U,2))),"@",2)
  ... S LINE=LINE_"-"_ENDTM_$TR($P(DATA,U,6),"O","*")  ;end time/overbk
  ... S LINE=$$PAD(LINE,17)_$E(CLN,1,11)             ;end time & clinic
- ... S LINE=$$PAD(LINE,30)_$E($$NAMEPRT^BDGF2(+DATA,0),1,18)  ;patient
+ ... ;202307 77892 maw p1022 PPN
+ ... S LINE=$$PAD(LINE,30)_$$GETPREF^AUPNSOGI(+DATA,"E",1)    ;patient
+ ... D SET(LINE,(+DATA)_U_$P(DATA,U,5)_U_DATE,BSDCNT,.VALMCNT)
+ ... ;S LINE=$$PAD(LINE,30)_$E($$NAMEPRT^BDGF2(+DATA,0),1,18)    ;patient
+ ... S LINE=""
  ... S LINE=$$PAD(LINE,50)_$E($P(DATA,U,4),1,29)             ;appt info
  ... ;
  ... ; add extra lines if end time diff hour from last appt
@@ -78,7 +82,7 @@ HELP ; -- help code
  Q
  ;
 EXIT ; -- exit code
- K ^TMP("BSDPVD2",$J),^TMP("BSDPVD",$J)
+ K ^TMP("BSDPVD2",$J),^TMP("BSDPVD",$J),VALMCNT
  Q
  ;
 EXPND ; -- expand code

@@ -1,5 +1,5 @@
 BDMDR3 ; IHS/CMI/LAB - patients dm list - chinle ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,4,8,10**;JUN 14, 2007;Build 12
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,4,8,10,19**;JUN 14, 2007;Build 159
  ;
  ;
 START ;
@@ -52,7 +52,7 @@ EDATE ;get visit date range for functional assessment
  Q
 ZIS ;
  S BDMTEMP=""
- S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="P" KILL DA D ^DIR KILL DIR
+ S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="B" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) D EXIT Q
  S BDMTEMP=Y
  ;call to XBDBQUE

@@ -1,5 +1,5 @@
 AMHRSR3 ; IHS/CMI/LAB - list SUICIDE RISK ASSESSMENT screenings ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**8**;JUN 02, 2010;Build 7
+ ;;4.0;IHS BEHAVIORAL HEALTH;**8,11**;JUN 02, 2010;Build 27
  ;
  ;
 INFORM ;
@@ -17,9 +17,6 @@ INFORM ;
  W !,"clinic, date of screening, designated PCP, MH Provider, SS Provider and A/SA"
  W !,"Provider."
  W !,"  Notes:  "
- W !?10,"- the last screening/refusal for each patient is used.  If a patient"
- W !?10,"  was screened more than once in the time period, only the latest"
- W !?10,"  is used in this report."
  W !?10,"- this report will optionally, look at both PCC and the Behavioral"
  W !?10,"   Health databases for evidence of screening/refusal"
  W !?10,"- this is a tally of Patients, not visits or screenings"
@@ -164,7 +161,7 @@ TEMP ;TEMPLATE OR LIST
 LIST1 ;
  S AMHRSORT=""
  W !
- S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN"
+ S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN;Q:Race;E:Ethnicity"
  S DIR("A")="How would you like the list to be sorted",DIR("B")="H"
  KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G PRIMPRV

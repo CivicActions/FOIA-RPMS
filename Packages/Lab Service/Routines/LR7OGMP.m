@@ -1,5 +1,11 @@
 LR7OGMP ;VA/DALOI/STAFF- Interim report rpc memo print ; 03-Jul-2014 07:41 ; MKK
- ;;5.2;LAB SERVICE;**1027,1031,1033**;NOV 01, 1997;Build 146
+ ;;5.2;LAB SERVICE;**187,246,282,286,344,395,IHS,1027,1031,1033,1051,1054**;NOV 01, 1997;Build 20
+ ;
+ ; ADO 74587 - LR*5.2*1054 - Designate Therapeutic Ref Ranges (if necessary)
+ ;
+ ; MSC/MKK - Modification - LR*5.2*1051 - (1) Add Lab Arrival Time line
+ ;                                        (2) Add LAB DIRECTOR
+ ;                                        (3) Item 75549 - Use Pointer (if it exists) to retrieve UNITS
  ;
  ;;VA LR Patche(s): 187,246,282,286,344,395
  ;
@@ -9,6 +15,11 @@ PRINT(OUTCNT) ; from LR7OGMC
  NEW TESTSPEC,THER,THERHIGH,THERLOW,UNITS,VALUE,X,ZERO
  ;
  NEW LRPLS,TIDT,SITECNT           ; IHS/OIT/MKK - LR*5.2*1027
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1051
+ NEW LABDIR
+ S LABDIR=$$GET^XPAR("ALL","IHS RPMS LAB DIRECTOR")
+ ; ----- END IHS/MSC/MKK - LR*5.2*1051
  ;
  ; the variables AGE, SEX, LRCW, and X are used withing the lab's print codes and ref ranges
  S AGE=$P(^TMP("LR7OG",$J,"G"),U,4),SEX=$P(^("G"),U,5),LRCW=$P(^("G"),U,6)
@@ -29,6 +40,9 @@ PRINT(OUTCNT) ; from LR7OGMC
  . S LINE=$$SETSTR^VALM1(" "_ACC,LINE,30,1+$L(ACC))
  . D SETLINE(LINE,.OUTCNT)
  . D SETLINE("    Specimen Collection Date: "_$$LRUDT^LR7OSUM6(CDT),.OUTCNT)
+ . ;
+ . D LABARRT  ; Lab Arrival Time - IHS/MSC/MKK - LR*5.2*1051
+ . ;
  . ; D SETLINE("     Test name                Result    units      Ref.   range   Site Code",.OUTCNT)
  . ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1031
  . D SETLINE(" ",.OUTCNT)
@@ -41,6 +55,21 @@ PRINT(OUTCNT) ; from LR7OGMC
  .. S TESTNUM=+DATA,PRNTCODE=$P(DATA,U,5),SUB=$P(DATA,U,6),FLAG=$P(DATA,U,8),X=$P(DATA,U,7),UNITS=$P(DATA,U,9),RANGE=$P(DATA,U,10),SITE=$P(DATA,U,11)
  .. S:+$G(SITE) SITECNT=SITECNT+1      ; IHS/OIT/MKK - LR*5.*1027
  .. S LOW=$P(RANGE,"-"),HIGH=$P(RANGE,"-",2),THER=$P(DATA,U,12)
+ .. ;
+ .. ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054
+ .. D  ; Check on Ref/Ther Ranges
+ ... NEW STR
+ ... S STR=$G(^LAB(60,TESTNUM,1,SPEC,0))
+ ... Q:$L($TR(STR,U))<1  ; Skip if no Ref/Ther Ranges in file 60
+ ... ;
+ ... S REFLOW=$P(STR,"^",2),REFHIGH=$P(STR,"^",3)
+ ... S:$TR(REFLOW," ")'=""!($TR(REFHIGH," ")'="") RANGE=REFLOW_" - "_REFHIGH
+ ... ;
+ ... S THERLOW=$P(STR,"^",11),THERHIGH=$P(STR,"^",12)
+ ... I $TR(THERLOW," ")'=""!($TR(THERHIGH," ")'="") D
+ .... S RANGE=THERLOW_" - "_THERHIGH
+ .... S THER=$P(STR,U,11,12)
+ .. ; ----- END IHS/MSC/MKK - LR*5.2*1054
  .. ;
  .. ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1031
  .. ; NEW REFLOW,REFHIGH
@@ -86,6 +115,7 @@ PRINT(OUTCNT) ; from LR7OGMC
  .. I LRX'="" S LINE=$$SETSTR^VALM1(LRX,LINE,44,$L(LRX))             ; IHS/OIT/MKK - LR*5.2*1027
  .. ; I $L(LINE)>67,SITE D SETLINE(LINE,.OUTCNT) S LINE=""
  .. ; I SITE S LINE=$$SETSTR^VALM1(" ["_SITE_"]",LINE,68,3+$L(SITE))
+ .. I $L($G(THER)) S LINE=$$SETSTR^VALM1(" (TR)",LINE,52,5)          ; IHS/MSC/MKK - LR*5.2*1054
  .. I SITE S LINE=$$SETSTR^VALM1($J("["_SITE_"]",7),LINE,59,7)       ; IHS/OIT/MKK - LR*5.2*1027
  .. I IDT S LINE=$$SETSTR^VALM1($TR($$FMTE^XLFDT($P($G(^LR(LRDFN,"CH",IDT,0)),"^",3),"2MZ"),"@"," "),LINE,67,14) ; IHS/OIT/MKK - LR*5.2*1027
  .. I LINE'="" D SETLINE(LINE,.OUTCNT)
@@ -99,9 +129,13 @@ PRINT(OUTCNT) ; from LR7OGMC
  ... D SETLINE(LINE,.OUTCNT)
  ... I $O(^TMP("LR7OG",$J,"TP",CDT,"C",CMNT)) S LINE="        "
  . ; D SETLINE("===============================================================================",.OUTCNT)
- . D:SITECNT<1 SETLINE($TR($J("",81)," ","="),.OUTCNT)               ; IHS/OIT/MKK - LR*5.2*1027
+ . ;
+ . D:SITECNT<1 SETLINE($TR($J("",81)," ","="),.OUTCNT)     ; IHS/OIT/MKK - LR*5.2*1027
+ . D:SITECNT<1 LABDIR   ; IHS/MSC/MKK - LR*5.2*1051
+ . ;
  . ; D SETLINE(" ",.OUTCNT)
- . D:SITECNT>0 PLS                                                   ; IHS/MSC/MKK - LR*5.2*1031
+ . D:SITECNT>0 PLS                                         ; IHS/MSC/MKK - LR*5.2*1031
+ . D:SITECNT>0 LABDIR   ; IHS/MSC/MKK - LR*5.2*1051
  Q
  ;
  ; ----- BEGIN IHS/OIT/MKK - LR*5.2*1027
@@ -218,3 +252,31 @@ ZEROFIX(F60PTR,RESULT) ; EP - Leading & Trailing Zero Fix for Results
  ;
  Q
  ; ----- END IHS/MSC/MKK - LR*5.2*1031
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1051
+LABARRT ; EP - Lab Arrival Time
+ NEW LABARRT,LRAS,LRAA,LRAD,LRAN,LINE,UID,UIDSTR
+ ;
+ S UID=$$GET1^DIQ(63.04,IDT_","_LRDFN,.31,"I")
+ Q:$L(UID)<1  ; Skip if no UID in file 63
+ ;
+ S UIDSTR=$$CHECKUID^LRWU4(UID)
+ Q:+UIDSTR<1  ; Skip if UID does not return Accession variables
+ ;
+ S LRAA=+$P(UIDSTR,U,2),LRAD=+$P(UIDSTR,U,3),LRAN=+$P(UIDSTR,U,4)
+ ;
+ S LABARRT=$$GET1^DIQ(68.02,LRAN_","_LRAD_","_LRAA,"LAB ARRIVTAL TIME","I")
+ Q:+LABARRT<1
+ ;
+ S LINE="    Lab Arrival Date/Time: "_$$UP^XLFSTR($$FMTE^XLFDT(LABARRT,"5MPZ"))
+ D SETLINE(LINE,.OUTCNT)
+ Q
+ ;
+LABDIR ; EP
+ Q:LABDIR<1   ; Skip if LABDIR variable not set
+ ;
+ D SETLINE(" ",.OUTCNT)
+ D SETLINE("LAB DIRECTOR: "_$$GET1^DIQ(200,LABDIR,"NAME")_" "_$$GET1^DIQ(200,LABDIR,"TITLE"),.OUTCNT)
+ D SETLINE(" ",.OUTCNT)
+ Q
+ ; ----- END IHS/MSC/MKK - LR*5.2*1051

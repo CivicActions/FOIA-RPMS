@@ -1,5 +1,5 @@
-ABMDE2X5 ; IHS/ASDST/DMJ - PAGE 2 - Primary Insurer Check-CONT ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDE2X5 ; IHS/ASDST/DMJ - PAGE 2 - Primary Insurer Check-CONT ;  [ 10/30/2003  11:00 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**4,10**;APR 05, 2002
  ;
  ; IHS/SD/SDR - v2.5 p10 - IM21846
  ;   Fix for <UNDEF>EXP+1^ABMDE2X5
@@ -7,7 +7,8 @@ ABMDE2X5 ; IHS/ASDST/DMJ - PAGE 2 - Primary Insurer Check-CONT ;
  ; *********************************************************************
  ;
 EXP ;EP - Entry Point for setting billing parms
- S ABM("H")=$S($P($G(^ABMDPARM(DUZ(2),1,2)),U,9):$P(^(2),U,9),1:2)
+ ;S ABM("H")=$S($P(^ABMDPARM(DUZ(2),1,2),U,9):$P(^(2),U,9),1:2)  ;IHS/SD/SDR 9/25/06 IM21846
+ S ABM("H")=$S($P($G(^ABMDPARM(DUZ(2),1,2)),U,9):$P(^(2),U,9),1:2)  ;IHS/SD/SDR 9/25/06 IM21846
  I '$D(ABMP("EXP")) D EXP^ABMDEVAR
  S $P(ABMV("X6"),U)=ABMP("EXP")
  I '$D(ABMP("FEE")) S ABMP("FEE")=$S($P(^ABMDPARM(DUZ(2),1,0),U,9)]"":$P(^(0),U,9),1:1)

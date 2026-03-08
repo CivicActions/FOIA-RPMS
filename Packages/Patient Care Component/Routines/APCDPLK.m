@@ -1,5 +1,5 @@
-APCDPLK ; IHS/CMI/LAB - LOOKUP PROBLEM ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDPLK ; IHS/CMI/TUCSON - LOOKUP PROBLEM ; [ 02/28/00  9:26 AM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**2**;MAR 09, 1999
  ;CALLED FROM APCD INPUT TEMPLATES
  ; Problem based on a problem # that is entered through data entry.
  S U="^",APCDPERR=""

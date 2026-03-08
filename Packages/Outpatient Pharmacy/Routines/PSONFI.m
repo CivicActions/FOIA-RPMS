@@ -1,10 +1,11 @@
-PSONFI ;BIR/MHA - dispense drug/orderable item text display ;09/13/00
- ;;7.0;OUTPATIENT PHARMACY;**46,94,131,225**;DEC 1997;Build 29
+PSONFI ;BIR/MHA - dispense drug/orderable item text display ;28-Nov-2017 12:33;DU
+ ;;7.0;OUTPATIENT PHARMACY;**46,94,131,225,1023**;DEC 1997;Build 121
  ;External reference to PSSDIN is supported by DBIA 3166
  ;External reference to ^PS(50.606 is supported by DBIA 2174
  ;External reference to ^PS(50.7 is supported by DBIA 2223
  ;External reference to ^PSDRUG( is supported by DBIA 221
  ;
+ ;Modified - IHS/MSC/MGH - RV+1 Modified for EPCS1 10/25/2017
 NFI ;display restriction/guidelines
  D EN^PSSDIN(PSODRUG("OI"),PSODRUG("IEN")) S NFI=$$PROMPT^PSSDIN
  I NFI]"","ODY"[NFI D TD^PSONFI S DIR(0)="E" D ^DIR K DIR
@@ -37,9 +38,10 @@ DIN(OI,DD) ;Setup DIN indicator
  K ^TMP("PSSDIN",$J) Q
  Q
 RV ;reverse video
- I $G(PKID),$G(PKIE)]"" D
- .I $O(^PS(52.41,ORD,"OBX",0)) D CNTRL^VALM10(1,1,13,IORVON,IORVOFF,0),RV^PSOPKIV1 Q
- .D CNTRL^VALM10(1,1,$L(PKIE),IORVON,IORVOFF,0)
+ ;IHS/MSC/MGH - Removed reverse video
+ I $G(PKID),$G(PKIE)]"" D CNTRL^VALM10(1,1,$L(PKIE),"","",0)
+ ;I $G(PKID),$G(PKIE)]"" D CNTRL^VALM10(1,1,$L(PKIE),IORVON,IORVOFF,0)
+ ;I $O(^PS(52.41,ORD,"OBX",0)) D CNTRL^VALM10(1,1,13,IORVON,IORVOFF,0),RV^PSOPKIV1 Q
  D:$G(NFIO) CNTRL^VALM10(+NFIO,$P(NFIO,",",2),5,IORVON,IORVOFF,0)
  D:$G(NFID) CNTRL^VALM10(+NFID,$P(NFID,",",2),5,IORVON,IORVOFF,0)
  K NFIO,NFID,PKID

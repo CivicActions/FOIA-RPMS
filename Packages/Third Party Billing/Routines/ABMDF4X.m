@@ -1,7 +1,14 @@
-ABMDF4X ; IHS/ASDST/DMJ - ADA-90 FORM ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF4X ; IHS/ASDST/DMJ - ADA-90 FORM ;  [ 10/08/2002  4:17 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**2**;APR 05, 2002
  ;Original;TMD;08/15/96 9:00 AM
  ;
+ ;  IHS/DSD/DMJ - 7/20/98 - Patch 2 - NOIS XFA-0698-200102
+ ;                Meds showing up on split bill for ADA & HCFA.
+ ;                Modified to show meds on HCFA only
+ ;                Also add code so claim generator will not bomb
+ ;                if auto approve is turned on and Y2K fix to
+ ;                print 4 ditis year in 3 birthdate fields.
+ ; 
 MARG ;Set left and top margins
  S U="^",(ABM("LM"),ABM("TM"),ABM("LN"))=0
  I $D(^ABMDEXP(4,0)) S ABM("TM")=$P(^(0),U,3),ABM("LM")=$P(^(0),U,2)
@@ -10,6 +17,10 @@ MARG ;Set left and top margins
  ;
  ;Loop thru line number array
 LOOP S ABM("LN")=$O(ABMF(ABM("LN"))) I +ABM("LN")=0!(ABM("LN")>62) G XIT
+ ;
+ ;Check for invalid line numbers
+ ;F ABM("I")=2,4,6,8,10,12,14,16,18,20,21,22,24,26,28,30,32,34,35,36,38,40,42,44,46,48,50,55,56,57 I ABM("LN")=ABM("I") Q
+ ;I  G LOOP
  ;
  ;Set to correct format line
  S ABM("FL")=ABM("LN")

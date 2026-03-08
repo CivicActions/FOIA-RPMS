@@ -1,13 +1,20 @@
 LR7OSUM1 ;VA/DALOI/dcm - Silent Patient cum cont. ; Mar 11, 2003
- ;;5.2;LAB SERVICE;**1003,1031**;NOV 1, 1997
+ ;;5.2;LAB SERVICE;**121,187,256,IHS,1003,1018,1027,1031,1054**;NOV 1, 1997;Build 20
  ;
- ;;VA LR Patche(s): 121,187,256,286,384
+ ; ADO 73380 - LR*5.2*1054 - Write Performing Labs on EHR Cumulative
  ;
 LRIDT ; from LR7OSUM
  F  S LRIDT=$O(^LR(LRDFN,"CH",LRIDT)) Q:LRIDT<1!(LRIDT>LROUT)!(CT1>COUNT)  I $D(^(LRIDT,0)) S X=^(0),CT1=CT1+1 D LRIIDT
  Q
  ;
 LRIIDT ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054 - ADO 73380
+ D
+ . NEW REQLDIV
+ . S REQLDIV=+$P($G(^LR(LRDFN,"CH",LRIDT,0)),U,14)
+ . S:REQLDIV LRPLS(REQLDIV)=""
+ ; ----- END IHS/MSC/MKK - LR*5.2*1054
+ ;
  S (LRIIDT,LRVIDT)=$P(X,U,1),LRSUB=1,LRTNN=1,LRSPM=$P(X,U,5),LRTLOC=$E($P(X,U,11),1,7),LRVDT=$P(X,U,3),LRAN=$P(X,U,6)
  Q:'$L(LRVDT)
  D LRSUB
@@ -154,6 +161,7 @@ TEXT ;
  ;
 MICRO ;from LR7OSUM
  Q:'$D(^LR(LRDFN,"MI"))
+ ;
  N MICROCNT
  S:'$D(LRUNKNOW) LRUNKNOW=$P(^LAB(69.9,1,1),U,5)
  S (LRONESPC,LRONETST)="",LREND=0,MICROCNT=GCNT+1
@@ -222,7 +230,7 @@ ZEROFIX ; EP - Leading & Trailing Zero Fix for Results
  Q:DN<1                                  ; Skip if no Data Name number
  ;
  Q:$G(^DD(63.04,DN,0))'["^LRNUM"         ; Skip if no numeric defintiion
- ;	
+ ;
  S STR=$P($P($G(^DD(63.04,DN,0)),"Q9=",2),$C(34),2)     ; Get numeric formatting
  ;
  S DP=+$P(STR,",",3)                     ; Decimal Places

@@ -1,5 +1,5 @@
-APCLAP3P ; IHS/CMI/LAB - print visits by prov ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLAP3P ; IHS/OHPRD/TMJ - print visits by prov ;  [ 01/16/05  1:22 PM ]
+ ;;3.0;IHS PCC REPORTS;**7,16**;FEB 05, 1997
 START ;
  S APCL80S="-------------------------------------------------------------------------------"
  S Y=APCLED D DD^%DT S APCLEDD=Y

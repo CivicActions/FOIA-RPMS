@@ -1,17 +1,27 @@
-RAORD6 ;HISC/CAH - AISC/RMO-Print A Request Cont. ; 06 Oct 2013  10:47 AM
- ;;5.0;Radiology/Nuclear Medicine;**5,10,15,18,27,45,41,75,85,99,1003**;Nov 01, 2010;Build 13
+RAORD6 ;HISC/CAH - AISC/RMO IHS/OIT/BT - Print A Request Cont. ;11 Nov 2022 3:55 PM
+ ;;5.0;Radiology/Nuclear Medicine;**5,10,15,18,27,45,41,75,85,99,123,132,144,1007,1009,1010**;Mar 16, 1998;Build 11
  ; 3-p75 10/12/2006 GJC RA*5*75 print Reason for Study
  ; 4-p75 10/12/2006 KAM RA*5*75 display the request print date in the header
  ; 5-p75 10/12/2006 KAM RA*5*75 update header "Age" to "Age at req"
  ; 6-p85 06/20/2007 KAM RA*5*85 Reason for Study/Bar Code print issue
  ;                              Remedy Call - 193859
+ ; 5-P123 6/23/2015 MJT RA*5*123 NSR 20140507 print weight & date taken in Radiology requests
+ ; 5-P132 11/1/2017 RTW RA*5*123 NSR 20160706 print height & date taken in Radiology requests
+ ; 
  ;Supported IA #10104 reference to ^XLFSTR
  ;Supported IA #10060 reference to ^VA(200
  D HD Q:RAX["^"
  ;
- ;IHS/BJI/DAY - Patch 1005 - Gender Fix
+ ;IHS/CMI/DAY - Patch 1005 - Gender Fix
  ;I $$PTSEX^RAUTL8(RADFN)="F" D  ;display pregnancy status for females ptch 45
  I $$PTSEX^RAUTL8(RADFN)'="M" D
+ .;End Patch
+ .;
+ .;IHS/CMI/DAY - Patch 1007 - Add Age Check for Display
+ .S RAAGE=$$PTAGE^RAUTL8(RADFN,"")
+ .I RAAGE<12 Q
+ .I RAAGE>56 Q
+ .;End Patch
  .;
  .W !,"Pregnant at time of order entry: ",?22,$S($P(RAORD0,"^",13)="y":"YES",$P(RAORD0,"^",13)="n":"NO",1:"UNKNOWN")
  .Q:'$D(RAOIFN)
@@ -29,8 +39,9 @@ RAORD6 ;HISC/CAH - AISC/RMO-Print A Request Cont. ; 06 Oct 2013  10:47 AM
  W:$P(RAORD0,"^",24)="y" !!?12,"*** Universal Isolation Precautions ***"
  W:$D(RA("VDT")) !!?8,"** Note Request Associated with Visit on ",RA("VDT")," **"
  W !!,"Requested:",?18,RA("PRC INFO")
- ;
- I $D(^TMP($J,"RA DIFF PRC")),('$D(RAFOERR)),('$D(RAOPT("REG"))),('$D(RAOPT("ORDEREXAM"))),('$D(RAOPT("ADDEXAM"))) D  Q:RAX["^"
+ ;KLM/P144 - removed option conditions below to print the exam information
+ ;we want to print case #s etc when registering no matter what
+ I $D(^TMP($J,"RA DIFF PRC")),('$D(RAFOERR)) D  Q:RAX["^"
  . ; don't print registered procedure info (CPT, Proc Type, Imaging
  . ; Type) if entering through 'Request An Exam', 'Register Patient
  . ; for Exams' or 'Add Exams To Last Visit'.  Don't print if ordered
@@ -38,7 +49,7 @@ RAORD6 ;HISC/CAH - AISC/RMO-Print A Request Cont. ; 06 Oct 2013  10:47 AM
  . ; will be defined. (Set in RAORD1 & RAO7RO)
  . N RAT,RA18NLIN S RAT="",RA18NLIN=0 W !,"Registered:"
  . F  S RAT=$O(^TMP($J,"RA DIFF PRC",RAT)) Q:RAT=""  D  Q:RAX["^"
- .. D HD:($Y+6)>IOSL Q:RAX["^"
+ .. D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  .. W:RA18NLIN ! W ?12,RAT
  .. S RA18NLIN=1
  .. Q
@@ -53,39 +64,39 @@ RAORD6 ;HISC/CAH - AISC/RMO-Print A Request Cont. ; 06 Oct 2013  10:47 AM
  .. S X=$G(^RAMIS(71.4,B,0))
  .. W:'C ?3,"-" W:C !?3,"-"
  .. D OUTTEXT^RAUTL9(X,"",5,80,4,"","!")
- .. D HD:($Y+6)>IOSL S C=C+1
+ .. D HD:($Y+10)>IOSL S C=C+1  ; 5-P123
  .. Q
  . Q
  W !,"Request Status:",?22,$E(RA("OST"),1,24)
  I $P(RAORD0,"^",5)=1!($P(RAORD0,"^",5)=3) D  Q:RAX["^"
  . W !,"Reason ",$S($P(RAORD0,"^",5)=1:"Cancelled",1:"Held"),":"
  . W ?22,$S($D(^RA(75.2,+$P(RAORD0,"^",10),0)):$E($P(^(0),"^"),1,50),$P(RAORD0,"^",27)]"":$E($P(RAORD0,"^",27),1,50),1:"UNKNOWN")
- . D HD:($Y+6)>IOSL Q:RAX["X"
+ . D HD:($Y+10)>IOSL Q:RAX["X"  ; 5-P123
  . I $D(^RAO(75.1,RAOIFN,1)) D  Q:RAX["^"
  .. N X,I,RAXX
  .. K ^UTILITY($J,"W")
  .. W !,"Hold Description:",!
- .. S I=0 F  S I=$O(^RAO(75.1,RAOIFN,1,I)) Q:'I  S (RAXX,X)=^(I,0) D HD:($Y+6)>IOSL Q:RAX["^"  S X=RAXX D ^DIWP
+ .. S I=0 F  S I=$O(^RAO(75.1,RAOIFN,1,I)) Q:'I  S (RAXX,X)=^(I,0) D HD:($Y+10)>IOSL Q:RAX["^"  S X=RAXX D ^DIWP  ; 5-P123
  .. Q:RAX["^"
- .. D HD:($Y+6)>IOSL Q:RAX["X"
+ .. D HD:($Y+10)>IOSL Q:RAX["X"  ; 5-P123
  .. D ^DIWW:$D(RAXX)
- .. D HD:($Y+6)>IOSL Q:RAX["X"
+ .. D HD:($Y+10)>IOSL Q:RAX["X"  ; 5-P123
  . I $P(RAORD0,"^",5)=1 D
  .. W !!,?(IOM-(IOM/2+15)),"*********************",!,?(IOM-(IOM/2+15)),"* C A N C E L L E D *",!,?(IOM-(IOM/2+15)),"*********************"
  W:$P(RAORD0,"^",5)=6&($D(RA("ST"))) !,"Exam Status:",?22,RA("ST")
  W:$P(RAORD0,"^",5)=8&($D(RA("SDT"))) !,"Exam Scheduled:",?22,RA("SDT")
- D HD:($Y+6)>IOSL Q:RAX["^"
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  W !!,"Requester:",?22,$E(RA("PHY"),1,20)
  W:RA("PHY")'="UNKNOWN" !?1,"Tel/Page/Dig Page: ",$G(RA("RPHOINFO"))
- D HD:($Y+6)>IOSL Q:RAX["^"
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  W !,"Attend Phy Current:",?22,$E(RA("ATTEN"),1,20)
  W:RA("ATTEN")'="UNKNOWN" !?1,"Tel/Page/Dig Page: ",$G(RA("APHOINFO"))
- D HD:($Y+6)>IOSL Q:RAX["^"
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  W !,"Prim Phy Current:",?22,$E(RA("PRIM"),1,20)
  W:RA("PRIM")'="UNKNOWN" !?1,"Tel/Page/Dig Page: ",$G(RA("PPHOINFO"))
  K RAPASS1,RAPASS2
  S RAPASS1=RA("ATTEN"),RAPASS2=RA("OATTEN")
- D HD:($Y+6)>IOSL Q:RAX["^"
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  I $$ID^RAORD6(RAPASS1,RAPASS2) D
  . W !,"Attend Phy At Order:",?22,$E(RA("OATTEN"),1,20)
  . W:RA("OATTEN")'="UNKNOWN" !?1,"Tel/Page/Dig Page: ",$G(RA("OAPHOINFO"))
@@ -102,11 +113,11 @@ RAORD6 ;HISC/CAH - AISC/RMO-Print A Request Cont. ; 06 Oct 2013  10:47 AM
  . S:RAPPRAD=+RAPPRAD RAPPRAD=$P(^VA(200,RAPPRAD,0),"^")
  . W !,"Approved by: ",?22,RAPPRAD
  . Q
- D HD:($Y+6)>IOSL Q:RAX["^"
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  W !,"Date/Time Ordered:",?22,$S($D(RA("ODT")):RA("ODT"),1:""),"  by ",$E(RA("USR"),1,20)
  W:$D(RA("RDT")) !,"Date Desired:",?22,RA("RDT")
  D:$P(RAORD0,"^",5)=1 USERCAN^RAORD3
- D HD:($Y+6)>IOSL Q:RAX["^"
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  W:$D(RA("PDT")) !,"Pre-op Date/Time:",?22,RA("PDT"),!!?26,"**** P R E - O P ****",!
 BAR ;Print bar-coded SSN on request form if term type has bar code setup
  I $G(RASSN)'?3N1"-"2N1"-".E G CONT
@@ -115,53 +126,73 @@ BAR ;Print bar-coded SSN on request form if term type has bar code setup
  D PSET^%ZISP I IOBARON]"",(IOBAROFF]"") W !!!?49,@IOBARON,X3,@IOBAROFF,!
  D PKILL^%ZISP
  ;
-CONT D HD:($Y+6)>IOSL Q:RAX["^"  D ODX^RABWUTL(RAOIFN) ; * Billing Aware *
- D HD:($Y+6)>IOSL Q:RAX["^"
+CONT D HD:($Y+10)>IOSL Q:RAX["^"  D ODX^RABWUTL(RAOIFN) ; * Billing Aware *  ; 5-P123
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  ; 06/20/2007 KAM/BAY RA*5*85 Added line feed to the next line
  I $L(RA("STY_REA")) W ! D DIWP^RAUTL5(1,68,"Reason for Study: "_RA("STY_REA")) ;3-p75
- D HD:($Y+6)>IOSL Q:RAX["^"  K ^UTILITY($J,"W"),^(1) W !,"Clinical History:",! K RAXX F RAV=0:0 S RAV=$O(^RAO(75.1,RAOIFN,"H",RAV)) Q:'RAV  I $D(^(RAV,0)) S RAXX=^(0) D HD:($Y+6)>IOSL Q:RAX["^"  S X=RAXX D ^DIWP
- Q:RAX["^"  D HD:($Y+6)>IOSL Q:RAX["^"  D ^DIWW:$D(RAXX),HD:($Y+6)>IOSL Q:RAX["^"  D WORK ;always print bottom section of form 012601
+ D HD:($Y+10)>IOSL Q:RAX["^"  K ^UTILITY($J,"W"),^(1) W !,"Clinical History:",! K RAXX F RAV=0:0 S RAV=$O(^RAO(75.1,RAOIFN,"H",RAV)) Q:'RAV  I $D(^(RAV,0)) S RAXX=^(0) D HD:($Y+10)>IOSL Q:RAX["^"  S X=RAXX D ^DIWP  ; 5-P123
+ Q:RAX["^"  D HD:($Y+10)>IOSL Q:RAX["^"  D ^DIWW:$D(RAXX),HD:($Y+10)>IOSL Q:RAX["^"  D WORK ;always print bottom section of form 012601  ; 5-P123
  W ! S BOT=IOSL-($Y+4) S:($E(IOST,1,6)="P-BROW"&($D(DDBRZIS))) BOT=5 F BT=1:1:BOT W !
  K BOT,BT
- ;IHS/BJI/DAY - Patch 1003 - Continue Chris Saddler patch from 2004
- ;Comment out VA form name
+ ;
+ ;IHS/CMI/DAY - Patch 1007 - Comment Out VA Form Number
  ;W !,"VA Form 519a-ADP"
  ;End Patch
+ ;
  Q
  ;
 WORK W !,RALNE,!,"Date Performed: ________________________",?46
  I $O(^RADPT("AO",RAOIFN,0))="" W "Case No.: ______________________"
  E  W "Case No.: ______see above_______"
- D HD:($Y+6)>IOSL Q:RAX["^"
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  W !,"Technologist Initials: _________________"
- D HD:($Y+6)>IOSL Q:RAX["^"
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  W !?46,"Number/Size Films: _____________",!,"Interpreting Phys. Initials: ___________",?65,"_____________",!?65,"_____________",!
- D HD:($Y+6)>IOSL Q:RAX["^"
+ D HD:($Y+10)>IOSL Q:RAX["^"  ; 5-P123
  W !,"Comments:"
  ;
 TC D EN30^RAO7PC1(RAOIFN),TC^RAORD61 Q:RAX["^"
  ;
-DASHLN W ! F I=1:1:5 D HD:($Y+6)>IOSL Q:RAX["^"  W !,RALNE ;P18
- ;IHS/BJI/DAY - Patch 1003 - Continue Chris Saddler patch from 2004
- ;Add display of last 5 exams/orders
+DASHLN W ! F I=1:1:5 D HD:($Y+10)>IOSL Q:RAX["^"  W !,RALNE ;P18  ; 5-P123
+ ;
+ ;IHS/CMI/DAY - Patch 1007 - Display last 5 exams/orders
+ ;Continue Chris Saddler patch from 2004
  W:($Y+6)'>IOSL !!,RALNE1 S RACONT="" D HD:($Y+8)>IOSL Q:RAX["^"  D EXAM^RADEM1 K RACONT W !,RALNE1
  ;End Patch
+ ;
  Q
  ;
 HD S:'$D(RAPGE) RAPGE=0 D CRCHK Q:$G(RAX)["^"  S RATAB=$S($D(RA("ILC")):1,1:16)
  ;10/12/2006 KAM Remedy tk 162508 Changed next line added "Printed:"
  W:$Y @IOF W !?RATAB,">>"_$S($D(RACRHD):"Discontinued ",1:"")_"Rad/NM Consultation" W:$D(RA("ILC")) " for ",$E(RA("ILC"),1,17) W "<<Printed:" S X="NOW",%DT="T" D ^%DT K %DT D D^RAUTL W ?52,Y ;P18 4-P74
  S RAPGE=RAPGE+1 W ?71,"Page ",RAPGE ;P18
- W !,RALNE1,!,"Name         : ",RA("NME"),?46,"Urgency    : ",RA("OUG") W:$D(RA("PORTABLE")) "  *PORTABLE*"
+ ;
+ ;IHS/CMI/DAY - Patch 1007 - Add Division to Printed Request
+ I +$G(RADIV) W !,"   Division: ",$$GET1^DIQ(79,RADIV,.01)
+ N RAZIMG S RAZIMG=$$GET1^DIQ(75.1,RAOIFN,20) I RAZIMG]"" W " - ",RAZIMG
+ ;End Patch
+ ;
+ W !,RALNE1
+ N NAMLNE S NAMLNE="Name         : "_RA("NME") W !,NAMLNE
+ W:$L(NAMLNE)<46 ?46 W:$L(NAMLNE)>45 ! W "Urgency      : ",RA("OUG") W:$D(RA("PORTABLE")) "  *PORTABLE*"
  W !,"Pt ID Num    : ",RASSN,?46,"Transport  : ",RA("TRAN")
  S Y=RA("DOB") D D^RAUTL W !,"Date of Birth: ",Y,?46,"Patient Loc: ",$E(RA("HLC"),1,20)
  ;10/12/2006 KAM Remedy Ticket 162508 changed next line
  W !,"Age at req   : ",RA("AGE"),?46,"Phone Ext  : ",RA("HPH") ;5-P75
  ;
- ;IHS/BJI/DAY - Patch 1005 - Gender Fix
- ;W !,"Sex          : ",$S(RA("SEX")="M":"MALE",1:"FEMALE") W:$D(RA("ROOM-BED")) ?46,"Room-Bed   : ",RA("ROOM-BED") W !,RALNE1
- W !,"Sex          : ",$S(RA("SEX")="M":"MALE",RA("SEX")="F":"FEMALE",1:"UNKNOWN") W:$D(RA("ROOM-BED")) ?46,"Room-Bed   : ",RA("ROOM-BED") W !,RALNE1
+ ;IHS/CMI/DAY - Patch 1007 - Gender Fix
+ ;W !,"Sex          : ",$S(RA("SEX")="M":"MALE",1:"FEMALE") W:$D(RA("ROOM-BED")) ?46,"Room-Bed   : ",RA("ROOM-BED")
+ W !,"Sex          : ",$S(RA("SEX")="M":"MALE",RA("SEX")="F":"FEMALE",1:"UNKNOWN") W:$D(RA("ROOM-BED")) ?46,"Room-Bed   : ",RA("ROOM-BED")
+ ;End Patch
  ;
+ ; *** NSR 20140507 Start Mod to print weight & date taken in Radiology requests ***
+ ; RTW BEGIN RA*5.0*132 ADD HEIGHT
+ W !,"Height (in.) : ",$S($D(RA("HT")):RA("HT"),1:"") W ?46,"Height Date: ",$S($D(RA("HTDT")):RA("HTDT"),1:"") ;5-P132 RTW
+ ; RTW END RA*5.0*132 ADD HEIGHT
+ W !,"Weight (lbs) : ",$S($D(RA("WT")):RA("WT"),1:"") W ?46,"Weight Date: ",$S($D(RA("WTDT")):RA("WTDT"),1:"") ;5-P123
+ ; *** NSR 20140507 End Mod to print weight & date taken in Radiology requests ***
+ ; 5-P123 moved next line to here from line above Start Mod
+ W !,RALNE1
  W:$P(RAORD0,U,5)=1 !,"***C A N C E L L E D***",?56,"***C A N C E L L E D***"
  Q
  ;

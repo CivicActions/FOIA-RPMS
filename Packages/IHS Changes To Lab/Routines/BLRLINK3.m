@@ -1,5 +1,11 @@
-BLRLINK3 ; IHS/HQT/MJL - CONT. OF BLR - IHS LABORATORY VISIT CREATION ; 13-Oct-2017 14:04 ; MKK
- ;;5.2;IHS LABORATORY;**1010,1011,1014,1015,1018,1021,1022,1024,1025,1027,1028,1029,1030,1031,1033,1034,1037,1039,1041**;NOV 01, 1997;Build 23
+BLRLINK3 ; IHS/HQT/MJL - CONT. OF BLR - IHS LABORATORY VISIT CREATION ; 19-May-2023 06:45 ; MKK
+ ;;5.2;IHS LABORATORY;**1010,1011,1014,1015,1018,1021,1022,1024,1025,1027,1028,1029,1030,1031,1033,1034,1037,1039,1041,1047,1052,1054**;NOV 01, 1997;Build 20
+ ;
+ ; IHS/MSC/MKK - LR*5.2*1052 - 20-Sep-2022 - Item 86507 - File 9009022 Fix
+ ; IHS/MSC/MKK - LR*5.2*1054 - 19-May-2022 - Item 95769 - Send UID to V Files
+ ;                           - 22-May-2023 - Item 97117 - Additional remidiation of V LAB Result Date/Time
+ ;                           - 23-May-2023 - Item 95356 - Send Ordering Location to V Files
+ ;                           - 21-Jun-2023 - Item 95356 - Send MI Comment(s) to V files
  ;
 EP ; EP
  S BLRVFILE="9000010"_$S(BLRSS="CH":".09",BLRSS="MI":".25",BLRSS="BB":".31",1:"??")
@@ -10,7 +16,7 @@ EP ; EP
  D VEDIT
  Q
  ;
-VBUILD ; EP create APCDALVR array which is the array containing the elements to be passed to PCC
+VBUILD ; EP create APCDALVR array to be passed to PCC
  ;--- BEGIN cmi/anch/maw REF LAB -- LR*5.2*1021
  I $G(^BLRTXLOG("BVER",BLRIEN))]"" D  Q  ;cmi/maw don't move to pcc if held for verification, ref lab
  . S BLRERR=1,BLRBUL=0
@@ -36,6 +42,7 @@ VBUILD ; EP create APCDALVR array which is the array containing the elements to 
  S APCDALVR("APCDTLAB")=$S(BLRTLAB="":BLRTNAM,1:"`"_BLRTLAB)
  S APCDALVR("APCDTORD")=BLRORD
  S APCDALVR("APCDTCDT")=BLRCDT
+ ;
  S APCDALVR("APCDTODT")=BLRODT
  S APCDALVR("APCDTACC")=BLRACC
  ;
@@ -54,9 +61,11 @@ VBUILD ; EP create APCDALVR array which is the array containing the elements to 
  K XXX,LRIEN,SIEN            ; IHS/MSC/MKK - LR*5.2*1033
  ;----- END LR*5.2*1028 - IHS LOINC/UCUM MODIFICATIONS - IHS/OIT/MPW
  ;
- D:+$L($G(BLRCOMDT))<1 GETCOMPD(BLRLOGDA,BLRACC,$S(BLRTLAB="":BLRTNAM,1:BLRTLAB),.BLRCOMDT)     ; IHS/OIT/MKK - LR*5.2*1031
+ ; D:+$L($G(BLRCOMDT))<1 GETCOMPD(BLRLOGDA,BLRACC,$S(BLRTLAB="":BLRTNAM,1:BLRTLAB),.BLRCOMDT)     ; IHS/OIT/MKK - LR*5.2*1031
+ D:+$G(BLRCOMDT)<1 GETCOMPD(BLRLOGDA,BLRACC,$S(BLRTLAB="":BLRTNAM,1:BLRTLAB),.BLRCOMDT)     ; IHS/OIT/MKK - LR*5.2*1031
  ;
- S APCDALVR("APCDTRDT")=$G(BLRCOMDT)
+ ; S APCDALVR("APCDTRDT")=$G(BLRCOMDT)
+ S:$G(APCDALVR("APCDTRDT"))="" APCDALVR("APCDTRDT")=$G(BLRCOMDT)  ; IHS/MSC/MKK - LR*5.2*1052
  S APCDALVR("APCDTCLS")="`"_$G(BLRCOLSA)
  S:$G(APCDALVR("APCDTLNC"))="`" APCDALVR("APCDTLNC")=""
  S:APCDALVR("APCDTCLS")="`" APCDALVR("APCDTCLS")=""
@@ -77,10 +86,6 @@ VBUILD ; EP create APCDALVR array which is the array containing the elements to 
  D:$G(BLRRES)'="" CHSETCOD^BLRLINK4   ; IHS/MSC/MKK - LR*5.2*1031
  S APCDALVR("APCDTRES")=$E(BLRRES,1,30)  ;cmi/maw 3/25/03 changed for ref lab
  ;S APCDALVR("APCDTRES")=BLRRES   ;IHS/ITSC/TPF 03/25/02 WHY A LIMIT OF 10?
- ;THIS IS OLD COMMENT STUFF
- ;I $D(BLRCOM(1)) S APCDALVR("APCDTLC1")=BLRCOM(1)
- ;I $D(BLRCOM(2)) S APCDALVR("APCDTLC2")=BLRCOM(2)
- ;I $D(BLRCOM(3)) S APCDALVR("APCDTLC3")=BLRCOM(3)
  ;
  ;create micro or Blood Bank specific elements in the APCDALVR array
  I BLRSS="MI" D  ;IHS/DIR TUC/FJE 12/08/98
@@ -88,8 +93,10 @@ VBUILD ; EP create APCDALVR array which is the array containing the elements to 
  . S:$G(BLRCOLSP)="" BLRCOLSP=$P($G(^LAB(60,+$G(BLRTEST),0)),"^",9)                                                 ; IHS/MSC/MKK - LR*5.2*1031
  . ;S APCDALVR("APCDTCOL")=$S($G(BLCOLSP)="":$G(BLCOLSP),1:"`"_BLRCOLSP) S:+BLRCOMPD APCDALVR("APCDTCMD")=BLRCOMPD   ; IHS/DIR TUC/FJE 12/08/98
  . S APCDALVR("APCDTCOL")=$S($G(BLCOLSP)'="":$G(BLCOLSP),1:"`"_BLRCOLSP) S:+BLRCOMPD APCDALVR("APCDTCMD")=BLRCOMPD   ; IHS/ITSC/TPF CHINLE FIX 08/16/02
+ . D MIBRPCOM      ; IHS/MSC/MKK - LR*5.2*1054 - Add MI Comments (if they exist) to APCDALVR array
  ;
- D:BLRSS="CH" ADDORDL^BLRLNKU2(BLRLOGDA,.APCDALVR)    ; IHS/MSC/MKK - LR*5.2*1039 - Add in Ordering Location for CH tests if missing
+ ; D:BLRSS="CH" ADDORDL^BLRLNKU2(BLRLOGDA,.APCDALVR)    ; IHS/MSC/MKK - LR*5.2*1039 - Add in Ordering Location for CH tests if missing
+ I BLRSS="CH"!(BLRSS="MI") D ADDORDL^BLRLNKU2(BLRLOGDA,.APCDALVR)    ; IHS/MSC/MKK - LR*5.2*1054 - Add in Ordering Location if missing
  ;
  S:BLRSS="BB" APCDALVR("APCDTBTN")=BLRBTN,APCDALVR("APCDTANT")=$S(BLRANT="":BLRANTN,1:"`"_BLRANT)
  ;
@@ -178,11 +185,18 @@ VEDIT ; EP update V file entries
  . I ICDNAME=".9999"!(ICDNAME="ZZZ.999") K APCDALVR("APCDTICD")
  ; ----- END IHS/MSC/MKK - LR*5.2*1033
  ;
- D RESETABN   ; IHS/MSC/MKK - LR*5.2*1041 - Set ABNORMAL flag to value in the Lab Data file every time
+ D RESETABN^BLRLINK5   ; IHS/MSC/MKK - LR*5.2*1047 - Set ABNORMAL flag to value in the Lab Data file every time
+ ;
+ D SETVCCDA^BLRLINK5(BLRLOGDA,BLRSS,BLRSITE)    ; IHS/MSC/MKK - LR*5.2*1047
+ ;
+ ; D RESETCDT   ; IHS/MSC/MKK - LR*5.2*1052 - Complete Data Setup
+ D RESETCDT^BLRLNKU3    ; IHS/MSC/MKK - LR*5.2*1054 - Complete Data Setup. Code moved due to BLRLINK3 size approaching Max.
+ ;
+ D SETLRUID^BLRLNKU3    ; IHS/MSC/MKK - LR*5.2*1054 - Setup UID to go over to PCC
+ ;
+ D ROLLUP^BLRLINK6      ; IHS/MSC/MKK - LR*5.2*1054 - If SNOMED has ROLLUP, put into Comments field, if possible
  ;
  D ^APCDALVR
- ;
- ; ----- END IHS/OIT/MKK LR*5.2*1024 MODIFICATIONS
  ;
  D MSNOMED^BLRLINK4     ; IHS/MSC/MKK - LR*5.2*1033 -- Make Certain VLAB SNOMED field is set
  ;
@@ -207,7 +221,7 @@ VEDIT ; EP update V file entries
  .Q
  .S BLRBUL=2,BLRPCC="Another user is editing this TX file entry..."_BLRIEN S BLRERR=1
  .W:'BLRQUIET !,"Another user is editing this TX file entry..."_BLRIEN,! S BLRERR=1
- ;	
+ ;
  I $G(APCDALVR("APCDAFLG"))=1 S BLRBUL=2,BLRPCC="Invalid template for result display"_" FLG = 1" W:'BLRQUIET !,BLRPCC,!
  ;
  D ^BLRLINKP:$G(APCDALVR("APCDAFLG"))=2
@@ -223,14 +237,15 @@ GETCOMPD(BLRLOGDA,LRAS,F60IEN,COMPDATE) ; EP
  NEW LRAA,LRAD,LRAN,LOGCOMPD,PTR,RESULTDT
  ;
  ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1039
- Q:+$G(BLRLOGDA)<1
+ ; Q:+$G(BLRLOGDA)<1
  Q:$L(LRAS)<1
  Q:+$G(F60IEN)<1
- Q:BLRSTAT'="R"    ; Has to have status of "RESULTED"
+ ; Q:BLRSTAT'="R"    ; Has to have status of "RESULTED"
  ;
+ ; Skip next 3 lines -- IHS/MSC/MKK - LR*5.2*1052
  ; If COMPLETE DATE in 9009022, use it
- S RESULTDT=$$GET1^DIQ(9009022,BLRLOGDA,1309,"I")
- I RESULTDT S COMPDATE=RESULTDT  Q
+ ; S RESULTDT=$$GET1^DIQ(9009022,BLRLOGDA,1309,"I")
+ ; I RESULTDT S COMPDATE=RESULTDT  Q
  ;
  Q:$$RDINF63^BLRLNKU2(BLRLOGDA,LRAS,F60IEN,.COMPDATE)    ; IHS/MSC/MKK - LR*5.2*1039
  ; ----- END IHS/MSC/MKK - LR*5.2*1039
@@ -246,36 +261,42 @@ GETCOMPD(BLRLOGDA,LRAS,F60IEN,COMPDATE) ; EP
  ;
  S COMPDATE=RESULTDT
  ;
+ ; Skip next 2 lines -- IHS/MSC/MKK - LR*5.2*1052
  ; If Complete Date not in ^BLRTXLOG, set it
- S:+$P($G(^BLRTXLOG(BLRLOGDA,13)),"^",9)<1 $P(^BLRTXLOG(BLRLOGDA,13),"^",9)=RESULTDT
+ ; S:+$P($G(^BLRTXLOG(BLRLOGDA,13)),"^",9)<1 $P(^BLRTXLOG(BLRLOGDA,13),"^",9)=RESULTDT
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1052
+ ; Always reset Complete Date in ^BLRTXLOG 
+ S $P(^BLRTXLOG(BLRLOGDA,13),"^",9)=RESULTDT
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1052 
  Q
  ; ----- END IHS/MSC/MKK - LR*5.2*1031
  ;
- ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1041
-RESETABN ; EP - For "CH" tests only, make sure "Abnormal" Flag is the same as the one in the LAB DATA file
- NEW (APCDALVR,BLRACCN,BLRTLAB,BLRTEST,DILOCKTM,DISYS,DT,DTIME,DUZ,IO,IOBS,IOF,IOM,ION,IOS,IOSL,IOST,IOT,IOXY,U,XPARSYS,XQXFLG)
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054
+MIBRPCOM      ; EP - Add MI Comments (if they exist) to APCDALVR array
+ NEW CNT,COML1,COML2,COML3,LINE,LINESTR,LRAA,LRAD,LRAN,LRAS,LRDFN,LRIDT
  ;
- Q:+$G(BLRTLAB)<1               ; Skip if no test variable
- Q:$L($G(BLRACCN))<1            ; Skip if no Accession string
+ Q:$G(BLRSS)'="MI"      ; Only MI subscripted entries are processed
  ;
- S X=$$GETACCCP^BLRUTIL3(BLRACCN,.LRAA,.LRAD,.LRAN)
- Q:LRAA<1!(LRAD<1)!(LRAN<1)
+ Q:+$P(^BLRTXLOG(BLRLOGDA,1),"^")      ; If there exists a parent pointer, skip this entry
  ;
- S LRSS=$$GET1^DIQ(68,LRAA,.02,"I")
- Q:LRSS'="CH"
+ S LRAS=$S($L(BLRACC):BLRACC,$L(BLRACCN):BLRACCN,1:"")
+ Q:LRAS=""
  ;
- S LRAAIEN=LRAN_","_LRAD_","_LRAA
- S LRDFN=$$GET1^DIQ(68.02,LRAAIEN,.01,"I")
+ S X=$$GETACCCP^BLRUTIL3(LRAS,.LRAA,.LRAD,.LRAN)
+ Q:X<1
+ ;
+ S LRDFN=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,0)),U)
  Q:LRDFN<1
  ;
- S LRAT=BLRTLAB
- S BLRDATAN=$$GET1^DIQ(60,LRAT,400,"I")
- Q:BLRDATAN<1
- ;
- S LRIDT=$$GET1^DIQ(68.02,LRAAIEN,13.5,"I")
+ S LRIDT=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,3)),U,5)
  Q:LRIDT<1
- ; 
- S LRDATABN=$P($G(^LR(LRDFN,LRSS,LRIDT,BLRDATAN)),U,2)
- S APCDALVR("APCDTABN")=$S($L(LRDATABN):LRDATABN,1:"@")
+ ;
+ ; Get the first 3 BACT RPT REMARK lines (if they exist)
+ S (CNT,LINE)=0    ; CNT variable used in case Line 1 & 3 exist, but line 2 does not. Should not happen, but need to account for the possibilty.
+ F  S LINE=$O(^LR(LRDFN,"MI",LRIDT,4,LINE))  Q:LINE<1!(LINE>3)  D
+ . S LINESTR=$G(^LR(LRDFN,"MI",LRIDT,4,LINE,0))
+ . I $L(LINESTR) S CNT=CNT+1,APCDALVR("APCDTLC"_CNT)=LINESTR
  Q
- ; ----- END IHS/MSC/MKK - LR*5.2*1041
+ ;
+ ; ----- END IHS/MSC/MKK - LR*5.2*1054

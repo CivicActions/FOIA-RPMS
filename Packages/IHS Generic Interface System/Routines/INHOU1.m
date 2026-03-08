@@ -1,5 +1,5 @@
-INHOU1 ;DJL,DP; 7 Oct 97 12:50;Interface Message Requeue Utilities 
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHOU1 ;ihs/cmi/maw - Interface Message Requeue Utilities 
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  ;
 REQ ;Requeue an Entry for processing
@@ -135,7 +135,7 @@ DOREQ(INREQIEN,INPRIO,INTTPROC) ; requeue the transaction
  ; CODE BEGINS
  D SET^INHD(INTTPROC,$P(^INTHU(INREQIEN,0),U,2),INREQIEN,"",INPRIO)
  ;Change status to "pending", update activity log
- D ULOG^INHU(INREQIEN,"P","Requeued by user "_$P(^DIC(3,DUZ,0),U))
+ D ULOG^INHU(INREQIEN,"P","Requeued by user "_$P(^VA(200,DUZ,0),U))
  Q
 0 ;
  S INQUEUED=$S($D(^INLHSCH(INCURP,INCURT,INREQIEN)):1,1:0)

@@ -1,8 +1,9 @@
-PSIVOPT1 ;BIR/MLM-EDIT/DC ORDER (BACKDOOR) ;22 OCT 97 / 3:14 PM
- ;;5.0; INPATIENT MEDICATIONS ;**29,58,101,110,127**;16 DEC 97
+PSIVOPT1 ;BIR/MLM-EDIT/DC ORDER (BACKDOOR) ;16-Jan-2023 3:14 PM
+ ;;5.0; INPATIENT MEDICATIONS ;**29,58,101,110,127,1029,1033**;16 DEC 97;Build 34
  ;
  ; Reference to ^PS(55 is supported by DBIA 2191
  ; Reference to ^PSSLOCK is supported by DBIA #2789
+ ; Modified - IHS/MSC/MIR-01/12/2022 - NEWORD+12,NONVF+11 - Patch 1029, UPDATE+7 01/16/2023 Patch 1033
  ;
 E ; Edit order through Pharmacy.
  NEW PSJEDFLG
@@ -55,6 +56,7 @@ UPDATE ; Update original order.
  S PSJORIFN=$P($G(^PS(55,DFN,"IV",+ON55,0)),U,21) Q:'PSJORIFN
  S P("NAT")=""
  D EN1^PSJHL2(DFN,"XX",+ON55_"V","UPDATED ORDER")
+ N PSJORD S PSJORD=+ON55 D CALLBOP1^PSIVORC2  ;IHS/MSC/MIR - 01/20/23 - Call Automated Dispensing System if present
  K X
  Q
  ;
@@ -70,6 +72,7 @@ NEWORD ; DC orig. order, get new order no.
  . ;;S P(21)="" W !!,"Original order discontinued...",!!
  . S P("21FLG")="" W !!,"Original order discontinued...",!!
  . D UNL^PSSLOCK(DFN,+ON55_"V")
+ . ;N PSJORD S PSJORD=+ON55 D CALLBOP^PSIVORC2 ;IHS/MSC/MIR - Call Automated Dispensing System if present
  F ON55=P("NEWON"),P("OLDON") K DA,DIE,DR D
  .S DA(1)=DFN,DA=+ON55,DIE="^PS(55,"_DFN_",""IV"",",DR=$S((ON55=P("NEWON")&(+ON55'=+P("OLDON"))):"113////"_P("OLDON")_";122////E",1:"114////"_P("NEWON")_";123////E") D ^DIE
  .I ON55=P("NEWON") N CLINAPPT S CLINAPPT=$G(^PS(55,DFN,"IV",+P("OLDON"),"DSS")) D
@@ -99,6 +102,7 @@ NONVF()   ;
  . I PSJIVORF,$P($G(^PS(55,DFN,"IV",+P("OLDON"),0)),U,21) D EN1^PSJHL2(DFN,"OD",+ON55_"V","ORDER DISCONTINUED")
  . S P("21FLG")="" W !!,"Original order discontinued...",!!
  . D UNL^PSSLOCK(DFN,+P("OLDON")_"V")
+ . ;N PSJORD S PSJORD=+ON55 D CALLBOP^PSIVORC2 ;IHS/MSC/MIR - Call Automated Dispensing System if present
  F ON55=P("NEWON"),P("OLDON") K DA,DIE,DR D
  . S DA=+ON55
  . S:ON55=P("NEWON") DIE="^PS(53.1,",DR="104////"_P("OLDON")_";103////E"

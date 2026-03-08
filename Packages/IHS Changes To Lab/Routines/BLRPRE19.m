@@ -93,9 +93,9 @@ SORRY ;
  S STR=STR_" an install of"_$C(13)_$C(10)_$$CJ^XLFSTR("Lab 5.2 Patch 1019",65)
  D BMES^XPDUTL(STR)
  ; D BMES^XPDUTL("Please print/capture this screen and notify the Support Center at")
- ; D BMES^XPDUTL($$CJ^XLFSTR("1-999-999-9999",65))
+ ; D BMES^XPDUTL($$CJ^XLFSTR("1-888-830-7280",65))
  S STR="Please print/capture this screen and notify the Support Center"
- S STR=STR_" at"_$C(13)_$C(10)_$$CJ^XLFSTR("1-999-999-9999",65)_$C(13)_$C(10)
+ S STR=STR_" at"_$C(13)_$C(10)_$$CJ^XLFSTR("1-888-830-7280",65)_$C(13)_$C(10)
  D BMES^XPDUTL(STR)
  Q
  ;
@@ -110,7 +110,7 @@ POST ;
  NEW STR
  S STR=$$CJ^XLFSTR("Updating MODULE PCC LINK CONTROL failed",65)
  S STR=$C(13)_$C(10)_"Please print/capture this screen and notify the Support Center"
- S STR=STR_" at"_$C(13)_$C(10)_$$CJ^XLFSTR("1-999-999-9999",65)_$C(13)_$C(10)
+ S STR=STR_" at"_$C(13)_$C(10)_$$CJ^XLFSTR("1-888-830-7280",65)_$C(13)_$C(10)
  ;
  S STR=$$KILL^ZIBGCHAR("BLRENTRY")    ; Clear Tracking global
  ;

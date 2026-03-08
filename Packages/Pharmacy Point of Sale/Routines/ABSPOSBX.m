@@ -1,5 +1,5 @@
 ABSPOSBX ; IHS/FCS/DRS - Billing - FSI/ILC A/R v1,2;      
- ;;1.0;PHARMACY POINT OF SALE;**48**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**48**;JUN 21, 2001;Build 131
  Q
 ENABLED() Q 1
 EN ; Taskman routine begins here
@@ -124,7 +124,7 @@ NEEDREL() Q:'BATCH 0 ; no batch on record
  I $P(^ABSBPMNT(BATCH,0),U,5)'="A" Q 0 ; prev. batch no longer active
  N X1,X2,X,%Y S X1=DT,X2=$$BLASTDT D ^%DTC
  Q X>$$BLIFE ; 1 if it's older than that, 0 if not older
-ADJBATCH() N B S B=$P($$GET235,U,5) Q:'B B ; batch # of last adjustments batch
+ADJBATCH() N B S B=$P($$GET235,U,5) Q:'B B   ; batch # of last adjustments batch
  Q $S($P($G(^ABSBPMNT(B,0)),U,5)="A":B,1:"") ; but only if Active batch
 BLASTDT() Q $P($$GET235,U,6) ; date we last made an entry in it
 BLIFE() Q $P($$GET235,U,7) ; how many days a batch is good for

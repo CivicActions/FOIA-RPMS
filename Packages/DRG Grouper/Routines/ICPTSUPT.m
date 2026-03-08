@@ -1,5 +1,5 @@
 ICPTSUPT ;SLC/KER - CPT SUPPORT FOR APIS ; 04/18/2004
- ;;6.0;CPT/HCPCS;**14,19**;May 19, 1997;Build 44
+ ;;6.0;CPT/HCPCS;**14,19**;May 19, 1997;Build 9
  ;
  ; External References
  ;   DBIA  10103  $$DT^XLFDT

@@ -1,8 +1,9 @@
 BMCRC32 ; IHS/OIT/FCJ - LIST APPROVED REFERRALS W/O PRINTED C32 ;   
- ;;4.0;REFERRED CARE INFO SYSTEM;**7,9**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**7,9,16**;JAN 09, 2006;Build 168
  ;BMC*4.0*7 NEW ROUTINE
  ;
  ; This routine prints a list of approved Referrals that a C32 has not be printed for
+ ;4.0*16 12.15.2023 IHS.OIT.FCJ ADD "C1" SUFFIX FOR CALLIN
  ;
 START ;
  W !!,"This report prints out a list of Active referrals that",!,"a C32 has not been printed for.",!!
@@ -82,7 +83,8 @@ PRINT ;print one referral
  S Y=BMCRIEN
  D ^BMCREF
  I $Y>(IOSL-5) D HEAD Q:$D(BMCQUIT)
- W BMCRNUMB_BMCSUF
+ ;W BMCRNUMB_BMCSUF         ;BMC*4.0*16
+ W BMCRNUMB_BMCSUF W:BMCSUF="" $$CALLIN^BMCRLU(BMCRIEN)         ;BMC*4.0*16
  W ?17,$E(BMCREC("PAT NAME"),1,25)
  W ?49,$$FMTE^XLFDT($P(BMCRREC,U),"2D")
  ;

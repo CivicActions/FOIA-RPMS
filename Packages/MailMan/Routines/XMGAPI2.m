@@ -1,5 +1,5 @@
-XMGAPI2 ;(WASH ISC)/JKL-Get Msg Header Info API ;04/17/2002  08:57
- ;;8.0;MailMan;;Jun 28, 2002
+XMGAPI2 ;(WASH ISC)/JKL-HEADER INFO FOR A MESSAGE ;05/28/99  10:47
+ ;;7.1;MailMan;**41,50**;Jun 02, 1994
  ; Entry points (DBIA 1144):
  ; $$HDR  Get message header information
  ;

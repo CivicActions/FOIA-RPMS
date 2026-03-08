@@ -1,10 +1,12 @@
-LRUTA ; IHS/DIR/FJE - DISPLAY LAB TEST INFO FOR LAB 2/14/89 17:18 ;
- ;;5.2;LR;**1013**;JUL 15, 2002
+LRUTA ; IHS/DIR/FJE - DISPLAY LAB TEST INFO FOR LAB ; 26-Apr-2023 13:05 ; MKK
+ ;;5.2;LAB SERVICE;**1013,1054**;NOV 01, 1997;Build 20
  ;
- ;;5.2;LAB SERVICE;;Sep 27, 1994
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
+ ;
  N N,LRCSREC
  S IOP="HOME" D ^%ZIS W @IOF
-ASK S DIC="^LAB(60,",DIC(0)="AEMOQZ",DIC("S")="I $E($P(^(0),U,3),1)'[""N""" D ^DIC K DIC Q:X=""!(X[U)  S LRIFN=+Y
+ASK ; S DIC="^LAB(60,",DIC(0)="AEMOQZ",DIC("S")="I $E($P(^(0),U,3),1)'[""N""" D ^DIC K DIC Q:X=""!(X[U)  S LRIFN=+Y
+ S DIC="^LAB(60,",DIC(0)="AEMOQZ",DIC("S")="I $E($P(^(0),U,3),1)'[""N"",+$G(^(.3))=0" D ^DIC K DIC Q:X=""!(X[U)  S LRIFN=+Y  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
 HDR W @IOF,"Lab test",?32,"Stat ok ?",?44,"Cost",?58,"Lab Test Synonym",!
  W $E($P(Y(0),U),1,30),?35,$S($P(Y(0),U,16)=1:"YES",1:"NO"),?42,$P(Y(0),U,11),?51,$E($P(Y(0),U,2),1,30)
  I $D(^LAB(60,LRIFN,2)) D PANEL R !!,"< Press ANY key to continue >",X:DTIME

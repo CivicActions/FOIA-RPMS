@@ -1,8 +1,13 @@
 AGED1 ; IHS/ASDS/EFG - EDIT PG 1 - ELIG/IDENTIFIERS ; MAR 19, 2010  
- ;;7.1;PATIENT REGISTRATION;**2,4,5,7,8,12**;AUG 25, 2005;Build 1
+ ;;7.1;PATIENT REGISTRATION;**2,4,5,7,8,12,15,17**;AUG 25, 2005;Build 9
  ;
  ;AG*7.1*7 - Modified code to allow the new page 10 to be called
  ;IHS/OIT/NKD AG*7.1*12 PATIENT RESIDENCE
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC
+ ;IHS/OIT/NKD AG*7.1*15 BIRTH SEX
+ ;IHS/OIT/NKD AG*7.1*15 PREFERRED NAME
+ ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
+ ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
  ;
  I "YC"[AGOPT(14) S AG("SVELIG")=""
  S AG("SVELIG")=$P($G(^AUPNPAT(DFN,11)),U,12)
@@ -13,7 +18,8 @@ VAR ;EP
  Q:'$D(^DPT(DFN,0))
  S AG("PG")=1
  S ROUTID=$P($T(+1)," ")  ;SET ROUTINE ID FOR PROGRAMMER VIEW
- S AGPAT=$P($G(^DPT(DFN,0)),U)
+ ;S AGPAT=$P($G(^DPT(DFN,0)),U)  ;IHS/OIT/NKD AG*7.1*15 PREFERRED NAME
+ S AGPAT=$$GETPREF^AUPNSOGI(DFN,"E")
  S AGCHRT=$S($D(^AUPNPAT(DFN,41,DUZ(2),0)):$P($G(^AUPNPAT(DFN,41,DUZ(2),0)),U,2),1:"xxxxx")
  S AG("AUPN")=""
  S:$D(^AUPNPAT(DFN,0)) AG("AUPN")=^(0)
@@ -44,11 +50,13 @@ SSNA ;Ver=add ask if patient has verified SSN
 ESSNA . D DRAW
  D CKELIG:"YC"[AGOPT(14)
  K DIR
- S DIR("?")="Enter your choice now."
- S DIR("?",1)="You may enter the item number of the field you wish to edit,"
- S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
- S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
- S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC - START OLD CODE
+ ;S DIR("?")="Enter your choice now."
+ ;S DIR("?",1)="You may enter the item number of the field you wish to edit,"
+ ;S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
+ ;S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
+ ;S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
+ ;IHS/OIT/NKD AG*7.1*15 - END OLD CODE
  S DIR("A")="CHANGE which item? (1-"_AG("N")_") NONE//" D READ
  I $D(MYERRS("C","E")),(Y'?1N.N),(Y'=AGOPT("ESCAPE")) W !,"ERRORS ON THIS PAGE. PLEASE FIX BEFORE EXITING!!" H 3 G VAR
  S TEMPY=Y I +Y'=Y D ASKADD^AG3A S Y=TEMPY K TEMPY  ;AG*7.1*4
@@ -62,7 +70,8 @@ ESSNA . D DRAW
  ;S AG("C")="ELIG^AG2A,DOB^AG2A,COB^AG3A,SOB^AG3A,SEX^AG2A,SSN^AG3A,MSTAT,EDCOM^AG2B,ALLADDR^AG3A,ALLADDR^AG3A,ALLADDR^AG3A,ALLADDR^AG3A,ALLADDR^AG3A,ALLADDR^AG3A,LOC,ALLADDR^AG3A,OPH^AG3A,MSGPH,WEB,EDEMAIL"  ;AG*7.1*4
  ;S AG("C")="ELIG^AG2A,DOB^AG2A,COB^AG3A,SOB^AG3A,SEX^AG2A,SSN^AG3A,MSTAT,EDCOM^AG2B,ST^AG3A,ADDR2,ADDR3,CITY^AG3A,STATE^AG3A,ZIP^AG3A,LOC,HPH^AG3A,OPH^AG3A,MSGPH,EDEMAIL"  ;AG*7.1*7
  ;S AG("C")="ELIG^AG2A,DOB^AG2A,COB^AG3A,SOB^AG3A,SEX^AG2A,SSN^AG3A,MSTAT,EDCOM^AG2B,ST^AG3A,ADDR2,ADDR3,CITY^AG3A,STATE^AG3A,ZIP^AG3A,LOC,HPH^AG3A,OPH^AG3A,MSGPH"  ;AG*7.1*8
- S AG("C")="ELIG^AG2A,DOB^AG2A,COB^AG3A,SOB^AG3A,SEX^AG2A,SSN^AG3A,MSTAT,EDCOM^AG2B,PRES^AG3A,ST^AG3A,ADDR2,ADDR3,CITY^AG3A,STATE^AG3A,ZIP^AG3A,LOC,HPH^AG3A,OPH^AG3A,MSGPH"  ;AG*7.1*12
+ ;S AG("C")="ELIG^AG2A,DOB^AG2A,COB^AG3A,SOB^AG3A,SEX^AG2A,SSN^AG3A,MSTAT,EDCOM^AG2B,PRES^AG3A,ST^AG3A,ADDR2,ADDR3,CITY^AG3A,STATE^AG3A,ZIP^AG3A,LOC,HPH^AG3A,OPH^AG3A,MSGPH"  ;AG*7.1*12
+  S AG("C")="ELIG^AG2A,DOB^AG2A,COB^AG3A,SOB^AG3A,SEX^AG2A,SSN^AG3A,MSTAT,EDCOM^AG2B,PRES^AG3A,ST^AG3A,ADDR2,ADDR3,CITY^AG3A,STATE^AG3A,ZIP^AG3A,LOC,HPH^AG3A,OPH^AG3A,MSGPH,CPH^AG3A"  ;AG*7.1*17
  I '$D(AGSEENLY) D C
  G VAR
 END ;
@@ -71,35 +80,38 @@ END ;
  I $P($G(^AUPNPAT(DFN,11)),U,12)=""  W *7,!!,"Eligibility Status must be entered." H 2 G VAR
  G ^AGED2
 READ ;EP
- K DFOUT,DTOUT,DUOUT,DQOUT,DLOUT,AG("ED"),AG("ERR"),DIROUT
- S DIR(0)="FO"
- D ^DIR
- Q:$D(DTOUT)
- S:Y="/.,"!(Y="^^") DFOUT=""
- S:Y="" DLOUT=""
- S:Y="^" (DUOUT,Y)=""
- S:Y?1"?".E!(Y["^") (DQOUT,Y)=""
- S X=Y,Y=$$UP^XLFSTR(X)
- Q:Y="P"
- I $E(Y,1)="p" S $E(Y,1)="P"
- I $E(Y,1)="P"&($P($G(^AUPNPAT(DFN,11)),U,12)'="") D
- . S AG("ED")=+$P($E(Y,2,99),".")
- . I AG("ED")<1!(AG("ED")>10) D  ;AG*7.1*7
- .. W *7,!!,"Use only pages 1 through 10."  ;AG*7.1*7
- .. H 2
- .. K AG("ED")
- .. S AG("ERR")=""
- . I $D(AG("ED"))  D
- .. I AG("ED")>0&(AG("ED")<11)  D  ;AG*7.1*7
- ... I AG("ED")=4 S AG("ED")="4A"
- ... I AG("ED")=5 S AG("ED")="BEA"  ;REPLACE OLD PG 5A WITH BENEFITS COORD SCREEN
- ... I AG("ED")=6 S AG("ED")=13
- ... I AG("ED")=8 S AG("ED")=11
- ... I AG("ED")=7 S AG("ED")=8
- ... I AG("ED")=9 S AG("ED")="11A"
- ... I AG("ED")=10 S AG("ED")="10A"  ;AG*7.1*7
- I $E(Y,1)="P"&($P($G(^AUPNPAT(DFN,11)),U,12)="") D
- . W *7,!!,"Eligibility Status must be entered." H 2
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC - START OLD CODE
+ ;K DFOUT,DTOUT,DUOUT,DQOUT,DLOUT,AG("ED"),AG("ERR"),DIROUT
+ ;S DIR(0)="FO"
+ ;D ^DIR
+ ;Q:$D(DTOUT)
+ ;S:Y="/.,"!(Y="^^") DFOUT=""
+ ;S:Y="" DLOUT=""
+ ;S:Y="^" (DUOUT,Y)=""
+ ;S:Y?1"?".E!(Y["^") (DQOUT,Y)=""
+ ;S X=Y,Y=$$UP^XLFSTR(X)
+ ;Q:Y="P"
+ ;I $E(Y,1)="p" S $E(Y,1)="P"
+ ;I $E(Y,1)="P"&($P($G(^AUPNPAT(DFN,11)),U,12)'="") D
+ ;. S AG("ED")=+$P($E(Y,2,99),".")
+ ;. I AG("ED")<1!(AG("ED")>10) D  ;AG*7.1*7
+ ;.. W *7,!!,"Use only pages 1 through 10."  ;AG*7.1*7
+ ;.. H 2
+ ;.. K AG("ED")
+ ;.. S AG("ERR")=""
+ ;. I $D(AG("ED"))  D
+ ;.. I AG("ED")>0&(AG("ED")<11)  D  ;AG*7.1*7
+ ;... I AG("ED")=4 S AG("ED")="4A"
+ ;... I AG("ED")=5 S AG("ED")="BEA"  ;REPLACE OLD PG 5A WITH BENEFITS COORD SCREEN
+ ;... I AG("ED")=6 S AG("ED")=13
+ ;... I AG("ED")=8 S AG("ED")=11
+ ;... I AG("ED")=7 S AG("ED")=8
+ ;... I AG("ED")=9 S AG("ED")="11A"
+ ;... I AG("ED")=10 S AG("ED")="10A"  ;AG*7.1*7
+ ;I $E(Y,1)="P"&($P($G(^AUPNPAT(DFN,11)),U,12)="") D
+ ;. W *7,!!,"Eligibility Status must be entered." H 2
+ ;IHS/OIT/NKD AG*7.1*15 - END OLD CODE
+ D EDREAD^AGUTL2  ;IHS/OIT/NKD AG*7.1*15
  Q
 C ;EP - Edit multiple fields on a Reg edit page.
  S AGY=Y
@@ -240,18 +252,24 @@ CKELIG ;EP
  Q
 DRAW ;DRAW PAGE 1
  S AG("PG")=1
- S AG("N")=19   ;AG*7.1*8/AG*7.1*12
+ S AG("N")=20   ;AG*7.1*8/AG*7.1*12/AG*7.1*17
  S DA=DFN
  S ROUTID=$P($T(+1)," ")  ;SET ROUTINE ID FOR PROGRAMMER VIEW
  D ^AGED
  K ^UTILITY("DIQ1",$J)
  ;OUTPUT OPTION NUMBER,FIELD NAME, AND DATA
+ N HIT  ;;IHS/OIT/JS AG*7.1*17 SSN display
+ D EN^AGSECCHK("AGZVIEWSSN",.HIT) ;;IHS/OIT/JS AG*7.1*17 SSN display
  F AG=1:1:AG("N") D
  . S AGSCRN=$P($T(@1+AG),";;",2,19)
  . S DIC=$P(AGSCRN,U,3)         ;FILE NUMBER
  . S DR=$P(AGSCRN,U,4)          ;FIELD NUMBER
- . I AG'=4&(AG'=14)&(AG'=18)&(AG'=15) W ?1,AG,".",?(27-$L($P($G(^DD(DIC,DR,0)),U))),$P($G(^DD(DIC,DR,0)),U)," : "  ;AG*7.1*4/AG*7.1*12
+ . ;I AG'=4&(AG'=14)&(AG'=18)&(AG'=15) W ?1,AG,".",?(27-$L($P($G(^DD(DIC,DR,0)),U))),$P($G(^DD(DIC,DR,0)),U)," : "  ;AG*7.1*4/AG*7.1*12  ;IHS/OIT/NKD AG*7.1*15
+ . ;I AG'=4&(AG'=14)&(AG'=18)&(AG'=15)&(AG'=5) W ?1,AG,".",?(27-$L($P($G(^DD(DIC,DR,0)),U))),$P($G(^DD(DIC,DR,0)),U)," : "  ;IHS/OIT/NKD AG*7.1*15
+ . I AG'=4&(AG'=14)&(AG'=18)&(AG'=15)&(AG'=5)&(AG'=20) W ?1,AG,".",?(27-$L($P($G(^DD(DIC,DR,0)),U))),$P($G(^DD(DIC,DR,0)),U)," : "  ;IHS/OIT/JS AG*7.1*17
+ . I AG=5 W ?1,AG,".",?(27-$L($P(AGSCRN,U))),$P(AGSCRN,U)," : "  ;IHS/OIT/NKD AG*7.1*15
  . I AG=18 W ?45,AG,".",$P(AGSCRN,U)," : "  ;AG*7.1*2 ITEM 5 PAGE 11/AG*7.1*12
+ . I AG=20 W ?45,AG,".",$P(AGSCRN,U)," : "  ;AG*7.1*17 CELL PHONE
  . I AG=4 W "      ",AG,".",$P(AGSCRN,U)," : "
  . I AG=14 W "      ",AG,".",$P(AGSCRN,U)," : "  ;AG*7.1*12
  . ;I AG=14 W ?54,AG,". ZIP CODE : "  ;AG*7.1*4
@@ -268,19 +286,21 @@ DRAW ;DRAW PAGE 1
  .... W ?30,AG("K")
  .... S LNCNT=LNCNT+1
  ... K HOME,AG("Y"),AG("K"),LNCNT
- . I AG'=16&(AG'=4)&(AG'=14) D  ;AG*7.1*12
+ . I AG'=16&(AG'=4)&(AG'=14)&(AG'=9) D  ;AG*7.1*12
  .. K AGRES
  .. S TEMPDIC=DIC
  .. S DIQ="AGRES",DIQ(0)="E" D EN^DIQ1
  .. S DIC=TEMPDIC
  .. ;W $G(AGRES(DIC,DFN,DR,"E"))
  .. ;BEGIN NEW CODE FOR ABOVE LINE IHS/SD/TPF AG*7.1*4
- .. N HIT
- .. D EN^AGSECCHK("AGZVIEWSSN",.HIT)
+ .. ;N HIT ;;IHS/OIT/JS AG*7.1*17 SSN display 
+ .. ;D EN^AGSECCHK("AGZVIEWSSN",.HIT) ;;IHS/OIT/JS AG*7.1*17 SSN display 
  .. I DIC=2,(DR=.09) D
- ... I HIT="Y" W $$GET1^DIQ(2,DFN_",",.09) Q
- ... I ($$GET1^DIQ(9000001,DFN_",",.23,"E")="V") W $$GET1^DIQ(9000001,DFN_",",1107.3)
- ... E  W $$GET1^DIQ(2,DFN_",",.09)
+ ... I $G(HIT)="Y" W $$GET1^DIQ(2,DFN_",",.09)
+ ... E  W:$$GET1^DIQ(2,DFN_",",.09)'="" "XXXXXXXXX" ;;IHS/OIT/JS AG*7.1*17 SSN display
+ ... Q
+ ... ;I ($$GET1^DIQ(9000001,DFN_",",.23,"E")="V") W $$GET1^DIQ(9000001,DFN_",",1107.3) ;;IHS/OIT/JS AG*7.1*17 SSN display
+ ... ;E  W $$GET1^DIQ(2,DFN_",",.09) ;;IHS/OIT/JS AG*7.1*17 SSN display 
  .. E  W $G(AGRES(DIC,DFN,DR,"E"))
  .. ;END NEW CODE
  .. K AGRES,TEMPDIC,AGRES
@@ -300,6 +320,7 @@ DRAW ;DRAW PAGE 1
  .. I $G(AGRES(DIC,DFN,DR,"I"))'="" W $P($G(^DIC(5,$G(AGRES(DIC,DFN,DR,"I")),0)),U,2)
  .. K AGRES,TEMPDIC,AGRES
  . ;SHOW SSN VERIFICATION STATUS NEXT TO THE SSN FIELD
+ . ;;  ;;IHS/OIT/JS AG*7.1*17 SSN display -begin
  . I AG=6 D
  .. I $P($G(^DPT(DFN,0)),U,9)="" D
  ... S AGSSNCHK=$P($G(^AUPNPAT(DFN,0)),U,24)
@@ -309,15 +330,20 @@ DRAW ;DRAW PAGE 1
  ... I AGSSNCHK="" W "Reason for no SSN not yet entered"
  .. I $P($G(^AUPNPAT(DFN,0)),U,23)'="",$D(^AUTTSSN($P($G(^(0)),U,23),0)) W "(",$P($G(^(0)),U,2),")"
  .. I $P($G(^DPT(DFN,0)),U,9)'=""&($P($G(^AUPNPAT(DFN,0)),U,23)="") W "(Not yet verified by the SSA)"
- . I AG'=3&(AG'=13)&(AG'=19)&(AG'=17)&(AG'=14) W !  ;AG*7.1*4/AG*7.1*8/AG*7.1*12
+ . I AG=9 W $$GET1^DIQ(9999999.361,$P($G(^AUPNPAT(DFN,18)),U,3),.02)
+ . I AG'=3&(AG'=13)&(AG'=19)&(AG'=17)&(AG'=14)&(AG'=20) W !  ;AG*7.1*4/AG*7.1*8/AG*7.1*12/AG*7.1*17
  . I AG=9!(AG=16) D  ;AG*7.1*12
  .. W AGLINE("-"),!
- S AG("N")=19  ;AG*7.1*8/AG*7.1*12
- W !,AGLINE("-")
+ K HIT ;;IHS/OIT/JS AG*7.1*17 SSN display
+ S AG("N")=20  ;AG*7.1*8/AG*7.1*12/AG*7.1*17
+ ;W !,AGLINE("-") ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ W !,AGLINE("EQ")
  K MYERRS,MYVARS
  D FETCHERR^AGEDERR(AG("PG"),.MYERRS)
  S MYVARS("DFN")=DFN,MYVARS("FINDCALL")="",MYVARS("SITE")=DUZ(2)
  D EDITCHEK^AGEDERR(.MYERRS,.MYVARS,1)
+ W !,AGLINE("-")  ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
+ D VERIF^AGUTILS  ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
  Q
  ;***************************************************************
  ; ON LINES BELOW:
@@ -325,12 +351,13 @@ DRAW ;DRAW PAGE 1
  ; PIECE 2= POSITION ON LINE TO DISP FLD
  ; PIECE 3= FILE #
  ; PIECE 4= FLD #
+ ;;SEX^25^2^.02  ;IHS/OIT/NKD AG*7.1*15
 1 ;
  ;;ELIGIBILITY STATUS^10^9000001^1112
  ;;DOB^25^2^.03
  ;;CITY OF BIRTH^15^2^.092
  ;;ST^62^2^.093
- ;;SEX^25^2^.02
+ ;;BIRTH SEX^25^2^.02
  ;;SSN^25^2^.09
  ;;MARITAL STATUS^14^2^.05
  ;;CURRENT COMMUNITY^11^9000001^1118
@@ -345,3 +372,4 @@ DRAW ;DRAW PAGE 1
  ;;HOME PHONE^16^2^.131
  ;;WORK PHONE^17^2^.132
  ;;MESSAGE PHONE^18^9000001^1801
+ ;;CELL PHONE^17^2^.134

@@ -1,5 +1,5 @@
 BDMVRL3 ; cmi/anch/maw - VIEW PT RECORD CON'T ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**9,12**;JUN 14, 2007;Build 51
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**9,12,13,15,19**;JUN 14, 2007;Build 159
  ;
  ;
 CDISP ;EP;DISPLAY AND EDIT COMPLICATIONS
@@ -159,61 +159,13 @@ CSEL ;SELECT COMPLICATION
  S BDMY=Y
  Q
 DELETE ;EP;TO DELETE A PATIENT FROM CMS
+ D EN^XBVK("BDM")
  D REG^BDMFUTIL
  Q:$D(BDMQUIT)
  K BDMQUIT
- N ACMEP,ACMPTDEL,ACMPP,ACMRGTP,ACMRGTP,ACMQUIT
- D CURRENT^ACMED
- S (ACMEP,ACMPTDEL,ACMPP,ACMRGTP)=""
- S ACMRG=BDMRDA
- S ACMRGNA=BDMREGNM
- D ^ACMLPAT
+ D LOOKUPD
+ D EN^XBVK("BDM")
  D PAUSE^BDMFMENU
- Q
-DA ;EP;TO DO THE DIABETES AUDIT
- D REG^BDMFUTIL
- Q:$D(BDMQUIT)
- S X="APCLD99"
- X ^%ZOSF("TEST")
- I $T D  Q
- .S DIC("B")=BDMREGNM
- .D ^APCLD99
- S X="APCL DIABETES PROGRAM QA AUDIT"
- S DIC="^APCLRPT("
- S DIC(0)="FM"
- D DIC^BDMFDIC
- I Y=-1 D  Q
- .W !,*7,"DIABETES PROGRAM QA AUDIT REPORT NOT AVAILABLE"
- .H 2
- S APCL1=+Y
- S X="APCL CUMULATIVE DIABETES QA"
- S DIC="^APCLRPT("
- S DIC(0)="FM"
- D DIC^BDMFDIC
- S APCL2=$S(Y>0:+Y,1:0)
- S APCLDMRG=BDMRDA
- D GO^APCLDM
- Q
-DMMEDS ;EP;TO SELECT DM MED TAXONOMY FOR DISPLAY OF DM MEDS
- D REG^BDMFUTIL
- Q:$D(BDMQUIT)
- N S,T,TX,X,Y,Z,BDM,BDMJ,BDMMEDS
- S (T,TX)="DM AUDIT "
- F  S T=$O(^ATXAX("B",T)) Q:T=""!(T'[TX)  D
- .S X=0
- .F  S X=$O(^ATXAX("B",T,X)) Q:'X  D
- ..Q:+$P($G(^ATXAX(X,0)),U,15)'=50
- ..S BDM(X)=""
- S BDMTXDA=0
- F  S BDMTXDA=$O(BDM(BDMTXDA)) Q:'BDMTXDA  D
- .S X=0
- .F  S X=$O(^ATXAX(BDMTXDA,21,X)) Q:'X  D
- ..S Y=$P($G(^ATXAX(BDMTXDA,21,X,0)),U)
- ..Q:'Y
- ..S BDMMEDS(Y)=""
- Q:'$D(BDMMEDS)
- S DA=DFN
- D MP1^BDMVRL1
  Q
 RR ;EP;TO START PRINT OF REGISTER REPORTS
  D REG^BDMFUTIL
@@ -327,41 +279,60 @@ DL ;EP;FOR DIAGNOSIS LIST FUNCTIONS
 USER ;EP;TO SETUP DMS USER
  D REG^BDMFUTIL
  Q:$D(BDMQUIT)
+ W !!,"REGISTER:  ",$P(^ACM(41.1,BDMRDA,0),U)
  F  D U1 Q:$D(BDMQUIT)!$D(BDMOUT)
- K BDMQUIT,BDMOUT
+ K BDMQUIT,BDMOUT,BDMRDA
+ D ^XBFMK
  Q
-U1 S DIR(0)="SO^1:Add/Remove DMS Authorized User;2:List Current DMS Authorized Users"
+U1 S DIR(0)="SO^1:Add Authorized User to the "_$P(^ACM(41.1,BDMRDA,0),U)_" register;2:List Current Authorized Users;3:Remove an Authorized User from the register"
  S DIR("A")="Which one"
  D DIR^BDMFDIC
  I Y<1 S BDMQUIT="" Q
  I Y=1 D UNEW Q
  I Y=2 D ULIST Q
+ I Y=3 D UREM Q
  Q
 UNEW ;ADD NEW DMS USER
+ K BDMUSER
  S DIC="^VA(200,"
  S DIC(0)="AEMQZ"
- S DIC("A")="Select NEW DMS User: "
+ S DIC("A")="Select NEW User: "
  W !
  D DIC^BDMFDIC
  I +Y<1 S BDMQUIT="" Q
  S BDMUSER=+Y
  S BDMUNAM=$P($G(^VA(200,+Y,0)),U)
- I $D(^ACM(41.1,BDMRDA,"AU",+Y)) D AU Q
+ I $D(^ACM(41.1,BDMRDA,"AU",+Y)) W !!,"This user is already an authorized user of the ",$P(^ACM(41.1,BDMRDA,0),U)," register.",! H 2 Q
  S (DINUM,X)=+Y
  S (DA,DA(1))=BDMRDA
  S DIC="^ACM(41.1,"_DA_",""AU"","
  S DIC(0)="L"
  S:'$D(^ACM(41.1,DA,"AU",0)) ^ACM(41.1,DA,"AU",0)="^9002241.12P"
  D FILE^BDMFDIC
- S BDMX="BDMZMENU"
- S BDMZ=""
- D AU11
+ ;LOG ADDING OF AUTHORIZED USER
+ NEW BDMDETAL89
+ S BDMDETAL(1)="^^ADDED USER "_BDMUSER_" AS AUTHORIZED USER^"_BDMUSER
+ D LOG^BUSAAPI("O","O","A",$S($G(XQY0)]"":$P(XQY0,U),1:"UNEW~BDMVRL3"),"ADDED USER AS AUTHORIZED USER TO "_$$VAL^XBDIQ1(9002241.1,BDMRDA,.01),"BDMDETAL")
 AU I $D(^ACM(41.1,BDMRDA,"AU",BDMUSER)) D
  .W !!,BDMUNAM," is now an Authorized User"
- .W !,"of the Diabetes Managment System."
+ .W !,"of the ",$P(^ACM(41.1,BDMRDA,0),U)," register."
+ .D AUMENU
+ Q
+ ;
+UREM ;
+ K BDMUSER
+ S DIC="^VA(200,"
+ S DIC(0)="AEMQZ"
+ S DIC("A")="Select User to REMOVE: "
+ W !
+ D DIC^BDMFDIC
+ I +Y<1 Q
+ S BDMUSER=+Y
+ S BDMUNAM=$P($G(^VA(200,+Y,0)),U)
+ I '$O(^ACM(41.1,BDMRDA,"AU","B",BDMUSER,0)) W !!,BDMUNAM," is not an authorized user of this register.",! Q
  S DIR(0)="YO"
  S DIR("A",1)="Do you wish to REMOVE "_BDMUNAM_" as an Authorized User"
- S DIR("A")="of the Diabetes Management System"
+ S DIR("A")="of the "_$$VAL^XBDIQ1(9002241.1,BDMRDA,.01)_" register"
  S DIR("B")="NO"
  W !
  D DIR^BDMFDIC
@@ -370,33 +341,41 @@ AU I $D(^ACM(41.1,BDMRDA,"AU",BDMUSER)) D
  .S DA(1)=BDMRDA
  .S DIK="^ACM(41.1,"_DA(1)_",""AU"","
  .D DIK^BDMFDIC
+ .;LOG REMOVING OF AUTHORIZED USER
+ .NEW BDMDETAL
+ .S BDMDETAL(1)="^^REMOVED USER "_BDMUSER_" AS AUTHORIZED USER^"_BDMUSER
+ .D LOG^BUSAAPI("O","O","A",$S($G(XQY0)]"":$P(XQY0,U),1:"UNEW~BDMVRL3"),"REMOVED AUTHORIZED USER FROM "_$$VAL^XBDIQ1(9002241.1,BDMRDA,.01),"BDMDETAL")
  .S X=$O(^DIC(19.1,"B","BDMZ REGISTER MAINTENANCE",0))
- .S BDMZ=$O(^VA(200,BDMUSER,51,"B",+X,0))
- .I BDMZ D AUR
+ .D AUR
  .Q
- S X=$O(^DIC(19.1,"B","BDMZ REGISTER MAINTENANCE",0))
- S BDMZ=$O(^VA(200,BDMUSER,51,"B",+X,0))
- S DIR(0)="YO"
- S:'BDMZ DIR("A")="Allow "_BDMUNAM
- S:BDMZ DIR("A")="Remove "_BDMUNAM_"'s"
- S DIR("A")=DIR("A")_" REGISTER MANAGER AUTHORITY"
- S DIR("B")="NO"
- W !
- D DIR^BDMFDIC
- I BDMZ,Y D AUR
-AU1 F BDMX="BDMZMENU","BDMZ REGISTER MAINTENANCE" D AU11
  Q
 AUR ;REMOVE KEY
- S DA(1)=BDMUSER,DA=BDMZ,DIK="^VA(200,"_DA(1)_",51,"
- D ^DIK
+ NEW A,B,C
+ S C=0
+ S A=0 F  S A=$O(^ACM(41.1,A)) Q:A'=+A  D
+ .S B=0 F  S B=$O(^ACM(41.1,A,"AU","B",B)) Q:B'=+B  D
+ ..I B=BDMUSER,$P(^ACM(41.1,A,0),U)["DIAB" S C=1
+ W !!,"PLEASE NOTE:"
+ I C W !,"This user is an authorized user on other DIABETES registers."  ;user has other registers, do not remove key
+ I 'C D
+ .W !,"This user in not currently an authorized user on any DIABETES register.",!,"If you feel they should be removed as a user of the entire",!,"Diabetes Management System, contact IT and ask them to remove"
+ .W !,"security key BDMZMENU from this user.",!
+ D PAUSE^BDMFMENU
  Q
-AU11 S X=$O(^DIC(19.1,"B",BDMX,0))
- S (DIC,DIK)="^VA(200,"_BDMUSER_",51,"
- S DIC(0)="L"
- S DA(1)=BDMUSER
- S:BDMZ DA=$O(^VA(200,BDMUSER,51,"B",+X,0))
- S $P(^VA(200,BDMUSER,51,0),U,2)="200.051P"
- D FILE^BDMFDIC:'BDMZ
+AUMENU ;
+ NEW HM,HMAN
+ S (HM,HMAN)=""
+ S X=$O(^DIC(19.1,"B","BDMZMENU",0))
+ I $O(^VA(200,BDMUSER,51,"B",+X,0)) S HM=1  ;user already has the BDMZMENU key
+ S X=$O(^DIC(19.1,"B","BDMZ REGISTER MAINTENANCE",0))
+ I $O(^VA(200,BDMUSER,51,"B",+X,0)) S HMAN=1  ;user already has the BDMZMENU key
+ I 'HM W !!,"PLEASE NOTE:",!,"This user does not have access to the DMS menu system, please contact",!,"IT and have them assign the security key BDMZMENU to ",$$VAL^XBDIQ1(200,BDMUSER,.01),!
+ I 'HMAN D
+ .W !,"This user does not have the BDMZ REGISTER MAINTENANCE security key.",!
+ .W "If the user will be allowed to add/edit/remove patients from the register "
+ .W !,"and to run register reports contact IT and asked them to assign key"
+ .W !,"BDMZ REGISTER MAINTENANCE to ",$$VAL^XBDIQ1(200,BDMUSER,.01),".",!
+ D PAUSE^BDMFMENU
  Q
 ULIST ;LIST DMS USERS
  W:$D(IOF) @IOF
@@ -421,4 +400,39 @@ Z(X) ;SET TMP NODE
 PAUSE ;
  K DIR
  S DIR(0)="E",DIR("A")="Press enter to continue" D ^DIR K DIR
+ Q
+LOOKUPD ;
+ NEW BDMX,BDMPTNO,BDMPTNA,BDMPTNA2
+ I $P(^ACM(41.1,BDMRDA,0),U,9)=1 W !!,*7,*7,"Patient lookup for the ",BDMREGNM,!,"is temporarily suspended during patient transfer." H 3 S ACMQUIT="ACMQUIT" Q
+ S BDMX="PATIENT LOOKUP UTILITY"
+ W !!?80-$L(BDMX)\2,BDMX,!!?15,"Select CLIENT"
+ K BDMX
+ S DIC="^ACM(41,",DIC(0)="AEMQ",DIC("A")="NAME OR CHART: ",D="B^C",DIC("S")="I $D(^ACM(41,+Y)),$P(^ACM(41,+Y,0),U)=BDMRDA"
+ W !
+ D MIX^DIC1
+ K DIC
+ I Y=-1&("^"[$E(X))!(X="") Q
+ S BDMPTNO=$P(^ACM(41,+Y,0),U,2),BDMPTNA=$P(^DPT(BDMPTNO,0),U),BDMPTNA2=$P($P(BDMPTNA,",",2)," ")_" "_$P(BDMPTNA,",")
+ I '$D(^ACM(41,"AC",BDMPTNO,BDMRDA)) W !!?10,BDMPTNA2," is not on the ",BDMREGNM," register." H 3 Q
+ ;S BDMRDADFN=^ACM(41,"AC",BDMPTNO,BDMRDA)
+ D DELETED
+ Q
+DELETED ;
+ NEW DIK,DIC,BDMGREF,BDMII,BDMX,BDMI
+ W !!?10,*7,*7,"******  WARNING  ******",!!,"This procedure will delete ALL data for",!?12,BDMPTNA2," from the ",!?12,BDMREGNM," register.",!,"Are you certain you want to do this" S %=2 D YN^DICN
+ I %'=1 W !!,"No data deleted." H 1 Q
+ W !!,"Deletion of ",BDMPTNA2,!?3,"from the ",BDMREGNM," register..."
+ S BDMX=0,BDMGREF="^ACM(49)"
+ F  S BDMX=$O(@BDMGREF@("AC",BDMRDA,BDMPTNO,BDMX)) Q:'BDMX  S DA=0 F  S DA=$O(@BDMGREF@("AC",BDMRDA,BDMPTNO,BDMX,DA)) Q:'DA  S DIK="^ACM(49,",DA=DA D ^DIK K DIK,DIC
+ ;F BDMI=42,43,44,45,46,47,48,51,53,54,41 S BDMGREF="^ACM("_BDMI_")" F  S BDMX=$O(@BDMGREF@("AC",BDMRDA,BDMPTNO,BDMX)) Q:'BDMX  S DIK="^ACM("_ACMI_",",DA=^(BDMX) D ^DIK W !,ACMI_"  "_DA K DIK,DIC,DA
+ F BDMI=42,43,44,45,46,47,48,51,53,54,41 S BDMGREF="^ACM("_BDMI_")" F  S BDMX=$O(@BDMGREF@("AC",BDMRDA,BDMPTNO,BDMX)) Q:'BDMX  S DIK="^ACM("_BDMI_",",DA=^(BDMX) D ^DIK W !,BDMI_"  "_DA K DIK,DIC,DA  ;maw p13
+ S DA=^ACM(41,"AC",BDMPTNO,BDMRDA),DIK="^ACM(41,"
+ D ^DIK
+ K DIK,DIC,BDMGREF,BDMII,BDMX,BDMI
+ W "is now complete."
+ ;BUSA LOG DELETION OF PATIENT FROM REGISTER
+ NEW BDMDETAL
+ S BDMDETAL(1)=BDMPTNO_U_U_"Deleted Patient from "_$$VAL^XBDIQ1(9002241.1,BDMRDA,.01)_" register."
+ D LOG^BUSAAPI("O","P","D",$S($G(XQY0)]"":$P(XQY0,U),1:"DELETED~BCMVRL3"),"DELETED PATIENT FROM REGISTER: "_$$VAL^XBDIQ1(9002241.1,BDMRDA,.01),"BDMDETAL")
+ H 2
  Q

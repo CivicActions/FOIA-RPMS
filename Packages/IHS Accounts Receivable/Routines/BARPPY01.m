@@ -1,5 +1,5 @@
-BARPPY01 ; IHS/SD/TMM - PREPAYMENT ENTRY MAY 11,2010 ; 05/11/2010
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**19**;OCT 26, 2005
+BARPPY01 ; IHS/SD/TMM - PREPAYMENT ENTRY MAY 11,2010 ; 10/28/2020
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,30**;OCT 26, 2005;Build 55
  ;
  ; IHS/SD/TMM 06/18/10 1.8*19  Add Prepayment functionality.
  ;      See work order 3PMS10001
@@ -15,6 +15,8 @@ BARPPY01 ; IHS/SD/TMM - PREPAYMENT ENTRY MAY 11,2010 ; 05/11/2010
  ;
  ;  BARDONE - All data has been collected, ready to review and file/modify
  ;  BARSTOP - Exit processing
+ ;
+ ;; IHS/SD/CPC BAR*1.8*30 CR10550 Adjust Check Number maximum 
  ;
  Q
  ;
@@ -171,6 +173,8 @@ CHECK ;  data related to CHECK payment
  D ^DIR
  I X="" D  G CHECK
  . W !,?5,"Check Number is required",!!
+ I $L(X)>50 D  G CHECK   ; IHS/SD/CPC BAR*1.8*30 CR10550 Adjust Check Number maximum 
+ . W !,?5,"Check number length is more than 50 characters",!!
  I $D(DIROUT) S BARSTOP=1 Q
  I $D(DUOUT)!$D(DTOUT) Q
  S BARCK=X

@@ -1,5 +1,5 @@
 BTIUMED1 ; SLC/JM - Active/Recent Med Objects Routine ;24-Sep-2013 14:41;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1006,1011,1012**;Jun 20, 1997;Build 45
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1006,1011,1012,1029**;Jun 20, 1997;Build 34
  ;
  ; All routines here are part of the LIST entry point of TIULMED
  ;
@@ -56,9 +56,9 @@ ADDMED(XMODE,REC) ; if XMODE creates XSTR, if not add med to TARGET
  ..D ADDM("SIG")
  .E  D ADDM("SIO"),ADDM("MDR"),ADDM("SCH")
  .D FLUSH
- .I $P(NODE,U,9)="HOLD" D
+ .I $P(NODE,U,9)="HOLD"!($P(NODE,U,9)=$G(HOLDSTTS)) D
  ..I $$PL(18) D
- ...S DATA="Reason for HOLD: "
+ ...S DATA="Reason for * : "             ;_$S($P(NODE,U,9)="HOLD":"HOLD: ",1:"* : ")
  ...D ADDP(18)
  ...D FLUSH
  ..;D WRAP
@@ -277,4 +277,9 @@ RECON ;Check for reconciliation
  ..S BY=$$GET1^DIQ(90461.632,AIEN,.02)
  ..S DATA="Reconciled on: "_WHEN_" by "_BY
  ..D FLUSH
+ Q
+HOLD ;Message for Object |Hold Medications| IHS/MSC/MIR feature 106931
+ N MSG S MSG="This information is no longer available in this form." D ADD(MSG)
+ S MSG="Please see Medications Component for more information on these medications." D ADD(MSG)
+ S MSG="This object can be replaced by local informatics staff through editing the note template." D ADD(MSG)
  Q

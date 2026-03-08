@@ -1,5 +1,5 @@
 BDGICE2 ;IHS/OIT/LJF - NEW INCOMPLETE CHART EDIT OPTION
- ;;5.3;PIMS;**1004,1006**;MAY 28, 2004
+ ;;5.3;PIMS;**1004,1006,1022**;MAY 28, 2004;Build 18
  ;IHS/OIT/LJF 09/08/2005 PATCH 1004 New routine
  ;            07/05/2006 PATCH 1006 add back ability to edit discharge/surgery dates
  ;
@@ -63,8 +63,13 @@ EN ;EP; -- main entry point for BDG IC EDIT
  ;
 HDR ;EP; -- header code
  NEW X
- S X=$$PAD($G(IORVON)_$$GET1^DIQ(2,+$G(DFN),.01)_$G(IORVOFF),35)_"#"_$$HRCN^BDGF2(+$G(DFN),DUZ(2))
- S X=$$PAD(X,50)_"Insurance: "_$$GET1^DIQ(9009016.1,+$G(BDGN),.0391)
+ ;202307 77894 maw p1022 PPN
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S X=$$PAD($G(IORVON)_$G(PRF)_$G(IORVOFF),50)_"#"_$$HRCN^BDGF2(+$G(DFN),DUZ(2))
+ ;S X=$$PAD($G(IORVON)_$$GET1^DIQ(2,+$G(DFN),.01)_$G(IORVOFF),35)_"#"_$$HRCN^BDGF2(+$G(DFN),DUZ(2))
+ S X=$$PAD(X,60)_"Insurance: "_$$GET1^DIQ(9009016.1,+$G(BDGN),.0391)
+ ;S X=$$PAD(X,50)_"Insurance: "_$$GET1^DIQ(9009016.1,+$G(BDGN),.0391)
  S VALMHDR(1)=X
  ;
  S X="Category: "_$G(IORVON)_$$GET1^DIQ(9009016.1,+$G(BDGN),.0392)_$G(IORVOFF)

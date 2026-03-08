@@ -1,5 +1,5 @@
 PSAVER4 ;;BIR/JMB-Verify Invoices - CONT'D ;9/8/97
- ;;3.0; DRUG ACCOUNTABILITY/INVENTORY INTERFACE;**15**; 10/24/97
+ ;;3.0; DRUG ACCOUNTABILITY/INVENTORY INTERFACE;**15,60**; 10/24/97;Build 4
  ;This routine prints the report of new drugs that will be added to
  ;each pharmacy location or master vault.
  ;
@@ -22,7 +22,7 @@ PRINT ;Sends invoices to printer
 QUIT D ^%ZISC S:$D(ZTQUEUED) ZTREQ="@" K IO("Q")
  Q
  ;
-HDR     ;Prints the header to the New Drug Report on the screen & paper.
+HDR ;Prints the header to the New Drug Report on the screen & paper.
  I $E(IOST,1,2)="C-" D:PSAPG'=1 END^PSAPROC Q:PSAOUT  W @IOF,!?28,"<<< NEW DRUG REPORT >>>"
  I $E(IOST)'="C" W:PSAPG'=1 @IOF W !?20,"DRUG ACCOUNTABILITY/INVENTORY INTERFACE",!?28,"<<< NEW DRUG REPORT >>>",?72,"Page "_PSAPG
  I $P($G(^PSD(58.8,PSALOC,0)),"^",2)="M" W !?34,"MASTER VAULT",!!,$P($G(^PSD(58.8,PSALOC,0)),"^")
@@ -32,3 +32,29 @@ HDR     ;Prints the header to the New Drug Report on the screen & paper.
  .W:$L(PSALOCN)>76 $P(PSALOCN,"(IP)",1)_"(IP)",!?17,$P(PSALOCN,"(IP)",2) W:$L(PSALOCN)<77 PSALOCN
  W !,PSADLN S PSAPG=PSAPG+1
  Q
+ ;
+VERLOCK ;==> PSA*3*60 (RJS-VMP)Sets invoice's status to Verifying
+ N DIC,DA,DR,DIE
+ I '$D(^PSD(58.811,"ASTAT","V",PSAIEN,PSAIEN1)),'$D(^PSD(58.811,"ASTAT","P",PSAIEN,PSAIEN1)),$D(^PSD(58.811,"ASTAT","L",PSAIEN,PSAIEN1)) D  Q
+ .S PSAMSG="**This Invoice is currently being Verified by another user"
+ I '$D(^PSD(58.811,"ASTAT","P",PSAIEN,PSAIEN1)),'$D(^PSD(58.811,"ASTAT","L",PSAIEN,PSAIEN1))&(($D(^PSD(58.811,"ASTAT","V",PSAIEN,PSAIEN1)))!($D(^PSD(58.811,"ASTAT","C",PSAIEN,PSAIEN1)))) D  Q
+ .S PSAMSG="**This Invoice has already been Verified by another user"
+ F  L +^PSD(58.811,PSAIEN,1,PSAIEN1,0):0 I  Q:$T
+ I '$D(^PSD(58.811,"ASTAT","L",PSAIEN,PSAIEN1)),'$D(^PSD(58.811,"ASTAT","V",PSAIEN,PSAIEN1)),$D(^PSD(58.811,"ASTAT","P",PSAIEN,PSAIEN1)) D
+ .S DA=PSAIEN1,DA(1)=PSAIEN,DIE="^PSD(58.811,"_DA(1)_",1,",DR="2///L;12////^S X="_DUZ
+ .D ^DIE
+ .S PSALOCK(PSA)=PSAIEN_"^"_PSAIEN1
+ .I PSATMP S PSATMP=PSATMP_","_PSA
+ .I 'PSATMP S PSATMP=PSA
+ L -^PSD(58.811,PSAIEN,1,PSAIEN1,0)
+ Q
+ ;
+VERUNLCK ; VERIFY CANCELED RESET INVOICE TO PROCESSED
+ N Y,PSAPC S PSACNT=0 F PSAPC=1:1 S PSA=+$P(PSASEL,",",PSAPC) Q:'PSA  D
+ .S PSAIEN=$P(PSALOCK(PSA),"^"),PSAIEN1=$P(PSALOCK(PSA),"^",2)
+ .I $D(^PSD(58.811,"ASTAT","L",PSAIEN,PSAIEN1)) D
+ ..N DIC,DA,DR,DIE
+ ..F  L +^PSD(58.811,PSAIEN,1,PSAIEN1,0):0 I  Q
+ ..S DA=PSAIEN1,DA(1)=PSAIEN,DIE="^PSD(58.811,"_DA(1)_",1,",DR="2///P;12////@" D ^DIE
+ ..L -^PSD(58.811,PSAIEN,1,PSAIEN1,0)
+ Q  ;<== PSA*3*?? (RJS-VMP)

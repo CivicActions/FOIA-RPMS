@@ -1,7 +1,10 @@
-BTIULO13 ;IHS/MSC/MGH - IHS OBJECTS ADDED IN PATCHES ;23-May-2016 15:35;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**1006,1009,1010,1011,1012,1017**;NOV 04, 2004;Build 7
+BTIULO13 ;IHS/MSC/JSM - IHS OBJECTS ADDED IN PATCHES ;13-Feb-2025 15:07
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1006,1009,1010,1011,1012,1017,1029,1030**;NOV 10, 2004;Build 40
+ ; IHS/MSC/JSM updated GETORD to update HOLD status to BEHORX LABEL HOLD STATUS XPAR (Feature 106931)
+ ;              and add legend to end of list at TMORDER
+ ; IHS/MSC/MIR 02/13/2025 added STHOLD in TMORDER+1, TMORDER+11, GETORD+24 (Feature 119124 p1030)
 TMORDER(DFN,TARGET) ;EP Med Orders for today
- NEW X,I,CNT,RESULT
+ NEW X,I,CNT,RESULT,STHOLD S STHOLD=0
  S CNT=0
  D GETORD(.RESULT,DFN)
  K @TARGET
@@ -10,10 +13,12 @@ TMORDER(DFN,TARGET) ;EP Med Orders for today
  ..S CNT=CNT+1
  ..S @TARGET@(CNT,0)=RESULT(I)
  I 'CNT S @TARGET@(1,0)="No Orders."
+ ;IHS/MSC/JSM p1029 Added next line if there are orders to display
+ E  I STHOLD S @TARGET@(CNT+1,0)=" ",@TARGET@(CNT+2,0)="(*) behind the status of the medication indicates pharmacy may be contacted about available fills of this medication"
  Q "~@"_$NA(@TARGET)
 GETORD(RETURN,DFN) ;Get list of orders
  K RETURN
- NEW VDT,END,ORLIST,NEWORD,ORD,HDR,HLF,LOC,X,Y,C,GROUP,GROUPIEN,ORDER,OLDOR
+ NEW VDT,END,ORLIST,NEWORD,ORD,HDR,HLF,LOC,X,Y,C,GROUP,GROUPIEN,ORDER,OLDOR,HOLDSTTS
  S C=0,OLDOR=0
  K ^TMP("ORR",$J)
  ;Get all orders for today
@@ -32,7 +37,10 @@ GETORD(RETURN,DFN) ;Get list of orders
  . S C=C+1
  . F Y=0:0 S Y=$O(ORD("TX",Y)) Q:'Y  D
  .. I $E(ORD("TX",Y),1)="<" Q
- .. ;I $E(ORD("TX",Y),1,6)="Change" Q
+ .. I $E(ORD("TX",Y),1,4)="Hold" D  ;IHS/MSC/JSM Added XPAR setting for Hold p1029
+ ... S HOLDSTTS=$$GET^XPAR("ALL","BEHORX LABEL HOLD STATUS",,"E")_"*"
+ ... S:HOLDSTTS="*" HOLDSTTS="Active*"
+ ... S ORD("TX",Y)=HOLDSTTS_$E(ORD("TX",Y),5,999),STHOLD=1  ; MIR added STHOLD Feature 119124
  .. I $E(ORD("TX",Y),1,6)="Change" S ORD("TX",Y)=$E(ORD("TX",Y),8,999)
  .. ;I $E(ORD("TX",Y),1,3)="to " Q
  .. I $E(ORD("TX",Y),1,3)="to " D

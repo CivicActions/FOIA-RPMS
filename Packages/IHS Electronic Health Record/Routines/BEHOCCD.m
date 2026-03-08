@@ -1,5 +1,5 @@
-BEHOCCD ;IHS/MSC/MGH - CCD calls ;31-Mar-2014 17:45;PLS
- ;;1.1;BEH COMPONENTS;**067001**;March 12, 2008;Build 1
+BEHOCCD ;IHS/MSC/MGH - CCD calls ;19-Oct-2021 13:50;DU
+ ;;1.1;BEH COMPONENTS;**067001,067005**;March 12, 2008;Build 1
  ;=================================================================
 PHR(RET,DFN) ;Returns if pt has an active PHR
  N PHN,PHNDT
@@ -56,7 +56,9 @@ REFUSAL(RET,DFN) ;Enter the refusal item
  N TYPE,DTDONE
  S TYPE="SNOMED"
  S EDU=422735006
- S DTDONE="TODAY",DTDONE=$$DT^CIAU(DTDONE)
+ ;IHS/MSC/MGH Patch 32 add time for refusals
+ ;S DTDONE="TODAY",DTDONE=$$DT^CIAU(DTDONE)
+ S DTDONE=$$NOW^XLFDT
  S INP=U_TYPE_U_EDU_U_DFN_U_DTDONE_U_U_DUZ_U_23
  D SET^BGOREF(.RET,INP)
  I RET="" S RET=1

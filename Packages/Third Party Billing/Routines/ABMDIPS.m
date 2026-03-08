@@ -1,5 +1,5 @@
 ABMDIPS ; IHS/ASDST/DMJ - GENERATE BILLS FOR PHYSICIAN IP SVCS. ;  
- ;;2.6;IHS Third Party Billing System;**2**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**2,10**;NOV 12, 2009;Build 43
  ;
  ;IHS/DSD/MRS - 8/3/1999 NOIS XAA-0899-200005 Patch 3 #7
  ;      Changed variable name from ABMIO to ABMI0
@@ -20,7 +20,8 @@ PAY ;enter payer
  S DIC="^AUTNINS(",DIC(0)="AEMQ"
  D ^DIC Q:+Y<0
  S ABMINS=+Y
- S ABMITYP=$P($G(^AUTNINS(ABMINS,2)),U)
+ ;S ABMITYP=$P($G(^AUTNINS(ABMINS,2)),U)  ;abm*2.6*10 HEAT73780
+ S ABMITYP=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMINS,".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  S ABMINAME=$P(^AUTNINS(ABMINS,0),U)
  ; Check for proper insurer file setup
  S ABMI0=$G(^ABMNINS(DUZ(2),ABMINS,1,141,0))

@@ -1,5 +1,5 @@
 APCLPYR ; IHS/CMI/LAB - Patients by Payer (Insurer) - Driver ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**29**;MAY 14, 2009;Build 20
  ;
  ;For Medicare Part D, add the selections fo the prompt below, then
  ;check the subsections in APCLPYR2 (MCR) and APCLPYR5 (RR).
@@ -24,7 +24,7 @@ APCLPYR ; IHS/CMI/LAB - Patients by Payer (Insurer) - Driver ;
  W !,"========================================================================",!!
  W "You may select from the following types of insurance"
  K DIR
- S DIR(0)="S^1:Medicare Part A;2:Medicare Part B;3:Medicaid;4:A Selected Private Insurance;5:Railroad Part A;6:Railroad Part B"
+ S DIR(0)="S^1:Medicare Part A;2:Medicare Part B;3:Medicaid;4:A Selected Private Insurance;5:Railroad Part A;6:Railroad Part B;7:Medicare Part D"
  S DIR("A")="Select a type of insurance"
  D ^DIR
  I $D(DIRUT) Q
@@ -34,6 +34,7 @@ APCLPYR ; IHS/CMI/LAB - Patients by Payer (Insurer) - Driver ;
  I Y=4 S APCLTYP="PVT"
  I Y=5 S APCLTYP="RRA"
  I Y=6 S APCLTYP="RRB"
+ I Y=7 S APCLTYP="MRD"
  ;
  I APCLTYP="PVT" D  Q:'APCLPYR
  .W !!,"========================================================================",!

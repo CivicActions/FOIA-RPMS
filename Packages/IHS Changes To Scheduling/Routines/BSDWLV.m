@@ -1,5 +1,5 @@
 BSDWLV ; IHS/ITSC/LJF, WAR - VIEW WAITING LIST ENTRY ; [ 01/09/2003  1:44 PM ]
- ;;5.3;PIMS;**1004,1007,1012**;MAY 28, 2004
+ ;;5.3;PIMS;**1004,1007,1012,1022**;MAY 28, 2004;Build 18
  ;IHS/OIT/LJF 07/20/2005 PATCH 1004 added subroutine to return 1 if patient active on a wait list
  ;                                  added subroutine to return array of active waiting list entries for patient
  ;                                  added display of user who added patient & user who removed patient
@@ -18,10 +18,14 @@ HDR ; -- header code
  NEW X
  S VALMHDR(1)=$$SP(15)_$$CONF^BDGF
  ;
- S X=$G(IORVON)_$$GET1^DIQ(2,DFN,.01)_$G(IORVOFF)
- S X=$$PAD(X,32)_"#"_$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
- S X=$$PAD(X,48)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
- S VALMHDR(2)=$$PAD(X,68)_"Sex: "_$$GET1^DIQ(2,DFN,.02)
+ S X=$G(IORVON)_$$GETPREF^AUPNSOGI(DFN,"E",1)_$G(IORVOFF)
+ S X=$$PAD(X,45)_$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
+ S X=$$PAD(X,53)_$$GET1^DIQ(2,DFN,.03)
+ S VALMHDR(2)=$$PAD(X,68)_$$GET1^DIQ(2,DFN,.02)
+ ;S X=$G(IORVON)_$$GET1^DIQ(2,DFN,.01)_$G(IORVOFF)
+ ;S X=$$PAD(X,32)_"#"_$$HRCN^BDGF2(DFN,+$G(DUZ(2)))
+ ;S X=$$PAD(X,48)_"DOB: "_$$GET1^DIQ(2,DFN,.03)
+ ;S VALMHDR(2)=$$PAD(X,68)_"Sex: "_$$GET1^DIQ(2,DFN,.02)
  ;
  I $$DEAD^BDGF2(DFN) S VALMHDR(3)=$$SP(25)_$G(IORVON)_"** Patient Died on "_$$DOD^BDGF2(DFN)_" **"_$G(IORVOFF)
  E  S VALMHDR(3)=$$PCLINE^SDPPTEM(DFN,DT)

@@ -1,7 +1,8 @@
 BSDAMR3 ;cmi/anch/maw - BSD Appointment Management Reports - Eligibility Appoinment List 2/12/2007 1:20:15 PM
- ;;5.3;PIMS;**1007**;DEC 01, 2006
+ ;;5.3;PIMS;**1007,1021,1022**;MAY 28, 2004;Build 18
  ;
  ;cmi/anch/maw new report for PATCH 1007 item 1007.18 Eligibility Appointment List
+ ;cmi/maw 04/18/2022 patch 1021 84779 remove ssn
  ;
 ASK ; -- ask user questions
  NEW VAUTC,VAUTD,POP,BSDBD,BSDED,BSDSUB,BSDTT
@@ -79,10 +80,15 @@ INIT ; -- init variables and list array
  . F  S APPT=$O(^SC(CLN,"S",APPT)) Q:'APPT!(APPT>END)  D
  .. ;
  .. ; -- then find appts to count
+ .. ;20230705 61951 various changes to display to fit PPN
  .. S APPN=0
  .. F  S APPN=$O(^SC(CLN,"S",APPT,1,APPN)) Q:'APPN  D
  ... S PAT=+^SC(CLN,"S",APPT,1,APPN,0)                ;patient ien
  ... S BSDSSN=$P($G(^DPT(PAT,0)),U,9)                    ;patient SSN
+ ... S BSDSSN=""  ;cmi/maw p1021 84779
+ ... ;S BSDDOB=$$FMTE^XLFDT($P($G(^DPT(PAT,0)),U,3))
+ ... S BSDDOB=$P($G(^DPT(PAT,0)),U,3)
+ ... I $G(BSDDOB) S BSDDOB=$$DTS^BSDU3(BSDDOB)
  ... N BSDMCR,BSDMCD,BSDPI
  ... S BSDMCR=$$MCR^AUPNPAT(PAT,APPT) I BSDMCR=1 S BSDMCR="MCR/"
  ... S BSDMCD=$$MCD^AUPNPAT(PAT,APPT) I BSDMCD=1 S BSDMCD="MCD/"
@@ -94,14 +100,21 @@ INIT ; -- init variables and list array
  ... I '$D(BSDCT(1)),'$D(BSDCT(4)) K BSDMCD
  ... I '$D(BSDCT(3)),'$D(BSDCT(4)) K BSDPI
  ... N BSDINS
- ... S BSDINS="*"_$G(BSDMCR)_$G(BSDMCD)_$G(BSDPI)_"*"
+ ... S BSDINS=$G(BSDMCR)_$G(BSDMCD)_$G(BSDPI)
+ ... I $G(BSDINS)="" S BSDINS="**"
+ ... ;S BSDINS="*"_$G(BSDMCR)_$G(BSDMCD)_$G(BSDPI)_"*"
  ... ;
  ... ; put appts into display array
- ... S LINE=$$PAD($$FMTE^XLFDT(APPT),22)                   ;appt date
+ ... N APPD
+ ... S APPD=$$DTS^BSDU3(APPT)
+ ... S LINE=$$PAD(APPD,14)
+ ... ;S LINE=$$PAD($$FMTE^XLFDT(APPT),20)                   ;appt date
  ... S LINE=LINE_$J($$HRCN^BDGF2(PAT,$$FAC^BSDU(CLN)),7)   ;chart#
- ... S LINE=$$PAD(LINE,33)_$E($$GET1^DIQ(2,PAT,.01),1,18)  ;patient name
- ... S LINE=$$PAD(LINE,53)_$G(BSDSSN)                      ;ssn
- ... S LINE=$$PAD(LINE,64)_BSDINS                          ;insurance info
+ ... ;S LINE=$$PAD(LINE,33)_$E($$GET1^DIQ(2,PAT,.01),1,16)  ;patient name
+ ... S LINE=$$PAD(LINE,23)_$E($$GETPREF^AUPNSOGI(PAT,"E",1),1,36)
+ ... ;S LINE=$$PAD(LINE,53)_$G(BSDSSN)                      ;ssn p1021 orig
+ ... S LINE=$$PAD(LINE,59)_$G(BSDDOB)                      ;dob p1021 new
+ ... S LINE=$$PAD(LINE,69)_BSDINS                          ;insurance info
  ... I BSDSRT="D" D
  .... S ^TMP("BSD",$J,BSDSUB,NAME,APPT,BSDINS)=LINE  ;sort by category,clinic,date
  ... I BSDSRT="P" D
@@ -152,7 +165,9 @@ HDG ; heading for paper report
  D HDR W @IOF,?30,"Appointments Elgibility Information"
  F I=1:1 Q:'$D(VALMHDR(I))  W !,VALMHDR(I)
  W !,$$REPEAT^XLFSTR("-",80)
- W !,"Appt Date",?24,"HRCN",?34,"Patient Name",?54,"SSN",?65,"Insurance Info"
+ ;W !,"Appt Date",?24,"HRCN",?34,"Patient Name",?54,"SSN",?65,"Insurance Info"  ;p1021 orig
+ ;W !,"Appt Date",?24,"HRCN",?34,"Patient Name",?54,"DOB",?65,"Insurance Info"  ;p1021 new
+ W !,"Appt Date",?16,"HRCN",?23,"Patient Name",?59,"DOB",?69,"Insurance Info"  ;p1022 new
  W !,$$REPEAT^XLFSTR("=",80)
  Q
  ;

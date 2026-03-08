@@ -1,6 +1,7 @@
-ORCDPSIV ;SLC/MKB-Pharmacy IV dialog utilities ;09/26/08
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**4,38,48,158,195,243,296**;Dec 17, 1997;Build 19
+ORCDPSIV ;SLC/MKB-Pharmacy IV dialog utilities ;29-Jan-2020 18:19;DU
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**4,38,48,158,195,243,296,1019**;Dec 17, 1997;Build 19
  ;Per VHA Directive 2004-038, this routine should not be modified.
+ ; Modified - IHS/MSC/MGH - 01/16/2020 - Patch 1019 ADDNUM entry point added
 CKSCH ; -- validate schedule [Called from P-S Action]
  N ORX S ORX=ORDIALOG(PROMPT,ORI) Q:ORX=$G(ORESET)  K ORSD
  D EN^PSSGS0(.ORX,"I")
@@ -147,7 +148,7 @@ ROUTECHK ;
  Q
  ;
 ENRATE ; -- set display text, help based on IV TYPE
- N X,MSG S X=$G(ORIVTYPE),MSG=""
+ N X,MSG,CHK,ERR S X=$G(ORIVTYPE),MSG=""
  S ORDIALOG(PROMPT,"A")=$S(X="I":"Infuse over time (min): ",1:"Infusion Rate (ml/hr): ")
  S MSG="Enter the "_$S(X="I":"number of minutes over which to infuse this medication.",1:"infusion rate, as the number of ml/hr or Text@Number of Labels per day. ")
  S ORDIALOG(PROMPT,"?")=MSG
@@ -171,6 +172,7 @@ INF ; -- input transform for INFUSION RATE
  .S FAIL=0
  .F CNT=1:1:$L(X) D  I FAIL=1 Q
  ..I ($A($E(X,CNT))<48)!($A($E(X,CNT))>58) S FAIL=1
+ ..I CNT=1&($E(X,CNT)="0") S FAIL=1
  .I FAIL=1 W !,"Infuse Over Time must be a whole number." K X Q
  K:$L(X)<1!($L(X)>30)!(X["""")!($A(X)=45) X I '$D(X) Q
  I $G(ORIVTYPE)="C" D  Q
@@ -248,4 +250,10 @@ IVPSI1 ; ASK ON CONDITION
 IVPS1X ;
  W !,"This field is optional a value does not need to be entered."
  I 1
+ Q
+ADDNUM ;Validate the additive number
+ N ERR,LOOP
+ D ZEROS^APSPLIQ(.ERR,X)
+ I $D(ERR)>1 D  K X Q
+ .F LOOP=1:1:ERR  W !,$G(ERR(LOOP))
  Q

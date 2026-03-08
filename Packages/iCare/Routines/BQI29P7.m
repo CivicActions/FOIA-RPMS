@@ -1,0 +1,308 @@
+BQI29P7 ;GDIT/HS/ALA-iCare v2.9 Patch 7 ; 17 Jan 2024  9:51 AM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**7**;Mar 01, 2021;Build 14
+ ;
+ ;
+PRE ;Pre-install
+ S $P(^BQI(90508,1,"VISIT"),"^",7)=""
+ K ^XTMP("BQICNSNM")
+ ; Cleanup PreDM
+ D PREDM
+ ;
+ NEW DA,DIK
+ S DIK="^BQI(90507.8," S DA=0 F  S DA=$O(^BQI(90507.8,DA)) Q:'DA  D ^DIK
+ S DIK="^BQI(90506," S DA=0 F  S DA=$O(^BQI(90506,DA)) Q:'DA  D ^DIK
+ S DIK="^BQI(90506.9," S DA=0 F  S DA=$O(^BQI(90506.9,DA)) Q:'DA  D ^DIK
+ S DIK="^BQI(90509.9," S DA=0 F  S DA=$O(^BQI(90509.9,DA)) Q:'DA  D ^DIK
+ S DIK="^BQI(90506.2," S DA=0 F  S DA=$O(^BQI(90506.2,DA)) Q:'DA  D ^DIK
+ ;
+ S DIK="^ATXAX(" D
+ . S DA=$O(^ATXAX("B","BQI BOTULISM TOX NUC ACID LNC","")) I DA'="" D ^DIK
+ . S DA=$O(^ATXAX("B","BQI ARBORVIRAL CULT ID LOINC","")) I DA'="" D ^DIK
+ . S DA=$O(^ATXAX("B","BQI EHRLICHIOSIS OTHER LOINC","")) I DA'="" D ^DIK
+ . S DA=$O(^ATXAX("B","BQI COVID ECR CULTURE LOINC","")) I DA'="" D ^DIK
+ . S DA=$O(^ATXAX("B","BQI COVID ECR ASSAYS LOINC","")) I DA'="" D ^DIK
+ . S DA=$O(^ATXAX("B","BQI COVID ECR SPIKE PROTEIN","")) I DA'="" D ^DIK
+ . S DA=$O(^ATXAX("B","BQI COVID ECR PANELS ANTIBODY","")) I DA'="" D ^DIK
+ . S DA=$O(^ATXAX("B","BQI COVID ECR PANELS GAMMA","")) I DA'="" D ^DIK
+ . S DA=$O(^ATXAX("B","BQI COVID ECR PANELS NUCLEIC","")) I DA'="" D ^DIK
+ ;
+ S DA=$O(^ATXAX("B","BQI COVID ECR PANELS GENOMIC","")) I DA'="" S UPD(9002226,DA_",",.01)="BQI COVID ECR GENOMIC SEQ"
+ S ^BQI(90508.2,15,0)="Suicide",^BQI(90508.2,"B","Suicide",15)=""
+ Q
+ ;
+POS ;Post-install
+ ; Reset Reminders
+ D CHK^BQIRMZDR("Nightly")
+ ; Set up Health Factor columns
+ D HF^BQINIGH5
+ ; Set up Exam columns
+ D EX^BQINIGH5
+ ; Repoint taxonomies
+ D RPT^BQINIGH5
+ ;
+ ;Fix site editable for DM Audit Education taxonomies
+ NEW TAX,TN
+ F TAX="DM AUDIT EXERCISE EDUC TOPICS","DM AUDIT DIET EDUC TOPICS","DM AUDIT OTHER EDUC TOPICS" D
+ . S TN=$O(^BQI(90507,6,10,"B",TAX,"")) I TN="" Q
+ . NEW DA,IENS
+ . S DA(1)=6,DA=TN,IENS=$$IENS^DILF(.DA)
+ . I $P(^BQI(90507,6,10,TN,0),"^",4)=1 S BQIUTX(90507.01,IENS,.04)="@"
+ I $D(BQIUTX) D FILE^DIE("","BQIUTX","ERRORX")
+ ;
+ D ^BQIULAY
+ D ^BQIUSRC
+ D SUI^BQISUICD
+ D DEP^BQISUICD
+ ;
+ ; Set Taxonomies
+ D ^BQIETX
+ D ^BQIFTX
+ D ^BQIHTX
+ D ^BQIJTX
+ D ^BQIKTX
+ D ^BQIOTX
+ D ^BQIQTX
+ D ^BQIWTX
+ ;D ^BQIXTX
+ D ^BQIYTX
+ ;
+ D FLU
+ D ICD
+ D REM
+ D DAT
+ D CONS
+ D UTAG
+ D GLS
+ ;
+RP ; Set BTPWRPC and BUSARPC into BQIRPC
+ NEW IEN,DA,X,DIC,Y
+ S DA(1)=$$FIND1^DIC(19,"","B","BQIRPC","","","ERROR"),DIC="^DIC(19,"_DA(1)_",10,",DIC(0)="FLMNZ"
+ I $G(^DIC(19,DA(1),10,0))="" S ^DIC(19,DA(1),10,0)="^19.01IP^^"
+ S X="BTPWRPC"
+ D ^DIC I +Y<1 K DO,DD D FILE^DICN
+ NEW IEN,DA,X,DIC,Y
+ S DA(1)=$$FIND1^DIC(19,"","B","BQIRPC","","","ERROR"),DIC="^DIC(19,"_DA(1)_",10,",DIC(0)="FLMNZ"
+ I $G(^DIC(19,DA(1),10,0))="" S ^DIC(19,DA(1),10,0)="^19.01IP^^"
+ S X="BUSARPC"
+ D ^DIC I +Y<1 K DO,DD D FILE^DICN
+ ;
+VR ;Set the version number
+ NEW DA
+ S DA=$O(^BQI(90508,0))
+ S BQIUPD(90508,DA_",",.08)="2.9.7.4"
+ S BQIUPD(90508,DA_",",.09)="2.9.7.4"
+ S BQIUPD(90508,DA_",",4.18)="@"
+ D FILE^DIE("","BQIUPD","ERROR")
+ K BQIUPD
+ Q
+ ;
+REM ;
+ NEW ZTDTH,ZTDESC,ZTRTN,ZTIO,ZTSAVE,NOW
+ S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,3)
+ S ZTDESC="Fix Reminder template",ZTRTN="URMD^BQI29P7",ZTIO=""
+ D ^%ZTLOAD
+ K ZTSK
+ Q
+ ;
+FLU ;
+ NEW ZTDTH,ZTDESC,ZTRTN,ZTIO,ZTSAVE,NOW
+ S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,3)
+ S ZTDESC="Fix FLU records",ZTRTN="REPT^BQI29P7",ZTIO=""
+ D ^%ZTLOAD
+ K ZTSK
+ Q
+ ;
+ICD ;
+ NEW ZTDTH,ZTDESC,ZTRTN,ZTIO,ZTSAVE,NOW
+ S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,3)
+ S ZTDESC="Problem ICD Xref",ZTRTN="PBREF^BQI29P7",ZTIO=""
+ D ^%ZTLOAD
+ K ZTSK
+ Q
+ ;
+DAT ;
+ NEW ZTDTH,ZTDESC,ZTRTN,ZTIO,ZTSAVE,NOW
+ S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,3)
+ S ZTDESC="Order Start/Stop Xref",ZTRTN="ORDT^BQI29P7",ZTIO=""
+ D ^%ZTLOAD
+ K ZTSK
+ Q
+ ;
+CONS ;
+ NEW ZTDTH,ZTDESC,ZTRTN,ZTIO,ZTSAVE,NOW
+ S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,3)
+ S $P(^BQI(90508,1,"VISIT"),"^",7)=""
+ S ZTDESC="Consults Xref",ZTRTN="CONS^BQINIGH5",ZTIO=""
+ D ^%ZTLOAD
+ K ZTSK
+ Q
+ ;
+REPT ; Repoint certain alerts
+ ;Influenza A H5N1 -> Influenza Novel A
+ NEW EXN,DN,TYP,DA,IENS
+ S EXN=0
+ F  S EXN=$O(^BQI(90507.7,EXN)) Q:'EXN  D
+ . S DN=0 F  S DN=$O(^BQI(90507.7,EXN,10,DN)) Q:'DN  D
+ .. S TYP=$P(^BQI(90507.7,EXN,10,DN,0),"^",7)
+ .. I TYP="Influenza A H5N1" S TYP="Influenza Novel A" D
+ ... S DA(1)=EXN,DA=DN,IENS=$$IENS^DILF(.DA),UPD(90507.701,IENS,.07)=TYP
+ .. I $D(UPD) D FILE^DIE("","UPD","ERROR")
+ ;
+ S TYP="Influenza A H5N1" D
+ . NEW PRB,DFN,CM,D1,D2,D3,DA,IENS
+ . S PRB="" F  S PRB=$O(^BQI(90507.6,"V",TYP,"P",PRB)) Q:PRB=""  D
+ .. S DFN="" F  S DFN=$O(^BQI(90507.6,"V",TYP,"P",PRB,DFN)) Q:DFN=""  D
+ ... S CM="" F  S CM=$O(^BQI(90507.6,"V",TYP,"P",PRB,DFN,CM)) Q:CM=""  D
+ .... S D1=$O(^BQI(90507.6,"V",TYP,"P",PRB,DFN,CM,""))
+ .... S D2=$O(^BQI(90507.6,"V",TYP,"P",PRB,DFN,CM,D1,""))
+ .... S D3=$O(^BQI(90507.6,"V",TYP,"P",PRB,DFN,CM,D1,D2,""))
+ .... S DA(2)=CM,DA(1)=D1,DA=D2,IENS=$$IENS^DILF(.DA)
+ .... S BQIUP(90507.611,IENS,.01)="Influenza Novel A"
+ .... I $D(BQIUP) D
+ ..... D FILE^DIE("","BQIUP","ERROR")
+ ..... K ^BQI(90507.6,"V",TYP,"P",PRB,DFN,CM,D1,D2,D3)
+ ..... S ^BQI(90507.6,"V","Influenza Novel A","P",PRB,DFN,CM,D1,D2,D3)=""
+ . NEW VIS,DFN,CM,D1,D2,D3,DA,IENS
+ . S VIS="" F  S VIS=$O(^BQI(90507.6,"V",TYP,"V",VIS)) Q:VIS=""  D
+ .. S DFN="" F  S DFN=$O(^BQI(90507.6,"V",TYP,"V",VIS,DFN)) Q:DFN=""  D
+ ... S CM="" F  S CM=$O(^BQI(90507.6,"V",TYP,"V",VIS,DFN,CM)) Q:CM=""  D
+ .... S D1=$O(^BQI(90507.6,"V",TYP,"V",VIS,DFN,CM,""))
+ .... S D2=$O(^BQI(90507.6,"V",TYP,"V",VIS,DFN,CM,D1,""))
+ .... S D3=$O(^BQI(90507.6,"V",TYP,"V",VIS,DFN,CM,D1,D2,""))
+ .... S DA(2)=CM,DA(1)=D1,DA=D2,IENS=$$IENS^DILF(.DA)
+ .... S BQIUP(90507.611,IENS,.01)="Influenza Novel A"
+ .... I $D(BQIUP) D
+ ..... D FILE^DIE("","BQIUP","ERROR")
+ ..... K ^BQI(90507.6,"V",TYP,"V",VIS,DFN,CM,D1,D2,D3)
+ ..... S ^BQI(90507.6,"V","Influenza Novel A","V",VIS,DFN,CM,D1,D2,D3)=""
+ Q
+ ;
+PBREF ;Additional ICD code crossreference
+ NEW PBIEN,PN
+ S ^XTMP("BQIPBICD",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Problem Additional ICD List"
+ S PBIEN=0 F  S PBIEN=$O(^AUPNPROB(PBIEN)) Q:'PBIEN  D
+ . S PN=0 F  S PN=$O(^AUPNPROB(PBIEN,12,"B",PN)) Q:PN=""  S ^XTMP("BQIPBICD",PN,PBIEN)=""
+ Q
+ ;
+URMD ;Update Reminders Default Templates
+ NEW RDUZ,SOR,SDIR,DOR,LYIEN,CRN,CARE
+ S RDUZ=0 F  S RDUZ=$O(^BQICARE(RDUZ)) Q:'RDUZ  D
+ . S DTYP="RE",CRN=$O(^BQI(90506.5,"C",DTYP,"")) I CRN="" Q
+ . S CARE=$P(^BQI(90506.5,CRN,0),U,1)
+ . S SOR=$$SFNC^BQICMVW(),SDIR="A",DOR=$$DFNC^BQICMVW()_$C(29)_$$CDEF^BQICMVW()
+ . S LYIEN=$O(^BQICARE(RDUZ,15,"B","Reminder Notifications Default",""))
+ . D SAV^BQILYDEF(.DATA,RDUZ,LYIEN,"Reminder Notifications Default","RE","",SOR,SDIR,DOR)
+ . ;
+ . S DTYP="CD",CRN=$O(^BQI(90506.5,"C",DTYP,"")) I CRN="" Q
+ . S CARE=$P(^BQI(90506.5,CRN,0),U,1)
+ . S SOR=$$SFNC^BQICMVW(),SDIR="A",DOR=$$DFNC^BQICMVW()_$C(29)_$$CDEF^BQICMVW()
+ . S LYIEN=$O(^BQICARE(RDUZ,15,"B","Consults (DD) Default",""))
+ . D SAV^BQILYDEF(.DATA,RDUZ,LYIEN,"Consults (DD) Default","CD","",SOR,SDIR,DOR)
+ . ;
+ . S DTYP="SU",CRN=$O(^BQI(90506.5,"C",DTYP,"")) I CRN="" Q
+ . S CARE=$P(^BQI(90506.5,CRN,0),U,1)
+ . S SOR=$$SFNC^BQICMVW(),SDIR="A",DOR=$$DFNC^BQICMVW()_$C(29)_$$CDEF^BQICMVW()
+ . S LYIEN=$O(^BQICARE(RDUZ,15,"B","Suicide Management Default",""))
+ . D SAV^BQILYDEF(.DATA,RDUZ,LYIEN,"Suicide Management Default","SU","ADD",SOR,SDIR,DOR)
+ . ;
+ . S DTYP="R",CRN=$O(^BQI(90506.5,"C",DTYP,"")) I CRN="" Q
+ . S CARE=$P(^BQI(90506.5,CRN,0),U,1)
+ . S DOR=$$RDEF^BQIRMPL(),SOR=$$SFNC^BQIPLVW(),SDIR="A"
+ . S LYIEN=$O(^BQICARE(RDUZ,15,"B","Reminders Default",""))
+ . D SAV^BQILYDEF(.DATA,RDUZ,LYIEN,"Reminders Default","R","",SOR,SDIR,DOR)
+ . ; Look for customized
+ . S RPLN=0 F  S RPLN=$O(^BQICARE(RDUZ,1,RPLN)) Q:'RPLN  D
+ .. NEW RCSTN,RMTN,RCOD,RNCD,RNNC,SDUZ
+ .. S RCSTN=0,RCSTN=$O(^BQICARE(RDUZ,1,RPLN,23,"B","Reminder Notifications",RCSTN)) I RCSTN="" Q
+ .. F RCOD="RE_006","RE_005","RE_004","RE_003","RE_002" D
+ ... S RMTN=$O(^BQICARE(RDUZ,1,RPLN,23,RCSTN,1,"B",RCOD,"")) Q:RMTN=""
+ ... S RNNC="RE_"_"00"_($P(RCOD,"_",2)+1)
+ ... K ^BQICARE(RDUZ,1,RPLN,23,RCSTN,1,"B",RCOD)
+ ... S ^BQICARE(RDUZ,1,RPLN,23,RCSTN,1,"B",RNNC,RMTN)="",$P(^BQICARE(RDUZ,1,RPLN,23,RCSTN,1,RMTN,0),"^",1)=RNNC
+ .. S RMTN=$O(^BQICARE(RDUZ,1,RPLN,23,RCSTN,1,"B"),-1)
+ .. F RNNC="REMCODE","HIDE_REMCODE","HIDE_REMMETH" D
+ ... I $D(^BQICARE(RDUZ,1,RPLN,23,RCSTN,1,"B",RNNC)) Q
+ ... S RMTN=RMTN+1,^BQICARE(RDUZ,1,RPLN,23,RCSTN,1,"B",RNNC,RMTN)="",$P(^BQICARE(RDUZ,1,RPLN,23,RCSTN,1,RMTN,0),"^",1)=RNNC
+ .. S $P(^BQICARE(RDUZ,1,RPLN,23,RCSTN,0),"^",3)=RMTN,$P(^BQICARE(RDUZ,1,RPLN,23,RCSTN,0),"^",4)=RMTN
+ .. S SDUZ=0 F  S SDUZ=$O(^BQICARE(RDUZ,1,RPLN,30,SDUZ)) Q:'SDUZ  D
+ ... S RCSTN=0,RCSTN=$O(^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,"B","Reminder Notifications",RCSTN)) I RCSTN="" Q
+ ... F RCOD="RE_006","RE_005","RE_004","RE_003","RE_002" D
+ .... S RMTN=$O(^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,RCSTN,1,"B",RCOD,"")) Q:RMTN=""
+ .... S RNNC="RE_"_"00"_($P(RCOD,"_",2)+1)
+ .... K ^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,RCSTN,1,"B",RCOD)
+ .... S ^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,RCSTN,1,"B",RNNC,RMTN)="",$P(^BQICARE(RDUZ,1,RPLN,23,RCSTN,1,RMTN,0),"^",1)=RNNC_"^"_RMTN
+ ... S RMTN=$O(^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,RCSTN,1,"B"),-1)
+ ... F RNNC="REMCODE","HIDE_REMCODE","HIDE_REMMETH" D
+ .... I $D(^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,RCSTN,1,"B",RNNC)) Q
+ .... S RMTN=RMTN+1,^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,RCSTN,1,"B",RNNC,RMTN)="",$P(^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,RCSTN,1,RMTN,0),"^",1)=RNNC_"^"_RMTN
+ ... S $P(^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,RCSTN,0),"^",3)=RMTN,$P(^BQICARE(RDUZ,1,RPLN,30,SDUZ,23,RCSTN,0),"^",4)=RMTN
+ Q
+ ;
+ORDT ; Start/Stop Dates
+ NEW BGDT,ORN,ORSTDT,ORSPDT
+ S BGDT=$$DATE^BQIUL1("T-36M"),BGDT=BGDT-.0001
+ F  S BGDT=$O(^OR(100,"AF",BGDT)) Q:BGDT=""  D
+ . S ORN="" F  S ORN=$O(^OR(100,"AF",BGDT,ORN)) Q:ORN=""  D
+ .. S ORSTDT=$P(^OR(100,ORN,0),"^",8),ORSPDT=$P(^(0),"^",9)
+ .. I ORSTDT'="" S ^XTMP("BQIORSTDT",ORSTDT,ORN)=""
+ .. I ORSPDT'="" S ^XTMP("BQIORSPDT",ORSPDT,ORN)=""
+ S ^XTMP("BQIORSTDT",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Order Start Date"
+ S ^XTMP("BQIORSPDT",0)=$$FMADD^XLFDT(DT,365)_U_DT_U_"Order Stop Date"
+ Q
+ ;
+PREDM ; Set to NLV (no longer valid, PreDM Metabolic Syndrome
+ F BQITAG=11 D
+ . S THCFL=+$P(^BQI(90506.2,BQITAG,0),U,10)
+ . S RIEN=""
+ . F  S RIEN=$O(^BQIREG("B",BQITAG,RIEN)) Q:RIEN=""  D
+ .. S RSTAT=$P(^BQIREG(RIEN,0),U,3),BQIDFN=$P(^BQIREG(RIEN,0),"^",2)
+ .. ; If status is Not Accepted or No Longer Valid or Superceded, quit
+ .. I RSTAT="N"!(RSTAT="V")!(RSTAT="S") Q
+ .. ; if the current status is 'Proposed', move the factors before setting the
+ .. ; current status to 'No Longer Valid' or 'Superseded'
+ .. I RSTAT="P" D MOV^BQITDPRC(BQIDFN,BQITAG)
+ .. S MESG="PreDM LOGIC UPDATE"
+ .. D EN^BQITDPRC(.TGDATA,BQIDFN,BQITAG,"V",,MESG,3)
+ ;
+NOT ;Send notification if a panel is using PreDM Metabolic Syndrome
+ NEW PDZ,PL,DN,DCAT,CT,BTEXT,PLNM
+ S PDZ=0 F  S PDZ=$O(^BQICARE(PDZ)) Q:'PDZ  D
+ . S PL=0,CT=2 K BTEXT
+ . S BTEXT(1,0)="The PreDM Metabolic Syndrome tag has changed.  You may need to "
+ . S BTEXT(2,0)="update the following panels which use PreDM Metabolic Syndrome in the"
+ . S BTEXT(3,0)="panel definition."_$C(10)_$C(13)
+ . F  S PL=$O(^BQICARE(PDZ,1,PL)) Q:'PL  D
+ .. S DN=$O(^BQICARE(PDZ,1,PL,15,"B","DXCAT","")) I DN="" Q
+ .. S DCAT=$P(^BQICARE(PDZ,1,PL,15,DN,0),"^",3)
+ .. I DCAT'=11 Q
+ .. S PLNM=$P(^BQICARE(PDZ,1,PL,0),"^",1)
+ .. S CT=CT+1,BTEXT(CT,0)="     Panel:  "_PLNM_$C(10)_$C(13)
+ . I CT>2 D ADD^BQINOTF("",PDZ_$C(28),"Correct Panel Definitions",.BTEXT,1)
+ Q
+ ;
+UTAG ;Update Tags
+ NEW ZTDTH,ZTDESC,ZTRTN,ZTIO,ZTSAVE,NOW
+ S ZTDTH=$$FMADD^XLFDT($$NOW^XLFDT(),,,15)
+ S ZTDESC="Update Tags",ZTRTN="TAG^BQI29P7",ZTIO=""
+ D ^%ZTLOAD
+ K ZTDESC,ZTRTN,ZTIO,ZTDTH,ZTSK
+ Q
+ ;
+TAG ;EP
+ NEW TAG
+ S TAG="Metabolic Syndrome" D EN^BQITASK4(TAG)
+ K BQQN,BQQY,CD,DATE,DIE,ENDT,EXDT,I,MFL,NDA,QFL,STDT,TAG
+ S TAG="PreDiabetes" D EN^BQITASK4(TAG)
+ K BQQN,BQQY,CD,DATE,DIE,ENDT,EXDT,I,MFL,NDA,QFL,STDT,TAG
+ Q
+ ;
+GLS ;Update glossary
+ NEW GN,GNM,GSN,BQIUPD
+ S GN=0
+ F  S GN=$O(^BQI(90509.9,GN)) Q:'GN  D
+ . S GNM=$P(^BQI(90509.9,GN,0),U,1)
+ . S GSN=$O(^BQI(90508.2,"B",GNM,"")) Q:GSN=""
+ . S BQIUPD(90508.2,GSN_",",1)="@"
+ . D FILE^DIE("","BQIUPD","ERROR")
+ . M ^BQI(90508.2,GSN,1)=^BQI(90509.9,GN,1)
+ Q

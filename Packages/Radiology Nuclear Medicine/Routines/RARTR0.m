@@ -1,5 +1,5 @@
-RARTR0 ;HISC/GJC-Queue/Print Radiology Rpts utility routine. ; 06 Oct 2013  11:06 AM
- ;;5.0;Radiology/Nuclear Medicine;**8,26,74,84,99,1003,1005**;Nov 01, 2010;Build 13
+RARTR0 ;HISC/GJC IHS/OIT/BT - Queue/Print Radiology Rpts utility routine. ; 15 Nov 2022  12:10 PM
+ ;;5.0;Radiology/Nuclear Medicine;**8,26,74,84,99,1003,1005,1010**;Nov 01, 2010;Build 13
  ; 06/28/2006 BAY/KAM Remedy Call 146291 - Change Patient Age to DOB
  ;
  ;Integration Agreements
@@ -141,7 +141,7 @@ HEAD ; Set up header info for e-mail message (called from INIT^RARTR)
  S RATPHY=$$ATND^RAUTL5(RADFN,DT),RAPRIPHY=$$PRIM^RAUTL5(RADFN,DT)
  S RAILOC=$$XTERNAL^RAUTL5($P(RAY2,"^",4),$P($G(^DD(70.02,4,0)),"^",2))
  S:RAILOC']"" RAILOC="Unknown" S:RASERV']"" RASERV="Unknown"
- S RANME=$E(RANME,1,20)_"  "
+ S RANME=RANME_"  "
  ;IHS/BJI/DAY - Patch 1003 - Continue Chris Saddler 2003 patch
  ;Use standard call for SSN, and remove SSN formatting
  ;S RASSN=$E(RASSN,1,3)_"-"_$E(RASSN,4,5)_"-"_$E(RASSN,6,9)_"    "
@@ -163,7 +163,11 @@ HEAD ; Set up header info for e-mail message (called from INIT^RARTR)
  S RASPACE="",$P(RASPACE," ",(42-$L(RAPRIPHY)))=""
  S RAPRIPHY=RAPRIPHY_RASPACE
  S RASERV="Service: "_$E(RASERV,1,30)
- S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=RANME_RASSN_RAGE_RACSE
+ I $L(RANME)<23 S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=RANME_RASSN_RAGE_RACSE
+ I $L(RANME)>22 D
+ . S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=RANME_RASSN_RAGE
+ . S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))="    "_RACSE
+ . Q
  S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=RAREQPHY_RAPTLOC
  S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=RATPHY_RAILOC
  S ^TMP($J,"RA AUTOE",$$INCR^RAUTL4(RAACNT))=RAPRIPHY_RASERV

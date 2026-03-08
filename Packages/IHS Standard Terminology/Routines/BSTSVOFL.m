@@ -1,5 +1,5 @@
 BSTSVOFL ;GDIT/HS/BEE-Standard Terminology Version/Update Overflow Routine ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;**1**;Dec 01, 2016;Build 36
+ ;;2.0;IHS STANDARD TERMINOLOGY;**1,3,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
@@ -10,7 +10,7 @@ FPARMS() ;Return the version/update failover parameters
  ;
  NEW SITE,SIEN,MFAIL,FWAIT,FOUND,BSTSWS
  ;
- ;Start with default values
+ ;Start with defaults
  S MFAIL=10,FWAIT=7200
  S (FOUND,SITE)=0 F  S SITE=$O(^BSTS(9002318,SITE)) Q:'SITE  S SIEN=0 F  S SIEN=$O(^BSTS(9002318,SITE,1,SIEN)) Q:'SIEN  D  I FOUND Q
  . NEW WIEN,IENS,DA
@@ -28,46 +28,69 @@ FPARMS() ;Return the version/update failover parameters
  ;
 NVLKP(MFAIL,FWAIT) ;Process NDC and VUID lookups - called by BSTSVRSN
  ;
- NEW ITEM,STS,ABORT
+ NEW ITEM,STS,ABORT,ENTRY,NV,NITEM,VITEM,DITEM
  ;
- S STS=0
+ S (NITEM,VITEM,DITEM)=0
+ S STS=1
+ ;
+ S ENTRY=$P($G(^XTMP("BSTSLCMP","UPD")),U,7)
+ S NV=$S(ENTRY]"":$E(ENTRY,1),1:"")
+ S:NV="V" VITEM=+$E(ENTRY,2,999)
+ S:NV="N" NITEM=+$E(ENTRY,2,999)
+ S:NV="D" DITEM=+$E(ENTRY,2,999)
  ;
  ;ReLoad VUID
- S (ABORT,ITEM)=0 F  S ITEM=$O(^PSNDF(50.68,ITEM)) Q:'ITEM  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
+ I (NV="V")!(NV="") S ABORT=0,ITEM=VITEM F  S ITEM=$O(^PSNDF(50.68,ITEM)) Q:'ITEM  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
  . NEW VUID,VAR,FCNT,TRY
- . S VUID=$P($G(^PSNDF(50.68,ITEM,"VUID")),U) Q:VUID=""
+ . S VUID=$P($G(^PSNDF(50.68,ITEM,"VUID")),U) I VUID="" D TRK("V",ITEM) Q
  . S ^XTMP("BSTSLCMP","STS")="Refreshing VUID entry: "_VUID
  . ;
  . ;Retrieve from server - Hang max of 12 times
- . S (FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS=2!(STS="0^") Q
+ . S (FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS=2!(STS="0^")!($D(^XTMP("BSTSLCMP","QUIT"))) Q
  .. D RESET^BSTSWSV1 ;Make sure link is on
- .. S STS=$$DILKP^BSTSAPI("VAR",VUID_"^V^2^^1") I +STS=2!(STS="0^") Q
+ .. S STS=$$DILKP^BSTSAPI("VAR",VUID_"^V^2^^1") I +STS=2!(STS="0^")!($D(^XTMP("BSTSLCMP","QUIT"))) Q
  .. S FCNT=FCNT+1 I FCNT'<MFAIL D  ;Fail handling
  ... S ABORT=$$FAIL(MFAIL,FWAIT,TRY,"NVLKP^BSTSVOFL - VUID: "_VUID)
  ... I ABORT=1 S ^XTMP("BSTSLCMP","QUIT")=1 D ELOG^BSTSVOFL("SUBSET REFRESH FAILED ON VUID LOOKUP: "_VUID)
  ... S FCNT=0
+ . I '$D(^XTMP("BSTSLCMP","QUIT")) D TRK("V",ITEM)
  ;
  ;Check for failure
  I $D(^XTMP("BSTSLCMP","QUIT")) Q 0
  ;
  ;Load NDC values
- I $D(^XTMP("BSTSLCMP","QUIT")) Q 0
- S ITEM=0 F  S ITEM=$O(^PSNDF(50.68,ITEM)) Q:'ITEM  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
+ I (NV'="D") S STS=1,ITEM=NITEM F  S ITEM=$O(^PSNDF(50.68,ITEM)) Q:'ITEM  D  Q:$D(^XTMP("BSTSLCMP","QUIT"))
  . NEW NDC,VAR,FCNT,TRY
- . S NDC=$P($G(^PSNDF(50.68,ITEM,1)),U,7) Q:NDC=""
+ . S NDC=$P($G(^PSNDF(50.68,ITEM,1)),U,7) I NDC="" D TRK("N",ITEM) Q
  . I $L(NDC)>11,$E(NDC,1)="0" S NDC=$E(NDC,2,99)
  . S ^XTMP("BSTSLCMP","STS")="Refreshing NDC entry: "_NDC
  . ;
- . ;Retrieve from server - Hang max of 12 times
- . S (FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS=2!(STS="0^") Q
+ . ;Retrieve from server - Hang max 12 times
+ . S (FCNT,STS)=0 F TRY=1:1:(12*MFAIL) D  I +STS=2!(STS="0^")!($D(^XTMP("BSTSLCMP","QUIT"))) Q
  .. D RESET^BSTSWSV1 ;Make sure link is on
- .. S STS=$$DILKP^BSTSAPI("VAR",NDC_"^N^2^^1") I +STS=2!(STS="0^") Q
+ .. S STS=$$DILKP^BSTSAPI("VAR",NDC_"^N^2^^1") I +STS=2!(STS="0^")!($D(^XTMP("BSTSLCMP","QUIT"))) Q
  .. S FCNT=FCNT+1 I FCNT'<MFAIL D  ;Fail handling
  ... S ABORT=$$FAIL(MFAIL,FWAIT,TRY,"NVLKP^BSTSVOFL - NDC: "_NDC)
  ... S ABORT=1 S ^XTMP("BSTSLCMP","QUIT")=1 D ELOG^BSTSVOFL("SUBSET REFRESH FAILED ON NDC LOOKUP: "_NDC)
  ... S FCNT=0 ;Fail handling
+ . I '$D(^XTMP("BSTSLCMP","QUIT")) D TRK("N",ITEM)
  ;
- Q +STS
+ ;Check for failure
+ I $D(^XTMP("BSTSLCMP","QUIT")) Q 0
+ ;
+ ;Process ORDERABLE ITEM
+ S STS=$$DNDC^BSTSVUP0(DITEM,FWAIT,MFAIL)
+ ;
+ ;Check for failure
+ I $D(^XTMP("BSTSLCMP","QUIT"))!(STS=0) Q 0
+ ;
+ Q 1
+ ;
+TRK(TYPE,IEN) ;
+ ;
+ S $P(^XTMP("BSTSLCMP","UPD"),U,7)=TYPE_IEN
+ ;
+ Q
  ;
 SBRSET ;EP - BSTS REFRESH SUBSETS option
  ;
@@ -82,7 +105,10 @@ SBRSET ;EP - BSTS REFRESH SUBSETS option
  W !,"allows custom codeset mappings to be refreshed with current mappings available"
  W !,"through DTS."
  ;
- W !
+ I +$O(^XTMP("BSTSPROCQ",0)) D
+ . W !!,"There are currently update processes queued to run. These processes will run"
+ . W !,"before this process starts.",!
+ ;
  S DIR("A")="Are you sure you want to do this"
  S DIR("B")="NO"
  S DIR(0)="Y"
@@ -99,7 +125,7 @@ SBRSET ;EP - BSTS REFRESH SUBSETS option
  S DIR(0)=DIR(0)_";32774:IHS Med Route"
  S DIR(0)=DIR(0)_";32775:CPT Meds with Maps"
  S DIR(0)=DIR(0)_";32777:SNOMED CT ICD-10 Auto and Conditional Mappings and Equivalencies"
- S DIR(0)=DIR(0)_";32778:SNOMED CT to ICD-9-CM Auto-Codeables"
+ ;S DIR(0)=DIR(0)_";32778:SNOMED CT to ICD-9-CM Auto-Codeables"
  ;
  S DIR("B")="SNOMED CT US Extension Subsets"
  ;
@@ -126,19 +152,18 @@ SBRSET ;EP - BSTS REFRESH SUBSETS option
  D ^DIR I $D(DIRUT) Q
  I '+Y Q
  ;
- ;Remove the LAST SUBSET CHECK date or LAST VERSION CHECK date
+ ;Remove LAST SUBSET CHECK date or LAST VERSION CHECK date
 CALL I (NMID=1552)!(NMID=36) S:((SBNAME="")!(SBNAME="ALL")) BSTS(9002318.1,NMIEN_",",.1)="@" I 1
  E  S BSTS(9002318.1,NMIEN_",",.05)="@"
  I $D(BSTS)'<10 D FILE^DIE("","BSTS","ERR")
  ;
- W !!,"Kicking off background process to refresh local cache subsets/mappings"
  I NMID=36 D  I 1  ;Subsets
- . I SBNAME="ALL" D SCHK^BSTSVRSN(NMID) Q  ;Process all
+ . I SBNAME="ALL" D QUEUE^BSTSVOFL(NMID) ;D SCHK^BSTSVRSN(NMID) Q  ;Process all
  . D ISCHK^BSTSVOF1(SBNAME) ;Process one subset
- E  I NMID=1552 D SCHK^BSTSVRXN(NMID) I 1
- E  I NMID=32777 D ACHK^BSTSVRSC(NMID) I 1 ;'36' Auto-codeable ICD-10s
- E  I NMID=32778 D A9CHK^BSTSVRSC(NMID) I 1 ;'36' Auto-codeable ICD-9s
- E  D CCHK^BSTSVRSC(NMID) ;Custom codesets
+ E  I NMID=1552 D QUEUE^BSTSVOFL(NMID) I 1 ;D SCHK^BSTSVRXN(NMID) I 1
+ E  I NMID=32777 D QUEUE^BSTSVOFL(NMID) I 1 ;D ACHK^BSTSVRSC(NMID) I 1 ;'36' Auto-codeable ICD-10s
+ E  I NMID=32778 ;D A9CHK^BSTSVRSC(NMID) I 1 ;'36' Auto-codeable ICD-9s - Not in use
+ E  D QUEUE^BSTSVOFL(NMID) ;D CCHK^BSTSVRSC(NMID) ;Custom codesets
  H 2
  ;
  ;Log call
@@ -150,6 +175,10 @@ CALL I (NMID=1552)!(NMID=36) S:((SBNAME="")!(SBNAME="ALL")) BSTS(9002318.1,NMIEN
  S ^XTMP("BSTSPROCQ","M","B",NMID,QUEUE)=""
  S ^XTMP("BSTSPROCQ","M","D",%,QUEUE)=""
  L -^XTMP("BSTSPROCQ","M")
+ ;
+ ;Kick off the call
+ D START^BSTSSTA
+ ;
  Q
  ;
 FAIL(MFAIL,FWAIT,TRY,MESSAGE) ;DTS Connection/Error Handling
@@ -163,7 +192,7 @@ FAIL(MFAIL,FWAIT,TRY,MESSAGE) ;DTS Connection/Error Handling
  ;
  S HFATMPT=TRY\MFAIL
  ;
- ;If reached maximum log error in error trap
+ ;If reached maximum log error
  I HFATMPT'<12 D  Q 1
  . NEW %ERROR,%MESSAGE,IEN,IENS,DA
  . S EXEC="S $"_"ZE=""<DTS CONNECTION ERROR - Contact BSTS Support>""" X EXEC
@@ -174,7 +203,7 @@ FAIL(MFAIL,FWAIT,TRY,MESSAGE) ;DTS Connection/Error Handling
  ;Log entry
  D ELOG(MESSAGE)
  ;
- ;For first 6 tries - only hang for 5 minutes
+ ;For first 6 tries-only hang for 5 minutes
  I HFATMPT<7 H 300
  E  H FWAIT
  ;
@@ -201,7 +230,7 @@ ELOG(MSG) ;Log entry in web service log
  .. S IEN=$$GET1^DIQ(9002318.01,IENS,".01","I")
  I IEN="" Q
  ;
- ;Create new entry
+ ;Create new
  D NOW^%DTC
  S DIC(0)="L",DA(1)=IEN
  S DIC="^BSTS(9002318.2,"_DA(1)_",5,"
@@ -212,7 +241,7 @@ ELOG(MSG) ;Log entry in web service log
  L -^BSTS(9002318.2,IEN,5,0)
  I +Y<0 Q
  ;
- ;File message
+ ;File
  I MSG="" Q
  S MSG=$TR(MSG,"^","~")
  S DA=+Y,IENS=$$IENS^DILF(.DA)
@@ -221,34 +250,14 @@ ELOG(MSG) ;Log entry in web service log
  ;
  Q
  ;
-JBTIME(TOM) ;Calculate job time
- ;
- ;TOM - (1) If after 6 PM already schedule for tomorrow
- S TOM=$G(TOM)
- ;
- NEW %,TIME
- ;
- D NOW^%DTC
- ;
- ;After 6 PM
- I +$E($P(%,".",2),1,2)'<18 D  Q TIME
- . I 'TOM S TIME=$$FMADD^XLFDT($$NOW^XLFDT(),,,2) Q
- . NEW X1,X2,X
- . S X1=$P(%,"."),X2=1 D C^%DTC
- . S TIME=X_".180200"
- ;
- ;Return 6:02 PM
- Q DT_".180200"
- Q
- ;
  ;Background processing
 QUEUE(TYPE) ;Schedule Background process
  ;
  NEW TAGRTN,NMIEN,NMID,ZTSK,FIELD,ONMIEN
  ;
- ;BSTS*1.0*8;Added S1552 subsets
  ;Determine process
  S ONMIEN=""
+ ;GDIT/HS/BEE;FEATURE#123647;Added CVX
  I TYPE=32778 S TAGRTN="A9CODE^BSTSVRSC",NMID=32778
  E  I TYPE=32777 S TAGRTN="ACODE^BSTSVRSC",NMID=32777
  E  I TYPE=32779 S TAGRTN="ACODE^BSTSVRSC",NMID=32777,ONMIEN=32779  ;BSTS*1.0*6;Added conditionals
@@ -258,10 +267,14 @@ QUEUE(TYPE) ;Schedule Background process
  E  I TYPE=36 S TAGRTN="RES^BSTSVRSN:"_TYPE,NMID=36
  E  I TYPE=5180 S TAGRTN="RES^BSTSVRSN:"_TYPE,NMID=5180
  E  I TYPE=1552 S TAGRTN="RES^BSTSVRSN:"_TYPE,NMID=1552
+ E  I TYPE=5190 S TAGRTN="RES^BSTSVRSN:"_TYPE,NMID=5190
  E  I TYPE="ICD" S TAGRTN="JOB^BSTSUTIL",NMID=36
  E  I TYPE="PRG" S TAGRTN="EPURGE^BSTSVOFL",NMID=36
  E  I TYPE="STS" S TAGRTN="STATUS^BSTSAPIL",NMID=36
- E  I TYPE'="PRG",TYPE'="S36",TYPE'="S1552",TYPE'="ICD",TYPE'=32779,TYPE'=32780,TYPE'=32778,TYPE'=32777,TYPE'=36,TYPE'=5180,TYPE'=1552 S TAGRTN="CDST^BSTSVRSC:"_TYPE,NMID=TYPE
+ E  I TYPE=32781 S TAGRTN="RES^BSTSVRSN:1552",NMID=1552,ONMIEN=32781
+ E  I TYPE=32782 S TAGRTN="RES^BSTSVRSN:5190",NMID=5190,ONMIEN=32782
+ E  I TYPE=32783 S TAGRTN="RES^BSTSVRSN:36",NMID=36,ONMIEN=32783
+ E  I TYPE'="PRG",TYPE'="S36",TYPE'="S1552",TYPE'="ICD",TYPE'=32779,TYPE'=32780,TYPE'=32778,TYPE'=32777,TYPE'=36,TYPE'=5180,TYPE'=1552,TYPE'=5190 S TAGRTN="CDST^BSTSVRSC:"_TYPE,NMID=TYPE
  E  Q
  ;
  ;Get NMIEN,ONMIEN
@@ -277,6 +290,8 @@ QUEUE(TYPE) ;Schedule Background process
  ;
  ;Quit if already scheduled
  I $D(^XTMP("BSTSPROCQ","B",TAGRTN)) Q
+ I TAGRTN="RES^BSTSVRSN:36",$D(^XTMP("BSTSPROCQ","B","ACODE^BSTSVRSC")) Q
+ I TAGRTN="ACODE^BSTSVRSC",$D(^XTMP("BSTSPROCQ","B","RES^BSTSVRSN:36")) Q
  ;
  ;Put entry in queue
  D QENTRY(TAGRTN,NMIEN,TYPE)
@@ -325,7 +340,7 @@ JOB(DTIME,OVR) ;Job off background process
  S ZTRTN="PROC^BSTSVOFL",ZTDESC="BSTS - Background Process Handling"
  I $G(DTIME)]"" S ZTDTH=DTIME
  I $G(DTIME)="" D
- . S ZTDTH=$$JBTIME^BSTSVOFL()  ;Job after 6 PM
+ . S ZTDTH=$$JBTIME^BSTSUTL0(1)  ;Job off the process
  D ^%ZTLOAD
  ;
  Q $G(ZTSK)
@@ -338,7 +353,7 @@ JOBNOW ;Job off background process now
 PROC ;BSTS Background Process Front End
  ;
  ;Perform lock
- L +^XTMP("BSTSPROCQ",1):1 E  Q
+ L +^XTMP("BSTSPROCQ",1):60 E  Q
  ;
  ;Reset quit flags
  K ^XTMP("BSTSPROCQ","QUIT")
@@ -360,11 +375,12 @@ PROC ;BSTS Background Process Front End
  .. L +^TMP("BSTSICD2SMD"):1 E  Q
  .. L -^TMP("BSTSICD2SMD")
  .. ;
+ .. ;BSTS*2.0*3;Always run the process now
  .. ;Check time, only start between 6 PM and 3 AM
- .. I +$G(BSTSOVR) S CANRUN=1 Q  ;Look for override (defined in job call)
- .. D NOW^%DTC
- .. S TIME=+$E($P(%,".",2),1,2)
- .. I TIME>3,TIME<18 Q
+ .. ;I +$G(BSTSOVR) S CANRUN=1 Q  ;Look for override (defined in job call)
+ .. ;D NOW^%DTC
+ .. ;S TIME=+$E($P(%,".",2),1,2)
+ .. ;I TIME>3,TIME<18 Q
  .. S CANRUN=1
  . ;
  . ;Handle quits
@@ -383,7 +399,9 @@ PROC ;BSTS Background Process Front End
  . ;
  . ;Make call
  . D DT^DICRW ;Refresh DT since could be run overnight
- . D EN^XBNEW(TAGRTN,"NMIEN")
+ . I TAGRTN="" S ^XTMP("BSTSPROCQ",QUEUE,"ERROR")="NO TAG/RTN"
+ . E  D EN^XBNEW(TAGRTN,"NMIEN")
+ . ;
  . D NOW^%DTC
  . L -^BSTS(9002318.1,0) ;Make sure locks released
  . L -^TMP("BSTSICD2SMD")
@@ -393,16 +411,17 @@ PROC ;BSTS Background Process Front End
  .. NEW ZTSK,X1,X2,X
  .. S ^XTMP("BSTSPROCQ",QUEUE,"ABORT")=%
  .. S X1=DT,X2=1 D C^%DTC
- .. S ZTSK=$$JOB($$JBTIME(1))  ;On fail reschedule
+ .. S ZTSK=$$JOB($$JBTIME^BSTSUTL0(1))  ;On fail reschedule
  . ;
  . ;Log success
  . D NOW^%DTC
  . S ^XTMP("BSTSPROCQ",QUEUE,"END")=%
  . S ^XTMP("BSTSPROCQ","PD",%,QUEUE)=""
- . S ^XTMP("BSTSPROCQ","PP",OTAGRTN,QUEUE)=""
  . M ^XTMP("BSTSPROCQ","P",QUEUE)=^XTMP("BSTSPROCQ",QUEUE)
- . S QIEN="" F  S QIEN=$O(^XTMP("BSTSPROCQ","B",OTAGRTN,QIEN)) Q:QIEN=""  K ^XTMP("BSTSPROCQ",QIEN)
- . K ^XTMP("BSTSPROCQ","B",OTAGRTN)
+ . I $G(OTAGRTN)]"" D
+ .. S QIEN="" F  S QIEN=$O(^XTMP("BSTSPROCQ","B",OTAGRTN,QIEN)) Q:QIEN=""  K ^XTMP("BSTSPROCQ",QIEN)
+ .. K ^XTMP("BSTSPROCQ","B",OTAGRTN)
+ .. S ^XTMP("BSTSPROCQ","PP",OTAGRTN,QUEUE)=""
  ;
  ;Look for concepts that need updated
  I '$D(^XTMP("BSTSLCMP","QUIT")),'$D(^XTMP("BSTSPROCQ","QUIT")),$O(^XTMP("BSTSPROCQ","C",""))]"" D UPCNC^BSTSVOF1
@@ -421,40 +440,6 @@ PROC ;BSTS Background Process Front End
  ;
 EPURGE ;Purge BSTS WEB SERVICE ENDPOINT Error Responses
  ;
- NEW SITE,SIEN
- ;
- S SITE=0 F  S SITE=$O(^BSTS(9002318,SITE)) Q:'SITE  S SIEN=0 F  S SIEN=$O(^BSTS(9002318,SITE,1,SIEN)) Q:'SIEN  D
- . NEW WIEN,IENS,DA,EDATE,QUIT,KPDATE,X1,X2,X,DAYS
- . ;
- . ;Get the pointer to the web service entry
- . S DA(1)=SITE,DA=SIEN,IENS=$$IENS^DILF(.DA)
- . S WIEN=$$GET1^DIQ(9002318.01,IENS,".01","I") Q:WIEN=""
- . ;
- . ;Get the days to keep on file
- . S DAYS=$$GET1^DIQ(9002318.01,IENS,".03","I") S:DAYS="" DAYS=14
- . S X1=DT,X2=-DAYS D C^%DTC S KPDATE=X
- . ;
- . ;Loop through response errors
- . S QUIT=0,EDATE="" F  S EDATE=$O(^BSTS(9002318.2,WIEN,5,"B",EDATE)) Q:'EDATE!QUIT  D
- .. ;
- .. NEW PIEN,DA,DIK
- .. ;
- .. ;Check date
- .. I EDATE>KPDATE S QUIT=1 Q
- .. ;
- .. ;Purge
- .. S PIEN="" F  S PIEN=$O(^BSTS(9002318.2,WIEN,5,"B",EDATE,PIEN)) Q:PIEN=""  D
- ... S DA(1)=WIEN,DA=PIEN,DIK="^BSTS(9002318.2,"_DA(1)_",5," D ^DIK
- . ;
- . ;Also clean out these calls from background log
- . S IENS="" F  S IENS=$O(^XTMP("BSTSPROCQ","PP","EPURGE^BSTSVOFL",IENS)) Q:IENS=""  D
- .. NEW END
- .. S END=$G(^XTMP("BSTSPROCQ","P",IENS,"START")) Q:END=""
- .. I END>KPDATE Q
- .. ;
- .. ;Purge
- .. K ^XTMP("BSTSPROCQ","PP","EPURGE^BSTSVOFL",IENS)
- .. K ^XTMP("BSTSPROCQ","PD",END,IENS)
- .. K ^XTMP("BSTSPROCQ","P",IENS)
+ D EPURGE^BSTSVUP0
  ;
  Q

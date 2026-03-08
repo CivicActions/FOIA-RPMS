@@ -1,7 +1,6 @@
-XMUT5Q1 ;(WASH ISC)/CAP-Delivery Queue Analysis (start/init) ;04/17/2002  12:02
- ;;8.0;MailMan;;Jun 28, 2002
- ; Entry points used by MailMan options (not covered by DBIA):
- ; OPTION   XMMGR-DELIVERY-STATS-COLL
+XMUT5Q1 ;(WASH ISC)/CAP - DELIVERY QUEUE ANALYSIS (START/INIT) ;10/6/92  16:30
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;;Jun 02, 1994
  ;
  ;R array is for responses
  ;M array is for messages
@@ -31,7 +30,7 @@ XMUT5Q1 ;(WASH ISC)/CAP-Delivery Queue Analysis (start/init) ;04/17/2002  12:02
  ;
 2 R !!,"How many times do you want to analyze the message delivery queue: 4//",X:DTIME I X="" S XMUT5F=0 G GO
  I X["?" W !,"The analysis will be automatically rescheduled this number of times." G 2
- I X'?1.N!(X>9999999) W $C(7),!,"Type in a number between 0 and 9999999." G 2
+ I X'?1.N!(X>9999999) W *7,!,"Type in a number between 0 and 9999999." G 2
  S XMUT5F=X
  ;
 TASKED ;Don't queue task if $D(XMUT5NO)
@@ -57,8 +56,7 @@ QUIT ;End process
  G QUIT^XMUT5Q
 NOTASK ;Run in foreground once
  G NOTASK^XMUT5Q
-OPTION ;
- D ^XMUT5B,REC^XMUT5Q
+OPTION D ^XMUT5B,REC^XMUT5Q
  I $D(ZTQUEUED) S ZTRTN="OPTION^XMUT5Q1" D GO^XMUT5Q S ZTREQ="@" Q
  W !!,"Stats collected.  If you would like them to be collected automatically",!
  W !,"every 1/2 hour, please schedule this option via TaskMan.",!!

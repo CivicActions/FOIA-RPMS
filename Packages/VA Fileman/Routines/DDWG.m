@@ -1,5 +1,6 @@
-DDWG ;SFISC/MKO-GOTO ;3:40 PM  5 Jul 1996
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDWG ;SFISC/MKO-GOTO ;09:03 AM  23 Jun 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 GOTO ;Go to a specific location
  N DDWANS,DDWI,DDWHLP
@@ -81,14 +82,16 @@ PROMPT ;Issue read
  D CUP(DDWMR-DDWLC+1,1) W DDWS_$P(DDGLCLR,DDGLDEL)
  D EN^DIR0(IOTM+DDWMR-DDWLC-1,$L(DDWS),DDWLEN,1,$G(DDWDEF),245,"","","AKTW",.DDWX,.DDWCOD)
  ;
- I DDWX?1."?",$D(DDWHLP)>9!($G(DDWHLP)]"") D HELP(.DDWHLP) Q
+ I DDWCOD="TO" W $C(7) Q
+ I U[DDWX S DDWANS=DDWX Q
+ I $D(DDWHLP)>9!($G(DDWHLP)]""),DDWX?1."?" D HELP(.DDWHLP) Q
  I $G(DDWVAL)]"" X DDWVAL I $D(DDWERR) W $C(7) D HELP(.DDWERR) Q
  S DDWANS=DDWX
  Q
  ;
 VALGTO ;Validate DDWX
  N DDWCH
- Q:U[DDWX
+ Q:DDWX=U
  S DDWERR="Invalid format.  Enter ? for examples."
  Q:DDWX'?.1A.1P1.15N
  I DDWX?1A.E S DDWCH=$E(DDWX) Q:"SsLlCc"'[DDWCH

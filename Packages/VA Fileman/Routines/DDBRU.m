@@ -1,5 +1,7 @@
-DDBRU ;SFISC/DCL-BROWSER UTILITIES AND EXTRINSIC FUNCTIONS ;2/27/99  11:57
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDBRU ;SFISC/DCL-BROWSER UTILITIES AND EXTRINSIC FUNCTIONS ;09:47 AM  1 Dec 1994; [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 CTRLCH() ;Extrinsic function - returns control characters 1-31
  N I,X S X="" N I F I=1:1:31 S X=X_$C(I)
@@ -118,9 +120,9 @@ NOW() ;
  ;
 MSMCON ;MSM CONSOLE FOR 132/80 MODES
  ;OR VT TERMINALS
-80 W $C(27),"[?",3,$C(108)
+80 W *27,"[?",3,*108
  S (IOM,X)=80 X ^%ZOSF("RM")
  Q
-132 W $C(27),"[?",3,$C(104)
+132 W *27,"[?",3,*104
  S (IOM,X)=132 X ^%ZOSF("RM")
  Q

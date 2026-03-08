@@ -1,7 +1,16 @@
-LR7OSMZ0 ;slc/dcm - Silent Micro rpt ; 23-Jun-2014 09:29 ; MKK
- ;;5.2;LR;**121,244,1018,1033**;Nov 17, 2004
+LR7OSMZ0 ;VA/SLC/DCM - Silent Micro rpt ; 23-Jun-2014 09:29 ; MKK
+ ;;5.2;LAB SERVICE;**121,244,1018,1033,1054**;NOV 01, 1997;Build 20
+ ;
+ ; ADO 73380 - Write Performing Labs on EHR Cumulative
  ;
 EN1 ;from 
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1054 - ADO 73380
+ D
+ . NEW REQLDIV
+ . S REQLDIV=+$P($G(^LR(LRDFN,"CH",LRIDT,0)),U,14)
+ . S:REQLDIV LRPLS(REQLDIV)=""
+ ; ----- END IHS/MSC/MKK - LR*5.2*1054
+ ;
  S LRLLT=$G(^LR(LRDFN,"MI",LRIDT,0)),LRACC=$P(LRLLT,U,6),LRAD=$E(LRLLT)_$P(LRACC," ",2)_"0000",X=$P(LRACC," "),DIC=68,DIC(0)="M"
  I $L(X) D ^DIC S LRAA=+Y,LRAN=+$P(LRACC," ",3),LRCMNT=$S($D(^LR(LRDFN,"MI",LRIDT,99)):^(99),1:""),LRPG=0 D EN^LR7OSMZ1 Q:LREND
  Q

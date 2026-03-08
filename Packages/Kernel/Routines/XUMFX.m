@@ -1,70 +1,94 @@
 XUMFX ;ISS/RAM - XUMF API's;04/15/02
- ;;8.0;KERNEL;**299,382,383**;Jul 10, 1995
+ ;;8.0;KERNEL;**299**;Jul 10, 1995
  ;
  Q
  ;
+IEN(IFN,ID) ; -- Internal Entry Number
+ ;
+ N IEN,ROOT
+ ;
+ S IFN=$G(IFN),ID=$G(ID)
+ ;
+ Q:'IFN "0^IFN required"
+ Q:ID="" "0^ID required"
+ ;
+ S ROOT=$$ROOT^DILFD(IFN,,1) Q:ROOT="" "0^invalid IFN"
+ S IEN=$O(@ROOT@("VUID",ID,0))
+ ;
+ Q $S(IEN:IEN,1:"0^not found")
+ ;
+PKV(IFN,IEN,HLCS) ; Primary Key Value - MFE.4
+ ;
+ S IFN=$G(IFN),IEN=$G(IEN),HLCS=$G(HLCS)
+ ;
+ N MFE,NODE,ID,TEXT,CDSYS,IENS
+ ;
+ S NODE=$G(^DIC(4.001,IFN,"MFE"))
+ Q:NODE="" "1^Error - MFS parameter not defined for IFN "_IFN
+ ;
+ S:HLCS="" HLCS="~"
+ S CDSYS=$P(NODE,U,3)
+ ;
+ Q:IEN="NEW" IEN_HLCS_"NEW ENTRY"_HLCS_CDSYS
+ ;
+ Q:'IFN "1^Error - IFN required"
+ Q:'IEN "1^Error - IEN required"
+ ;
+ S IENS=IEN_","
+ ;
+ S FIELD=$P(NODE,U,1),ID=$$GET1^DIQ(IFN,IENS,FIELD)
+ S FIELD=$P(NODE,U,2),TEXT=$$GET1^DIQ(IFN,IENS,FIELD)
+ ;
+ S MFE=ID_HLCS_TEXT_HLCS_CDSYS
+ ;
+ Q:'$P(NODE,U,4) MFE
+ ;
+ S FIELD=$P(NODE,U,4),ID=$$GET1^DIQ(IFN,IENS,FIELD)
+ S FIELD=$P(NODE,U,5),TEXT=$$GET1^DIQ(IFN,IENS,FIELD)
+ S CDSYS=$P(NODE,U,6)
+ ;
+ Q MFE_HLCS_ID_HLCS_TEXT_HLCS_CDSYS
  ;
 MFE(IFN,PKV,HLCS,IEN,ERROR) ; -- update
  ;
- N IENS,MFE,I,X,ID,XREF,NAME,FLD,FDA,DIC,Y
+ N IENS,MFE,I,X,ID,XREF,NAME,FLD,FDA,DIC
  ;
  S IFN=$G(IFN),IEN=$G(IEN),HLCS=$G(HLCS),ERROR=$G(ERROR)
  S:HLCS="" HLCS="~"
  ;
  Q:ERROR
  ;
- I 'IFN S ERROR="1^Error - IFN required HLNODE: "_HLNODE Q
+ I 'IFN S ERROR="1^Error - IFN required" Q
  ;
- I $P(PKV,HLCS)=""!($P(PKV,HLCS,2)="")!($P(PKV,HLCS,4)="") D  Q:ERROR
- .Q:$G(XUMFSDS)="1H"
- .S ERROR="1^Error - PKV not valid HLNODE: "_HLNODE
+ I $P(PKV,HLCS)=""!($P(PKV,HLCS,2)="")!($P(PKV,HLCS,4)="") D  Q
+ .S ERROR="1^Error - PKV not valid"
  .D EM^XUMFH(ERROR,.ERR)
  ;
  S MFE=$G(^DIC(4.001,IFN,"MFE")),XREF=$P(MFE,U,8)
  I XREF="" D  Q
- .S ERROR="1^Error - MFE parameter XREF missing HLNODE: "_HLNODE
+ .S ERROR="1^Error - MFE parameter XREF missing"
  .D EM^XUMFH(ERROR,.ERR)
  ;
- ;I IFN=4.001 D  Q
- ;.S IEN=$$FIND1^DIC(1,,"BX",$P(PKV,HLCS))
- ;.I 'IEN D  Q
- ;..S ERROR="1^not a valid IEN in MFE - HLNODE: "_HLNODE
- ;..D EM^XUMFH(ERROR,.ERR)
- ;.Q:$D(^DIC(4.001,IEN))
- ;.S NAME=$P(PKV,HLCS)
- ;.K FDA
- ;.S FDA(IFN,"?+1,",.01)=NAME
- ;.D UPDATE^DIE("E","FDA",,"ERR")
- ;.I $D(ERR) D  Q
- ;..S ERROR="1^MFE UPDATE FAILED for .01 File#: "_IFN
- ;..D EM^XUMFH(ERROR,.ERR)
- ;
- ;lookup an active VUID
- S VUID=$P(PKV,HLCS)
- I $G(XUMFSDS)="1H" S VUID=$P(PKV,HLCS,4)
- S ROOT=$$ROOT^DILFD(IFN,,1)
- I '$L(ROOT) D  Q
- .S ERROR="1^Error - MFE no root file#: "_IFN
- .D EM^XUMFH(ERROR,.ERR)
- S IEN=$O(@ROOT@("AMASTERVUID",VUID,1,0))
- ;
- ;reactivate an existing inactive VUID
- I 'IEN D
- .S IEN=$O(@ROOT@("AMASTERVUID",VUID,0,0)) Q:'IEN
- .K FDA,ERR
- .S IENS=IEN_","
- .S FDA(IFN,IENS,99.98)=1
- .D FILE^DIE("E","FDA","ERR")
- .I $D(ERR) D
- ..S ERROR="1^flag update error for IFN: "_IFN_" IEN: "_IEN_" PKV: "_PKV
+ I IFN=4.001 D  Q
+ .S IEN=$$FIND1^DIC(1,,"BX",$P(PKV,HLCS))
+ .I 'IEN D  Q
+ ..S ERROR="1^not a valid IEN in MFE XUMF"
  ..D EM^XUMFH(ERROR,.ERR)
- ..K ERR
+ .Q:$D(^DIC(4.001,IEN))
+ .S NAME=$P(PKV,HLCS)
+ .K FDA
+ .S FDA(IFN,"?+1,",.01)=NAME
+ .D UPDATE^DIE("E","FDA",,"ERR")
+ .I $D(ERR) D  Q
+ ..S ERROR="1^MFE UPDATE FAILED"
+ ..D EM^XUMFH(ERROR,.ERR)
+ ;
+ S VUID=$P(PKV,HLCS)
+ S ROOT=$$ROOT^DILFD(IFN,,1)
+ S IEN=$O(@ROOT@("AMASTERVUID",VUID,1,0))
+ ;S:'IEN IEN=$O(@ROOT@("AVUID",VUID,0))
  ;
  Q:IEN
- ;
- I $G(XUMFSDS)="1H",'IEN D  Q
- .S ERROR="1^SDS history could not find owning record PKV: "_PKV
- .D EM^XUMFH(ERROR,.ERR)
  ;
  I 'IEN D
  .S KEY=$P(PKV,HLCS,4)
@@ -74,19 +98,19 @@ MFE(IFN,PKV,HLCS,IEN,ERROR) ; -- update
  .S NAME=$P(PKV,HLCS,2)
  .D CHK^DIE(IFN,.01,,NAME,.X)
  .I X="^" D  Q
- ..S ERROR="1^Error - PKV .01 is invalid"_" File #: "_IFN_" PKV="_PKV
+ ..S ERROR="1^Error - PKV .01 is invalid"
  ..D EM^XUMFH(ERROR,.ERR)
  .K DIC S DIC=IFN,DIC(0)="F" D FILE^DICN K DIC
  .I Y="-1" D  Q
- ..S ERROR="1^stub entry for "_PKV_" failed PKV: "_PKV
+ ..S ERROR="1^stub entry for "_PKV_" failed"
  ..D EM^XUMFH(ERROR,.ERR)
  .S IEN=+Y
  ;
  S IENS=IEN_","
  ;
- I $L($P(MFE,U)),$P(MFE,U)'=99.99 Q
  S FDA(IFN,IENS,99.99)=$P(PKV,HLCS,1)
  S FDA(IFN,IENS,99.98)=1
+ ;S FDA(IFN,IENS,.01)=$P(PKV,HLCS,2)
  ;
  K ERR
  ;
@@ -95,6 +119,43 @@ MFE(IFN,PKV,HLCS,IEN,ERROR) ; -- update
  .S ERROR="1^VUID update error for IFN: "_IFN_" IEN: "_IEN_" PKV: "_PKV
  .D EM^XUMFH(ERROR,.ERR)
  .K ERR
+ ;
+ Q
+ ;
+LOAD(IFN) ; -- query and file
+ ;
+ D MFS(IFN,"ALL",5,.ERROR)
+ ;
+ Q
+ ;
+ARRAY(IFN) ; -- query and tmp array
+ ;
+ D MFS(IFN,"ALL",7,.ERROR)
+ ;
+ Q
+ ;
+MFS(IFN,IEN,TYP,ERROR) ; -- get file from Master File Server
+ ;
+ ; TYP (5=query/file, 7=query/tmp_array)
+ ;
+ N TEST
+ ;
+ S (ERROR,TEST)=0
+ ;
+ S IFN=$G(IFN),IEN=$G(IEN),TYP=$G(TYP)
+ ;
+ I 'IFN S ERROR="1^IFN required" Q
+ I IEN="" S ERROR="1^IEN required" Q
+ I TYP'=5,TYP'=7 S ERROR="1^not a valid type" Q
+ ;
+ I $P($$PARAM^HLCS2,U,3)="T" S TEST=1
+ ;
+ S PARAM("LLNK")="XUMFX MFR^XUMF "_$S('TEST:"FORUM",1:"TEST")
+ S PARAM("PROTOCOL")=$O(^ORD(101,"B","XUMFX MFQ",0))
+ ;
+ D MAIN^XUMFXP(IFN,"ALL",TYP,.PARAM,.ERROR) Q:ERROR
+ D MAIN^XUMFXI(IFN,"ALL",TYP,.PARAM,.ERROR) Q:ERROR
+ D MAIN^XUMFXH
  ;
  Q
  ;
@@ -107,6 +168,7 @@ VUID(FILE,FIELD,VUID,X) ; -- If value type pointer and VUID may be used,
  D FIELD^DID(FILE,FIELD,,"POINTER","X1")
  S X1=$G(X1("POINTER"))
  Q:'$L(X1) 0
+ ;S X1=U_X1_"""AVUID"",XVUID,0)"
  S X1=U_X1_"""AMASTERVUID"",XVUID,1,0)"
  S X1=$O(@X1)
  Q +X1
@@ -116,19 +178,24 @@ VAL(FILE,FIELD,VUID,VALUE,IENS) ; convert to internal
  N RESULT,ERR
  ;
  I $L(VUID) D  Q RESULT
- .I VUID="SDS" S VALUE=VUID_+VALUE
  .S RESULT=$$VUID(FILE,FIELD,VUID,VALUE)
  .I 'RESULT D
  ..S RESULT="^",ERROR="1^VUID lookup failed on "_VALUE
  ..D EM("VUID lookup failed on "_VALUE)
  ;
- I VALUE["\F\" F  Q:VALUE'["\F\"  D
+ I FILE=120.51,FIELD=4 F  Q:VALUE'["\F\"  D
  .S VALUE=$P(VALUE,"\F\")_"^"_$P(VALUE,"\F\",2,9999)
- I VALUE["\T\" F  Q:VALUE'["\T\"  D
+ I FILE=120.51,FIELD=4 F  Q:VALUE'["\T\"  D
  .S VALUE=$P(VALUE,"\T\")_"&"_$P(VALUE,"\T\",2,9999)
  ;
  D VAL^DIE(FILE,IENS,FIELD,,VALUE,.RESULT,,"ERR")
- I $D(ERR) D EM("validation error",.ERR)
+ ;
+ I $D(ERR) D
+ .;Q:$G(ERR("DIERR",1))=405
+ .;Q:$G(ERR("DIERR",1))=602
+ .;Q:$G(ERR("DIERR",1))=710
+ .D EM("validation error",.ERR)
+ ;
  I RESULT="^" S ERROR="1^data validation error"
  ;
  Q RESULT
@@ -147,8 +214,6 @@ EM(ERROR,ERR,XMSUB,XMY) ; -- error message
  S GROUP=$P($G(^DIC(4.001,+IFN,0)),U,6)
  I GROUP'="" S GROUP="G."_GROUP,XMY(GROUP)=""
  S XMTEXT="X("
- ;
- M ^TMP("XUMF ERROR",$J,$O(^TMP("XUMF ERROR",$J,9999999999999),-1)+1)=X
  ;
  D ^XMD
  ;

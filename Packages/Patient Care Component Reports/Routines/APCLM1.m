@@ -1,5 +1,5 @@
-APCLM1 ; IHS/CMI/LAB - ADULT IMMUNIZATION NEEDS ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLM1 ; IHS/OHPRD/TMJ - ADULT IMMUNIZATION NEEDS ;  [ 02/06/02  9:51 AM ]
+ ;;3.0;IHS PCC REPORTS;**4,5,11,16**;EB 05, 1997
  ;IHS/CMI/LAB - patch 4 for new imm package and 4 digit year display/Y2K
  ;
  ;
@@ -10,7 +10,7 @@ ST ;
  W !!,"This report displays the most recent Td, Pneumococcal, & Influenza Vaccinations",!,"for Adults considered as 'High Risk.'  Utilizing QMan, development of a",!
  W "Cohort (Template) of Patients is required prior to running this report.",!!
  W "Development of the Cohort of High Risk Adults usually consists of finding",!,"Living Patients who are over Age 65 OR who have one or more specific",!,"chronic diseases.",!!
- W "Feel free to contact the Help Desk for",!,"assistance in creating your Cohort.",!!
+ W "Feel free to contact the Information Systems Division at (520) 295-2533 for",!,"assistance in creating your Cohort.",!!
  W "Note:  Patients with Inactive charts will not appear on this report even",!,"if there were a member of the cohort (template).",!! ;IHS/CMI/LAB
  ;
  S DIC("S")="I $P(^(0),U,4)=2!($P(^(0),U,4)=9000001)" S DIC="^DIBT(",DIC("A")="Enter Patient SEARCH TEMPLATE name: ",DIC(0)="AEMQ" D ^DIC K DIC,DA,DR,DICR

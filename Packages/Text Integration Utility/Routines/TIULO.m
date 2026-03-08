@@ -1,5 +1,5 @@
-TIULO ; SLC/JER - Embedded Objects ;29-Aug-2014 11:06;DU
- ;;1.0;TEXT INTEGRATION UTILITIES;**34,70,101,148,204,1013**;Jun 20, 1997;Build 33
+TIULO ; SLC/JER - Embedded Objects ;22-Feb-2022 09:48
+ ;;1.0;TEXT INTEGRATION UTILITIES;**34,70,101,148,204,1013,1025**;Jun 20, 1997;Build 8
 DEM(DFN,VADM) ; Calls DEM^VADPT
  D DEM^VADPT
  Q
@@ -8,10 +8,13 @@ NAME(DFN) ; Patient NAME
  Q $S(VADM(1)]"":VADM(1),1:"NAME UNKNOWN")
 SSN(DFN) ; Patient SSN
  N SSN
- I '$D(VADM(2)) D DEM(DFN,.VADM)
- ;IHS/MSC/MGH Updated to block out SSN patch 1013
- S SSN=$P(VADM(2),U,2)
- I SSN'="" S SSN="XXX-XX-"_$P(SSN,"-",3)
+ ;I '$D(VADM(2)) D DEM(DFN,.VADM)
+ ;IHS/MSC/MGH Updated to block out SSN patch 1013 and 1025
+ ;IHS/MSC/MGH Updated to removed SSN completely
+ ;S SSN=$P(VADM(2),U,2)
+ ;I SSN'="" S SSN="XXX-XX-XXXX"
+ ;IHS/MSC/MIR Patch 1025 '_' changed to '-'
+ S SSN="XXX-XX-XXXX"
  Q $S(SSN]"":SSN,1:"SSN UNKNOWN")
 AGE(DFN) ; Patient AGE
  I '$D(VADM(4)) D DEM(DFN,.VADM)

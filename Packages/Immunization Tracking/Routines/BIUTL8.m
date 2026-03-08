@@ -1,5 +1,5 @@
-BIUTL8 ;IHS/CMI/MWR - UTIL: PATLKUP, PRTLST, ZGBL; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**13**;AUG 01,2016
+BIUTL8 ;IHS/CMI/MWR - UTIL: PATLKUP, PRTLST, ZGBL; MAY 10, 2010 ;
+ ;;8.5;IMMUNIZATION;**22,28,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: PATIENT LOOKUP, DUPTEST, PRINT LIST, K/ZGBL, KILLALL.
  ;;           HFSPATH, IMMSVDIR.
@@ -11,6 +11,7 @@ BIUTL8 ;IHS/CMI/MWR - UTIL: PATLKUP, PRTLST, ZGBL; MAY 10, 2010
  ;;           Add default of V01 (Ineligible) for patients 19 and over.  VFCSET+14
  ;;  PATCH 10: Screen code for PPD Lot Number in Lot Number File.  LOTSCRS+0
  ;;  PATCH 13: Return Flu Season Start and End Dates.  FLUDATS+0
+ ;;  PATCH 2x: ICE
  ;
  ;----------
 PATLKUP(BIDFN,BIADD,DUZ2,BIPOP) ;EP
@@ -24,7 +25,7 @@ PATLKUP(BIDFN,BIADD,DUZ2,BIPOP) ;EP
  ;---> Example: D PATLKUP^BIUTL8(.BIDFN)
  ;              D PATLKUP^BIUTL8(.BIDFN,"ADD") - May ADD Patient to IMM
  ;
- N DFN,DIC,X,Y
+ N DFN,DIC,X,Y,DUOUT,DTOUT,DIRUT
  S (BIDFN,BIPOP)=0 D SETVARS^BIUTL5
  S:$G(DUZ2)]"" DUZ(2)=DUZ2
  S DIC="^AUPNPAT(",DIC(0)="AEMQ"
@@ -44,7 +45,8 @@ PATLKUP(BIDFN,BIADD,DUZ2,BIPOP) ;EP
  .;
  .;---> If patient is over 18, or if user does not have BIZ EDIT PATIENTS Key,
  .;---> then add as Inactive, "Never Activated," and quit.
- .I ($$AGE^BIUTL1(BIDFN,1)>18)!($G(BIADD)'="ADD") D  Q
+ .;V8.5 PATCH 29 - FID-107546 Tdap age check
+ .I (+$$AGE^BIUTL1(BIDFN,1)>18)!($G(BIADD)'="ADD") D  Q
  ..D ADDPAT^BIPATE(BIDFN,DUZ(2),.BIERR,$G(DT),"n")
  ..I $G(BIERR)]"" W !!?3,BIERR D DIRZ^BIUTL3() S BIPOP=1
  .;
@@ -57,7 +59,6 @@ PATLKUP(BIDFN,BIADD,DUZ2,BIPOP) ;EP
  .S DIR(0)="SM^A:Active;I:Inactive"
  .S DIR("A")="   Enter A (Active) or I (Inactive)"
  .S DIR("B")="A"
- .;S DIR("B")=$S($$AGE^BIUTL1(BIDFN,1)<19:"A",1:"I")
  .D ^DIR W !
  .I $D(DIRUT) S BIPOP=1 Q
  .N BINACT S BINACT=$S(Y="I":$G(DT),1:"")
@@ -68,8 +69,7 @@ PATLKUP(BIDFN,BIADD,DUZ2,BIPOP) ;EP
  ;
  ;---> If this Patient is already in the Imm Database and <36 months
  ;---> but is Inactive, query.
- Q:$$AGE^BIUTL1(BIDFN,2,$G(DT))>35
- ;Q:'$$INACT^BIUTL1(BIDFN)   ;vvv83
+ Q:+$P($$AGE^BIUTL1(BIDFN,2,$G(DT)),U,2)>35
  Q:($$INACT^BIUTL1(BIDFN)="")
  Q:($G(BIADD)'="ADD")
  ;
@@ -107,8 +107,7 @@ VFCSET ;EP
  ;---> Add default of V01 (Ineligible) for patients 19 and over.
  ;
  ;--> If patient was less than 19yrs set default=V01 and quit.
- ;Q:($$AGE^BIUTL1(BIDFN,1,BIDATE)>18)
- I ($$AGE^BIUTL1(BIDFN,1,BIDATE)<19) S BI("P")=4 Q
+ I (+$$AGE^BIUTL1(BIDFN,1,BIDATE)<19) S BI("P")=4 Q
  ;---> Otherwise patient is adult, set default="V01".
  S BI("P")=1
  ;
@@ -158,6 +157,10 @@ DUPTEST(BIERR,BIDATA,BIOIEN) ;EP
  S B=$P(BIDATA,V,2) Q:'B
  S C=$P(BIDATA,V,3) Q:'C
  S D=9999999-$P($P(BIDATA,V,6),".") Q:'D
+ ;
+ ;V8.5 PATCH 28 - FID-1067077 ALLOW DUP SPLIT DOSE VACCINE
+ I +$G(^BISDV(+C,0))=C Q:$$D343^BIUTL9(B,C,D)<2
+ ;V8.5 PATCH 28 - END
  ;
  ;---> Check for duplicate visit.
  D
@@ -308,16 +311,22 @@ HFSPATH(DUZ2) ;EP
  ;
  ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
  ;---> IP Address for TCH Forecaster.
+ ;
+ ;********** PATCH 18, v8.5, JUL 01,2019, IHS/CMI/MWR
+ ;---> IP Address for TCH Forecaster.
  ;----------
-IPTCH(DUZ2) ;EP
- ;---> Return the IP Address used for the TCH Forecaster
+IPTCH(DUZ2,BIICE) ;EP
+ ;---> Return the IP Address used for the ICE Forecaster
  ;---> in the BI SITE PARAMETERS File.
  ;---> Parameters:
  ;     1 - DUZ2  (opt) User's DUZ(2), otherwise IEN of Site in
  ;                     RPMS SITE PARAMETERS File.
+ ;     2 - BIICE (opt) If BIICE=1 return IP for ICE, .33 field.
  ;
  S:'$G(DUZ2) DUZ2=$P($G(^AUTTSITE(1,0)),"^")
- N BIIP S BIIP=$P($G(^BISITE(+DUZ2,0)),"^",30)
+ ;N BIIP S BIIP=$P($G(^BISITE(+DUZ2,0)),"^",30)
+ ;N BIIP S BIIP=$P($G(^BISITE(+DUZ2,0)),"^",$S($G(BIICE):33,1:30))
+ N BIIP S BIIP=$P($G(^BISITE(+DUZ2,3)),"^",2)
  S:'BIIP BIIP="127.0.0.1"
  Q BIIP
  ;**********
@@ -412,3 +421,4 @@ FLUDATS(DUZ2) ;PEP - Return Flu Season Start and End Dates.
  I Y'?2N1"/"2N S Y="04/01"
  Q X_"%"_Y
  ;**********
+ ;

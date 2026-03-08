@@ -1,31 +1,97 @@
-RAORD7 ;HISC/CAH AISC/RMO-Log of Scheduled Requests by Procedure ;11/8/01  08:00
- ;;5.0;Radiology/Nuclear Medicine;**15,31**;Mar 16, 1998
- ;;This routine looks at orders in file 75.1 with field 23 (Scheduled date) within the date range selected. User also selects order statuses to include.
-DATE D SET^RAPSET1 I $D(XQUIT) K RAED,XQUIT Q
- S %DT("A")="Starting Scheduled Date: ",%DT="EXA" W ! D ^%DT K %DT G Q^RAORD7A:Y<0 S RALDTE1=Y
- S %DT("A")="Ending Scheduled Date: ",%DT="EXAT" W ! D ^%DT K %DT G Q^RAORD7A:Y<0 S RALDTE2=Y
- I RALDTE2<RALDTE1 W !?5,"  ?? Starting date must be before ending date.  Please try again.",! G DATE
- I RALDTE2#1=0 S RALDTE2=RALDTE2+.2359
- W !!,"Enter  *  to select all imaging locations that",!,"you are allowed here (enter ?? to view them.)"
- D OMA^RAUTL13 G Q^RAORD7A:'$L($O(RALOC(0)))!($G(RAQUIT)=1)
- S %DT="R",X="NOW" D ^%DT I Y>RALDTE1,Y'<RALDTE2 D
- . K DIR S DIR(0)="Y",DIR("A")="Include only orders not registered (no-show's)",DIR("B")="NO",DIR("?")=" "
- . S DIR("?",1)="If you have entered a date range in the past, and answer 'Yes' to this question,"
- . S DIR("?",2)="the log will only include orders that have not yet reached an 'active' status.",DIR("?",3)="In other words, the orders that appear on the log are probably no-show's." W ! D ^DIR
- . I Y=1 S RANOSHOW=1 ;User wants a no-show report
- I $D(DTOUT)!($D(DUOUT)) G Q^RAORD7A
- K DIR S DIR(0)="S^P:Procedure Name;D:Date/Time",DIR("A")="Sort by (P)rocedure Name or (D)ate/Time",DIR("B")="P" D ^DIR G:'$D(Y(0)) Q^RAORD7A S RASORT=Y(0) K DIR
- F I=1,2,6 S RANO(I)=""
- W !!!,"Scheduled requests to be included on this report are:",!
- I $D(RANOSHOW) W !,"No-show's only."
- W !,"Starting Schedule date: " W $$FMTE^XLFDT(RALDTE1,"P")
- W !,"Ending Schedule date:   " W $$FMTE^XLFDT(RALDTE2,"P")
- W !,"Locations:  " S I=0 F  S I=$O(RALOC(I)) Q:I=""  W I W:$X>(IOM-25) ! W ?($X+5)
- W !!,"Sorted by: ",RASORT,!
- K DIR S DIR(0)="Y",DIR("A")="SELECTION CRITERIA OK",DIR("B")="YES" W ! D ^DIR
- I $D(DUOUT)!($D(DTOUT)) G Q^RAORD7A
- I Y'=1 G DATE
+RAORD7 ; IHS/ADC/PDW -Log Report of Scheduled Requests by Procedure 11:16 ;   [ 11/23/2001  9:30 AM ]
+ ;;4.0;RADIOLOGY;**11**;NOV 20, 1997
  ;
- S:$D(RANOSHOW) ZTSAVE("RANOSHOW")=""
- S ZTRTN="START^RAORD7A",ZTSAVE("RALDTE1")="",ZTSAVE("RALDTE2")="",ZTSAVE("RAST")="",ZTSAVE("RALOC(")="",ZTSAVE("RAORST(")="",ZTSAVE("RASORT")="" W ! D ZIS^RAUTL G Q^RAORD7A:RAPOP
- G ^RAORD7A
+ ;Occurences of "^" in this routine have been replaced by U for patch 11
+ ;IHS/HQW/SCR 9/10/01 **11**
+ ;
+ ;S %DT("A")="Scheduled Request Log Date: ",%DT="EXA" W ! D ^%DT K %DT G Q:Y<0 S RALDTE=Y,ZTRTN="START^RAORD7",ZTSAVE("RALDTE")="" W ! D ZIS^RAUTL G Q:POP ;Modified for VA patches IHS/HQW/SCR 9/10/01
+ S %DT("A")="Scheduled Request Log Date: ",%DT="EXA" W ! D ^%DT K %DT G Q:Y<0 S RALDTE=Y   ;IHS/HQW/SCR 9/10/01 **11**
+ D OMA  ;IHS/HQW/SCR 9/10/01 **11**
+ I 'RALOC&('$O(RALOC(0))) D Q Q  ;IHS/HQW/SCR 9/10/01 **11**
+ S ZTRTN="START^RAORD7",ZTSAVE("RALDTE")="",ZTSAVE("RALOC(")="" W ! D ZIS^RAUTL  ;IHS/HQW/SCR 9/10/01 **11**
+ I POP D Q Q  ;IHS/HQW/SCR 9/10/01 **11**
+ ;
+START ;
+ U IO K ^TMP($J,"RAORD7") S RAPGE=0,$P(RALNE,"-",79)="",$P(RALNE1,"=",79)="",RAX="",RABEGDT=RALDTE-.0001,RAENDDT=RALDTE+.9999
+ S Y=RALDTE D D^RAUTL S RALDTE=Y,X="NOW",%DT="T" D ^%DT D D^RAUTL S RARUNDTE=Y
+ ;F RAOSCH=RABEGDT:0 S RAOSCH=$O(^RAO(75.1,"AD",RAOSCH)) Q:'RAOSCH!(RAOSCH>RAENDDT)  F RADFN=0:0 S RADFN=$O(^RAO(75.1,"AD",RAOSCH,RADFN)) Q:'RADFN  D CHKORD ;Cmnt'd out and modified by next block IHS/HQW/SCR 9/10/01 **11**
+ ;
+ ;BEGIN major restructure for VA patches IHS/HQW/SCR 9/10/01 **11**
+ ;
+ F RAOSCH=RABEGDT:0 S RAOSCH=$O(^RAO(75.1,"AD",RAOSCH)) Q:'RAOSCH!(RAOSCH>RAENDDT)  S RADFN=0 F  S RADFN=$O(^RAO(75.1,"AD",RAOSCH,RADFN)) Q:'RADFN  D    ;IHS/HQW/SCR 9/10/01 **11**
+ .S RAOIFN=0 F  S RAOIFN=$O(^RAO(75.1,"AD",RAOSCH,RADFN,RAOIFN)) Q:'RAOIFN  I $D(^RAO(75.1,RAOIFN,0)),$P(^(0),U,5)=8 S RAORD0=^(0) D    ;IHS/HQW/SCR 9/10/01 **11**
+ ..S RAPRI=+$P(RAORD0,U,2) D  S RACPT=$S($P($G(^RAMIS(71,RAPRI,0)),U)]"":$E($P(^(0),U),1,21),1:"UNKNOWN")  ;IHS/HQW/SCR 9/10/01 **11**
+ ...S RAI=0,RAI=$O(^RAMIS(71,RAPRI,2,RAI)) Q:'RAI  S RAMIS=+$G(^(RAI,0))  ;IHS/HQW/SCR 9/10/01 **11**
+ ..S ^TMP($J,"RAORD7",$S($P(RAORD0,U,20):$P(RAORD0,U,20),1:$O(^RA(79.1,0))),RAMIS,RAOSCH,RACPT,RADFN,RAOIFN)=""  ;IHS/HQW/SCR 9/10/01 **11**
+ I '$D(^TMP($J,"RAORD7")) W !!?5,"There are no scheduled requests logged for ",RALDTE,"." D Q Q  ;IHS/HQW/SCR 9/10/01 **11**
+ S (RAI,RAJ,RAOSCH)=0 F  S RAI=$O(^TMP($J,"RAORD7",RAI)) Q:'RAI!(RAX[U)  I $D(RALOC(RAI)) F  S RAJ=$O(^TMP($J,"RAORD7",RAI,RAJ)) Q:'RAJ!(RAX[U)  D   ;IHS/HQW/SCR 9/10/01 **11**
+ .F  S RAOSCH=$O(^TMP($J,"RAORD7",RAI,RAJ,RAOSCH)) Q:'RAOSCH!(RAX[U)  D   ;IHS/HQW/SCR 9/10/01 **11**
+ ..S RAPRC="" F  S RAPRC=$O(^TMP($J,"RAORD7",RAI,RAJ,RAOSCH,RAPRC)) Q:RAPRC=""!(RAX[U)  W:RAPGE !,RALNE1 D   ;IHS/HQW/SCR 9/10/01 **11**
+ ...S (RADFN,RAOIFN)=0 F  S RADFN=$O(^TMP($J,"RAORD7",RAI,RAJ,RAOSCH,RAPRC,RADFN)) Q:'RADFN!(RAX[U)  F  S RAOIFN=$O(^(RADFN,RAOIFN)) Q:'RAOIFN!(RAX[U)  S RAORD0=$G(^RAO(75.1,RAOIFN,0)) D   ;IHS/HQW/SCR 9/10/01 **11**
+ ....D HD:($Y+4)>IOSL!('RAPGE)!(RAI'=$G(RAHI)) Q:RAX[U  S RANME=$P($G(^DPT(RADFN,0)),U)   ;IHS/HQW/SCR 9/10/01 **11**
+ ....S RAI=RAHI,RALOC=$S($D(^SC(+$P(RAORD0,U,22),0)):$P(^(0),U),1:"UNKNOWN"),Y=RAOSCH D D^RAUTL S RATIME=$P($P(Y,",",2),"  ",2),RAOURG=$P(RAORD0,U,6)   ;IHS/HQW/SCR 9/10/01 **11**
+ ....W !,$E(RANME,1,19),?20,RAPRC,?43,$$SSN^RAUTL(RADFN,1),?52,$E(RALOC,1,11),?64,RATIME   ;IHS/HQW/SCR 9/10/01 **11**
+ ....S C=$P(^DD(75.1,6,0),U,2),Y=RAOURG D Y^DIQ W ?71,$E(Y,1,7),!!  ;IHS/HQW/SCR 9/10/01 **11**
+ ;
+ ;END major restructure for VA patches IHS/HQW/SCR 9/10/01 **11**
+ ;
+ ;START commenting out lines for VA patches IHS/HQW/SCR 9/10/01 **11**
+ ;
+ ;I '$D(^TMP($J,"RAORD7")) W !!?5,"There are no scheduled requests logged for ",RALDTE,"." G Q
+ ;F RAMIS=0:0 S RAMIS=$O(^TMP($J,"RAORD7",RAMIS)) Q:'RAMIS!(RAX[U)  F RACPT=0:0 S RACPT=$O(^TMP($J,"RAORD7",RAMIS,RACPT)) Q:'RACPT!(RAX[U)  W:RAPGE !,RALNE1 D CHKUTL
+ ;
+CHKORD ;
+ ;F RAOIFN=0:0 S RAOIFN=$O(^RAO(75.1,"AD",RAOSCH,RADFN,RAOIFN)) Q:'RAOIFN  I $D(^RAO(75.1,RAOIFN,0)),$P(^(0),U,5)=8 S RAORD0=^(0) D SETUTL
+ ;Q
+ ;
+SETUTL ;
+ ;S RAPRI=+$P(RAORD0,U,2),RACPT=$S('$D(^RAMIS(71,RAPRI,0)):93999,+$P(^(0),U,9):+$P(^(0),U,9),1:93999)
+ ;S RAI=0,RAI=$O(^RAMIS(71,RAPRI,2,RAI)) Q:'RAI  I $D(^(RAI,0)) S RAMIS=+^(0) I $D(^RAMIS(71.1,RAMIS,0)) F RAJ=1:1 I '$D(^TMP($J,"RAORD7",RAMIS,RACPT,RAOSCH,RADFN,RAJ)) S ^(RAJ)=RAORD0 Q
+ ;Q
+ ;
+CHKUTL ;
+ ;F RAOSCH=0:0 S RAOSCH=$O(^TMP($J,"RAORD7",RAMIS,RACPT,RAOSCH)) Q:'RAOSCH!(RAX[U)  F RADFN=0:0 S RADFN=$O(^TMP($J,"RAORD7",RAMIS,RACPT,RAOSCH,RADFN)) Q:'RADFN!(RAX[U)  D CHKNUM
+ ;Q
+ ;
+CHKNUM ;
+ ;F RAJ=0:0 S RAJ=$O(^TMP($J,"RAORD7",RAMIS,RACPT,RAOSCH,RADFN,RAJ)) Q:'RAJ!(RAX[U)  S RAORD0=^(RAJ) I $D(^DPT(RADFN,0)) S RADPT0=^(0) D PRT
+ ;Q
+ ;
+PRT ;
+ ;D HD:($Y+4)>IOSL!('RAPGE) Q:RAX[U  S RAPRC=$S($D(^RAMIS(71,+$P(RAORD0,U,2),0)):$P(^(0),U),1:"UNKNOWN"),RANME=$P(RADPT0,U),RASSN=$P(RADPT0,U,9)
+ ;S RALOC=$S($D(^SC(+$P(RAORD0,U,22),0)):$P(^(0),U),1:"UNKNOWN") S Y=RAOSCH D D^RAUTL S RATIME=$P($P(Y,",",2),"  ",2) S RAOURG=$P(RAORD0,U,6)
+ ;W !,$E(RANME,1,19),?20,$E(RAPRC,1,21),?43,$$SSN^RAUTL(RADFN,1),?52,$E(RALOC,1,11),?64,RATIME,?71,$E($P($P(^DD(75.1,6,0),RAOURG_":",2),";"),1,7),!!
+ ;Q
+ ;
+ ;END commenting out lines for VA patches IHS/HQW/SCR 9/10/01 **11**
+ ;
+Q ;
+ ;K ^TMP($J,"RAORD7"),POP,RABEGDT,RACPT,RADFN,RADPT0,RAENDDT,RAI,RAJ,RALDTE,RALNE,RALNE1,RALOC,RAMIS,RANME,RAOIFN,RAORD0,RAOSCH,RAOURG,RAPGE,RAPRC,RAPRI,RARUNDTE,RASSN,RATIME,RAX,X,Y W ! D CLOSE^RAUTL 
+ ;Above line modified for VA patches IHS/HQW/SCR 9/10/01 **11**
+ K ^TMP($J,"RAORD7"),POP,RABEGDT,RACPT,RADFN,RADPT0,RAENDDT,RAI,RAHI,RAJ,RALDTE,RALNE,RALNE1,RALOC,RAMIS,RANME,RAOIFN,RAORD0,RAOSCH,RAOURG,RAPGE,RAPRC,RAPRI,RARUNDTE,RASSN,RATIME,RAX,X,Y  ;IHS/HQW/SCR 9/10/01 **11**
+ K RAMES,ZTDESC,ZTRTN,ZTSAVE,C  ;IHS/HQW/SCR 9/10/01 **11**
+ W ! D CLOSE^RAUTL   ;IHS/HQW/SCR 9/10/01 **11**
+ Q  ;IHS/HQW/SCR 9/10/01 **11**
+HD ;
+ ;D CRCHK Q:RAX[U  W @IOF,!,"Scheduled Request Log for ",RALDTE," by Procedure" S RAPGE=RAPGE+1 W ?70,"Page: ",RAPGE,!,"Run Date: ",RARUNDTE ;Modified for VA patches IHS/HQW/SCR 9/10/01 **11**
+ D CRCHK Q:RAX[U  W:RAPGE!($E(IOST,1,2)="C-") @IOF W !,"Scheduled Request Log for ",RALDTE," by Location" S RAPGE=RAPGE+1 ;IHS/HQW/SCR 9/10/01 **11**
+ W ?70,"Page: ",RAPGE,!,"Run Date: ",RARUNDTE,?35,"Location: ",$S($D(^SC(+$P($G(^RA(79.1,+RAI,0)),U),0)):$P(^(0),U),1:"UNKNOWN") ;IHS/HQW/SCR 9/10/01*11*
+ W !!,"Patient",?20,"Procedure",?43,"Pt ID",?52,"Location",?64,"Time",?71,"Urgency",!,RALNE
+ S RAHI=RAI ;IHS/HQW/SCR 9/10/01 **11**
+ Q
+ ;
+CRCHK ;
+ I RAPGE,$E(IOST)="C" W !!,*7,"Press RETURN to continue or '^' to stop " R X:DTIME S RAX=X
+ Q
+OMA ;
+ ;Tag and code added for VA patches  ;IHS/HQW/SCR 9/10/01 **11**
+ ;
+ ;ask for One/Many/All locations for output
+ ;each location will be printed seperately
+ ;array returned will be RALOC(ien of 79.1)=IEN in 44
+ ;
+ N RAINT  ;IHS/HQW/SCR 9/10/01 **11**
+ S DIC="^RA(79.1,",VAUTSTR="Location to print",VAUTNI=2,VAUTVB="RALOC" D FIRST^VAUTOMA I 'RALOC&('$O(RALOC(0))) Q   ;IHS/HQW/SCR 9/10/01 **11**
+ I RALOC D  I '$D(RALOC) D Q Q  ;IHS/HQW/SCR 9/10/01 **11**
+ .S RAINT=0 F  S RAINT=$O(^RA(79.1,RAINT)) Q:'RAINT  S RALOC(RAINT)=$P($G(^RA(79.1,RAINT,0)),U)  ;IHS/HQW/SCR 9/10/01 **11**
+ Q

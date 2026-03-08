@@ -1,8 +1,10 @@
 BIELIG ;IHS/CMI/MWR - EDIT ELIGIBILITY CODES.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**3**;SEP 10,2012
+ ;;8.5;IMMUNIZATION;**3,25,26**;OCT 24,2011;Build 33
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT ELIGIBILITY FIELDS: ACTIVE, LOCAL TEXT, REPORT ABBREVIATION.
  ;;  PATCH 3: This entire routine to edit Eligibility Codes is new.
+ ;;  PATCH 25:  83097-Add HL7 Code and HL7 Description
+ ;;  PATCH 26: change code in ELIGC for new codes
  ;
  ;
  ;----------
@@ -58,7 +60,7 @@ HDR(BIPRT) ;EP
  D:$G(BIPRT)
  .S X=$$SP^BIUTL5(51)_"Printed: "_$$NOW^BIUTL5()
  .D WH^BIW(.BILINE,X,1)
- .S X="    #  Eligibility Code      Label of Cdoe    Status     Local Text     Report Text"
+ .S X="    #  Eligibility Code      Label of Code    Status     Local Text     Report Text     HL7 Code    HL7 Description"
  .D WH^BIW(.BILINE,X)
  Q
  ;
@@ -181,6 +183,8 @@ ELIGC(IEN,FORM) ;EP
  ;                        3=Active/Inactive Status (1
  ;                        4=Local Text
  ;                        5=Local Report Abbreviation
+ ;                        6=HL7 Code
+ ;                        7=HL7 Description
  ;
  Q:'$G(IEN) ""
  Q:'$D(^BIELIG(IEN,0)) "NO GLOBAL"
@@ -190,5 +194,7 @@ ELIGC(IEN,FORM) ;EP
  Q:$G(FORM)=3 $P(Y,U,3)
  Q:$G(FORM)=4 $P(Y,U,4)
  Q:$G(FORM)=5 $P(Y,U,5)
- Q:$G(FORM)=6 $S($P(Y,U,5)]"":$P(Y,U,5),1:$P(Y,U))
+ Q:$G(FORM)=99 $S($P(Y,U,5)]"":$P(Y,U,5),1:$P(Y,U))  ;20230309 maw p26 for new codes
+ Q:$G(FORM)=6 $P(Y,U,6)
+ Q:$G(FORM)=7 $P(Y,U,7)
  Q $P(Y,U)

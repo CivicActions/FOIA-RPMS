@@ -1,0 +1,3 @@
+XMADJF0 ;(WASH ISC)/CAP- * OBSOLETE * ;01/08/98  13:25
+ ;;7.1;MailMan;**50**;Jun 02, 1994
+ Q

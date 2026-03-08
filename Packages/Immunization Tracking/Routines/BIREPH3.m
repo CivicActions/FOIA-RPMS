@@ -1,5 +1,5 @@
 BIREPH3 ;IHS/CMI/MWR - REPORT, H1N1 ACCOUNTABILITY; AUG 10,2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+ ;;8.5;IMMUNIZATION;**29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  VIEW OR PRINT H1N1 ACCOUNTABILITY REPORT.
  ;;  v8.3 PATCH 3: BIREPH* routines are completely new for H1N1 Report.
@@ -26,32 +26,21 @@ GETIMMS(BIBEGDT,BIENDDT,BICC,BIHCF,BICM,BIBEN,BIHIST,BIVT) ;EP
  ;********** PATCH 4, v8.3, DEC 30,2009, IHS/CMI/MWR
  ;---> PATCH: Modify H1N1 Report to count 2nd doses regardless of Date Range.
  ;
- ;Q:'$G(BIBEGDT)  Q:'$G(BIENDDT)
- ;N N S N=BIBEGDT-.9999
- ;F  S N=$O(^AUPNVIMM("ADT",N)) Q:(N>(BIENDDT+.9999)!('N))  D
- ;.N M S M=0
- ;.F  S M=$O(^AUPNVIMM("ADT",N,M)) Q:'M  D
- ;..N P S P=0
- ;..F  S P=$O(^AUPNVIMM("ADT",N,M,P)) Q:'P  D
- ;...D CHKSET(N,M,P,.BICC,.BIHCF,.BICM,.BIBEN,BIHIST,.BIVT)
- ;
  ;---> Hard code for 2009-2010 Season.
  ;
  Q:'$G(BIBEGDT)  Q:'$G(BIENDDT)
  ;
  ;********** PATCH 1, v8.4, AUG 01,2010, IHS/CMI/MWR
  ;---> Extend time frame of report from Aug 1, 2009 until Aug 30, 2010.
- ;N N S N=3090901-.9999
- ;F  S N=$O(^AUPNVIMM("ADT",N)) Q:(N>(3100430+.9999)!('N))  D
- N N S N=3090801-.9999
- F  S N=$O(^AUPNVIMM("ADT",N)) Q:(N>(3100830+.9999)!('N))  D
- .;**********
- .;
- .N M S M=0
- .F  S M=$O(^AUPNVIMM("ADT",N,M)) Q:'M  D
- ..N P S P=0
- ..F  S P=$O(^AUPNVIMM("ADT",N,M,P)) Q:'P  D
- ...D CHKSET(N,M,P,.BICC,.BIHCF,.BICM,.BIBEN,BIHIST,.BIVT,BIBEGDT,BIENDDT)
+ ;
+ N VDT,VDA,IDA
+ S VDT=3090801-.9999
+ F  S VDT=$O(^AUPNVIMM("ADT",VDT)) Q:(VDT>(3100830+.9999)!('VDT))  D
+ .S VDA=0
+ .F  S VDA=$O(^AUPNVIMM("ADT",VDT,VDA)) Q:'VDA  D
+ ..S IDA=0
+ ..F  S IDA=$O(^AUPNVIMM("ADT",VDT,VDA,IDA)) Q:'IDA  D
+ ...D CHKSET(VDT,VDA,IDA,.BICC,.BIHCF,.BICM,.BIBEN,BIHIST,.BIVT,BIBEGDT,BIENDDT)
  ;
  ;************************************************************
  ;
@@ -181,7 +170,8 @@ AGEGRP(BIDFN,BIDATE) ;EP
  ;     1 - BIDFN  (req) IEN in PATIENT File.
  ;     2 - BIDATE (req) Date of Visit.
  ;
- N X S X=$$AGE^BIUTL1(BIDFN,1,BIDATE)
+ N X
+ S X=+$$AGE^BIUTL1(BIDFN,1,BIDATE)
  Q:X<2 1
  Q:X<5 2
  Q:X<19 3

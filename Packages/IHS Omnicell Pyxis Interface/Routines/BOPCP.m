@@ -1,8 +1,10 @@
-BOPCP ;IHS/ILC/ALG/CIA/PLS - Capture and File Data;27-Nov-2006 11:10;SM;
- ;;1.0;AUTOMATED DISPENSING INTERFACE;**1,2**;Jul 26, 2005
+BOPCP ;IHS/ILC/ALG/CIA/PLS - Capture and File Data;19-Jul-2023 09:13
+ ;;1.0;AUTOMATED DISPENSING INTERFACE;**1,2,4**;Jul 26, 2005;Build 25
  ;Called from ^BOPCAP
  ;Modified - IHS/MSC/PLS - 11/20/06 - Line AL1+10 - Added set of zero node for allergies
  ;                                    Line AL1S+1 - Added logic to set "B" xref on BOP11
+ ;Modified - IHS/MSC/MIR - 07/19/23 - changed RXE1+14:+16 to the DRUG FILE EIN
+ ;									- added ORC+5 and ORC1+5
 PID ;EP - Get PID Segment data
  D DEM^VADPT,ADD^VADPT
  S BOP(1.13)=$P($G(^DPT(BOPDFN,.13)),U,2)
@@ -11,6 +13,7 @@ PID ;EP - Get PID Segment data
  .S BOP1=BOPDFN_U_BOPDFN_U_VADM(1)_U_$P(VADM(3),U)_U_$P(VADM(5),U)_U_$P(VADM(8),U)_U_VAPA(1)_U_VAPA(4)_U_$P(VAPA(5),U,2)_U_VAPA(6)_U_BOPIT_U_VAPA(8)_U_BOP(1.13)_U_$P(VADM(11),U)_U_$P(VADM(2),U) Q
  E  D
  .S BOP1=BOPDFN_U_BOPDFN_U_VADM(1)_U_$P(VADM(3),U)_U_$P(VADM(5),U)_U_$P(VADM(8),U)_U_VAPA(1)_U_VAPA(4)_U_$P(VAPA(5),U,2)_U_VAPA(6)_U_BOPIT_U_VAPA(8)_U_BOP(1.13)_U_$G(VA("PID"))_U_$P(VADM(2),U) Q
+ Q
  ;
 PV1 ;EP - Get PV1 Segment data
  K VAIP("D") S VAROOT="BOPVA" D IN5^VADPT K VAROOT
@@ -35,8 +38,8 @@ RXE ;EP - Get RXE, RXR, ZRX Segment Data
  I $P(BOP(3.3),".",2)=24 S $P(BOP(3.3),".",2)=2359
  S BOP(3.4)=$P(BOPX2,U,4) ;Stop Date/Time
  I $P(BOP(3.4),".",2)=24 S $P(BOP(3.4),".",2)=2359
- N X S X=$P($G(^PS(55,BOPDFN,5,BOPORDN,0)),U,7)
- S BOP(3.5)=X ;QT Order Type
+ N X S X=$P(BOPX0,U,7)
+ S BOP(3.5)=X ;QT Schedule Type
  S BOP(3.6)=""
  S BOP(3.7)=$P(BOPX2,U,5) ;Admin Times
  N I S BOP3="" F I=3.1:.1:3.7 S BOP3=BOP3_BOP(I)_U
@@ -50,6 +53,33 @@ RXE ;EP - Get RXE, RXR, ZRX Segment Data
  S BOP4=BOP(4.1)_U_BOP(4.2)_U_BOP(4.3)
  S BOP5=U_$P(X,U,2) ;Dispense Amount-HL7
  S BOP6=U_$P($G(^PS(55,BOPDFN,5,BOPORDN,6)),U) ;Special instruction
+ Q
+RXE1 ;EP - Get RXE, RXR, ZRX Segment Data for IV
+ S BOPX0=^PS(55,BOPDFN,"IV",BOPORDN,0),BOPX2=^(2)
+ S BOP(3.1)=$P(BOPX0,U,9) ;Schedule (Q/T Frequency-HL7)
+ S BOP(3.2)=""
+ S BOP(3.3)=$P(BOPX0,U,2) ;Start Date/Time
+ I $P(BOP(3.3),".",2)=24 S $P(BOP(3.3),".",2)=2359
+ S BOP(3.4)=$P(BOPX0,U,3) ;Stop Date/Time
+ I $P(BOP(3.4),".",2)=24 S $P(BOP(3.4),".",2)=2359
+ N X,BOPFL S X=$P(BOPX0,U,4),BOPFL=$S(BOPIV=1:52.6,1:52.7)
+ S BOP(3.5)=X ;QT IV Type
+ S BOP(3.6)=""
+ S BOP(3.7)=$S($P(BOPX0,U,11):$P(BOPX0,U,11),1:$P(BOPX0,U,15)) ;Admin Times
+ N I S BOP3="" F I=3.1:.1:3.7 S BOP3=BOP3_BOP(I)_U
+ S X=$S(BOPIV=1:$G(^PS(55,BOPDFN,"IV",BOPORDN,"AD",ADD,0)),1:$G(^PS(55,BOPDFN,"IV",BOPORDN,"SOL",SOL,0)))
+ S BOPDDN=$P(X,U),DSPNS=+$P(X,U,2),$P(X,U,2)=DSPNS_U_$$TRIM^XLFSTR($E($P(X,U,2),$L(DSPNS)+1,$L($P(X,U,2))))
+ S (BOP(4.1),BOPDDN)=$P($G(^PS(BOPFL,+BOPDDN,0)),U,2) ;Dispense Drug (IEN)
+ S BOP(4.2)=$P($G(^PSDRUG(+BOPDDN,0)),U)
+ S BOP(4.3)=$P($G(^PS(55,BOPDFN,"IV",BOPORDN,.2)),U,2)
+ ;S BOP(4.3)=""
+ S BOP4=BOP(4.1)_U_BOP(4.2)_U_BOP(4.3)
+ S BOP5=U_$P(X,U,2,3) ;Dispense Amount and Unit-HL7
+ S $P(BOP5,U,11)="PS("_BOPFL
+ S BOP6=U_$P($G(^PS(55,BOPDFN,"IV",BOPORDN,.3)),U) ;Instruction
+ I BOPIV=1 D
+ .S BOP21=$P(X,U)_U_BOP(4.2)_U_$P(X,U,2,3),$P(BOP21,U,11)="PS("_BOPFL
+ E  S BOP20=$P(X,U)_U_BOP(4.2)_U_$P(X,U,2,3),$P(BOP20,U,11)="PS("_BOPFL
  Q
 OBXH ;EP - Get OBX height and weight Data
  S BOP(9.1)=$$VITCHT^BOPTU(+$P($$VITAL^BOPTU(DFN,"HT"),U,2))
@@ -94,6 +124,7 @@ ORC ;EP -  Get ORC Segment Data
  N X S X=$G(^PS(55,BOPDFN,5,BOP(2.2),0))
  S BOP(2.3)=$P(X,U,9) ;Order Status
  N A S A=BOP(2.3),BOP(2.3)=$S(A="A":"IP",(A="D"!(A="DE")!(A="DR")):"DC",A="H":"HD",1:"")
+ I BOP(2.3)="DC" S BOP(2.1)="DC"
  S (BOP(2.4))=$P(X,U,16) ;Login Date/Time
  S BOP(2.7)=+$P(X,U,2),BOP(2.93)=BOP(2.7)  ;Provider IEN
  S BOP(2.7)=$P($G(^VA(200,BOP(2.7),0)),U) ;Provider
@@ -101,6 +132,24 @@ ORC ;EP -  Get ORC Segment Data
  S BOP(2.5)=+$P(X,U,7),BOP(2.91)=BOP(2.5),BOP(2.5)=$P($G(^VA(200,BOP(2.5),0)),U) ;Clerk
  S BOP(2.6)=+$P(X,U,3),BOP(2.92)=BOP(2.6),BOP(2.6)=$P($G(^VA(200,BOP(2.6),0)),U) ;Pharmacist
  S X=$G(^PS(55,BOPDFN,5,BOPORDN,1,BOPI,0))
+ S BOP(2.8)=BOP(2.2)_"-"_$P(X,U)
+ N I S BOP2="" F I=2.1:.1:2.8 S A=$G(BOP(I)),BOP2=BOP2_A_U
+ F I=2.91:.01:2.99 S A=$G(BOP(I)),BOP2=BOP2_A_"-" I I=2.99 S BOP2=BOP2_U
+ K I,A
+ Q
+ORC1 ;EP -  Get ORC Segment Data for IVs
+ S BOP(2.2)=+$G(BOPORDN) ;Order Number
+ N X S X=$G(^PS(55,BOPDFN,"IV",BOP(2.2),0))
+ S BOP(2.3)=$P(X,U,17) ;Order Status
+ N A S A=BOP(2.3),BOP(2.3)=$S(A="A":"IP",(A="D"!(A="DE")!(A="DR")):"DC",A="H":"HD",1:"")
+ I BOP(2.3)="DC" S BOP(2.1)="DC"
+ S BOP(2.4)=$P($G(^PS(55,BOPDFN,"IV",BOP(2.2),2)),U) ;Login Date/Time
+ S BOP(2.7)=+$P(X,U,6),BOP(2.93)=BOP(2.7)  ;Provider IEN
+ S BOP(2.7)=$P($G(^VA(200,BOP(2.7),0)),U) ;Provider
+ S X=$G(^PS(55,BOPDFN,"IV",BOP(2.2),4))
+ S (BOP(2.5),BOP(2.91))="" ;+$P(X,U,7),BOP(2.91)=BOP(2.5),BOP(2.5)=$P($G(^VA(200,BOP(2.5),0)),U) ;Clerk
+ S BOP(2.6)=+$P(X,U,4),BOP(2.92)=BOP(2.6),BOP(2.6)=$P($G(^VA(200,BOP(2.6),0)),U) ;Pharmacist
+ S X=$S(BOPIV=1:$G(^PS(55,BOPDFN,"IV",BOPORDN,"AD",ADD,0)),1:$G(^PS(55,BOPDFN,"IV",BOPORDN,"SOL",SOL,0)))
  S BOP(2.8)=BOP(2.2)_"-"_$P(X,U)
  N I S BOP2="" F I=2.1:.1:2.8 S A=$G(BOP(I)),BOP2=BOP2_A_U
  F I=2.91:.01:2.99 S A=$G(BOP(I)),BOP2=BOP2_A_"-" I I=2.99 S BOP2=BOP2_U

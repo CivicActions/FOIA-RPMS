@@ -1,5 +1,5 @@
-AMHCDBL2 ; IHS/CMI/LAB - backload pcc visits ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHCDBL2 ; IHS/CMI/LAB - backload pcc visits ; [ 04/27/04  2:41 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**2**;JAN 27, 2003
  ;
  ;backfill BH with CDMIS Data
 CS ;EP

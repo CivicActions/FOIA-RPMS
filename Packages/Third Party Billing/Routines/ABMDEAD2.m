@@ -1,11 +1,10 @@
-ABMDEAD2 ; IHS/ASDST/DMJ - Add New Claim - Program 2 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDEAD2 ; IHS/SD/SDR - Add New Claim - Program 2 ;  
+ ;;2.6;IHS 3P BILLING SYSTEM;**40**;NOV 12, 2009;Build 785
  ;
- ; IHS/SD/SDR - v2.5 p10 - IM20022
- ;   Use ROI/AOB multiples
+ ;IHS/SD/SDR 2.5*10 IM20022 Use ROI/AOB multiples
+ ;IHS/SD/SDR 2.5*10 IM20320 Fix for manually added insurer (not being put as ACTIVE INSURER)
  ;
- ; IHS/SD/SDR - v2.5 p10 - IM20320
- ;   Fix for manually added insurer (not being put as ACTIVE INSURER)
+ ;IHS/SD/SDR 2.6*40 ADO111599 Added VA Contract# to claim if VA MEDICAL BENEFIT (VMBP) is an insurer on claim
  ;
 STUFF K DIC S DIC="^ABMDCLM(DUZ(2),",DIC(0)="L",X=ABMP("PDFN")
  S DINUM=$$NXNM^ABMDUTL
@@ -32,6 +31,20 @@ STUFF K DIC S DIC="^ABMDCLM(DUZ(2),",DIC(0)="L",X=ABMP("PDFN")
  .D ^DIE K DR
  I $D(ABM("F1")) D
  .S DR=".91;.83" D ^DIE
+ ;
+ ;start new abm*2.6*40 IHS/SD/SDR ADO111599
+ K ABMVAFLG
+ S ABMT("I")=0
+ F  S ABMT("I")=$O(ABML(ABMT("I"))) Q:'ABMT("I")  D
+ .Q:(ABMT("I")>97)
+ .S ABMT("IN")=$O(ABML(ABMT("I"),0))
+ .I $P($G(^AUTNINS(ABMT("IN"),0)),U)="VA MEDICAL BENEFIT (VMBP)" S ABMVAFLG=1
+ I $G(ABMVAFLG)=1 D
+ .S DIE="^ABMDCLM(DUZ(2),"
+ .S DA=ABMP("CDFN")
+ .S DR="927////"_$P($G(^ABMDPARM(DUZ(2),1,3)),U,13)  ;SITM VA CONTRACT#
+ .D ^DIE
+ ;end new abm*2.6*40 IHS/SD/SDR ADO111599
  ;
  I $O(^DIC(40.7,"B","EMERGENCY MEDICINE",""))=ABMP("CLN") S ABMP("C0")=^ABMDCLM(DUZ(2),ABMP("CDFN"),0) D ASET^ABMDE3B
  I $O(^DIC(40.7,"B","EPSDT",""))=ABMP("CLN") S Y=67 D SP^ABMDE3B

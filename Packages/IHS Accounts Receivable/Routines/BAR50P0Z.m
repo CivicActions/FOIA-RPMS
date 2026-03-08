@@ -1,5 +1,5 @@
 BAR50P0Z ; IHS/SD/LSL - MATCH REASONS AND CLAIMS ; 01/30/2009
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**10,20,21,23,24,26,28**;OCT 26, 2005;Build 92
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**10,20,21,23,24,26,28,29,30,31**;OCT 26,2005;Build 90
  ; NEW ROUTINE TO LOCKOUT REVERSALS AND PLB SEGMENTS; MRS:BAR*1.8*10 D159
  ; MODIFIED TO LIMIT LOCK OUT TO INDIVIDUAL CHECKS
  ; HEAT148388 P.OTT 1/10/2014 ACCEPT REVERSALS FOR TYPE= 1 IF NEG PAYMENT FIX: 1/27/2014
@@ -8,12 +8,17 @@ BAR50P0Z ; IHS/SD/LSL - MATCH REASONS AND CLAIMS ; 01/30/2009
  ;  so sending out routine to get everyone on the same page, right or wrong.  What I saw at one site was EN+3 being commented out
  ;  which causes payment reversal message to display no matter how the A/R parameter for allow neg bal is answered.
  ;IHS/SD/SDR 1.8*28 - CR8346 HEAT275351 - Made fix for check on reason NTP present.
+ ;IHS/SD/CPC 1.8*30 - Including routine in build. Changes were made for CR7474 but CR7474 was subsequently removed from patch, restoring to P29 version.
+ ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2 add test to prt detail to screen and move part of routine because of size
+ ;
  Q
-EN(IMPDA) ; EP ; Scan SEGMENTS for PLB, REVERSALS AND NEGATIVE AMOUNTS
+EN(IMPDA) ; EP ; Scan SEGMENTS for PLB, REVERSALS AND NEG AMOUNTS
+ I $G(BARREPRC)]"" Q 0
  N BARFLG
  ;old code Q:'$$IHS^BARUFUT(DUZ(2)) 0             ;Ignore if NON-IHS facility
- I '$$IHSNEGB^BARUFUT(DUZ(2)) Q 0  ;HEAT147572
- W !!,"Now will look for PLBs, Payment Reversals, and Negative Payments..."  ;bar*1.8*20 REQ4
+ ;I '$$IHSNEGB^BARUFUT(DUZ(2)) Q 0  ;HEAT147572 line moved to $$NEGP 4/22/2014
+ ;W !!,"Now will look for PLBs, Payment Reversals, and Negative Payments..."  ;bar*1.8*20 REQ4
+ W:$G(BARDSP) !!,"Now will look for PLBs, Payment Reversals, and Negative Payments..."  ;bar*1.8*20 REQ4;BAR*1.8*31 CR#6984 REQ 2
  S BARFLG=0
  S BARFLG=$$PLB(IMPDA)            ;PLB
  S BARFLG=0  ;bar*1.8*20 REQ4
@@ -21,30 +26,43 @@ EN(IMPDA) ; EP ; Scan SEGMENTS for PLB, REVERSALS AND NEGATIVE AMOUNTS
  S BARFLG=0  ;bar*1.8*20 REQ4
  S BARFLG=$$NEGP(IMPDA)           ;NEGATIVE AMT PAYMENT
  ;start new code bar*1.8*20 REQ4
- K DIR
- S DIR(0)="E"
- S DIR("A")="<CR> - Continue"
- D ^DIR
+ ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2;Added if statement
+ I $G(BARDSP) D
+ .K DIR
+ .S DIR(0)="E"
+ .S DIR("A")="<CR> - Continue"
+ .D ^DIR
  K ^XTMP("BAR-BILLS",$J,DUZ(2)),^XTMP("BAR-BMAMT",$J,DUZ(2))
  ;end new code REQ4
  Q BARFLG
  ;
  ; **************
 PLB(IMPDA) ; EP  ;D159-2
- W !!,"Looking for PLB Segment... "
+ I $G(BARREPRC)]"" Q 0
+ ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2;mod nxt 3 lines to print "." or comment and st of chg to test for BARDSP ON WRT
+ ;W !!,"Looking for PLB Segment... "
+ I $G(BARDSP) W !!,"Looking for PLB Segment... "
+ E  W "."
  S PLBAMT=+$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCKIEN,0)),U,9)
- I (PLBAMT=0) W "No PLB Segments found" Q BARFLG  ;No PLB
- W "PLB SEGMENT FOUND"
- I (PLBAMT<0) W !?2,"The PLB amount increases the check amount - no further action will be taken" Q BARFLG
+ I (PLBAMT=0),$G(BARDSP) W "No PLB Segments found" Q BARFLG  ;No PLB
+ W:$G(BARDSP) "PLB SEGMENT FOUND"   ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2
+ I (PLBAMT<0),$G(BARDSP) W !?2,"The PLB amount increases the check amount - no further action will be taken" Q BARFLG
  S IENS=BARCKIEN_","_IMPDA
- W !?2,"Bills will be marked Not To Post to accommodate amount ",$FN($$GET1^DIQ(90056.02011,IENS,.09),",",2)
+ W:$G(BARDSP) !?2,"Bills will be marked Not To Post to accommodate amount ",$FN($$GET1^DIQ(90056.02011,IENS,.09),",",2)
+ ;BAR*1.8*31 end of code changes
  S BARFLG=1
  D PLBFIND
  ;end new code REQ4
  Q BARFLG
  ;
 REV(IMPDA) ;EP ;D159-1
- W !!,"Looking for Payment Reversals... "  ;bar*1.8*20 REQ4
+ I $G(BARREPRC)]"" Q 0
+ ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2;mod nxt 3 lines to print "." or comment and st of chg to test for BARDSP ON WRT
+ ;W !!,"Looking for Payment Reversals... "  ;bar*1.8*20 REQ4
+ I $G(BARDSP) W !!,"Looking for Payment Reversals... "  ;bar*1.8*20 REQ4
+ E  W "."   ;BAR*1.8*31
+ I '$$IHSNEGB^BARUFUT(DUZ(2)) D  Q 0 ;IHSNEGB Returns FALSE if negative balance IS ALLOWED ;BAR*1.8*29 Comment added.
+ .W:$G(BARDSP) !,"The 'Allow Negative Balance' parameter is set to yes.  Aborting reversal Check.",!
  N BARCDA,BAR15,BARAMT,CNT,BARVCK,BARSCK
  S BARCDA=0
  S (BARVCK,BARSCK)=""
@@ -58,25 +76,30 @@ REV(IMPDA) ;EP ;D159-1
  . I '$$ISREV(IMPDA,BARCDA) Q  ;new code P.OTT 1/10/2014 HEAT148388 1/24/2024 PARAMETER PASSING
  .Q:($P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,2)),U)'=$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCKIEN,0)),U))  ;not check number I want
  .I BARFLG=0  D
- ..W "PAYMENT REVERSAL FOUND",!?3,"Bills will be marked Not To Post to accommodate "
- ..W !,?6,"E-Bill#",?27,"E-Pymt",?39,"E-Claim Status Code"
+ ..W:$G(BARDSP) "PAYMENT REVERSAL FOUND",!?3,"Bills will be marked Not To Post to accommodate "
+ ..W:$G(BARDSP) !,?6,"E-Bill#",?27,"E-Pymt",?39,"E-Claim Status Code"
  .S BARFLG=1
  .S BARCNT=+$G(BARCNT)+1
  .S EAMT=$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U,4)
  .S EBILL=$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U)
  .S ESTAT=$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U,11)
  .S ^XTMP("BAR-REV",$J,DUZ(2),BARCDA)=EBILL
- .W !,BARCNT,?6,EBILL,?27,$FN(EAMT,",",2),?39,ESTAT
+ .W:$G(BARDSP) !,BARCNT,?6,EBILL,?27,$FN(EAMT,",",2),?39,ESTAT
  .D UP(IMPDA,BARCDA,"REV")
  .S REVAMT=+$G(REVAMT)-$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U,4)
  I BARFLG D REVFIND
- I 'BARFLG W "No Payment Reversals found" Q BARFLG  ;No Payment Reversals
+ I 'BARFLG,$G(BARDSP) W "No Payment Reversals found" Q BARFLG  ;No Payment Reversals
+ ;BAR*1.8*31;end of code change
  ;end new code REQ4
  Q BARFLG
  ;
 NEGP(IMPDA) ;EP ;D159-1
+ I $G(BARREPRC)]"" Q 0
  ;W !,"Looking for Negative Payments "  ;bar*1.8*20 REQ4
- W !!,"Looking for Negative Payments... "  ;bar*1.8*20 REQ4
+ I '$$IHSNEGB^BARUFUT(DUZ(2)) Q 0  ;HEAT147572 BAR*1.8*24
+ ;W !!,"Looking for Negative Payments... "  ;bar*1.8*20 REQ4;BAR*1.8*31
+ I $G(BARDSP) W !!,"Looking for Negative Payments... "  ;bar*1.8*20 REQ4;BAR*1.8*31;IHS.OIT.FCJ CR#6984 REQ 2
+ E  W "."       ;BAR*1.8*31
  N BARCDA,BAR300,BARAMT,CNT,BARSTA,BAR302,BARVCK,BARSCK
  S BARCDA=0
  S BARSCK=""
@@ -92,9 +115,10 @@ NEGP(IMPDA) ;EP ;D159-1
  .Q:($P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,2)),U)'=$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCKIEN,0)),U))  ;not check number I want
  .S BARAMT=$P(BAR300,U,4)
  .I BARAMT<0 D
- ..;Q:BARVCK=BARSCK                ;Only process once for each check  P.OTTIS HEAT148388
- ..I BARFLG=0 W "NEGATIVE PAYMENT AMOUNT FOUND",!?2,"Bills will be marked Not To Post to accommodate"  ;bar*1.8*20 REQ4
- ..I BARFLG=0 W !,?6,"E-Bill#",?27,"E-Pymt",?39,"E-Claim Status Code"  ;bar*1.8*20 REQ4
+ ..;Q:BARVCK=BARSCK   ;Only process once for each check  P.OTTIS HEAT148388
+ ..;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2;mod nxt 2 lines to test for BARDSP ON WRT
+ ..I BARFLG=0 W:$G(BARDSP) "NEGATIVE PAYMENT AMOUNT FOUND",!?2,"Bills will be marked Not To Post to accommodate"  ;bar*1.8*20 REQ4
+ ..I BARFLG=0 W:$G(BARDSP) !,?6,"E-Bill#",?27,"E-Pymt",?39,"E-Claim Status Code"  ;bar*1.8*20 REQ4
  ..S BARFLG=1
  ..;W !!?5,"Negative Payment Amount found, all transactions"  ;bar*1.8*20 REQ4
  ..;D LOOP^BAREDP0Z(IMPDA,"NEGP",BARVCK)   ;Mark all NOT TO POST  ;bar*1.8*20 REQ4
@@ -104,12 +128,14 @@ NEGP(IMPDA) ;EP ;D159-1
  ..S EAMT=$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U,4)
  ..S EBILL=$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U)
  ..S ^XTMP("BAR-REV",$J,DUZ(2),BARCDA)=EBILL
- ..W !,BARCNT,?6,EBILL,?27,$FN(EAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U,11)
+ ..;W !,BARCNT,?6,EBILL,?27,$FN(EAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U,11)  ;BAR*1.8*31
+ ..W:$G(BARDSP) !,BARCNT,?6,EBILL,?27,$FN(EAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U,11)  ;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2
  ..D UP(IMPDA,BARCDA,"NEGP")
  ..S REVAMT=+$G(REVAMT)+$P($G(^BAREDI("I",DUZ(2),IMPDA,30,BARCDA,0)),U,4)
  I BARFLG S BAR="NEGP" D REVFIND
  ;end new code REQ4
- I 'BARFLG W "No Negative Payments found "  ;bar*1.8*20 REQ4
+ ;I 'BARFLG W "No Negative Payments found "  ;bar*1.8*20 REQ4;BAR*1.8*31
+ I 'BARFLG,$G(BARDSP) W "No Negative Payments found "  ;bar*1.8*20 REQ4;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2
  Q BARFLG
  ;
 LOOP(IMPDA,REASON,VCHK) ;EP; LOOP THROUGH BAREDI("I",IMPDA AND FLAG NOT TO POST
@@ -146,7 +172,8 @@ PLBFIND ; EP
  .;if ERA claim has already been marked NTP for PLB, lessen PLB amount by that ERA claim amount
  .I BARRCHK=1,((CHKREASN)="PLB") D  Q
  ..S PLBAMT=PLBAMT-$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4)
- ..W !?5,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U)_" for $"_$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),2)_" was marked Not To Post"
+ ..;W !?5,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U)_" for $"_$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),2)_" was marked Not To Post"  ;BAR*1.8*31
+ ..W:$G(BARDSP) !?5,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U)_" for $"_$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),2)_" was marked Not To Post" ;BAR*1.8*31;IHS.OIT.FCJ CR#6984REQ2
  .;S ^XTMP("BAR-MBAMT",$J,DUZ(2),$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),CLMDA)=""  ;E-payment  ;bar*1.8*26 IHS/SD/SDR HEAT263595
  .S ^XTMP("BAR-MBAMT",$J,DUZ(2),+$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),CLMDA)=""  ;E-payment  ;bar*1.8*26 IHS/SD/SDR HEAT263595
  S BAMT=0,BARDONE=0
@@ -157,7 +184,8 @@ PLBFIND ; EP
  .;by here the BAMT should be as much or more than the PLB amount
  .D UP(IMPDA,CLMDA,"PLB")  ;mark bill Not To Post
  .S BARDONE=1
- .W !?2,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U)_" for $"_$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),2)_" was marked Not To Post"
+ .;W !?2,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U)_" for $"_$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),2)_" was marked Not To Post"   ;BAR*1.8*31
+ .W:$G(BARDSP) !?2,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U)_" for $"_$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),2)_" was marked Not To Post"   ;BAR*1.8*31;IHS.OIT.FCJ CR#6984REQ2
  Q:BARDONE  ;stop here if a bill was found and marked Not To Post
  S BAMT=99999999999
  F  S BAMT=$O(^XTMP("BAR-MBAMT",$J,DUZ(2),BAMT),-1) Q:'BAMT  D  Q:BARDONE
@@ -166,12 +194,14 @@ PLBFIND ; EP
  ..D UP(IMPDA,CLMDA,"PLB")  ;mark bill Not To Post
  ..S PLBAMT=PLBAMT-BAMT
  ..I PLBAMT=0!(PLBAMT<0) S BARDONE=1
- ..W !?5,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U)_" for $"_$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),2)_" was marked Not To Post"
- W !
+ ..;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2 ADDED $G(BARDSP) TO NXT 2 LINES
+ ..W:$G(BARDSP) !?5,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U)_" for $"_$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),2)_" was marked Not To Post" ;BAR*1.8*31
+ W:$G(BARDSP) !  ;BAR*1.8*31
  Q
 REVFIND ;EP
  ;find pymt to "counter" either payment reversal or negative payment and mark it Not To Post
  ;payment can be either on same bill, or different bill, or over several bills to "cover" amount
+ I $G(BARREPRC)]"" Q
  S MTCHAMT=$S(REVAMT<0:(REVAMT*-1),1:REVAMT)  ;total amount that needs to be written off
  D BUILDLST
  Q:MTCHAMT<0  ;bills have already been marked Not To Post
@@ -192,7 +222,8 @@ REVFIND ;EP
  ....S RCLMDA=$O(^XTMP("BAR-BILLS",$J,DUZ(2),EBILL,MDA,0))
  ....D UP(IMPDA,RCLMDA,$S(BAR="REV":"REV",1:"NEGP"))
  ....S MTCHAMT=MTCHAMT-MAMT
- ....W !?6,EBILL,?27,$J(MAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U,11)
+ ....;W !?6,EBILL,?27,$J(MAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U,11)   ;BAR*1.8*31
+ ....W:$G(BARDSP) !?6,EBILL,?27,$J(MAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U,11)  ;BAR*1.8*31;IHS.OIT.FCJ CR#6984 REQ2
  ....K ^XTMP("BAR-BILLS",$J,DUZ(2),EBILL,MDA)
  I MTCHAMT>0 D
  .S MAMT=0
@@ -205,7 +236,8 @@ REVFIND ;EP
  ...;S RCLMDA=$O(^XTMP("BAR-MBAMT",$J,DUZ(2),EBILL,MDA,0))
  ...D UP(IMPDA,MDA,$S(BAR="REV":"REV",1:"NEGP"))
  ...S MTCHAMT=MTCHAMT-MAMT
- ...W !?6,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U),?27,$J(MAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U,11)
+ ...;W !?6,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U),?27,$J(MAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U,11) ;BAR*1.8*31 
+ ...W:$G(BARDSP) !?6,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U),?27,$J(MAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U,11)  ;BAR*1.8*31;IHS.OIT.FCJ CR#6984REQ2
  I MTCHAMT>0 D  Q:((MTCHAMT=0)!(MTCHAMT<0))
  .S MAMT=999999999
  .F  S MAMT=$O(^XTMP("BAR-MBAMT",$J,DUZ(2),MAMT),-1) Q:'MAMT  D  Q:((MTCHAMT=0)!(MTCHAMT<0))
@@ -215,25 +247,13 @@ REVFIND ;EP
  ...I $D(^BAREDI("I",DUZ(2),IMPDA,30,MDA,4))>10 Q  ;bar*1.8*28 IHS/DIT/CPC CR9572
  ...D UP(IMPDA,MDA,$S(BAR="REV":"REV",1:"NEGP"))
  ...S MTCHAMT=MTCHAMT-MAMT
- ...W !?6,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U),?27,$J(MAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U,11)
- W !
+ ...;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2 ADDED $G(BARDSP) TO NXT 2 LINES
+ ...W:$G(BARDSP) !?6,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U),?27,$J(MAMT,",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,MDA,0)),U,11)  ;BAR*1.8*31
+ W:$G(BARDSP) !  ;BAR*1.8*31
  Q
 BUILDLST ;EP
- S CLMDA=0
- K ^XTMP("BAR-MBAMT",$J,DUZ(2)),^XTMP("BAR-BILLS",$J,DUZ(2))
- F  S CLMDA=$O(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA)) Q:'CLMDA  D
- .Q:($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,2)),U)'=$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCKIEN,0)),U))  ;only my check
- .Q:$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,2)="P"  ;already posted
- .Q:$D(^XTMP("BAR-REV",$J,DUZ(2),CLMDA))  ;bill is reversal
- .S CHKREASN=$$RCHK
- .;if ERA claim has already been marked NTP for PLB, lessen PLB amount by that ERA claim amount
- .I BARRCHK=1,((CHKREASN)=$S(BAR="REV":"REV",1:"NEGP")) D  Q
- ..;S MTCHAMT=MTCHAMT-$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4)  ;bar*1.8*26 IHS/SD/SDR HEAT263595
- ..S MTCHAMT=MTCHAMT-(+$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4))  ;bar*1.8*26 IHS/SD/SDR HEAT263595
- ..W !?6,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U),?27,$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,11)
- .;S ^XTMP("BAR-MBAMT",$J,DUZ(2),$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),CLMDA)=""  ;E-payment  ;bar*1.8*26 IHS/SD/SDR HEAT263595
- .S ^XTMP("BAR-MBAMT",$J,DUZ(2),+$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),CLMDA)=""  ;E-payment  ;bar*1.8*26 IHS/SD/SDR HEAT263595
- .S ^XTMP("BAR-BILLS",$J,DUZ(2),$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U),+$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),CLMDA)=""  ;bills
+ ;;BAR*1.8*31;OIT.IHS.FCJ CR#6984 REQ 2
+ D BUILDLST^BAR50PZ0  ;split due to rtn size 
  Q
 RCHK(CHKREASN) ;
  S BARRCHK=0,CHKREASN=""
@@ -244,9 +264,7 @@ RCHK(CHKREASN) ;
  ..S BARRCHK=1
  ..S CHKREASN=$P($G(^BARERR($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,4,BARNTPR,0)),U),0)),U)
  Q CHKREASN
- ;end new code REQ4
 ISREV(IMPDA,CLMDA) ;P.OTT 1/10/2014 HEAT148388
  I +$$GET1^DIQ(90056.0205,CLMDA_","_IMPDA_",",.11)=22 Q 1
- ;;;I +$$GET1^DIQ(90056.0205,CLMDA_","_IMPDA_",",.11)=1 I +$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4)<0 Q 1
  Q 0
  ;----------------

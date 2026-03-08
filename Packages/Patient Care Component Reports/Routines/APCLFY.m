@@ -1,5 +1,5 @@
-APCLFY ; IHS/CMI/LAB - FISCAL YEAR process routine ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLFY ; IHS/OHPRD/TMJ - FISCAL YEAR process routine ;  [ 11/04/98  7:05 PM ]
+ ;;3.0;IHS PCC REPORTS;**3**;FEB 05, 1997
  ;CMI/TUCSON/LAB - patch 3 Y2K and fixed FY prompting
  ;
 START ;beginning of routine 

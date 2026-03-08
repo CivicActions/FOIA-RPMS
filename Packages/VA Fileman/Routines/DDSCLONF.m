@@ -1,5 +1,6 @@
-DDSCLONF ;SFISC/MKO-CLONE A FORM ;1:35 PM  4 Sep 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDSCLONF ;SFISC/MKO-CLONE A FORM ;01:47 PM  29 Jul 1994 [ 09/10/1998  11:27 AM ]
+ ;;21.0;VA FileMan;**1007**;Sep 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  D ASKCONT Q:DDSQUIT
  D CREATBK Q:DDSQUIT
@@ -16,7 +17,7 @@ CREATBK ;Create blocks
  F  S DDSBKDA=$O(^TMP("DDSCLONE",$J,DDSBKDA)) Q:'DDSBKDA!DDSQUIT  D
  . S DDSBK=^TMP("DDSCLONE",$J,DDSBKDA)
  . W !?2,$P(DDSBK,U,2)
- . K DIC,DD,DO
+ . K DIC
  . S DIC="^DIST(.404,",DIC(0)="QL",X=$P(DDSBK,U,2)
  . D FILE^DICN K DIC
  . I Y=-1 D  Q
@@ -47,7 +48,7 @@ CREATFM ;Create form
  . S DDSJ=" "
  . F  S DDSJ=$O(^DIST(.403,+Y,40,DDSI,40,DDSJ)) Q:DDSJ=""  D
  .. K ^DIST(.403,+Y,40,DDSI,40,DDSJ)
- K @$$REF^DDS0(+Y)
+ K ^DIST(.403,+Y,"AZ")
  ;
  S $P(^DIST(.403,+Y,0),U)=$P(DDSFORM,U,3)
  W ?35,"#"_+Y

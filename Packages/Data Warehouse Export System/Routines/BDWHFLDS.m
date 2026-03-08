@@ -1,0 +1,41 @@
+BDWHFLDS ;ihs/cmi/maw - BDW HOPE Fields
+ ;;1.0;IHS DATA WAREHOUSE;**6**;JAN 23, 2006;Build 60
+ Q
+ ;
+SEGS ;-- call segments and create fields
+ D ZVP,ZMD,RXD
+ Q
+ ;
+ZVP ;-- create zvp fields
+ N R,P
+ S R=$G(INA("RXIEN"))
+ S P=$$GET1^DIQ(52,R,4,"I")
+ S INDA("ZVP",1)=""
+ S INA("BDW1ZVP1",1)=1
+ S INA("BDW1ZVP8")=$$NPI^BDWHUTL(P)
+ S INA("BDW1ZVP9")=$$DETOXMID^BDWHUTL(P)
+ S INA("BDW1ZVP10")=$$DEA^BDWHUTL(P)
+ S INA("BDW1ZVP11")=$$VANUM^BDWHUTL(P)
+ S INA("BDW1ZVP12")=$$AFFIL^BDWHUTL(P)
+ Q
+ ;
+ZMD ;-- create zmd fields
+ N R
+ S R=$G(INA("RXIEN"))
+ S INDA("ZMD",1)=""
+ S INA("BDW1ZMD1",1)=1
+ S INA("BDW1ZMD6")=$S($G(INA("RFIEN")):"Y",1:"N")
+ S INA("BDW1ZMD7")=$$DAYS^BDWHUTL(R)
+ S INA("BDW1ZMD8")=$$DEAVA^BDWHUTL(R)
+ S INA("BDW1ZMD9")=$$RXDETOXN^BDWHUTL(R)
+ Q
+ ;
+RXD ;-- create rxd fields
+ N R
+ S R=$G(INA("RXIEN"))
+ S INDA("RXD",1)=""
+ S INA("BDW1RXD1",1)=1
+ S INA("BDW1RXD3")=$$FMTHL7^XLFDT($G(INA("FILLDATE")))
+ S INA("BDW1RXD7")=$$GET1^DIQ(52,R,.01)
+ Q
+ ;

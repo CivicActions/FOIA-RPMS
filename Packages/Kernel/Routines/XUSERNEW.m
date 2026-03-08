@@ -1,6 +1,5 @@
-XUSERNEW ;SF/RWF - ADD NEW USER ;5/13/08  17:19
- ;;8.0;KERNEL;**16,49,134,208,157,313,351,419,467,480**;Jul 10, 1995;Build 38
- ;;Per VHA Directive 2004-038, this routine should not be modified
+XUSERNEW ;SF/RWF - ADD NEW USER ; [7/15/04 9:32am]
+ ;;8.0;KERNEL;**16,49,134,208,157,313,351**;Jul 10, 1995
  ;In the call to NEW^XM for new users the variable XMZ must be undef.
  ;on a reactivation XMZ should be set to the current max message number.
 EN ;Add
@@ -9,7 +8,6 @@ EN ;Add
  S XUN=+Y ;XU USER ADD called in $$ADD
  S DR="["_$$GET^XUPARAM("XUNEW USER","N")_"]"
  S DIE=200,DA=XUN D XUDIE^XUS5 G:$D(DTOUT) EXIT
- I $$GET1^DIQ(200,XUN_",",11,"I")="" W !,"Without a VERIFY code the user will not be able to sign-on!",$C(7),!
  S Y=XUN K XMZ D NEW^XM K XMDT,XMM,XMZ
  ;ACCESS LETTER, Also see XUSERBLK
  W ! D LETTER(XUN,1)
@@ -47,7 +45,6 @@ RE2 S XUSOLD=^VA(200,XUN,0)
  D XUDIE^XUS5 G:$D(DTOUT) EXIT
  I $P(^VA(200,XUN,0),U,3)="" W !!,"No ACCESS CODE has been entered.",$C(7),!
  I $P(^VA(200,XUN,0),U,11)>0,$P(^(0),U,11)'>DT W !!,"User is still TERMINATED.",$C(7),!
- I $$GET1^DIQ(200,XUN_",",11,"I")="" W !,"Without a VERIFY code the user will not be able to sign-on!",$C(7),!
  N DIR
  S DIR(0)="Y",DIR("A")="Deny access to old mail messages",DIR("B")="NO",DIR("?")="Enter a 'YES' to restrict access to old mail messages."
  D ^DIR G:$D(DIRUT) EXIT
@@ -57,12 +54,11 @@ RE2 S XUSOLD=^VA(200,XUN,0)
  Q
  ;
 ADD(NP1,KEYS,NONC) ;Common point to do DIC call for adding a new person.
- ;NP1 will be added to the default or what comes from the NPI field or the KSP.
+ ;NP1 will be added to the default or what comes from the NPI field of the KSP.
  ;KEYS is a list of Keys to give the new person
  N DA,DR,DLAYGO,XUITNAME,XUS1,XUS2,DIC,DIE,DIK,NP2,Y
  I $G(^XTV(8989.3,1,"NPI"))]"" X ^("NPI") S NP2=DR
- S:'$D(NP2) NP2="1;"_$S($D(^XUSEC("XUSPF200",DUZ)):9,1:"9R~")_";4;41.99"
- ;";41.99" is for adding National Provider Identifier
+ S:'$D(NP2) NP2="1;"_$S($D(^XUSEC("XUSPF200",DUZ)):9,1:"9R~")_";4"
  S DIC="^VA(200,",DIC(0)="AELMQ",DLAYGO=200,DIC("A")="Enter NEW PERSON's name (Family,Given Middle Suffix): ",DIC("DR")="",XUITNAME=1
  D ^DIC S XUS1=Y G AX:(Y'>0)!($P(Y,U,3)'>0)
  S DA=+$G(^VA(200,+XUS1,3.1)) I DA,'$G(NONC) D
@@ -83,13 +79,6 @@ ADD(NP1,KEYS,NONC) ;Common point to do DIC call for adding a new person.
  . S DIK="^DIC(3,",XUS1=$P($G(^DIC(3,DA,0)),U,16) D ^DIK
  . Q:'XUS1!($P($G(^DIC(16,0)),U)'="PERSON")!'$D(^DD(16,0))
  . S DIK="^DIC(16,",DA=XUS1 D ^DIK
- N XUSNPI S XUSNPI=$P($G(^VA(200,DA,"NPI")),"^")
- I XUS1>0,+XUSNPI>0 D
- . S XUSNPI=$$ADDNPI^XUSNPI("Individual_ID",DA,XUSNPI,$$NOW^XLFDT(),1) ;add NPI to multiple
- . ; Initialize field 41.97 to 1 (YES)
- . Q:+XUSNPI'>0
- . N DIE,DR,DA S DIE="^VA(200,",DA=+XUS1,DR="41.97////1" D ^DIE
- . Q
  I XUS1>0,$D(KEYS) F XUS2=1:1 S Y=$P(KEYS,",",XUS2) Q:'$L(Y)  D
  . S %=$$ADD^XQKEY(XUS1,Y) I '% W !,"Key '",Y,"' not allocated"
  I XUS1>0 D CALL^XUSERP(+XUS1,1) ;XQOR add
@@ -106,6 +95,6 @@ LETTER(XUN,ASK) ;Print access letter
  S XUTEXT=$$GET^XUPARAM("XUSER COMPUTER ACCOUNT","N"),XUTEXT=$O(^DIC(9.2,"B",XUTEXT,0))
  S DIR(0)="Y",DIR("A")="Print User Account Access Letter"
  I XUTEXT>0 S Y=1 D:$G(ASK) ^DIR I Y=1 D
- . S (XUU,XUU2)="________",DIWF="^DIC(9.2,XUTEXT,1,",DIWF(1)=200,FR=XUN,TO=XUN,BY="NUMBER" D EN2^DIWF
+ . S XUU="________",DIWF="^DIC(9.2,XUTEXT,1,",DIWF(1)=200,FR=XUN,TO=XUN,BY="NUMBER" D EN2^DIWF
  . Q
  Q

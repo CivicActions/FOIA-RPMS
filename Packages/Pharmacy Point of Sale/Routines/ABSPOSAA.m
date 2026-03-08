@@ -1,5 +1,5 @@
 ABSPOSAA ; IHS/FCS/DRS - JWS, ;   [ 09/12/2002  10:05 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**3**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,53**;JUN 01, 2001;Build 131
  Q
  ;  $$CONNECT(DIALOUT)  - initialize modem and dial 
  ;  Called from ABSPOSAQ from ABSPOSAM
@@ -13,8 +13,12 @@ ABSPOSAA ; IHS/FCS/DRS - JWS, ;   [ 09/12/2002  10:05 AM ]
  ;   "Dialing", "Waiting for remote connect", etc.
  ;   And tack on "Failed while " in front, when something goes wrong.
  ;
-CONNECT(DIALOUT) ;EP - 
- ; Open the device 
+CONNECT(DIALOUT) ;EP -
+ ;
+ ; /IHS/OIT/RAM ; 20 MAR 2024 ; DON'T USE 'CONNECT' FOR THE NEW CONNECTION TYPE '4'
+ ;          CONNECTIVITY IS BUILT-INTO THE NEW ENHANCEMENTS.
+ I $$HTTPPOST^ABSPOSA(DIALOUT) Q 0
+ ; Open the device
  N RET
  S RET=$$OPEN^ABSPOSAB(DIALOUT)
  I RET Q 20999_",OPEN^ABSPOSAB(),"_RET
@@ -71,6 +75,8 @@ STATUS(DIALOUT) ;check status of IO
  ; Returns $ZB value for terminal server.
  ; Development:  $$STATRPT^ABSPOSAZ, $$GETSTAT^ABSPOSAZ may be useful
  ;
+ ; /IHS/OIT/RAM ; 20 MAR 2024 ; Also always return 0 (OK) for the new HTTP POST connectivity.
+ I $$HTTPPOST^ABSPOSA(DIALOUT) Q 0
  I '$$TCP^ABSPOSA(DIALOUT) Q 0 ; relevant only to term server and T1
  ; if last operation timed out (-3), that's okay
  ; maybe we should also skim past "end of input" (-1), too

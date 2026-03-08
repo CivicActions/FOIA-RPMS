@@ -1,9 +1,11 @@
-ORWDPS2 ; SLC/KCM/JLI - Pharmacy Calls for Windows Dialog;17-Jun-2013 10:14;PLS
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,116,125,131,132,148,141,195,215,258,243,1011**;Dec 17, 1997;Build 242
+ORWDPS2 ; SLC/KCM/JLI - Pharmacy Calls for Windows Dialog;30-Dec-2019 10:28;MGH
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**85,116,125,131,132,148,141,195,215,258,243,1011,1018,1019**;Dec 17, 1997;Build 242
  ;
  ; Modified - IHS/MSC/PLS - 06/01/2013 - Line DISPLST+5
+ ;            IHS/MSC/MGH - 07/22/2019 - Line DISPLST+8
+ ;            IHS/MSC/MGH = 12/03/2019 - Line OISLCT+10,OISLCT+12
 OISLCT(LST,OI,PSTYPE,ORVP,NEEDPI,PKIACTIV) ; return for defaults for pharmacy orderable item
- N ILST,ORDOSE,ORWPSOI,ORWDOSES,X1,X2
+ N ILST,ORDOSE,ORWPSOI,ORWDOSES,X1,X2,ORLIQ
  K ^TMP("PSJINS",$J),^TMP("PSJMR",$J),^TMP("PSJNOUN",$J),^TMP("PSJSCH",$J),^TMP("PSSDIN",$J)
  S ILST=0
  S ORWPSOI=0
@@ -12,8 +14,10 @@ OISLCT(LST,OI,PSTYPE,ORVP,NEEDPI,PKIACTIV) ; return for defaults for pharmacy or
  I '$L($T(DOSE^PSSOPKI1)) D DOSE^PSSORUTL(.ORDOSE,ORWPSOI,PSTYPE,ORVP)       ; dflt doses
  I $L($T(DOSE^PSSOPKI1)) D DOSE^PSSOPKI1(.ORDOSE,ORWPSOI,PSTYPE,ORVP)       ; dflt doses NEW PKI CODE from pharmacy
  D EN^PSSDIN(ORWPSOI)                               ; nfi text
+ ;IHS/MSC/MGH Find liquids Patch 1019 and add to medication
+ S ORLIQ=$$LIQUID^APSPLIQ(ORWPSOI)
  S ILST=ILST+1,LST(ILST)="~Medication"
- S ILST=ILST+1,LST(ILST)="d"_OI_U_$S(+OI:$P(^ORD(101.43,OI,0),U),1:"")
+ S ILST=ILST+1,LST(ILST)="d"_OI_U_$S(+OI:$P(^ORD(101.43,OI,0),U),1:"")_U_ORLIQ
  S ILST=ILST+1,LST(ILST)="~Verb"
  S ILST=ILST+1,LST(ILST)="d"_$P($G(ORDOSE("MISC")),U)
  S ILST=ILST+1,LST(ILST)="~Preposition"
@@ -52,14 +56,21 @@ DOSAGE ; from OISLCT, set up the list of dosages
  S I=0 F  S I=$O(ORWDOSES(I)) Q:I'>0  S ILST=ILST+1,LST(ILST)=ORWDOSES(I)
  Q
 DISPLST ; from OISLCT, set up list of dispense drugs
- ; DrugIEN^Strength^Units^Name^Split^Drug Long Name^Qty Qualifier
- N DD
+ ; DrugIEN^Strength^Units^Name^Split^Drug Long Name^Qty Qualifier^Compound Flag
+ N DD,CMED
  S DD=0 F  S DD=$O(ORDOSE("DD",DD)) Q:'DD  D
  . S ILST=ILST+1
  . ;IHS/MSC/PLS - 06/17/13
  . ;S LST(ILST)="i"_DD_U_$P(ORDOSE("DD",DD),U,5,6)_U_$P(ORDOSE("DD",DD),U)_U_$P(ORDOSE("DD",DD),U,11)
  . S LST(ILST)="i"_DD_U_$P(ORDOSE("DD",DD),U,5,6)_U_$P(ORDOSE("DD",DD),U)_U_$P(ORDOSE("DD",DD),U,11)_U_$$GET1^DIQ(50,DD,9999999.352)_U_$$QTYTXT^APSPES1(DD)
+ . ;IHS/MSC/MGH added for eRX to check for compound p1018
+ . S CMED=$$CMP(DD)
+ . I +CMED S LST(ILST)=LST(ILST)_U_CMED  ;8th piece
  Q
+CMP(DDRG) ;Check to see if dispense drug is a compound P1018
+ N ISCMP
+ S ISCMP=$$GET1^DIQ(50,DDRG,9999999.35,"I")
+ Q ISCMP
 ALLDOSE ; from OISLCT, set up a list of all possible doses
  ; LST(n)=iDrugName^Strength^NF^... (see BLDDOSE)
  N I,J,CONJ,DD,DRUG,DDNM,LDOSE,TEXT,STREN,UD,COST,NF,ID,X

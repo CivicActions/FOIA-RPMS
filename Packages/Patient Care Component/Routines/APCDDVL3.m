@@ -1,5 +1,5 @@
-APCDDVL3 ; IHS/CMI/LAB - report on checked in visits with no pov ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDDVL3 ; IHS/CMI/TUCSON - report on checked in visits with no pov ; [ 05/16/99  8:00 AM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**1**;MAR 09, 1999
  ;IHS/CMI/LAB - patch 1 Y2K
  ;
  ;
@@ -21,9 +21,6 @@ SORT ;
  S DIR(0)="S^T:Terminal Digit Order;H:Health Record Number Order;D:Visit Date Order;C:Clinic Code Order",DIR("A")="Sort the report by",DIR("B")="T" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I $D(DIRUT) G ED
  S APCDCSRT=Y
-DEMO ;
- D DEMOCHK^APCLUTL(.APCDDEMO)
- I APCDDEMO=-1 G BD
 ZIS ;call to XBDBQUE
  S XBRP="PRINT^APCDDVL3",XBRC="PROCESS^APCDDVL3",XBRX="EOJ^APCDDVL3",XBNS="APCD"
  D ^XBDBQUE
@@ -41,7 +38,6 @@ PROCESS ;EP - called from XBDBQUE
  . S APCDV=0
  . F  S APCDV=$O(^AUPNVSIT("B",APCDT,APCDV)) Q:'APCDV  D
  .. I $P($P(^AUPNVSIT(APCDV,0),U),".",2)'=12 Q  ;no a 12:00 visit
- .. Q:$$DEMO^APCLUTL($P(^AUPNVSIT(APCDV,0),U,5),APCDDEMO)
  .. I $P(^AUPNVSIT(APCDV,0),U,28)]"" Q  ;has billing link
  .. I $P(^AUPNVSIT(APCDV,0),U,6)'=DUZ(2) Q  ;another facilities visit
  .. ;I $$PRIMPROV^APCLV(APCDV)]"",$D(^AUPNVPOV("AD",APCDV)) Q  ;COMPLETE VISIT

@@ -1,9 +1,12 @@
-PSSDDUT ;BIR/LDT-Pharmacy Data Management DD Utility ;09/15/97
- ;;1.0;PHARMACY DATA MANAGEMENT;**13,18,19,38,56**;9/30/97
+PSSDDUT ;BIR/LDT-Pharmacy Data Management DD Utility ;15-May-2024 13:48;DU
+ ;;1.0;PHARMACY DATA MANAGEMENT;**13,18,19,38,56,1035**;9/30/97;Build 39
+ ; Modified - IHS/MSC/PLS - 05/14/2024 - SCH+2
  ;
 SCH ;Called from DRUG file (50), Unit Dose Schedule field 62.04
  ;(Replaces EN^PSGS0)
- I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>2)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N") K X Q
+ ;IHS/MSC/PLS - P35 FID 103810
+ ;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>2)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N") K X Q
+ I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N") K X Q
  I X?.E1L.E S X=$$ENLU^PSSGMI(X) I '$D(PSGOES) D EN^DDIOL("  ("_X_")","","?0")
  I X["Q0" K X Q
  ;

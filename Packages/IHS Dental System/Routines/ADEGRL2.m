@@ -1,6 +1,7 @@
 ADEGRL2 ; IHS/HQT/MJL - DENTAL ENTRY PART 3 ;  [ 03/24/1999   9:04 AM ]
- ;;6.0;ADE;**26**;APRIL 1999;Build 13
+ ;;6.0;ADE;**26,38**;MAR 25, 1999;Build 158
  ;;IHS/OIT/GAB 10.2014 Modified for 2015 Code Updates - PATCH 26
+ ;;IHS/OIT/GAB 11.2022 File 3,6,16 Removal - ADE Patch 38
  ;
  ;        RETURNS ADENEWVS=1 AND ADEVDATE (IF A NEW VISIT),
  ;                ADENEWVS=0 AND ADEDFN (IF OLD VISIT)
@@ -66,7 +67,9 @@ VSHELP1 Q:'$D(^ADEPCD(ADEDFN,0))
  I $D(ADEDIR),ADEDIR,$P(^ADEPCD(ADEDFN,0),U,9)="c" Q
  W ! W:+ADE ADE,". " W Y
  W ?20,"  ",$S($P(^ADEPCD(ADEDFN,0),U,9)="c":"CONTRACT",1:"DIRECT")
- I $P(^ADEPCD(ADEDFN,0),U,4)]"",$D(^DIC(16,$P(^ADEPCD(ADEDFN,0),U,4),0)) W ?30,"  ",$P(^(0),U) ;IHS/HMW 1-4-90
+ ;I $P(^ADEPCD(ADEDFN,0),U,4)]"",$D(^DIC(16,$P(^ADEPCD(ADEDFN,0),U,4),0)) W ?30,"  ",$P(^(0),U) ;IHS/HMW 1-4-90
+ ;/IHS/OIT/GAB PATCH 38 - Commented above line and added below line for File 3,6,16 removal, File200 update
+ I $P(^ADEPCD(ADEDFN,0),U,4)]"",$D(^VA(200,$P(^ADEPCD(ADEDFN,0),U,4),0)) W ?30," ",$P(^(0),U)
  I $D(^AUTTADA("B","9140")),$O(^AUTTADA("B","9140",0)),$D(^ADEPCD(ADEDFN,"ADA","B",$O(^AUTTADA("B","9140",0)))) W ?60,"<CANCELLATION>"
  I $D(^AUTTADA("B","9130")),$O(^AUTTADA("B","9130",0)),$D(^ADEPCD(ADEDFN,"ADA","B",$O(^AUTTADA("B","9130",0)))) W ?60,"<BROKEN APPT.>"
  ;/IHS/OIT/GAB Patch #26 Added below two lines for 2015 codes, will be replacing 9130 & 9140 (don't remove old codes yet)

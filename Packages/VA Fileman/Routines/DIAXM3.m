@@ -1,5 +1,6 @@
-DIAXM3 ;SFISC/DCM-PROCESS MAPPING INFORMATION (CONT) ;3/3/93  12:23 PM
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIAXM3 ;SFISC/DCM-PROCESS MAPPING INFORMATION (CONT) ;3/3/93  12:23 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 N S DIAXNO=$P(Y(0),U,2),DIAXLE=+$P(DIAXNO,"J",2) S:DIAXFR DIAXFR("DLR")=$P(Y(0),U,5)["$"
  S @(DIAXA_"(""LE"")")=DIAXLE,@(DIAXA_"(""DC"")")=+$P(DIAXNO,",",2)

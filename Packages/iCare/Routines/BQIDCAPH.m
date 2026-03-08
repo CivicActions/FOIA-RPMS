@@ -1,5 +1,5 @@
 BQIDCAPH ;GDIT/HS/ALA-Scheduled Visits by Hospital location ; 17 Nov 2005  6:04 PM
- ;;2.3;ICARE MANAGEMENT SYSTEM;**3,4**;Apr 18, 2012;Build 66
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**5**;Mar 01, 2021;Build 20
  ;
  Q
  ;
@@ -21,7 +21,8 @@ APT(DATA,PARMS,MPARMS) ;EP
  NEW UID
  S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
  S DATA=$NA(^TMP("BQIDCAPH",UID))
- K @DATA
+ S DCRIT=$NA(^TMP("BQICRIT",UID))
+ K @DATA,@DCRIT
  ;
 FND ;  Find the patients with appts for one or more hospital locations
  NEW HLOC,FROM,THRU,NM,N,FRDT,ENDT,LABEL,APST,STOP,FDT,EDT,DFN,STR,LOC,STAT
@@ -66,9 +67,11 @@ FND1 ; Check one hospital location
  F  S FDT=$O(^SC(HLOC,"S",FDT)) Q:FDT=""!(FDT\1>EDT)  D
  . S N=0
  . F  S N=$O(^SC(HLOC,"S",FDT,1,N)) Q:'N  D
- .. NEW DA,IENS
+ .. NEW DA,IENS,SIENS
  .. S DA(2)=HLOC,DA(1)=FDT,DA=N,IENS=$$IENS^DILF(.DA)
  .. S DFN=$$GET1^DIQ(44.003,IENS,.01,"I") I DFN="" Q
+ .. K DA,SIENS
+ .. S DA(1)=HLOC,DA=FDT,SIENS=$$IENS^DILF(.DA)
  .. ; User may now select Living, Deceased or both as a filter so
  .. ; if no filters defined assume living patients otherwise let filter decide
  .. ;I $O(^BQICARE(OWNR,1,PLIEN,15,0))="",$P($G(^DPT(DFN,.35)),U,1)'="" Q
@@ -79,14 +82,14 @@ FND1 ; Check one hospital location
  ... I $G(APSTAT)="AC" S APCHK=""
  ... I $G(APSTAT)'="AC" S APCHK=APSTAT
  ... I $P($G(^DPT(DFN,"S",FDT,0)),U,2)'=APCHK Q
- ... S @DATA@(DFN)=""
+ ... S @DATA@(DFN)="",@DCRIT@("APPT",DFN,SIENS)=""
  .. I $D(MPARMS("APSTAT")) D  Q
  ... S APST=""
  ... F  S APST=$O(MPARMS("APSTAT",APST)) Q:APST=""  D
  .... I $G(APST)="AC" S APCHK=""
  .... I $G(APST)'="AC" S APCHK=APST
  .... I $P($G(^DPT(DFN,"S",FDT,0)),U,2)'=APCHK Q
- .... S @DATA@(DFN)=""
+ .... S @DATA@(DFN)="",@DCRIT@("APPT",DFN,SIENS)=""
  .. ;S @DATA@(DFN)=""
  Q
  ;
@@ -110,13 +113,15 @@ FNDALL ; Loop through all patients since cancelled status selected
  .. I $G(HLOC)]"",LOC'=HLOC Q
  .. I LOC'="",$D(MPARMS("HLOC")),'$D(MPARMS("HLOC",LOC)) Q
  .. I LOC="",$D(MPARMS("HLOC")) Q
+ .. K DA,SIENS
+ .. S DA(1)=LOC,DA=FDT,SIENS=$$IENS^DILF(.DA)
  .. I $D(APSTAT) D  Q
  ... I APSTAT="AC",STAT'="" Q
  ... I STAT'=APSTAT Q
- ... S @DATA@(DFN)=""
+ ... S @DATA@(DFN)="",@DCRIT@("APPT",DFN,SIENS)=""
  .. I $D(MPARMS("APSTAT")) D  Q
  ... I STAT'="",'$D(MPARMS("APSTAT",STAT)) Q
  ... I STAT="",'$D(MPARMS("APSTAT","AC")) Q
- ... S @DATA@(DFN)=""
- .. S @DATA@(DFN)=""
+ ... S @DATA@(DFN)="",@DCRIT@("APPT",DFN,SIENS)=""
+ .. S @DATA@(DFN)="",@DCRIT@("APPT",DFN,SIENS)=""
  Q

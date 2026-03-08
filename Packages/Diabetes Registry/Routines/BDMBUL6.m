@@ -1,5 +1,5 @@
-BDMBUL6 ; cmi/anch/maw - Routine to create bulletin ; 
- ;;2.0;DIABETES MANAGEMENT SYSTEM;;AUG 11, 2006
+BDMBUL6 ; IHS/CMI/TMJ - Routine to create bulletin; [ 05/11/06  3:52 PM ]
+ ;;1.0;DIABETES MANAGEMENT SYSTEM;**6**;OCT 01, 2000
  ;;
  ;;Here's how to make this work:
  ;;
@@ -63,6 +63,14 @@ WRITEMSG ;
  ;;10. Lipid Panel
  ;;11. Pap Smear
  ;;12. All Education
+ ;;13. Nutrition
+ ;;14. Exercise
+ ;;15. Microalbumin
+ ;;16. Text Follow up
+ ;;
+ ;;The new Text Follow up insert will print the follow up item needed
+ ;;and then will automatically print the associated Education text
+ ;;for that follow up item.
  ;;
  ;;4. Self Glucose Monitoring Report
  ;;
@@ -72,9 +80,21 @@ WRITEMSG ;
  ;;
  ;;7. Modified Lister Routines to accommodate DMS GUI Interface
  ;;
+ ;;8. New routine BDMKILL to kill of all BDM Variables.
+ ;;
+ ;;9. Added new menu option to create Taxonomy Setup for both the IHS Standard
+ ;;Diabetes Register and the IHS Standard Pre-Diabetes Register.
+ ;;
+ ;;10.  Removed Diagnosis update from the Register Data Action Item #1 
+ ;;under Patient Management.  Replaced Item #20 (Order Entry/Results Dep)
+ ;;with the new Action Item called Diagnosis.  
+ ;;This new item allows the User to Add/Edit/Delete multiple diagnosis
+ ;;(similar to item #2 Complication Action Item).
+ ;;
+ ;;
  ;;
  ;;For additional information contact your RPMS site manager, Area Office RPMS or
- ;;the HELP DESK.
+ ;;the ITSC HELP DESK at ITSCHELP@mail.ihs.gov (505) 248-4371.
  ;;
  ;;  
  ;;+++++++++++++++++++++ End of Announcement +++++++++++++++++++++++

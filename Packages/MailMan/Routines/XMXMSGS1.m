@@ -1,5 +1,5 @@
-XMXMSGS1 ;ISC-SF/GMB-Message APIs (cont.) ;04/19/2002  11:58
- ;;8.0;MailMan;;Jun 28, 2002
+XMXMSGS1 ;ISC-SF/GMB- Message APIs (cont'd) ;03/24/99  15:09
+ ;;7.1;MailMan;**50**;Jun 02, 1994
 FWD(XMDUZ,XMZ,XMINSTR,XMCNT) ;
 XFWD ; (Need XMDUZ, XMZ, XMINSTR.  XMK not needed.)
  ; XMZREC   Zero node of the msg record
@@ -14,48 +14,37 @@ XFWD ; (Need XMDUZ, XMZ, XMINSTR.  XMK not needed.)
  Q
 CHKSHARE(XMDUZ,XMZ,XMRESTR) ;
  I $G(XMRESTR("FLAGS"))["C",$D(^TMP("XMY",$J,.6)) D
- . D ERRSET^XMXUTIL(39200,XMZ,XMZ)
- . ;Confidential messages may not be forwarded to SHARED,MAIL.
+ . S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"XMZ")=XMZ
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",1)="Message "_XMZ_" is confidential.  SHARED,MAIL removed as recipient."
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",2)="Confidential messages may not be forwarded to SHARED,MAIL."
  . D SAVEADDR
  . D CHKADDR^XMXADDR(XMDUZ,"-.6")
  I $G(XMRESTR("FLAGS"))["X",$D(^TMP("XMY",$J,.6)) D
- . D ERRSET^XMXUTIL(39201,XMZ,XMZ)
- . ;Message |1| is closed.  SHARED,MAIL removed as recipient.
- . ;Closed messages may not be forwarded to SHARED,MAIL.
+ . S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"XMZ")=XMZ
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",1)="Message "_XMZ_" is closed.  SHARED,MAIL removed as recipient."
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",2)="Closed messages may not be forwarded to SHARED,MAIL."
  . D SAVEADDR
  . D CHKADDR^XMXADDR(XMDUZ,"-.6")
  Q
 CHKRESTR(XMDUZ,XMZ,XMRESTR) ;
  N XMTO
- I $D(XMRESTR("NOBCAST")) D
- . ; The user is not allowed to forward this message to broadcast
- . ; because it has replies, and users with autoforward would not
- . ; see the replies.  Search for any broadcasts and delete them.
- . N XMOK
- . S XMTO="",XMOK=1
- . F  S XMTO=$O(^TMP("XMY0",$J,XMTO)) Q:XMTO=""  D
- . . Q:$E(XMTO)'="*"
- . . S XMOK=0
- . . I '$D(^TMP("XM",$J,"SAVE")) D SAVEADDR
- . . D CHKADDR^XMXADDR(XMDUZ,"-"_XMTO)
- . Q:XMOK
- . D ERRSET^XMXUTIL(39205,XMZ,XMZ)
  I $D(XMRESTR("NOFPG")) D
  . ; The user is not allowed to forward this priority message to groups
- . ; because s/he is not the originator and does not possess the proper
- . ; security key.  Search for any groups and delete them.
+ . ; because s/he is not the originator and
+ . ; does not possess the proper security key.
+ . ; Search for any groups and delete them.
  . N XMOK
  . S XMTO="",XMOK=1
- . F  S XMTO=$O(^TMP("XMY0",$J,XMTO)) Q:XMTO=""  D
+ . F  S XMTO=$O(^TMP("XMY0",XMTO)) Q:XMTO'=+XMTO  D
  . . Q:$E(XMTO,1,2)'="G."
  . . S XMOK=0
  . . I '$D(^TMP("XM",$J,"SAVE")) D SAVEADDR
  . . D CHKADDR^XMXADDR(XMDUZ,"-"_XMTO)
  . Q:XMOK
- . D ERRSET^XMXUTIL(39202,XMZ,XMZ)
- . ;Priority message |1| not forwarded.
- . ;Only message originator or XM GROUP PRIORITY key holders
- . ;may forward priority messages to groups.
+ . S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"XMZ")=XMZ
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",1)="Priority message "_XMZ_" not forwarded to groups."
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",2)="Only message originator or XM GROUP PRIORITY key holders"
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",3)="may forward priority messages to groups."
  I $D(XMRESTR("NONET")) D
  . ; The user is not allowed to forward this message to remote sites
  . ; because it exceeds the site maximum number of lines and
@@ -63,17 +52,16 @@ CHKRESTR(XMDUZ,XMZ,XMRESTR) ;
  . ; Search for any remote addressees and delete them.
  . N XMOK
  . S XMTO="",XMOK=1
- . F  S XMTO=$O(^TMP("XMY0",$J,XMTO)) Q:XMTO=""  D
+ . F  S XMTO=$O(^TMP("XMY0",XMTO)) Q:XMTO'=+XMTO  D
  . . Q:XMTO'["@"
  . . S XMOK=0
  . . I '$D(^TMP("XM",$J,"SAVE")) D SAVEADDR
  . . D CHKADDR^XMXADDR(XMDUZ,"-"_XMTO)
  . Q:XMOK
- . N XMPARM S XMPARM(1)=XMZ,XMPARM(2)=XMRESTR("NONET")
- . D ERRSET^XMXUTIL(39203,.XMPARM,XMZ)
- . ;Message |1| not forwarded to remote recipients.
- . ;Only XMMGR key holders may forward to remotes sites
- . ;messages which exceed site maximum of |2| lines.
+ . S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"XMZ")=XMZ
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",1)="Message "_XMZ_" not forwarded to remote recipients."
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",2)="Only XMMGR key holders may forward to remote sites"
+ . S ^TMP("XMERR",$J,XMERR,"TEXT",3)="messages which exceed site maximum of "_XMRESTR("NONET")_" lines."
  Q
 SAVEADDR ; Save addressees
  S %X="^TMP(""XMY"",$J,",%Y="^TMP(""XM"",$J,""SAVE"",""XMY""," D %XY^%RCR
@@ -95,25 +83,24 @@ XFWDONE ;
  D FWDIT(XMDUZ,XMZ,.XMINSTR,.XMCNT)
  Q
 FWDIT(XMDUZ,XMZ,XMINSTR,XMCNT) ;
- I $$GOTADDR^XMXADDR D  Q
+ I $D(^TMP("XMY",$J)) D  Q
  . D FWD^XMKP(XMDUZ,XMZ,.XMINSTR)
  . S:$D(XMCNT) XMCNT=XMCNT+1
- ;Message |1| has no addressees.  Not forwarded.
- D ERRSET^XMXUTIL(39204,XMZ,XMZ)
+ S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"XMZ")=XMZ
+ S ^TMP("XMERR",$J,XMERR,"TEXT",1)="Message "_XMZ_" has no addressees.  Not forwarded."
  Q
 PRT(XMDUZ,XMZ) ; Print
 XPRT ;
  S ^TMP("XM",$J,"XMZ",XMZ)=""
  S XMCNT=$G(XMCNT)+1
  Q
-XP(XMDUZ,XMK,XMZ,XMTPRI,XMCNT)      ; Toggle Transmission Priority
-XXP ;
+XP(XMDUZ,XMK,XMZ,XMCNT)      ;
+XXP ; Toggle Transmission Priority
  S:'$G(XMK) XMK=$O(^XMB(3.7,"M",XMZ,XMDUZ,""))
- I XMDUZ'=.5!(XMK'>999) D  Q  ;Transmit priority toggle valid only
- . D ERRSET^XMXUTIL(37219.5)  ;for Postmaster transmission queues.
- Q:XMTPRI=$P(^XMB(3.7,XMDUZ,2,XMK,1,XMZ,0),U,6)
+ I XMDUZ'=.5!(XMK'>999) D  Q
+ . S XMERR=$G(XMERR)+1,^TMP("XMERR",$J,XMERR,"TEXT",1)="Transmission Priority toggle valid only for Postmaster Transmission Queues."
  N XMFDA
- S XMFDA(3.702,XMZ_","_XMK_","_XMDUZ_",",6)=XMTPRI
+ S XMFDA(3.702,XMZ_","_XMK_","_XMDUZ_",",6)=$S($P(^XMB(3.7,XMDUZ,2,XMK,1,XMZ,0),U,6):"@",1:1)
  D FILE^DIE("","XMFDA")
  S:$D(XMCNT) XMCNT=XMCNT+1
  Q

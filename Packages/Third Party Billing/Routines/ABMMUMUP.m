@@ -1,5 +1,5 @@
 ABMMUMUP ;IHS/SD/SDR - MU Report Parameters ;
- ;;2.6;IHS 3P BILLING SYSTEM;**7,8**;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**7,8,10**;NOV 12, 2009;Build 43
  ;
  W !!
  I $P($G(^ABMMUPRM(1,0)),U,2)'="" D  Q
@@ -14,7 +14,8 @@ ABMMUMUP ;IHS/SD/SDR - MU Report Parameters ;
  Q:Y<1
  D ^XBFMK
  S DIR(0)="Y"
- S DIR("A")="Do you wish to designate a Facility as an FQHC or RHC"
+ ;S DIR("A")="Do you wish to designate a Facility as an FQHC or RHC"  ;abm*2.6*10 HEAT61752
+ S DIR("A")="Do you wish to designate a Facility as an FQHC, RHC or Tribal clinic"  ;abm*2.6*10 HEAT61752
  D ^DIR K DIR
  Q:$D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT)
  S ABMANS=+Y
@@ -34,7 +35,8 @@ EN ;
  .F  D  Q:+$G(Y)<0!$D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT)  ;they didn't answer
  ..D ^XBFMK
  ..S DIR(0)="SAO^"_$G(ABMDIR)
- ..S DIR("A")="Select one or more facilities to designate as an FQHC or RHC: "
+ ..;S DIR("A")="Select one or more facilities to designate as an FQHC or RHC: "  ;abm*2.6*10 HEAT61752
+ ..S DIR("A")="Select one or more facilities to designate as an FQHC, RHC or Tribal clinic: "  ;abm*2.6*10 HEAT61752
  ..D ^DIR K DIR
  ..Q:$D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT)
  ..Q:+$G(Y)<0
@@ -42,7 +44,8 @@ EN ;
  ..S ABMF($G(ABMFLIST(ABMFANS)))=""
  ..D ^XBFMK
  ..S DIR(0)="Y"
- ..S DIR("A")="Is this FQHC led by a PA? "
+ ..;S DIR("A")="Is this FQHC led by a PA? "  ;abm*2.6*10 HEAT61752
+ ..S DIR("A")="Is this FQHC/RHC/Tribal clinic led by a PA? "  ;abm*2.6*10 HEAT61752
  ..D ^DIR K DIR
  ..Q:$D(DTOUT)!$D(DUOUT)!$D(DIRUT)!$D(DIROUT)
  ..S ABMF($G(ABMFLIST(ABMFANS)))=Y
@@ -50,12 +53,18 @@ EN ;
  ...S ABMCNT=0
  ...F  S ABMCNT=$O(ABMF(ABMCNT)) Q:'ABMCNT  S ABMF($G(ABMFLIST(ABMFANS)))=ABMFANS2
  I $D(ABMF) D
- .W !!!,"The following have been identified by you as FQHC/RHC facilities"
+ .;W !!!,"The following have been identified by you as FQHC/RHC facilities"  ;abm*2.6*10 HEAT61752
+ .W !!!,"The following have been identified by you as FQHC/RHC/Tribal facilities"  ;abm*2.6*10 HEAT61752
  .S ABMCNT=0
  .F  S ABMCNT=$O(ABMF(ABMCNT)) Q:'ABMCNT  D
  ..W !?2,$$GET1^DIQ(9999999.06,ABMCNT,.01,"E")
- ..W:+$G(ABMF(ABMCNT))=0 " (FQHC)"
- ..W:+$G(ABMF(ABMCNT))=1 " (FQHC led by PA)"
+ ..;start old code abm*2.6*10 HEAT61752
+ ..;W:+$G(ABMF(ABMCNT))=0 " (FQHC)"
+ ..;W:+$G(ABMF(ABMCNT))=1 " (FQHC led by PA)"
+ ..;end old code start new code HEAT61752
+ ..W:+$G(ABMF(ABMCNT))=0 " (FQHC/RHC/Tribal)"
+ ..W:+$G(ABMF(ABMCNT))=1 " (FQHC/RHC/Tribal led by PA)"
+ ..;end new code HEAT61752
  .D ^XBFMK
  .S DIR(0)="Y"
  .S DIR("A",1)=""

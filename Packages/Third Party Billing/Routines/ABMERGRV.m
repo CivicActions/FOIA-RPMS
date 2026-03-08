@@ -1,5 +1,5 @@
 ABMERGRV ; IHS/SD/SDR - GET ANCILLARY SVCS REVENUE CODE INFO ;   
- ;;2.6;IHS Third Party Billing;**1,8,11,13,20,21,22,23,25**;NOV 12, 2009;Build 444
+ ;;2.6;IHS Third Party Billing;**1,8,11,13,20,21,22,23,25,29,32,33,37**;NOV 12, 2009;Build 739
  ;Original;DMJ;01/26/96 4:02 PM
  ; IHS/SD/SDR 2.5 p8 task 6 Added code for new ambulance multiple 47
  ; IHS/SD/SDR 2.5 p9 IM18857 Added code to print FL45
@@ -19,6 +19,13 @@ ABMERGRV ; IHS/SD/SDR - GET ANCILLARY SVCS REVENUE CODE INFO ;
  ;IHS/SD/SDR 2.6*23 HEAT247169 Added code to check subfile 43 if visit type is 997.
  ;IHS/SD/SDR 2.6*23 HEAT347035 Added quit if print order was selected to not do the T1015-on-top thing
  ;IHS/SD/SDR 2.6*25 CR10016 Made change to fix Arizona Medicaid pharmacy billing rev code 519
+ ;IHS/SD/AML 2.6*29 CR10888 If Medi-Cal and DOS on/after 1/1/2019 print rev code from prev. line until next rev code is found,
+ ;   then print that rev code
+ ;IHS/SD/SDR 2.6*29 CR10410 Medicare non-covered charges changes
+ ;IHS/SD/SDR 2.6*32 CR10210 Removed ALL INCLUSIVE PRINT NDC prompt
+ ;IHS/SD/SDR 2.6*33 ADO60189/CR9512 changed flat rate total amount to be bill amount, not covered days*flat rate amount
+ ;IHS/SD/SDR 2.6*37 ADO80078 fixed flat rate when billing secondary; it should be the flat rate amount again, not the bill amount
+ ;  Also fixed FL47 should be covered days*flat rate amount; prior to this patch was just flat rate amount
  ;
  ; *********************************************************************
  ;
@@ -52,7 +59,9 @@ P1 ;EP - SET UP ABMRV ARRAY
  ; 
  ; if not flat rate .....
  ;I '$D(ABMP("FLAT")) D  ;abm*2.6*22 IHS/SD/SDR HEAT335246
- I '$D(ABMP("FLAT"))!(($D(ABMP("FLAT")))&($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")) D  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ D CNDCD21^ABMDESM1  ;abm*2.6*29 IHS/SD/SDR CR10410
+ ;I '$D(ABMP("FLAT"))!(($D(ABMP("FLAT")))&($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")) D  ;abm*2.6*22 IHS/SD/SDR HEAT335246  ;abm*2.6*32 IHS/SD/SDR CR10210
+ I '$D(ABMP("FLAT")) D  ;abm*2.6*32 IHS/SD/SDR CR10210
  .N I
  .F I=21,23,25,27,33,35,37,39,43,45,47 D
  ..; dont get pharmacy if RX bill status is unbillable
@@ -93,7 +102,28 @@ P1 ;EP - SET UP ABMRV ARRAY
  ....S ABMRV(ABMI,ABMJ,ABMK)=$G(ABMTMP("TMP"))
  ....;end new HEAT147327
  K ABMI,ABMJ,ABMK,ABMTMP
- .;end new code HEAT117086
+ ;end new code HEAT117086
+ ;
+ ;start new abm*2.6*29 IHS/SD/AML CR10888 2019 requirement for O/P Medi-Cal
+ I (($P($G(^AUTNINS(ABMP("INS"),0)),U)["O/P MEDI-CAL")&(ABMP("VDT")>3181231)) D
+ .S I=0
+ .F  S I=$O(ABMRV(I)) Q:'I  D
+ ..S J=""
+ ..S J=$O(ABMRV(I,J)) Q:J=""  D
+ ...S K=0
+ ...F  S K=$O(ABMRV(I,J,K)) Q:K=""  D
+ ....I $P(ABMRV(I,J,K),U,6)'=0 S ABMDRVC=$P(ABMRV(I,J,K),U)
+ ....S $P(ABMRV(I,J,K),U)=+$G(ABMDRVC)
+ .S I=0
+ .F  S I=$O(ABMRV(I)) Q:'I  D
+ ..S J=""
+ ..F  S J=$O(ABMRV(I,J)) Q:J=""  D
+ ...S K=0
+ ...F  S K=$O(ABMRV(I,J,K)) Q:K=""  D
+ ....I $P(ABMRV(I,J,K),U,6)'=0 S ABMDRVC=$P(ABMRV(I,J,K),U)
+ ....S $P(ABMRV(I,J,K),U)=+$G(ABMDRVC)
+ K ABMDRVC
+ ;abm*2.6*29 end new IHS/SD/AML CR10888 2019 requirement for O/P Medi-Cal
  ;
  I $P($G(^DIC(40.7,$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,10),0)),U,2)="A3" D
  .S ABMODMOD=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),12)),U,14)_$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),12)),U,16)
@@ -119,7 +149,9 @@ P1 ;EP - SET UP ABMRV ARRAY
  .N I
  .F I=1:1:3 S ABM(I)=$P(ABMP("FLAT"),"^",I)
  .I (ABMP("VTYP")=999&(ABMP("BTYP")=731)&($P($G(^AUTNINS(ABMP("INS"),0)),U)["MONTANA MEDICAID")) S ABM(3)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),5)),U,7)  ;abm*2.6*1 HEAT7884
- .S ABMRV(+ABM(2),0,1)=+ABM(2)_"^^^^"_ABM(3)_"^"_($S(+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U)'=0:$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U),1:ABM(1)*ABM(3)))_"^^"_ABM(1)
+ .;S ABMRV(+ABM(2),0,1)=+ABM(2)_"^^^^"_ABM(3)_"^"_($S(+$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U)'=0:$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U),1:ABM(1)*ABM(3)))_"^^"_ABM(1)  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ .;S ABMRV(+ABM(2),0,1)=+ABM(2)_"^^^^"_ABM(3)_"^"_($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U))_"^^"_ABM(1)  ;abm*2.6*33 IHS/SD/SDR ADO60189  ;abm*2.6*37 IHS/SD/SDR ADO80078
+ .S ABMRV(+ABM(2),0,1)=+ABM(2)_"^^^^"_ABM(3)_"^"_($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U,8))_"^^"_ABM(1)  ;abm*2.6*33 IHS/SD/SDR ADO60189  ;abm*2.6*37 IHS/SD/SDR ADO80078
  .;I +$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U)'=0 S $P(ABMRV(+ABM(2),0,1),U,6)=(+$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),2),U,8))
  .S $P(ABMRV(+ABM(2),0,1),U,10)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U)
  .S $P(ABMRV(+ABM(2),0,1),U,27)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,2)  ;service date to  ;abm*2.6*21 IHS/SD/SDR HEAT120880
@@ -127,15 +159,18 @@ P1 ;EP - SET UP ABMRV ARRAY
  .S ABMP("CDAYS")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),7)),U,3)  ;abm*2.6*1 HEAT5691
  .I +$G(ABMP("CDAYS"))>0 D
  ..S $P(ABMRV(+ABM(2),0,1),U,5)=$G(ABMP("CDAYS"))
- ..S $P(ABMRV(+ABM(2),0,1),U,6)=$G(ABMP("CDAYS"))*ABM(1)
+ ..;S $P(ABMRV(+ABM(2),0,1),U,6)=$G(ABMP("CDAYS"))*ABM(1)   ;abm*2.6*33 IHS/SD/SDR ADO60189
+ ..S $P(ABMRV(+ABM(2),0,1),U,6)=$G(ABMP("CDAYS"))*ABM(1)   ;added this line back in to FL47 would be total for line, not just the flat rate amount;  abm*2.6*37 IHS/SD/SDR ADO80078
+ ..I (+$G(ABMCND21)=1) S $P(ABMRV(+ABM(2),0,1),U,7)=$P(ABMRV(+ABM(2),0,1),U,6),$P(ABMRV(+ABM(2),0,1),U,6)=0  ;abm*2.6*29 IHS/SD/SDR CR10410
  .S ABMCPT=$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),U,16) I ABMCPT D
  ..S ABMCPT=$P($$CPT^ABMCVAPI(ABMCPT,ABMP("VDT")),U,2)  ;CSV-c
  ..S ABMP("CPT")=ABMCPT
  ..S $P(ABMRV(+ABM(2),0,1),U,2)=ABMCPT
  ..Q:$G(ABMP("EXP"))'=11
  ..S $P(ABMRV(+ABM(2),"TOT"),U,2)=ABMCPT
- .S ABM(4)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6)
- .I ABM(4),ABMP("VTYP")=111 S $P(ABMRV(+ABM(2),0,1),U,7)=(ABM(4)*ABM(1))
+ .S ABM(4)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),6)),U,6)  ;non-covered days
+ .;I ABM(4),ABMP("VTYP")=111 S $P(ABMRV(+ABM(2),0,1),U,7)=(ABM(4)*ABM(1))  ;abm*2.6*33 IHS/SD/SDR ADO60189
+ .I ABM(4),ABMP("VTYP")=111 S $P(ABMRV(+ABM(2),0,1),U,7)=(ABM(4)*$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),2)),U,8))  ;abm*2.6*33 IHS/SD/SDR ADO60189
  .I ABM(4),(+$G(ABMP("CDAYS"))=0) S $P(ABMRV(+ABM(2),0,1),U,5)=0
  .;start new abm*2.6*20 IHS/SD/AML HEAT262141 1/4/2016 - AHCCCS RX REQUIREMENT
  .I $$RCID^ABMERUTL(ABMP("INS"))=99999 D

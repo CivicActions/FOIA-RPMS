@@ -1,105 +1,118 @@
-AG8A ; IHS/ASDS/EFG - ENTER & EDIT NON-MANDATORY DATA ;    
- ;;7.1;PATIENT REGISTRATION;;AUG 25,2005
+AG8A ; IHS/ASDS/EFG - ENTER & EDIT NON-MANDATORY DATA ;    [ 05/07/2003  3:05 PM ]
+ ;;7.0;IHS PATIENT REGISTRATION;**1**;MAR 28, 2003
  ;
-REL ;EP - RELIGION
+ ;
+ ; IHS/SD/EFG - 03/12/2003 - AG*7*1
+ ;     MODIFIED EC STREET ADDRESS TO ALLOW USER TO ENTER "SAME" TO
+ ;         COPY PATIENT'S ADDRESS AND PHONE TO EC ADDRESS AND PHONE
+ ;
+ ; *********************************************************************
+REL ; EP - RELIGION
  D S2
  S DR=.08
  D END
  Q
-FNAME ;EP - FATHER'S NAME
+ ; *********************************************************************
+FNAME ; EP - FATHER'S NAME
  D S2
  S DR=.2401
  D END
  Q
-FCOB ;EP - FATHER'S CITY OF BIRTH
+ ; *********************************************************************
+FCOB ; EP - FATHER'S CITY OF BIRTH
  D S1
  S DR=2602
  D END
  Q
-FSOB ;EP - FATHER'S STATE OF BIRTH
+ ; *********************************************************************
+FSOB ; EP - FATHER'S STATE OF BIRTH
  D S1
  S DR=2603
  D END
  Q
-FEMP ;EP - FATHER'S EMPLOYER
- D S1
- S DR=2701
- D END
- Q
-MNAME ;EP - MOTHER'S MAIDEN NAME
+ ; *********************************************************************
+MNAME ; EP - MOTHER'S MAIDEN NAME
  D S2
  S DR=.2403
  D END
  Q
-MCOB ;EP - MOTHER'S CITY OF BIRTH
+ ; *********************************************************************
+MCOB ; EP - MOTHER'S CITY OF BIRTH
  D S1
  S DR=2605
  D END
  Q
-MSOB ;EP - MOTHER'S STATE OF BIRTH
+ ; *********************************************************************
+MSOB ; EP - MOTHER'S STATE OF BIRTH
  D S1
  S DR=2606
  D END
  Q
-MEMP ;EP - MOTHER'S EMPLOYER
- D S1
- S DR=2702
- D END
- Q
-ECNAME ;EP - EMERG CONTACT NAME
+ ; *********************************************************************
+ECNAME ; EP - EMERG CONTACT NAME
  D S2
  S DR=.331
- I $P($G(^DPT(DFN,.33)),U)=""&($P($G(^AUPNPAT(DFN,31)),U,2)'="") S $P(^AUPNPAT(DFN,31),U,2)=""  ; IF EC NAME HAS BEEN DELETED - DELETE RELATIONSHIP
+ I $P($G(^DPT(DFN,.33)),U,1)=""&($P($G(^AUPNPAT(DFN,31)),U,2)'="") S $P(^AUPNPAT(DFN,31),U,2)=""  ; IF EC NAME HAS BEEN DELETED - DELETE RELATIONSHIP
  G END
-ECREL ;EP - EMERG CONT RELATIONSHIP
+ ; *********************************************************************
+ECREL ; EP - EMERG CONT RELATIONSHIP
  D S1
  S DR=3102
  D END
  Q
-ECSTR ;EP - EMERG CONT STREET
+ ; *********************************************************************
+ECSTR ; EP - EMERG CONT STREET
  D S2
  S DR=.333
  W !,"(If the Emerg. Contact address is the patient's, enter SAME)"  ; IHS/SD/EFG  AG*7*1  03/12/2003
  D END
- Q:$D(DUOUT)  G SAME
+ Q:$D(DUOUT)  G SAME  ; IHS/SD/EFG  AG*7*1  03/12/2003
  Q
-ECCITY ;EP - EMERG CONT CITY
+ ; *********************************************************************
+ECCITY ; EP - EMERG CONT CITY
  D S2
  S DR=.336
  D END
  Q
-ECST ;EP - EMERG CONT STATE
+ ; *********************************************************************
+ECST ; EP - EMERG CONT STATE
  D S2
  S DR=.337
  D END
  Q
-ECZIP ;EP - EMERG CONT ZIP
+ ; *********************************************************************
+ECZIP ; EP - EMERG CONT ZIP
  D S2
  I $D(DPTFLAG) S DR=.2201
  E  S DR=.338
  D END
  Q
-ECPH ;EP - EMERG CONT PHONE #
+ ; *********************************************************************
+ECPH ; EP - EMERG CONT PHONE #
  D S2
  S DR=.339
  D END
  Q
+ ; *********************************************************************
 S1 ;
  K DUOUT
  S DIE="^AUPNPAT("
  S DA=DFN
  W !
  Q
+ ; *********************************************************************
 S2 ;
  K DUOUT
  S DIE="^DPT("
  S DA=DFN
  W !
  Q
+ ; *********************************************************************
 END ;
  D ^DIE
  S:$D(Y) DUOUT=""
  Q
+ ; *********************************************************************
 SAME ;
  S DA=DFN
  S DR=.333
@@ -115,6 +128,7 @@ SAME ;
  Q:'$D(^DPT(DFN,.13))
  S $P(^DPT(DFN,.33),U,9)=$P(^DPT(DFN,.13),U)
  Q
+ ; *********************************************************************
 ECRELD ;CALLED FROM DGDDC RTN WHICH IS CALLED BY XREF ON FIELD .331 OF ^DPT
  S $P(^AUPNPAT(DFN,31),"^",2)=""
  Q

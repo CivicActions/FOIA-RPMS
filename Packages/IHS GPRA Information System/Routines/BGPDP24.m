@@ -1,5 +1,5 @@
-BGPDP24 ; IHS/CMI/LAB - print ind 24 ;
- ;;7.0;IHS CLINICAL REPORTING;;JAN 24, 2007
+BGPDP24 ; IHS/CMI/LAB - print ind 24 ;   [ 08/19/02  3:52 PM ]
+ ;;1.0;IHS GPRA REPORTING;**1**;JUN 12, 2002
  ;
  ;
 I24 ;EP ; 

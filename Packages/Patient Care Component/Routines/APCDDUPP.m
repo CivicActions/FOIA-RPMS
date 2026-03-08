@@ -1,5 +1,5 @@
-APCDDUPP ; IHS/CMI/LAB - find and delete duplicate visits ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDDUPP ;IHS/CMI/LAB - find and delete duplicate visits [ 09/02/02  9:36 PM ] ; 13 May 2004  8:51 AM
+ ;;2.0;IHS RPMS/PCC Data Entry;**9**;MAR 09, 1999
  ;
  ;
  W !!,"This routine will find all visits that have duplicate primary providers"

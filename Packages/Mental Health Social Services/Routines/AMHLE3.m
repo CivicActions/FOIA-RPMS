@@ -1,5 +1,5 @@
 AMHLE3 ; IHS/CMI/LAB - DE CONT. ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**1**;JUN 18, 2010;Build 8
+ ;;3.0;IHS BEHAVIORAL HEALTH;**10**;JAN 27, 2003
  ;
  ;
 PHX ;EP
@@ -20,15 +20,14 @@ EP ;EP
  S AMHHEAD=" PERSONAL HISTORY FOR "_$P(^DPT(AMHPAT,0),U) D SUBHEAD
  S AMHX=0 F  S AMHX=$O(^AMHPPHX("AC",AMHPAT,AMHX)) Q:AMHX'=+AMHX  D
  .S AMHD=$P(^AMHPPHX(AMHX,0),U,3) D DATE
- .;W !,AMHD,?11,$E($P(^AMHTPHF($P(^AMHPPHX(AMHX,0),U),0),U),1,25)
- .W !,$E($P(^AMHTPHF($P(^AMHPPHX(AMHX,0),U),0),U),1,25)
+ .W !,AMHD,?11,$E($P(^AMHTPHF($P(^AMHPPHX(AMHX,0),U),0),U),1,25)
  .Q
  ;call DIR to get the factor
  K DIR S DIR(0)="9002011.52,.01",DIR("A")="Enter PERSONAL HISTORY" D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  I $D(DIRUT) W !!,"Bye..." D EOJ Q
  S AMHPHX=+Y
  I $D(^AMHPPHX("AA",AMHPAT,AMHPHX)) W !!,$P(^AMHTPHF(AMHPHX,0),U)," already recorded for this patient.",!,$C(7),"You may change it or delete it.  To delete an entry, enter an '@'.",! D  D EOJ Q
- .S DIE="^AMHPPHX(",DR=".01",DA=$O(^AMHPPHX("AA",AMHPAT,AMHPHX,0))
+ .S DIE="^AMHPPHX(",DR=".01;.03",DA=$O(^AMHPPHX("AA",AMHPAT,AMHPHX,0))
  .L +^AMHPPHX(DA,0):10 E  W !!,"Can't lock global entry." Q
  .D ^DIE
  .L -^AMHPPHX:10
@@ -45,7 +44,7 @@ DATE ;
 PEF ;EP - called from AMHLEA - other
  S AMHR=%,AMHPAT=%1
  K AMHEFT
- ;W !! S DIR(0)="S^F:Full Encounter Form;S:Suppressed Encounter Form;B:Both a Suppressed & Full;T:2 copies of the Suppressed;E:2 copies of the Full"
+ ;W !! S DIR(0)="S^F:Full Encounter Form;S:Suppress Subjective/Objective/Chief Complaint Encounter Form;B:Both a Suppressed&Full;T:2 copies of the Suppressed;E:2 copies of the Full"
  ;S DIR("A")="What type of form do you want to print"
  ;S DIR("B")=$S($P(^AMHSITE(DUZ(2),0),U,23)]"":$P(^AMHSITE(DUZ(2),0),U,23),1:"B") K DA D ^DIR K DIR
  D FORMDIR^AMHLEFP(AMHR)

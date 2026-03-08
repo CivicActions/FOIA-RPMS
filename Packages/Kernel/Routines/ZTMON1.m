@@ -1,6 +1,5 @@
-ZTMON1 ;SEA/RDS-TaskMan: Option, ZTMON, Part 2 (Main Loop) ;2/19/08  13:36
- ;;8.0;KERNEL;**36,118,127,275,446**;Jul 10, 1995;Build 44
- ;Per VHA Directive 2004-038, this routine should not be modified.
+ZTMON1 ;SEA/RDS-TaskMan: Option, ZTMON, Part 2 (Main Loop) ;11/03/2003  13:42
+ ;;8.0;KERNEL;**36,118,127,275**;Jul 10, 1995
 MON D IO:MODE,JOB,SUB
  G DONE
  ;
@@ -37,10 +36,9 @@ TASK ;Evaluate Task List
  Q
  ;
 SUB ;Look for idle submanagers
- N %N,ZT1,ZT2,ZT3,ZT4
- W !,"Checking Sub-Managers:"
- I $D(^%ZTSCH("WAIT","SUB")) W !?5,"Sub-Managers told to Wait."
- D SUBCHK^%ZTMS5(0)
+ D SUBCHK^%ZTMS5
+ N %N,ZT1,ZT2,ZT3,ZT4 L +^%ZTSCH("SUB"):1
+ I $D(^%ZTSCH("WAIT","SUB")) W !,"Sub-Managers told to Wait."
  S %N=""
  F  S %N=$O(^%ZTSCH("SUB",%N)) Q:%N=""  D
  . S %=$G(^(%N)),ZT4=+$G(^%ZTSCH("LOADA",%N))
@@ -48,6 +46,7 @@ SUB ;Look for idle submanagers
  . W " Status: ",$S($D(^%ZTSCH("STOP","SUB",%N)):"Stop",ZT4:"BWait",1:"Run")
  . I $G(^%ZTSCH("SUB",%N,0))>5 W !?10,"SUB-MANAGERS ARE NOT STARTING."
  . Q
+ L -^%ZTSCH("SUB")
  Q
  ;
 DONE ;Prompt to Quit Or Continue

@@ -1,5 +1,5 @@
-BEHOPTPL ;MSC/IND/DKM - Patient List Management ;15-Sep-2014 22:13;PLS
- ;;1.1;BEH COMPONENTS;**004004,004010**;Mar 20, 2007
+BEHOPTPL ;MSC/IND/DKM - Patient List Management ;09-Mar-2023 12:03;PLS
+ ;;1.1;BEH COMPONENTS;**004004,004010,004014**;Mar 20, 2007
  ;=================================================================
  ; Lookup by full or partial SSN
 LOOKUP(DATA,ID) ;
@@ -18,10 +18,12 @@ HRNLKP(DATA,HRN) ;
  Q
  ; Patient lookup using IEN
 IENLKP(DATA,IEN) ;
- N DFN
+ N DFN,SOGI
  I $E(IEN)="`" D
  .S DFN=+$E(IEN,2,$L(IEN))
- .S:$$ISACTIVE^BEHOPTCX(DFN) DATA(1)=DFN_U_$P(^DPT(DFN,0),U)_U_$$HRN^BEHOPTCX(DFN)_"   "_$$DOB^DPTLK1(DFN)
+ .S SOGI=$P($$GET^AUPNSOGI(DFN,,,,,1),U,1)  ;P004014
+ .;S:$$ISACTIVE^BEHOPTCX(DFN) DATA(1)=DFN_U_$P(^DPT(DFN,0),U)_U_$$HRN^BEHOPTCX(DFN)_"   "_$$DOB^DPTLK1(DFN)
+ .S:$$ISACTIVE^BEHOPTCX(DFN) DATA(1)=DFN_U_SOGI_U_$$HRN^BEHOPTCX(DFN)_"   "_$$DOB^DPTLK1(DFN)
  Q
  ; Patient lookup using DOB
 DOBLKP(DATA,DOB) ;

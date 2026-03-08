@@ -1,0 +1,3 @@
+XMA7G1 ;(WASH ISC)/JA- * OBSOLETE * ;12/12/97  14:52
+ ;;7.1;MailMan;**24,50**;Jun 02, 1994
+ Q

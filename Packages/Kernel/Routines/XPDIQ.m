@@ -1,5 +1,6 @@
-XPDIQ ;SFISC/RSD - Install Questions ;03/21/2008
- ;;8.0;KERNEL;**21,28,58,61,95,108,399**;Jul 10, 1995;Build 12
+XPDIQ ;SFISC/RSD - Install Questions ;12/16/98  12:06 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**21,28,58,61,95,108**;Jul 10, 1995
  Q
 DIR(XPFR,XPFP) ;XPFR=prefix, XPFP=file no._# or Mail Group ien
  ;XPFP is for XPF  or XPM questions
@@ -44,7 +45,7 @@ QUES(X) ;build XPDQUES array, X="INI","INIT","XPF","XPM"
  ;move INSTALL ANSWERS from file 9.7 to XPDQUES
  ;XPDQUES(X)=internal answer, XPDQUES(X,"A")=prompt, XPDQUES(X,"B")=external answer.
  N Y,Z K XPDQUES S Z=X
- F  S Z=$O(^XPD(9.7,XPDA,"QUES","B",Z)) Q:Z=""!($P(Z,X)]"")  S Y=$O(^(Z,0))  D
+ F  S Z=$O(^XPD(9.7,XPDA,"QUES","B",Z)) Q:Z=""!($P(Z,X)]"")  S Y=$O(^(Z,0)) D
  .Q:'$D(^XPD(9.7,XPDA,"QUES",Y,0))
  .S XPDQUES(Z)=$G(^(1)),XPDQUES(Z,"A")=$G(^("A")),XPDQUES(Z,"B")=$G(^("B")) ; ^(1) refer to prev line ^XPD(9.7,XPDA,"QUES","B",Z)
  Q
@@ -97,14 +98,6 @@ XPI1 ;Inhibit Logons
  Q
 XPM1 ;mail groups
  S FLAG=XPDANS
- ;DIR("B") is null if first time here
- I DIR("B")="" D
- .;check if mail group already exist
- .S X=$$FIND1^DIC(3.8,"","XQf",XPDANS,"","","")
- .;get the current coordinator
- .Q:'X  S X=$P($G(^XMB(3.8,X,0)),U,7)
- .;set the default to current coordinator
- .I X,$D(^VA(200,X,0))#10 S DIR("B")=$P(^(0),U)
  D XPQ("XPM1")
  Q
 XPO1 ;rebuild menu trees

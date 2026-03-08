@@ -1,7 +1,8 @@
-LRVER ;DALOI/CJS/FHS - LAB ROUTINE DATA VERIFICATION ; 22-Oct-2013 09:22 ; MKK
- ;;5.2;LAB SERVICE;**1027,1030,1033**;NOV 01, 1997
+LRVER ;DALOI/CJS/FHS - LAB ROUTINE DATA VERIFICATION ; 05-Apr-2022 14:53 ; MKK
+ ;;5.2;LAB SERVICE;**153,1018,286,1027,1030,1033,1051**;NOV 01, 1997;Build 19
  ;
- ;;VA LR Patch(s): 153,286
+ ; MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 75913 - No Lab Data Error Fix
+ ;
  ;
 EP ; EP -- IHS/OIT/MKK - LR*5.2*1033
  D ^LRPARAM
@@ -86,11 +87,31 @@ WLN1 I '$D(^LRO(68,LRAA,1,LRAD,1,LRAN,0)) W !,"Accession does not exist." D NEXT
  ; Check for valid pointer to file #63 and entry in file #63.
  S LRIDT=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,3)),U,5)
  I LRIDT<1 D  G WLN
- . W !,">>>>ERROR - NO POINTER TO FILE #63 - PLEASE NOTIFY SYSTEM MANAGER<<<<<",!
+ . ; W !,">>>>ERROR - NO POINTER TO FILE #63 - PLEASE NOTIFY SYSTEM MANAGER<<<<<",!
+ . ;
+ . ; ----- BEGIN MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 75913 - No Lab Data Error Fix
+ . NEW LRASTR
+ . S LRASTR=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,.3)),U)
+ . I $L(LRASTR) S LRASTR="LRUID:"_LRASTR
+ . E  S LRASTR=$G(^LRO(68,LRAA,1,LRAD,1,LRAN,.2))
+ . W !,"NOTICE: NO POINTER TO FILE #63 - ",LRASTR,!
+ . ; ----- END MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 75913
+ . ;
  . D NEXT
+ ;
  I '$D(^LR(LRDFN,"CH",LRIDT,0)) D  G WLN
- . W !,">>>>ERROR - NO ENTRY IN FILE #63 - PLEASE NOTIFY SYSTEM MANAGER<<<<<",!
+ . ; W !,">>>>ERROR - NO ENTRY IN FILE #63 - PLEASE NOTIFY SYSTEM MANAGER<<<<<",!
+ . ;
+ . ; ----- BEGIN MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 75913 - No Lab Data Error Fix
+ . NEW LRASTR
+ . S LRASTR=$P($G(^LRO(68,LRAA,1,LRAD,1,LRAN,.3)),U)
+ . I $L(LRASTR) S LRASTR="LRUID:"_LRASTR
+ . E  S LRASTR=$G(^LRO(68,LRAA,1,LRAD,1,LRAN,.2))
+ . W !,"NOTICE: NO DATA IN FILE #63 - ",LRASTR,!   ; MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 75913 - No Lab Data Error Fix
+ . ; ----- END MSC/MKK - LR*5.2*1051 - 05-Apr-2022 - Item 75913
+ . ;
  . D NEXT
+ ;
  I $D(^LRO(69,LRODT,1,LRSN)),'$D(^(LRSN,1)) W !,"This Order # has not been collected",$C(7) D NEXT G WLN
  I $D(^LRO(69,LRODT,1,LRSN,1)),$P(^LRO(69,LRODT,1,LRSN,1),U,4)'="C" W !,"You cannot verify an accession which has not been collected.",$C(7) D NEXT G WLN
  Q

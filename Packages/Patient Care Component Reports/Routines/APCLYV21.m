@@ -1,5 +1,5 @@
 APCLYV21 ; IHS/CMI/LAB - PRINT OUTPT VISITS WITH ICD CODES (CALC) ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**26**;MAY 14, 2009;Build 48
  ;
 INIT ;initialize variables
  S APCLJOB=$J,APCLBT=$H
@@ -18,7 +18,7 @@ VST1 S APCLVDFN=$O(^AUPNVSIT("B",APCLVDT,APCLVDFN)) G VST:APCLVDFN=""
  G VST1:$$DEMO^APCLUTL($P(APCLSTR,U,5),$G(APCLDEMO))
  I APCLLOC]"",$P(APCLSTR,U,6)'=APCLLOC G VST1 ;screen out other facilities
  ;screen out all but ambulatory, in-hospital, & day surgery
- S X=$P(APCLSTR,"^",7) I X'="A",(X'="I"),(X'="S") G VST1
+ S X=$P(APCLSTR,"^",7) I X'="A",(X'="I"),(X'="S"),(X'="M") G VST1
  I $D(^APCLCNTL(4,11,"B",$P(APCLSTR,"^",3))) G VST1 ;LAB ADDED TO SCREEN OUT C AND V
  I APCLPROV]"" S APCLFOUN=0 D GETPROV G:'APCLFOUN VST1
  G VST1:$P(APCLSTR,"^",8)=APCLDEN ;screen out dental visits

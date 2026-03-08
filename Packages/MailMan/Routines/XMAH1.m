@@ -1,7 +1,5 @@
-XMAH1 ;ISC-SF/GMB-Reply to a message API ;04/17/2002  07:33
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CAP
- ;
+XMAH1 ;(WASH ISC)/CAP-Reply to a message ;06/23/99  14:37
+ ;;7.1;MailMan;**4,50**;Jun 02, 1994
  ; Entry points (DBIA 1232):
  ; ^XMAH1      Interactive respond to a message
  ; ENTA^XMAH1  Interactive respond to a message
@@ -20,7 +18,7 @@ ENTA ; Interactive respond to a message
  Q
 INIT(XMDUZ,XMK,XMKN,XMZ,XMSUBJ,XMFROM,XMINSTR,XMIEN,XMRESPSO,XMRESP,XMABORT) ;
  N XMIM,XMIU,XMZREC
- D INITAPI^XMVVITAE
+ D INIT^XMVVITAE
  K XMERR,^TMP("XMERR",$J)
  S XMZREC=^XMB(3.9,XMZ,0)
  I '$$REPLY^XMXSEC(XMDUZ,XMZ,XMZREC) D SHOW^XMJERR S XMABORT=1 Q

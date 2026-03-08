@@ -1,5 +1,5 @@
-RASTREQ ;HISC/CAH,GJC AISC/MJK-Status Requirements Check Routine ; 06 Oct 2013  11:07 AM
- ;;5.0;Radiology/Nuclear Medicine;**1,10,23,40,56,99,90,1005**;Mar 16, 1998;Build 13
+RASTREQ ;HISC/CAH,GJC AISC/MJK IHS/OIT/NST - Status Requirements Check Routine ;20 Jun 2025 10:01 AM
+ ;;5.0;Radiology/Nuclear Medicine;**1,10,23,40,56,99,90,137,1005,1009,1013**;Mar 16, 1998;Build 13
  ;Supported IA #10104 UP^XLFSTR
  ;Supported IA #1367 LKUP^XPDKEY
  ;Supported IA #10060 ^VA(200
@@ -135,6 +135,30 @@ NORPT ; either no report yet, or report is stub
  I '$O(^RADPT(DA(2),"DT",DA(1),"P",DA,"CMOD",0)) K X S RAZ="CPT modifiers" X:$D(RAMES1) RAMES1
  Q
  ;
+32 ;Pregnancy screen check - P137/KLM
+ ;
+ ;IHS/CMI/MAW - Patch 1009 - Gender Fix
+ ;I $$PTSEX^RAUTL8(DA(2))="F" Q
+ I $$PTSEX^RAUTL8(DA(2))="M" Q
+ N RAPTAGE
+ ;IHS/OIT/NST - Patch 1013 - Change age range 8-64 years old 
+ S RAPTAGE=$$PTAGE^RAUTL8(DA(2),"") I ((RAPTAGE<8)!(RAPTAGE>64)) Q
+ I $D(^RARPT(+$P(RAJ,"^",17),0)),$P(^(0),"^",5)="EF" D  Q  ;outside report
+ .N RAFDA
+ .;If this is an outside report and nothing is entered
+ .;for pregnancy screen, we stuff a 'u'(unknown) and
+ .;'OUTSIDE STUDY' to keep it consistent with the importer.
+ .Q:$P(^RADPT(DA(2),"DT",DA(1),"P",DA,0),U,32)]""
+ .S RAFDA(70.03,DA_","_DA(1)_","_DA(2)_",",32)="u"
+ .S RAFDA(70.03,DA_","_DA(1)_","_DA(2)_",",80)="OUTSIDE STUDY"
+ .D FILE^DIE("K","RAFDA")
+ .K RAFDA
+ .Q  ;end outside report logic
+ ;otherwise, if not defined, don't complete
+ I $$GET1^DIQ(70.03,DA_","_DA(1)_","_DA(2),32)']"" K X S RAZ="Pregnancy screen" X:$D(RAMES1) RAMES1
+ K RAPTAGE
+ Q
+ ;
 HELP ; Called from 'Help Text' node in DD(70.03,3,4).
  N E,RA
  S RAJ=$G(^RADPT(DA(2),"DT",DA(1),"P",DA,0))
@@ -156,17 +180,6 @@ HELP1 ; Called from 'HELP' above and 'STUFF^RASTREQ1'
  ; 'E'   -> ien of the examination status
  ; Both 'RAJ' & 'E' set in 'HELP' & 'STUFF^RASTREQ1'
  ;
- ;start of p99, exam status UNCHANGED if pregnancy screen is not answered for female pt bet ages 12-55
- N RAPTAGE,RASAVE
- S RASAVE=X ;save the value of X, since it's being replaced in DIQ call.
- S RAPTAGE=$$PTAGE^RAUTL8(DA(2),"")
- ;
- ;IHS/BJI/DAY - Patch 1005 - Gender Fix
- ;I $$PTSEX^RAUTL8(DA(2))="F",((RAPTAGE>11)&(RAPTAGE<56)),$$GET1^DIQ(70.03,DA_","_DA(1)_","_DA(2),32)="" S E=$P(RAJ,U,3),(N,X)="" S:$G(E) (N,X)=$P($G(^RA(72,E,0)),U) Q
- I $$PTSEX^RAUTL8(DA(2))'="M",((RAPTAGE>11)&(RAPTAGE<56)),$$GET1^DIQ(70.03,DA_","_DA(1)_","_DA(2),32)="" S E=$P(RAJ,U,3),(N,X)="" S:$G(E) (N,X)=$P($G(^RA(72,E,0)),U) Q
- ;
- S X=RASAVE
- ;end p99
  N RADIO,RADIOUZD,RAS5 S RADIO=$S($G(^RA(72,E,.5))]"":$G(^(.5)),1:"N")
  S:$P($G(^RA(79.2,+RAIMGTYI,0)),"^",5)="Y" RADIOUZD=""
  ;
@@ -176,6 +189,7 @@ HELP1 ; Called from 'HELP' above and 'STUFF^RASTREQ1'
  F RAK=1:1 Q:$P(RAS,"^",RAK,99)']""  D:$P(RAS,"^",RAK)="Y" @RAK
  I $D(X),$P(RAS,"^",3)'="Y",$D(^RA(72,"AA",RAIMGTYJ,9,E)) D 3
  I $D(X),$P(RAS,"^",16)'="Y",$D(^RA(72,"AA",RAIMGTYJ,9,E)),$D(^RA(79,+$P(^RADPT(DA(2),"DT",DA(1),0),"^",3),.1)),$P(^(.1),"^",16)="Y" D 16
+ I $D(X),$D(^RA(72,"AA",RAIMGTYJ,9,E)) D 32 ;Check Preg screen -P137 /KLM
  I $D(RADIOUZD) D  ;if Radiopharm Used, then check req'd NucMed flds
  . D EN1^RASTREQN(RADIO,RAJ)
  . I $D(X),($$UP^XLFSTR($P($G(^RA(72,E,.6)),"^",11)="Y")) D EN1^RADOSTIK(RADFN,RADTI,RACNI)

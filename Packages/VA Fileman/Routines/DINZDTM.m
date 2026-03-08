@@ -1,5 +1,6 @@
-DINZDTM ;SFISC/HGL,AL-SETS %ZOSF FOR DATATREE ;2:32 PM  1 Oct 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINZDTM ;SFISC/HGL,AL-SETS %ZOSF FOR DATATREE ;03:23 PM  21 Dec 1994 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  K ^%ZOSF("MASTER"),^%ZOSF("SIGNOFF")
  F I=1:2 S Z=$P($T(Z+I),";;",2) Q:Z=""  S X=$P($T(Z+1+I),";;",2,99) S ^%ZOSF(Z)=X
@@ -21,7 +22,7 @@ Z ;;
  ;;BRK;; Enable Break
  ;;B 1
  ;;DEL;; Delete Routine in X
- ;;X "ZR  ZS @X"
+ ;;zdelete @X:1
  ;;EOFF;; Turn echo off
  ;;U $I:(echom=0)
  ;;EON;; Turn echo on

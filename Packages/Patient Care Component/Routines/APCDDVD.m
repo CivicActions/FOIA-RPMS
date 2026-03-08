@@ -1,5 +1,5 @@
-APCDDVD ; IHS/CMI/LAB - VISIT REVIEW DRIVER ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDDVD ; IHS/CMI/TUCSON - VISIT REVIEW DRIVER ; 
+ ;;1.0;IHS PCC SUITE;**1**;MAR 14, 2008
  ;;BJPC v1 patch 1
 ZERO ;EP; for zero dependent entry report
  S APCDT="ZERO" G RDPV
@@ -70,7 +70,7 @@ SORT ;
  I $D(DIRUT) G SORT
  S APCDCSRT=Y
 PPT ;
- I APCDT'="PPPV" S APCDRTYP="" G DEMO
+ I APCDT'="PPPV" S APCDRTYP="" G ZIS
  W !!,"You have chosen to run the report of visits with No Primary Provider or Purpose",!,"of visit.  You can list only those visits with certain ancillary visits",!,"attached to them.",!
  S APCDRTYP=""
  S DIR(0)="S^R:Radiology (visits with V Radiology and no PP/PV);L:Lab (visits w/V LAB and no PP/PV);P:Pharmacy (visits w/V Medication and no PP/PV)"
@@ -86,15 +86,12 @@ DOPRV ;
  S APCDDOPP=Y
 DLPOV ;
  S APCDDLPV=""
- I APCDRTYP'="L",APCDRTYP'="A" G DEMO
+ I APCDRTYP'="L",APCDRTYP'="A" G ZIS
  W !!,"Your lab personnel may be entering a diagnosis with the lab tests.",!,"You can display these diagnoses on this report.  Displaying"
  W !,"these may make the report a little longer but could assist you",!,"with billing and/or visit clean up.",!
  S DIR(0)="Y",DIR("A")="Do you want to display the LAB diagnoses",DIR("B")="N" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G DOPRV
  S APCDDLPV=Y
-DEMO ;
- D DEMOCHK^APCLUTL(.APCDDEMO)
- I APCDDEMO=-1 G SORT
 ZIS ;call xbdbque
  S XBRC="DRIVER^APCDDVD",XBRP="PRINT^APCDDVD",XBRX="XIT^APCDDVD",XBNS="APCD"
  D ^XBDBQUE

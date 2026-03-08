@@ -1,7 +1,8 @@
-DIDU1 ;SEA/TOAD-VA FileMan: DD Tools, IENS Check ;10:39 AM  8 Jul 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIDU1 ;SEA/TOAD-VA FileMan: DD Tools, IENS Check ;7/17/94  17:28 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
- ;
+ 
 IEN(DIENS,DIFLAGS) ;
  ;ENTRY POINT--return whether the IEN String is valid
  ;extrinsic function, all passed by value

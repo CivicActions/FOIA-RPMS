@@ -1,0 +1,83 @@
+BTIUIPDV ; IHS/MSC/MGH - IMPLANTABLE DEVICE OBJECT ;16-Feb-2021 09:22;DU
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1023**;MAR 20, 2013;Build 12
+ ;
+ Q
+ ;
+ABBREV(DFN,TARGET) ;Abbreviated list of implantable devices
+ ;
+ N DEVIEN,STRARR,DEVCNT,STRERR,CNT,STAT,FN,SUBIEN,BIEN,AIEN,SUBFN,SUBARR,SUBERR,SITE,BSITE
+ K @TARGET
+ S CNT=0,DEVCNT=0,FN=9000091,SUBFN=9000091.4
+ S DEVIEN="" F  S DEVIEN=$O(^AUPNPDEV("C",DFN,DEVIEN)) Q:'+DEVIEN  D
+ .D GETS^DIQ(FN,DEVIEN,".01;.06;.07;.1;2","E","STRARR","STRERR")
+ .S AIEN=DEVIEN_","
+ .Q:STRARR(FN,AIEN,.07,"E")'=""
+ .S BSITE=$G(STRARR(FN,AIEN,.1,"E"))
+ .S SITE=$P($$DESC^BSTSAPI(BSITE),U,2)
+ .S CNT=CNT+1,DEVCNT=DEVCNT+1
+ .S @TARGET@(CNT,0)=DEVCNT_") Implanted Date: "_$G(STRARR(FN,AIEN,.06,"E"))_"   Category: "_$G(STRARR(FN,AIEN,.01,"E"))
+ .S CNT=CNT+1
+ .S @TARGET@(CNT,0)="     Body Site: "_SITE
+ .S CNT=CNT+1
+ .S @TARGET@(CNT,0)="     Description: "_$G(STRARR(FN,AIEN,2,"E"))
+ .;Get status
+ .S STAT=""
+ .S SUBIEN=9999999 S SUBIEN=$O(^AUPNPDEV(DEVIEN,3,SUBIEN),-1)
+ .I +SUBIEN S STAT=$P($G(^AUPNPDEV(DEVIEN,3,SUBIEN,0)),U,2)
+ .S STAT=$S(STAT="I":"Inactive",STAT="D":"Deleted",STAT="R":"Removed",STAT="E":"Expired",1:"Active")
+ .S CNT=CNT+1
+ .S @TARGET@(CNT,0)="     Status: "_STAT
+ .;Get subfile fields
+ .S SUBIEN=0 F  S SUBIEN=$O(^AUPNPDEV(DEVIEN,4,SUBIEN)) Q:'+SUBIEN  D
+ ..S BIEN=SUBIEN_","_DEVIEN_","
+ ..D GETS^DIQ(SUBFN,BIEN,".06;2.01","E","SUBARR","SUBERR")
+ ..;S CNT=CNT+1
+ ..;S @TARGET@(CNT,0)="     Manufacture Expiration Date: "_$G(SUBARR(SUBFN,BIEN,.06,"E"))
+ ..S CNT=CNT+1
+ ..S @TARGET@(CNT,0)="     Brand Name: "_$G(SUBARR(SUBFN,BIEN,2.01,"E"))
+ I CNT=0 S @TARGET@(1,0)="No implantable devices on file"
+ Q "~@"_$NA(@TARGET)
+DETAIL(DFN,TARGET) ;Expanded list of implantable devices
+ K @TARGET
+ N DEVIEN,STRARR,DEVCNT,STRERR,CNT,FN,SUBIEN,BIEN,AIEN,SUBFN,SUBARR,SUBERR,SITE,BSITE
+ K @TARGET
+ S CNT=0,DEVCNT=0,FN=9000091,SUBFN=9000091.4
+ S DEVIEN="" F  S DEVIEN=$O(^AUPNPDEV("C",DFN,DEVIEN)) Q:'+DEVIEN  D
+ .D GETS^DIQ(FN,DEVIEN,".01;.06;.07;.1;2","IE","STRARR","STRERR")
+ .S AIEN=DEVIEN_","
+ .Q:STRARR(FN,AIEN,.07,"E")'=""
+ .S CNT=CNT+1,DEVCNT=DEVCNT+1
+ .S @TARGET@(CNT,0)=DEVCNT_") Implanted Date: "_$G(STRARR(FN,AIEN,.06,"E"))_"   Category: "_$G(STRARR(FN,AIEN,.01,"E"))
+ .S BSITE=$G(STRARR(FN,AIEN,.1,"I"))
+ .S SITE=$P($$DESC^BSTSAPI(BSITE),U,2)
+ .S CNT=CNT+1
+ .S @TARGET@(CNT,0)="     Body Site: "_SITE
+ .S CNT=CNT+1
+ .S @TARGET@(CNT,0)="     Description: "_$G(STRARR(FN,AIEN,2,"E"))
+ .;Get status
+ .S STAT=""
+ .S SUBIEN=9999999 S SUBIEN=$O(^AUPNPDEV(DEVIEN,3,SUBIEN),-1)
+ .S STAT=$P($G(^AUPNPDEV(DEVIEN,3,SUBIEN,0)),U,2)
+ .S STAT=$S(STAT="I":"Inactive",STAT="D":"Deleted",STAT="R":"Removed",STAT="E":"Expired",1:"Active")
+ .S CNT=CNT+1
+ .S @TARGET@(CNT,0)="     Status: "_STAT
+ .;Get subfile fields
+ .S SUBIEN=0 F  S SUBIEN=$O(^AUPNPDEV(DEVIEN,4,SUBIEN)) Q:'+SUBIEN  D
+ ..S BIEN=SUBIEN_","_DEVIEN_","
+ ..D GETS^DIQ(SUBFN,BIEN,".03;.04;.05;.06;1.01;2.01;2.02;3.01","E","SUBARR","SUBERR")
+ ..S CNT=CNT+1
+ ..S @TARGET@(CNT,0)="     DEVICE DATA"
+ ..;S CNT=CNT+1
+ ..;S @TARGET@(CNT,0)="       Manufacture Expiration Date: "_$G(SUBARR(SUBFN,BIEN,.06,"E"))
+ ..S CNT=CNT+1
+ ..S @TARGET@(CNT,0)="       Brand Name: "_$G(SUBARR(SUBFN,BIEN,2.01,"E"))
+ ..S CNT=CNT+1
+ ..S @TARGET@(CNT,0)="       Serial #: "_$G(SUBARR(SUBFN,BIEN,.03,"E"))_" Lot/Batch: "_$G(SUBARR(SUBFN,BIEN,.04,"E"))
+ ..S CNT=CNT+1
+ ..S @TARGET@(CNT,0)="       Version: "_$G(SUBARR(SUBFN,BIEN,2.02,"E"))_" Company: "_$G(SUBARR(SUBFN,BIEN,3.01,"E"))
+ ..S CNT=CNT+1
+ ..S @TARGET@(CNT,0)="       Manufactured Date: "_$G(SUBARR(SUBFN,BIEN,.05,"E"))
+ ..S CNT=CNT+1
+ ..S @TARGET@(CNT,0)="       GMDN: "_$G(SUBARR(SUBFN,BIEN,1.01,"E"))
+ I CNT=0 S @TARGET@(1,0)="No implantable devices on file"
+ Q "~@"_$NA(@TARGET)

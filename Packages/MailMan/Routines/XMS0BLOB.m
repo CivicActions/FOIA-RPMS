@@ -1,5 +1,5 @@
-XMS0BLOB ;(WASH ISC)/CAP-Send BLOBs (other body parts) ;04/18/2002  07:52
- ;;8.0;MailMan;;Jun 28, 2002
+XMS0BLOB ;(WASH ISC)/CAP-SEND BLOBS (OTHER BODY PARTS) ;12/12/97  07:34
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ;
  ;This routine sends BLOBS (Basic Large Objects), also known in the
  ;messaging world as 'Other Body Parts' of messages.
@@ -12,6 +12,11 @@ XMS0BLOB ;(WASH ISC)/CAP-Send BLOBs (other body parts) ;04/18/2002  07:52
  ;
  ;See XMR0BLOB for documentation on MPDUs (Message Protocol Data Units)
  ;exchanged between sender and receiver.
+ ;
+ ;Can't send BLOB if the system transmitting to is not MailMan/'$D(XMVA)
+ ;or if it is not a version postdating v7.0.
+ ;
+ Q:$S('$D(XMVA):1,XMVA'>7:1,$G(XMSLOCAL)'["FTP":1,1:0)
  ;
  ;Get data on BLOB from Imaging files
  S XMSBLOBX=0
@@ -73,5 +78,5 @@ ERR ;
  ;Clean up and quit
 Q K XMSBLOBT,XMSBLOBX,DIC Q
  ;
-TEST S XMSEN="Q",XMREC="S XMRG=250",XMZ=18067
+TEST S XMSEN="Q",XMREC="S XMRG=250",XMZ=18067,XMVA=7.01,XMSLOCAL="DUP,SER,FTP]"
  G XMS0BLOB

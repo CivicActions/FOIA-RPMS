@@ -1,8 +1,10 @@
 BMCRLU ; IHS/PHXAO/TMJ - GEN RETR UTILITIES ;     
- ;;4.0;REFERRED CARE INFO SYSTEM;**3,9**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**3,9,16**;JAN 09, 2006;Build 168
  ;IHS/ITSC/FCJ REMOVED THE () FOR PRINTING ACT OR EST; FX DT FORMAT
  ;4.0*3 10.30.2007 IHS/OIT/FCJ ADDED CSV CHANGES
  ;4.0*9 11.2.2012 IHS.OIT.FCJ ADDED ICD-10 CHANGE
+ ;4.0*16 12.15.2023 IHS.OIT.FCJ ADD CALLIN NODE;MOD AVEOS FOR FORMAT
+ ;
  ;
 RZERO(V,L) ;ep right zero fill 
  NEW %,I
@@ -84,7 +86,7 @@ AVEOS(R,F) ;EP return available end date of service
  I $G(F)="" S F="E"
  S BMCDOS=""
  S BMCDOS=$S($P($G(^BMCREF(R,11)),U,8)]"":$P(^BMCREF(R,11),U,8),1:$P($G(^BMCREF(R,11)),U,7))
- I F="E",BMCDOS]"" S BMCDOS=$$FMTE^XLFDT(BMCDOS)
+ I F="E",BMCDOS]"" S BMCDOS=$$FMTE^XLFDT(BMCDOS,"2P")  ;BMC4.0*16 ADDED "2P" TO MATCH AVDOS ABOVE FOR DT FORMAT
  I F="S",BMCDOS]"" S Y=BMCDOS D DT1^BMCOSUT S BMCDOS=Y_" "_$S($$VAL^XBDIQ1(90001,R,1106)]"":"A",1:"E")
  I F="N" Q BMCDOS
  Q BMCDOS
@@ -121,6 +123,11 @@ FACREF(R) ;EP return facility referred to (piece 7-8-9)
  S %=^BMCREF(R,0)
  S BMCF=$S($P(%,U,7):$P($G(^AUTTVNDR($P(%,U,7),0)),U),$P(%,U,8):$P(^DIC(4,$P(%,U,8),0),U),$P(%,U,9):$P($G(^BMCLPRV($P(%,U,9),0)),U),$P(%,U,23):$P(^DIC(40.7,$P(%,U,23),0),U),1:"<UNKNOWN>")
  Q BMCF
+CALLIN(R) ;EP return call in referral;BMC*4.0*16
+ N BMC
+ S BMC=""
+ I $P($G(^BMCREF(R,1)),U)="" S BMC=$S($P($G(^BMCREF(R,1)),U,3)'="":"C1",1:"")
+ Q BMC
 CASEMAN(R) ;EP return case manager
  Q $S($P(^BMCREF(R,0),U,19)]"":$P(^VA(200,$P(^BMCREF(R,0),U,19),0),U),1:"??")
 REFDTI(R,F) ; EP - Date Referral Initiated

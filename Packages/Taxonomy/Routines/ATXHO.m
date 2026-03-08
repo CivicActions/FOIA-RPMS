@@ -1,0 +1,9 @@
+ATXHO ;IHS/CMI/LAB-CREATED BY ^ATXSTX ON DEC 02, 2025;
+ ;;5.1;TAXONOMY;**68**;FEB 04, 1997;Build 136
+ ;
+ ; See referenced routines to see taxonomies being loaded.
+ ;
+START ;
+ D ^ATXHOA ;    BQI DEDP INFLUENZA A CULTURE
+ D ^ATXHOB ;    BQI DEDP INFLUENZA A NUCLEIC
+ Q

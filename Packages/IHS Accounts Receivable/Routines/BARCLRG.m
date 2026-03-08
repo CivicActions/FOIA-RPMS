@@ -1,5 +1,5 @@
 BARCLRG ; IHS/SD/LSL - COLLECTION REGISTERS RPTS MAY 30,1996 ; 04/11/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**4,20**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**4,20,29,30**;OCT 26,2005;Build 55
  ;
  ; IHS/SD/LSL - 05/08/2002 - V1.6 Patch 2 - NOIS HQW-0302-100189
  ;     Modified code to use new header template for REPRINT.
@@ -11,6 +11,9 @@ BARCLRG ; IHS/SD/LSL - COLLECTION REGISTERS RPTS MAY 30,1996 ; 04/11/2008
  ; IHS/SD/AML - 12/09/10 - V1.8 P20
  ;      Modified to allow the batch Date Finalized (.25) and User
  ;      Finalized (.26) to be stored when batch is finalized.
+ ;
+ ;IHS/SD/CPC BAR*1.8*29 - CR10866 Validated stuff occassionally matches DUZ with New Person index BS5 value
+ ;IHS/SD/CPC BAR*1.8*30 - CR10550 Check number format for increased size
  ; *********************************************************************
  ;
 START ;**EP-Collections report using FM print
@@ -63,7 +66,7 @@ LOOKUP ;
  ; **Collection Register name lookup
  K DUOUT,DTOUT,BAREFLG
  S DIC="90051.01"
- S DIC(0)="AEMQZ"
+ S DIC(0)="AEMOQZ"   ;BAR*1.8*30 CR10550 CHANGED FROM S DIC(0)="AEMQZ" "AEMOTQZ" Displays Lookup: index, do not want.  Removed T.
  D ^DIC
  K DIC
  S:Y<0 BAREFLG=1
@@ -181,7 +184,8 @@ FLEND ;**End of Final Report -- Summary Page and Postable Batch Status
  . S DIE="90051.01"
  . S DA=BARBATCH
  . ;S DR="3///POSTABLE"  ;IHS/SD/AML 12/9/2010 bar*1.8*20 - Populates the Finalized Date & User
- . S DR="3///POSTABLE;25///NOW;26///^S X=DUZ"  ;IHS/SD/AML bar*1.8*20 - Populates the Finalized Date & User
+ . ;S DR="3///POSTABLE;25///NOW;26///^S X=DUZ"  ;IHS/SD/AML bar*1.8*20 - Populates the Finalized Date & User ;IHS/SD/CPC - CR10866
+ . S DR="3///POSTABLE;25///NOW;26////^S X=DUZ"  ;IHS/SD/CPC BAR*1.8*29 - CR10866 Validated stuff occassionally matches DUZ with New Person index BS5 value
  . S DIDEL=90050
  . D ^DIE
  . K DIDEL

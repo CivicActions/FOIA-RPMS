@@ -1,15 +1,15 @@
-ABMDES4 ; IHS/ASDST/DMJ - ADA Form Dental Charge Summary ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**11,14**;NOV 12, 2009;Build 238
+ABMDES4 ; IHS/SD/SDR - ADA Form Dental Charge Summary ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**11,14,28,30,37**;NOV 12, 2009;Build 739
  ;
- ; IHS/SD/EFG - V2.5 P8 - IM16385
- ;   Fix header wrapping; include misc services
- ; IHS/SD/SDR - v2.5 p10 - IM20395
- ;   Split out lines bundled by rev code
- ; IHS/SD/SDR - v2.5 p10 - IM21581
- ;   Added active insurer print to summary
+ ;IHS/SD/EFG 2.5*8 IM16385 Fix header wrapping; include misc services
+ ;IHS/SD/SDR 2.5*10 IM20395 Split out lines bundled by rev code
+ ;IHS/SD/SDR 2.5*10 IM21581 Added active insurer print to summary
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR - 2.6*14 5/8/14 - HEAT163277 - Made change for RX multiple so charges would be counted in total sooner
+ ;IHS/SD/SDR v2.6 CSV
+ ;IHS/SD/SDR 2.6*14 5/8/14 HEAT163277 Made change for RX multiple so charges would be counted in total sooner
+ ;IHS/SD/SDR 2.6*28 CR8340 Added 3 modifiers to summary
+ ;IHS/SD/SDR 2.6*30 CR8870 Updated display so it won't wrap if units are maxed out, including 3 decimal places
+ ;IHS/SD/SDR 2.6*37 ADO76036 Added ABMP("TOT") var for COB page Current Charges
  ;
  N ABM
  Q:'$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),33,0))&('$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),43,0)))
@@ -32,7 +32,12 @@ HD ;
  W $$EN^ABMVDF("IOF")
  W !?15,"***** ADA FORM DENTAL CHARGE SUMMARY *****"
  W !!,"Active Insurer: ",$P($G(^AUTNINS(ABMP("INS"),0)),U),!
- W !!?2,"Tooth",?9,"Surface",?20,"Description of Service",?52,"Date",?60,"ADA Code",?73,"Fee"
+ ;W !!?2,"Tooth",?9,"Surface",?20,"Description of Service",?52,"Date",?60,"ADA Code",?73,"Fee"  ;abm*2.6*28 IHS/SD/SDR CR8340
+ ;W !!?2,"Tooth",?9,"Surface",?20,"Description of Service",?47,"Date",?57,"ADA Code",?73,"Fee"  ;abm*2.6*28 IHS/SD/SDR CR8340  ;abm*2.6*30 IHS/SD/SDR CR8870
+ ;start new abm*2.6*30 IHS/SD/SDR CR8870
+ W !!,?18,"Description"
+ W !?1,"Tooth",?7,"Surface",?18,"Of Service",?41,"Date",?51,"ADA Code",?72,"Fee"  ;abm*2.6*28 IHS/SD/SDR CR8340  ;abm*2.6*30 IHS/SD/SDR CR8870
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  W !,"-------------------------------------------------------------------------------"
  Q
  ;
@@ -49,10 +54,28 @@ WRT ;
  .Q:$G(ABMQUIET)
  .I $Y+5>IOSL D HD Q:$D(DUOUT)
  .W !
- .W ?18,$E($P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,3),1,30)  ;CSV-c
- .W ?50,$$HDT^ABMDUTL($P(ABM(0),U,7))
- .W ?62,$P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,2)  ;CSV-c
- .W ?70,$J($FN(ABM("CHRG"),",",2),8)
+ .;start old abm*2.6*28 IHS/SD/SDR CR8340
+ .;W ?18,$E($P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,3),1,30)  ;CSV-c
+ .;W ?50,$$HDT^ABMDUTL($P(ABM(0),U,7))
+ .;W ?62,$P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,2)  ;CSV-c
+ .;W ?70,$J($FN(ABM("CHRG"),",",2),8)
+ .;start old abm*2.6*30 IHS/SD/SDR CR8870
+ .;end old start new abm*2.6*28 IHS/SD/SDR CR8340
+ .;W ?18,$E($P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,3),1,25)
+ .;W ?44,$$HDT^ABMDUTL($P(ABM(0),U,7))
+ .;W ?56,$P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,2)  ;CSV-c
+ .;F ABMI=5,8,9 D
+ .;.W $S($P(ABM(0),U,ABMI)'="":"-"_$P(ABM(0),U,ABMI),1:"")
+ .;W ?71,$J($FN(ABM("CHRG"),",",2),8)
+ .;end new abm*2.6*28 IHS/SD/SDR CR8340
+ .;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ .W ?17,$E($P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,3),1,20)
+ .W ?39,$$HDTO^ABMDUTL($P(ABM(0),U,7))
+ .W ?49,$P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,2)  ;CSV-c
+ .F ABMI=5,8,9 D
+ ..W $S($P(ABM(0),U,ABMI)'="":"-"_$P(ABM(0),U,ABMI),1:"")
+ .W ?67,$J($FN(ABM("CHRG"),",",2),13)
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  ;end new code HEAT117086
  ;
  ;S (ABM("C"),ABM,ABM("TCHRG"))=0  ;abm*2.6*11 HEAT117086
@@ -68,12 +91,33 @@ WRT ;
  ..S ABMOPS=$P(ABM(0),U,5)
  ..S ABMTMP=$P($G(^ADEOPS(ABMOPS,88)),U)
  ..S:ABMTMP["D" ABMTMP=$P($G(^ADEOPS(ABMOPS,0)),U,4)
- ..W ?2,ABMTMP
- .W ?9,$P(ABM(0),U,6)
- .W ?18,$E($P(^AUTTADA(+ABM(0),0),U,2),1,30)
- .W ?50,$$HDT^ABMDUTL($P(ABM(0),U,7))
- .W ?62,$P(^AUTTADA(+ABM(0),0),U)
- .W ?70,$J($FN(ABM("CHRG"),",",2),8)
+ ..I (($D(^ABMDREC(ABMP("INS"))))&($P($G(^ABMDREC(ABMP("INS"),0)),U,3)="Y")&($L(ABMTMP)=1)&(+ABMTMP'=0)) S ABMTMP="0"_ABMTMP  ;abm*2.6*37 IHS/SD/SDR ADO76301
+ ..W ?2,ABMTMP  ;tooth
+ .;W ?9,$P(ABM(0),U,6)  ;surface  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .W ?8,$P(ABM(0),U,6)  ;surface  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .;start old abm*2.6*28 IHS/SD/SDR CR8340
+ .;W ?18,$E($P(^AUTTADA(+ABM(0),0),U,2),1,30)
+ .;W ?50,$$HDT^ABMDUTL($P(ABM(0),U,7))
+ .;W ?62,$P(^AUTTADA(+ABM(0),0),U)
+ .;W ?70,$J($FN(ABM("CHRG"),",",2),8)
+ .;end old start new abm*2.6*28 IHS/SD/SDR CR8340
+ .;start old abm*2.6*30 IHS/SD/SDR CR8870
+ .;W ?18,$E($P(^AUTTADA(+ABM(0),0),U,2),1,25)
+ .;W ?44,$$HDT^ABMDUTL($P(ABM(0),U,7))
+ .;W ?56,$P(^AUTTADA(+ABM(0),0),U)
+ .;F ABMI=13,14,15 D
+ .;.W $S($P(ABM(0),U,ABMI)'="":"-"_$P(ABM(0),U,ABMI),1:"")
+ .;W ?71,$J($FN(ABM("CHRG"),",",2),8)
+ .;end new abm*2.6*28 IHS/SD/SDR CR8340
+ .;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ .W ?17,$E($P(^AUTTADA(+ABM(0),0),U,2),1,20)  ;desc
+ .W ?39,$$HDTO^ABMDUTL($P(ABM(0),U,7))  ;date
+ .W ?49,$P(^AUTTADA(+ABM(0),0),U)  ;ADA code
+ .F ABMI=13,14,15 D  ;modifiers
+ ..W $S($P(ABM(0),U,ABMI)'="":"-"_$P(ABM(0),U,ABMI),1:"")
+ .W ?67,$J($FN(ABM("CHRG"),",",2),13)  ;fee
+ I ABMP("EXP")=33 S ABMP("TOT")=$S($D(ABMP("FLAT")):+ABMP("FLAT"),1:ABM("TCHRG"))  ;set this for 837D only; otherwise the charge summary is doubled  ;abm*2.6*37 IHS/SD/SDR ADO76036
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  ;
  S ABM=0
  I '$G(ABMQUIET) W !
@@ -85,10 +129,28 @@ WRT ;
  .Q:$G(ABMQUIET)
  .I $Y+5>IOSL D HD Q:$D(DUOUT)
  .W !
- .W ?18,$E($P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,3),1,30)  ;CSV-c
- .W ?50,$$HDT^ABMDUTL($P(ABM(0),U,7))
- .W ?62,$P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,2)  ;CSV-c
- .W ?70,$J($FN(ABM("CHRG"),",",2),8)
+ .;start old abm*2.6*28 IHS/SD/SDR CR8340
+ .;W ?18,$E($P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,3),1,30)  ;CSV-c
+ .;W ?50,$$HDT^ABMDUTL($P(ABM(0),U,7))
+ .;W ?62,$P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,2)  ;CSV-c
+ .;W ?70,$J($FN(ABM("CHRG"),",",2),8)
+ .;start old abm*2.6*30 IHS/SD/SDR CR8870
+ .;end old start new abm*2.6*28 IHS/SD/SDR CR8340
+ .;W ?18,$E($P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,3),1,25)  ;CSV-c
+ .;W ?44,$$HDT^ABMDUTL($P(ABM(0),U,7))
+ .;W ?56,$P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,2)  ;CSV-c
+ .;F ABMI=5,8,9 D
+ .;.W $S($P(ABM(0),U,ABMI)'="":"-"_$P(ABM(0),U,ABMI),1:"")
+ .;W ?71,$J($FN(ABM("CHRG"),",",2),8)
+ .;end new abm*2.6*28 IHS/SD/SDR CR8340
+ .;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ .W ?17,$E($P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,3),1,20)  ;CSV-c
+ .W ?39,$$HDTO^ABMDUTL($P(ABM(0),U,7))
+ .W ?49,$P($$CPT^ABMCVAPI(+ABM(0),ABMP("VDT")),U,2)  ;CSV-c
+ .F ABMI=5,8,9 D
+ ..W $S($P(ABM(0),U,ABMI)'="":"-"_$P(ABM(0),U,ABMI),1:"")
+ .W ?67,$J($FN(ABM("CHRG"),",",2),13)
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  ;
  ; Include RX charges
  I '$G(ABMQUIET) W !
@@ -120,14 +182,26 @@ WRT ;
  ...S ABMRXQTY=$P(ABMRV(ABMRCD,ABMED,ABMCNTR),U,5)  ;quantity
  ...I $Y+5>IOSL D HD Q:$D(DUOUT)
  ...W !
- ...W ?2,$E(ABMRX,1,48)
- ...W ?50,$$HDT^ABMDUTL(ABMRXDT)
- ...W ?62,"QTY "_ABMRXQTY
- ...W ?70,$J($FN(ABMRXCHG,",",2),8)
+ ...;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ...;W ?2,$E(ABMRX,1,48)
+ ...;W ?50,$$HDT^ABMDUTL(ABMRXDT)
+ ...;W ?62,"QTY "_ABMRXQTY
+ ...;;W ?70,$J($FN(ABMRXCHG,",",2),8)  ;abm*2.6*28 IHS/SD/SDR CR8340
+ ...;W ?71,$J($FN(ABMRXCHG,",",2),8)  ;abm*2.6*28 IHS/SD/SDR CR8340
+ ...;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ ...W ?1,$E(ABMRX,1,40)
+ ...W ?43,$$HDTO^ABMDUTL(ABMRXDT)
+ ...W ?52,"QTY "_ABMRXQTY
+ ...W ?67,$J($FN(ABMRXCHG,",",2),13)  ;abm*2.6*28 IHS/SD/SDR CR8340
+ ;end old abm*2.6*30 IHS/SD/SDR CR8870
  ;
  I '$G(ABMQUIET) D
- .W !?71,"========"
- .W !?10,"TOTAL CHARGE",?69,$J($FN(ABM("TCHRG"),",",2),9)
+ .;W !?71,"========"  ;abm*2.6*28 IHS/SD/SDR CR8340
+ .;W !?71,"========="  ;abm*2.6*28 IHS/SD/SDR CR8340  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .W !?67,"============="  ;abm*2.6*28 IHS/SD/SDR CR8340  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .;W !?10,"TOTAL CHARGE",?69,$J($FN(ABM("TCHRG"),",",2),9)  ;abm*2.6*28 IHS/SD/SDR CR8340
+ .;W !?10,"TOTAL CHARGE",?70,$J($FN(ABM("TCHRG"),",",2),9)  ;abm*2.6*28 IHS/SD/SDR CR8340  ;abm*2.6*30 IHS/SD/SDR CR8870
+ .W !?10,"TOTAL CHARGE",?66,$J($FN(ABM("TCHRG"),",",2),14)  ;abm*2.6*28 IHS/SD/SDR CR8340  ;abm*2.6*30 IHS/SD/SDR CR8870
  I $D(ABMP("FLAT")) D
  .S ABM("TCHRG")=$P(ABMP("FLAT"),U)
  .Q:$G(ABMQUIET)

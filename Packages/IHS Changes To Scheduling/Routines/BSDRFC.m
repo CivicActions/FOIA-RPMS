@@ -1,5 +1,5 @@
 BSDRFC ; IHS/ANMC/LJF - RADIOLOGY PULL LIST ;  [ 11/02/2004  11:45 AM ]
- ;;5.3;PIMS;**1001**;APR 26, 2002
+ ;;5.3;PIMS;**1001,1022**;MAY 28, 2004;Build 18
  ;
 ASK ; -- ask user for division/clinic selections
  D CLINIC^BSDU(1) Q:$D(BSDU)
@@ -61,7 +61,13 @@ INIT ; -- init variables and list array
  ... S NODE=^TMP("BSDRFC1",$J,A,B,C)
  ... ;
  ... ; set up line: chart # - name - clinic - appt time
- ... S LINE=$J($P(NODE,U,2),7)_"   "_$E($$GET1^DIQ(2,B,.01),1,18)
+ ... ;202307 77892 maw p1022 PPN
+ ... N PRF
+ ... S PRF=$$GETPREF^AUPNSOGI(B,"E",1)
+ ... S LINE=$J($P(NODE,U,2),7)_"  "_$G(PRF)
+ ... D SET(LINE,.BSDLN)
+ ... S LINE=""
+ ... ;S LINE=$J($P(NODE,U,2),7)_"   "_$E($$GET1^DIQ(2,B,.01),1,18)
  ... S LINE=$$PAD(LINE,34)_$$GET1^DIQ(44,+NODE,.01)
  ... S LINE=$$PAD(LINE,60)_$$FMTE^XLFDT(C,5)
  ... D SET(LINE,.BSDLN)   ;add to display array

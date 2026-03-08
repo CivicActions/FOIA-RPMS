@@ -1,6 +1,6 @@
-DIFGO ;SFISC/XAK-FILEGRAM OPTIONS ;5:13 AM  7 Jun 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**47**;Mar 30, 1999;
+DIFGO ;SFISC/XAK-FILEGRAM OPTIONS ;2/24/93  10:58 ; [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994;
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 0 S DIC="^DOPT(""DIFG"","
  G OPT:$D(^DOPT("DIFG",6)) S ^(0)="FILEGRAM OPTION^1.01" K ^("B")
@@ -10,7 +10,7 @@ OPT ;
  S DIC(0)="AEQIZ" D ^DIC G Q:Y<0 S DI=+Y D EN G 0
  ;
 EN ;Entry point for all filegram options
- S:'$D(Y) Y=0 S DIC("S")="I Y>1.99" D:DI#2 ^DICRW G:Y<0 Q K DIC("S") ;ihs/ohprd/dg 8-21-91
+ S DIC("S")="I Y>1.99" D:DI#2 ^DICRW G:Y<0 Q K DIC("S") ;ihs/ohprd/dg 8-21-91
  D @DI W !!
 Q K %,DIC,DIK,DI,DA,I,J,X,Y Q
  ;
@@ -43,7 +43,7 @@ DT I Y W $E(Y,6,7)," ",$P("JAN^FEB^MAR^APR^MAY^JUN^JUL^AUG^SEP^OCT^NOV^DEC",U,$E
  W Y Q
  ;
 5 ;;SPECIFIERS
- S DI=+Y G 99^DIU
+ S DI=+Y G 11^DIU
  ;
 6 ;;INSTALL/VERIFY FILEGRAM
  S DIC(0)="QEAMNIZ",DIC=1.12 D ^DIC K DIC Q:Y<0  Q:'$P(Y(0),U,6)

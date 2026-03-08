@@ -1,8 +1,9 @@
 BARTRNS2 ; IHS/SD/SDR - Transaction Summary/Detail Report ; 03/10/2009
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**28**;OCT 26, 2005;Build 92
- ;IHS/SD/POT - 1.8*28 - CR8397 HEAT155084 - NEW ROUTINE CLONED FROM BARTRNS1; CALLED FROM BARTRNT
- ;IHS/SD/SDR - 1.8*28 - CR8397 HEAT155084 Corrected column header from Adj Amt to Adj Cat.  Added column  for Adj Amt.
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**28,33**;OCT 26, 2005;Build 133
+ ;IHS/SD/POT 1.8*28 - CR8397 HEAT155084 - NEW ROUTINE CLONED FROM BARTRNS1; CALLED FROM BARTRNT
+ ;IHS/SD/SDR 1.8*28 - CR8397 HEAT155084 Corrected column header from Adj Amt to Adj Cat.  Added column  for Adj Amt.
  ;    Added #DAYS (APPR.DT-ADJ.DT) (Header was printing without data).  Changed loop to look thru transaction file, not bill file.
+ ;IHS/SD/SDR 1.8*33 ADO60817 Updated to use 'C' xref, not 'B' so it will be DATE/TIME, not DATE/TIME/COUNTER
  ;
  Q
 COMPUTE ; EP
@@ -19,9 +20,17 @@ COMPUTE ; EP
 LOOP ;EP for Loop thru Bill File
  S BARP("DT")=BARY("DT",1)-1+.9  ;PKD 9/24/10 1.8*19 don't go back extra day
  ;PKD 1.8*19 BARY("DT",3) - corrected end date
- F  S BARP("DT")=$O(^BARTR(DUZ(2),"B",BARP("DT"))) Q:'BARP("DT")!(BARP("DT")>BARY("DT",3))  D
- .S BARTR=BARP("DT")  ;A/R Trans IEN
- .S BARIEN=$P($G(^BARTR(DUZ(2),BARP("DT"),0)),U,4)  ;A/R Bill IEN
+ ;F  S BARP("DT")=$O(^BARTR(DUZ(2),"B",BARP("DT"))) Q:'BARP("DT")!(BARP("DT")>BARY("DT",3))  D  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ ;start new bar*1.8*33 IHS/SD/SDR ADO60817
+ F  S BARP("DT")=$O(^BARTR(DUZ(2),"C",BARP("DT"))) Q:'BARP("DT")!(BARP("DT")>BARY("DT",3))  D LOOP2
+ Q
+LOOP2 ;
+ S BARTR=0
+ F  S BARTR=$O(^BARTR(DUZ(2),"C",BARP("DT"),BARTR)) Q:'BARTR  D
+ .;end new bar*1.8*33 IHS/SD/SDR ADO60817
+ .;S BARTR=BARP("DT")  ;A/R Trans IEN  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .;S BARIEN=$P($G(^BARTR(DUZ(2),BARP("DT"),0)),U,4)  ;A/R Bill IEN  ;bar*1.8*33 IHS/SD/SDR ADO60817
+ .S BARIEN=$P($G(^BARTR(DUZ(2),BARTR,0)),U,4)  ;A/R Bill IEN  ;bar*1.8*33 IHS/SD/SDR ADO60817
  .Q:+BARIEN=0  ;transaction not associated with A/R Bill
  .;get bill info
  .S BAR(0)=$G(^BARBL(DUZ(2),BARIEN,0))  ;A/R Bill 0 node

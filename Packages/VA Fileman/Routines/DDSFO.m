@@ -1,5 +1,6 @@
-DDSFO ;SFISC/MKO-FORM ONLY FIELDS ;1:52 PM  19 Jun 1998
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDSFO ;SFISC/MKO-FORM ONLY FIELDS ;02:46 PM  8 Sep 1994 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 DIR ;Setup input variables to DIR
  N I,J
@@ -10,7 +11,7 @@ DIR ;Setup input variables to DIR
  . S I=$P(DIR(0),U,2) Q:$P(I,":",2)["Z"
  . S $P(I,":",2)=$P(I,":",2)_"Z"
  . S $P(DIR(0),U,2)=I
- S:$G(^DIST(.404,DDSBK,40,DDO,22))'?."^" $P(DIR(0),U,3)=^(22)
+ S:$G(^DIST(.404,DDSBK,40,DDO,22))'?."^" DIR(0)=DIR(0)_U_^(22)
  I $D(^DIST(.404,DDSBK,40,DDO,21)) D
  . S (I,J)=0
  . F  S I=$O(^DIST(.404,DDSBK,40,DDO,21,I)) Q:I=""  I $D(^(I,0))#2 S J=J+1,DIR("?",J)=^(0)

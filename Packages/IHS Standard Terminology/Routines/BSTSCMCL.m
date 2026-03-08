@@ -1,5 +1,5 @@
 BSTSCMCL ;GDIT/HS/BEE-Standard Terminology Cache Method Calls ; 5 Nov 2012  9:53 AM
- ;;2.0;IHS STANDARD TERMINOLOGY;**1**;Dec 01, 2016;Build 36
+ ;;2.0;IHS STANDARD TERMINOLOGY;**1,3,7,8**;Dec 01, 2016;Build 27
  ;
  Q
  ;
@@ -7,6 +7,16 @@ BSTSCMCL ;GDIT/HS/BEE-Standard Terminology Cache Method Calls ; 5 Nov 2012  9:53
 LHIST(BSTSWS,RSLT) ;EP - Retrieve the log history
  NEW STS,EXEC,TRY
  F TRY=1:1:+$G(BSTSWS("RETRY")) S STS="",EXEC="S STS=##class(BSTS.SOAP.WebFunctions).LogHistory(.BSTSWS,.RSLT)" X EXEC D:'+STS ER("ELOG",STS) I +STS Q
+ ;
+ ;Check server status
+ D SWLCL^BSTSWSV1(.BSTSWS,.STS)
+ ;
+ Q STS
+ ;
+ ;BSTS*2.0*3;Added Concept Selection Retrieval
+SLCNT(BSTSWS,RSLT) ;EP - Retrieve the concept selection logs
+ NEW STS,EXEC,TRY
+ F TRY=1:1:+$G(BSTSWS("RETRY")) S STS="",EXEC="S STS=##class(BSTS.SOAP.WebFunctions).SelectionCounts(.BSTSWS,.RSLT)" X EXEC D:'+STS ER("ELOG",STS) I +STS Q
  ;
  ;Check server status
  D SWLCL^BSTSWSV1(.BSTSWS,.STS)
@@ -30,6 +40,13 @@ ELOG(BSTSWS,RSLT) ;EP - Log an event to DTS
  ;
  ;Check server status
  D SWLCL^BSTSWSV1(.BSTSWS,.STS)
+ ;
+ Q STS
+ ;
+ ;GDIT/HS/BEE;FEATURE#123647;Added CCODE tag for CVX
+CCODE(BSTSWS,RSLT) ;EP - DTS4 Return all concepts that are in CVX subsets
+ NEW STS,EXEC,TRY
+ F TRY=1:1:+$G(BSTSWS("RETRY")) S STS="",EXEC="S STS=##class(BSTS.SOAP.WebFunctions).getAllCVXSubsetConcepts(.BSTSWS,.RSLT)" X EXEC D:'+STS ER("SCODE",STS) I +STS Q
  ;
  Q STS
  ;
@@ -133,11 +150,57 @@ TRMSRCH(BSTSWS,RSLT) ;EP - DTS4 Term Search
  ;
 SUBLST(BSTSWS,RSLT) ;EP - DTS4 Retrieve Subset List
  ;
- ;Retrieve list of concepts in a specified subset
- NEW STS,EXEC,TRY
- F TRY=1:1:+$G(BSTSWS("RETRY")) S STS="",EXEC="S STS=##class(BSTS.SOAP.WebFunctions).getSubsetList(.BSTSWS,.RSLT)" X EXEC D:'+STS ER("SUBLST",STS) I +STS Q
+ ;GDIT/HS/BEE;FEATURE#112749;Updated to handle expression subsets
  ;
- ;Note - do not perform time check - this could be a longer running call
+ NEW SBINFO,SUBSET,NMID,STS
+ ;
+ S SUBSET=$G(BSTSWS("SUBSET"))
+ S NMID=$G(BSTSWS("NAMESPACEID"))
+ S SBINFO=$$SBINFO^BSTSDTS6(SUBSET,NMID)
+ ;
+ ;Reset scratch globals
+ K ^TMP("BSTSCMCL",$J)
+ K ^TMP("BSTSCMCLA",$J)
+ ;
+ ;Retrieve list of concepts in a specified property subset
+ I ($P(SBINFO,U,2)="P")!($P(SBINFO,U,2)="B") D
+ . NEW EXEC,TRY,CNT,DTSID
+ . F TRY=1:1:+$G(BSTSWS("RETRY")) S STS="",EXEC="S STS=##class(BSTS.SOAP.WebFunctions).getSubsetList(.BSTSWS,.RSLT)" X EXEC D:'+STS ER("SUBLST",STS) I +STS Q
+ . ;
+ . ;Check for call failure
+ . I '+STS Q
+ . ;
+ . ;Store in temporary file
+ . S CNT=0 F  S CNT=$O(^TMP("BSTSCMCL",$J,CNT)) Q:'CNT  D
+ .. S DTSID=$G(^TMP("BSTSCMCL",$J,CNT)) I 'DTSID Q
+ .. S ^TMP("BSTSCMCLA",$J,CNT)=DTSID
+ .. S ^TMP("BSTSCMCLA",$J,"DTSID",DTSID)=CNT
+ ;
+ ;Retrieve list of concepts in a specified expression subset
+ I ($P(SBINFO,U,2)="E")!($P(SBINFO,U,2)="B") D
+ . NEW EXEC,TRY,CNT,DTSID,SUBID,CNTR
+ . K ^TMP("BSTSCMCL",$J)
+ . ;
+ . ;Get the subset id
+ . S SUBID=$P(SBINFO,U) I +SUBID'>0 Q
+ . S BSTSWS("SUBID")=SUBID
+ . F TRY=1:1:+$G(BSTSWS("RETRY")) S STS="",EXEC="S STS=##class(BSTS.SOAP.WebFunctions).getExpressionSubsetList(.BSTSWS,.RSLT)" X EXEC D:'+STS ER("SUBLST",STS) I +STS Q
+ . ;
+ . ;Check for call failure
+ . I '+STS Q
+ . ;
+ . ;Store in temporary file
+ . S CNTR=+$O(^TMP("BSTSCMCLA",$J,"DTSID"),-1)
+ . S CNT=0 F  S CNT=$O(^TMP("BSTSCMCL",$J,CNT)) Q:'CNT  D
+ .. S DTSID=$G(^TMP("BSTSCMCL",$J,CNT)) I 'DTSID Q
+ .. I $D(^TMP("BSTSCMCLA",$J,"DTSID",DTSID)) Q  ;Skip if already defined
+ .. S CNTR=CNTR+1,^TMP("BSTSCMCLA",$J,CNTR)=DTSID
+ .. S ^TMP("BSTSCMCLA",$J,"DTSID",DTSID)=CNTR
+ ;
+ ;Switch combined results to old format
+ K ^TMP("BSTSCMCL",$J)
+ S CNT=0 F  S CNT=$O(^TMP("BSTSCMCLA",$J,CNT)) Q:'CNT  S ^TMP("BSTSCMCL",$J,CNT)=^TMP("BSTSCMCLA",$J,CNT)
+ K ^TMP("BSTSCMCLA",$J)
  ;
  Q STS
  ;
@@ -221,7 +284,9 @@ SUBSET(BSTSWS,RESULT) ;EP - DTS4 get subset list
  ;
  ;Place call to retrieve list of subsets
  NEW STS,EXEC,TRY
- F TRY=1:1:+$G(BSTSWS("RETRY")) S STS="",EXEC="S STS=##class(BSTS.SOAP.WebFunctions).getListofSubsets(.BSTSWS,.RESULT)" X EXEC D:'+STS ER("SUBSET",STS) I +STS Q
+ ;GDIT/HS/BEE;FEATURE#112749;New subset retrieval method
+ ;F TRY=1:1:+$G(BSTSWS("RETRY")) S STS="",EXEC="S STS=##class(BSTS.SOAP.WebFunctions).getListofSubsets(.BSTSWS,.RESULT)" X EXEC D:'+STS ER("SUBSET",STS) I +STS Q
+ F TRY=1:1:+$G(BSTSWS("RETRY")) S STS="",EXEC="S STS=##class(BSTS.SOAP.WebFunctions).getNewListofSubsets(.BSTSWS,.RESULT)" X EXEC D:'+STS ER("SUBSET",STS) I +STS Q
  ;
  ;Note - do not perform time check - this could be a longer running call
  ;

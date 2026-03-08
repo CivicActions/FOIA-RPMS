@@ -1,10 +1,9 @@
-DIAC ;SFISC/YJK-FILE ACCESS CHECK ;3/18/99  12:59
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIAC ;SFISC/YJK-FILE ACCESS CHECK ;9/14/94  10:00 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
-EN Q:'$D(DIAC)!'$D(DIFILE)
- I '$D(^DIC(DIFILE,0))#2 S (DIAC,%)=0 Q
- I DUZ(0)="@" S (DIAC,%)=1 Q
+EN Q:'$D(DIAC)!'$D(DIFILE)  I DUZ(0)="@" S (DIAC,%)=1 Q
  S A1=$S(DIAC="DD":2,DIAC="DEL":3,DIAC="LAYGO":4,DIAC="RD":5,DIAC="WR":6,DIAC="AUDIT":7,1:0) D:A1 CK
  K A1 S %=DIAC Q
  ;

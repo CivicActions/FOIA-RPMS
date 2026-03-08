@@ -1,5 +1,5 @@
 LA7VQN5A ;VA/DALOI/JMC - Process Incoming UI Msgs, continued ; 11-Apr-2014 07:11 ; MAW
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,1027**;NOV 01, 1997;Build 9
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**46,64,1027,1047**;NOV 01, 1997;Build 21
  ; This routine is a continuation of LA7VIN5.
  ; It is performs processing of fields in OBX segments.
  Q
@@ -175,7 +175,7 @@ ABFLAG(LA7X) ; Process/Store Abnormal Flags.
  ; Store abnormal flags in LAH global with results.
  ; Currently only storing high/low and critical flags
  ;S LA7Y=$S(LA7X="L":"L",LA7X="H":"H",LA7X="LL":"L*",LA7X="HH":"H*",1:"")  ;cmi/maw 5/21/2010 store anything that comes in for reference lab
- S LA7Y=$S(LA7X="L":"L",LA7X="H":"H",LA7X="LL":"L*",LA7X="HH":"H*",LA7X="A":"A",1:"")  ;cmi/maw 04/12/2011 store A from Reference lab
+ S LA7Y=$S(LA7X="L":"L",LA7X="H":"H",LA7X="LL":"L*",LA7X="HH":"H*",LA7X="A":"A",LA7X="AA":"A*",1:"")  ;cmi/maw 05/21/2020 add AA
  ;S LA7Y=$G(LA7X)  ;cmi/maw 5/21/2010 file as is CHANGED BACK ON 8/9/2010
  S $P(^LAH(LA7LWL,1,LA7ISQN,LA76304),"^",2)=LA7Y
  ;

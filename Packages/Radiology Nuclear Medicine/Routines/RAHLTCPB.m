@@ -1,7 +1,7 @@
-RAHLTCPB ; HIRMFO/REL,GJC,BNT,PAV - Rad/Nuc Med HL7 TCP/IP Bridge;05/21/99
- ;;5.0;Radiology/Nuclear Medicine;**12,17,25,51,71,81,84**;Mar 16, 1998;Build 13
+RAHLTCPB ; HIRMFO/REL,GJC,BNT,PAV - Rad/Nuc Med HL7 TCP/IP Bridge;05/21/99 ;17 Apr 2019 3:25 PM
+ ;;5.0;Radiology/Nuclear Medicine;**12,17,25,51,71,81,84,106,157,1009**;Mar 16, 1998;Build 21
  ; 07/05/2006 BAY/KAM Remedy Call 124379 Eliminate unneeded ORM msgs
- ; 09/01/2006   Acomodate multiple ORC/OBR segments Patch 81
+ ; 09/01/2006   Accomodate multiple ORC/OBR segments Patch 81
  ; 
  ;Integration Agreements
  ;----------------------
@@ -33,6 +33,10 @@ PID ; Pick data off the 'PID' segment.
  . S SEGMNT=$P(SEGMNT,HL("FS"),2,99999)
  . I $P($P(SEGMNT,HL("FS"),3),$E(HL("ECH")))]"" D
  .. S (^TMP("RARPT-REC",$J,RASUB,"RADFN"),RADFN)=$P($P(SEGMNT,HL("FS"),3),$E(HL("ECH")))
+ .. Q
+ . ;cmi/maw patch 1009 20210518 CR8758
+ . I $P($P(SEGMNT,HL("FS"),2),$E(HL("ECH")))]"" D
+ .. S (^TMP("RARPT-REC",$J,RASUB,"RAHRN"),RADFN)=$P($P(SEGMNT,HL("FS"),2),$E(HL("ECH")))
  .. Q
  . I $P(SEGMNT,HL("FS"),19)]"" D
  .. S ^TMP("RARPT-REC",$J,RASUB,"RASSN")=$P(SEGMNT,HL("FS"),19)
@@ -71,7 +75,10 @@ OBR ; Pick data off the 'OBR' segment.
  I $G(RACNI)'>0 S RAERR="Invalid exam record IEN" D XIT Q
  S RAHLD=$$PCEXTR^RAHLO4(CNT,SEGMNT,25,HL("FS")) K RAHL70
  I RAHLD="" S RAERR="Missing Report Status" D XIT Q
- I "AFR"'[RAHLD S RAERR="Invalid Report Status: "_RAHLD D XIT Q
+ ;P106
+ I "^A^F^R^VAQ^"'[("^"_RAHLD_"^") D  D XIT Q
+ .S RAERR="Invalid Report Status: "_RAHLD QUIT
+ ;
  S ^TMP(RARRR,$J,RASUB,"RASTAT")=RAHLD
  G:$P(RARRR,"-",3) 112 S RAHLD=$$PCEXTR^RAHLO4(CNT,SEGMNT,32,HL("FS")) K RAHL70
  I RAHLD']"" S RAERR="Missing Provider ID" D XIT Q
@@ -136,11 +143,13 @@ RPT ; Save off Report Text data.
  S RAXADEDN=^TMP("RARPT-REC",$J,RASUB,"RASTAT")
  S RANODE=$S(OBXTYP="D":"RADX",OBXTYP="I":"RAIMP",1:"RATXT"),LIN=""
  I OBX2CE D  Q
- . S X=$P(SEGMNT,HL("FS"),5),RADX1=$P(X,$E(HL("ECH")))
+ . ; KLM/p157 update DX Code processing for v2.3 to accomodate VR passing a primary designation.
+ . ; We will need to set LIN (RADX,RADX2,RADX3)to the entire dx code passed (ie 1^NORMAL^P).
+ . S X=$P(SEGMNT,HL("FS"),5),RADX1=$P(X,$E(HL("ECH"),2))
  . S LIN=RADX1,L=999 D P2 S LIN=X
  . Q:X'["~"  F J=0:0 S J=$O(^TMP("RARPT-HL7",$J,CNT,J)) Q:'J  S X1=^(J),LIN=LIN_X1 Q
- . S RADX=LIN,RADX2=$P($P(RADX,"~",2),"^") S:RADX2]"" LIN=RADX2 D P2
- . S RADX3=$P($P(RADX,"~",3),"^") Q:RADX3']""  S LIN=RADX3 D P2 Q
+ . S RADX=LIN,RADX2=$P(RADX,"~",2) S:RADX2]"" LIN=RADX2 D P2 ;p157
+ . S RADX3=$P(RADX,"~",3) Q:RADX3']""  S LIN=RADX3 D P2 Q  ;p157
  S X=$P(SEGMNT,HL("FS"),5)
  I X["\S\"!(X["\R\")!(X["\E\")!(X["\T\") D FORMAT
  I $G(RATELE),$D(RATELEKN),X[RATELEKN S X=$P(X,RATELEKN,2),RATELENM=$P(X,"-"),RATELEPI=$TR($P(X,"-",2)," ","") ;SFVAMC/DAD/9-7-2007/Comment out the quit Q  ;Patch 84
@@ -158,6 +167,11 @@ P2 ; Set node
  ; If Addendum and Report text is a space don't process
  I $P(SEGMNT,HL("FS"),1)=1,RAXADEDN="A",RANODE="RATXT",$E(LIN,1,L-1)=" " Q
  S RARCNT(OBXTYP)=$G(RARCNT(OBXTYP))+1
+ ;KLM/p157 Setting "PDX" node for the Primary indicator (to be used in RAHLO2)
+ I RANODE="RADX" D
+ . I $P($G(LIN),"^",3)="P" S ^TMP("RARPT-REC",$J,RASUB,RANODE,"PDX",RARCNT(OBXTYP))=+LIN
+ . S LIN=+LIN
+ . Q
  S ^TMP("RARPT-REC",$J,RASUB,RANODE,RARCNT(OBXTYP))=$E(LIN,1,L-1)
  F I=1:1:RACN S RARRR="RARPT-REC-"_I S:$D(^TMP(RARRR,$J)) ^TMP(RARRR,$J,RASUB,RANODE,RARCNT(OBXTYP))=$E(LIN,1,L-1)
  Q

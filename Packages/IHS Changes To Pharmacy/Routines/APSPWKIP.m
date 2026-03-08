@@ -1,0 +1,126 @@
+APSPWKIP ; IHS/MSC/MIR - PHARMACIST WORKLOAD REPORT - IV/Unit Dose orders ;22-Jan-2025 14:13;PLS
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1035**;Sep 23, 2004;Build 39
+EN ;EP
+ N APSPBDF,APSPEDF,APSPDIV,APSPNUM,APSPUSR,APSPNAME
+ N APSPCLAS,APSPBD,APSPED,APSPDARY,APSPQ,QFLG,APSPTOT
+ S (APSPDIV,APSPUSR,APSPQ)=""
+ W @IOF
+ W !!,"Pharmacist Workload Report - UD/IV Orders"
+ D ASKDATES^APSPUTIL(.APSPBD,.APSPED,.APSPQ,DT,DT)
+ Q:APSPQ
+ S APSPBDF=$P($TR($$FMTE^XLFDT(APSPBD,"5Z"),"@"," "),":",1,2)
+ S APSPEDF=$P($TR($$FMTE^XLFDT(APSPED,"5Z"),"@"," "),":",1,2)
+ S APSPBD=APSPBD-.01,APSPED=APSPED+.99
+ S APSPLOC=$$DIR^APSPUTIL("Y","Would you like orders displayed by location","No",,.APSPQ) Q:APSPQ
+ S APSPNUM=$$DIR^APSPUTIL("S^I:Individual Pharmacy user;A:All Pharmacy users","Lookup Individual User or List ALL Users? ","A",,.APSPQ)
+ Q:APSPQ
+ I APSPNUM="A" S APSPDARY="*"
+ I APSPNUM="I" F  D  Q:QFLG
+ .S APSPUSR=$$GETIEN1^APSPUTIL(200,"Select Pharmacy User: ",-1,"B")
+ .I APSPUSR<1 S QFLG=1 Q
+ .S APSPNAME=$$GET1^DIQ(200,APSPUSR,.01)
+ .S APSPDARY(APSPUSR)=APSPNAME,APSPDARY=$G(APSPDARY)+1
+ .S QFLG='$$DIRYN^APSPUTIL("Want to Select Another User","No","Enter a 'Y' or 'YES' to include more pharmacy users in your search",.APSPQ)
+ .S:'QFLG QFLG=APSPQ
+ Q:APSPQ!'$D(APSPDARY)
+ D DEV
+ Q
+DEV ;
+ N XBRP,XBNS
+ S XBRP="OUT^APSPWKIP"
+ S XBNS="APS*"
+ D ^XBDBQUE
+ Q
+OUT ;EP
+ U IO
+ K ^TMP($J),^TMP("APSPWK",$J)
+ D FIND(APSPBD,APSPED,"AD")  ; Regular and Refill
+ D PRINT
+ K ^TMP("APSPWK",$J)
+ Q
+ ;
+FIND(SDT,EDT,XREF) ;EP
+ N RXIEN,ACTIEN,RTSDT,FILLDT,A0,FDTLP,IEN,PHARM,DRGIEN,DRGIV,LOC S LOC=1
+ S FDTLP=SDT,APSPTOT="",DRGIV=0   ;Total new orders UD ^ IV ^ grand total
+ F  S FDTLP=$O(^PS(55,"AUDS",FDTLP)) Q:FDTLP>EDT!'FDTLP  D
+ .S DFN="" F  S DFN=$O(^PS(55,"AUDS",FDTLP,DFN)) Q:'DFN  D
+ ..S NM="" F  S NM=$O(^PS(55,"AUDS",FDTLP,DFN,NM)) Q:'NM  D
+ ...S DAT=$$GET1^DIQ(55.06,NM_","_DFN,27,"I")
+ ...I APSPLOC,DAT D
+ ....S LOC=$$GET1^DIQ(55.06,NM_","_DFN,130)
+ ....I LOC="" S LOC=$C(31)_"LOCATION FIELD EMPTY"
+ ...S PHARM=$$GET1^DIQ(55.06,NM_","_DFN,18,"I") I PHARM D SETNEW(PHARM)
+ S FDTLP=SDT,DRGIV=1
+ F  S FDTLP=$O(^PS(55,"AIVS",FDTLP)) Q:FDTLP>EDT!'FDTLP  D
+ .S DFN="" F  S DFN=$O(^PS(55,"AIVS",FDTLP,DFN)) Q:'DFN  D
+ ..I APSPLOC S DIV=$$GET1^DIQ(2,DFN,.1) S:'$L(DIV) DIV=$C(31)_"No Location"
+ ..S NM="" F  S NM=$O(^PS(55,"AIVS",FDTLP,DFN,NM)) Q:'NM  D
+ ...S DAT=$$GET1^DIQ(55.01,NM_","_DFN,.02,"I")
+ ...I APSPLOC,DAT D
+ ....S LOC=$$GET1^DIQ(55.01,NM_","_DFN,136)
+ ....I LOC="" S LOC=$C(31)_"LOCATION FIELD EMPTY"
+ ...S PHARM=$$GET1^DIQ(55.01,NM_","_DFN,140,"I") I PHARM D SETNEW(PHARM)
+ Q
+ ;
+SETNEW(PHARM) ;Set the pharmacist data
+ I $G(APSPDARY)'="*",'$D(APSPDARY(PHARM)) Q
+ N PHARNAME,PC,I
+ S PHARNAME=$$GET1^DIQ(200,PHARM,.01)
+ S PC=1+DRGIV
+ F I=PC,3 S $P(^TMP("APSPWK",$J,LOC,PHARNAME),U,I)=$P($G(^TMP("APSPWK",$J,LOC,PHARNAME)),U,I)+1
+ F I=PC,3 S $P(APSPTOT,U,I)=$P(APSPTOT,U,I)+1,$P(APSPTOT(LOC),U,I)=$P($G(APSPTOT(LOC)),U,I)+1
+ Q
+ ;
+PRINT ;Print out the report
+ N PHARM,TOT,NUMBERS,%NEW,%RFILL,LIN,APSPQ
+ S $P(LIN,"-",78)="",APSPQ=""
+ ;I (APSPNUM="I"&(APSPDARY=1!'APSPLOC)) D PRT1 Q
+ D PRT2 ; use this format in all cases
+ Q
+PRT2 ;Print all providers
+ N PHARM,NUM,UNNUM,INNUM,URNUM,IRNUM,TOT,UNTOT,INTOT,URTOT,IRTOT
+ N UNPRC,INPRC,URPRC,IRPRC,LOC
+ D HDR2
+ S LOC="" F  S LOC=$O(^TMP("APSPWK",$J,LOC)) Q:LOC=""  D  Q:APSPQ
+ .W:APSPLOC !,"Location: ",LOC D HDR3
+ .S UNTOT=$P(APSPTOT(LOC),U,1),INTOT=$P(APSPTOT(LOC),U,2)
+ .S PHARM="" F  S PHARM=$O(^TMP("APSPWK",$J,LOC,PHARM)) Q:PHARM=""  D  Q:APSPQ
+ ..S NUM=$G(^TMP("APSPWK",$J,LOC,PHARM))
+ ..S UNNUM=$P(NUM,U,1),INNUM=$P(NUM,U,2),TOT=$P(NUM,U,3)
+ ..I 'UNTOT S UNPRC=0
+ ..E  S UNPRC=$$ROUND((UNNUM/UNTOT),3)*100
+ ..I 'INTOT S INPRC=0
+ ..E  S INPRC=$$ROUND((INNUM/INTOT),3)*100
+ ..W $E(PHARM,1,23),?25,$J(+UNNUM,7),?35,$J(UNPRC,7),?45,$J(+INNUM,7),?55,$J(INPRC,7),?65,$J(+TOT,7),!
+ ..I $Y+5>IOSL,IOST["C-" D PAUS Q:APSPQ  D HDR2 W:APSPLOC !,"Location: ",LOC D HDR3
+ .Q:'APSPLOC
+ .W "Total Location Unit Dose: ",$J(+UNTOT,6)
+ .W ?40,"IV: ",$J(+INTOT,8)
+ .W ?58,"Total: ",$J(+$P(APSPTOT(LOC),U,3),7),!
+ Q:APSPQ
+ S UNTOT=$P(APSPTOT,U,1),INTOT=$P(APSPTOT,U,2)
+ W !?9,"Total Unit Dose: ",$J(+UNTOT,6)
+ W ?40,"IV: ",$J(+INTOT,8)
+ W ?58,"TOTAL: ",$J(+$P(APSPTOT,U,3),7)
+ Q
+HDR2 ; Header for all users
+ I IOST["C-" W @IOF
+ W "Pharmacist Workload Report - UD/IV Orders: ",$S(APSPNUM="A":"All",1:"Individual")," Users"
+ I APSPLOC W " by Location"
+ W !?14,$$FMTE^XLFDT(APSPBD+.01)," - ",$$FMTE^XLFDT(APSPED-.99),!
+ Q
+HDR3 ;
+ W !,"Pharmacy User",?25,"UD orders",?35,"% total",?45,"IV orders",?55,"% total",?67,"Total"
+ W !,$E(LIN,1,72)
+ W !
+ Q
+PAUS ;
+ N DTOUT,DUOUT,DIR
+ S DIR("?")="Enter '^' to Halt or Press Return to continue"
+ S DIR(0)="FO",DIR("A")="Press Return to continue or '^' to Halt"
+ D ^DIR
+ I $D(DUOUT) S APSPQ=1
+ Q
+ROUND(VAL,SD) ;
+ Q:VAL'=+VAL!($G(SD)=0) VAL
+ Q +$J(VAL,0,$S($D(SD):SD,VAL<1:2,VAL<10:2,1:2))

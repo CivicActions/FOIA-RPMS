@@ -1,5 +1,5 @@
-APCDGHVD ; IHS/CMI/LAB - GET HISTORICAL VISIT DATE ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDGHVD ; IHS/CMI/TUCSON - GET HISTORICAL VISIT DATE ; [ 01/08/04  3:47 PM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**2,7**;MAR 09, 1999
  ;
  ; This routines is called from templates to edit and create
  ; a visit.

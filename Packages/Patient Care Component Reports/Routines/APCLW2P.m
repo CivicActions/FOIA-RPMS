@@ -1,5 +1,5 @@
-APCLW2P ; IHS/CMI/LAB - print dx by age ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLW2P ; IHS/OHPRD/TMJ - print dx by age ;  [ 04/10/03  2:58 PM ]
+ ;;3.0;IHS PCC REPORTS;**6,8,11,13,16**;FEB 05, 1997
 START ;
  S APCL80="",$P(APCL80,"-",80)="-"
  S (APCLPG,APCLSEXP)=0

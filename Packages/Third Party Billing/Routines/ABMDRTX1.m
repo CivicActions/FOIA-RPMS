@@ -1,5 +1,5 @@
 ABMDRTX1 ; IHS/ASDST/DMJ - Print Transmittal Report ; 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.5;IHS 3P BILLING SYSTEM;**13**;APR 05, 2002
  ;Original;TMD;03/25/96 11:29 AM
  ;
  ; IHS/SD/SDR - v2.5 p13 - NO IM
@@ -27,6 +27,7 @@ PRQUE ;EP - Entry Point for Taskman
 DATA ;
  Q:'$D(^ABMDBILL(DUZ(2),ABM,0))
  S ABMBILL0=$G(^ABMDBILL(DUZ(2),ABM,0))
+ ;Q:$P(ABMBILL0,U,4)="X"           ; Bill is cancelled, don't show  ;abm*2.5*13 NO IM
  S ABM("L")=$P(ABMBILL0,U,3)
  S ABM("V")=$P(ABMBILL0,U,7)
  S ABM("P")=$P(ABMBILL0,U,5)
@@ -54,7 +55,8 @@ WRT ;
  .I ABM("V")'=$P(ABM("T"),U,2) D SUB W !,$P(^ABMDVTYP($P(ABM("T"),U,2),0),U)
  .S ABM("V")=$P(ABM("T"),U,2)
  .Q:'$D(^ABMDBILL(DUZ(2),$P(ABM("T"),U,4),0))
- .W !?5,$E($P(ABM("T"),U,3),1,27),?34,$P(^ABMDBILL(DUZ(2),$P(ABM("T"),U,4),0),U)_$S($P(^ABMDBILL(DUZ(2),$P(ABM("T"),U,4),0),U,4)="X":"*",1:""),?43,$E($P(^AUTNINS($P(^(0),U,8),0),U),1,26)
+ .;W !?5,$E($P(ABM("T"),U,3),1,27),?34,$P(^ABMDBILL(DUZ(2),$P(ABM("T"),U,4),0),U),?43,$E($P(^AUTNINS($P(^(0),U,8),0),U),1,26)  ;abm*2.5*13 NO IM
+ .W !?5,$E($P(ABM("T"),U,3),1,27),?34,$P(^ABMDBILL(DUZ(2),$P(ABM("T"),U,4),0),U)_$S($P(^ABMDBILL(DUZ(2),$P(ABM("T"),U,4),0),U,4)="X":"*",1:""),?43,$E($P(^AUTNINS($P(^(0),U,8),0),U),1,26)  ;abm*2.5*13 NO IM
  .W ?70,$J($FN($P(^ABMDBILL(DUZ(2),$P(ABM("T"),U,4),2),U),",",2),10) S ABM("TOT")=ABM("TOT")+$P(^(2),U),ABM("SUBTOT")=ABM("SUBTOT")+$P(^(2),U)
  .S ABM("CNT")=ABM("CNT")+1
  .S ABM("SUBCNT")=ABM("SUBCNT")+1
@@ -70,7 +72,7 @@ HD ;
  .S ABM("HD",1)=ABM("HD")
  S ABM("PG")=ABM("PG")+1
  D WHD^ABMDRHD
- W !?5,"""*"" following the bill number denotes a bill that has been cancelled"
+ W !?5,"""*"" following the bill number denotes a bill that has been cancelled"  ;abm*2.5*13 NO IM
  W !?35,"BILL",?75,"BILL"
  W !?11,"PATIENT",?34,"NUMBER",?46,"ACTIVE INSURER",?73,"AMOUNT"
  W !,"-------------------------------------------------------------------------------"

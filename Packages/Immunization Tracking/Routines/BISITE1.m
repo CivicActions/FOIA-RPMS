@@ -1,5 +1,5 @@
-BISITE1 ;IHS/CMI/MWR - EDIT SITE PARAMETERS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**14**;AUG 01,2017
+BISITE1 ;IHS/CMI/MWR - EDIT SITE PARAMETERS; MAY 10, 2010 [ 06/24/2025  10:15 PM ] ; 03 Jul 2025  12:45 AM
+ ;;8.5;IMMUNIZATION;**22,29,30,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  INIT FOR EDIT SITE PARAMETERS.
  ;   PATCH 2: Fix display of default Low Supply Alert.  INIT+72
@@ -9,6 +9,8 @@ BISITE1 ;IHS/CMI/MWR - EDIT SITE PARAMETERS; MAY 10, 2010
  ;;           Update display of selected High Risk parameters.  INIT+165
  ;;  PATCH 13: Add Flu Season Date Range parameter. INIT+197
  ;;  PATCH 14: Update display of selected High Risk parameters.  INIT+164
+ ;;  PATCH 22: Changes to include COVID.   RISKTX+0
+ ;;  PATCH 31: Show numbers for risk included if text string too long
  ;
  ;
  ;----------
@@ -143,18 +145,11 @@ INIT ;EP
  D WRITE(.BILINE,X)
  K X
  ;
- ;---> ImmServe Directory.
- ;********** PATCH 8, v8.5, MAR 15,2014, IHS/CMI/MWR
- ;---> Leave parameter place keeper on menu, but disable.
- ;S X=$$IMMSVDIR^BIUTL8(BISITE)
- ;S:($L(X)>39) X=$E(X,1,39)_"..."
- ;S X="  15) ImmServe Directory...........: "_X
- ;**********
  ;
  ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
  ;---> IP Address for TCH Forecaster.
  S X=$$IPTCH^BIUTL8(BISITE)
- S X="  15) IP Address for TCH Forecaster: "_X
+ S X="  15) IP Address for ICE Forecaster: "_X
  ;**********
  D WRITE(.BILINE,X)
  K X
@@ -179,16 +174,14 @@ INIT ;EP
  ;********** PATCH 14, v8.5, AUG 01,2017, IHS/CMI/MWR
  ;---> Update display of selected High Risk parameters.
  ;---> Risk Check enabled.
- N Z S Z=$$RISKP^BIUTL2(BISITE)
+ N Z
+ S Z=$$RISKP^BIUTL2(BISITE)
  D
  .I 'Z S X="High Risk Disabled" Q
- .S X=$$RISKTX^BISITE1(Z)
+ .S X=$$RISKTX(Z)
+ .;V8.5 P31
+ .S:$L(X)>33 X="(Risk Factors: "_Z_")"
  .S X="Enabled: "_X
- .;I Z=1 S X="Enabled: Hep B Only" Q
- .;I Z=2 S X="Enabled: Pneumo Only" Q
- .;I Z=12 S X="Enabled: Hep B and Pneumo" Q
- .;I Z=23 S X="Enabled: Pneumo Only (+Smoking)" Q
- .;I Z=123 S X="Enabled: Hep B and Pneumo (+Smoking)" Q
  ;**********
  ;
  S X="  18) High Risk Factor Check.......: "_X
@@ -247,25 +240,30 @@ LOTSDEF(BIDUZ2) ;EP
  Q $P($G(^BISITE(+$G(BIDUZ2),0)),U,25)
  ;**********
  ;
- ;********** PATCH 14, v8.5, AUG 01,2017, IHS/CMI/MWR
- ;---> Update display of selected High Risk parameters.
+ ;********** PATCH 22, v8.5, OCT 24,2011, IHS/CMI/MWR
+ ;---> Update display of selected High Risk parameters to include COVID.
  ;----------
 RISKTX(Z) ;EP
  ;---> Return text of Risk Factors.
  ;---> Parameters:
  ;     1 - Z (req) Number representing High Risk.
  ;
- N X S X=""
- I Z=1 S X="Pneumo"
- I Z=2 S X="HepB for DM"
- I Z=3 S X="HepA & HepB for CLD/HepC"
- I Z=19 S X="Pneumo (+Smoking)"
- I Z=12 S X="Pneumo, HepB for DM"
- I Z=13 S X="Pneumo, HepA & HepB for CLD/HepC"
- I Z=23 S X="HepA & HepB for DM and CLD/HepC"
- I Z=139 S X="Pneumo (+Smoking), HepA & HepB"
- I Z=129 S X="Pneumo (+Smoking), HepB for DM"
- I Z=123 S X="Pneumo, HepB, HepA & HepB"
- I Z=1239 S X="Pneumo(+Smkg), HepB, HepA & HepB"
- I X="" S X="ERROR: Unable to determine."
+ N I,SP,X
+ S SP=", "
+ S I(1)="Pneumo"
+ S I(2)="HepB-DM"
+ S I(3)="HepA&B"
+ S I(4)="COVID"
+ S I(5)="MenB"
+ S I(6)="RSV"
+ S I(7)="HPV"
+ S I(8)="RecombZV"
+ S I("S")="Smoking"
+ N X
+ S X=""
+ F J=1:1 S Y=$E(Z,J) Q:Y=""  I $D(I(Y)) S X=X_I(Y)_SP
+ S:X="" X="ERROR: Unable to determine."
+ I $E(X,$L(X)-1)="," S X=$E(X,1,$L(X)-2)
  Q X
+ ;=====
+ ;

@@ -1,10 +1,11 @@
-BIUTL3 ;IHS/CMI/MWR - UTIL: ZTSAVE, ASKDATE, DIRZ.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**5**;JUL 01,2013
+BIUTL3 ;IHS/CMI/MWR - UTIL: ZTSAVE, ASKDATE, DIRZ.; MAY 10, 2010 ; 09 Jun 2025  10:51 PM [ 06/12/2025  11:12 AM ]
+ ;;8.5;IMMUNIZATION;**21,29,30,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: SAVE ANY AND ALL BI VARIABLES FOR QUEUEING TO TASKMAN,
  ;;  ASK DATE RANGE, DIRZ (PROMPT TO CONTINUE).
  ;;  PATCH 2: Add more variables to save: BIDELIM, BIU19.
  ;;  PATCH 5: Add more variables to save: BITOTPTS, BITOTFPT, BITOTMPT ZSAVES+77
+ ;;  PATCH 21: Add "A" to DIR(0)   DIRZ+19
  ;
  ;
  ;----------
@@ -171,7 +172,7 @@ LOCKED ;EP
  ;
  ;
  ;----------
-DIRZ(BIPOP,BIPRMT,BIPRMT1,BIPRMT2,BIPRMTQ) ;EP - Press RETURN to continue.
+DIRZ(BIPOP,BIPRMT,BIPRMT1,BIPRMT2,BIPRMTQ,BINLF) ;EP - Press RETURN to continue.
  ;---> Call to ^DIR, to Press RETURN to continue.
  ;---> Parameters:
  ;     1 - BIPOP   (ret) BIPOP=1 if DTOUT or DUOUT
@@ -179,6 +180,7 @@ DIRZ(BIPOP,BIPRMT,BIPRMT1,BIPRMT2,BIPRMTQ) ;EP - Press RETURN to continue.
  ;     3 - BIPRMT1 (opt) Prompt other than "Press RETURN..."
  ;     4 - BIPRMT2 (opt) Prompt other than "Press RETURN..."
  ;     5 - BIPRMTQ (opt) Response to "?" other than standard
+ ;     6 - BINLF   (opt) If BINLF=1, no linefeed before prompt.
  ;
  ;---> Example: D DIRZ^BIUTL3(.BIPOP)
  ;
@@ -190,7 +192,12 @@ DIRZ(BIPOP,BIPRMT,BIPRMT1,BIPRMT2,BIPRMTQ) ;EP - Press RETURN to continue.
  .I $G(BIPRMT1)]"" S DIR("A",1)=BIPRMT1
  .I $G(BIPRMT2)]"" S DIR("A",2)=BIPRMT2
  I $G(BIPRMTQ)]"" S DIR("?")=BIPRMTQ
- S DIR(0)="E" W ! D ^DIR W !
+ ;********** PATCH 21, v8.5, APR 01,2021, IHS/CMI/MWR
+ ;---> Add "A" to DIR(0) so that nothing is added to the prompt, if supplied.
+ ;---> Also add "no linefeed" option.
+ W:('$G(BINLF)=1) !
+ S DIR(0)="EA"
+ D ^DIR W !
  S BIPOP=$S($D(DIRUT):1,Y<1:1,1:0)
  Q
  ;
@@ -213,3 +220,153 @@ NOW2 ;EP
  D DIRZ()
  K BITTTE,BITTTS
  Q
+VARR ;EP;TO CREATE VACCINE CVX ARRAYS FOR IMM/DUE EVALUATION
+ ;V8.5 PATCH 29 - FID-107546 Adjust Td,NOS forecast
+ K VARR
+ N X,Y,Z,CVX,NAM,GRP
+ S X=0
+ F  S X=$O(^AUTTIMM(X)) Q:'X  S Y=^(X,0) D V1
+ Q
+ ;=====
+ ;
+V1 ;EVAL EACH VACCINE
+ S NAM=$P(Y,U,1,9)
+ S CVX=+$P(Y,U,3)
+ S GRP=+$P(Y,U,9)
+ I NAM["COV" D
+ .S ^BIVARR("COV",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"COV",X)=NAM
+ .S:NAM["NOS" ^BIVARR("COV","NOS",CVX,GRP,X)=NAM
+ I NAM["DT"!(NAM["Td") D
+ .I NAM'["Td",NAM'["ADULT" D
+ ..S ^BIVARR("DT",CVX,GRP,X)=NAM
+ ..S ^BIVARR("GRP",GRP,CVX,"DT",X)=NAM
+ ..S:NAM["NOS" ^BIVARR("DT","NOS",CVX,GRP,X)=NAM
+ .I NAM["Td",NAM'["Tdap" D
+ ..S ^BIVARR("TD",CVX,GRP,X)=NAM
+ ..S ^BIVARR("GRP",GRP,CVX,"TD",X)=NAM
+ ..S:NAM["NOS" ^BIVARR("TD","NOS",CVX,GRP,X)=NAM
+ .I NAM["Tdap" D
+ ..S ^BIVARR("TDAP",CVX,GRP,X)=NAM
+ ..S ^BIVARR("GRP",GRP,CVX,"TDAP",X)=NAM
+ ..S:NAM["NOS" ^BIVARR("TDAP","NOS",CVX,GRP,X)=NAM
+ I NAM["HEP A"!(NAM["Hep A")!(NAM["HepA") D
+ .S ^BIVARR("HEP A",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"HEP A",X)=NAM
+ .S:NAM["NOS" ^BIVARR("HEP A","NOS",CVX,GRP,X)=NAM
+ I NAM["HEP B"!(NAM["Hep B")!(NAM["HepB") D
+ .S ^BIVARR("HEP B",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"HEP B",X)=NAM
+ .S:NAM["NOS" ^BIVARR("HEP B","NOS",CVX,GRP,X)=NAM
+ I NAM["HIB" D
+ .S ^BIVARR("HIB",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"HIB",X)=NAM
+ .S:NAM["NOS" ^BIVARR("HIB","NOS",CVX,GRP,X)=NAM
+ I NAM["HPV" D
+ .S ^BIVARR("HPV",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"HPV",X)=NAM
+ .S:NAM["NOS" ^BIVARR("HPV","NOS",CVX,GRP,X)=NAM
+ I NAM["INFLU"!(NAM["Influ")!(NAM["influ")!(NAM["H1N1") D
+ .S ^BIVARR("INFLU",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"INFLU",X)=NAM
+ .S:NAM["NOS" ^BIVARR("INFLU","NOS",CVX,GRP,X)=NAM
+ I NAM["H1N1" D
+ .S ^BIVARR("H1N1",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"H1N1",X)=NAM
+ .S:NAM["NOS" ^BIVARR("H1N1","NOS",CVX,GRP,X)=NAM
+ I NAM["IPV"!(NAM["OPV")!(NAM["POLIO") D
+ .S ^BIVARR("POLIO",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"POLIO",X)=NAM
+ .S:NAM["NOS" ^BIVARR("POLIO","NOS",CVX,GRP,X)=NAM
+ I NAM["MEN"!(NAM["Meni") D
+ .S ^BIVARR("MEN",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"MEN",X)=NAM
+ .S:NAM["NOS" ^BIVARR("MEN","NOS",CVX,GRP,X)=NAM
+ .D:NAM["Men-A"
+ ..S ^BIVARR("MEN-A",CVX,GRP,X)=NAM
+ ..S ^BIVARR("GRP",GRP,CVX,"MEN-A",X)=NAM
+ ..S:NAM["NOS" ^BIVARR("MEN-A","NOS",CVX,GRP,X)=NAM
+ .D:NAM["Men-B"!(NAM["Men B")!(NAM["Group B,")
+ ..S ^BIVARR("MEN-B",CVX,GRP,X)=NAM
+ ..S ^BIVARR("GRP",GRP,CVX,"MEN-B",X)=NAM
+ ..S:NAM["NOS" ^BIVARR("MEN-B","NOS",CVX,GRP,X)=NAM
+ I NAM["MM"!(NAM["VARI")!(NAM["MEAS") D
+ .S ^BIVARR("MMRV",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"MMRV",X)=NAM
+ .S:NAM["NOS" ^BIVARR("MMRV","NOS",CVX,GRP,X)=NAM
+ I NAM["PNEU"!(NAM["Pneu") D
+ .S ^BIVARR("PNEU",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"PNEU",X)=NAM
+ .S:NAM["NOS" ^BIVARR("PNEU","NOS",CVX,GRP,X)=NAM
+ I NAM["ROTA" D
+ .S ^BIVARR("ROTA",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"ROTA",X)=NAM
+ .S:NAM["NOS" ^BIVARR("ROTA","NOS",CVX,GRP,X)=NAM
+ I NAM["RSV" D
+ .S ^BIVARR("RSV",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"RSV",X)=NAM
+ .S:NAM["NOS" ^BIVARR("RSV","NOS",CVX,GRP,X)=NAM
+ I NAM["ZOS"!(NAM["Zos") D
+ .S ^BIVARR("ZOS",CVX,GRP,X)=NAM
+ .S ^BIVARR("GRP",GRP,CVX,"ZOS",X)=NAM
+ .S:NAM["NOS" ^BIVARR("ZOS","NOS",CVX,GRP,X)=NAM
+ I NAM'["COV",NAM'["DT",NAM'["Td",NAM'["HEP A",NAM'["Hep A",NAM'["HepA",NAM'["HEP B",NAM'["Hep B",NAM'["HepB",NAM'["HIB",NAM'["HPV",NAM'["INFLU",NAM'["Influ",NAM'["influ",NAM'["H1N1" D
+ .I NAM'["H1N1",NAM'["IPV",NAM'["OPV",NAM'["POLIO",NAM'["MEN",NAM'["Meni",NAM'["MM",NAM'["VARI",NAM'["MEAS",NAM'["PNEU",NAM'["Pneu",NAM'["ROTA",NAM'["RSV",NAM'["ZOS",NAM'["Zos" D
+ ..S ^BIVARR("IEN",X,CVX,GRP)=NAM
+ Q
+ Q
+ ;=====
+ ;
+GR ;FIND PATIENT WITH GREATER THAN IMMUNIZATIONS
+ K ^BITMP("GR")
+ S K=0
+ S QUIT=0
+ ;F GR=70,60,50 Q:QUIT  D GR1
+ D GR1
+ D SHOW
+ D PAUSE^BYIMIMM6
+ Q
+ ;=====
+ ;
+GR1 ;
+ S DFN=9999999999
+ F  S DFN=$O(^AUPNVIMM("AC",DFN),-1) Q:'DFN!QUIT  D
+ .S (J,IDA)=0
+ .F  S IDA=$O(^AUPNVIMM("AC",DFN,IDA)) Q:'IDA!QUIT  D
+ ..S J=J+1
+ ..Q:J<71
+ ..S:'$D(^BITMP("GR",DFN)) K=K+1
+ ..S ^BITMP("GR",DFN)=J
+ ..S:K>19 QUIT=1
+ Q
+ ;=====
+ ;
+PCNT(DFN) ;COUNT PATIENT'S IMMUNIZATIONS
+ N CNT,X
+ S CNT=0
+ S X=0
+ F  S X=$O(^AUPNVIMM("AC",DFN,X)) Q:'X  S CNT=CNT+1
+ Q CNT
+ ;=====
+ ;
+SHOW ;SHOW PTS WITH >70 IMMUNIZATIONS
+ N NAM,DFN
+ W @IOF
+ W !?5,"Patients with greater than 70 immunizations"
+ W !?5,"-------------------------------------------"
+ W !!?35,"No. of"
+ W !?5,"NAME",?35,"Imms"
+ W !?5,"----------------------------  -----"
+ N X,Y,Z,DFN
+ S DFN=0
+ F  S DFN=$O(^BITMP("GR",DFN)) Q:'DFN  D
+ .S NAM=$P($G(^DPT(DFN,0)),U)
+ .S NAM(NAM)=DFN
+ S NAM=""
+ F  S NAM=$O(NAM(NAM)) Q:NAM=""  D
+ .S DFN=NAM(NAM)
+ .S CNT=$$PCNT(DFN)
+ .W !?5,NAM,?35,CNT
+ Q
+ ;=====
+END ;

@@ -1,5 +1,5 @@
 BLRPRE18 ; IHS/HQW/TPF - ENVIRONMENT CHECK FOR PATCH 18; [ 06/03/2003  8:35 AM ]
- ;;5.2T8;LR;**1018**;Oct 27, 2004
+ ;;5.2;LR;**1018**;Oct 27, 2004
  ;
  S $P(LINE,"*",81)=""
  S XPDNOQUE="NO QUE"  ;NO QUEUING ALLOWED
@@ -95,7 +95,7 @@ SORRY ;
  D BMES^XPDUTL("Sorry....something is wrong with your enviroment")
  D BMES^XPDUTL("for a Lab 5.2 Patch 1018 install!")
  D BMES^XPDUTL("Please print/capture this screen and notify")
- D BMES^XPDUTL("the Help Desk")
+ D BMES^XPDUTL("the Support Center at 1-888-830-7280")
  Q
  ;CHECK FOR LMI MAIL GROUP
 CHECKLMI() ;
@@ -105,7 +105,7 @@ CHECKLMI() ;
  Q +Y
  ;
  ;RESET ^LR("BLRA" FOR NEW STRUCTURE -- IF AND ONLY IF Patch 18 has not been installed before.
- ; E-SIG sites are the only ones effected by this.
+ ; E-SIG sites are the only ones affected by this.
 POST ;
  NEW LAB18,LAB18C
  ;

@@ -1,5 +1,5 @@
-%ZOSV ;SFISC/AC - View commands & special functions. ;10/26/06  08:15
- ;;8.0;KERNEL;**13,65,71,94,107,118,136,215,284,425**;Jul 10, 1995;Build 18
+%ZOSV ;SFISC/AC - View commands & special functions. ;08/21/2003  17:06
+ ;;8.0;KERNEL;**13,65,71,94,107,118,136,215,284**;Jul 10, 1995
 ACTJ() ; # active jobs
  Q $P($$JOBS^%SY,",",2)
  ;
@@ -64,11 +64,14 @@ DOLRO ;SAVE ENTIRE SYMBOL TABLE IN LOCATION SPECIFIED BY X
  K %X,%Y,Y Q
  ;
 ORDER ;SAVE PARTS OF SYMBOL TABLE IN LOCATION SPECIFIED BY X
- S (Y,Y1)=$P(Y,"*") I $D(@Y)=0 F  S Y=$ZSORT(@Y) Q:Y=""!(Y[Y1)
- Q:Y=""  S %=$D(@Y) S:%#2 @(X_"Y)="_Y) I %>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
- F  S Y=$ZSORT(@Y) Q:Y=""!(Y'[Y1)  S %=$D(@Y) S:%#2 @(X_"Y)="_Y) I %>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
- K %,%X,%Y,Y,Y1
- Q
+ ;PARTS INDICATED BY X1("NAMESPACE*")="" ARRAY
+ I $D(X1("*"))#2 D DOLRO Q
+ S X1="" F  S X1=$O(X1(X1)) Q:X1=""  D
+ . S (Y,Y1)=$P(X1,"*") I $D(@Y)=0 F  S Y=$ZSORT(@Y) Q:Y=""!(Y[Y1)
+ . Q:Y=""  S %=$D(@Y) S:%#2 @(X_"Y)="_Y) I %>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
+ . F  S Y=$ZSORT(@Y) Q:Y=""!(Y'[Y1)  S %=$D(@Y) S:%#2 @(X_"Y)="_Y) I %>9 S %X=Y_"(",%Y=X_"Y," D %XY^%RCR
+ . Q
+ K %,%X,%Y,Y,Y1 Q
  ;
 PARSIZ ;
  S X=3 Q
@@ -132,13 +135,11 @@ SID() ;Build a System ID
  Q "1~"_(+J3)_T_$P(J3,",",2)_T_J2_T
  ;
 T0 ; start RT clock
- ;S %ZH0=$ZH,%=$P(%ZH0,",",3) S:$E($ZV,10,12)>5.1 %=$E(%,13,23) S XRT0=+$H_","_($P(%,":")*3600+($P(%,":",2)*60)+$P(%,":",3))
- Q
+ S %ZH0=$ZH,%=$P(%ZH0,",",3) S:$E($ZV,10,12)>5.1 %=$E(%,13,23) S XRT0=+$H_","_($P(%,":")*3600+($P(%,":",2)*60)+$P(%,":",3)) Q
  ;
 T1 ; store RT datum w/ZHDIF
- ;S %ZH1=$ZH,%=$P(%ZH1,",",3) S:$E($ZV,10,12)>5.1 %=$E(%,13,23) S XRT1=+$H_","_($P(%,":")*3600+($P(%,":",2)*60)+$P(%,":",3))
- ;S ^%ZRTL(3,XRTL,+XRT1,XRTN,$P(XRT1,",",2))=XRT0_"^^"_($P(%ZH1,",")-$P(%ZH0,","))_"^"_($P(%ZH1,",",7)-$P(%ZH0,",",7))_"^"_($P(%ZH1,",",8)-$P(%ZH0,",",8)) K XRT0,%ZH0,%ZH1
- Q
+ S %ZH1=$ZH,%=$P(%ZH1,",",3) S:$E($ZV,10,12)>5.1 %=$E(%,13,23) S XRT1=+$H_","_($P(%,":")*3600+($P(%,":",2)*60)+$P(%,":",3))
+ S ^%ZRTL(3,XRTL,+XRT1,XRTN,$P(XRT1,",",2))=XRT0_"^^"_($P(%ZH1,",")-$P(%ZH0,","))_"^"_($P(%ZH1,",",7)-$P(%ZH0,",",7))_"^"_($P(%ZH1,",",8)-$P(%ZH0,",",8)) K XRT0,%ZH0,%ZH1 Q
  ;
 ZHDIF ;Display dif of two $ZH's
  W !," CPU=",$J($P(%ZH1,",")-$P(%ZH0,","),6,2),?14," ET=",$J($P(%ZH1,",",2)-$P(%ZH0,",",2),6,1),?27," DIO=",$J($P(%ZH1,",",7)-$P(%ZH0,",",7),5),?40," BIO=",$J($P(%ZH1,",",8)-$P(%ZH0,",",8),5),! Q

@@ -1,5 +1,5 @@
-BGPMUUT5 ;IHS/MSC/MGH - Find lab results for date range ;16-Dec-11 13:21;MMT
- ;;12.1;IHS CLINICAL REPORTING;;MAY 17, 2012;Build 66
+BGPMUUT5 ;IHS/MSC/MGH - Find lab results for date range ;02-Mar-2011 16:47;DU
+ ;;11.1;IHS CLINICAL REPORTING SYSTEM;**1**;JUN 27, 2011;Build 106
  Q
 LAB(DATA,DFN,TAX,BDATE,EDATE,FLG) ; EP
  ;This function is designed to see if the patient has any labs
@@ -17,7 +17,6 @@ LAB(DATA,DFN,TAX,BDATE,EDATE,FLG) ; EP
 CHSET ;Finds and evaluates chemistry tests
  N CDT,SITE,SPEC,PTR
  S CDT=+^LR(LRDFN,"CH",IDT,0),SITE=$P(^(0),U,5)
- Q:SITE=""
  S SPEC=$P($G(^LAB(61,SITE,0)),U,1),CNT=CNT+1
  S PTR=1 F  S PTR=$O(^LR(LRDFN,"CH",IDT,PTR)) Q:PTR<1  D
  .I FLG="" D NXTST

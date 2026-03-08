@@ -1,18 +1,14 @@
-DIRCR ;SFISC/GFT-DELETE THIS LINE AND SAVE AS '%RCR'*** ;12:18 PM  20 Apr 1993 [ 04/02/2003   8:23 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;;Mar 30, 1999
- ;THIS ROUTINE CONTAINS AN IHS MODIFICATION BY IHS/MFD
+DIRCR ;SFISC/GFT-DELETE THIS LINE AND SAVE AS '%RCR'*** ;12:18 PM  20 Apr 1993 [ 09/10/1998  11:12 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 %RCR ;GFT/SF
  ;
 STORLIST ;
- ;----- BEGIN IHS MODIFICATION
- ;4 NEW LINES ARE ADDED.  ORIGINAL MODIFICATION BY IHS/MFD
- I $ZV["Cache" G IHS
- S %D="" F  S %D=$O(%RCR(%D)) Q:%D=""  ZNEW @%D
- S %E=%RCR K %RCR,%X,%Y D @%E Q
-IHS ;
- ;----- END IHS MODIFICATION
+ ; begin IHS mods
+ S %D="" F  S %D=$O(%RCR(%D)) Q:%D=""  ZNEW @%D  ;IHS/MFD added line
+ S %E=%RCR K %RCR,%X,%Y D @%E Q  ;IHS/MFD added line
+ ; end IHS mods
  D INIT
 O S %D=$O(%RCR(%D)) G CALL:%D=""
  I $D(@%D)#2 S @(%E_")="_%D) G O:$D(@%D)=1

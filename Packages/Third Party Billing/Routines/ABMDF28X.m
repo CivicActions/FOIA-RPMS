@@ -1,5 +1,5 @@
 ABMDF28X ; IHS/SD/SDR - PRINT UB-04 ;  
- ;;2.6;IHS Third Party Billing;**1,3,9,10,21,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS Third Party Billing;**1,3,9,10,21,27,29**;NOV 12, 2009;Build 562
  ;IHS/SD/SDR 2.5*12 IM25033 Made changes for NM Medicaid
  ;IHS/SD/SDR 2.5*12 IM25136 Made change for alignment of FL4
  ;IHS/SD/SDR 2.5*12 IM24881 Form alignment changes
@@ -15,6 +15,7 @@ ABMDF28X ; IHS/SD/SDR - PRINT UB-04 ;
  ;IHS/SD/SDR 2.6*21 HEAT183995 Made change so delayed reason code will only print 1 digit, no leading zero.
  ;IHS/SD/AML 2.6*27 CR10170 Make FL14, 15 not print leading zero for Partnership HMO.
  ;IHS/SD/SDR 2.6*27 CR8897 Stopped box 12 from printing if Medi-Cal and visit type 142.
+ ;IHS/SD/SDR 2.6*29 CR10825 Made FL15 print 1 char only when it does print (AZ Mcd doesn't print at all)
  ;***************
  ;
  K ABM
@@ -29,36 +30,36 @@ ABMDF28X ; IHS/SD/SDR - PRINT UB-04 ;
  I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMR(10,120)="SAN FELIPE HS"
  S ABMDE=$P(^DIC(4,ABMP("LDFN"),0),U)_"^^25"  ;data ^ tab ^ format
  D WRT^ABMDF28W  ;write data in specified format
- S ABMDE=ABMR(10,120)_"^25^25"  ;Pay-To Name -- form locator #2-line 1
+ S ABMDE=ABMR(10,120)_"^25^25"  ;Pay-To Name FL #2-line 1
  I $$RCID^ABMERUTL(ABMP("INS"))=61044 S ABMDE=""
  D WRT^ABMDF28W  ;write data in specified format
- D 30^ABMER20  ;Patient control number -- form locator #3a
+ D 30^ABMER20  ;Patient control number FL #3a
  S ABMDE=ABMR(20,30)_"^53^24"
  D WRT^ABMDF28W
  ;
 2 ;
  ;Provider address, Patient control number, Bill type
  W !
- D 130^ABMER10  ;Provider address -- form locator #1-line 2
+ D 130^ABMER10  ;Provider address FL #1-line 2
  I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMR(10,130)="PO BOX 4339"
  I $D(^DIC(4,ABMP("LDFN"),1)) D
  .S ABMVLOC=^DIC(4,ABMP("LDFN"),1)
  S ABMDE=$P($G(ABMVLOC),U)_"^^25"
  D WRT^ABMDF28W
- D 130^ABMER10  ;Pay-To Address -- form locator #2-line 2
+ D 130^ABMER10  ;Pay-To Address FL #2-line 2
  S ABMDE=ABMR(10,130)_"^25^25"
  I $$RCID^ABMERUTL(ABMP("INS"))=61044 S ABMDE=""
  I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMDE="PO BOX 4342^25^25"  ;abm*2.6*1 HEAT4566
  D WRT^ABMDF28W
  S ABMP("HRN")=$P($G(^AUPNPAT(+ABMP("PDFN"),41,+ABMP("LDFN"),0)),U,2)
  S:ABMP("HRN")="" ABMP("HRN")=$P($G(^AUPNPAT(+ABMP("PDFN"),41,DUZ(2),0)),U,2)
- S ABMDE=$G(ABMP("HRN"))_"^53^24"  ;Patient HRN - form locator #3b
+ S ABMDE=$G(ABMP("HRN"))_"^53^24"  ;Patient HRN FL #3b
  D WRT^ABMDF28W
- S ABMDE=ABMP("BTYP")_"^77^4"  ;Bill type -- form locator #4
+ S ABMDE=ABMP("BTYP")_"^77^4"  ;Bill type FL #4
  D WRT^ABMDF28W
  ;
 3 ;
- ; Provider city, state, zip  -- form locator #1-line 3
+ ; Provider city, state, zip FL #1-line 3
  W !
  D 140^ABMER10  ;Provider city
  D 150^ABMER10  ;Provider state
@@ -75,7 +76,7 @@ ABMDF28X ; IHS/SD/SDR - PRINT UB-04 ;
  I $$RCID^ABMERUTL(ABMP("INS"))=61044 S ABMDE=$TR(ABMDE,",-")
  I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMDE="SAN FELIPE, NM 87001^^25"
  D WRT^ABMDF28W
- ; Pay-To city, state, zip - form locator #2-line 3
+ ; Pay-To city, state, zip FL #2-line 3
  I $L(ABMR(10,160))=9 D
  .S ABMR(10,160)=$E(ABMR(10,160),1,5)_"-"_$E(ABMR(10,160),6,9)
  .Q
@@ -86,14 +87,14 @@ ABMDF28X ; IHS/SD/SDR - PRINT UB-04 ;
  ;
 4 ;
  W !
- D 110^ABMER10  ;Provider phone     form locator #1-line 4
- D 40^ABMER10   ;Fed. tax number    form locator #5
- D 190^ABMER20  ;Stmt covers period from form locator #6
- D 200^ABMER20  ;Stmt covers period to   form locator #6
- D 200^ABMER30  ;Covered days       form locator #7-old
- D 210^ABMER30  ;Non-covered days   form locator #8-old
- D 220^ABMER30  ;Co-insured days    form locator #9-old
- D 230^ABMER30  ;Lifetime reserve days   form locator #10-old
+ D 110^ABMER10  ;Provider phone  FL #1-line 4
+ D 40^ABMER10   ;Fed. tax number FL #5
+ D 190^ABMER20  ;Stmt covers period from FL #6
+ D 200^ABMER20  ;Stmt covers period to  FL #6
+ D 200^ABMER30  ;Covered days  FL #7-old
+ D 210^ABMER30  ;Non-covered days FL #8-old
+ D 220^ABMER30  ;Co-insured days  FL #9-old
+ D 230^ABMER30  ;Lifetime reserve days FL #10-old
  S ABMDE=ABMR(10,110)_"^^25"
  D WRT^ABMDF28W
  I DUZ(2)=1581,(ABMP("VTYP")=998) S ABMR(10,40)=850210848
@@ -110,10 +111,10 @@ ABMDF28X ; IHS/SD/SDR - PRINT UB-04 ;
  W !
  K ABMP("PNAME")
  N I
- F I=40:10:60 D  ;Patient name -form locator #9
+ F I=40:10:60 D  ;Patient name FL #9
  .D @(I_"^ABMER20A")
  N I
- F I=120:10:160 D  ;Patient mailing address -form locator #9
+ F I=120:10:160 D  ;Patient mailing address FL #9
  .D @(I_"^ABMER20")
  S ABMDE=ABMR(20,120)_$S(ABMR(20,130)]"":" "_ABMR(20,130),1:"")_"^41^40"  ;patient str address #9a
  D WRT^ABMDF28W
@@ -144,54 +145,55 @@ ABMDF28X ; IHS/SD/SDR - PRINT UB-04 ;
  S ABMDE=ABMR(20,80)_"^^8"  ;Patient Birthdate
  D WRT^ABMDF28W  ; form locator #10
  S ABMDE=ABMR(20,70)_"^10^1"  ;Patient sex code
- D WRT^ABMDF28W  ; form locator #11
+ D WRT^ABMDF28W  ;FL #11
  S:ABMR(20,170) ABMDE=ABMR(20,170)_"^12^6"  ;Admission date
- ;D WRT^ABMDF28W  ; form locator #12  ;abm*2.6*27 IHS/SD/SDR CR8897
- I '($$RCID^ABMERUTL(ABMP("INS"))["61044"&(ABMP("VTYP")=142)) D WRT^ABMDF28W  ; form locator #12  ;abm*2.6*27 IHS/SD/SDR CR8897
+ ;D WRT^ABMDF28W  ;FL #12  ;abm*2.6*27 IHS/SD/SDR CR8897
+ I '($$RCID^ABMERUTL(ABMP("INS"))["61044"&(ABMP("VTYP")=142)) D WRT^ABMDF28W  ;FL #12  ;abm*2.6*27 IHS/SD/SDR CR8897
  S:ABMR(20,180) ABMDE=ABMR(20,180)_"^18^3"  ;Admission hour
- D WRT^ABMDF28W  ; form locator #13
- I +$G(ABMR(20,100))'=0 S ABMR(20,100)="0"_ABMR(20,100)
- S ABMDE=(ABMR(20,100))_"^21^3"  ;Type of admission
- I ($P($G(^AUTNINS(ABMP("INS"),0)),U)="NEW MEXICO MEDICAID")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="MEDICAID EXEMPT") S ABMDE=+(ABMR(20,100))_"^21^3"
- I (($$RCID^ABMERUTL(ABMP("INS"))["61044")&($P($G(^AUTNINS(ABMP("INS"),0)),U)'["O/P MEDI-CAL")) S ABMDE=+(ABMR(20,100))_"^21^3"  ;abm*2.6*27 IHS/SD/AML CR10170
- D WRT^ABMDF28W  ; form locator #14
- I +$G(ABMR(20,110))'=0 S ABMR(20,110)="0"_ABMR(20,110)
- S ABMDE=(ABMR(20,110))_"^24^3"  ;Source of admission
+ D WRT^ABMDF28W  ;FL #13
+ ;I +$G(ABMR(20,100))'=0 S ABMR(20,100)="0"_ABMR(20,100)  ;abm*2.6*29 IHS/SD/SDR CR10825
+ S ABMDE=+(ABMR(20,100))_"^21^3"  ;Type of admission
+ ;I ($P($G(^AUTNINS(ABMP("INS"),0)),U)="NEW MEXICO MEDICAID")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="MEDICAID EXEMPT") S ABMDE=+(ABMR(20,100))_"^21^3"  ;abm*2.6*29 IHS/SD/SDR CR10825
+ ;I (($$RCID^ABMERUTL(ABMP("INS"))["61044")&($P($G(^AUTNINS(ABMP("INS"),0)),U)'["O/P MEDI-CAL")) S ABMDE=+(ABMR(20,100))_"^21^3"  ;abm*2.6*27 IHS/SD/AML CR10170  ;abm*2.6*29 IHS/SD/SDR CR10825
+ D WRT^ABMDF28W  ;FL #14
+ S ABMDE=+(ABMR(20,110))_"^24^3"  ;Source of admission  ;abm*2.6*29 IHS/SD/SDR CR10825
+ ;I +$G(ABMR(20,110))'=0 S ABMR(20,110)="0"_ABMR(20,110)  ;abm*2.6*29 IHS/SD/SDR CR10825
+ ;S ABMDE=(ABMR(20,110))_"^24^3"  ;Source of admission  ;abm*2.6*29 IHS/SD/SDR CR10825
  ;I ($P($G(^AUTNINS(ABMP("INS"),0)),U)="NEW MEXICO MEDICAID")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="MEDICAID EXEMPT") S ABMDE=+(ABMR(20,110))_"24^3"  ;abm*2.6*9 HEAT53204
- I ($P($G(^AUTNINS(ABMP("INS"),0)),U)="NEW MEXICO MEDICAID")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="MEDICAID EXEMPT") S ABMDE=+(ABMR(20,110))_"^24^3"  ;abm*2.6*9 HEAT53204
- I (($$RCID^ABMERUTL(ABMP("INS"))["61044")&($P($G(^AUTNINS(ABMP("INS"),0)),U)'["O/P MEDI-CAL")) S ABMDE=+(ABMR(20,110))_"^24^3"  ;abm*2.6*27 IHS/SD/AML CR10170
+ ;I ($P($G(^AUTNINS(ABMP("INS"),0)),U)="NEW MEXICO MEDICAID")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="MEDICAID EXEMPT") S ABMDE=+(ABMR(20,110))_"^24^3"  ;abm*2.6*9 HEAT53204  ;abm*2.6*29 IHS/SD/SDR CR10825
+ ;I (($$RCID^ABMERUTL(ABMP("INS"))["61044")&($P($G(^AUTNINS(ABMP("INS"),0)),U)'["O/P MEDI-CAL")) S ABMDE=+(ABMR(20,110))_"^24^3"  ;abm*2.6*27 IHS/SD/AML CR10170  ;abm*2.6*29 IHS/SD/SDR CR10825
  I $P($G(^AUTNINS(ABMP("INS"),0)),U)="ARIZONA MEDICAID",(ABMP("VTYP")=998) S ABMDE="^^24^3"
- D WRT^ABMDF28W  ; form locator #15
+ D WRT^ABMDF28W  ;FL #15
  S:ABMR(20,220) ABMDE=ABMR(20,220)_"^27^3"  ;Discharge hour
- D WRT^ABMDF28W  ; form locator #16
+ D WRT^ABMDF28W  ;FL #16
  S:ABMR(20,210) ABMDE=ABMR(20,210)_"^30^3"  ;Pat discharge status
- D WRT^ABMDF28W  ; form locator #17
+ D WRT^ABMDF28W  ;FL #17
  ;
  S ABMDE=ABMR(41,40)_"^33^3"  ;Condition code 1
- D WRT^ABMDF28W  ;form locator #18
+ D WRT^ABMDF28W  ;FL #18
  S ABMDE=ABMR(41,50)_"^37^3"  ;Condition code 2
- D WRT^ABMDF28W  ;form locator #19
+ D WRT^ABMDF28W  ;FL #19
  S ABMDE=ABMR(41,60)_"^40^3"  ;Condition code 3
- D WRT^ABMDF28W  ;form locator #20
+ D WRT^ABMDF28W  ;FL #20
  S ABMDE=ABMR(41,70)_"^43^3"  ;Condition code 4
- D WRT^ABMDF28W  ;form locator #21 
+ D WRT^ABMDF28W  ;FL #21 
  S ABMDE=ABMR(41,80)_"^46^3"  ;Condition code 5
- D WRT^ABMDF28W  ;form locator #22
+ D WRT^ABMDF28W  ;FL #22
  S ABMDE=ABMR(41,90)_"^49^3"  ;Condition code 6
- D WRT^ABMDF28W  ;form locator #23
+ D WRT^ABMDF28W  ;FL #23
  S ABMDE=ABMR(41,100)_"^52^3"  ;Condition code 7
- D WRT^ABMDF28W  ;form locator #24
+ D WRT^ABMDF28W  ;FL #24
  S ABMDE=$G(ABMR(41,110))_"^55^3"  ;Condition code 8
- D WRT^ABMDF28W  ;form locator #25
+ D WRT^ABMDF28W  ;FL #25
  S ABMDE=$G(ABMR(41,120))_"^58^3"  ;Condition code 9
- D WRT^ABMDF28W  ;form locator #26
+ D WRT^ABMDF28W  ;FL #26
  S ABMDE=$G(ABMR(41,130))_"^61^3"  ;Condition code 10
- D WRT^ABMDF28W  ;form locator #27
+ D WRT^ABMDF28W  ;FL #27
  S ABMDE=$G(ABMR(41,210))_"^64^3"  ;Condition code 11
- D WRT^ABMDF28W  ;form locator #28
+ D WRT^ABMDF28W  ;FL #28
  ;
  S ABMDE=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),8)),U,16)  ;accident state
- I ABMDE S ABMDE=$P($G(^DIC(5,ABMDE,0)),U,2)_"^69^2" D WRT^ABMDF28W  ;form locator #29
+ I ABMDE S ABMDE=$P($G(^DIC(5,ABMDE,0)),U,2)_"^69^2" D WRT^ABMDF28W  ;FL #29
  ;
 10 ;
  W !!
@@ -209,19 +211,19 @@ ABMDF28X ; IHS/SD/SDR - PRINT UB-04 ;
  F I=180:10:230,310:10:330 D
  .D @(I_"^ABMER40")
  S ABMDE=ABMR(40,80)_"^^2"  ; Occurrence code 1
- D WRT^ABMDF28W  ;form locator #31a
+ D WRT^ABMDF28W  ;FL #31a
  S ABMDE=ABMR(40,90)_"^3^6"  ; Occurrence date 1
- D WRT^ABMDF28W  ;form locator #31a
+ D WRT^ABMDF28W  ;FL #31a
  ;
  S ABMDE=ABMR(40,100)_"^10^2"  ; Occurrence code 2
- D WRT^ABMDF28W  ; form locator #32a
+ D WRT^ABMDF28W  ;FL #32a
  S ABMDE=ABMR(40,110)_"^13^6"  ; Occurrence date 2
- D WRT^ABMDF28W  ; form locator #32a
+ D WRT^ABMDF28W  ;FL #32a
  ;
  S ABMDE=ABMR(40,120)_"^20^2"  ; Occurrence code 3
- D WRT^ABMDF28W  ; form locator #33a
+ D WRT^ABMDF28W  ;FL #33a
  S ABMDE=ABMR(40,130)_"^23^6"  ;Occurrence date 3
- D WRT^ABMDF28W  ; form locator #33a
+ D WRT^ABMDF28W  ;FL #33a
  ;
  S ABMDE=ABMR(40,140)_"^30^2"  ; Occurrence code 4
  D WRT^ABMDF28W  ; form locator #34a

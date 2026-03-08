@@ -1,5 +1,5 @@
 APCSHLO ;cmi/flag/maw - APCL ILI CDC HL7 Export 5/12/2010 9:26:17 AM
- ;;3.0;IHS PCC REPORTS;**28**;FEB 05, 1997
+ ;;2.0;IHS PCC SUITE;**5**;MAY 14, 2009
  ;
  ;
  ;ihs/cmi/maw - 9/8/2010 added new segments based on patch 5 requirements
@@ -436,11 +436,11 @@ SETGL(D) ;-- set the temp global
  ;
 WRITE(T) ; use XBGSAVE to save the temp global (APCSDATA) to a delimited
  ; file that is exported to the IE system
- N XBGL,XBQ,XBQTO,XBNAR,XBMED,XBFLT,XBUF,XBFN,APCSFN
+ N XBGL,XBQ,XBQTO,XBNAR,XBMED,XBFLT,XBUF,XBFN
  S XBGL="APCSTMP",XBMED="F",XBQ="N",XBFLT=1,XBF=$J,XBE=$J
  S XBNAR="EPI "_TYP_"_HL7 EXPORT"
  S APCSASU=$P($G(^AUTTLOC($P(^AUTTSITE(1,0),U),0)),U,10)  ;asufac for file name
- S (XBFN,APCSFN)="EPI"_TYP_"HL7_"_APCSASU_"_"_$$DATE(DT)_".txt"
+ S XBFN="EPI"_TYP_"HL7_"_APCSASU_"_"_$$DATE(DT)_".txt"
  S XBS1="SURVEILLANCE ILI SEND"
  ;
  D ^XBGSAVE
@@ -450,19 +450,8 @@ WRITE(T) ; use XBGSAVE to save the temp global (APCSDATA) to a delimited
  . I XBFLG(1)]"" W:'$D(ZTQUEUED) !!,TYP_" HL7 file NOT successfully created",!!
  . W:'$D(ZTQUEUED) !,"File was NOT successfully transferred to IHS/CDC",!,"you will need to manually ftp it.",!
  . W:'$D(ZTQUEUED) !,XBFLG(1),!!
- D SETLOG
  K ^APCSTMP($J),APCSCNT
  Q
 DATE(D) ;EP
  Q (1700+$E(D,1,3))_$E(D,4,5)_$E(D,6,7)
  ;
-SETLOG ;EP
- ;create entry with start date of DT
- N APCLFDA,APCLIENS,APCLERR
- S APCLIENS="+2,"_1_","
- S APCLFDA(9001003.313,APCLIENS,.01)=DT
- S APCLFDA(9001003.313,APCLIENS,.02)=APCSFN
- S APCLFDA(9001003.313,APCLIENS,.05)=$S(XBFLG:0,1:1)
- S APCLFDA(9001003.313,APCLIENS,.04)=APCSCNT
- D UPDATE^DIE("","APCLFDA","APCLIENS","APCLERR(1)")
- Q

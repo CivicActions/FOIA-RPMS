@@ -1,5 +1,5 @@
 ABMDRSU ; IHS/ASDST/DMJ - Display Summarized Claim ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;Original;TMD;
  ;
 SEL K ABM,ABMP
@@ -25,7 +25,8 @@ L2 ;LOOP THROUGH 'AS' X-REF
  .I $D(ABMY("PAT")),ABMY("PAT")'=ABM("P") Q
  .I $D(ABMY("LOC")),ABMY("LOC")'=ABM("L") Q
  .I $D(ABMY("INS")),ABMY("INS")'=ABM("I") Q
- .I $D(ABMY("TYP")) Q:ABMY("TYP")'[$P($G(^AUTNINS(ABM("I"),2)),U)
+ .;I $D(ABMY("TYP")) Q:ABMY("TYP")'[$P($G(^AUTNINS(ABM("I"),2)),U)  ;abm*2.6*10 HEAT73780
+ .I $D(ABMY("TYP")) Q:ABMY("TYP")'[$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM("I"),".211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  .I $D(ABMY("DT")),ABM("D")<ABMY("DT",1)!(ABM("D")>ABMY("DT",2)) Q
  .D ^ABMDRSU1
 DONE Q

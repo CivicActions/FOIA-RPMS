@@ -1,0 +1,24 @@
+BAR50PZ0 ;IHS/OIT/FCJ - MATCH REASONS AND CLAIMS-P2 ;02.24.2021
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**31**;OCT 26,2005;Build 90
+ ;NEW ROUTINE-Moved parts of BAR50P0Z because was too large for SAC
+ ;
+ ;
+ Q
+BUILDLST ;EP
+ ;;BAR*1.8*31;OIT.IHS.FCJ CR#6984 ;Moved because of rtn size
+ S CLMDA=0
+ K ^XTMP("BAR-MBAMT",$J,DUZ(2)),^XTMP("BAR-BILLS",$J,DUZ(2))
+ F  S CLMDA=$O(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA)) Q:'CLMDA  D
+ .Q:($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,2)),U)'=$P($G(^BAREDI("I",DUZ(2),IMPDA,5,BARCKIEN,0)),U))  ;only my check
+ .Q:$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,2)="P"  ;already posted
+ .Q:$D(^XTMP("BAR-REV",$J,DUZ(2),CLMDA))  ;bill is reversal
+ .S CHKREASN=$$RCHK^BAR50P0Z
+ .;if ERA claim has already been marked NTP for PLB, lessen PLB amount by that ERA claim amount
+ .I BARRCHK=1,((CHKREASN)=$S(BAR="REV":"REV",1:"NEGP")) D  Q
+ ..S MTCHAMT=MTCHAMT-(+$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4))  ;bar*1.8*26 IHS/SD/SDR HEAT263595
+ ..;W !?6,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U),?27,$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,11)  ;BAR*1.8*31
+ ..W:$G(BARDSP) !?6,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U),?27,$J($P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),",",2),?39,$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,11)  ;BAR*1.8*31;IHS.OIT.FCJ CR#6984REQ2
+ .S ^XTMP("BAR-MBAMT",$J,DUZ(2),+$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),CLMDA)=""  ;E-payment  ;bar*1.8*26 IHS/SD/SDR HEAT263595
+ .S ^XTMP("BAR-BILLS",$J,DUZ(2),$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U),+$P($G(^BAREDI("I",DUZ(2),IMPDA,30,CLMDA,0)),U,4),CLMDA)=""  ;bills
+ Q
+ ;

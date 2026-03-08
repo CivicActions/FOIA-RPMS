@@ -1,14 +1,15 @@
 BARPUC2 ; IHS/SD/LSL - UNALLOCATED PATIENT LOOKUP ; 01/26/2009 
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**17,23**;OCT 26, 2005
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**17,23,35**;OCT 26, 2005;Build 187
  ;
  ;** patient a/r lookup based on from/thru dos
  ;** called from ^BARPST
  ;** BARPASS = PATDFN^BEGDOS^ENDDOS
  ;** builds an array that includes all entries from a/r that meet the
  ;   criteria.
- ;HEAT93190 DEC 2012 P.OTTIS NOHEAT MARK DUPLICATE BILLS
- ;MAR 2013 P.OTTIS ADDED NEW VA billing 
- ; *********************************************************************
+ ;IHS/SD/POT HEAT93190 DEC 2012 NOHEAT MARK DUPLICATE BILLS
+ ;IHS/SD/POT MAR 2013 ADDED NEW VA billing
+ ;IHS/SD/SDR 1.8*35 ADO60910 Added preferred name PPN
+ ;********************************************
  ;
 EN(BARPASS)        ;EP
  N DIC,DIQ,DR,BARBLV,BARDT,BARPAT,BARBEG,BAREND,BARHIT,BARCNT
@@ -26,16 +27,16 @@ EN(BARPASS)        ;EP
  S DIQ="BARBLV("
  S BARCNT=0
  F  S BARDT=$O(^BARBL(DUZ(2),"ABC",BARPAT,BARDT)) Q:'BARDT!(BARDT>BAREND)  D
- . S BARBDA=0
- . F  S BARBDA=$O(^BARBL(DUZ(2),"ABC",BARPAT,BARDT,BARBDA)) Q:'BARBDA  D
- .. S DA=BARBDA
- .. D EN^XBDIQ1
- .. S BARCNT=BARCNT+1
- .. S ^BARTMP($J,BARBDA,BARCNT)=BARDT_U_BARBLV(.01)_U_BARBLV(13)_U_BARBLV(3)_U_BARBLV(15)
- .. S ^BARTMP($J,"B",BARCNT,BARBDA)=""
- .. K BARBLV
+ .S BARBDA=0
+ .F  S BARBDA=$O(^BARBL(DUZ(2),"ABC",BARPAT,BARDT,BARBDA)) Q:'BARBDA  D
+ ..S DA=BARBDA
+ ..D EN^XBDIQ1
+ ..S BARCNT=BARCNT+1
+ ..S ^BARTMP($J,BARBDA,BARCNT)=BARDT_U_BARBLV(.01)_U_BARBLV(13)_U_BARBLV(3)_U_BARBLV(15)
+ ..S ^BARTMP($J,"B",BARCNT,BARBDA)=""
+ ..K BARBLV
  Q BARCNT
- ; *********************************************************************
+ ;********************************************
  ;
 HIT(BARPASS) ;
  ; ** display a/r bills found
@@ -43,29 +44,29 @@ HIT(BARPASS) ;
  S (BARBDA,BARPG,BARSTOP)=0
  D HEAD
  F  S BARBDA=$O(^BARTMP($J,BARBDA)) Q:'BARBDA  D  Q:BARSTOP
- . S BARLIN=$O(^BARTMP($J,BARBDA,""))
- . S BARREC=^BARTMP($J,BARBDA,BARLIN)
- . S BARBLO=$P(BARREC,U,2)
- . I $D(^BARTR(DUZ(2),"AM4",+BARBLO)) S BARBLO="m"_BARBLO
- . S BARSTOP=$$CHKLINE(0) Q:BARSTOP
- . S BARTMP=$$DUPLBILL^BARPNP2($P(BARREC,U,2)) I BARTMP>0 D  ;-------->P.OTT MARK DUPLICATE BILLS
- . . S BAREIN1=$P(BARTMP,"^",2)
- . . S BAREIN2=$P(BARTMP,"^",3)
- . . S BARDPTR=$P(BARTMP,"^",4)
- . . I BARDPTR=3 S BARBLO="?"_BARBLO Q
- . . I BARBDA=BAREIN1,BARDPTR=1 S BARBLO="!"_BARBLO Q  ;! = ORPHANT (NO DATA IN 3PB)
- . . I BARBDA=BAREIN2,BARDPTR=2 S BARBLO="!"_BARBLO Q  ;d = DUPLICATE (CORRECT ONE)
- . . I BARBDA=BAREIN1 S BARBLO="d"_BARBLO Q
- . . I BARBDA=BAREIN2 S BARBLO="d"_BARBLO Q
- . ;---------------------------------------------------------< P.OTT
- . W !,BARLIN
- . W ?6,$$SDT^BARDUTL($P(BARREC,U,1))
- . W ?18,BARBLO
- . W ?32,$J($P(BARREC,U,3),8,2)
- . W ?44,$E($P(BARREC,U,4),1,23)
- . W ?70,$J($P(BARREC,U,5),8,2)
+ .S BARLIN=$O(^BARTMP($J,BARBDA,""))
+ .S BARREC=^BARTMP($J,BARBDA,BARLIN)
+ .S BARBLO=$P(BARREC,U,2)
+ .I $D(^BARTR(DUZ(2),"AM4",+BARBLO)) S BARBLO="m"_BARBLO
+ .S BARSTOP=$$CHKLINE(0) Q:BARSTOP
+ .S BARTMP=$$DUPLBILL^BARPNP2($P(BARREC,U,2)) I BARTMP>0 D  ;-------->P.OTT MARK DUPLICATE BILLS
+ ..S BAREIN1=$P(BARTMP,"^",2)
+ ..S BAREIN2=$P(BARTMP,"^",3)
+ ..S BARDPTR=$P(BARTMP,"^",4)
+ ..I BARDPTR=3 S BARBLO="?"_BARBLO Q
+ ..I BARBDA=BAREIN1,BARDPTR=1 S BARBLO="!"_BARBLO Q  ;! = ORPHANT (NO DATA IN 3PB)
+ ..I BARBDA=BAREIN2,BARDPTR=2 S BARBLO="!"_BARBLO Q  ;d = DUPLICATE (CORRECT ONE)
+ ..I BARBDA=BAREIN1 S BARBLO="d"_BARBLO Q
+ ..I BARBDA=BAREIN2 S BARBLO="d"_BARBLO Q
+ .;----------------------------------< P.OTT
+ .W !,BARLIN
+ .W ?6,$$SDT^BARDUTL($P(BARREC,U,1))
+ .W ?18,BARBLO
+ .W ?32,$J($P(BARREC,U,3),8,2)
+ .W ?44,$E($P(BARREC,U,4),1,23)
+ .W ?70,$J($P(BARREC,U,5),8,2)
  Q
- ; *********************************************************************
+ ;********************************************
  ;
 HEAD ;
  W $$EN^BARVDF("IOF"),!
@@ -73,48 +74,55 @@ HEAD ;
  S BARPG=BARPG+1
  S BARPTNAM=$P(^DPT(+BARPASS,0),U,1)
  I $D(^BARTR(DUZ(2),"AM5",+BARPASS)) S BARPTNAM="(msg) "_BARPTNAM
- W "Claims for "_BARPTNAM_"  from "_$$SDT^BARDUTL($P(BARPASS,U,2))_" to "_$$SDT^BARDUTL($P(BARPASS,U,3))
- W ?(IOM-15),"Page: "_BARPG
+ ;W "Claims for "_BARPTNAM_"  from "_$$SDT^BARDUTL($P(BARPASS,U,2))_" to "_$$SDT^BARDUTL($P(BARPASS,U,3))  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ ;W ?(IOM-15),"Page: "_BARPG  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ ;start new bar*1.8*35 IHS/SD/SDR ADO60910
+ W "Claims for "_BARPTNAM
+ I $$GETPREF^AUPNSOGI(+BARPASS,"I",1)'="" W " - "_$$GETPREF^AUPNSOGI(+BARPASS,"I",1)_"*" W ?(IOM-15),"Page: "_BARPG
+ E  W ?(IOM-15),"Page: "_BARPG
+ W !,"  from "_$$SDT^BARDUTL($P(BARPASS,U,2))_" to "_$$SDT^BARDUTL($P(BARPASS,U,3))
+ W !!
+ ;end new bar*1.8*35 IHS/SD/SDR ADO60910
  W !!?32,"Billed",?70,"Current"
  W !,"Line #",?8,"DOS",?18,"Claim #",?32,"Amount",?44,"Billed To",?70,"Balance"
  S BARDSH=""
  S $P(BARDSH,"-",IOM)=""
  W !,BARDSH
  Q
- ; *********************************************************************
+ ;********************************************
  ;
 HIT1(BARPASS) ; EP
- ; ** display a/r bills found
+ ;** display a/r bills found
  N BARHIT,BARLIN,BARREC,BARBLO,BAREIN1,BAREIN2,BARDPTR
  S (BARTPAY,BARTADJ,BARHIT,BARPG,BARSTOP)=0
  D HEAD1
  F  S BARHIT=$O(^BARTMP($J,BARHIT)) Q:'BARHIT  D  Q:BARSTOP
- . S BARLIN=$O(^BARTMP($J,BARHIT,""))
- . S BARREC=^BARTMP($J,BARHIT,BARLIN)
- . S BARBLO=$P(BARREC,U,2)
- . I $D(^BARTR(DUZ(2),"AM4",+BARBLO)) S BARBLO="m"_BARBLO
- . S BARTMP=$$DUPLBILL^BARPNP2($P(BARREC,U,2)) I BARTMP>0 D  ;-------->P.OTT MARK DUPLICATE BILLS
- . . S BAREIN1=$P(BARTMP,"^",2)
- . . S BAREIN2=$P(BARTMP,"^",3)
- . . S BARDPTR=$P(BARTMP,"^",4)
- . . I BARDPTR=3 S BARBLO="?"_BARBLO Q
- . . I BARHIT=BAREIN1,BARDPTR=1 S BARBLO="!"_BARBLO Q  ;! = ORPHANT (NO DATA IN 3PB)
- . . I BARHIT=BAREIN2,BARDPTR=2 S BARBLO="!"_BARBLO Q  ;d = DUPLICATE (CORRECT ONE)
- . . I BARHIT=BAREIN1 S BARBLO="d"_BARBLO Q
- . . I BARHIT=BAREIN2 S BARBLO="d"_BARBLO Q
- . ;---------------------------------------------------------< P.OTT
- . S BARTPAY=BARTPAY+$P(BARREC,U,6)
- . S BARTADJ=BARTADJ+$P(BARREC,U,7)
- . S BARSTOP=$$CHKLINE(1) Q:BARSTOP
- . W !,BARLIN
- . W ?6,$$SDT^BARDUTL($P(BARREC,U,1))
- . W ?18,BARBLO
- . W ?32,$J($P(BARREC,U,3),8,2)
- . W ?44,$J($P(BARREC,U,6),8,2)
- . W ?56,$J($P(BARREC,U,7),8,2)
- . W ?70,$J($P(BARREC,U,5),8,2)
+ .S BARLIN=$O(^BARTMP($J,BARHIT,""))
+ .S BARREC=^BARTMP($J,BARHIT,BARLIN)
+ .S BARBLO=$P(BARREC,U,2)
+ .I $D(^BARTR(DUZ(2),"AM4",+BARBLO)) S BARBLO="m"_BARBLO
+ .S BARTMP=$$DUPLBILL^BARPNP2($P(BARREC,U,2)) I BARTMP>0 D  ;-------->P.OTT MARK DUPLICATE BILLS
+ ..S BAREIN1=$P(BARTMP,"^",2)
+ ..S BAREIN2=$P(BARTMP,"^",3)
+ ..S BARDPTR=$P(BARTMP,"^",4)
+ ..I BARDPTR=3 S BARBLO="?"_BARBLO Q
+ ..I BARHIT=BAREIN1,BARDPTR=1 S BARBLO="!"_BARBLO Q  ;! = ORPHANT (NO DATA IN 3PB)
+ ..I BARHIT=BAREIN2,BARDPTR=2 S BARBLO="!"_BARBLO Q  ;d = DUPLICATE (CORRECT ONE)
+ ..I BARHIT=BAREIN1 S BARBLO="d"_BARBLO Q
+ ..I BARHIT=BAREIN2 S BARBLO="d"_BARBLO Q
+ .;---------------------------------< P.OTT
+ .S BARTPAY=BARTPAY+$P(BARREC,U,6)
+ .S BARTADJ=BARTADJ+$P(BARREC,U,7)
+ .S BARSTOP=$$CHKLINE(1) Q:BARSTOP
+ .W !,BARLIN
+ .W ?6,$$SDT^BARDUTL($P(BARREC,U,1))
+ .W ?18,BARBLO
+ .W ?32,$J($P(BARREC,U,3),8,2)
+ .W ?44,$J($P(BARREC,U,6),8,2)
+ .W ?56,$J($P(BARREC,U,7),8,2)
+ .W ?70,$J($P(BARREC,U,5),8,2)
  Q
- ; *********************************************************************
+ ;********************************************
  ;
 HEAD1 ;
  W $$EN^BARVDF("IOF"),!
@@ -122,15 +130,22 @@ HEAD1 ;
  S BARPG=BARPG+1
  S BARPTNAM=$P(^DPT(+BARPASS,0),U,1)
  I $D(^BARTR(DUZ(2),"AM5",+BARPASS)) S BARPTNAM="(msg) "_BARPTNAM
- W "Claims for "_BARPTNAM_"  from "_$$SDT^BARDUTL($P(BARPASS,U,2))_" to "_$$SDT^BARDUTL($P(BARPASS,U,3))
- W ?(IOM-15),"Page: "_BARPG
+ ;W "Claims for "_BARPTNAM_"  from "_$$SDT^BARDUTL($P(BARPASS,U,2))_" to "_$$SDT^BARDUTL($P(BARPASS,U,3))  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ ;W ?(IOM-15),"Page: "_BARPG  ;bar*1.8*35 IHS/SD/SDR ADO60910
+ ;start new bar*1.8*35 IHS/SD/SDR ADO60910
+ W "Claims for "_BARPTNAM
+ I $$GETPREF^AUPNSOGI(+BARPASS,"I",1)'="" W " - "_$$GETPREF^AUPNSOGI(+BARPASS,"I",1)_"*" W ?(IOM-15),"Page: "_BARPG
+ E  W ?(IOM-15),"Page: "_BARPG
+ W !,"  from "_$$SDT^BARDUTL($P(BARPASS,U,2))_" to "_$$SDT^BARDUTL($P(BARPASS,U,3))
+ W !!
+ ;end new bar*1.8*35 IHS/SD/SDR ADO60910
  W !!?32,"Billed",?44,"Current",?56,"Current",?70,"Current"
  W !,"Line #",?8,"DOS",?18,"Claim #",?32,"Amount",?44,"Payments",?56,"Adjust.",?70,"Balance"
  S BARDSH=""
  S $P(BARDSH,"-",IOM)=""
  W !,BARDSH
  Q
- ; *********************************************************************
+ ;********************************************
  ;
 CHKLINE(BARHD) ;
  ; Q 0 = CONTINUE
@@ -143,8 +158,8 @@ CHKLINE(BARHD) ;
  I BARHD=0 D HEAD
  I BARHD=1 D HEAD1
  Q 0
-  ; Begin new code BAR*1.8*17 ADD COMMENTS ENTRY TO PUC ITEMS
- ; - per Adrian 2/12/10 PKD:BAR*1.8.17 2/12/10
+ ;Begin new code BAR*1.8*17 ADD COMMENTS ENTRY TO PUC ITEMS
+ ;- per Adrian 2/12/10 PKD:BAR*1.8.17 2/12/10
 ITMSG  ;
  ;BAR1.8*17 PKD 2/24/2010
  W !!!,"Create a New Message for: "
@@ -159,12 +174,12 @@ ITMSG  ;
  W ?71,BARTX(15)  ;coll. item
  S D0=BARTX(6,"I")
  I D0']"" D  Q    ;MRS:BAR*1.8*7 IM30586
- . W !,"** ERROR--MISSING ALLOCATION INFO "
- . D EOP^BARUTL(1)
+ .W !,"** ERROR--MISSING ALLOCATION INFO "
+ .D EOP^BARUTL(1)
  S BARALLC=$$VALI^BARVPM(8) ;CODE
  I BARALLC="" D  Q    ;MRS:BAR*1.8*7 IM30586
- . W !,"** ERROR--MISSING ALLOCATION INFO "
- . D EOP^BARUTL(1)
+ .W !,"** ERROR--MISSING ALLOCATION INFO "
+ .D EOP^BARUTL(1)
  S Y=$P(BARTX("ID"),":") D DD^%DT
  W !?8,Y,?32,$E($TR($P($T(@BARALLC),";;",3)," ",""),1,12) ;P.OTT SHOW BOTH FIELDS
  W ?46
@@ -186,7 +201,7 @@ PRTQ ; Ask whether to print comments on Letters to Finance 1.8.17 2/25/10 PKD
  D ^DIR
  I Y=1 S BARPRTQ=1
  Q
- ; ********************************************************************
+ ;********************************************
  ;THIS TABLE REPLICATES ^AUTTINTY INSURER TYPE (21 ENTRIES) P.OTT 4/12/2013
  ;AND MAPS INSURER TYPE CODE TO CATEGORY (IE: W --> OTHER)
 H ;;PRIVATE INSURANCE;;HMO

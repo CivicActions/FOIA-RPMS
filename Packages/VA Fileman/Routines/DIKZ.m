@@ -1,6 +1,7 @@
-DIKZ ;SFISC/XAK-XREF COMPILER ;19JAN2010
- ;;22.0;VA FileMan;**140,163**;Mar 30, 1999;Build 30
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DIKZ ;SFISC/XAK-XREF COMPILER ;8:28 AM  30 Oct 1996 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;**6,24**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  I $G(DUZ(0))'="@" W $C(7),$$EZBLD^DIALOG(101) Q
 EN1 N DIKJ,%X D:'$D(DISYS) OS^DII
  I '$D(^DD("OS",DISYS,"ZS")) W $C(7),$$EZBLD^DIALOG(820) Q
@@ -15,89 +16,43 @@ EN ;
  K ^UTILITY($J),^UTILITY("DIK",$J) N DIK,DIFILENO
  S DNM=X,(DH,DIFILENO)=+Y I $D(^DIC(+Y,0,"GL")) S DIK2=^("GL")
  I '$D(DIK2)!(DMAX<2400) G Q
- S X=DH D DELETROU^DIEZ(DNM),A^DIU21,WAIT^DICD:'$G(DIKZS),DT^DICRW ;DELETE OLD ROUTINES, DELETE "DIK" NODES
- S (DRN,DIKZQ,T)=0,DMAX=DMAX-100
- ;
- ;Load indexes defined in Index file
- N DIXRLIST,DIKMF
- K ^TMP("DIKC",$J)
- D LOADALL^DIKC1(DIFILENO,"KS","R","",$NA(^TMP("DIKC",$J)),"",.DIKMF)
- ;
- ; compile kill logic
- S (DIKA,A)=1,X=2,DIKVR="DIKILL",DIK=DIK2
- D Q2,NEWR S ^UTILITY($J,0,3)=" S DIKZK="_X
- S DIKGO="^"_DNM_1 ;starting ROUTINE name
- D ^DIKZ0 G:DIKZQ Q D RTE
- ;
- ; compile set logic
- S (DIKA,A)=1,X=1,DIKVR="DISET",DIK=DIK2
- D Q2,NEWR S ^UTILITY($J,0,3)=" S DIKZK="_X
- S DIKGO=DIKGO_",^"_DNM_DRN
- D ^DIKZ0 G:DIKZQ Q D RTE
- ;
- ; compile driver code
- D Q2,^DIKZ1
- ;
- ; finish up
+ S X=DH D A^DIU21,WAIT^DICD:'$G(DIKZS),DT^DICRW,OS^DII:'$D(DISYS) S (DIKA,A)=1,(DRN,DIKZQ,T)=0
+ S DIKGO="^"_DNM_1,DMAX=DMAX-100,DIK=DIK2,X=2,DIKVR="DIKILL"
+ D NEWR S ^UTILITY($J,0,3)=" S DIKZK=2" D ^DIKZ0 G:DIKZQ Q D RTE
+ S (X,DIKA,A)=1,DIKVR="DISET",DIK=DIK2
+ D Q2,NEWR S ^UTILITY($J,0,3)=" S DIKZK=1",DIKGO=DIKGO_",^"_DNM_DRN
+ D ^DIKZ0 G:DIKZQ Q D RTE,Q2,^DIKZ1
  S:'DIKZQ ^DD(DIFILENO,0,"DIKOLD")=DNM
 Q I DIKZQ S X=DH(1) D A^DIU21
 Q1 K DH,X,Y,DIK4,DIKQ,DIKC,T,DV,DIK8,DU,DW,DW1,DIKGO,DRN,DNM,DTOUT,DIRUT,DIROUT,DUOUT,DIC,A,%,%H,%Y
  K DIKVR,DIK6,DIKA,DIKR,DMAX,DIK2,DIKCT,DIK1,DIK0,^UTILITY($J),^("DIK"),DIK,DIKZQ,DIKZZ,DIKZZ1,DIKZOVFL
- K ^TMP("DIKC",$J)
 Q2 K DIKRT,DIKLW,DIKL2
  Q
-SV ; transfer the accumulated code in ^UTILITY($J,#) to ^UTILITY($J,0,#)
- ; (the routine buffer) and call SAVE to flush the buffer into a routine
- ; whenever it's full. Flush the buffer one more time when done.
- S DNM(1)=DNM_DRN
- F DIKR=0:0 S DIKR=$O(^UTILITY($J,DIKR)) Q:DIKR'>0  S %=^(DIKR) K ^(DIKR) D:T+$L(%)>DMAX  S ^UTILITY($J,0,DIKR)=%,T=T+$L(%)+2
- . N DIKZMORE S DIKZMORE=1 D SAVE
- D SAVE
- Q
-SAVE ; save the accumulated code in ^UTILITY($J,0,#) as a routine
- I DIKR,$E($P(%," ",2))="." F  D  Q:$E($P(%," ",2))'="."
+SV S DNM(1)=DNM_DRN
+ F DIKR=0:0 S DIKR=$O(^UTILITY($J,DIKR)) Q:DIKR'>0  S %=^(DIKR) K ^(DIKR) D SAVE:T+$L(%)>DMAX S ^UTILITY($J,0,DIKR)=%,T=T+$L(%)+2
+SAVE I DIKR,$E($P(%," ",2))="." F  D  Q:$E($P(%," ",2))'="."
  . S ^UTILITY($J,DIKR)=%
  . S DIKR=$O(^UTILITY($J,0,DIKR),-1),%=^(DIKR) K ^(DIKR)
+ . S T=T-$L(%)-2
  I $D(DIKLW),'DIKR S ^UTILITY($J,0,997)=" G:'$D(DIKLM) "_$C(64+DIKCT)_$S(DNM_DRN'=DNM(1):"^"_DNM(1),1:"")_" Q:$D("_DIKVR_")"
  I $D(DIKLW),DIKR S ^UTILITY($J,0,998)=" G ^"_DNM_(DRN+1)
  S ^UTILITY($J,0,999)="END "_$S($D(DIKRT)&'DIKR:"Q",1:"G "_$S(DIKR&($D(DIKLW)):"END",1:"")_U_DNM_(DRN+1))
  N X,DIR S X=DNM_DRN X ^DD("OS",DISYS,"ZS") S X(1)=X D BLD^DIALOG(8025,.X,"","DIR") W:'$G(DIKZS) !,DIR S:$G(DIKZRLA)]"" @DIKZRLA@(DNM_DRN)="",DIKZRLAF=1
- D NEWR:'$D(DIKRT)!$G(DIKZMORE) Q:DIKZQ  S ^DD(DH,0,"DIK")=DNM K DIKL2
+ D NEWR:'$D(DIKRT)!(T+$L(%)>DMAX) Q:DIKZQ  S ^DD(DH,0,"DIK")=DNM K DIKL2
  Q
 NEWR ;
- I '$D(DIKRT),T,$D(%),T+$L(%)>DMAX S DIKZDH=+$P(^UTILITY($J,0,1),"#",2)
+ I '$D(DIKRT)&(T+$L(%)>DMAX) S DIKZDH=+$P(^UTILITY($J,0,1),"#",2)
  K ^UTILITY($J,0) S DIKR=4,T=0,DRN=DRN+1 I $L(DNM_DRN)>8 W:'$G(DIKZS) $C(7),!,DNM_DRN_$$EZBLD^DIALOG(1503) S:$G(DIKZRLA)]"" DIKZRLAF=0 S DIKZQ=1 Q
  S ^UTILITY($J,0,1)=DNM_DRN_" ; COMPILED XREF FOR FILE #"_$S($D(DIKZDH):DIKZDH,1:DH)_" ; "_$E(DT,4,5)_"/"_$E(DT,6,7)_"/"_$E(DT,2,3),^(2)=" ; "
  K DIKZDH Q
 RTE ;
- N DIKFIL,DIKSUB,DIKLIST,DIKP
- ;Build DIKSUB(file)=subfile1,subfile2,... list
- S DIKFIL=0 F  S DIKFIL=$O(DIK(X,DIKFIL)) Q:'DIKFIL  D
- . S DIKSUB=0 F  S DIKSUB=$O(^DD(DIKFIL,"SB",DIKSUB)) Q:'DIKSUB  D
- .. S:$D(DIK(X,DIKSUB))#2 DIKSUB(DIKFIL)=$G(DIKSUB(DIKFIL))_DIKSUB_","
- ;
- ;Build DIKLIST(file)=subfile1,subfile2,...
- M DIKLIST=DIKSUB
- S DIKFIL=0 F  S DIKFIL=$O(DIKSUB(DIKFIL)) Q:'DIKFIL  D
- . S DIKP=0
- . F  D  Q:DIKP'<($L(DIKLIST(DIKFIL),",")-1)
- .. F DIKP=DIKP+1:1:$L(DIKLIST(DIKFIL),",")-1 D
- ... S DIKSUB=$P(DIKLIST(DIKFIL),",",DIKP)
- ... S DIKLIST(DIKFIL)=DIKLIST(DIKFIL)_$G(DIKSUB(DIKSUB))
- K DIKSUB
- ;
- ;Convert file numbers in DIKLIST to routine list
- S DIKFIL=0 F  S DIKFIL=$O(DIKLIST(DIKFIL)) Q:'DIKFIL  D
- . S $E(DIKLIST(DIKFIL),$L(DIKLIST(DIKFIL)))=""
- . S DIKLIST(DIKFIL)=DIKFIL_","_DIKLIST(DIKFIL)
- . F DIKP=1:1:$L(DIKLIST(DIKFIL),",") D
- .. S DIKSUB=$P(DIKLIST(DIKFIL),",",DIKP)
- .. S $P(DIKLIST(DIKFIL),",",DIKP)=DIK(X,DIKSUB)
- ;
- ;Move list to DIK
- M DIK(X)=DIKLIST
- K DIKFIL,DIKLIST,DIKP
+ F DIK4=0:0 S DIK4=$O(DIK(X,DIK4)) Q:DIK4'>0  S DIKQ=DIK4,DH=2 F DIK6=0:0 S DIK6=^DD(DIKQ,0,"UP") Q:DIK6'>0!(^("UP")=DH(1))  D RTE1
  S DIKRT=1,A=A-1,DH=DH(1) G SV
+ ;
+RTE1 ;
+ I DIK(X,DIK6)[$P(DIK(X,DIKQ),",") S DIK(X,DIK6)=DIK(X,DIK6)_","_$P(DIK(X,DIKQ),",",DH,999),DIKQ=DIK6,DH=DH+1 Q
+ S DIK(X,DIK6)=DIK(X,DIK6)_","_DIK(X,DIKQ),DIKQ=DIK6
+ Q
  ;
 EN2(Y,DIKZFLGS,X,DMAX,DIKZRLA,DIKZZMSG) ;Silent or Talking with parameter passing
  ;and optionally return list of routines built and if successful

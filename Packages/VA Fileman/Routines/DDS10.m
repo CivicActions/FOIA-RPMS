@@ -1,6 +1,7 @@
-DDS10 ;SFISC/MKO-BLOCK SETUP ;21SEP2006
- ;;22.0;VA FileMan;**147,151**;Mar 30, 1999;Build 10
- ;Per VHA Directive 2004-038, this routine should not be modified.
+DDS10 ;SFISC/MKO-BLOCK SETUP ;07:45 AM  24 Feb 1995 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;**4**;Dec 28, 1994
+ ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
 SET(DDS1B,DDS1E,DA,DDP,DIE,DL,DDSDA) ;Get values for pointed-to block
  ;In:
@@ -17,7 +18,7 @@ SET(DDS1B,DDS1E,DA,DDP,DIE,DL,DDSDA) ;Get values for pointed-to block
  ;
  D BK(.DDS1B,.DDP) Q:$G(DIERR)
  D GDA(DDS1B,DDS1E,.DA) Q:$G(DIERR)
- D GL(DDP,.DA,.DIE,.DL,.DDSDA,$P($G(^DIST(.403,+DDS,40,+$G(DDSPG),40,DDS1B,0)),U,4)'="d") Q:$G(DIERR)  ;Don't LOCK record if block is display-only
+ D GL(DDP,.DA,.DIE,.DL,.DDSDA,1) Q:$G(DIERR)
  Q
  ;
 BK(DDSBK,DDP) ;Lookup block, get file number
@@ -89,7 +90,7 @@ GL(F,DA,DIE,DL,DDSDA,DDSL) ;Get global root, level, and IEN
  I $D(@(DIE_DA_",-9)")) D BLD^DIALOG(602,"",.DDSP)
  ;
  I $G(DDSL),$D(^TMP("DDS",$J,"LOCK",DIE_DA_")"))[0 D  Q:$G(DIERR)
- . D LOCK^DILF(DIE_DA_")") E  D BLD^DIALOG(110,"",.DDSP) Q  ;**147
+ . L +@(DIE_DA_")"):0 E  D BLD^DIALOG(110,"",.DDSP) Q
  . S ^TMP("DDS",$J,"LOCK",DIE_DA_")")=""
  Q
  ;

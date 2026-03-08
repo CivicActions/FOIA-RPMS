@@ -1,5 +1,5 @@
-XGKB ;SFISC/VYD - Read with Escape Processing ;10/23/2006
- ;;8.0;KERNEL;**34,244,365**;Jul 10, 1995;Build 5
+XGKB ;SFISC/VYD - Read with Escape Processing ;07/10/2002  10:58 [ 07/29/2004   9:01 AM ]
+ ;;8.0;KERNEL;**34,244**;Jul 10, 1995
  ;;Special thanks to MELDRUM.KEVIN@ISC-SLC.VA.GOV
  ;
 INIT(XGTRM) ;turn escape processing on and passed terminator string if any
@@ -7,7 +7,7 @@ INIT(XGTRM) ;turn escape processing on and passed terminator string if any
  I %OS["VAX DSM" U $I:(NOLINE:ESCAPE) D:'$D(^XUTL("XGKB")) VAXDSM^XGKB1
  I %OS["MSM" U $I:(0::::64) D:'$D(^XUTL("XGKB")) MSM^XGKB1
  I %OS["DTM" U $I:(VT=1:ESCAPE=1) D:'$D(^XUTL("XGKB")) DTM^XGKB1
- I %OS["OpenM" U $I:(:"CT") D:'$D(^XUTL("XGKB")) DTM^XGKB1 S:$G(XGTRM)="*" XGTRM=""
+ I %OS["OpenM" U $I:(:"CT") D:'$D(^XUTL("XGKB")) DTM^XGKB1
  I %OS["GT.M" U $I:(ESCAPE) D:'$D(^XUTL("XGKB")) GTM^XGKB1
  I $G(XGTRM)="*" X ^%ZOSF("TRMON") I 1 ;turn all on
  E  I $L($G(XGTRM)) S %=$$SETTRM^%ZOSV(XGTRM) ;turn on passed terminators

@@ -1,7 +1,5 @@
-XMA3 ;ISC-SF/GMB-XMCLEAN, XMAUTOPURGE ;04/18/2002  07:09
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CAP
- ;
+XMA3 ;(WASH ISC)/CAP-XMCLEAN, XMAUTOPURGE ;02/16/99  12:44
+ ;;7.1;MailMan;**37,54,69,50**;Jun 02, 1994
  ; Entry points used by MailMan options (not covered by DBIA):
  ; CLEAN      Option: XMCLEAN - Clean out waste baskets and
  ;                              Postmaster's ARRIVING basket
@@ -19,53 +17,49 @@ STAT ;
  D USERSTAT^XMA30 ; Show user mailbox info
  Q
 SCAN ; PURGE MESSAGES
- I $D(ZTQUEUED) G EN
- N DIR,XMPARM,XMTEXT
+ N DIR,XMPARM
+ I $D(ZTQUEUED) D  Q
+ . D PURGEIT(.XMPARM)
+ . S ZTREQ="@"
  D AUDIT^XMA30 ; Show purge audit records
  S DIR(0)="E" D ^DIR Q:$D(DIRUT)  K DIR
- D BLD^DIALOG(36425,"","","XMTEXT","F")
- ;I will purge messages which are not in anybody's Mailbox.
- ;This will be done by comparing the message numbers in the MESSAGE file
- ;(3.9) against the 'M' cross reference of the MAILBOX file (3.7).
- ;Because this is a real-time dynamic cross reference, it is
- ;RECOMMENDED that you run the INTEGRITY CHECKER with some
- ;frequency, to CORRECT problems, if any.
+ W !!,"I will purge messages which are not in anybody's Mailbox."
+ W !,"This will be done by comparing the message numbers in the MESSAGE file (3.9)"
+ W !,"against the 'M' cross reference of the MAILBOX file (3.7)."
+ W !!,"Because this is a real-time dynamic cross reference, it is"
+ W !,"RECOMMENDED that you run the INTEGRITY CHECKER with some"
+ W !,"frequency, to CORRECT problems, if any."
  I '$P($G(^XMB(1,1,.12)),U) D
- . D BLD^DIALOG(36426,"","","XMTEXT","SF")
- . ;A Mailbox INTEGRITY CHECK will run before the PURGE.
+ . W !,"A Mailbox INTEGRITY CHECK will run before the PURGE."
  E  D
- . D BLD^DIALOG(36427,"","","XMTEXT","SF")
- . ;A Mailbox INTEGRITY CHECK will NOT run before the PURGE,
- . ;because your site parameters indicate you do not want it to.
- . ;You may want to do a BACK-UP just before this runs, and revert
- . ;to it if many problems are discovered.
- W !
- D MSG^DIALOG("WM","","","","XMTEXT")
+ . W !,"A Mailbox INTEGRITY CHECK will NOT run before the PURGE,"
+ . W !,"because your site parameters indicate you do not want it to."
+ . W !,"You may want to do a BACK-UP just before this runs, and revert"
+ . W !,"to it if many problems are discovered."
  W !
  D GETPARMS(.XMPARM)
- D BLD^DIALOG(36428,"","","DIR(""A"")") ;Do you really want to purge all unreferenced messages
- S DIR("B")=$$EZBLD^DIALOG(39053) ; NO
+ S DIR("A")="Do you really want to purge all unreferenced messages"
+ S DIR("B")="NO"
  S DIR(0)="Y"
- D ^DIR Q:'Y
+ D ^DIR I Y=0!$D(DIRUT) Q
  D WAIT^DICD
  D PURGEIT(.XMPARM)
  K DIR S DIR(0)="E" D ^DIR Q:$D(DIRUT)  K DIR
  D STAT
  Q
 PURGEIT(XMPARM) ;
- N XMKILL,XMIEN,XMCNT,XMCRE8,XMABORT
- D INIT(.XMIEN,.XMPARM,.XMKILL,.XMABORT) Q:XMABORT
- D MPURGE(.XMCRE8,.XMPARM,.XMKILL,.XMCNT,.XMABORT)
- D FINISH(XMIEN,XMCRE8,.XMKILL,.XMCNT,XMABORT)
+ N XMKILL,XMIEN,XMCNT,XMCRE8
+ D INIT(.XMIEN,.XMPARM,.XMKILL)
+ D MPURGE(.XMCRE8,.XMPARM,.XMKILL,.XMCNT)
+ D FINISH(XMIEN,XMCRE8,.XMKILL,.XMCNT)
  Q
-INIT(XMIEN,XMPARM,XMKILL,XMABORT) ;
- S XMABORT=0
+INIT(XMIEN,XMPARM,XMKILL) ;
  D:'$D(XMPARM) GETPARMS(.XMPARM)
- I '$P($G(^XMB(1,1,.12)),U) D MAILBOX^XMUT4(.XMABORT) Q:XMABORT  ; Integrity check
+ D:'$P($G(^XMB(1,1,.12)),U) MAILBOX^XMUT4 ; Integrity check
  S (XMKILL("MSG"),XMKILL("RESP"))=0
  S XMKILL("START")=$P(^XMB(3.9,0),U,4)
  D AUDTPURG^XMA32 ; purge audit records
- D DONTPURG^XMA30 ; Note all messages which shouldn't be purged
+ D DONTPURG ; Note all messages which shouldn't be purged
  D INITAUDT^XMA32A(.XMIEN,.XMPARM)
  Q
 GETPARMS(XMPARM) ;
@@ -83,50 +77,82 @@ GETPARMS(XMPARM) ;
  . Q:XMSBUF=0
  . S XMPARM("START")=$$PDATE(XMSBUF,45)
  Q:$D(ZTQUEUED)
- N XMTEXT,XMVAR
- S XMVAR(1)=$$FMTE^XLFDT($S(XMPARM("START")=0:$O(^XMB(3.9,"C",0)),1:XMPARM("START")),5)
- S XMVAR(2)=$$FMTE^XLFDT(XMPARM("END"),5)
- S XMVAR(3)=$$FMTE^XLFDT(XMPARM("PDATE"),5)
- D BLD^DIALOG(36429,.XMVAR,"","XMTEXT","F")
- D MSG^DIALOG("WM","","","","XMTEXT")
- ;Any unreferenced message will be purged if its local create date
- ;is from |1| to |2| inclusive.
- ;However, locally generated messages sent to remote sites will not be purged
- ;if they were sent on or after |3|.
- ;The following messages are considered 'referenced' and will not be purged:
- ;- Messages in users' baskets
- ;- Messages in transit (arriving or being sent)
- ;- Server messages
- ;- Messages being edited (includes aborted edits)
- ;- Later'd messages
+ W !,"Any unreferenced message will be purged if its local create date "
+ W !,"is from ",$S(XMPARM("START")=0:"the beginning of time",1:$$MMDT^XMXUTIL1(XMPARM("START")))," to ",$$MMDT^XMXUTIL1(XMPARM("END"))," inclusive."
+ W !,"However, locally generated messages sent to remote sites will not be purged"
+ W !,"if they were sent on or after ",$$MMDT^XMXUTIL1(XMPARM("PDATE")),"."
+ W !!,"The following messages are considered 'referenced' and will not be purged:"
+ W !,"- Messages in users' baskets"
+ W !,"- Messages in transit (arriving or being sent)"
+ W !,"- Server messages"
+ W !,"- Messages being edited (includes aborted edits)"
+ W !,"- Later'd messages"
  Q
 PDATE(XMDAYS,XMDEFALT) ; Subtract so many days from today and return that date.
  S:+XMDAYS=0 XMDAYS=XMDEFALT ; use default if days is null
  Q $$FMADD^XLFDT(DT,-XMDAYS)
-FINISH(XMIEN,XMCRE8,XMKILL,XMCNT,XMABORT) ;
+FINISH(XMIEN,XMCRE8,XMKILL,XMCNT) ;
  K ^TMP("XM",$J)
  S XMKILL("TOTAL")=XMKILL("MSG")+XMKILL("RESP")
- ;I $G(ZTSTOP) W !!,"*** Stopping prematurely per user request ***"
- I '$D(ZTQUEUED) D
- . N XMVAR,XMTEXT
- . S XMVAR(1)=$J(XMCNT,$L(XMKILL("START")))
- . S XMVAR(2)=$J(XMKILL("TOTAL"),$L(XMKILL("START")))
- . S XMVAR(3)=$J(XMKILL("START")-XMKILL("TOTAL"),$L(XMKILL("START")))
- . W !
- . D BLD^DIALOG(36430,.XMVAR,"","XMTEXT","F")
- . D MSG^DIALOG("WM","","","","XMTEXT")
- . ;|1| messages processed, |2| messages purged, |3| messages in file 3.9
+ W:'$D(ZTQUEUED) !!,XMCNT," messages processed, ",XMKILL("TOTAL")," messages purged, ",XMKILL("START")-XMKILL("TOTAL")," messages in ^XMB(3.9"
  D CHKAUDT^XMA32A(XMIEN,XMCRE8,.XMKILL)
  Q
-MPURGE(XMCRE8,XMPARM,XMKILL,XMCNT,XMABORT) ;
+DONTPURG ; Find all messages which might not be in someone's mailbox,
+ ; but which shouldn't be purged anyway.
+ N XMDUZ,XMZ,XMZR,XMQ,XMT,XMD,XMINST,XMG
+ K ^TMP("XM",$J)
+ ;
+ ; DON'T PURGE LOCAL MESSAGES AND REPLIES WHICH ARE ABOUT TO BE DELIVERED
+ ;
+ S (XMT,XMG,XMZ)="" ; new messages, forwarded messages, and replies
+ F  S XMT=$O(^XMBPOST("BOX",XMT)) Q:XMT=""  D
+ . F  S XMG=$O(^XMBPOST("BOX",XMT,XMG)) Q:XMG=""  D
+ . . F  S XMZ=$O(^XMBPOST("BOX",XMT,XMG,XMZ)) Q:XMZ=""  S ^TMP("XM",$J,"NOP",+XMZ)="" I XMG="R" S ^TMP("XM",$J,"NOP",$P(XMZ,U,2))=""
+ ;
+ ; new messages, forwarded messages
+ S (XMQ,XMT,XMZ)="" ; Queue number, Timestamp, Message IEN
+ F  S XMQ=$O(^XMBPOST("M",XMQ)) Q:XMQ=""  D
+ . F  S XMT=$O(^XMBPOST("M",XMQ,XMT)) Q:XMT=""  D
+ . . F  S XMZ=$O(^XMBPOST("M",XMQ,XMT,XMZ)) Q:XMZ=""  S ^TMP("XM",$J,"NOP",+XMZ)=""
+ ;
+ ; replies
+ S (XMQ,XMZ,XMZR)="" ; Queue number, Message IEN, Reply IEN
+ F  S XMQ=$O(^XMBPOST("R",XMQ)) Q:XMQ=""  D
+ . S XMT="" ; Timestamp
+ . F  S XMT=$O(^XMBPOST("R",XMQ,XMT)) Q:XMT'>0  D
+ . . F  S XMZ=$O(^XMBPOST("R",XMQ,XMT,XMZ)) Q:XMZ=""  D
+ . . . S ^TMP("XM",$J,"NOP",XMZ)="" ; Original msg to new replies
+ . . . F  S XMZR=$O(^XMBPOST("R",XMQ,XMT,XMZ,XMZR)) Q:XMZR=""  S ^TMP("XM",$J,"NOP",XMZR)="" ; Reply
+ ;
+ ; DON'T PURGE MESSAGES QUEUED TO BE DELIVERED REMOTELY
+ S XMINST=999 ; Institution
+ F  S XMINST=$O(^XMB(3.7,.5,2,XMINST)) Q:XMINST'>0  D
+ . S XMZ=0
+ . F  S XMZ=$O(^XMB(3.7,.5,2,XMINST,1,XMZ)) Q:XMZ'>0  S ^TMP("XM",$J,"NOP",XMZ)=""
+ ;
+ ; DON'T PURGE LATER'D MESSAGES
+ S XMD=0 ; Date to be later'd
+ F  S XMD=$O(^XMB(3.73,XMD)) Q:XMD'>0  D
+ . S XMZ=$P(^XMB(3.73,XMD,0),U,3)
+ . S:XMZ ^TMP("XM",$J,"NOP",XMZ)="" ; Msg to be later'd
+ ;
+ ; DON'T PURGE MESSAGES WHICH ARE BEING EDITED
+ S (XMDUZ,XMZ)=""
+ F  S XMDUZ=$O(^XMB(3.7,"AD",XMDUZ)) Q:XMDUZ=""  D
+ . F  S XMZ=$O(^XMB(3.7,"AD",XMDUZ,XMZ)) Q:XMZ=""  S ^TMP("XM",$J,"NOP",XMZ)=""
+ ;
+ ; DON'T PURGE MESSAGES WHICH ARE TO BE DELIVERED LATER TO CERTAIN RECIPIENTS
+ S (XMD,XMZ)=""
+ F  S XMD=$O(^XMB(3.9,"AL",XMD)) Q:XMD=""  D
+ . F  S XMZ=$O(^XMB(3.9,"AL",XMD,XMZ)) Q:XMZ=""  S ^TMP("XM",$J,"NOP",XMZ)=""
+ Q
+MPURGE(XMCRE8,XMPARM,XMKILL,XMCNT) ;
  N XMZREC,XMZ
  S XMZ="",XMCNT=0
  S XMCRE8=$S(XMPARM("START")=0:0,1:$O(^XMB(3.9,"C",XMPARM("START")),-1))
  F  S XMCRE8=$O(^XMB(3.9,"C",XMCRE8)) Q:'XMCRE8  Q:XMCRE8>XMPARM("END")  D
  . F  S XMZ=$O(^XMB(3.9,"C",XMCRE8,XMZ)) Q:'XMZ  D
- . . S XMCNT=XMCNT+1 I XMCNT#5000=0 D  Q:XMABORT
- . . . I '$D(ZTQUEUED) W:$X>40 ! W XMCNT,"." Q
- . . . I $$S^%ZTLOAD S (XMABORT,ZTSTOP)=1 ; User asked the task to stop
+ . . I '$D(ZTQUEUED) S XMCNT=XMCNT+1 I XMCNT#5000=0 W:$X>40 ! W XMCNT,"."
  . . I '$D(^XMB(3.9,XMZ)) K ^XMB(3.9,"C",XMCRE8,XMZ) Q
  . . Q:$D(^XMB(3.7,"M",XMZ))        ; Msg is in someone's basket
  . . Q:$D(^TMP("XM",$J,"NOP",XMZ))  ; Msg is one of "do not purge"
@@ -155,7 +181,7 @@ KILLMSG(XMZ,XMKILL) ; Kill message
  Q
 CLEAN ; Clean various files
  D CSTAT ; Clean Message Statistics file
- D CMBOX ; Clean WASTE baskets & Postmaster's ARRIVING basket
+ D CMBOX ; Clean out WASTE baskets and Postmaster's ARRIVING basket
  S:$D(ZTQUEUED) ZTREQ="@"
  Q
 CSTAT ; Clean Statistics file audits - delete records more than 2 years old
@@ -169,40 +195,36 @@ CSTAT ; Clean Statistics file audits - delete records more than 2 years old
  . . S DA=XMAUDT D ^DIK
  Q
 CMBOX ; Clean the mailbox file
- N XMDUZ,XMCNT,XMABORT
+ N XMDUZ,XMCNT
  D CARRIVE
- S (XMDUZ,XMCNT,XMABORT)=0
- F  S XMDUZ=$O(^XMB(3.7,XMDUZ)) Q:XMDUZ'>0  D  Q:XMABORT
- . D CWASTE(XMDUZ,.XMCNT,.XMABORT)
- W:'$D(ZTQUEUED) !,$$EZBLD^DIALOG(36431) ; Waste & Arriving Baskets Cleaned!
+ S (XMDUZ,XMCNT)=0
+ F  S XMDUZ=$O(^XMB(3.7,XMDUZ)) Q:XMDUZ'>0  D CWASTE(XMDUZ,.XMCNT)
+ W:'$D(ZTQUEUED) !,"Waste & Arriving Baskets Cleaned!"
  Q
-CWASTE(XMDUZ,XMCNT,XMABORT) ; Clean a user's WASTE basket
- S XMCNT=XMCNT+1 I XMCNT#100=0 D  Q:XMABORT
- . I '$D(ZTQUEUED) W:$X>40 ! W XMCNT,"." Q
- . I $$S^%ZTLOAD S (XMABORT,ZTSTOP)=1 ; User asked the task to stop
- L +^XMB(3.7,XMDUZ,2,.5):5  E  Q
+CWASTE(XMDUZ,XMCNT) ; Clean a user's WASTE basket
  N XMZ
+ L +^XMB(3.7,XMDUZ):5  E  Q
+ I '$D(ZTQUEUED) S XMCNT=XMCNT+1 I XMCNT#100=0 W:$X>60 ! W XMCNT,"."
  S XMZ=0
  F  S XMZ=$O(^XMB(3.7,XMDUZ,2,.5,1,XMZ)) Q:XMZ'>0  K ^XMB(3.7,"M",XMZ,XMDUZ,.5)
  K ^XMB(3.7,XMDUZ,2,.5)
- S ^XMB(3.7,XMDUZ,2,.5,0)=$$EZBLD^DIALOG(37004) ; "WASTE"
- S ^XMB(3.7,XMDUZ,2,.5,1,0)="^3.702P^0^0"
- L -^XMB(3.7,XMDUZ,2,.5)
+ S ^XMB(3.7,XMDUZ,2,.5,0)="WASTE",^(1,0)="^3.702P^0^0"
+ L -^XMB(3.7,XMDUZ)
  Q
 CARRIVE ; Clean the postmaster's ARRIVING basket
  N XMZ,XMCNT,XMZLAST,XMDATE,XMPARM
  S XMPARM("END")=$$PDATE(+$P($G(^XMB(1,1,.14)),U,1),2)
- L +^XMB(3.7,.5,2,.95):5 E  Q
+ L +^XMB(3.7,.5):5 E  Q
  S (XMZ,XMCNT,XMZLAST)=0
  F  S XMZ=$O(^XMB(3.7,.5,2,.95,1,XMZ)) Q:XMZ'>0  D
  . I '$D(^XMB(3.9,XMZ,0)) D  Q
  . . S DA=XMZ,DA(1)=.95,DA(2)=.5,DIK="^XMB(3.7,.5,2,.95,1," D ^DIK
  . ; If it's still arriving, its date will be a FileMan date.
  . ; After it's finished arriving, its date will be an internet (text) date.
- . S XMDATE=$P($G(^XMB(3.9,XMZ,0)),U,3)
+ . S XMDATE=$P($G(^XMB(3.9,XMZ,3)),U,3)
  . I XMDATE?7N1".".N,XMDATE'>XMPARM("END") D  Q  ; been arriving for over 24 hours
  . . S DA=XMZ,DA(1)=.95,DA(2)=.5,DIK="^XMB(3.7,.5,2,.95,1," D ^DIK
  . S XMCNT=XMCNT+1,XMZLAST=XMZ
  S ^XMB(3.7,.5,2,.95,0)="ARRIVING",^(1,0)="^3.702P^"_XMZLAST_U_XMCNT
- L -^XMB(3.7,.5,2,.95)
+ L -^XMB(3.7,.5)
  Q

@@ -1,6 +1,8 @@
 ABME5N3 ; IHS/ASDST/DMJ - 837 N3 Segment 
- ;;2.6;IHS Third Party Billing System;**6,9**;NOV 12, 2009
+ ;;2.6;IHS Third Party Billing System;**6,9,35**;NOV 12, 2009;Build 659
  ;Address Information
+ ;
+ ;IHS/SD/SDR 2.6*35 ADO60702 Added check for FT ambulance destination field
  ;
 EP(X,Y) ;EP - START HERE
  ;x=file number
@@ -38,6 +40,7 @@ LOOP ;LOOP HERE
  .I ABMR("F")["AUPNPAT" S ABMR("N3",20)=$P($G(^DPT(ABMR("IEN"),.11)),U)
  .I ABMR("F")["AUTTLOC" S ABMR("N3",20)=$P($G(^DIC(4,ABMR("IEN"),1)),U)
  .I ABMR("F")["AUTTVNDR" S ABMR("N3",20)=$P($G(^AUTTVNDR(ABMR("IEN"),13)),U)  ;abm*2.6*9 NOHEAT IHS/SD/AML 1/17/2012 Adds vendor street address
+ .I ABMR("N3",20)="" S ABMR("N3",20)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),16)),U,2)  ;abm*2.6*35 IHS/SD/SDR ADO60702
  Q
 30 ;N302 - Address 2
  S ABMR("N3",30)=""

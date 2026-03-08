@@ -1,9 +1,10 @@
-PSOPMP1 ;BIRM/MFR - Patient Medication Profile - Listmanager ;04/28/05
- ;;7.0;OUTPATIENT PHARMACY;**260,285,281,303,289**;DEC 1997;Build 107
+PSOPMP1 ;BIRM/MFR - Patient Medication Profile - Listmanager ;21-Apr-2023 11:45;DU
+ ;;7.0;OUTPATIENT PHARMACY;**260,285,281,303,289,1034**;DEC 1997;Build 37
  ;Reference to ^PSDRUG("AQ" supported by IA 3165
  ;Reference to EN1^GMRADPT supported by IA 10099
  ;Reference to ^PSXOPUTL supported by IA 2200
  ;
+ ; Modified - IHS/MSC/PLS - 04/21/2023 - PENHDR+3
 VIDEO() ; - Changes the Video Attributes for the list
  ;
  ; - Highlighting the PRESCRIPTION line if SIG is displayed
@@ -68,7 +69,9 @@ GROUP(LBL,CNT,LINE) ; Sets a group delimiter line
 PENHDR(DFN) ; Sets the Header in the ^TMP("PSOHDR",$J) global for displaying individual Pending Order
  N VADM,WT,HT,PSOERR,GMRA
  K ^TMP("PSOHDR",$J) D ^VADPT,ADD^VADPT
- S ^TMP("PSOHDR",$J,1,0)=VADM(1),^TMP("PSOHDR",$J,2,0)=$P(VADM(2),"^",2)
+ ;IHS/MSC/PLS - p1034
+ ;S ^TMP("PSOHDR",$J,1,0)=VADM(1),^TMP("PSOHDR",$J,2,0)=$P(VADM(2),"^",2)
+ S ^TMP("PSOHDR",$J,1,0)=$$GETPREF^AUPNSOGI(DFN,"E",1),^TMP("PSOHDR",$J,2,0)=$P(VADM(2),"^",2)
  S ^TMP("PSOHDR",$J,3,0)=$P(VADM(3),"^",2),^TMP("PSOHDR",$J,4,0)=VADM(4),^TMP("PSOHDR",$J,5,0)=$P(VADM(5),"^",2)
  S POERR=1 D RE^PSODEM K PSOERR
  S ^TMP("PSOHDR",$J,6,0)=$S(+$P(WT,"^",8):$J($P(WT,"^",9),6)_" ("_$P(WT,"^")_")",1:"_______ (______)")
@@ -100,7 +103,7 @@ STSINFO(RX) ; Returns the Rx Status MNEMONIC^NAME
  I STS=15 Q PSOSTSEQ("DE")
  I STS=16 Q PSOSTSEQ("PH")
  Q "99^UNKNOWN^??"
- ; 
+ ;
 ISSDT(IEN,TYPE) ; Returns the Rx ISSUE DATE formatted MM-DD-YY
  ;Input: RX   - Prescription IEN (#52)
  ;       TYPE - "R":Regular Rx, "P":Pending order

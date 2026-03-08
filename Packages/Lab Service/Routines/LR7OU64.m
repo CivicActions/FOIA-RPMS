@@ -1,5 +1,5 @@
 LR7OU64 ;SLC/DCM/FHS/DALISC - RESULT CODE NLT LINKING UTILITY AUTO ; 12/3/1997
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**153**;Sep 27, 1994
 EN ;
  ;Find matches between file 64 and 60

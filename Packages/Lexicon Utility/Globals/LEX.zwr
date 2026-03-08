@@ -62631,3 +62631,5 @@ OSEHRA ZGO Export: ^LEX
 ^LEX("757.5","UPC","{TITER}",801)=""
 ^LEX("757.5","UPC","{TSI_INDEX}",800)=""
 ^LEX("757.5","UPC","{WBCS}",810)=""
+^LEX(757.01,"AWRD","CANCER",DA,"LINKED")=""  Subsequent searches for "LUNG
+^LEX(757.01,"AWRD","CANCER",DA,"LINKED")=""  Subsequent searches for "LUNG

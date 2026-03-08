@@ -1,7 +1,8 @@
-LRCAPR1A ; IHS/DIR/AAB - WKLD REP GENERATOR-SELECT 11:15 ; [ 10/15/92 ]
- ;;5.2;LR;**1006**;SEP 01, 1998
+LRCAPR1A ; IHS/DIR/AAB - WKLD REP GENERATOR-SELECT 11:15 ; 26-Apr-2023 11:35 ; MKK
+ ;;5.2;LAB SERVICE;**88,201,1006,1054**;NOV 01, 1997;Build 20
+ ;;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
  ;
- ;;5.2;LAB SERVICE;**88,201**;Sep 27, 1994
 ACCN ;
  K DIC S DIC=68,DIC(0)="AEMQZ" D ^DIC Q:Y=-1  S LRX=$P(Y,U,2),LRAA=+Y Q
 DATE ;
@@ -21,7 +22,8 @@ COLL ;
  F I=1:1 D ^DIC Q:Y=-1  S DIC("A")="Select another Collection Sample: ",LRCOL(+Y)=+Y,LRCOL=I
  Q
 TEST ;
- K DIC S DIC="^LAB(60,",DIC(0)="AEMQ"
+ ; K DIC S DIC="^LAB(60,",DIC(0)="AEMQ"
+ K DIC S DIC="^LAB(60,",DIC(0)="AEMQ",DIC("S")="I +$G(^(.3))=0"  ; IHS/MSC/MKK - LR*5.2*1054 - Do not select tests with INACTIVATION DATE set
  S DIC("A")="Select LABORATORY TEST: All//"
  F I=1:1 D ^DIC Q:Y=-1  S LRTSTS(+Y)=$P(Y,U),LRTSTS=I,DIC("A")=" Select another LAB test: "
  Q

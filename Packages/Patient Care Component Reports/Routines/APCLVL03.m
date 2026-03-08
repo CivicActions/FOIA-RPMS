@@ -1,5 +1,5 @@
-APCLVL03 ; IHS/CMI/LAB - SCREEN LOGIC ; 
- ;;2.0;IHS PCC SUITE;**2,4,7**;MAY 14, 2009
+APCLVL03 ; IHS/CMI/LAB - SCREEN LOGIC ; 02 Mar 2018  7:23 AM
+ ;;2.0;IHS PCC SUITE;**2,4,7,23**;MAY 14, 2009;Build 17
  ;
 MEAS ;EP - measurements and values
  ;get measurement type and value range and store as T_U_RANGE
@@ -278,7 +278,7 @@ GTU1 ;
  I Y=-1 D SETRPT Q
  S APCLMT=+Y,APCLMSR(APCLMT)="",APCLMTT=$P(^BDPTCAT(APCLMT,0),U)
  ;now get value
- S DIR(0)="S^A:ANY/ALL "_APCLMTT_" Users who Updated the Provider;S:Selected Set of "_APCLMTT_" Users who Updated the Provider",DIR("A")="Include which Users who Updated "_APCHMTT KILL DA
+ S DIR(0)="S^A:ANY/ALL "_APCLMTT_" Users who Updated the Provider;S:Selected Set of "_APCLMTT_" Users who Updated the Provider",DIR("A")="Include which Users who Updated "_APCLMTT KILL DA
  S DIR("B")="A" D ^DIR KILL DIR
  I $D(DIRUT) S APCLMSR(APCLMT)="" W !,"skipping provider type ",APCLMTT K APCLMSR(APCLMT) G GTU1
  I Y="A" G GTU1

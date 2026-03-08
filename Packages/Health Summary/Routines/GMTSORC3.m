@@ -1,11 +1,12 @@
-GMTSORC3 ; SLC/JER,KER - Current Orders (V3) ; 09/21/2001
- ;;2.7;Health Summary;**15,28,47**;Oct 20, 1995
+GMTSORC3 ; SLC/JER,KER - Current Orders (V3) ; 11/18/2024
+ ;;2.7;Health Summary;**15,28,47**;Oct 20, 1995;Build 45
  ;
  ; External References
  ;   DBIA 10096    ^%ZOSF("TEST")
  ;   DBIA 10011    ^DIWP
  ;   DBIA  3154    EN^ORQ1
- ;                             
+ ;                  
+ ; IHS/MSC/MIR  11/18/2024  PRT+15 has been updated for "Hold" status Feature 115724 (BHS patch 21)           
 MAIN ; Current Orders (v3)
  N DIWF,DIWL,DIWR,GMTSDATA,GMTSDGRP,GMTSI,GMTSJ,GMTSK,GMTSLINE,GMTSORNM,GMTSSTAT,GMTSSTOP,GMTSSTRT,GMTSTTAB,GMTSWHEN,ORLIST,X S X="ORQ1" X ^%ZOSF("TEST") G:'$T EXIT D EXIT
  ;
@@ -39,7 +40,7 @@ PRT ; Get the data
  . D CKP^GMTSUP Q:$D(GMTSQIT)  I GMTSNPG D HEAD S GMTSLINE=0
  . S GMTSLINE=GMTSLINE+1
  . W ?GMTSTTAB,$G(^UTILITY($J,"W",DIWL,GMTSK,0)) S GMTSTTAB=2
- . W:GMTSLINE=1 ?39,GMTSSTAT,?45,GMTSSTRT,?63,GMTSSTOP W !
+ . W:GMTSLINE=1 ?39,$S($$UP^XLFSTR(GMTSSTAT)="HOLD":"asd",1:GMTSSTAT),?45,GMTSSTRT,?63,GMTSSTOP W !
  Q
 HEAD ; Print the header
  D CKP^GMTSUP Q:$D(GMTSQIT)  W "Item Ordered",?38,"Status",?45,"Start Date",?63,"Stop Date",!! Q

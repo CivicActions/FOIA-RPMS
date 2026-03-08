@@ -1,9 +1,10 @@
 BMCRINH ; IHS/ITSC/FCJ - IN-HOUSE REPORT;    
- ;;4.0;REFERRED CARE INFO SYSTEM;**9**;JAN 09, 2006;Build 101
+ ;;4.0;REFERRED CARE INFO SYSTEM;**9,16**;JAN 09, 2006;Build 168
  ;
  ;IHS/ITSC/FCJ Referral number was not printing
  ; This routine lists active In-house referrals,
  ; User can select date range, will sort by date initiated and clinic
+ ;4.0*16 12.15.2023 IHS.OIT.FCJ ADD "C1" SUFFIX FOR CALLIN
  ;
 START ;
  W !!,"This report prints out a list of all Active In-House referrals. ",!,"The user can select a date range by Date initiated and Status of Referral.",!
@@ -84,6 +85,7 @@ PRINT ;print one referral
  E  W $$FMTE^XLFDT($P(^BMCREF(BMCRIEN,11),U,6),"5D")  ;ACT DOS
  W ?23,$P(^BMCREF(BMCRIEN,0),U,2)
  W $P($G(^BMCREF(BMCRIEN,1)),U) ;BMC*4.0 6.6.05 IHS/ITSC/FCJ PRT SUF
+ W:$P($G(^BMCREF(BMCRIEN,1)),U)="" $$CALLIN^BMCRLU(BMCRIEN)         ;BMC*4.0*16
  W ?39,$E(BMCREC("PAT NAME"),1,24)
  S BMCHRN="????" I $D(^AUPNPAT(BMCDFN,41,DUZ(2))) S BMCHRN=$P(^AUTTLOC(DUZ(2),0),U,7)_$P(^AUPNPAT(BMCDFN,41,DUZ(2),0),U,2)
  W ?65,BMCHRN

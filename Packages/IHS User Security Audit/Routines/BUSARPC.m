@@ -1,5 +1,5 @@
 BUSARPC ;GDIT/HS/BEE-IHS USER SECURITY AUDIT Utility Program ; 31 Jan 2013  9:53 AM
- ;;1.0;IHS USER SECURITY AUDIT;;Nov 05, 2013;Build 65
+ ;;1.0;IHS USER SECURITY AUDIT;**3**;Nov 05, 2013;Build 47
  ;
  Q
  ;
@@ -12,7 +12,7 @@ BMX(BUSAP) ;PEP - Log audit entry from BMXNet
  S SKIP=""
  ;
  ;Make sure logging switch is on
- I '+$$STATUS^BUSAOPT("B") S STS="0^BMX audit logging switch is off" G XBMX
+ I '$D(^BUSA(9002319.04,"S","B",1)) S STS="0^BMX audit logging switch is off" G XBMX
  ;
  ;Define Application Variables
  S BUSABKR="B"                  ;Set Broker to BMX
@@ -103,7 +103,7 @@ XBMX Q STS
 CIA(XWBPTYPE,RTN,BUSAARY) ;PEP - Log audit entry from CIA Broker
  ;
  ;Make sure logging switch is on
- I '+$$STATUS^BUSAOPT("C") S STS="0^CIA Broker audit logging switch is off" G XCIA
+ I '$D(^BUSA(9002319.04,"S","C",1)) S STS="0^CIA Broker audit logging switch is off" G XCIA
  ;
  NEW BUSABKR,BUSARPC,RPCIEN,BUSAIEN,BUSADVAL,BUSAOVAL,STS,MINP
  NEW TYPE,CAT,ACT,X,DESC,XDESC,DFNLOC,DFNEXE,VSTLOC,VSTEXE
@@ -205,7 +205,7 @@ XWB(BUSAP) ;PEP - Log audit entry from XWB Broker
  S SKIP=""
  ;
  ;Make sure logging switch is on
- I '+$$STATUS^BUSAOPT("B") S STS="0^BMX audit logging switch is off" G XXWB
+ I '$D(^BUSA(9002319.04,"S","W",1)) S STS="0^XWB audit logging switch is off" G XXWB
  ;
  ;Define Application Variables
  S BUSABKR="W"                  ;Set Broker to XWB Broker

@@ -1,5 +1,5 @@
-APCLAP5 ; IHS/CMI/LAB - APC visit counts by selected vars ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLAP5 ; IHS/OHPRD/TMJ - APC visit counts by selected vars ; [ 12/16/2003  1:20 PM ]
+ ;;3.0;IHS PCC REPORTS;**11,16**;FEB 05, 1997
  ;
 START ; 
  I '$G(DUZ(2)) W $C(7),$C(7),!!,"SITE NOT SET IN DUZ(2) - NOTIFY SITE MANAGER!!",!! Q
@@ -27,7 +27,7 @@ CL ;choose to tally by clinic or location
 CLINIC ;
  K APCLCLNT
  S X="CLINIC",DIC="^AMQQ(5,",DIC(0)="FM",DIC("S")="I $P(^(0),U,14)" D ^DIC K DIC,DA I Y=-1 W "OOPS - QMAN NOT CURRENT - QUITTING" G XIT
- D PEP^AMQQGTX0(+Y,"APCLCLNT(")
+ D ^AMQQGTX0(+Y,"APCLCLNT(")
  I '$D(APCLCLNT) G CL
  S C=0,X=0 F  S X=$O(APCLCLNT(X)) Q:X'=+X  S C=C+1
  I C>12 W !,$C(7),$C(7),"I can't fit ",C," clinics on this report, please select 1-12 clinics." G CLINIC
@@ -37,14 +37,11 @@ LOC ;get location
  G ZIS
 F ;enter location
  S X="LOCATION OF ENCOUNTER",DIC="^AMQQ(5,",DIC(0)="FM",DIC("S")="I $P(^(0),U,14)" D ^DIC K DIC,DA I Y=-1 W "OOPS - QMAN NOT CURRENT - QUITTING" G XIT
- D PEP^AMQQGTX0(+Y,"APCLLOCT(")
+ D ^AMQQGTX0(+Y,"APCLLOCT(")
  I '$D(APCLLOCT) G CL
  S C=0,X=0 F  S X=$O(APCLLOCT(X)) Q:X'=+X  S C=C+1
  I C>12 W !,$C(7),$C(7),"I can't fit ",C," facilities on this report, please select 1-12 facilities." G F
 ZIS ;call to XBDBQUE
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G LOC
  S XBRP="^APCLAP5P",XBRC="^APCLAP51",XBRX="XIT^APCLAP5",XBNS="APCL"
  D ^XBDBQUE
  D XIT

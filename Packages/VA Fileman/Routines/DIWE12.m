@@ -1,5 +1,6 @@
-DIWE12 ;SFISC/XAK,RWF-WORD PROCESSING CHANGE EDITORS ;11:21 AM  5 Mar 1999
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIWE12 ;SFISC/XAK,RWF-WORD PROCESSING CHANGE EDITORS ;9/27/94  09:59 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  Q:$D(DIWE(1))  S DIWE(1)=DIWE D 1 K DIWE(1) Q
  ;
@@ -15,7 +16,7 @@ OPT S DIWE(5)=$G(^DIST(1.2,DIWE,2)) I DIWE(5)]"" X DIWE(5) I '$T S:$D(DIWE(2)) D
  . S DIR(0)="Y",DIR("A")=$J("",$G(DL)*2)_"Edit",DIR("B")="NO",DIR("?",1)="    Enter 'YES' if you wish to go into the editor.",DIR("?")="    Enter 'NO' if you do not wish to edit at this time."
  . Q
  D ^DIR K DIR I '$D(DIRUT),Y=1 X DIWE(0)
-QQ K DIWEPSE,DUOUT I $D(DIWE(1)) S DIWE=DIWE(1),DIWE(5)=$G(^DIST(1.2,DIWE,3)) X:DIWE(5)]"" DIWE(5)
+QQ K DIWEPSE I $D(DIWE(1)) S DIWE=DIWE(1),DIWE(5)=$G(^DIST(1.2,DIWE,3)) X:DIWE(5)]"" DIWE(5)
 QX K DWOU I $D(DIWESW) K DIWESW G:'$D(DIWE(1)) 1
  D:$D(DIWE(2)) X^DIWE Q
  ;

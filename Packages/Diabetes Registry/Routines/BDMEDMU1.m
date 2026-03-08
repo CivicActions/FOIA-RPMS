@@ -1,5 +1,5 @@
 BDMEDMU1 ; IHS/CMI/LAB - EDITS FOR AUPNVSIT (VISIT:9000010) 24-MAY-1993 ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**7,8**;JUN 14, 2007;Build 53
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**7,8,16**;JUN 14, 2007;Build 122
  ;
 FOOT ;EP
  K BDMEVSIT
@@ -53,7 +53,7 @@ DEPR ;EP
  S APCDALVR("APCDVSIT")=BDMEVSIT
  S APCDALVR("APCDATMP")="[APCDALVR 9000010.13 (ADD)]"
  S APCDALVR("APCDTEX")="`"_BDMEMTYP
- S APCDALVR("APCDTRES")=$P(BDMEREC,U,22)
+ S APCDALVR("APCDTRES")=$P(BDMEREC,U,26)
  D ^APCDALVR
  I $D(APCDALVR("APCDAFLG")) S T="Error creating V Exam Entry for Depression Screening Exam.  PCC not updated." D ERR^BDMEDMUP(T)
  K APCDALVR
@@ -127,14 +127,11 @@ FLU ;EP
  I '$G(BDMEVSIT) S T="Could not Create PCC Visit when attempting to update Flu Immunization." D ERR^BDMEDMUP(T) Q
  S (X,G)=0 F  S X=$O(^AUPNVIMM("AD",BDMEVSIT,X)) Q:X'=+X!(G)  I $P(^AUPNVIMM(X,0),U)=BDMEMTYP S G=1
  I G S T="Already have a flu immunization on Visit Date "_$$FMTE^XLFDT($P(^AUPNVSIT(BDMEVSIT,0),U)) D ERR^BDMEDMUP(T) Q
- K APCDALVR
- S APCDALVR("APCDPAT")=BDMEDMPT
- S APCDALVR("APCDVSIT")=BDMEVSIT
- S APCDALVR("APCDATMP")="[APCDALVR 9000010.11 (ADD)]"
- S APCDALVR("APCDTIMM")="`"_BDMEMTYP
- D ^APCDALVR
- I $D(APCDALVR("APCDAFLG")) S T="Error creating V Immunization Entry for Flu Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
- K APCDALVR
+ NEW X,ERR
+ S X="I|"_BDMEDMPT_"|"_$P(BDMEREC1,U,11)_"|||"_$P(BDMEREC,U,16)_".12"_"|"_DUZ(2)_"||E|"_BDMEVSIT
+ S ERR=""
+ D ADDEDIT^BIRPC3(.ERR,X)
+ I ERR]"" S T="Error creating V Immunization Entry for Influenza Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
  Q
 HEPB ;EP
  K BDMEVSIT
@@ -145,14 +142,11 @@ HEPB ;EP
  I '$G(BDMEVSIT) S T="Could not Create PCC Visit when attempting to update HEP B Immunization." D ERR^BDMEDMUP(T) Q
  S (X,G)=0 F  S X=$O(^AUPNVIMM("AD",BDMEVSIT,X)) Q:X'=+X!(G)  I $P(^AUPNVIMM(X,0),U)=BDMEMTYP S G=1
  I G S T="Already have a HEP B immunization on Visit Date "_$$FMTE^XLFDT($P(^AUPNVSIT(BDMEVSIT,0),U)) D ERR^BDMEDMUP(T) Q
- K APCDALVR
- S APCDALVR("APCDPAT")=BDMEDMPT
- S APCDALVR("APCDVSIT")=BDMEVSIT
- S APCDALVR("APCDATMP")="[APCDALVR 9000010.11 (ADD)]"
- S APCDALVR("APCDTIMM")="`"_BDMEMTYP
- D ^APCDALVR
- I $D(APCDALVR("APCDAFLG")) S T="Error creating V Immunization Entry for HEP B Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
- K APCDALVR
+ NEW X,ERR
+ S X="I|"_BDMEDMPT_"|"_BDMEMTYP_"|||"_BDMEDMDT_".12"_"|"_DUZ(2)_"||E|"_BDMEVSIT
+ S ERR=""
+ D ADDEDIT^BIRPC3(.ERR,X)
+ I ERR]"" S T="Error creating V Immunization Entry for HEP B Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
  Q
 PNEU ;EP
  K BDMEVSIT
@@ -160,17 +154,14 @@ PNEU ;EP
  S BDMEDMDT=$P(BDMEREC,U,17)
  S BDMEMTYP=$P(BDMEREC1,U,12)
  D EVSIT^BDMEDMUP ;get event visit
- I '$G(BDMEVSIT) S T="Could not Create PCC Visit when attempting to update Pneumovac Immunization." D ERR^BDMEDMUP(T) Q
+ I '$G(BDMEVSIT) S T="Could not Create PCC Visit when attempting to update Pneumococcal Immunization." D ERR^BDMEDMUP(T) Q
  S (X,G)=0 F  S X=$O(^AUPNVIMM("AD",BDMEVSIT,X)) Q:X'=+X!(G)  I $P(^AUPNVIMM(X,0),U)=BDMEMTYP S G=1
- I G S T="Already have a pneumovac immunization on Visit Date "_$$FMTE^XLFDT($P(^AUPNVSIT(BDMEVSIT,0),U)) D ERR^BDMEDMUP(T) Q
- K APCDALVR
- S APCDALVR("APCDPAT")=BDMEDMPT
- S APCDALVR("APCDVSIT")=BDMEVSIT
- S APCDALVR("APCDATMP")="[APCDALVR 9000010.11 (ADD)]"
- S APCDALVR("APCDTIMM")="`"_BDMEMTYP
- D ^APCDALVR
- I $D(APCDALVR("APCDAFLG")) S T="Error creating V Immunization Entry for Pneumovac Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
- K APCDALVR
+ I G S T="Already have a pneumococcal immunization on Visit Date "_$$FMTE^XLFDT($P(^AUPNVSIT(BDMEVSIT,0),U)) D ERR^BDMEDMUP(T) Q
+ NEW X,ERR
+ S X="I|"_BDMEDMPT_"|"_BDMEMTYP_"|||"_BDMEDMDT_".12"_"|"_DUZ(2)_"||E|"_BDMEVSIT
+ S ERR=""
+ D ADDEDIT^BIRPC3(.ERR,X)
+ I ERR]"" S T="Error creating V Immunization Entry for Pneumococcal Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
  Q
 TD ;EP
  K BDMEVSIT
@@ -178,17 +169,14 @@ TD ;EP
  S BDMEDMDT=$P(BDMEREC,U,18)
  S BDMEMTYP=$P(BDMEREC1,U,13)
  D EVSIT^BDMEDMUP ;get event visit
- I '$G(BDMEVSIT) S T="Could not Create PCC Visit when attempting to update Pneumovac Immunization." D ERR^BDMEDMUP(T) Q
+ I '$G(BDMEVSIT) S T="Could not Create PCC Visit when attempting to update TD Immunization." D ERR^BDMEDMUP(T) Q
  S (X,G)=0 F  S X=$O(^AUPNVIMM("AD",BDMEVSIT,X)) Q:X'=+X!(G)  I $P(^AUPNVIMM(X,0),U)=BDMEMTYP S G=1
  I G S T="Already have a TD immunization on Visit Date "_$$FMTE^XLFDT($P(^AUPNVSIT(BDMEVSIT,0),U)) D ERR^BDMEDMUP(T) Q
- K APCDALVR
- S APCDALVR("APCDPAT")=BDMEDMPT
- S APCDALVR("APCDVSIT")=BDMEVSIT
- S APCDALVR("APCDATMP")="[APCDALVR 9000010.11 (ADD)]"
- S APCDALVR("APCDTIMM")="`"_BDMEMTYP
- D ^APCDALVR
- I $D(APCDALVR("APCDAFLG")) S T="Error creating V Immunization Entry for TD Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
- K APCDALVR
+ NEW X,ERR
+ S X="I|"_BDMEDMPT_"|"_BDMEMTYP_"|||"_BDMEDMDT_".12"_"|"_DUZ(2)_"||E|"_BDMEVSIT
+ S ERR=""
+ D ADDEDIT^BIRPC3(.ERR,X)
+ I ERR]"" S T="Error creating V Immunization Entry for TD Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
  Q
 ID ;
  S:$E(BDMEDMDT,6,7)="00" BDMEDMDT=$E(BDMEDMDT,1,5)_"01" S:$E(BDMEDMDT,4,5)="00" BDMEDMDT=$E(BDMEDMDT,1,3)_"01"_$E(BDMEDMDT,6,7)
@@ -196,3 +184,33 @@ ID ;
 BI() ;EP- check to see if using new imm package or not 1/5/1999 IHS/CMI/LAB
  Q $S($O(^AUTTIMM(0))<100:0,1:1)
  ;
+SHINGRIX ;EP
+ K BDMEVSIT
+ I $P(BDMEREC1,U,24)=""!($P(BDMEREC1,U,25)="") Q
+ S BDMEDMDT=$P(BDMEREC1,U,24)
+ S BDMEMTYP=$P(BDMEREC1,U,25)
+ D EVSIT^BDMEDMUP ;get event visit
+ I '$G(BDMEVSIT) S T="Could not Create PCC Visit when attempting to update Shingrix Immunization." D ERR^BDMEDMUP(T) Q
+ S (X,G)=0 F  S X=$O(^AUPNVIMM("AD",BDMEVSIT,X)) Q:X'=+X!(G)  I $P(^AUPNVIMM(X,0),U)=BDMEMTYP S G=1
+ I G S T="Already have a SHINGRIX immunization on Visit Date "_$$FMTE^XLFDT($P(^AUPNVSIT(BDMEVSIT,0),U)) D ERR^BDMEDMUP(T) Q
+ NEW X,ERR
+ S X="I|"_BDMEDMPT_"|"_BDMEMTYP_"|||"_BDMEDMDT_".12"_"|"_DUZ(2)_"||E|"_BDMEVSIT
+ S ERR=""
+ D ADDEDIT^BIRPC3(.ERR,X)
+ I ERR]"" S T="Error creating V Immunization Entry for Shingrix Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
+ Q
+TDAP ;EP
+ K BDMEVSIT
+ I $P(BDMEREC1,U,26)=""!($P(BDMEREC1,U,27)="") Q
+ S BDMEDMDT=$P(BDMEREC1,U,26)
+ S BDMEMTYP=$P(BDMEREC1,U,27)
+ D EVSIT^BDMEDMUP ;get event visit
+ I '$G(BDMEVSIT) S T="Could not Create PCC Visit when attempting to update TDAP Immunization." D ERR^BDMEDMUP(T) Q
+ S (X,G)=0 F  S X=$O(^AUPNVIMM("AD",BDMEVSIT,X)) Q:X'=+X!(G)  I $P(^AUPNVIMM(X,0),U)=BDMEMTYP S G=1
+ I G S T="Already have a TDAP immunization on Visit Date "_$$FMTE^XLFDT($P(^AUPNVSIT(BDMEVSIT,0),U)) D ERR^BDMEDMUP(T) Q
+ NEW X,ERR
+ S X="I|"_BDMEDMPT_"|"_BDMEMTYP_"|||"_BDMEDMDT_".12"_"|"_DUZ(2)_"||E|"_BDMEVSIT
+ S ERR=""
+ D ADDEDIT^BIRPC3(.ERR,X)
+ I ERR]"" S T="Error creating V Immunization Entry for Tdap Immunization.  PCC not updated." D ERR^BDMEDMUP(T)
+ Q

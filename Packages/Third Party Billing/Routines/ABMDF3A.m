@@ -1,5 +1,5 @@
-ABMDF3A ; IHS/ASDST/DMJ - Set HCFA-1500 Print Array ;     
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF3A ; IHS/SD/SDR - Set HCFA-1500 Print Array ;     
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;Original;TMD;03/25/96 4:36 PM
  ;
  ; IHS/ASDS/DMJ - 05/16/00 - V2.4 Patch 1 - NOIS HQW-0500-100040
@@ -21,7 +21,8 @@ ENT ;
  S ABMP("BTYP")=$P(ABMP("B0"),"^",2)                 ;Bill type
  S ABMP("VTYP")=$P(ABMP("B0"),"^",7)                 ;Visit Type IEN
  S ABMP("CLN")=$P(ABMP("B0"),"^",10)                ;Clinic
- S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ; Type of ins.
+ ;S ABMP("ITYPE")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ; Type of ins.  ;abm*2.6*10 HEAT73780
+ S ABMP("ITYPE")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")  ; Type of ins.  ;abm*2.6*10 HEAT73780
  S (ABMV("X1"),ABMV("X2"),ABMV("X3"))=""
  D PAT^ABMDE1X                        ; returns ABMV("X2") array
  D REMPL^ABMDE1X1                     ; returns ABMV("X3") array
@@ -65,8 +66,10 @@ INSNUM ;
  .S ABM("INUM")=$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,$S(ABM("I")="Y":999,1:$P(ABMP("B0"),U,7)),0)),U,8)
  S:ABM("INUM")="" ABM("INUM")=$P($G(^AUTNINS(ABMP("INS"),15,ABMP("LDFN"),0)),U,2)
  S $P(ABMF(54),U,3)=ABM("INUM")
- I $P($G(^AUTNINS(ABMP("INS"),2)),U)="R" S $P(ABMF(54),U,3)=$P(^AUTTLOC(ABMP("LDFN"),0),U,19)
- S ABM("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)
+ ;I $P($G(^AUTNINS(ABMP("INS"),2)),U)="R" S $P(ABMF(54),U,3)=$P(^AUTTLOC(ABMP("LDFN"),0),U,19)  ;abm*2.6*10 HEAT73780
+ I $$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),".211","I"),1,"I")="R" S $P(ABMF(54),U,3)=$P(^AUTTLOC(ABMP("LDFN"),0),U,19)  ;abm*2.6*10 HEAT73780
+ ;S ABM("ITYP")=$P($G(^AUTNINS(ABMP("INS"),2)),U)  ;abm*2.6*10 HEAT73780
+ S ABM("ITYP")=$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMP("INS"),"211","I"),1,"I")  ;abm*2.6*10 HEAT73780
  S ABM("ITYP")=$S(ABM("ITYP")="R":1,ABM("ITYP")="D":2,ABM("ITYP")="C":3,1:7)
  S $P(ABMF(1),U,ABM("ITYP"))="X"
  ;

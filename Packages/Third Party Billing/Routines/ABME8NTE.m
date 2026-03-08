@@ -1,5 +1,5 @@
-ABME8NTE ; IHS/ASDST/DMJ - 837 NTE Segment 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABME8NTE ; IHS/ASDST/DMJ - 837 NTE Segment [ 10/17/2003  11:52 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**1,4,9**;APR 05, 2002
  ;Transaction Set Header
  ;
  ; IHS/SD/SDR - v2.5 p9 - IM15435
@@ -36,7 +36,9 @@ LOOP ;LOOP HERE
  .Q:'$D(^ABMDBILL(DUZ(2),ABMP("BDFN"),61,2,0))
  .S ABMR("NTE",30)=ABMR("NTE",30)_" "_^ABMDBILL(DUZ(2),ABMP("BDFN"),61,2,0)
  S ABMR("NTE",30)=$TR(ABMR("NTE",30),":","-")
+ ;start new code abm*2.5*9 IM19203
  I ABMR("NTE",30)="" D
  .S ABMR("NTE",30)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),10)),U)
- S ABMR("NTE",30)=$E(ABMR("NTE",30),1,80)
+ ;end new code abm*2.5*9 IM19203
+ S ABMR("NTE",30)=$E(ABMR("NTE",30),1,80)  ;abm*2.5*9 IM15435
  Q

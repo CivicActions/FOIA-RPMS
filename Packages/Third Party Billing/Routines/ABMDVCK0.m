@@ -1,35 +1,38 @@
 ABMDVCK0 ; IHS/ASDST/DMJ - PCC Visit Edits ;      
- ;;2.6;IHS 3P BILLING SYSTEM;**11,19**;NOV 12, 2009;Build 300
+ ;;2.6;IHS 3P BILLING SYSTEM;**11,19,31,35,36,38**;NOV 12, 2009;Build 756
  ;Original;TMD;08/19/96 4:49 PM
  ;Split off from ABMDVCK
  ;
- ; IHS/PIMC/JLG - 9/24/02 - V2.5 P2 - PAB-1001-90120
- ;      Jim supplied code to fix 72-hour rule for Medicaid
+ ;IHS/PIMC/JLG 9/24/02 2.5*2 PAB-1001-90120 Jim supplied code to fix 72-hour rule for Medicaid
+ ;IHS/SD/SDR 12/7/2004 2.5*7 An issue has arisen with the new version of Pharmacy (7).  They send
+ ;  the clinic code of Pharmacy and TPB thinks it's unbillable if inpatient.  Changing the clinic
+ ;  to general if inpatient and clinic is pharmacy.
+ ;IHS/SD/SDR 2.5*12 IM25368 Changes so duplicate claims won't generate and claims will generate under correct DUZ(2).
  ;
- ; IHS/SD/SDR - 12/7/2004 - V2.5 P7 - An issue has arisen with the new
- ;      version of Pharmacy (7).  They send the clinic code of Pharmacy
- ;      and TPB thinks it's unbillable if inpatient.  Changing the clinic
- ;      to general if inpatient and clinic is pharmacy.
- ;
- ; IHS/SD/SDR - v2.5 p12 - IM25368 - Changes so duplicate claims won't generate and claims
- ;   will generate under correct DUZ(2).
- ;
- ;IHS/SD/SDR - 2.6*19 - HEAT109144 - Updated error 191 so it will check for visit 72 hours after
+ ;IHS/SD/SDR 2.6*19 HEAT109144 Updated error 191 so it will check for visit 72 hours after
  ;  discharge if visit being checked is inpatient.  Also added check so it will see if outpt visit
  ;   was within last 72 hours and give warning 255 if so.
- ;IHS/SD/SDR - 2.6*19 - HEAT251398 - Changed claim generator to allow service category TELEMEDICINE to
- ;  generate claims.
+ ;IHS/SD/SDR 2.6*19 HEAT251398 Changed claim generator to allow service category TELEMEDICINE to generate claims.
+ ;IHS/SD/SDR 2.6*31 CR8903 Make SERVICE CATEGORY Telecommunications billable only if the 3P Parm SERV CAT TELECOMM BILLABLE =Y
+ ;IHS/SD/SDR 2.6*35 ADO60700 Moved CG checks for errors 59 and 60 to happen after the visit location checks;
+ ;   visits from the CG1P were getting too far so it didn't seem very site-specific; came to light while testing
+ ;   the CG report.
+ ;IHS/SD/SDR 2.6*36 ADO75940 Updated check for visit location to check correct parent/satellite combination; updated where the clinic
+ ;   is set so it will always be General if the Service category is H or I. Before this patch the claim would end up with whatever
+ ;   clinic was entered on the last visit.
+ ;IHS/SD/SDR 2.6*38 ADO97221 Changed to use service category of the actual visit, not parent visit. For In Hospital
+ ;  it was using the wrong service category so In Hospitals were getting marked with a 3P PCC reason that wasn't correct,
+ ;  specifically errors 17 and 18
+ ;********************
  ;
- ; *********************************************************************
- ;
-VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
+VCHX(ABMVDFN) ;EP -CHECK EACH VISIT
  N ABMCHV0,ABMCHVDT,ABMV
  Q:'$D(^AUPNVSIT(ABMVDFN,0))
  S ABMCHV0=^AUPNVSIT(ABMVDFN,0)
  S ABMCHVDT=$P(ABMCHV0,U)\1
  S ABMP("LDFN")=$P(ABMCHV0,"^",6)
- ; The following are checks to see if a claim can be generated
- ; Reasons are put into field .04 of the visit file
+ ;The following are checks to see if a claim can be generated
+ ;Reasons are put into field .04 of the visit file
  ;Codes 1, 2, 20, 22, 24, & 25 are not referred to in this section
  ;
  ;8= Location not specified for this visit
@@ -39,7 +42,12 @@ VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
  .S ^TMP($J,"PROC",ABMVDFN)=""
  ;
  ;10= Visit location not found in 3P site parameters file
- ;start old code abm*2.6*11 HEAT86425
+ ;start old abm*2.6*11 HEAT86425
+ ;start new abm*2.6*36 IHS/SD/SDR ADO75940
+ I '$D(ABMPSLST) D START^ABMDVCK4
+ Q:'$D(ABMPSLST(ABMP("LDFN"),DUZ(2)))
+ ;end new abm*2.6*36 IHS/SD/SDR ADO75940
+ ;
  S ABMARPS=$P($G(^ABMDPARM(DUZ(2),1,4)),"^",9)
  I $O(^ABMDCLM(ABMP("LDFN"),"AV",ABMVDFN,"")) S ABMARPS=""
  I 'ABMARPS,'$D(^ABMDPARM(ABMP("LDFN"),0)) D  Q
@@ -52,7 +60,7 @@ VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
  .D PCFL^ABMDVCK2(10)
  .S ABMP("FLAG1")=1
  .S ^TMP($J,"PROC",ABMVDFN)=""
- ;end old code start new code HEAT86425
+ ;end old start new HEAT86425
  ;I $O(^ABMDCLM(DUZ(2),"AV",ABMVDFN,""))!($O(^ABMDCLM(ABMP("LDFN"),"AV",ABMVDFN,""))) Q
  ;I '$D(ABMARPS) D LOOP^ABMDVCK  ;abm*2.6*11 so CG can be run manually for one VDFN
  ;I 'ABMARPS,'$D(^ABMDPARM(ABMP("LDFN"),0)) D  Q
@@ -65,7 +73,7 @@ VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
  ;.D PCFL^ABMDVCK2(10)
  ;.S ABMP("FLAG1")=1
  ;.S ^TMP($J,"PROC",ABMVDFN)=""
- ;end new code HEAT86425
+ ;end new HEAT86425
  I ABMP("LDFN")'=DUZ(2),'ABMARPS Q
  I ABMARPS,$P($G(^BAR(90052.05,DUZ(2),ABMP("LDFN"),0)),"^",3)'=DUZ(2) Q
  I ABMARPS,$P($G(^BAR(90052.05,DUZ(2),ABMP("LDFN"),0)),"^",6)>ABMP("VDT") D  Q
@@ -78,6 +86,21 @@ VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
  .S ^TMP($J,"PROC",ABMVDFN)=""
  S ^TMP($J,"PROC",ABMVDFN)=""
  S ABMP("FLAG1")=1
+ ;
+ ;start new abm*2.6*35 IHS/SD/SDR ADO60700
+ ;this section of code was moved here from ABMDVCK; the visit loc checks should happen first, then these two
+ S ABMIFLG=$$ICDCHK^ABMDVCK3(ABMVDFN)  ;check for uncoded ICDs (.9999)
+ I $G(ABMIFLG)=1 D
+ .S ABMILAG=$P($G(^ABMDPARM(DUZ(2),1,5)),U,2)
+ .S X1=DT
+ .S X2=ABMP("VDT")
+ .D ^%DTC
+ .I X>ABMILAG K ABMIFLG  ;past lag time
+ I $G(ABMIFLG)=1 D PCFL^ABMDVCK2(59) Q  ;error for uncoded Dx
+ ;I "ASOM"[SERVCAT,($P($G(^APCCCTRL(DUZ(2),0)),U,12)'=""),($P(^APCCCTRL(DUZ(2),0),U,12)'>ABMP("VDT")),($P($G(^AUPNVSIT(ABMVDFN,11)),U,11)'="R") D PCFL(60) Q  ;abm*2.6*19 IHS/SD/SDR HEAT251398  ;abm*2.6*31 IHS/SD/SDR CR8903
+ ;EHR/Chart Audit Start Date
+ I (("ASOM"[SERVCAT)!((SERVCAT="T"&($P($G(^ABMDPARM(DUZ(2),1,5)),U,5)=1)))),($P($G(^APCCCTRL(DUZ(2),0)),U,12)'=""),($P(^APCCCTRL(DUZ(2),0),U,12)'>ABMP("VDT")),($P($G(^AUPNVSIT(ABMVDFN,11)),U,11)'="R") D PCFL^ABMDVCK2(60) Q
+ ;end new abm*2.6*35 IHS/SD/SDR ADO60700
  ;
  ;1= Claim manually purged
  I $P(ABMP("V0"),U,4)=1 D  Q
@@ -104,8 +127,9 @@ VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
  .S X2=0-($P(^ABMDPARM(DUZ(2),1,0),U,16)*30.417)
  .D C^%DTC
  S ABMP("PDFN")=$P(ABMP("V0"),U,5)
- S ABMP("CLN")=$P(ABMCHV0,U,8)              ; Clinic
- I "IDH"[SERVCAT,(ABMP("CLN")=39) S ABMP("CLN")=1
+ S ABMP("CLN")=$P(ABMCHV0,U,8)  ;Clinic
+ ;I "IDH"[SERVCAT,(ABMP("CLN")=39) S ABMP("CLN")=1  ;abm*2.6*36 IHS/SD/SDR ADO76302
+ I "IDH"[SERVCAT S ABMP("CLN")=1  ;abm*2.6*36 IHS/SD/SDR ADO76302
  ;
  ;7= Patient not specified for this visit
  I ABMP("PDFN")="" D PCFL^ABMDVCK2(7) Q
@@ -118,7 +142,15 @@ VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
  ;
  ;21= PCC service category not amb, hosp, in hosp, observ, or day surg
  ;I "ADHOISRT"'[$P(ABMCHV0,U,7) D PCFL^ABMDVCK2(21) Q  ;abm*2.6*19 IHS/SD/SDR HEAT251398
- I "ADHOISRTM"'[$P(ABMCHV0,U,7) D PCFL^ABMDVCK2(21) Q  ;abm*2.6*19 IHS/SD/SDR HEAT251398
+ ;I "ADHOISRTM"'[$P(ABMCHV0,U,7) D PCFL^ABMDVCK2(21) Q  ;abm*2.6*19 IHS/SD/SDR HEAT251398  ;abm*2.6*31 IHS/SD/SDR CR8903
+ ;start new abm*2.6*31 IHS/SD/SDR CR8903
+ D  I ABM21FLG=1 Q
+ .S ABM21FLG=0
+ .Q:("ADHOISRM"[$P(ABMCHV0,U,7))
+ .Q:(($P(ABMCHV0,U,7)="T")&(+$P($G(^ABMDPARM(DUZ(2),1,5)),U,5)=1))
+ .D PCFL^ABMDVCK2(21)
+ .S ABM21FLG=1
+ ;end new abm*2.6*31 IHS/SD/SDR CR8903
  I ABMP("CLN")="" S ABMP("CLN")=1
  ;
  ;12= Previous claim exists for this patient, visit date, and clinic
@@ -154,7 +186,12 @@ VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
  N OK,ABMORLAG
  S ABMORLAG=$P($G(^ABMDPARM(DUZ(2),1,4)),U,8)
  S:'ABMORLAG ABMORLAG=45   ;Orphan lag time in days
- I ("ID"'[SERVCAT)!(("ID"[SERVCAT)&ABMPARNT=""),'$D(^AUPNVPOV("AD",ABMVDFN)) D  Q:'OK
+ ;I ("ID"'[SERVCAT)!(("ID"[SERVCAT)&ABMPARNT=""),'$D(^AUPNVPOV("AD",ABMVDFN)) D  Q:'OK  ;abm*2.6*38 IHS/SD/SDR ADO97221
+ ;start new abm*2.6*38 IHS/SD/SDR ADO97221
+ ;note: prior to this it was using the service category of the H visit, not the actual visit
+ S ABMVSC=$P($G(^AUPNVSIT(ABMVDFN,0)),U,7)
+ I ("ID"'[ABMVSC)!(("ID"[ABMVSC)&ABMPARNT=""),'$D(^AUPNVPOV("AD",ABMVDFN)) D  Q:'OK  ;abm*2.6*38 IHS/SD/SDR ADO97221
+ .;end new abm*2.6*38 IHS/SD/SDR ADO97221
  .S X1=ABMP("VDT")
  .S X2=ABMORLAG
  .D C^%DTC
@@ -170,7 +207,8 @@ VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
  ;Look elswhere if no provider 
  ;
  ;18= No data found in file #9000010.06 (V PROVIDER) for this visit
- I '$D(^AUPNVPRV("AD",ABMVDFN)) D  Q:'OK&'ABMIPGMN
+ ;I '$D(^AUPNVPRV("AD",ABMVDFN)) D  Q:'OK&'ABMIPGMN  ;abm*2.6*38 IHS/SD/SDR ADO97221
+ I ("ID"'[ABMVSC)!(("ID"[ABMVSC)&ABMPARNT=""),'$D(^AUPNVPRV("AD",ABMVDFN)) D  Q:'OK&'ABMIPGMN  ;abm*2.6*38 IHS/SD/SDR ADO97221
  .S X1=ABMP("VDT")
  .S X2=ABMORLAG
  .D C^%DTC
@@ -179,15 +217,16 @@ VCHX(ABMVDFN) ;EP -  CHECK EACH VISIT
  .Q:OK
  .D PCFL^ABMDVCK2(18)
  Q:$G(ABMP("NOKILLABILL"))
+ K ABMVSC  ;abm*2.6*38 IHS/SD/SDR ADO97221
  I ABMP("V0")=ABMCHV0 D ELG^ABMDLCK(ABMVDFN,.ABML,ABMP("PDFN"),ABMP("VDT"))
  ;
- ; 41 ; Visit date occurs after date of death
+ ;41= Visit date occurs after date of death
  I +$G(ABMNOELG)=41 D PCFL^ABMDVCK2(41) Q
  ;
  ;19= No eligibility found for this patient
  I $D(ABML)'=10 D PCFL^ABMDVCK2(19) Q
  ;
- ; 34-58 = No eligibility found for this patient (specific)
+ ;34-58 = No eligibility found for this patient (specific)
  I $O(ABML(""))=99 D  Q
  .S ABMINS2=0
  .F  S ABMINS2=$O(ABML(99,ABMINS2)) Q:'+ABMINS2  D

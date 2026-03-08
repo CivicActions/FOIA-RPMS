@@ -1,7 +1,9 @@
-PSSGS0 ;BIR/CML3-SCHEDULE PROCESSOR ;06/01/98
- ;;1.0;PHARMACY DATA MANAGEMENT;**12,27,38,44,56,69,59**;9/30/97
+PSSGS0 ;BIR/CML3-SCHEDULE PROCESSOR ;13-Jun-2024 13:20;DU
+ ;;1.0;PHARMACY DATA MANAGEMENT;**12,27,38,44,56,69,59,1035**;9/30/97;Build 39
  ;Reference to $$TRIM^XLFSTR supported by DBIA #10104
  ;Reference to ^PS(53.1 supported by DBIA #2140
+ ;
+ ; Modified - IHS/MSC/PLS - 06/13/2024 - Line EN+3 - FID 103810
  ;
 ENA ; entry point for train option
  ;N X S X="PSGSETU" X ^%ZOSF("TEST") I  D ENCV^PSGSETU Q:$D(XQUIT)
@@ -18,7 +20,9 @@ EN5 ;
 EN(X,PSSLSTPK) ; validate
  ;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>2)!($L(X)>70)!($L(X)<1)!(X["P RN")!(X["PR N")!($E(X,1)=" ") K X Q
  I $G(PSSLSTPK)="O"!(PSSLSTPK="X") Q:$G(X)=""  G ENOP
- I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!($L(X)>70)!($L(X)<1) K X Q
+ ;IHS/MSC/PLS - p1035 FID 103810
+ ;I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X," ")>3)!($L(X)>70)!($L(X)<1) K X Q
+ I X[""""!($A(X)=45)!(X?.E1C.E)!($L(X)>70)!($L(X)<1) K X Q
  S X=$$TRIM^XLFSTR(X,"R"," ")
  I X?.E1L.E S X=$$ENLU^PSSGMI(X)
  ;
@@ -68,7 +72,7 @@ DWC I $L(Z)<2 K X Q
  ;
 UPPER(PSSUPPER) ;
  Q $TR(PSSUPPER,"abcdefghijklmnopqrstuvwxyz","ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-DICW ; 
+DICW ;
  S Z=^PS(51.1,+Y,0) W $P(Z,"^",8) Q
 PRNOK(PSCH) ;
  Q:PSCH'["PRN" 0

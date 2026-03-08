@@ -1,5 +1,5 @@
-PSOORDRG ;BIR/SAB - order entry drug selection ;08-Apr-2013 14:53;DU
- ;;7.0;OUTPATIENT PHARMACY;**3,29,49,46,81,105,134,144,132,1005,188,1007,207,148,243,1015**;DEC 1997;Build 62
+PSOORDRG ;BIR/SAB - order entry drug selection ;24-Mar-2025 13:55;DU
+ ;;7.0;OUTPATIENT PHARMACY;**3,29,49,46,81,105,134,144,132,1005,188,1007,207,148,243,1015,1036**;DEC 1997;Build 17
  ;External references to ^PSJORUT2 supported by DBIA 2376
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External reference to ^PS(50.605 supported by DBIA 696
@@ -15,6 +15,7 @@ PSOORDRG ;BIR/SAB - order entry drug selection ;08-Apr-2013 14:53;DU
  ;            IHS/MSC/PLS - 07/14/08 - Included VistA patch 188
  ;            IHS/MSC/MGH - 04/08/13 - Changed for compound meds
  ;                          Added DOIT and PROCESS entry points
+ ;            IHS/MSC/PLS - 03/24/2025 - multiple changes to use uppercase DrugName - FID 121255
 EN(PSODFN,DREN) ;
  K ^TMP($J,"DI"),^TMP($J,"DD"),^TMP($J,"DC"),^TMP($J,"DI"_PSODFN),PSOPHI S INDX=0
  ;build patient's drug profile outpat/inpat/non-va
@@ -40,6 +41,7 @@ DRG ;S X=DREN,DIC="^PSDRUG(",DIC(0)="MQNZO" D ^DIC K DIC,PSOY Q:Y<1  S PSOY=Y,PS
  ;dup drug/class check
  S DNM=0 F  S DNM=$O(^TMP($J,"ORDERS",DNM)) Q:'DNM  D
  .S DRNM=$P(^TMP($J,"ORDERS",DNM),"^",3)
+ .S DRNM=$$UP^XLFSTR(DRNM)  ;FID 121255
  .I PSODRUG("NAME")=DRNM S DD=$G(DD)+1,^TMP($J,"DD",DD,0)=PSODRUG("IEN")_"^"_PSODRUG("NAME")_"^"_$P(^TMP($J,"ORDERS",DNM),"^",4)_"^"_$P(^(DNM),"^",5) Q:'$G(PSOPHI)
  .I PSODRUG("VA CLASS")]"",$E(PSODRUG("VA CLASS"),1,4)=$E($P(^TMP($J,"ORDERS",DNM),"^"),1,4),DRNM'=PSODRUG("NAME") D
  ..I $E(PSODRUG("VA CLASS"),1,2)="HA",$E($P(^TMP($J,"ORDERS",DNM),"^"),1,2)="HA" Q
@@ -53,6 +55,7 @@ DRG ;S X=DREN,DIC="^PSDRUG(",DIC(0)="MQNZO" D ^DIC K DIC,PSOY Q:Y<1  S PSOY=Y,PS
  ;DOIT entry point created to allow for looping
  F  S DRG=$O(^TMP($J,"ORDERS",DRG)) Q:'DRG  D
  .S DRNM=$P(^TMP($J,"ORDERS",DRG),"^",3)
+ .S DRNM=$$UP^XLFSTR(DRNM)  ;FID 121255
  .S TDRG=$O(^PSDRUG("B",DRNM,""))
  .Q:TDRG=""
  .S CMP=$P($G(^PSDRUG(TDRG,999999935)),U,1)
@@ -79,7 +82,7 @@ DOIT(DRG,NDF) ;Process the drug  IHS/MSC/MGH 04/08/2013
  I 'PSOICT Q
  S IT=PSOICT
  S DRNM=$P(^TMP($J,"ORDERS",DRG),"^",3),ORN=$P(^(DRG),"^",4),RXN=$P(^(DRG),"^",5)
- S DI=$G(DI)+1,^TMP($J,"DI",DI,0)=$O(^PSDRUG("B",DRNM,0))_"^"_DRNM_"^"_IT_"^"_$S($P(^PS(56,IT,0),"^",4)=1:"CRITICAL",1:"SIGNIFICANT")_"^"
+ S DI=$G(DI)+1,^TMP($J,"DI",DI,0)=$O(^PSDRUG("B",$$UP^XLFSTR(DRNM),0))_"^"_DRNM_"^"_IT_"^"_$S($P(^PS(56,IT,0),"^",4)=1:"CRITICAL",1:"SIGNIFICANT")_"^"  ;FID 121255
  S ^TMP($J,"DI",DI,0)=^TMP($J,"DI",DI,0)_$P(^PS(50.416,$P(^PS(56,IT,0),"^",2),0),"^")_"^"_$P(^PS(50.416,$P(^PS(56,IT,0),"^",3),0),"^")_"^"_ORN_"^"_RXN
  D REMOTE
  Q:$G(PSOPHI)

@@ -1,5 +1,5 @@
 BSTSLKP ;GDIT/HS/BEE-Standard Terminology Lookups ; 15 Nov 2012  4:26 PM
- ;;2.0;IHS STANDARD TERMINOLOGY;**2**;Dec 01, 2016;Build 1
+ ;;2.0;IHS STANDARD TERMINOLOGY;**2,8**;Dec 01, 2016;Build 27
  Q
  ;
 DSC(OUT,BSTSWS) ;EP - Perform Lookup on Description Id
@@ -110,6 +110,10 @@ VNLKP(OUT,BSTSWS) ;EP - Perform local NDC/VUID lookup
  .. NEW CONC,DTSID
  .. S CONC=$$GET1^DIQ(9002318.4,CIEN_",",".02","I") Q:CONC=""
  .. S DTSID=$$GET1^DIQ(9002318.4,CIEN_",",".08","I") Q:DTSID=""
+ .. ;
+ .. ;GDIT/HS/BEE;FEATURE#123640;Filter out inactive RxNorm
+ .. I $$GET1^DIQ(9002318.4,CIEN_",",.16,"I") Q
+ .. ;
  .. S CCT=CCT+1,@OUT@(CCT)=CONC_U_DTSID
  ;
  ;VUID search

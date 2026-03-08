@@ -1,5 +1,5 @@
-BGPDD ; IHS/CMI/LAB - indicator D ;
- ;;7.0;IHS CLINICAL REPORTING;;JAN 24, 2007
+BGPDD ; IHS/CMI/LAB - indicator D ;   [ 08/12/02  6:20 AM ]
+ ;;1.0;IHS GPRA REPORTING;**1**;JUN 12, 2002
  ;
 ID ;EP ;EP - indicator D
  ;Q:'$D(BGPIND(30))
@@ -32,7 +32,7 @@ EYE(P,EDATE) ;
  I $D(BGPG(1)) Q "Yes-Diabetic Eye Exam"
  S BD=BDATE
  S ED=EDATE
- S T=+$$CODEN^ICPTCOD(92250),T1=+$$CODEN^ICPTCOD(92012),T2=+$$CODEN^ICPTCOD(92014),T3=+$$CODEN^ICPTCOD(92015)
+ S T=$O(^ICPT("B",92250,0)),T1=$O(^ICPT("B",92012,0)),T2=$O(^ICPT("B",92014,0)),T3=$O(^ICPT("B",92015,0))
  I T,$D(^AUPNVCPT("AA",P,T)) S %="" D  I %]"" Q %
  .S E=0 F  S E=$O(^AUPNVCPT("AA",P,T,E)) Q:E'=+E!(%]"")  D
  ..S D=9999999-E ;date done

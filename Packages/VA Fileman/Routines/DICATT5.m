@@ -1,6 +1,6 @@
-DICATT5 ;SFISC/XAK-POINTERS ;12:04 PM  25 Jan 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**26**;Mar 30, 1999
+DICATT5 ;SFISC/XAK-POINTERS ;5/7/93  1:44 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 7 K DIC S Y="",%=$P(O,U,3),DIC(0)="EFQIZ"
  S:$P(O,U,2)["P"&$L(%) Y=$S($D(@("^"_%_"0)")):$P(^(0),U),1:"")
@@ -28,7 +28,6 @@ M W !,"MUMPS CODE THAT WILL SET 'DIC(""S"")': " W:D]"" D S Y=D D:D]"" RW^DIR2 G 
  I X="" S X=D G S:X=""
  I X?."?" D HELP^DICATT4 G M
  D ^DIM:'$T I '$D(X) S X="" G S
- I X'["DIC(""S"")" W $C(7),!,?8,"WARNING - Screen Does Not Contain DIC(""S"")"
 E W !,"EXPLANATION OF SCREEN: " W:P]"" P_"// " R %:DTIME S:'$T %=U,DTOUT=1 S:%="" %=P G S:%=U I %?.P W !?5,$C(7),"An explanation must be entered." G E
  I $D(^DD(A,DA,12.1)) S:X'=^(12.1) M(1)=0
  S ^DD(A,DA,12)=%,^(12.1)=X,Z="*"_Z S:Z?1"*P".E C=X_" D ^DIC K DIC S DIC=DIE,X=+Y K:Y<0 X" Q

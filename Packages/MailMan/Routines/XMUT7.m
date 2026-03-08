@@ -1,17 +1,19 @@
-XMUT7 ;ISC-SF/GMB-Send Message to Forwarding Address ;04/17/2002  12:08
- ;;8.0;MailMan;;Jun 28, 2002
- ; Was (WASH ISC)/CAP
+XMUT7 ;(WASH ISC)/CAP-Send Message to Forwarding Address ;12/4/93 11:44
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;;Jun 02, 1994
  ;
- ; Entry points covered by DBIA 1132:
- ; ENT   Send bulletin to check forwarding address.
-ENT(XMUSER) ; Send bulletin to check forwarding address.
- ; See DD for file 3.7, field 2
- ; XMUSER - DUZ of user, whose forwarding address we are checking.
- N XMPARM,XMINSTR,XMTO
- S XMINSTR("FROM")=.5
- S XMPARM(1)=$$NAME^XMXUTIL(XMUSER)
- S XMPARM(2)=$P(^XMB(3.7,XMUSER,0),U,2) Q:XMPARM(2)=""
- S XMTO(XMPARM(2))=""
- I '+$G(^XMB(1,1,"FORWARD")) S XMTO(.5)=""
- D TASKBULL^XMXBULL(.5,"XM FWD ADDRESS CHECK",.XMPARM,"",.XMTO,.XMINSTR)
+ ;Input = Y = user's DUZ
+ ;X(1)="User's name",X(2)=FORWARDING ADDRESS
+ ;
+ENT(Y) N %,X,XMSUB,XMTEXT,XMZ,XMDUZ,XMDUN,XMY
+ S XMDUZ=.5,XMDUN="POSTMASTER"
+ S X=$P(^VA(200,Y,0),U),%=$P(^XMB(3.7,Y,0),U,2) Q:%=""
+ S XMSUB="TESTING NEW FORWARDING ADDRESS FOR "_X
+ S XMY(%)="",XMTEXT="%(" I '+$G(^XMB(1,1,"FORWARD")) S XMY(.5)=""
+ S %(1)="This is a test.  Please ignore."
+ S %(2)="This is to confirm that the FORWARDING ADDRESS: "_%
+ S %(3)="for user '"_X_"' does not generate an error"
+ S %(4)="at "_$P(%,"@",2)_"."
+ N ZTSK
+ D ^XMD
  Q

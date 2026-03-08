@@ -1,13 +1,13 @@
-DIO2 ;SFISC/GFT,TKW-PRINT ;9:17 AM  24 Feb 2000 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**32**;Mar 30, 1999
+DIO2 ;SFISC/GFT,TKW-PRINT ;9/20/94  14:11 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  S (DISTP,DILCT)=0
 XDY I $D(DIBTPGM) D @("EN"_DIBTPGM),ENRLS^DIOZ(+$P(DIBTPGM,"^DISZ",2)) Q
  X DY(DN) G XDY:DN
  Q
  ;
-SEARCH S DISEARCH=1 ; Protect switch SO-2/24/2000
+SEARCH S DIO=1
 SCR S DIO("SCR")=1,DE=0 I '$D(DIS(0)) G OR
  X DIS(0) Q:'$T  G PASS:'$D(DIS(1))
 OR S DE=DE+1 I '$D(DIS(DE)) Q

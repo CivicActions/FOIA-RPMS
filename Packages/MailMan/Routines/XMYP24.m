@@ -1,0 +1,11 @@
+XMYP24 ;ISC-SF/GMB- Post Init for patch XM*8*24 ;02/10/2004  06:56
+ ;;8.0;MailMan;**24**;Jun 28, 2002
+ENTER ;
+ Q:^XMB("NETNAME")'[".VA.GOV"
+ N XMFDA,XMIENS
+ S XMIENS="1,"
+ S XMFDA(4.3,XMIENS,40)=1
+ D FILE^DIE("","XMFDA")
+ S XMFDA(4.341,"?+1,1,",.01)=".VA.GOV"
+ D UPDATE^DIE("","XMFDA")
+ Q

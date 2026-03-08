@@ -1,37 +1,24 @@
 ABMDE2E ; IHS/SD/SDR - DSD/DMJ - Check visit for elig ;     
- ;;2.6;IHS 3P BILLING SYSTEM;**8,10,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**8,10,21,37**;NOV 12, 2009;Build 739
  ;
- ; IHS/ASDS/SDH - 06/08/01 - V2.4 Patch 9 - NOIS QDA-0399-130023
- ;     Modified to update Mode of Export in Insurer has changed.
- ; IHS/ASDS/LSL - 07/25/01 - V2.4 Patch 9 - NOIS HQW-0798-100082
- ;     Loop through all of ABML to update claim with unbillable 
- ;     insurers.  Currently only loops if at least one good insurer.
- ;     Only create new entry in Insurer multiple if billable insurer.
- ;     Loop all eligibility occurances for PI (08/29/01)
- ; IHS/ASDS/SDH - 9/27/01 - V2.4 Patch 9 - NOIS XAA-0901-200095
- ;     After moving Kidscare to Page 5 from Page 7 found that there are
- ;     checks that are done for Medicaid that should also be done for
- ;     Kidscare.
- ; IHS/ASDS/DMJ - 12/10/01 - V2.4 Patch 10 - NOIS HQW-1201-100014
- ;     Loop PCC visit multiple (11) ignoring those that have been
- ;     merged/deleted.
+ ;IHS/ASDS/SDH 2.4*9 06/08/01 NOIS QDA-0399-130023 Modified to update Mode of Export in Insurer has changed.
+ ;IHS/ASDS/LSL 2.4*9 07/25/01 NOIS HQW-0798-100082 Loop through all of ABML to update claim with unbillable 
+ ;  insurers.  Currently only loops if at least one good insurer. Only create new entry in Insurer multiple if billable insurer.
+ ;  Loop all eligibility occurances for PI (08/29/01)
+ ;IHS/ASDS/SDH 2.4*9 9/27/01 NOIS XAA-0901-200095 After moving Kidscare to Page 5 from Page 7 found that there are
+ ;  checks that are done for Medicaid that should also be done for Kidscare.
+ ;IHS/ASDS/DMJ 2.4*10 12/10/01 NOIS HQW-1201-100014 Loop PCC visit multiple (11) ignoring those that have been merged/deleted.
  ;
- ; IHS/SD/SDR - v2.5 p3 - 2/28/03 - QEA-0702-130030
- ;     Modified to check for manually entered insurer
- ; IHS/SD/SDR V2.5 P5 - 3/10/2004
- ;     Jim Gray provided code change to fix problem with with array not
- ;     being killed before use.
- ; IHS/SD/SDR - v2.5 p8 - task 8
- ;    Added code to check for replacment insurer
- ; IHS/SD/SDR - v2.5 p9 - IM17864
- ;    Check if insurer is merged
- ; IHS/SD/SDR - v2.5 p10 - IM20320
- ;   Added check to MERGECK to see if manually added insurer; if so,
- ;   don't delete
+ ;IHS/SD/SDR 2.5*3 2/28/03 QEA-0702-130030 Modified to check for manually entered insurer
+ ;IHS/SD/SDR 2.5*5 3/10/2004 Jim Gray provided code change to fix problem with with array not being killed before use.
+ ;IHS/SD/SDR 2.5*8 task 8 Added code to check for replacment insurer
+ ;IHS/SD/SDR 2.5*9 IM17864 Check if insurer is merged
+ ;IHS/SD/SDR 2.5*10 IM20320 Added check to MERGECK to see if manually added insurer; if so, don't delete
  ;
- ;IHS/SD/SDR - 2.6*21 - HEAT137034 - Fixed code for DISPLAY UNBILLABLE INSURER site parameter. The check wasn't being
+ ;IHS/SD/SDR 2.6*21 HEAT137034 Fixed code for DISPLAY UNBILLABLE INSURER site parameter. The check wasn't being
  ;  done correctly so unbillable insurers were displaying all the time instead of when specified by parameter.
- ;IHS/SD/SDR - 2.6*21 - VMBP - RQMT_90 - Added code for 'V' insurer type.
+ ;IHS/SD/SDR 2.6*21 VMBP RQMT_90 Added code for 'V' insurer type.
+ ;IHS/SD/SDR 2.6*37 ADO76009 Populate ACTIVE INSURER PI MULTIPLE to differentiate if pt has same insurer twice
  ;
  ; *********************************************************************
  ;
@@ -217,9 +204,23 @@ ADD ;EP - Entry Pont for adding Elig Info to Claim
  D FILE^DICN
  S (DA,ABM("XIEN"))=+Y
  K DIC
+ S Y=$$ACTINSM(DA(1),DA)
  Q
  ;
- ; *********************************************************************
+ ;start new abm*2.6*37 IHS/SD/SDR ADO76009
+ ;*******************************************
+ACTINSM(ABMCDFN,ABMMLT) ;
+ ;this is to keep track of which entry it is, since the patient can have multiple entries for the same PI
+ N DA,X,Y,DIE,DIC,DR
+ I $P($G(^ABMDCLM(DUZ(2),ABMCDFN,13,ABMMLT,0)),U,3)="I" D
+ .S DIE="^ABMDCLM(DUZ(2),"
+ .S DA=ABMCDFN
+ .I +$P($G(^ABMDCLM(DUZ(2),ABMCDFN,13,ABMMLT,0)),U,8)=0 S DR=".081////@" D ^DIE Q  ;PI insurers only; the rest are ok
+ .S DR=".081////"_$P($G(^ABMDCLM(DUZ(2),ABMCDFN,13,ABMMLT,0)),U,8)
+ .D ^DIE
+ Q ABMMLT
+ ;end new abm*2.6*37 IHS/SD/SDR ADO76009
+ ;*******************************************
 ADDCOV ; EP for adding Coverage Types
  I ABM("C")]"",$D(^AUTTPIC(ABM("C"),0)),$P(^(0),U,2)=ABM("INS")
  E  Q

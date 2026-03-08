@@ -1,13 +1,16 @@
-PSOHLD ;BIR/SAB - hold unhold functionality ;05-Jun-2013 15:36;DU
- ;;7.0;OUTPATIENT PHARMACY;**1,16,21,24,27,32,55,82,114,130,166,1011,148,268,281,1015,1017**;DEC 1997;Build 40
+PSOHLD ;BIR/SAB - hold unhold functionality ;22-Nov-2024 13:20;DU
+ ;;7.0;OUTPATIENT PHARMACY;**1,16,21,24,27,32,55,82,114,130,166,1011,148,268,281,1015,1017,1030,1036**;DEC 1997;Build 17
  ;External reference to ^DD(52-DBIA 999,  VA(200-DBIA 224, NA^ORX1-DBIA 2186,
  ;
  ;Modified - IHS/MSC/PLS - 07/21/2011 - Lines EN+5 and EN+19
  ;                         04/16/2013 - Change /// to //// for division (PSOSITE) set
  ;                         06/05/2013 - Line NOOR+2
+ ;                         03/02/2022 - Added logic to store NDC
+ ;                         11/22/2024 - Line NOOR+4 - FID 109703
  ; L, UL, PSOL, and PSOUL^PSSLOCK-DBIA 2789, ^%DTC-DBIA 10000, ^DIE-DBIA 10018, ^DIR-DBIA 10026,
  ; ^DIK-DBIA 10013, ^VALM1-DBIA 10016, ^XUSEC(-DBIA 10076
 UHLD I '$D(PSOPAR) D ^PSOLSET G:'$D(PSOPAR) EX
+ N NDC  ;IHS/MSC/PLS - 3/2/2022
  I $G(PSOBEDT) W $C(7),$C(7) S VALMSG="Invalid Action at this time !",VALMBCK="" Q
  I $G(PSONACT) W $C(7),$C(7) S VALMSG="No Pharmacy Orderable Item !",VALMBCK="" Q
  S PSOPLCK=$$L^PSSLOCK(PSODFN,0) I '$G(PSOPLCK) D LOCK^PSOORCPY S VALMSG=$S($P($G(PSOPLCK),"^",2)'="":$P($G(PSOPLCK),"^",2)_" is working on this patient.",1:"Another person is entering orders for this patient.") K PSOPLCK S VALMBCK="" Q
@@ -21,12 +24,15 @@ UHLD I '$D(PSOPAR) D ^PSOLSET G:'$D(PSOPAR) EX
  .S VALMSG="Medication Expired on "_$E($P(^PSRX(DA,2),"^",6),4,5)_"-"_$E($P(^(2),"^",6),6,7)_"-"_$E($P(^(2),"^",6),2,3) I $P(^PSRX(DA,"STA"),"^")<11 S $P(^PSRX(DA,"STA"),"^")=11
  .S ^PSRX(DA,"H")="",COMM="Medication Expired on "_$E($P(^(2),"^",6),4,5)_"-"_$E($P(^(2),"^",6),6,7)_"-"_$E($P(^(2),"^",6),2,3) D EN^PSOHLSN1(DA,"SC","ZE",COMM,"") K COMM
 EN S RXF=0 F I=0:0 S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I,RSDT=$P(^(0),"^")
+ ;IHS/MSC/PLS - 3/2/2022
+ S NDC=$P(^PSDRUG(+$P($G(Y(0)),U,6),2),U,4)
  I RXF D  I $D(Y) D ULP G EX
  .S (PSDA,DA(1))=DA,DA=RXF,DIE="^PSRX("_DA(1)_",1,"
  .S RLDT=$P(^PSRX(DA(1),1,DA,0),"^",18)
  .;IHS/MSC/PLS - Updated division
  .;S DR=$S('RLDT:".01R;2;",1:"")_"3COMMENTS"
- .S DR=$S('RLDT:".01R;2;",1:"")_"3COMMENTS"_";8////"_PSOSITE
+ .;IHS/MSC/PLS - 3/2/2022
+ .S DR=$S('RLDT:".01R;2;",1:"")_"3COMMENTS"_";8////"_PSOSITE_";11////"_NDC
  .S PSOUNHLD=1 D ^DIE K PSOUNHLD
  .S ZD(PSDA)=$P(^PSRX(DA(1),1,DA,0),"^")
  .Q:$D(Y)  S PSORX("FILL DATE")=$P(^PSRX(DA(1),1,DA,0),"^"),DA=PSDA K DA(1)
@@ -38,6 +44,7 @@ EN S RXF=0 F I=0:0 S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I,RSDT=$P(^(0),"^")
  S DR=DR_"100///0;101///^S X=$S(RXF:$G(ZD(PSDA)),1:$P(^PSRX(PSDA,2),""^"",2))"
  ;
  S:'RXF DR=DR_";20////"_PSOSITE  ;IHS/MSC/PLS - 07/21/2011 - Updated division
+ S:'RXF DR=DR_";27////"_NDC   ;IHS/MSC/PLS - 3/2/2022
  D ^DIE K FDT I $D(Y) S VALMBCK="R" D ULP G EX
  S COMM="Medication Removed from Hold by Pharmacy" D EN^PSOHLSN1(DA,"OE","",COMM,PSONOOR) K COMM,PSONOOR
  S PSORX("FILL DATE")=$S('RXF:$P(^PSRX(DA,2),"^",2),1:ZD(PSDA)) K ^PSRX("AH",$P(^PSRX(DA,"H"),"^"),DA) S ^PSRX(DA,"H")="" D ACT^PSOHLDA S (NEW1,NEW11)="^^"
@@ -106,10 +113,14 @@ NOOR ;ask nature of order
  K DIR,DTOUT,DTOUT,DIRUT I $T(NA^ORX1)]""  D  Q
  .;IHS/MSC/PLS - 06/05/2013
  .;S PSONOOR=$$NA^ORX1("W",0,"B","Nature of Order",0,"WPSDIVR"_$S(+$G(^VA(200,DUZ,"PS")):"E",1:""))
- .S PSONOOR=$$NA^ORX1("W",0,"B","Nature of Order",0,"WPSDIV"_$S(+$G(^VA(200,DUZ,"PS")):"E",1:""))
+ .;IHS/MSC/PLS - p1036 FID 109703
+ .;S PSONOOR=$$NA^ORX1("W",0,"B","Nature of Order",0,"WPSDIV"_$S(+$G(^VA(200,DUZ,"PS")):"E",1:""))
+ .S PSONOOR=$$NA^ORX1($$GET1^DIQ(9009033,$G(PSOSITE),407,"I"),0,"B","Nature of Order",0,"WPSDIV"_$S(+$G(^VA(200,DUZ,"PS")):"E",1:""))
  .I +PSONOOR S PSONOOR=$P(PSONOOR,"^",3) Q
  .S DIRUT=1 K PSONOOR
- S DIR("A")="Nature of Order: ",DIR("B")="WRITTEN"
+ ;IHS/MSC/PLS - p1036 FID - 109703
+ ;S DIR("A")="Nature of Order: ",DIR("B")="WRITTEN"
+ S DIR("A")="Nature of Order: ",DIR("B")=$$GET1^DIQ(9009033,PSOSITE,407)
  S DIR(0)="SA^W:WRITTEN;V:VERBAL;P:TELEPHONE;S:SERVICE CORRECTED;D:DUPLICATE;I:POLICY;R:SERVICE REJECTED"_$S(+$G(^VA(200,DUZ,"PS")):";E:PROVIDER ENTERED",1:"")
 NOORX D ^DIR K DIR,DTOUT,DTOUT Q:$D(DIRUT)  S PSONOOR=Y
  Q

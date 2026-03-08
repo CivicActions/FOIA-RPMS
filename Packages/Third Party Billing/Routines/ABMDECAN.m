@@ -1,16 +1,21 @@
 ABMDECAN ; IHS/ASDST/DMJ - Cancel Selected Claim ;
- ;;2.6;IHS 3P BILLING SYSTEM;**9,11,19,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**9,11,19,21,32,36,37**;NOV 12, 2009;Build 739
  ;
- ; 03/10/04 V2.5 Patch 5 - Deny cancel claim if bill attached
- ; IHS/SD/SDR - V2.5 P8 - Added code for cancellation reason
- ; IHS/SD/SDR - v2.5 p10 - IM20454 - Fix cancellation when replacement insurer present
- ; IHS/SD/SDR - v2.5 p12 - UFMS - If user isn't logged into cashiering session they can't do
- ;   this option.  Also added call to populate cashiering session with claim/bill number if they
+ ;03/10/04 2.5*5 Deny cancel claim if bill attached
+ ;IHS/SD/SDR 2.5*8 Added code for cancellation reason
+ ;IHS/SD/SDR 2.5*10 IM20454 Fix cancellation when replacement insurer present
+ ;IHS/SD/SDR 2.5*12 UFMS If user isn't logged into cashiering session they can't do this option.
+ ;   Also added call to populate cashiering session with claim/bill number if they
  ;   are cancelling.  Also added who cancelled bill, when, and reason (.111,.112,.113)
  ;
- ;IHS/SD/SDR - 2.6*19 - HEAT155799 - Updated code that creates 3P Cancelled Claim entry so it can
- ;   be called from the Merged claim option if user decides to delete claims that were merged.
- ;IHS/SD/SDR - 2.6*21 - HEAT242626	 - Updated so only claims with a status of F, E or P can be cancelled.
+ ;IHS/SD/SDR 2.6*19 HEAT155799 Updated code that creates 3P Cancelled Claim entry so it can be called from the Merged claim
+ ;   option if user decides to delete claims that were merged.
+ ;IHS/SD/SDR 2.6*21 HEAT242626 Updated so only claims with a status of F, E or P can be cancelled.
+ ;IHS/SD/SDR 2.6*32 CR11501 Added DX and CPT multiples to data merged to 3P Cancelled Claim data for reporting.
+ ;IHS/SD/SDR 2.6*36 ADO76247 Fixed cancelled claims messages to check cancelled claim file before writing; at this time, when it's
+ ;  a pharmacy POS bill there won't be a claim but they can use the ADPS option to create COB bills that could be cancelled or
+ ;  the original bill could be cancelled
+ ;IHS/SD/SDR 2.6*37 ADO76009 Added logic for when the patient has the same insurer twice, to only reactive the entry in question, not both entries
  ;   
  K ABMP
  S U="^"
@@ -84,9 +89,23 @@ ENT3 ;EP - Delete claim without asking
  .S DIK="^ABMCCLMS(DUZ(2),"
  .S DA=ABMP("CDFN")
  .D ^DIK
+ ;
  M ^ABMCCLMS(DUZ(2),ABMP("CDFN"),0)=^ABMDCLM(DUZ(2),ABMP("CDFN"),0)
  M ^ABMCCLMS(DUZ(2),ABMP("CDFN"),11)=^ABMDCLM(DUZ(2),ABMP("CDFN"),11)  ;PCC Visits
  M ^ABMCCLMS(DUZ(2),ABMP("CDFN"),41)=^ABMDCLM(DUZ(2),ABMP("CDFN"),41)  ;Providers
+ ;start new abm*2.6*32 IHS/SD/SDR CR11501
+ F I=17,21,23,25,27,33,35,37,39,43,47 D
+ .S J=0
+ .F  S J=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),I,J)) Q:'J  D
+ ..S $P(^ABMCCLMS(DUZ(2),ABMP("CDFN"),I,J,0),U)=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),I,J,0),U)
+ ..I I=17 D
+ ...S $P(^ABMCCLMS(DUZ(2),ABMP("CDFN"),I,J,0),U,2)=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),I,J,0),U,2)
+ ...S $P(^ABMCCLMS(DUZ(2),ABMP("CDFN"),I,J,0),U,6)=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),I,J,0),U,6)
+ ..I I=23 S $P(^ABMCCLMS(DUZ(2),ABMP("CDFN"),I,J,0),U,29)=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),I,J,0),U,29)
+ ..I I=25 S $P(^ABMCCLMS(DUZ(2),ABMP("CDFN"),I,J,0),U,7)=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),I,J,0),U,7)
+ ..I I=33 S $P(^ABMCCLMS(DUZ(2),ABMP("CDFN"),I,J,0),U,3)=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),I,J,0),U,3)
+ ;end new abm*2.6*32 IHS/SD/SDR CR11501
+ ;
  S DIK="^ABMCCLMS(DUZ(2),"
  S DA=ABMP("CDFN")
  D IX^DIK  ;merged entries don't x-ref
@@ -187,13 +206,22 @@ OPEN ;
  ; If bill was manually entered, cancel it and exit
  I ABMP("BILL")=+ABMP("BILL") D BKILL G XIT
  ; If claim does not exist cancel the bill and allow claim editing
- I '$D(^ABMDCLM(DUZ(2),+ABMP("BILL"),0)) W !!,"Claim Number: ",+ABMP("BILL")," has been Canceled, thus cannot be Opened for Editing!" G TRK
+ ;I '$D(^ABMDCLM(DUZ(2),+ABMP("BILL"),0)) W !!,"Claim Number: ",+ABMP("BILL")," has been Canceled, thus cannot be Opened for Editing!" G TRK  ;abm*2.6*36 IHS/SD/SDR ADO76247
+ I $D(^ABMCCLMS(DUZ(2),+ABMP("BILL"),0)) W !!,"Claim Number: ",+ABMP("BILL")," has been Canceled, thus cannot be Opened for Editing!" G TRK  ;abm*2.6*36 IHS/SD/SDR ADO76247
+ I '$D(^ABMDCLM(DUZ(2),+ABMP("BILL"),0)) G TRK  ;this would be a manual bill or a pharmacy POS bill, so there's no claim  ;abm*2.6*36 IHS/SD/SDR ADO76247
  L +^ABMDCLM(DUZ(2),+ABMP("BILL")):0 I '$T W !?5,*7,"Another User is Editing the CLAIM, try Later!" G XIT
  S ABMP("INS")=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),U,8)  ;Active ins
  S DA=+ABMP("BILL")
  S DIE="^ABMDCLM(DUZ(2),"
  S DR=".04////E;.08////"_ABMP("INS")
  D ^DIE  ; mark claim in edit status and stuff active ins
+ ;start new abm*2.6*37 IHS/SD/SDR ADO76009
+ ;this is for the patient having the same insurer twice, making sure it gets the correct entry (not just the first entry)
+ S ABMT("PIM")=0,ABMT("PI")=0
+ F  S ABMT("PI")=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMT("PI"))) Q:'ABMT("PI")  D  Q:ABMT("PIM")
+ .I (($P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMT("PI"),0),U)=ABMP("INS"))!($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMT("PI"),0)),U,11)=ABMP("INS")))&($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMT("PI"),0)),U,3)="I") D
+ ..S ABMT("PIM")=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,ABMT("PI"),0)),U,8)
+ ;end new abm*2.6*37 IHS/SD/SDR ADO76009
  K DR
  S DA(1)=DA
  S DIE="^ABMDCLM(DUZ(2),"_DA(1)_",13,"
@@ -201,9 +229,11 @@ OPEN ;
  ; Update insurer/provider multiple
  F  S DA=$O(^ABMDCLM(DUZ(2),DA(1),13,DA)) Q:'DA  D
  .I $P(^ABMDCLM(DUZ(2),DA(1),13,DA,0),U)=ABMP("INS")!($P($G(^ABMDCLM(DUZ(2),DA(1),13,DA,0)),U,11)=ABMP("INS")) D  Q
+ ..I (+$P($G(^ABMDCLM(DUZ(2),DA(1),13,DA,0)),U,8)'=0)&($P($G(^ABMDCLM(DUZ(2),DA(1),13,DA,0)),U,8)'=ABMT("PIM")) Q  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ..S DR=".03////I"
  ..D ^DIE
  .I $P(^ABMDCLM(DUZ(2),DA(1),13,DA,0),U,3)="I",($P(^(0),U)'=ABMP("INS")!($P($G(^ABMDCLM(DUZ(2),DA(1),13,DA,0)),U,11)'=ABMP("INS"))) D
+ ..I (+$P($G(^ABMDCLM(DUZ(2),DA(1),13,DA,0)),U,8)'=0)&($P($G(^ABMDCLM(DUZ(2),DA(1),13,DA,0)),U,8)=ABMT("PIM")) Q  ;abm*2.6*37 IHS/SD/SDR ADO76009
  ..S DR=".03////P"
  ..D ^DIE
  ;
@@ -224,7 +254,8 @@ TRK ;
  .D BKILL
  ;
 MSG ;
- W !,"Claim Number: ",+ABMP("BILL")," is now Open for Editing!"
+ ;W !,"Claim Number: ",+ABMP("BILL")," is now Open for Editing!"  ;abm*2.6*36 IHS/SD/SDR ADO76247
+ I $D(^ABMDCLM(DUZ(2),+ABMP("BILL"),0)) W !,"Claim Number: ",+ABMP("BILL")," is now Open for Editing!"  ;abm*2.6*36 IHS/SD/SDR ADO76247
  G XIT
  ;
 BKILL ;CANCEL BILL

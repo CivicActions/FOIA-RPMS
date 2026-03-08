@@ -1,5 +1,5 @@
-BGOUTL3 ; IHS/BAO/TMD - Utilities (continued)  ;11-Jul-2013 13:22;du
- ;;1.1;BGO COMPONENTS;**11,13**;Mar 20, 2007;Build 13
+BGOUTL3 ; IHS/BAO/TMD - Utilities (continued)  ;22-Mar-2023 08:08;PLS
+ ;;1.1;BGO COMPONENTS;**11,13,33**;Mar 20, 2007;Build 13
 GETSET(RET,BGOFILE,BGOFLD,BGOCHK) ;gets set of codes
  ; RET(n)=code^text for code
  N BGOPCC,BGOPCCL,BGOPCCC,BGOLO,BGOHI,BGOPCCD,BGOPCCT
@@ -38,3 +38,9 @@ EXAM ;Check exam codes
  I X="H",(C'=42&(C'=43)) K X Q
  I C=42!(C=43),X'="L",X'="M",X'="H" K X Q
  Q
+ ;
+KEYSCRN(KEYS,USR) ;-
+ N DATA,LP,SUM,VAL
+ D HASKEYS^BEHOUSCX(.DATA,$TR(KEYS,"~",U),USR)
+ S VAL=0 F LP=1:1:$L(DATA,U) S VAL=VAL+$P(DATA,U,LP)
+ Q VAL=$L(DATA,U)

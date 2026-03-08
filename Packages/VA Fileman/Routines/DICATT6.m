@@ -1,5 +1,6 @@
-DICATT6 ;SFISC/XAK-SETS,FREE TEXT ;5:52 AM  20 Dec 2001 [ 12/09/2003  4:25 PM ]
- ;;22.0;VA FileMan;**76,1002**;Mar 30, 1999
+DICATT6 ;SFISC/XAK-SETS,FREE TEXT ;10/12/90  9:35 AM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  G @N
  ;

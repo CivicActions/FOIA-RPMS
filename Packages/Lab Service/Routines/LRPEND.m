@@ -1,5 +1,5 @@
 LRPEND ;DALISC/FHS - SET LAB PENDING FILE ; 2/9/97  15:41 ;
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**153**;Sep 27, 1994
  Q
  ;PID = SSN / PSITE = Ordering Site # / CSITE = Collecting Site #

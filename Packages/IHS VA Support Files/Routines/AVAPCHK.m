@@ -1,5 +1,6 @@
 AVAPCHK ;IHS/ORDC/LJF - CLEAN UP FILES 3,6,16&200 ; [ 10/03/95  7:57 AM ]
- ;;93.2;VA SUPPORT FILES;;SEPT 18, 1995;Build 12
+ ;;93.2;VA SUPPORT FILES;**27**;SEPT 18, 1995;Build 8
+ ;PATCH 27: THIS ROUTINE'S FUNCTION ENTIRELY DEPRECATED BY DELETION OF FILES 3/6/16
  ;
  ;This routine checks the status of your User, Person, Provider, and 
  ;New Person files.  It attempts to correct links, if possible. Those
@@ -12,7 +13,7 @@ AVAPCHK ;IHS/ORDC/LJF - CLEAN UP FILES 3,6,16&200 ; [ 10/03/95  7:57 AM ]
  ;     number.
  ;  3. Run EN^AVAPCHK. There is no user interface.  Then run
  ;     RESULTS^AVAPCHK which displays to the screen the results.
- ;  4. If it did not run clean, call me at (999) 999-9999.  I will
+ ;  4. If it did not run clean, call me at (405) 945-6968.  I will
  ;     need to hand fix those errors.
  ;
  ;To Developers: Use this routine to check the status of the 4 files
@@ -23,6 +24,7 @@ AVAPCHK ;IHS/ORDC/LJF - CLEAN UP FILES 3,6,16&200 ; [ 10/03/95  7:57 AM ]
  Q  ;no direct entry to rtn
  ;
 EN ;EP; called by A9AVA8
+ Q  ;AVA*93.2*27
  D DT^DICRW
  K ^AVA(3),^AVA(16),^AVA("OK"),^AVA("NOT OK")
  S X="AVAP7" X ^%ZOSF("TEST")
@@ -170,6 +172,7 @@ SETERR(FILE,IEN,MSG) ; -- SUBRTN to set entry into error file
  S ^AVA(16,IEN)=MSG Q
  ;
 RESULTS ;EP; called to display results of run
+ Q  ;AVA*93.2*27
  D DT^DICRW,^XBCLS
  W !!,"RESULTS OF AVA CHECK OF FILES 3, 6, 16, & 200",!
  ;
@@ -192,6 +195,8 @@ READ ;
  K DIR S DIR(0)="E",DIR("A")="Press ENTER to continue" D ^DIR Q
  ;
 ADD1(AVAX) ;EP; called to add new person & user entries for person entry
+ Q  ;AVA*93.2*27
+ ;
  NEW AVA3,X
  S AVA3=$P(^VA(200,0),U,3)+1
  Q:$D(^VA(200,AVA3))  Q:$D(^DIC(3,AVA3))

@@ -1,8 +1,9 @@
 ACHSMD2D ; IHS/ITSC/PMF - PRINT DENIAL LISTING BY PROVIDER BY DATE OF SERVICE ;   [ 10/16/2001   8:16 AM ]
- ;;3.1;CONTRACT HEALTH MGMT SYSTEM;;JUN 11, 2001
+ ;;3.1;CONTRACT HEALTH MGMT SYSTEM;**32**;JUN 11, 2001;Build 39
+ ;ACHS*3.1*32 9.12.24 IHS.OIT.FCJ NEW STANDARD MED PRIORITIES
  ;
  ;    This is a new routine to accommodate new Denial/Deferred
- ;    Services data structure at Alpha sites.
+ ;    Services data structure at Alpha sites. Option: PDEN   Denial Listing
  ;
 A0 ;
  S (ACHSPGNO,ACHSLC,ACHSPTOT,ACHSGTOT,ACHSTFLG,ACHSPNOT,ACHSGNOT)=0
@@ -104,7 +105,8 @@ B5 ;
  W ?7,$E(ACHSNAME,1,50)
 B10 ;
  S X=$P($G(^ACHSDEN(DUZ(2),"D",ACHSZRR,400)),U,2)
- S X=$P($G(^ACHSMPRI(X,0)),U)
+ ;S X=$P($G(^ACHSMPRI(X,0)),U)  ;ACHS*3.1*32
+ S X=$P($G(^ACHSMPR(X,0)),U)  ;ACHS*3.1*32
  ;
  W ?58,$S($L(X):$E(X,1,4),1:"??")
 XXX ;

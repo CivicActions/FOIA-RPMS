@@ -1,5 +1,5 @@
 APCLPRPM ; IHS/CMI/LAB - driver for primary care provider report ;
- ;;2.0;IHS PCC SUITE;**2,7**;MAY 14, 2009
+ ;;2.0;IHS PCC SUITE;**2,7,29**;MAY 14, 2009;Build 20
  ;
  W:$D(IOF) @IOF
  W !,"This report will generate a list of patients for a specific Designated Primary Care"
@@ -102,8 +102,9 @@ HEAD1 ;
 LVST ;ENTRY POINT from [APCL PRIM PROV LISTING print template
  S APCLAST=""
  S APCLVDFN=""
+ S APCLDT=""
  S APCLAST=$O(^AUPNVSIT("AA",DFN,""))
- I APCLAST="" S APCLAST="NONE FOUND" Q
+ I APCLAST="" S APCLDT="NONE FOUND" Q   ;IHS/CMI/LAB - PATCH 29
  S APCLVDFN=$O(^AUPNVSIT("AA",DFN,APCLAST,""))
  S Y=$P(^AUPNVSIT(APCLVDFN,0),U)
  D DD^%DT S APCLDT=$E(Y,1,12)

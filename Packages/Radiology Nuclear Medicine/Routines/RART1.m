@@ -1,5 +1,5 @@
-RART1 ;HISC/GJC,SWM-Reporting Menu (Part 2) ; 06 Oct 2013  11:05 AM
- ;;5.0;Radiology/Nuclear Medicine;**8,16,15,21,23,27,34,99,47,1005**;Mar 16, 1998;Build 13
+RART1 ;HISC/GJC,SWM IHS/OIT/BT/MAW/JSL - Reporting Menu (Part 2) ; Jul 27, 2023@14:18
+ ;;5.0;Radiology/Nuclear Medicine;**8,16,15,21,23,27,34,99,47,173,1009,1010**;Mar 16, 1998;Build 11
  ;Print Report By Patient has been moved to 4^RART2!
  ;these sections are moved to ^RART3 : QRPT, PHYS, MODSET, OUT1
  ;RVD P99, add pregnancy screen and commment if populated for female pt.
@@ -22,7 +22,12 @@ OERR ;entry from RA OERR PROFILE protocol
  ;
 OERR1 ;Entry Point for Alert Follow-Up Action for OE/RR
  Q:'$D(XQADATA)!('$D(XQAID))  S (RARPT,Y)=XQADATA D RASET^RAUTL2
- S:Y Y(0)=Y,RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown"),RAPRC=$S($D(^RAMIS(71,+$P(Y(0),"^",2),0)):$P(^(0),"^"),1:"Unknown")
+ I Y D
+ . S Y(0)=Y
+ . S RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1)
+ . S:RANME="" RANME=$S($D(^DPT(RADFN,0)):$P(^(0),"^"),1:"Unknown")
+ . S RAPRC=$S($D(^RAMIS(71,+$P(Y(0),"^",2),0)):$P(^(0),"^"),1:"Unknown")
+ . Q
  S RALERTS="" D DISP K:X="^" XQAID,XQAKILL
  I $D(XQAID) S DFN=$P(XQAID,",",2) D DELETE^XQALERT
  K RALERTS
@@ -53,18 +58,16 @@ DISP I RARPT,($D(RAPBRPT)),($P($G(^RARPT(+RARPT,0)),"^",5)="V") D  Q
  . R X:3 ; D:$$IMAGE^RARIC1 DISPF^MAGRIC ;don't call MAG 111300
  . Q
 DISP1 I $S('$D(ORACTION):1,ORACTION'=8:1,'$D(X):0,X="T":1,1:0) W @IOF
- W !,RANME," (",$$SSN^RAUTL,")",?39,"Case No. ",?55,": ",$P($G(^RARPT(RARPT,0)),"^")," @",$E(RADATE,$L(RADATE)-4,$L(RADATE))
+ W !,RANME," (",$$SSN^RAUTL,") ",?39,"Case No. ",?55,": ",$P($G(^RARPT(RARPT,0)),"^")," @",$E(RADATE,$L(RADATE)-4,$L(RADATE))
  W !,$E(RAPRC,1,40) I +$G(^RARPT(RARPT,"T")) W ?39,"Transcriptionist",?55,": ",$E($P($G(^VA(200,+^RARPT(RARPT,"T"),0)),"^"),1,20)
  N R3 S R3=$G(^RADPT(+$G(RADFN),"DT",+$G(RADTI),"P",+$G(RACNI),0))
  W !,"Req. Phys : ",$E($P($G(^VA(200,+$P(R3,"^",14),0)),"^"),1,25)
  S RAPREVER=+$P($G(^RARPT(RARPT,0)),"^",13) W ?39,"Pre-verified",?55,": ",$S($D(^VA(200,RAPREVER,0)):$E($P($G(^VA(200,RAPREVER,0)),"^"),1,24),1:"NO") K RAPREVER
  D PHYS^RART3
  ;Display Pregnancy Screen and Comments if respective field is filled and pt is female, patch #99
- ;
- ;IHS/BJI/DAY - Patch 1005 - Gender Fix
  ;I $$PTSEX^RAUTL8(RADFN)="F" D
+ ;IHS/BJI/DAY gender fix
  I $$PTSEX^RAUTL8(RADFN)'="M" D
- .;
  .W:$P(R3,U,32)'="" !,"Pregnancy Screen: ",$S($P(R3,"^",32)="y":"Patient answered yes",$P(R3,"^",32)="n":"Patient answered no",$P(R3,"^",32)="u":"Patient is unable to answer or is unsure",1:"")
  .N RAPCOMM S RAPCOMM=$G(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"PCOMM"))
  .W:$P(R3,U,32)'=""&$L(RAPCOMM) !,"Pregnancy Screen Comment: ",RAPCOMM
@@ -88,7 +91,9 @@ DISP1 I $S('$D(ORACTION):1,ORACTION'=8:1,'$D(X):0,X="T":1,1:0) W @IOF
  ;
  ; Print the clinical history from file 70
  I +$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H",0)) D
- . K ^UTILITY($J,"W"),^(1) S X="",DIWL=3,DIWF="|WC75"
+ . ;maw 1010 needs to be looked at again.  Choctaw MS is a good site for this
+ . K ^UTILITY($J,"W"),^(1) S X="",DIWL=3,DIWF="|WC75"  ;maw orig line
+ . ;K ^UTILITY($J,"W"),^(1) S X="",DIWL=3,DIWF="|WNC75"  ;cmi/maw 20210609 patch 1 CR10054 add N to print as stored
  . W !?3,"Clinical History:"
  . S RAP="H" D WRITEHX(RAP)
  . Q
@@ -98,16 +103,22 @@ DISP1 I $S('$D(ORACTION):1,ORACTION'=8:1,'$D(X):0,X="T":1,1:0) W @IOF
  ; different than the order clinical history.
  I +$O(^RARPT(RARPT,"H",0)) D
  . D CHKDUPHX Q:RADUPHX  ; Duplicate history
- . K ^UTILITY($J,"W"),^(1) S X="",DIWL=3,DIWF="|WC75"
+ . ;maw 1010 needs to be looked at again.  Choctaw MS is a good site for this
+ . K ^UTILITY($J,"W"),^(1) S X="",DIWL=3,DIWF="|WC75"  ;maw orig line
+ . ;K ^UTILITY($J,"W"),^(1) S X="",DIWL=3,DIWF="|WNC75"  ;cmi/maw 20210609 patch 1 CR10054 add N to print as stored
  . W !?3,"Additional Clinical History:"
  . S RAP="AH" D WRITEHX(RAP)
  ;
  ; Print Report and Impression text
  F RAP="R","I" D  Q:X="^"!(X="P")!(X="T")
- . K ^UTILITY($J,"W"),^(1) S X="",DIWL=3,DIWF="|WC75"
+ . K ^UTILITY($J,"W"),^(1) S X="",DIWL=3,DIWF="|WC75"  ;maw orig line
+ . ;K ^UTILITY($J,"W"),^(1) S X="",DIWL=3,DIWF="|WNC75"  ;cmi/maw 20210609 patch 1 CR10054 add N to print as stored
  . W !?3,$S(RAP="R":"Report:",1:"Impression:") W:RAP="R" ?45,"Status: ",$$XTERNAL^RAUTL5(RAST,$P($G(^DD(74,5,0)),U,2))
  . W:RAP="R"&($E(RAST)="P") $C(7)
- . D WRITE
+ . ;
+ . ;D WRITE          ;P1010 DAY/JSL - add new report display
+ . D WRTRT1^BRARPT7  ;P1010 DAY/JSL - add new report display
+ . ;
  . Q
  Q:X="P"  G DISP1:X="T",Q6:X="^"
  ; I $$IMAGE^RARIC1() D DISPF^MAGRIC ;don't call MAG 111300
@@ -150,13 +161,19 @@ WRITEHX(RAP) ; Get and write the clinical history
  . F  S RAV=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H",RAV)) Q:RAV'>0  D  Q:X="^"!(X="P")!(X="T")
  . . S RAXX=^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H",RAV,0),X=""
  . . D WAIT:($Y+6)>IOSL&('$D(RARTVERF)) Q:X="^"!(X="P")!(X="T")
- . . S X=RAXX D ^DIWP S X=""
+ . . S X=RAXX
+ . . ;maw 1010 needs to be looked at again.  Choctaw MS is a good site for this
+ . . ;S DIWF="|N"  ;cmi/maw 20210623 patch 1009 CR10054
+ . . D ^DIWP S X=""
  . . Q
  I RAP="AH" D
  . F  S RAV=$O(^RARPT(RARPT,"H",RAV)) Q:RAV'>0  D  Q:X="^"!(X="P")!(X="T")
  . . S RAXX=^RARPT(RARPT,"H",RAV,0),X=""
  . . D WAIT:($Y+6)>IOSL&('$D(RARTVERF)) Q:X="^"!(X="P")!(X="T")
- . . S X=RAXX D ^DIWP S X=""
+ . . S X=RAXX
+ . . ;maw 1010 needs to be looked at again.  Choctaw MS is a good site for this
+ . . ;S DIWF="|N"  ;cmi/maw 20210623 patch 1009 CR10054
+ . . D ^DIWP S X=""
  . . Q
  Q:X="^"  D ^DIWW:$D(RAXX) Q
  ;
@@ -168,6 +185,8 @@ CHKDUPHX ; Check Duplicate History in file 70 and 74.
  S RADUPHX=0
  ; Quit if H node does not exist.  Could have been purged.
  I '$D(^RARPT(RARPT,"H")) S RADUPHX=1 Q
+ ;p173/KLM Quit if no CH on exam, flag set to take CH from report.
+ I '$D(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H")) S RADUPHX=0 Q
  S RA74=$O(^RARPT(RARPT,"H",""),-1)
  S RA70=$O(^RADPT(RADFN,"DT",RADTI,"P",RACNI,"H",""),-1),RA701=$O(^(0))
  S RAX=RA74-RA70+1 Q:RAX'=1  ; begin comparison

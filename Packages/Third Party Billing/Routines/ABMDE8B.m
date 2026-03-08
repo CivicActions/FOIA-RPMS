@@ -1,21 +1,23 @@
-ABMDE8B ; IHS/ASDST/DMJ - Edit Page 8 - WORKSHEET SURG PROC ;   
- ;;2.6;IHS 3P BILLING SYSTEM;**6,14,21**;NOV 12, 2009;Build 379
+ABMDE8B ; IHS/SD/SDR - Edit Page 8 - WORKSHEET SURG PROC ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**6,14,21,30,32**;NOV 12, 2009;Build 621
  ;A few lines have been added in the ICD subrtn so that surgery page
  ;can accommodate surgical CPT's entered by claim generator
  ;
- ; IHS/SD/SDR - V2.5 P2 - 5/9/02 - NOIS HQW-0302-100190 - Modified to include 2nd and 3rd modifiers and well as units
- ; IHS/SD/SDR - V2.5 P8 - IM10618/IM11164 - Prompt/display provider
- ; IHS/SD/SDR - v2.5 p9 - IM16660 - 4-digit revenue codes
- ; IHS/SD/SDR - v2.5 p9 - task 1 - Use new service line provider multiple
- ; IHS/SD/SDR - v2.5 p10 - IM19843 - Added code for new SERVICE DATE TO prompt
- ; IHS/SD/SDR - v2.5 p11 - NPI
- ; IHS/SD/SDR - v2.5 p13 - IM25777 - Medical charges duplicating because all line items not displaying (BAD X-REF)
+ ;IHS/SD/SDR 2.5*2 5/9/02 NOIS HQW-0302-100190 Modified to include 2nd and 3rd modifiers and well as units
+ ;IHS/SD/SDR 2.5*8 IM10618/IM11164 Prompt/display provider
+ ;IHS/SD/SDR 2.5*9 IM16660 4-digit revenue codes
+ ;IHS/SD/SDR 2.5*9 task 1 Use new service line provider multiple
+ ;IHS/SD/SDR 2.5*10 IM19843 Added code for new SERVICE DATE TO prompt
+ ;IHS/SD/SDR 2.5*11 NPI
+ ;IHS/SD/SDR 2.5*13 IM25777 Medical charges duplicating because all line items not displaying (BAD X-REF)
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ; IHS/SD/SDR - v2.6 p6 - HEAT28973 - If 55 modifier present use '1' as units for charges
- ;IHS/SD/SDR - 2.6*14 - HEAT161263 - Changed to use $$GET1^DIQ for provider narrative so output transform will be executed.
- ;IHS/SD/SDR 2.6*21 HEAT106899 - Updated display so it will look for the new operating provider; it will look for ordering, then operating,
+ ;IHS/SD/SDR 2.6 CSV
+ ;IHS/SD/SDR 2.6*6 HEAT28973 If 55 modifier present use '1' as units for charges
+ ;IHS/SD/SDR 2.6*14 HEAT161263 Changed to use $$GET1^DIQ for provider narrative so output transform will be executed.
+ ;IHS/SD/SDR 2.6*21 HEAT106899 Updated display so it will look for the new operating provider; it will look for ordering, then operating,
  ;  then rendering and display the first one it finds.
+ ;IHS/SD/SDR 2.6*30 CR8870 Updated display so it won't wrap if units are maxed out, including 3 decimal places
+ ;IHS/SD/SDR 2.6*32 CR8942 Corrected default rev code
  ; *********************************************************************
  ;
 DISP2 K ABMZ S ABMZ("TITL")="SURGICAL PROCEDURES",ABMZ("PG")="8B"
@@ -39,20 +41,29 @@ MS ; Surgical Procedures
  S ABMZ("X")="X",ABM("TOTL")=0
  S ABMZ("NARR")=";.06////"_U_2_U_7
  D MODE^ABMDE8X
- I ^ABMDEXP(ABMMODE(2),0)["UB" S ABMZ("DR")=";W !;.03//960"_ABMZ("DR")
+ ;I ^ABMDEXP(ABMMODE(2),0)["UB" S ABMZ("DR")=";W !;.03//960"_ABMZ("DR")  ;abm*2.6*32 IHS/SD/SDR CR8942
+ I ^ABMDEXP(ABMMODE(2),0)["UB" S ABMZ("REVN")=";W !;.03//510"  ;abm*2.6*32 IHS/SD/SDR CR8942
  S:((^ABMDEXP(ABMMODE(2),0)["HCFA")!(^ABMDEXP(ABMMODE(2),0)["CMS")) ABMZ("DIAG")=";.04"
  D HD G LOOP
  G:'$D(ABMP("VTYP",999)) ^ABMDE8B1
 HD ;
  W !,"BIL",?5,"SERV",?12,"REVN",?19,"CORR",?26,"CPT"
- W !,"SEQ",?5,"DATE",?12,"CODE",?19,"DIAG",?26,"CODE",?41,"PROVIDER'S NARRATIVE",?64,"UNITS",?72,"CHARGE"
- W !,"===",?5,"=====",?12,"====",?18,"======",?26,"===========================================",?71,"========"
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;W !,"SEQ",?5,"DATE",?12,"CODE",?19,"DIAG",?26,"CODE",?41,"PROVIDER'S NARRATIVE",?64,"UNITS",?72,"CHARGE"
+ ;W !,"===",?5,"=====",?12,"====",?18,"======",?26,"===========================================",?71,"========"
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ W !,"SEQ",?5,"DATE",?12,"CODE",?19,"DIAG",?26,"CODE",?33,"PROVIDER'S NARRATIVE",?60,"UNITS",?70,"CHARGE"
+ W !,"===",?5,"=====",?12,"====",?18,"======",?26,"================================",?59,"=======",?67,"============="
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  Q
-LOOP S (ABMZ("LNUM"),ABMZ("NUM"),ABMZ(1),ABM)=0
+LOOP ;
+ S (ABMZ("LNUM"),ABMZ("NUM"),ABMZ(1),ABM)=0
  F ABM("I")=1:1 S ABM=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),21,ABM)) Q:'ABM  S ABM("X")=ABM,ABMZ("NUM")=ABM("I") D MS1
  S ABM("L")=ABMZ("LNUM")+1,ABMZ("DR2")=";.02////"_ABM("L")
  S ABMZ("MOD")=.09_U_3_U_.11_U_.12
-TOTL I ABM("TOTL")>0 W !?70,"=========",!?68,$J(("$"_$FN(ABM("TOTL"),",",2)),11)
+TOTL ;
+ ;I ABM("TOTL")>0 W !?70,"=========",!?68,$J(("$"_$FN(ABM("TOTL"),",",2)),11)  ;abm*2.6*30 IHS/SD/SDR CR8870
+ I ABM("TOTL")>0 W !?66,"==============",!?67,$J(("$"_$FN(ABM("TOTL"),",",2)),13)  ;abm*2.6*30 IHS/SD/SDR CR8870
  G XIT
  ;
 MS1 ;
@@ -73,7 +84,8 @@ EOP I $Y>(IOSL-5) D PAUSE^ABMDE1,HD
  S ABM("LITMTOTAL")=$P(ABM("X0"),"^",7)*$P(ABM("X0"),"^",13)
  I ABMZ("MOD")["55" S ABM("LITMTOTAL")=$P(ABM("X0"),"^",7)*(1)  ;IHS/SD/AML 2/10/2011 - HEAT28973
  S:'+ABM("LITMTOTAL") ABM("LITMTOTAL")=$P(ABM("X0"),"^",7)
- K ABMU S ABMU(1)="?70"_U_$J($FN(ABM("LITMTOTAL"),",",2),9)
+ ;K ABMU S ABMU(1)="?70"_U_$J($FN(ABM("LITMTOTAL"),",",2),9)  ;abm*2.6*30 IHS/SD/SDR CR8870
+ K ABMU S ABMU(1)="?67"_U_$J($FN(ABM("LITMTOTAL"),",",2),13)  ;abm*2.6*30 IHS/SD/SDR CR8870
  S ABM("TOTL")=ABM("TOTL")+ABM("LITMTOTAL")
  W !,$J(ABM("I"),2)
  W ?5,"CHARGE DATE: ",$$SDT^ABMDUTL($P(ABM("X0"),U,5))
@@ -92,13 +104,21 @@ EOP I $Y>(IOSL-5) D PAUSE^ABMDE1,HD
  S IENS=ABM("X")_","_ABMP("CDFN")_","  ;abm*2.6*14 HEAT161263
  S ABMU("TXT")=$S($P(ABM("X0"),U,6)]"":$$GET1^DIQ(9002274.3021,IENS,".06","E"),1:"")  ;abm*2.6*14 HEAT161263
  S ABMU("LM")=32+$L(ABMZ("MOD"))
- S ABMU("RM")=70
+ ;S ABMU("RM")=70  ;abm*2.6*30 IHS/SD/SDR CR8870
+ S ABMU("RM")=61  ;abm*2.6*30 IHS/SD/SDR CR8870
  S ABMU("TAB")=$L(ABMZ("MOD"))
- S ABMU("2TXT")=$P($G(ABM("X0")),U,13)
- S ABMU("2LM")=68
- S ABMU("2RM")=72
+ ;S ABMU("2TXT")=$P($G(ABM("X0")),U,13)  ;abm*2.6*30 IHS/SD/SDR CR8870
+ S ABMU("2TXT")=$$FMT^ABMERUTL($P($G(ABM("X0")),U,13),"6R")  ;abm*2.6*30 IHS/SD/SDR CR8870
+ ;start old abm*2.6*30 IHS/SD/SDR CR8870
+ ;S ABMU("2LM")=68
+ ;S ABMU("2RM")=72
+ ;end old start new abm*2.6*30 IHS/SD/SDR CR8870
+ S ABMU("2LM")=60
+ S ABMU("2RM")=69
+ ;end new abm*2.6*30 IHS/SD/SDR CR8870
  D ^ABMDWRAP
- W:$X<33 ?68,$J(("$"_$FN(ABM("LITMTOTAL"),",",2)),11)
+ ;W:$X<33 ?68,$J(("$"_$FN(ABM("LITMTOTAL"),",",2)),11)  ;abm*2.6*30 IHS/SD/SDR CR8870
+ W:$X<33 ?66,$J(("$"_$FN(ABM("LITMTOTAL"),",",2)),11)  ;abm*2.6*30 IHS/SD/SDR CR8870
  Q
  ;
 XIT I +$O(ABME(0)) S ABME("CONT")="" D ^ABMDERR K ABME("CONT")

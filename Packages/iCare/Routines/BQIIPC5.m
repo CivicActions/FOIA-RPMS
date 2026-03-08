@@ -1,5 +1,5 @@
 BQIIPC5 ;GDIT/HS/ALA-IPC5 Measures ; 14 Oct 2014  9:54 AM
- ;;2.4;ICARE MANAGEMENT SYSTEM;;Apr 01, 2015;Build 41
+ ;;2.3;ICARE MANAGEMENT SYSTEM;**5**;Apr 18, 2012;Build 17
  ;
  ;
 IPC ; Set IPC4
@@ -123,7 +123,7 @@ ARR ;  Measure definition
  ;;0|MU_56^M^5^IVD: LDL Control^^70^^Monthly_Data_Supplemental^CL^CK^16^80%^A~1|
  ;;0|MU_3^M^5^Preventive Care and Screening: Tobacco Use^^71^^Monthly_Data_Supplemental^CP^CO^16^80%^A~1|
  ;;0|2015_2070^G^5^CVD: BP Assessed^^62^^Monthly_Data_Supplemental^^BD^17^~1|
- ;;0|2015_2091^G^5^CVD: BMI Assessed^^63^^Monthly_Data_Supplemental^^BG^17^~1|
+ ;;0|2015_2091^G^5^CVD: Assessed^^63^^Monthly_Data_Supplemental^^BG^17^~1|
  ;;0|2015_2071^G^5^CVD: LDL Assessed^^64^^Monthly_Data_Supplemental^^BJ^17^~1|
  ;;0|2015_2073^G^5^CVD: Lifestyle Counseling^^65^^Monthly_Data_Supplemental^^BM^17^~1|
  ;;0|IPC_CVD^R^5^CVD Measure Bundle^B^60^^Monthly_Data_Supplemental^AX^AW^17^70%~1|D EN^BQIIPBNL(CRN,MSN,BQDATE,CODE)

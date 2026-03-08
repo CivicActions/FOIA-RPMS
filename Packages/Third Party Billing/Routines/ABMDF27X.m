@@ -1,21 +1,22 @@
 ABMDF27X ; IHS/ASDST/DMJ - New HCFA-1500 (08/05) Format ;   
- ;;2.6;IHS Third Party Billing;**1,3,4,8,9,10,11,13,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS Third Party Billing;**1,3,4,8,9,10,11,13,21,30**;NOV 12, 2009;Build 585
  ;
  ; Objective: Print designated form using data contained in the
  ;            ABMF array.
  ;
- ; IHS/SD/SDR - v2.5 p12 - IM25017 - Changes for 1st line of block 24J provider number
- ; IHS/SD/SDR - v2.5 p12 - IM25331 - Put taxonomy code if NPI ONLY
- ; IHS/SD/SDR - v2.5 p12 - IM24829 - Make 24a 2-digit rather than 4 and TO format
- ; IHS/SD/SDR - v2.5 p13 - IM25899 - Alignment changes
- ; IHS/SD/SDR - v2.5 p13 - IM25365 - Changed for FL override
- ; IHS/SD/SDR - abm*2.6*1 - HEAT3077 - Change FL override to remove NPI from 24I
- ; IHS/SD/SDR - abm*2.6*3 - HEAT11389 - made correction to OVER to check line number
- ; IHS/SD/SDR - abm*2.6*4  HEAT12115 - allow 5+ DX codes
- ; IHS/SD/SDR - 2.6*9 - fixed FL override to use LDFN not DUZ(2)
- ;IHS/SD/SDR - 2.6*13 - HEAT117086 - changed it so T1015 will be top line for any D insurer type
- ;IHS/SD/SDR - 2.6*21 - HEAT205579 - Made T1015 print on first line for ARBOR HEALTH PLAN
- ;IHS/SD/SDR - 2.6*21 - NOHEAT1 - Fix for <UNDEF>LOOP+29^ABMDF27X
+ ;IHS/SD/SDR 2.5*12 IM25017 - Changes for 1st line of block 24J provider number
+ ;IHS/SD/SDR 2.5*12 IM25331 - Put taxonomy code if NPI ONLY
+ ;IHS/SD/SDR 2.5*12 IM24829 - Make 24a 2-digit rather than 4 and TO format
+ ;IHS/SD/SDR 2.5*13 IM25899 - Alignment changes
+ ;IHS/SD/SDR 2.5*13 IM25365 - Changed for FL override
+ ;IHS/SD/SDR 2.6*1 HEAT3077 - Change FL override to remove NPI from 24I
+ ;IHS/SD/SDR 2.6*3 HEAT11389 - made correction to OVER to check line number
+ ;IHS/SD/SDR 2.6*4 HEAT12115 - allow 5+ DX codes
+ ;IHS/SD/SDR 2.6*9 fixed FL override to use LDFN not DUZ(2)
+ ;IHS/SD/SDR 2.6*13 HEAT117086 - changed it so T1015 will be top line for any D insurer type
+ ;IHS/SD/SDR 2.6*21 HEAT205579 - Made T1015 print on first line for ARBOR HEALTH PLAN
+ ;IHS/SD/SDR 2.6*21 NOHEAT1 - Fix for <UNDEF>LOOP+29^ABMDF27X
+ ;IHS/SD/SDR 2.6*30 CR9375 Fix for <UNDEF>LOOP+30^ABMDF27X
  ;
  ;
 MARG ;Set left and top margins
@@ -55,7 +56,8 @@ LOOP ;Loop thru line number array
  ;start new code abm*2.6*11 HEAT97421
  ;I $P(ABMF(17),U,4)["IOWA MEDICAID" D  ;abm*2.6*13 HEAT117086
  ;I ABMP("ITYPE")="D" D  ;abm*2.6*13 HEAT117086  ;abm*2.6*21 IHS/SD/SDR NOHEAT1
- I $G(ABMP("ITYPE"))="D"!($P($G(^AUTNINS(ABMP("INS"),0)),U)="ARBOR HEALTH PLAN") D  ;abm*2.6*13 HEAT117086  ;abm*2.6*21 IHS/SD/SDR NOHEAT1 and HEAT205579
+ ;I $G(ABMP("ITYPE"))="D"!($P($G(^AUTNINS(ABMP("INS"),0)),U)="ARBOR HEALTH PLAN") D  ;abm*2.6*13 HEAT117086  ;abm*2.6*21 IHS/SD/SDR NOHEAT1 and HEAT205579  ;abm*2.6*30 IHS/SD/SDR CR9375
+ I (($G(ABMP("ITYPE"))="D")!(($P($G(^AUTNINS(+$G(ABMP("INS")),0)),U)="ARBOR HEALTH PLAN"))) D  ;abm*2.6*30 IHS/SD/SDR CR9375
  .F ABMLOOP=37:2:47 D
  ..Q:'$D(ABMF(ABMLOOP))
  ..S ABMCHK=$TR($P(ABMF(ABMLOOP),U,5)," ","")

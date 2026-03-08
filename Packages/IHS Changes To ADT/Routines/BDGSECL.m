@@ -1,5 +1,5 @@
 BDGSECL ; IHS/ANMC/LJF - LIST SENSITIVE PATIENTS ; 
- ;;5.3;PIMS;;APR 26, 2002
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
  ;
 EN ; -- main entry point for BDG SECURITY LIST
  NEW VALMCNT
@@ -23,6 +23,7 @@ INIT ; -- init variables and list array
  S (DGN,DGNUM)=0
  F  S DGN=$O(^DGSL(38.1,DGN)) Q:'DGN  D
  . S NAME=$$GET1^DIQ(38.1,DGN,.01),STATUS=$$GET1^DIQ(38.1,DGN,2)
+ . S NAME=$$GETPREF^AUPNSOGI(DGN,"E",1)  ;20230621 97824 p1022 maw
  . Q:STATUS'="SENSITIVE"
  . ; assigned by (initials)
  . S X=$$GET1^DIQ(200,+$$GET1^DIQ(38.1,DGN,3,"I"),1)
@@ -39,7 +40,11 @@ INIT ; -- init variables and list array
  .. S DATA=^TMP("BDGSECL1",$J,NAME,DGN)
  .. ; create display line
  .. S DGNUM=DGNUM+1                        ;entry # on display screen
- .. S LINE=$J(DGNUM,3)_". "_$E(NAME,1,20)                ;#. pat name
+ .. ;20230620 97824 p1022 maw added for PPN
+ .. ;S LINE=$J(DGNUM,3)_". "_$E(NAME,1,20)                ;#. pat name
+ .. S LINE=$J(DGNUM,3)_". "_$G(NAME)                ;#. pat name
+ .. D SET(LINE,DGN,.VALMCNT,.DGNUM)   ;add display line to list global
+ .. S LINE=""
  .. S LINE=$$PAD(LINE,28)_$P(DATA,U,2)                   ;date
  .. S LINE=$$PAD(LINE,50)_$P(DATA,U)                     ;assigned by 
  .. D SET(LINE,DGN,.VALMCNT,.DGNUM)   ;add display line to list global

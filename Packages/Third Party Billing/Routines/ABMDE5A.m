@@ -1,15 +1,15 @@
 ABMDE5A ; IHS/ASDST/DMJ - PAGE 5A - DIAGNOSIS PART 2 ;
- ;;2.6;IHS 3P BILLING SYSTEM;**10,14,16**;NOV 12, 2009;Build 268
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,14,16,34**;NOV 12, 2009;Build 645
  ;
- ; IHS/SD/SDR - v2.5 p13 - POA changes
- ;   Added POA to display
+ ;IHS/SD/SDR 2.5*13 POA changes-Added POA to display
  ;
- ; IHS/SD/SDR - v2.6 CSV
- ;IHS/SD/SDR 2.6*14 - 002F - Added code to display ICD10 code and indicator
- ;IHS/SD/SDR 2.6*14 - Added SNOMED and dual coding field to View option; also added options to refresh (RBCL) the diagnoses and ICD Indicator to
+ ;IHS/SD/SDR - v2.6 CSV
+ ;IHS/SD/SDR 2.6*14 002F Added code to display ICD10 code and indicator
+ ;IHS/SD/SDR 2.6*14 Added SNOMED and dual coding field to View option; also added options to refresh (RBCL) the diagnoses and ICD Indicator to
  ;  override if the claim should be ICD9 or ICD10
- ;IHS/SD/SDR - 2.6*14 - HEAT161263 - Changed reference to AUTNPOV to use $$GET1^DIQ so output transform would execute for SNOMED references
- ;IHS/SD/SDR - 2.6*16 - HEAT217211 - Updated to include PLACE OF OCCURRENCE; fixed alignment of CAUSE OF INJURY (was wrapping)
+ ;IHS/SD/SDR 2.6*14 HEAT161263 Changed reference to AUTNPOV to use $$GET1^DIQ so output transform would execute for SNOMED references
+ ;IHS/SD/SDR 2.6*16 HEAT217211 Updated to include PLACE OF OCCURRENCE; fixed alignment of CAUSE OF INJURY (was wrapping)
+ ;IHS/SD/SDR 2.6*34 ADO60694 CR7384 Added DRG to view option
  ;
  S ABMZ("TITL")="DIAGNOSIS VIEW OPTION" D SUM^ABMDE1
  S ABMA("C")=0,ABMA("D")="",$P(ABMA("D"),"-",80)=""
@@ -30,6 +30,12 @@ ABMDE5A ; IHS/ASDST/DMJ - PAGE 5A - DIAGNOSIS PART 2 ;
  E  W ?16,"================================",?49,"=============================="  ;abm*2.6*10 ICD10 002G
  S ABMA=0 F ABMA("I")=1:1 S ABMA=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),11,ABMA)) Q:'ABMA  D V1
  I ABMA("I")=1 W *7,!," There are no PCC visits to view."
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60694
+ I ABMP("PAGE")[7 D
+ .W !!,"DRG CODED IN PCC: "
+ .I +$P($G(^AUPNVSIT(ABMVDFN,0)),U,34) W $P($G(^ICD($P($G(^AUPNVSIT(ABMVDFN,0)),U,34),0)),U)_" ("_$E($G(^ICD($P($G(^AUPNVSIT(ABMVDFN,0)),U,34),1,1,0)),1,52)_")"
+ .E  W "<NONE>"
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60694
  D ^ABMDERR
  G XIT
 V1 ; view

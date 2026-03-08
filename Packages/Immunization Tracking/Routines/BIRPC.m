@@ -1,11 +1,15 @@
-BIRPC ;IHS/CMI/MWR - REMOTE PROCEDURE CALLS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**9**;OCT 01,2014
+BIRPC ;IHS/CMI/MWR - REMOTE PROCEDURE CALLS; MAY 10, 2010 ; 27 Aug 2025  11:24 PM
+ ;;8.5;IMMUNIZATION;**18,31**;OCT 24,2011;Build 137
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  RETURNS IMMUNIZATION HISTORY, FORECAST, IMM/SERV PROFILE.
  ;;  PATCH 1: Add API: FORCALL, to allow queued update of all BI Patients.
  ;;  PATCH 3: Add NDC and Elig Codes, plus Date of Event to default Hx string. IMMHX+60
  ;;  PATCH 5: Add Admin Note to default Hx string. IMMHX+60
  ;;  PATCH 9: Add Date VIS Presented to Patient as piece 26.  IMMHX+65
+ ;;  PATCH 18: Changes to for ICE Forecaster.  IMMFORC+36
+ ;;  PATCH 31: ^BIDX sets BIRPROF(BIVGO) risk profile for vaccine
+ ;;            group, forecast display checks BIRPROF(BIVGO) to
+ ;;            determine adding *RB* flag
  ;
  ;
  ;----------
@@ -112,7 +116,7 @@ IMMHX(BIHX,BIDFN,BIDE,BISKIN,BIFMT) ;PEP - Return Immunization History.
  ;
  ;
  ;----------
-IMMFORC(BIFORC,BIDFN,BIFDT,BIUPD,BIDUZ2,BIPDSS) ;PEP - Return Immunization Forecast.
+IMMFORC(BIFORC,BIDFN,BIFDT,BIUPD,BIDUZ2,BIPDSS,BIHR) ;PEP - Return Immunization Forecast.
  ;---> Return Immserve Patient Forecast in one string.
  ;---> Lines delimited by "^".
  ;---> Called by RPC: BI IMMSERVE PT PROFILE
@@ -126,6 +130,8 @@ IMMFORC(BIFORC,BIDFN,BIFDT,BIUPD,BIDUZ2,BIPDSS) ;PEP - Return Immunization Forec
  ;                      Rules in Patient History data string.
  ;     6 - BIPDSS (ret) Returned string of V IMM IEN's that are
  ;                      Problem Doses, according to TCH.
+ ;     7 - BIHR   (opt) If BIHR=1 include '*RB*' flag if imm due is
+ ;                      High Risk/Risk Based
  ;
  ;---> Define delimiter to pass error and error variable.
  N BI31,BIERR S BI31=$C(31)_$C(31),BIERR=""
@@ -147,7 +153,21 @@ IMMFORC(BIFORC,BIDFN,BIFDT,BIUPD,BIDUZ2,BIPDSS) ;PEP - Return Immunization Forec
  I BIFDT<$$DOB^BIUTL1(BIDFN) D  Q
  .D ERRCD^BIUTL2(315,.BIERR) S BIFORC=BI31_BIERR
  ;
- ;---> Update patient's forecast with Immserve Utility (in ^BIPDUE).
+ ;
+ ;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ ;---> Using Reminders variable PXRMAGE to avoid redundant calls in <59 seconds.
+ ;
+ D:($D(PXRMAGE)&$D(^BIPDUE("B",BIDFN))&'$G(BIUPD))
+ .N %,BID,BIT,N,X
+ .S N=$O(^BIPDUE("B",BIDFN,0))
+ .Q:'N
+ .S BID=$P($G(^BIPDUE(N,0)),U,6)
+ .D NOW^%DTC S BIT=%
+ .;W !,BID,"  ",BIT,"  TIME DIFF: ",(BIT-BID)
+ .S:((BIT-BID)<.000059) BIUPD=1
+ ;**********
+ ;
+ ;---> Update patient's forecast (in ^BIPDUE).
  D:'$G(BIUPD) UPDATE^BIPATUP(BIDFN,BIFDT,.BIERR,1,$G(BIDUZ2),.BIPDSS)
  I BIERR]"" S BIFORC=BI31_BIERR Q
  ;
@@ -157,7 +177,7 @@ IMMFORC(BIFORC,BIDFN,BIFDT,BIUPD,BIDUZ2,BIPDSS) ;PEP - Return Immunization Forec
  .;---> NOTE! The above text is specifically checked for in ^BIPATVW1.
  ;
  ;---> Copy Immserve Patient Forecast (stored in ^BIPDUE) to string.
- N A,B,C,N,U,V,X,Z
+ N A,B,C,N,U,V,X,Z,IDA,VG
  S:'$D(BIFORC) BIFORC="" S U="^",V="|"
  S N=0
  F  S N=$O(^BIPDUE("B",BIDFN,N)) Q:'N  D
@@ -165,11 +185,18 @@ IMMFORC(BIFORC,BIDFN,BIFDT,BIUPD,BIDUZ2,BIPDSS) ;PEP - Return Immunization Forec
  .I $P(Z,U)'=BIDFN K ^BIPDUE(N),^BIPDUE("B",BIDFN,N) Q
  .;
  .;---> A=Date Due, B=Date Past Due.
+ .S IDA=+$P(Z,U,2)
+ .S VG=+$P($G(^AUTTIMM(IDA,0)),U,9)
+ .S VGO=+$P($G(^BISERT(VG,0)),U,2)
  .S A=$P(Z,U,4),B=$P(Z,U,5)
- .S X="  "_$$VNAME^BIUTL2($P(Z,U,2))  ;v8.0
+ .S X="  "_$$VNAME^BIUTL2(IDA)  ;v8.0
  .;
  .;---> Concatenate due by/past due appropriate text and date.
  .S X=X_V_$S(B:" past due",1:" due")
+ .I $G(BIHR),$D(^BITMP($J,BIDFN,"BIRPROF",VGO)) D
+ ..;I $G(INP)]"",INP["F" Q
+ ..S X=X_$S(B:"  ",1:"      ")_"*RB*"
+ ..K ^BITMP($J,BIDFN,"BIRPROF",VGO)
  .S BIFORC=BIFORC_X_U
  ;
  ;
@@ -258,5 +285,5 @@ FORCALL ;PEP - Update Forecast for all Immunization Patients.
  D ^XBKVAR
  N ZTIO S ZTIO=""
  N BIN S BIN=0
- F  S BIN=$O(^BIP(BIN)) Q:'BIN  D IMMFORC^BIRPC(,BIN)
+ F  S BIN=$O(^BIP(BIN)) Q:'BIN  D IMMFORC(,BIN,,,,,1)
  Q

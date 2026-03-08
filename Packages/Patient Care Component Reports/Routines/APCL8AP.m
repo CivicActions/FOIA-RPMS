@@ -1,5 +1,5 @@
-APCL8AP ; IHS/CMI/LAB - print apc report 1A ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCL8AP ; IHS/OHPRD/TMJ - print apc report 1A ;  [ 07/16/03  5:00 PM ]
+ ;;3.0;IHS PCC REPORTS;**13,20**;FEB 05, 1997
 START ;
  S APCL80="-----------------------------------------------------------------------------"
  S Y=$E(APCLFYE,1,3)_"0000" D DD^%DT S APCLFYD=Y S Y=DT D DD^%DT S APCLDT=Y

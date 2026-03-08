@@ -1,8 +1,10 @@
 ABMDESEL ; IHS/ASDST/DMJ - Selective Report Parameters ;
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**33,37**;NOV 12, 2009;Build 739
  ;
- ; IHS/SD/SDR - v2.5 p10 - IM13359
- ;   Ask for range of patients
+ ;IHS/SD/SDR 2.5*10 IM13359 Ask for range of patients
+ ;
+ ;IHS/SD/SDR 2.6*33 ADO60185 CR12178 Added preferred name
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
  ;
  K ABMY,DIR,DIC
 LOOP G XIT:$D(DUOUT)!$D(DTOUT)!$D(DIROUT)
@@ -10,7 +12,15 @@ LOOP G XIT:$D(DUOUT)!$D(DTOUT)!$D(DIROUT)
  W !?3,"==================================================================="
  I $D(ABMY("LOC")) W !?3,"- Visit Location....: ",$P(^AUTTLOC(ABMY("LOC"),0),"^",2)
  I $D(ABMY("INS")) W !?3,"- Billing Entity....: ",$P(^AUTNINS(ABMY("INS"),0),U)
- I $D(ABMY("PAT")) W !?3,"- Billing Entity....: ",$P(^DPT(ABMY("PAT"),0),U)
+ ;I $D(ABMY("PAT")) W !?3,"- Billing Entity....: ",$P(^DPT(ABMY("PAT"),0),U)  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ I $D(ABMY("PAT")) D
+ .W !?3,"- Billing Entity....: ",$P(^DPT(ABMY("PAT"),0),U)
+ .;I $$GETPREF^AUPNSOGI(ABMY("PAT"),"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .I $$GETPREF^AUPNSOGI(ABMY("PAT"),"I",1)'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ..;W "* - ",$$GETPREF^AUPNSOGI(ABMY("PAT"),"")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ..W "-",$$GETPREF^AUPNSOGI(ABMY("PAT"),"I",1)_"*"  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  I $D(ABMY("TYP")) W !?3,"- Billing Entity....: ",ABMY("TYP","NM")
  I $D(ABMY("DT")) W !?3,"- Visit Dates from..: "
  I  W $$HDT^ABMDUTL(ABMY("DT",1)),"  to: ",$$HDT^ABMDUTL(ABMY("DT",2))

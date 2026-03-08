@@ -1,40 +1,28 @@
-AMQQMGR ; IHS/CMI/THL - MANAGER'S UTILITIES ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
- ;-----
- S IOP=0
- D ^%ZIS
- S X=$P(^AMQQ(8,DUZ(2),0),U,6)
- F %=3,6,16 S AMQQ200(%)=$S(X:"^VA(200)",1:("^DIC("_%_")"))
+AMQQMGR ; IHS/OHPRD/JCM - MANAGER'S UTILITIES ;  [ 01/31/2008   5:08 PM ]
+ ;;2.0;PCC QUERY UTILITY;**4,18,20,21**;FEB 07, 2007
+ ;;PATCH 18 ALLOWS DELETION OF SEARCH TEMPLATE BY SOMEONE OTHER THAN
+ ;;THE TEMPLATE CREATOR
+ S IOP=0 D ^%ZIS
+ S X=$P(^AMQQ(8,DUZ(2),0),U,6) F %=3,6,16 S AMQQ200(%)=$S(X:"^VA(200)",1:("^DIC("_%_")")) ;11/24/94 GIS
 MENU ;
  I '$O(^AMQQ(8,0)) D INIT I '$O(^AMQQ(8,0)) Q
- S DIC="^AMQQ(8,"
- S DIC(0)=""
- S X="`"_DUZ(2)
- D ^DIC
- K DIC
- I Y=-1 W !!,*7,"DUZ(2) MUST BE SET TO THE FACILITY INDICATED IN THE QMAN SITE PARAMETERS FILE!" H 2 Q
-ASK W !! S DIR(0)="SO^1:CHECK security keys;2:DEVICE management;3:INDEX setup;4:INTEG check;5:LAB setup;6:LOG of queries;7:SECONDARY facilities;8:DELETE Search Template;9:HELP;0:EXIT"
- ;W !! S DIR(0)="SO^1:CHECK security keys;2:DEVICE management;3:INDEX setup;4:INTEG check;5:LAB setup;6:LOG of queries;7:SECONDARY facilities;8:DELETE Search Template;9:HELP;11:IMMunizaiton Update;0:EXIT"
- S DIR("??")="AMQQMGR"
- S DIR("A")=$C(10)_"     Your choice"
- S DIR("?")="Enter a code from the list or type '??' for more information"
- D ^DIR
- K DIR
- D CHK
- I $D(AMQQQUIT) G EXIT
+ S DIC="^AMQQ(8,",DIC(0)="",X="`"_DUZ(2) D ^DIC K DIC I Y=-1 W !!,*7,"DUZ(2) MUST BE SET TO THE FACILITY INDICATED IN THE QMAN SITE PARAMETERS FILE!" H 2 Q
+ASK ;W !! S DIR(0)="SO^1:CHECK security keys;2:DEVICE management;3:INDEX setup;4:INTEG check;5:LAB setup;6:LOG of queries;7:SECONDARY facilities;9:HELP;0:EXIT"
+ W !! S DIR(0)="SO^1:CHECK security keys;2:DEVICE management;3:INDEX setup;4:INTEG check;5:LAB setup;6:LOG of queries;7:SECONDARY facilities;8:DELETE Search Template;9:HELP;11:IMMunizaiton Update;0:EXIT"
+ S DIR("??")="AMQQMGR",DIR("A")=$C(10)_"     Your choice",DIR("?")="Enter a code from the list or type '??' for more information"
+ D ^DIR K DIR
+ D CHK I $D(AMQQQUIT) G EXIT
  I Y=0 G EXIT
  I Y=9 W !!,"Enter a code from the list or type '??' for more information." G ASK
- D @("M"_Y)
- I '$D(AMQQQUIT) G MENU
+ D @("M"_Y) I '$D(AMQQQUIT) G MENU
 EXIT K AMQQQUIT,X,Y,%,AMQQMGRL,AMQQMGRN,AMQQMGRS,AMQQMGRF,AMQQLSSX
  Q
  ;
 CHK I $D(DTOUT)+$D(DUOUT)+(Y=-1)+(Y="") K DIRUT,DUOUT,DTOUT S AMQQQUIT="" Q
  Q
 M1 ;
- D ^%ZIS
+ D ^%ZIS U IO
  I POP W:$D(IOF) @IOF Q
- U IO
  W:IOST["C-" @IOF
  W ?15,"*****  SECURITY KEY ASSIGNMENT CRITERIA  *****",!!
  W "Q-MAN DEMOGRAPHIC DATA ACCESS   Key = AMQQZMENU  Assign to all Q-Man users",!
@@ -42,19 +30,16 @@ M1 ;
  W "Q-MAN PROGRAMMER ACCESS  Key = AMQQZPROG  Assign to PCC developers only",!
  W "Q-MAN MANAGERS UTILITIES   Key = AMQQZMGR   Only the site manager should hold it"
  W "PROMPT FOR WHO REPORT IS FOR   Key = AMQQZRPT   Assign to users running reports",!,"for others"
- S AMQQMGRL=6
- S Z=""
+ S AMQQMGRL=6,Z=""
  F X="AMQQZMENU^Q-MAN ACCESS","AMQQZCLIN^CLINICAL DATA ACCESS","AMQQZPROG^Q-MAN PROGRAMMER ACCESS","AMQQZMGR^SITE MANAGER'S UTILITIES","AMQQZRPT^REPORT GENERATORS" D KEY I $G(Z)=U G M10
  I IOST["C-" R !,"<Press the ENTER key to go on>",X:DTIME K DUOUT,DTOUT,DIRUT Q
 M10 W @IOF
- K AMQQMGRL
- D ^%ZISC
+ K AMQQMGRL D ^%ZISC
  Q
  ;
-KEY S AMQQMGRL=AMQQMGRL+3
- W !!,?10,"*****  ",$P(X,U,2),"  *****",!
+KEY S AMQQMGRL=AMQQMGRL+3 W !!,?10,"*****  ",$P(X,U,2),"  *****",!
  S X=$P(X,U)
- F %=0:0 S %=$O(^XUSEC(X,%)) Q:'%  S AMQQMGRL=AMQQMGRL+1 W ! D WAIT Q:$G(Z)=U  W $S($D(@AMQQ200(3)@(%,0)):$P(^(0),U),1:(%_"  ??"))
+ F %=0:0 S %=$O(^XUSEC(X,%)) Q:'%  S AMQQMGRL=AMQQMGRL+1 W ! D WAIT Q:$G(Z)=U  W $S($D(@AMQQ200(3)@(%,0)):$P(^(0),U),1:(%_"  ??")) ;VA/SLC ISC/GIS 11/24/93
  Q
  ;
 WAIT I (AMQQMGRL<(IOSL-3)) Q
@@ -72,56 +57,25 @@ M7 W @IOF,!!,?20,"*****  SECONDARY FACILITIES  *****",!!
  W !,"number at this facility.  The user may request other chart numbers provided"
  W !,"that you enter the other local facilities now.  You may enter up to three",!,"facilities, but do not enter this one!",!
  I $P(^AMQQ(8,DUZ(2),0),U,2) W !,"OTHER FACILITIES' CHART NUMBERS NOW DISPLAYED =>",! D
- .F %=2:1:4 Q:'$P(^AMQQ(8,DUZ(2),0),U,%)  W !,$P(^DIC(4,$P(^(0),U,%),0),U)
-ASKFAC .W !!,"You may recreate this list if you want.  Do you want to remove this list"
- .W !,"and enter other local facilities"
- .S %=2
- .D YN^DICN
- .G:%=0 ASKFAC
- .I %=-1!(%=2) S AMQQSTP=""
+ . F %=2:1:4 Q:'$P(^AMQQ(8,DUZ(2),0),U,%)  W !,$P(^DIC(4,$P(^(0),U,%),0),U)
+ASKFAC . W !!,"You may recreate this list if you want.  Do you want to remove this list",!,"and enter other local facilities" S %=2 D YN^DICN G:%=0 ASKFAC I %=-1!(%=2) S AMQQSTP=""
  I $D(AMQQSTP) K AMQQSTP Q
  W !
- I $P(^AMQQ(8,DUZ(2),0),U,2) D
- .S DA=DUZ(2)
- .S DIE="^AMQQ(8,"
- .S DR=".02///@;.03///@;.04///@"
- .D ^DIE
- .K DIE,DR,DA
- .S DIE="^AMQQ(1,256,4,"
- .S DA=1
- .S DA(1)=256
- .S DR="4///@;5///@"
- .D ^DIE
- .K DIE,DR,DA
- S AMQQMGRF="@^@^@"
- F  D FAC Q:"^@"[X  I $G(AMQQMGRN)=3 Q
+ I $P(^AMQQ(8,DUZ(2),0),U,2) S DA=DUZ(2),DIE="^AMQQ(8,",DR=".02///@;.03///@;.04///@" D ^DIE K DIE,DR,DA D
+ . S DIE="^AMQQ(1,256,4,",DA=1,DA(1)=256,DR="4///@;5///@" D ^DIE K DIE,DR,DA
+ S AMQQMGRF="@^@^@" F  D FAC Q:"^@"[X  I $G(AMQQMGRN)=3 Q
  I X="@" S AMQQMGRN=0 G SETM7
  I '+AMQQMGRF Q
-SETM7 S %=AMQQMGRF
- S DA=DUZ(2)
- S DIE="^AMQQ(8,"
- S DR=".02////"_$P(%,U)_";.03////"_$P(%,U,2)_";.04////"_$P(%,U,3)
- D ^DIE
- K DIE,DR,DA
- S %=AMQQMGRN*10
- S DIE="^AMQQ(1,256,4,"
- S DA=1
- S DA(1)=256
- S DR="4///"_%_";5///"_%
- D ^DIE
- K DIE,DR,DA
- W !!,"Okay, the entered local facility or facilities' chart numbers will now appear"
- W !,"on all outputs"
- H 2
+SETM7 S %=AMQQMGRF,DA=DUZ(2),DIE="^AMQQ(8,",DR=".02////"_$P(%,U)_";.03////"_$P(%,U,2)_";.04////"_$P(%,U,3) D ^DIE K DIE,DR,DA
+ S %=AMQQMGRN*10,DIE="^AMQQ(1,256,4,",DA=1,DA(1)=256,DR="4///"_%_";5///"_% D ^DIE K DIE,DR,DA
+ W !!,"Okay, the entered local facility or facilities' chart numbers will now appear",!,"on all outputs" H 2
  K AMQQMGRF,AMQQMGRN,DIC
  Q
  ;
-FAC S DIR(0)="PO^9999999.06:EMQ"
- D ^DIR
+FAC S DIR(0)="PO^9999999.06:EMQ" D ^DIR
  I +Y=DUZ(2) W !,*7,"Enter a facility other than your local facility.",! G FAC
  I X=""!(X=U)!(X="@") Q
- D CHK
- I $D(AMQQQUIT) K AMQQQUIT Q
+ D CHK I $D(AMQQQUIT) K AMQQQUIT Q
  S AMQQMGRN=$G(AMQQMGRN)+1
  S $P(AMQQMGRF,U,AMQQMGRN)=+Y
  Q
@@ -135,16 +89,12 @@ M6 D ^AMQQMGR2
 M4 D ^AMQQNTEG
  Q
  ;
-M5 D ^AMQQMGR6
+M5 D ^AMQQMGR6 ; GIS/ILC 2/2/00
  Q
  ; 
-VER W @IOF,!,?15,"*****  LAB RESULTS FOR Q-MAN  *****",!!
-M51 W !
- S DIR(0)="SO^1:TOP 40 tests;2:INDIVIDUAL tests;3:VIEW Q-Man lab tests;9:HELP;0:EXIT"
- S DIR("A")=$C(10)_"Your choice"
- S DIR("??")="AMQQLABSTART"
- D ^DIR
- K DIR
+VER ;I $G(^DD(60,0,"VR"))'>5 W !!,"Sorry, this option requires LAB TEST FILE Ver. 5.01 or higher!!",!!,*7 H 3 Q
+ W @IOF,!,?15,"*****  LAB RESULTS FOR Q-MAN  *****",!!
+M51 W ! S DIR(0)="SO^1:TOP 40 tests;2:INDIVIDUAL tests;3:VIEW Q-Man lab tests;9:HELP;0:EXIT",DIR("A")=$C(10)_"Your choice",DIR("??")="AMQQLABSTART" D ^DIR K DIR
  I Y=9 W !!,"Select a code from the list or type '??' for more info",!! G M51
  I 'Y Q
  I Y=1 D TOP^AMQQMGR4 G M5
@@ -155,27 +105,13 @@ M51 W !
 INIT ;
  I '$D(DUZ(2)) W !!,"KERNEL VARIABLES NOT SET!!,",!! Q
  W !!,"Is the site where Q-Man is being installed ",$P(^DIC(4,DUZ(2),0),U)
- S %=0
- D YN^DICN
- I $E(%Y)?1A,"yYnN"[$E(%Y) D ISET
+ S %=0 D YN^DICN I $E(%Y)?1A,"yYnN"[$E(%Y) D ISET
  K DUOUT,DTOUT,%,%Y
  Q
  ;
 ISET I "nN"[$E(%Y) W !!,"Well then, you must log in again, and this time enter the correct site!",!!,*7 Q
- S X="`"_DUZ(2)
- S DIC="^AMQQ(8,"
- S DIC(0)="L"
- S DLAYGO=9009078
- D ^DIC
- I Y'=-1 D
- .S X="0:1;2:4;5:10;11:19;20:39;40:59;60:79;80:199"
- .X $P(^DD(9009078,30,0),U,5,99)
- .D:$D(X)
- ..S ^AMQQ(8,+Y,3)=X
- ..S DIK="^AMQQ(8,"
- ..S DIK(1)=30
- ..S DA=DUZ(2)
- ..D EN^DIK
+ S X="`"_DUZ(2),DIC="^AMQQ(8,",DIC(0)="L",DLAYGO=9009078 D ^DIC
+ I Y'=-1 S X="0:1;2:4;5:10;11:19;20:39;40:59;60:79;80:199" X $P(^DD(9009078,30,0),U,5,99) I $D(X) S ^AMQQ(8,+Y,3)=X S DIK="^AMQQ(8,",DIK(1)=30,DA=DUZ(2) D EN^DIK
  Q
  ;
 TERMS ;EP;PROGRAMMER ENTRY POINT TO CREATE NEW METADICTIONARY ENTRIES

@@ -1,10 +1,10 @@
-BDPLINKO ; IHS/CMI/TMJ - LINK ROUTINE ON PARM PASS TO THE DESG PROV PKG ;
- ;;2.0;IHS PCC SUITE;**21**;MAY 14, 2009;Build 34
+BDPLINKO ; IHS/CMI/TMJ - LINK ROUTINE ON PARM PASS TO THE DESG PROV PKG ; 16 Jun 2022  4:08 PM
+ ;;2.0;IHS PCC SUITE;**21,27**;MAY 14, 2009;Build 64
  ;
  ;
  ;
 START ;Get Record Information
-UPDATE(BDPFILE,BDPFIELD,BDPDA,BDPPROV,BDPPAT) ;PEP - published entry point
+UPDATE(BDPFILE,BDPFIELD,BDPDA,BDPPROV,BDPPAT,BDPLINKI) ;PEP - published entry point
  ;THIS NEEDS UPDATED FOR PATCH 21
  ;this entry point is called from xrefs on various
  ;files/fields to update the current designated
@@ -50,7 +50,7 @@ ADD ;
  S BDPRIEN=+Y
  D ^XBFMK K DIADD,DLAYGO
  Q
-KILL(BDPFILE,BDPFIELD,BDPDA,BDPPROV,BDPPAT) ;PEP - called from kill side of xrefs
+KILL(BDPFILE,BDPFIELD,BDPDA,BDPPROV,BDPPAT,BDPLINKI) ;PEP - called from kill side of xrefs
  I $G(BDPLINKI) Q  ;don't process if bdp
  I $G(BDPFILE)="" Q
  I $G(BDPFIELD)="" Q

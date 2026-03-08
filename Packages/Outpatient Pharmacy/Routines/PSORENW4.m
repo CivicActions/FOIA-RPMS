@@ -1,5 +1,5 @@
-PSORENW4 ;BIR/SAB - rx speed renew ;05-Jun-2014 08:45;DU
- ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,37,64,46,75,71,100,130,117,152,1004,1005,1009,148,264,225,301,1014,1016,1017**;DEC 1997;Build 40
+PSORENW4 ;BIR/SAB - rx speed renew ;19-Mar-2018 16:37;DU
+ ;;7.0;OUTPATIENT PHARMACY;**11,23,27,32,37,64,46,75,71,100,130,117,152,1004,1005,1009,148,264,225,301,1014,1016,1017,1023**;DEC 1997;Build 121
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External reference to ^PS(50.7 supported by DBIA 2223
  ;External references L, UL, PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
@@ -9,6 +9,7 @@ PSORENW4 ;BIR/SAB - rx speed renew ;05-Jun-2014 08:45;DU
  ;                          12/05/11 - Line PROCESS+1,PROCESS+3
  ;                          06/24/13 - Line PROCESS+1
  ;                          06/04/14 - Line PROCESS+33
+ ;            IHS/MSC/MGH   03/19/18 - Line PROCESS+11
 SEL K PSODRUG ;PSO*7*301
  I $P(PSOPAR,"^",4)=0 S VALMSG="Renewing is NOT Allowed. Check Site Parameters!",VALMBCK="" Q
  N VALMCNT I '$G(PSOCNT) S VALMSG="This patient has no Prescriptions!",VALMBCK="" Q
@@ -30,11 +31,15 @@ PROCESS ; Process one order at a time
  .W $C(7),!!,"Rx "_$$GET1^DIQ(52,$P(PSOLST(ORN),"^",2),.01)_" is an external prescription and can't be refilled!"
  I $$LMREJ^PSOREJU1($P(PSOLST(ORN),"^",2)) W $C(7),!!,"Rx "_$$GET1^DIQ(52,$P(PSOLST(ORN),"^",2),.01)_" has OPEN/UNRESOLVED 3rd Party Payer Rejects!" K DIR,PSOMSG D PAUSE^VALM1 Q
  D PSOL^PSSLOCK($P(PSOLST(ORN),"^",2)) I '$G(PSOMSG) W $C(7),!!,$S($P($G(PSOMSG),"^",2)'="":$P($G(PSOMSG),"^",2),1:"Another person is editing Rx "_$P(^PSRX($P(PSOLST(ORN),"^",2),0),"^")),! K DIR,PSOMSG D PAUSE^VALM1 Q
- N APSPDRG
+ N APSPDRG,DEACLS
  K RET,DRET,PRC,PHI S PSORENW("OIRXN")=$P(PSOLST(ORN),"^",2),PSOFROM="NEW"
  ;IHS/MSC/MGH Text for REM medication. Patch 1013
  S APSPDRG=$P($G(^PSRX(PSORENW("OIRXN"),0)),"^",6)
  I +APSPDRG D REMMSG^APSPFUNC(APSPDRG)
+ ;IHS/MSC/MGH add check for renewals of contolled substances
+ I +APSPDRG S DEACLS=+$P($G(^PSDRUG(APSPDRG,0)),U,3)
+ I (DEACLS>0&(DEACLS<6))&('$D(^XUSEC("PSORPH",DUZ))) D  D PAUSE^VALM1  Q
+ .W $C(7),!!,"Must have PSORPH key to do renewals on controlled substances!"
  S PSORENW("RX0")=^PSRX(PSORENW("OIRXN"),0),PSORENW("RX2")=^(2),PSORENW("RX3")=^(3),PSORENW("STA")=^("STA"),PSORENW("TN")=$G(^("TN")),SIGOK=$P($G(^PSRX(PSORENW("OIRXN"),"SIG")),"^",2)
  I SIGOK F I=0:0 S I=$O(^PSRX(PSORENW("OIRXN"),"SIG1",I)) Q:'I  S SIG(I)=^PSRX(PSORENW("OIRXN"),"SIG1",I,0)
  S PSOIBOLD=$G(PSORENW("OIRXN")) D SETIB^PSORENW1

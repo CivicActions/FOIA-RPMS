@@ -1,5 +1,5 @@
-APCLDV5P ; IHS/CMI/LAB - list refusals ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLDV5P ;IHS/CMI/LAB - list refusals [ 01/10/2005   3:42 PM ]
+ ;;3.0;IHS PCC REPORTS;**16**;FEB 05, 1997
  ;
  ;
 PRINT ;EP - called from xbdbque

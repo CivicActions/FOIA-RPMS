@@ -1,31 +1,31 @@
-APSSSPRO ;IHS/CIA/PLS - ScriptPro Interface;08-Mar-2012 16:37;PLS
- ;;1.0;IHS SCRIPTPRO INTERFACE;**1**;January 11, 2006;Build 13
+APSSSPRO ;IHS/CIA/PLS - ScriptPro Interface;11-Apr-2023 12:30;DU
+ ;;1.0;IHS SCRIPTPRO INTERFACE;**1,3**;January 11, 2006;Build 14
  ;Call via entry point placed in Field 900 of File 9009033
  ;Direct entry not supported
  ; Modified - IHS/MSC/PLS - 02/08/07 - Line ASK+2 - Added check for ZTSK
  ;                          12/06/07 - Line ASK+7 - Changed duplicate check for DTOUT to check for DUOUT
  Q
-EP1(RXIEN,REPRINT,SGY,RXF,RXPI) ;PEP	- Main entry point
+EP1(RXIEN,REPRINT,SGY,RXF,RXPI) ;PEP - Main entry point
  N APSS,RX0,RX2,RX3,REFIEN,RXSTAT,QTY
- N DEVLP
  Q:'$G(RXIEN)  ; Prescription IEN required
  Q:'$D(^APSSPARM($G(DUZ(2))))
  Q:'$$SETUP(DUZ(2),.APSS)
 TASK ;
  I $G(APSS("ASK")),'$$ASK("Send to SCRIPT-PRO") U IO Q
  Q:'$G(APSS("DEV"))  ; No device
- ;S DEVLP=0
- ;F  S DEVLP=$O(APSS("DEV",DEVLP)) Q:'DEVLP  D
- ;.
- N ZTRTN,ZTIO,ZTDESC,ZTREQ,ZTSAVE,VAR,ZTSK
- ;.
- ;S DEV=$P(APSS("DEV",DEVLP),U,2)
- ;.Q:'DEV  ;No device specified
+ D
+ .N LP
+ .F LP=1:1:$L(APSS("DEV"),U) D
+ ..D TASK1($P(APSS("DEV"),U,LP))
+ Q
+TASK1(DEV) ;Create task
+ N ZTRTN,ZTIO,ZTDESC,ZTREQ,ZTSAVE,VAR,ZTSK,SPDEV
+ ;G EPTASK^APSSSPRO
  S ZTRTN="EPTASK^APSSSPRO"
  S ZTDESC="ScriptPro Interface for RXIEN: "_RXIEN
  S ZTDTH=$H
- S ZTIO="`"_APSS("DEV")
- F VAR="RXIEN","REPRINT","SGY(","RXF","RXPI","PSOSITE" S:$D(VAR) ZTSAVE(VAR)=""
+ S ZTIO="`"_DEV,SPDEV=DEV_"-"_$P($G(^%ZIS(1,DEV,0)),U,1)
+ F VAR="RXIEN","REPRINT","SGY(","RXF","RXPI","PSOSITE","SPDEV" S:$D(VAR) ZTSAVE(VAR)=""
  D ^%ZTLOAD
  Q
  ;
@@ -99,15 +99,6 @@ SETUP(FAC,APSS) ;EP - Build configuration array
  S APSS("ASK")=''$$GETP(PARAM,6)
  S APSS("LOG")=''$$GETP(PARAM,7)
  Q 1
- ;S CNT=1
- ;S APSS("DEV",CNT)=U_$$GETP(PARAM,3)
- ;S DEVLP=0
- ;F  S DEVLP=$O(^APSSPARM(FAC,2,DEVLP)) Q:'DEVLP  D
- ;.S DAT=^APSSPARM(FAC,2,DEVLP,0)
- .Q:'$P(DAT,U,3)  ;Is device active?
- ;.S CNT=CNT+1
- ;.S APSS("DEV",CNT)=DAT
- ;Q 1
  ;
 INIT ;EP - Build data for prescription
  S RX0=$G(^PSRX(RXIEN,0))
@@ -126,8 +117,8 @@ LOG(REC,SGY) ;
  S APSSNOW=$$NOW^XLFDT
  L +^XTMP("APSSSPRO"):2
  S ^XTMP("APSSSPRO",0)=$$FMADD^XLFDT(DT,7)_U_$$DT^XLFDT
- S ^XTMP("APSSSPRO",RXIEN,APSSNOW)=REC
- S LP=0 F  S LP=$O(SGY(LP)) Q:'LP  S ^XTMP("APSSSPRO",RXIEN,APSSNOW,LP)=SGY(LP)
+ S ^XTMP("APSSSPRO",SPDEV,RXIEN,APSSNOW)=REC
+ S LP=0 F  S LP=$O(SGY(LP)) Q:'LP  S ^XTMP("APSSSPRO",SPDEV,RXIEN,APSSNOW,LP)=SGY(LP)
  L -^XTMP("APSSSPRO")
  Q
  ; Check drug availability in ScriptPro
@@ -178,10 +169,21 @@ HASDRUG(DRUG) ; EP
 SETRM(X) ;
  X ^%ZOSF("RM")
  Q
- ; Return device for pharmacy division or default
+ ; Return device(s) for pharmacy division or default(s)
 GETDEV(PDIV,DEF) ;EP-
  N PDIEN
  S PDIEN=$O(^APSSPARM(FAC,2,"B",+$G(PDIV),0))
- Q:'PDIEN DEF
+ Q:'PDIEN $$GETDLST("D",DEF)
  S DAT=$G(^APSSPARM(FAC,2,PDIEN,0))
- Q $S($P(DAT,U,3)&$P(DAT,U,2):$P(DAT,U,2),1:DEF)
+ Q $S($P(DAT,U,3)&$P(DAT,U,2):$$GETDLST("P",$P(DAT,U,2)),1:$$GETDLST("D",DEF))
+ ;
+GETDLST(TYPE,DEF) ;Return string of devices delimited by ^
+ N RES,LP
+ S RES=""
+ I TYPE="D" D
+ .S RES=DEF
+ .S LP=0 F  S LP=$O(^APSSPARM(FAC,3,LP)) Q:'LP  S RES=RES_U_+^(LP,0)
+ E  D
+ .S RES=DEF
+ .S LP=0 F  S LP=$O(^APSSPARM(FAC,2,PDIEN,1,LP)) Q:'LP  S RES=RES_U_+^(LP,0)
+ Q RES

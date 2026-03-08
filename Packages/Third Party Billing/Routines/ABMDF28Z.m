@@ -1,5 +1,5 @@
 ABMDF28Z ; IHS/SD/SDR - PRINT UB-04 ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**3,8,9,10,11,14,16,21,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,8,9,10,11,14,16,21,27,40**;NOV 12, 2009;Build 785
  ;IHS/SD/SDR-2.6*3-POA changes-removed insurer type "R" check
  ;IHS/SD/SDR-2.6*14-ICD10 002F-Updated ICD indicator on form to 9 or 0
  ;IHS/SD/SDR-2.6*16-HEAT236243-Moved dt for box 74 so there is space between PX code and date.
@@ -13,6 +13,7 @@ ABMDF28Z ; IHS/SD/SDR - PRINT UB-04 ;
  ; self-insured has already been billed.
  ;IHS/SD/SDR-2.6*21 VMBP Updated p11 changes to include Serena ref#s. Moved VA Station Number to correct field on form.
  ;IHS/SD/SDR 2.6*27 CR9867 Added code to check new parameter BILLING PRV TAXONOMY instead of hardcoding for specific insurers
+ ;IHS/SD/SDR 2.6*40 ADO111599 Print VA Contract# in box 80 when VA MEDICAL BENEFIT is insurer
  ;
 45 ; ABMPAID = Primary + Secondary + Tertiary + Prepaid
  ; ABMPBAL = Gross amount - ABM("PAID")
@@ -141,11 +142,12 @@ ABMDF28Z ; IHS/SD/SDR - PRINT UB-04 ;
  S ABMDE=$G(^ABMDBILL(DUZ(2),ABMP("BDFN"),61,1,0))_"^^19"  ; remarks line 1
  ;I (ABMP("ITYPE")="V")&($P($G(^ABMDPARM(ABMP("LDFN"),1,3)),U,13)'="") S ABMDE=$P($G(^ABMDPARM(ABMP("LDFN"),1,3)),U,13)_"^^19"  ;abm*2.6*11 VMBP RQMT_94  ;abm*2.6*21 IHS/SD/SDR VMBP
  I ((ABMP("ITYPE")="V")!($$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")["VMBP"))&($P($G(^ABMDPARM(ABMP("LDFN"),1,3)),U,13)'="") S ABMDE=$P($G(^ABMDPARM(ABMP("LDFN"),1,3)),U,13)_"^^19"  ;abm*2.6*11 VMBP RQMT_94  ;abm*2.6*21 IHS/SD/SDR VMBP
+ I ($$GET1^DIQ(9999999.18,ABMP("INS"),".01","E")["VA MEDICAL BENEFIT (VMBP)") S ABMDE=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),9)),U,27)_"^^19"  ;abm*2.6*40 IHS/SD/SDR ADO111599
  D WRT^ABMDF28W  ;FL #80
  ;
  ;If NM Medicaid add Taxonomy and qualifier
  ;I ($P($G(^AUTNINS(ABMP("INS"),0)),U)="NEW MEXICO MEDICAID")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="MEDICAID EXEMPT") D  ;abm*2.6*8 NOHEAT - ADD TAX FOR IA MCD ONLY
- ;I ($P($G(^AUTNINS(ABMP("INS"),0)),U)="NEW MEXICO MEDICAID")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="MEDICAID EXEMPT")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="IOWA MEDICAID") D  ;abm*2.6*8 NOHEAT - ADD TAX FOR IA MCD ONLY  ;abm*2.6*21 IHS/SD/SDR HEAT189659
+ ;I ($P($G(^AUTNINS(ABMP("INS"),0)),U)="NEW MEXICO MEDICAID")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="MEDICAID EXEMPT")!($P($G(^AUTNINS(ABMP("INS"),0)),U)="IOWA MEDICAID") D  ;ADD TAX IA MCD ONLY  ;abm*2.6*21 IHS/SD/SDR HEAT189659
  ;start old abm*2.6*27 IHS/SD/AML CR9867
  ;I "^NEW MEXICO MEDICAID^MEDICAID EXEMPT^IOWA MEDICAID^SOUTH DAKOTA MEDICAID^MONTANA DPHHS^"[("^"_$P($G(^AUTNINS(ABMP("INS"),0)),U)_"^") D  ;abm*2.6*8 NOHEAT - ADD TAX FOR IA MCD ONLY  ;abm*2.6*21 IHS/SD/SDR HEAT189659, HEAT162190
  ;.S ABMNLOC=$S($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,8)'="":$P(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1),U,8),$P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,12)'="":$P(^(2),U,12),1:ABMP("LDFN"))  ;abm*2.6*10 HEAT82967
@@ -154,6 +156,7 @@ ABMDF28Z ; IHS/SD/SDR - PRINT UB-04 ;
  ;.S ABMDE=ABMDE_"^26^15"
  ;.D WRT^ABMDF28W
  ;end old start new abm*2.6*27 IHS/SD/AML,SDR CR9867
+ S ABMDE=""  ;abm*2.6*40 IHS/SD/SDR ADO111599
  S ABM81FLG=""
  S ABM81FLG=$P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,23)
  S ABMNLOC=$S($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,8)'="":$P(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1),U,8),$P($G(^ABMDPARM(ABMP("LDFN"),1,2)),U,12)'="":$P(^(2),U,12),1:ABMP("LDFN"))

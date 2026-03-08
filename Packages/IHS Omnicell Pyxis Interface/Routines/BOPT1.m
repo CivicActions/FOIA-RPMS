@@ -1,5 +1,6 @@
-BOPT1 ;IHS/ILC/ALG/CIA/PLS - ILC Send and Receive;07-Mar-2006 12:04;SM
- ;;1.0;AUTOMATED DISPENSING INTERFACE;**1**;Jul 26, 2005
+BOPT1 ;IHS/ILC/ALG/CIA/PLS - ILC Send and Receive;20-Sep-2023 12:04
+ ;;1.0;AUTOMATED DISPENSING INTERFACE;**1,4**;Jul 26, 2005;Build 25
+ ; 09/20/2023 MIR p4 modified O01
  Q
  ;This rtn loops through the BOP QUEUE file #90355.1
  ;looking for HL7 messages to build, send or receive.
@@ -116,9 +117,10 @@ A35 ;Build a Merge Account only A35;not implemented
  Q
 O01 ;Order a Drug O01
  ;RXC seg. is not implemented as no IV solutions done at this time
+ ;RXC is implemented for Patch 4 together with IV solutions/additives
  S TYPE="RDE",CONT=0
- D MSH^BOPT2,PID^BOPT2,PV1^BOPT2,ORC^BOPT3,RXE^BOPT3
- I +$P($G(^BOP(90355.1,COUNTER,8)),U,6)=1 D RXC^BOPT3
+ D MSH^BOPT2,PID^BOPT2,PV1^BOPT2,ORC^BOPT3,RXE^BOPT3,RXC^BOPT3
+ ;I +$P($G(^BOP(90355.1,COUNTER,8)),U,6)=1 D RXC^BOPT3 ; Change for Patch 4 Sep 2023 by MIR
  D RXR^BOPT3
  Q
 A13 ;FOR an A13;

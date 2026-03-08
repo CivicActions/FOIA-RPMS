@@ -1,5 +1,5 @@
-APSPHLD ;IHS/MSC/PLS- Support for speed unhold ;24-May-2013 09:10;PLS
- ;;7.0;OUTPATIENT PHARMACY;**1013,1015**;DEC 1997;Build 62
+APSPHLD ;IHS/MSC/PLS- Support for speed unhold ;26-Mar-2022 21:50;DU
+ ;;7.0;OUTPATIENT PHARMACY;**1013,1015,1030**;DEC 1997;Build 7
 SPEED ;speed UNHOLD
  K LST,PSORX("FILL DATE")
  N APSPVAL,PSONOOR
@@ -28,6 +28,7 @@ ULK D PSOUL^PSSLOCK($P(PSOLST(ORN),"^",2))
 ULP D ULP^PSOHLD
  Q
 UHLD(DA) ;EP-
+ N NDC  ;IHS/MSC/PLS - 3/26/2022
  S Y(0)=^PSRX(DA,0),STA=+$G(^("STA"))
  I STA=16 S VALMSG="Placed on HOLD by Provider!" K Y,STA D PSOUL^PSSLOCK(DA) D ULP S VALMBCK="" Q
  I STA'=3!('$D(^XUSEC("PSORPH",DUZ))) S VALMSG="Invalid Action Selection!",VALMBCK="" K Y,STA D PSOUL^PSSLOCK(DA) D ULP Q
@@ -36,10 +37,12 @@ UHLD(DA) ;EP-
  .S VALMSG="Medication Expired on "_$E($P(^PSRX(DA,2),"^",6),4,5)_"-"_$E($P(^(2),"^",6),6,7)_"-"_$E($P(^(2),"^",6),2,3) I $P(^PSRX(DA,"STA"),"^")<11 S $P(^PSRX(DA,"STA"),"^")=11
  .S ^PSRX(DA,"H")="",COMM="Medication Expired on "_$E($P(^(2),"^",6),4,5)_"-"_$E($P(^(2),"^",6),6,7)_"-"_$E($P(^(2),"^",6),2,3) D EN^PSOHLSN1(DA,"SC","ZE",COMM,"") K COMM
 EN S RXF=0 F I=0:0 S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I,RSDT=$P(^(0),"^")
+ ;IHS/MSC/PLS - 3/26/2022
+ S NDC=$P(^PSDRUG(+$P($G(Y(0)),U,6),2),U,4)
  I RXF D  I $D(Y) Q
  .S (PSDA,DA(1))=DA,DA=RXF,DIE="^PSRX("_DA(1)_",1,"
  .S RLDT=$P(^PSRX(DA(1),1,DA,0),"^",18)
- .S DR=$S('RLDT:".01R;2;",1:"")_"3COMMENTS"_";8///"_PSOSITE
+ .S DR=$S('RLDT:".01R;2;",1:"")_"3COMMENTS"_";8///"_PSOSITE_";11////"_NDC
  .S PSOUNHLD=1 D ^DIE K PSOUNHLD
  .S ZD(PSDA)=$P(^PSRX(DA(1),1,DA,0),U)
  .Q:$D(Y)  S PSORX("FILL DATE")=$P(^PSRX(DA(1),1,DA,0),"^"),DA=PSDA K DA(1)
@@ -53,6 +56,7 @@ EN S RXF=0 F I=0:0 S I=$O(^PSRX(DA,1,I)) Q:'I  S RXF=I,RSDT=$P(^(0),"^")
  S DR=DR_"100///0;101///^S X=$S(RXF:$G(ZD(DA)),1:$P(^PSRX(DA,2),""^"",2))"
  ;
  S:'RXF DR=DR_";20///"_PSOSITE
+ S:'RXF DR=DR_";27////"_NDC   ;IHS/MSC/PLS - 3/26/2022
  D ^DIE  K FDT   ;I $D(Y) S VALMBCK="R" Q
  S COMM="Medication Removed from Hold by Pharmacy" D EN^PSOHLSN1(DA,"OE","",COMM,PSONOOR) K COMM   ;,PSONOOR
  S PSORX("FILL DATE")=$S('RXF:$P(^PSRX(DA,2),U,2),1:ZD(DA))

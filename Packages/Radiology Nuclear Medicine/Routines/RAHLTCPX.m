@@ -1,5 +1,5 @@
-RAHLTCPX ;HIRMFO/RTK,RVD,GJC - Rad/Nuc Med HL7 TCP/IP Bridge;02/11/08
- ;;5.0;Radiology/Nuclear Medicine;**47**;Mar 16, 1998;Build 21
+RAHLTCPX ;HIRMFO/RTK,RVD,GJC - Rad/Nuc Med HL7 TCP/IP Bridge;02/11/08 ;23 Jun 2025 3:05 PM
+ ;;5.0;Radiology/Nuclear Medicine;**47,114,129,141,144,157,1009,1013**;Mar 16, 1998;Build 13
  ;
  ; this is a modified copy of RAHLTCPB for HL7 v2.4
  ;
@@ -104,24 +104,36 @@ OBR ; Pick data off the 'OBR' segment.
  N RAX,RAX1,RAX2,RAI,RARR,RAVERF,RARSDNT,RATRANSC,ARR
  ;OBR-3/PAR(4) for v2.4: site specific accession # (SSS-DDDDDD-CCCCC)
  ;Note: if SSAN parameter switch is off format is old # (DDDDDD-CCCCC)
- D:$L(PAR(4))
- .S RALONGCN=$P(PAR(4),HLCS),^TMP(RARRR,$J,RASUB,"RALONGCN")=RALONGCN
+ D:$L($G(PAR(4)))
+ .S (RADTI,RACNI)=""  ; ;IHS/OIT/NST - Patch 1013 - Initialize variables
+ .S RALONGCN=$P(PAR(4),HLCS)
  .I RALONGCN="" Q
  .I $L(RALONGCN,"-")=2 D  ;if old format get data from "ADC" x-ref
  ..S RADTI=$O(^RADPT("ADC",RALONGCN,RADFN,"")) Q:RADTI=""
  ..S RACNI=$O(^RADPT("ADC",RALONGCN,RADFN,RADTI,"")) Q:RACNI=""
- .I $L(RALONGCN,"-")=3 D  ;if new format get data from "ADC1" x-ref
+ .;
+ .;if new format & the "ADC1" x-ref exists (reg'd/b'cast under v2.4)
+ .I $L(RALONGCN,"-")=3,($D(^RADPT("ADC1",RALONGCN))\10=1) D
  ..S RADTI=$O(^RADPT("ADC1",RALONGCN,RADFN,"")) Q:RADTI=""
  ..S RACNI=$O(^RADPT("ADC1",RALONGCN,RADFN,RADTI,"")) Q:RACNI=""
+ .;
+ .;if new format & the "ADC1" x-ref does not exist
+ .;(reg'd under v2.3 & b'cast/resent under v2.4) p129
+ .I $L(RALONGCN,"-")=3,($D(^RADPT("ADC1",RALONGCN))\10=0) D
+ ..S RADTI=$O(^RADPT("ADC",$P(RALONGCN,"-",2,3),RADFN,"")) Q:RADTI=""
+ ..S RACNI=$O(^RADPT("ADC",$P(RALONGCN,"-",2,3),RADFN,RADTI,"")) Q:RACNI=""
+ ..S RALONGCN=$P(RALONGCN,"-",2,3) ;KLM/P144 strip off site prefix if SSANs are not enabled
+ .;
  .Q:RADTI=""
  .Q:RACNI=""
+ .S ^TMP(RARRR,$J,RASUB,"RALONGCN")=RALONGCN ;p144 - moved, set after we know about SSANs
  .S ^TMP(RARRR,$J,RASUB,"RADTI")=RADTI
  .S ^TMP(RARRR,$J,RASUB,"RACNI")=RACNI
  I $G(RADTI)'>0 S RAERR="Invalid exam registration timestamp" D XIT Q
  I $G(RACNI)'>0 S RAERR="Invalid exam record IEN" D XIT Q
- ;OBR-25/PAR(26) STATUS: 'C'orrected, 'F'inal, or 'R'esults filed, not verified
- I '$L(PAR(26)) S RAERR="Missing Report Status",RAEXIT=1 Q 
- I "CFR"'[PAR(26) S RAERR="Invalid Report Status: "_PAR(26),RAEXIT=1 Q
+ ;OBR-25/PAR(26) STATUS: 'C'orrected, 'F'inal, or 'R'esults filed, not verified & 'VAQ' NTP releases the study back to the VA
+ I '$L($G(PAR(26))) S RAERR="Missing Report Status",RAEXIT=1 Q
+ I "^C^F^R^VAQ^"'[("^"_PAR(26)_"^") S RAERR="Invalid Report Status: "_PAR(26),RAEXIT=1 Q
  S ^TMP(RARRR,$J,RASUB,"RASTAT")=PAR(26)
  G:$P(RARRR,"-",3) 112
  ;OBR-32 PAR(33) Principal Result Interpreter
@@ -193,7 +205,11 @@ OBX ; Pick data off the 'OBX' segments
  ; For DX Codes we are expecting only the # (ie, 1,2,5 etc not the text)
  ; If VR (PSCRIBE) sends text with DX Code, strip off text in next line
  ; Text only will be rejected
- I RAOBX3(1)="D" S RAX=+RAX
+ ; KLM/p157 - PS to send usage code in third piece (ie 1^NORMAL^P). P is for primary.
+ I RAOBX3(1)="D" D
+ .I $P($G(RAX),U,3)="P" S ^TMP("RARPT-REC",$J,RASUB,RANODE,"PDX",RARCNT(RAOBX3(1)))=+RAX
+ .S RAX=+RAX
+ .Q
  S ^TMP("RARPT-REC",$J,RASUB,RANODE,RARCNT(RAOBX3(1)))=RAX
  F RAI=1:1:RACNPPP S RARRR="RARPT-REC-"_RAI S ^TMP(RARRR,$J,RASUB,RANODE,RARCNT(RAOBX3(1)))=RAX
  K RAOBX3,RASTR
@@ -201,7 +217,7 @@ OBX ; Pick data off the 'OBX' segments
 XIT ;
  D ERR I RAERRCHK=1 G XIT1
  I $D(^TMP("RARPT-REC",$J)) S:'RACNPPP RACKYES=1 D EN1^RAHLO D ERR I RAERRCHK=1 G XIT1
- F RAI=1:1:RACNPPP S RARRR="RARPT-REC-"_RAI D:$D(^TMP(RARRR,$J)) 
+ F RAI=1:1:RACNPPP S RARRR="RARPT-REC-"_RAI D:$D(^TMP(RARRR,$J))
  .K ^TMP("RARPT-REC",$J) M ^TMP("RARPT-REC",$J)=^TMP(RARRR,$J) K ^TMP(RARRR,$J)
  .S RACKYES=(RAI=RACNPPP) N I D EN1^RAHLO D ERR I RAERRCHK=1 G XIT1
 XIT1 K ^TMP("RARPT-REC",$J) ; kill storage area for current HL7 message id

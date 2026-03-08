@@ -1,5 +1,5 @@
-XMPSEC ;ISC-SF/GMB-PackMan Security ;04/17/2002  11:13
- ;;8.0;MailMan;;Jun 28, 2002
+XMPSEC ;ISC-SF/GMB-PACKMAN SECURITY ;01/22/99  12:50
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; Code rewritten.  Originally (ISC-WASH/GM/CAP)
  ; Includes the former ^XMASEC (ISC-WASH/GM)
  N I,XMTVAL,XMSTR

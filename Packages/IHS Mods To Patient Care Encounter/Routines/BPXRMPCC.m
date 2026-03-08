@@ -1,5 +1,5 @@
-BPXRMPCC ; IHS/MSC/MGH - Computed Findings for PCC reminders. ;16-Feb-2018 16:02;DU
- ;;2.0;CLINICAL REMINDERS;**1001,1002,1003,1009**;Feb 04, 2005;Build 17
+BPXRMPCC ; IHS/MSC/MGH - Computed Findings for PCC reminders. ;31-Mar-2021 11:10;DU
+ ;;2.0;CLINICAL REMINDERS;**1001,1002,1003,1009,1012**;Feb 04, 2005;Build 18
  ;=================================================================
  ;This routine is designed to use the standard PCC logic for reminders to
  ;evaluate if items are met or not met. Using the standard PCC calls ensures
@@ -66,18 +66,17 @@ OSTEO(DFN,TEST,DATE,VALUE,TEXT) ; EP
  N BPXRESLT,TODAY,X,Y,Z,AGE,DOB
  S DOB=$P($G(^DPT(DFN,0)),U,3)
  S TODAY=$$DT^XLFDT()
- ;I $$LASTDX^APCHSMU2(DFN,"BGP OSTEOPOROSIS DXS",$P(^DPT(DFN,0),U,3),TODAY) S TEST=1,VALUE="NA",TEXT="Pt has DX of osteoporosis",DATE=TODAY Q
  S BPXRESLT=$$REMOSTEO^APCLAPIR(DFN)
  I $P(BPXRESLT,U,1)=1 D
- .I $$LASTDX^APCHSMU2(DFN,"BGP OSTEOPOROSIS DXS",$P(^DPT(DFN,0),U,3),TODAY) D
- ..S TEST=1,VALUE=$P(BPXRESLT,U,4),TEXT=$P(BPXRESLT,U,3),DATE=$P(BPXRESLT,U,2)
- .E  D
- ..S DATE=$P(BPXRESLT,U,2)
- ..I DATE'="" D
- ...S Z=$$AGE^PXRMAGE(DOB,"",DATE)
- ...I Z>64 S TEST=1,VALUE=$P(BPXRESLT,U,4),TEXT=$P(BPXRESLT,U,3),DATE=$P(BPXRESLT,U,2)
- ...E  S TEST=0,VALUE=TEST,DATE=$P(BPXRESLT,U,2),TEXT="Test was done before age 65"
- ..E  S TEST=0,VALUE=TEST,DATE=TODAY,TEXT="Unable to determine date of test"
+ .;I +$$LASTDX^APCHSMU2(DFN,"BGP OSTEOPOROSIS DXS",$P(^DPT(DFN,0),U,3),TODAY) D
+ .S TEST=1,VALUE=$P(BPXRESLT,U,4),TEXT=$P(BPXRESLT,U,3),DATE=$P(BPXRESLT,U,2)
+ .;E  D
+ .;.S DATE=$P(BPXRESLT,U,2)
+ .;.I DATE'="" D
+ .;..S Z=$$AGE^PXRMAGE(DOB,"",DATE)
+ .;..I Z>64 S TEST=1,VALUE=$P(BPXRESLT,U,4),TEXT=$P(BPXRESLT,U,3),DATE=$P(BPXRESLT,U,2)
+ .;..E  S TEST=0,VALUE=TEST,DATE=$P(BPXRESLT,U,2),TEXT="Test was done before age 65"
+ .E  S TEST=0,VALUE=TEST,DATE=TODAY,TEXT="Unable to determine date of test"
  I $P(BPXRESLT,U,1)=0 S TEST=0,VALUE=TEST,DATE=TODAY
  Q
 PAP(DFN,TEST,DATE,VALUE,TEXT) ; EP

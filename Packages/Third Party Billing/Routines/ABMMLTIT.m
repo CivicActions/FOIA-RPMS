@@ -1,15 +1,17 @@
 ABMMLTIT ; IHS/SD/SDR - Input transform-anes. mod field - 8/19/2005 1:28:34 PM
- ;;2.6;IHS 3P BILLING SYSTEM;**3,14,21,27**;NOV 12, 2009;Build 486
+ ;;2.6;IHS 3P BILLING SYSTEM;**3,14,21,27,29**;NOV 12, 2009;Build 562
  ;
  ; Input transform routine for multiples
- ;IHS/SD/SDR - 2.6*14 - Added input transform for ICD DX check; used on fields 17,.01 and .59
- ;IHS/SD/SDR - 2.6*21 - HEAT199768 - Added code for Radiology; used in 3P Fee Table
+ ;IHS/SD/SDR 2.6*14 Added input transform for ICD DX check; used on fields 17,.01 and .59
+ ;IHS/SD/SDR 2.6*21 HEAT199768 Added code for Radiology; used in 3P Fee Table
+ ;IHS/SD/SDR 2.6*29 CR10404 Corrected Lab CPT range to include 'A' and 'Z' HCPCS codes
  ;
 LAB() ; EP
  S ABMF=0
  ;I (($P(^ICPT(Y,0),"^",1)>79999)&($P(^(0),"^",1)<90000)!($P(^(0),"^",1)=36415)&($$CHKCPT^ABMDUTL(Y)'=0))!($A($E($P($G(^ICPT(Y,0)),"^",1),1),1)>65)&($A($E($P(^(0),"^",1),1),1)<90) S ABMF=1  ;abm*2.6*27 IHS/SD/SDR CR8894
  I ($$CHKCPT^ABMDUTL(Y)=0) Q ABMF  ;inactive CPT code  ;abm*2.6*27 IHS/SD/SDR CR8894
- I (($P($G(^ICPT(Y,0)),"^",1)>79999)&($P($G(^(0)),"^",1)<90000)!($P($G(^(0)),"^",1)=36415))!($A($E($P($G(^ICPT(Y,0)),"^",1),1))>65)&($A($E($P(^(0),"^",1),1))<90) S ABMF=1  ;abm*2.6*27 IHS/SD/SDR CR8894
+ ;I (($P($G(^ICPT(Y,0)),"^",1)>79999)&($P($G(^(0)),"^",1)<90000)!($P($G(^(0)),"^",1)=36415))!($A($E($P($G(^ICPT(Y,0)),"^",1),1))>65)&($A($E($P(^(0),"^",1),1))<90) S ABMF=1  ;abm*2.6*27 IHS/SD/SDR CR8894  ;abm*2.6*29 IHS/SD/SDR CR10404
+ I (($P($G(^ICPT(Y,0)),"^",1)>79999)&($P($G(^(0)),"^",1)<90000)!($P($G(^(0)),"^",1)=36415))!($A($E($P($G(^ICPT(Y,0)),"^",1),1))>64)&($A($E($P(^(0),"^",1),1))<91) S ABMF=1  ;abm*2.6*27 IHS/SD/SDR CR8894  ;abm*2.6*29 IHS/SD/SDR CR10404
  Q ABMF
  ;
  ;start new abm*2.6*14

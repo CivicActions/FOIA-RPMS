@@ -1,39 +1,24 @@
-PSSPOIMN ;BIR/RTR/WRT-Orderable Item manual create ;29-May-2012 15:18;PLS
- ;;1.0;PHARMACY DATA MANAGEMENT;**15,32,34,38,51,57,1013,82,125,1015**;9/30/97;Build 62
- ;
- ;Reference to ^PS(59 supported by DBIA #1976
- ;Reference to $$PSJDF^PSNAPIS(P1,P3) supported by DBIA #2531
- ;Reference to $$VAGN^PSNAPIS(P1) supported by DBIA #2531
- ;
- ;Modified - IHS/MSC/MGH - 02/08/2012 - Line BEG+2
- ;
+PSSPOIMN ;BIR/RTR/WRT-Orderable Item manual create ;09/01/98
+ ;;1.0;PHARMACY DATA MANAGEMENT;**15,32,34**;9/30/97
  S PSSITE=+$O(^PS(59.7,0)) I +$P($G(^PS(59.7,PSSITE,80)),"^",2)<2 W !!?3,"Orderable Item Auto-Create has not been completed yet!",! K PSSITE,DIR S DIR(0)="E",DIR("A")="Press RETURN to continue" D ^DIR K DIR Q
  K PSSITE D MESS^PSSPOIM1
 BEG I $D(PSIEN) L -^PSDRUG(PSIEN)
- K PSSCROSS,DOSEFV,DOSEFORM,POINT,SPHOLD,NEWSP,PSVAR1,PSITEM,PSTOP,PSMASTER,DIC("S")
- ;IHS/MSC/MGH changed for mixed case lookup, uses new cross-reference
- ;S PSOUT=0 W !! K DIC S DIC(0)="QEAM",DIC="^PSDRUG(",DIC("A")="Select DISPENSE DRUG: "
- S PSOUT=0 W !! K DIC S DIC(0)="QEAM",D="BCAP",DIC="^PSDRUG(",DIC("A")="Select DISPENSE DRUG: "
- ;DIC("S")="I $P($G(^PSDRUG(+Y,2)),""^"",3)[""I""!($P($G(^(2)),""^"",3)[""O"")!($P($G(^(2)),""^"",3)[""U"")"
- ;D ^DIC G:$D(DTOUT)!($D(DUOUT))!(Y<1) END K DIC("S") S PSIEN=+Y,PSNAME=$P(^PSDRUG(PSIEN,0),"^") L +^PSDRUG(PSIEN):0 I '$T W !,$C(7),"Another person is editing this one." Q
- D IX^DIC G:$D(DTOUT)!($D(DUOUT))!(Y<1) END K DIC("S") S PSIEN=+Y,PSNAME=$P(^PSDRUG(PSIEN,0),"^") L +^PSDRUG(PSIEN):0 I '$T W !,$C(7),"Another person is editing this one." Q
+ K DOSEFV,DOSEFORM,POINT,SPHOLD,NEWSP,PSVAR1,PSITEM,PSTOP,PSMASTER,DIC("S")
+ S PSOUT=0 W !! K DIC S DIC(0)="QEAM",DIC="^PSDRUG(",DIC("A")="Select DISPENSE DRUG: ",DIC("S")="I $P($G(^PSDRUG(+Y,2)),""^"",3)[""I""!($P($G(^(2)),""^"",3)[""O"")!($P($G(^(2)),""^"",3)[""U"")"
+ D ^DIC G:$D(DTOUT)!($D(DUOUT))!(Y<1) END K DIC("S") S PSIEN=+Y,PSNAME=$P(^PSDRUG(PSIEN,0),"^") L +^PSDRUG(PSIEN):0 I '$T W !,$C(7),"Another person is editing this one." Q
 MAS I $G(PSMASTER) S PSOUT=0 N DOSEFV,DOSEFORM,POINT,SPHOLD,NEWSP,PSVAR1,PSITEM,PSTOP
  S NODE=$G(^PSDRUG(PSIEN,"ND")),DOSEPTR=0,DA=$P(NODE,"^"),X=$$VAGN^PSNAPIS(DA),VAGEN=X I +$P(NODE,"^"),+$P(NODE,"^",3),VAGEN'=0 S K=$P(NODE,"^",3),X=$$PSJDF^PSNAPIS(DA,K),DOSEFV=X I DOSEFV'=0 D
  .S DOSEPTR=$P(X,"^"),DOSEFORM=$P(X,"^",2)
  D TMP
  I +$P($G(^PSDRUG(PSIEN,2)),"^") S (POINT,PSITEM)=$P(^(2),"^") W !!,PSNAME," is already matched to",!!,?5,$P($G(^PS(50.7,POINT,0)),"^")_" "_$P($G(^PS(50.606,+$P($G(^(0)),"^",2),0)),"^"),!
  ;Warn user the Orderable Item is inactive. Display date and option to use.
- I $G(POINT) N PSSIAD D
+ I  N PSSIAD D
  .S PSSIAD=$P($G(^PS(50.7,POINT,0)),"^",4) I $G(PSSIAD) S Y=PSSIAD D DD^%DT W !,"This Orderable Item has an Inactive Date.  *** "_Y,!,"To modify the Orderable Item, use the 'Edit Orderable Item' option."
- I $G(POINT) D  W ! K DIR S DIR("B")="NO",DIR(0)="Y",DIR("A")="Do you want to match to a different Orderable Item" D ^DIR K DIR D:Y=1 MORE,SET,REM D SETX G:$G(PSMASTER) END G BEG
+ I  D  W ! K DIR S DIR("B")="NO",DIR(0)="Y",DIR("A")="Do you want to match to a different Orderable Item" D ^DIR K DIR D:Y=1 SET,REM D SETX D:POINT'=$G(PSITEM) EN^PSSPOIDT(POINT),EN2^PSSHL1(POINT,"MUP") G:$G(PSMASTER) END G BEG
  .K PSSDXLF
- D MCH
+ D MCH I $G(PSIEN) D EN2^PSSUTIL(PSIEN,1)
  G:'$G(PSMASTER) BEG
-END I $D(PSIEN) I '$G(PSSHUIDG) D DRG^PSSHUIDG(PSIEN) D  L -^PSDRUG(PSIEN)
- .N XX,DVER,DNSNAM,DNSPORT,DMFU S XX=""
- .F XX=0:0 S XX=$O(^PS(59,XX)) Q:'XX  D
- ..S DVER=$$GET1^DIQ(59,XX_",",105,"I"),DMFU=$$GET1^DIQ(59,XX_",",105.2)
- ..I DVER="2.4" S DNSNAM=$$GET1^DIQ(59,XX_",",2006),DNSPORT=$$GET1^DIQ(59,XX_",",2007) I DNSNAM'=""&(DMFU="YES") D DRG^PSSDGUPD(PSIEN,"",DNSNAM,DNSPORT)
+END I $D(PSIEN) L -^PSDRUG(PSIEN)
  G END^PSSPOIM1
 REM D TMP
  I $O(^TMP($J,"PSSOO",0)) H 1 D OTHER^PSSPOIM1,DISP
@@ -52,12 +37,12 @@ DISPO Q:$G(PSOUT)  W ! K DIR S DIR(0)="N",DIR("A")="Choose number of Orderable I
  S PSOUT=1 Q
 MCH I $O(^TMP($J,"PSSOO",0)) H 1 D OTHER^PSSPOIM1,DISP
  Q:$G(PSOUT)  I $O(^TMP($J,"PSSOO",0)),$G(MATCH) S PSSP=MATCH D ^PSSPOIM1 Q:(PSOUT)!(PSNO)  K DIE S DIE="^PSDRUG(",DA=PSIEN,DR="2.1////"_MATCH D ^DIE S PSITEM=MATCH D COM Q
-MCHA W ! I $G(DOSEFORM)'="" W !?3,"Dosage Form -> ",DOSEFORM,!! K DIR S DIR(0)="Y",DIR("B")="NO",DIR("A")="Match to another Orderable Item with same Dosage Form" D ^DIR G:Y=1 LOOK I Y["^"!(Y="")!($D(DTOUT)) Q
- I $G(DOSEFORM)="" K DIC S DIC="^PS(50.606,",DIC(0)="QEAMZ",DIC("A")="Choose Dosage Form: " D ^DIC Q:$D(DTOUT)!($D(DUOUT))!(Y<1)  S DOSEPTR=+Y W !!?3,"Dose Form -> ",$G(Y(0,0))
- I $G(DOSEFORM)="" K DIR W ! S DIR(0)="Y",DIR("B")="NO",DIR("A")="Match to another Orderable Item with same Dosage Form" D ^DIR
+MCHA W ! I $G(DOSEFORM)'="" W !?3,"Dose Form -> ",DOSEFORM,!! K DIR S DIR(0)="Y",DIR("B")="NO",DIR("A")="Match to another Orderable Item with same Dose Form" D ^DIR G:Y=1 LOOK I Y["^"!(Y="")!($D(DTOUT)) Q
+ I $G(DOSEFORM)="" K DIC S DIC="^PS(50.606,",DIC(0)="QEAMZ",DIC("A")="Choose Dose Form: " D ^DIC Q:$D(DTOUT)!($D(DUOUT))!(Y<1)  S DOSEPTR=+Y W !!?3,"Dose Form -> ",$G(Y(0,0))
+ I $G(DOSEFORM)="" K DIR W ! S DIR(0)="Y",DIR("B")="NO",DIR("A")="Match to another Orderable Item with same Dose Form" D ^DIR
  I $G(DOSEFORM)="" Q:$D(DTOUT)!($D(DUOUT))!(Y<0)  S DOSEFORM=$P(^PS(50.606,DOSEPTR,0),"^") G:Y>0 LOOK
 MCHAN W !! I $L(VAGEN)>40 W !,"VA Generic Name -> ",VAGEN,!
- W !,?3,"Dosage Form   -> ",DOSEFORM,!,?3,"Dispense Drug -> ",PSNAME,!!
+ W !,?3,"Dose Form -> ",DOSEFORM,!,?3,"Dispense Drug -> ",PSNAME,!!
  K DIR S DIR(0)="F^3:40",DIR("A")="Orderable Item Name" S:$L(VAGEN)>2&($L(VAGEN)<41) DIR("B")=VAGEN
  D ^DIR Q:$D(DUOUT)!($D(DTOUT))!(Y["^")!(Y="")
  I X[""""!($A(X)=45)!('(X'?1P.E))!(X?2"z".E) W $C(7),!!?5,"??" G MCHAN
@@ -83,38 +68,4 @@ SET ;
 SETX ;
  I $G(PSSDXLF),$G(PSSDXL),$G(PSITEM),$G(PSSDXL)'=+$P($G(^PS(50.7,+$G(PSITEM),0)),"^",2) K ^PSDRUG(PSIEN,"DOS2") I $G(PSIEN) D EN2^PSSUTIL(PSIEN,1)
  K PSSDXL,PSSDXLF
- Q
-MORE ;Show Additives and Solutions
- Q:'$G(PSIEN)
- N PSSMORA,PSSMORS,PSSMZ,PSSMZOUT,PSSMODT
- S (PSSMORA,PSSMORS,PSSMZOUT)=0
- I $O(^PS(52.6,"AC",PSIEN,0)) S PSSMORA=1
- I $O(^PS(52.7,"AC",PSIEN,0)) S PSSMORS=1
- I 'PSSMORA,'PSSMORS Q
- W !!!,"There are "_$S('$G(PSSMORS):"IV Additives",'$G(PSSMORA):"IV Solutions",1:"IV Additives and IV Solutions")_" tied to this Dispense Drug."
- W !,"By rematching the Dispense Drug to a new Pharmacy Orderable Item, all of these",!,$S('$G(PSSMORS):"IV Additives",'$G(PSSMORA):"IV Solutions",1:"IV Additives and IV Solutions")_" will also be rematched to the new Orderable Item.",!
- K DIR S DIR(0)="E",DIR("A")="Press Return to see "_$S('$G(PSSMORS):"IV Additive",'$G(PSSMORA):"IV Solution",1:"IV Additive/Solution")_" list" D ^DIR I Y'=1 W ! Q
- W @IOF
- W !,$S('$G(PSSMORA):"IV Solutions",'$G(PSSMORS):"IV Additives",1:"IV Additives/Solutions"),!,"------------" I $G(PSSMORS),$G(PSSMORA) W "----------"
- I $G(PSSMORA) D  G:$G(PSSMZOUT) MOREZ
- .F PSSMZ=0:0 S PSSMZ=$O(^PS(52.6,"AC",PSIEN,PSSMZ)) Q:'PSSMZ!($G(PSSMZOUT))  D
- ..D:($Y+5)>IOSL MOREH Q:$G(PSSMZOUT)
- ..W !,$P($G(^PS(52.6,PSSMZ,0)),"^"),?42,"(A)"
- ..S PSSMODT=$P($G(^PS(52.6,PSSMZ,"I")),"^") I PSSMODT D MODT
- ;I $G(PSSMORA),$G(PSSMORS) W !
- I $G(PSSMORS) D
- .F PSSMZ=0:0 S PSSMZ=$O(^PS(52.7,"AC",PSIEN,PSSMZ)) Q:'PSSMZ!($G(PSSMZOUT))  D
- ..D:($Y+5)>IOSL MOREH Q:$G(PSSMZOUT)
- ..W !,$P($G(^PS(52.7,PSSMZ,0)),"^"),?31,$P($G(^(0)),"^",3),?42,"(S)"
- ..S PSSMODT=$P($G(^PS(52.7,PSSMZ,"I")),"^") I PSSMODT D MODT
-MOREZ ;
- I '$G(PSSMZOUT) W ! K DIR S DIR(0)="E",DIR("A")="Press RETURN to continue" D ^DIR K DIR
- Q
- ;
-MOREH ;
- W ! K DIR S DIR(0)="E",DIR("A")="Press RETURN to continue" D ^DIR K DIR I 'Y S PSSMZOUT=1 Q
- W @IOF
- Q
-MODT ;
- S Y=$G(PSSMODT) I $G(Y) D DD^%DT W ?50,$G(Y) K Y
  Q

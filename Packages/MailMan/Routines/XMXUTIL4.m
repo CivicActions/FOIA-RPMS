@@ -1,5 +1,5 @@
-XMXUTIL4 ;ISC-SF/GMB-List message recipients (cont.) ;04/11/2002  10:44
- ;;8.0;MailMan;;Jun 28, 2002
+XMXUTIL4 ;ISC-SF/GMB-List message recipients (cont'd) ;06/14/99  10:23
+ ;;7.1;MailMan;**50**;Jun 02, 1994
  ; All entry points are for internal MailMan use only.
 QLIST(XMZ,XMFLAGS,XMAMT,XMSTART,XMTROOT) ; list them
  N XMCNT,XMIEN,XMREC,XMTO,XMNAME
@@ -68,7 +68,7 @@ QDFLDS(XMZ,XMFLAGS,XMIEN,XMREC,XMNAME,XMTROOT,XMCNT) ;
  . . S @(XMTROOT_XMCNT_",""SECS"")")=$P(XMREC,U,8)
  I $E(XMNAME,1,3)="* (" D  Q
  . S @(XMTROOT_XMCNT_",""TO ID"")")=$E(XMNAME) ; broadcast
- ; I ".D.H.S."[("."_$E(XMNAME,1,2))
+ ; I $E(XMNAME,1,2)="D."!($E(XMNAME,1,2)="S.")
  S @(XMTROOT_XMCNT_",""TO ID"")")=$E(XMNAME) ; device or server
  I $P(XMREC,U,3)'="" D
  . S @(XMTROOT_XMCNT_",""SDATE"")")=$P(XMREC,U,3)
@@ -78,37 +78,38 @@ QDFLDS(XMZ,XMFLAGS,XMIEN,XMREC,XMNAME,XMTROOT,XMCNT) ;
  Q
 FWD(XMZ,XMIEN) ;
  Q:'$D(^XMB(3.9,XMZ,1,XMIEN,"F"))
- N XMFWDREC,XMFWDBY
- S XMFWDREC=^XMB(3.9,XMZ,1,XMIEN,"F")
- S XMFWDBY=$P(XMFWDREC,U)
- I $E(XMFWDBY)?1A!($E(XMFWDBY)="<") D
+ N XMFWDBY
+ S XMFWDBY=^XMB(3.9,XMZ,1,XMIEN,"F")
+ I $P(XMFWDBY,U,2) S @(XMTROOT_XMCNT_",""FWD BY DUZ"")")=$P(XMFWDBY,U,2)
+ S XMFWDBY=$P(XMFWDBY,U)
+ I $E(XMFWDBY)?1A!($E(XMFWDBY)="<") D  Q
  . N XMLEN
  . S XMLEN=$L(XMFWDBY," ")
  . S @(XMTROOT_XMCNT_",""FWD BY"")")=$P(XMFWDBY," ",1,XMLEN-4)
  . S @(XMTROOT_XMCNT_",""FWD ON"")")=$P(XMFWDBY," ",XMLEN-3,XMLEN)
- E  I $E(XMFWDBY)?1N!($E(XMFWDBY)=".") D
+ I $E(XMFWDBY)?1N!($E(XMFWDBY)=".") D  Q
  . N XMLEN
  . S XMFWDBY=$$NAME^XMXUTIL(+XMFWDBY)_" "_$P(XMFWDBY," ",2,99)
  . S XMLEN=$L(XMFWDBY," ")
  . S @(XMTROOT_XMCNT_",""FWD BY"")")=$P(XMFWDBY," ",1,XMLEN-4)
  . S @(XMTROOT_XMCNT_",""FWD ON"")")=$P(XMFWDBY," ",XMLEN-3,XMLEN)
- E  S @(XMTROOT_XMCNT_",""FWD ON"")")=$E(XMFWDBY,2,99)
- I $P(XMFWDREC,U,2) S @(XMTROOT_XMCNT_",""FWD BY DUZ"")")=$P(XMFWDREC,U,2)
- I "R"'[$P(XMFWDREC,U,3) S @(XMTROOT_XMCNT_",""FWD TYPE"")")=$P(XMFWDREC,U,3)
- Q:$P(XMFWDREC,U,4)=""  ; or quit if FWD TYPE="A"
- S @(XMTROOT_XMCNT_",""FWD BY ORIG"")")=$P(XMFWDREC,U,4)
- I "R"'[$P(XMFWDREC,U,5) S @(XMTROOT_XMCNT_",""FWD TYPE ORIG"")")=$P(XMFWDREC,U,5)
+ S @(XMTROOT_XMCNT_",""FWD ON"")")=$E(XMFWDBY,2,99)
  Q
 QFIND(XMZ,XMFLAGS,XMFIND,XMTROOT,XMCNT) ; find them
+ N XMXREF
  S XMCNT=0
- D FIND^DIC(200,"","","A",XMFIND,"","B^BB^C^D","I $D(^XMB(3.9,XMZ,1,""C"",+Y))")
+ S XMXREF="B"
+ S:$D(^VA(200,"BB")) XMXREF=XMXREF_"^BB"
+ S:$D(^VA(200,"C")) XMXREF=XMXREF_"^C"
+ S:$D(^VA(200,"D")) XMXREF=XMXREF_"^D"
+ D FIND^DIC(200,"","","A",XMFIND,"",XMXREF,"I $D(^XMB(3.9,XMZ,1,""C"",+Y))")
  I '$D(DIERR) D MOVE(200,XMZ,XMFLAGS,XMTROOT,.XMCNT)
  Q:$O(^XMB(3.9,XMZ,1,"C",":"))=""  ; Quit if there aren't any non-local addressees
  N XMSCREEN
  S XMSCREEN=$S(+XMFIND=XMFIND:"I '$D(^XMB(3.9,XMZ,1,""C"",XMFIND))",1:"")
  D FIND^DIC(3.91,","_XMZ_",","","C",XMFIND,"","C",XMSCREEN)
  I '$D(DIERR) D MOVE(3.91,XMZ,XMFLAGS,XMTROOT,.XMCNT)
- Q:$E(XMFIND)'?1U  ; Quit if the search string does not begin with an upper case letter
+ Q:"ABCDEFGHIJKLMNOPQRSTUVWXYZ"'[$E(XMFIND)  ; Quit if the search string does not begin with an upper case letter
  Q:$O(^XMB(3.9,XMZ,1,"C","`"))=""  ; Quit if there aren't any lower case addressees
  ; FM will translate lower case to upper case in its search, but won't
  ; translate upper to lower, so we do it here.

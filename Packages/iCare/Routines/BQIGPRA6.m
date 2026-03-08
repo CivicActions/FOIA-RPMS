@@ -1,5 +1,5 @@
 BQIGPRA6 ;GDIT/HS/ALA-Update all patients for selected measures ; 26 Sep 2012  9:59 AM
- ;;2.7;ICARE MANAGEMENT SYSTEM;**1**;Dec 19, 2017;Build 12
+ ;;2.7;ICARE MANAGEMENT SYSTEM;**1,2**;Dec 19, 2017;Build 10
  ;
  Q
  ;
@@ -46,6 +46,9 @@ EN ;EP
  .. I $P(^BQI(90506.1,BQX,0),U,10)=1 Q
  .. S X=$P(^BQI(90506.1,BQX,0),U,1),XN=$P(X,"_",2)
  .. S X=$P($G(@BQIMEASG@(XN,0)),U,1) I X'="" S BGPIND(X)=""
+ ;
+ ; Set up taxonomies
+ D @("UNFOLDTX^"_BQIUFLD)
  ;
  S DFN=0
  F  S DFN=$O(^BQIPAT(DFN)) Q:'DFN  D FND
@@ -104,9 +107,9 @@ FND ;EP
  D FILE^DIE("","BQIPUP","ERROR")
  K BQIPUP
  ; Setup taxonomies
- I VER>14.1 D
- . I $T(UNFOLDTX^BGP8UTL2)="" Q
- . D UNFOLDTX^BGP8UTL2
+ ;I VER>14.1 D
+ ;. I $T(UNFOLDTX^BGP8UTL2)="" Q
+ ;. D UNFOLDTX^BGP8UTL2
  ;
  D @("BQI^"_BQIROU_"(DFN,.BQIGREF)")
  ;

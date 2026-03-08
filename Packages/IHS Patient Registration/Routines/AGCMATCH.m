@@ -1,9 +1,10 @@
-AGCMATCH ; IHS/ASDS/SDH-Patient Registration ;  
- ;;7.1;PATIENT REGISTRATION;;AUG 25,2005
+AGCMATCH ; IHS/ASDS/SDH-Patient Registration V7.0 ;  [ 03/24/2003  9:21 AM ]
+ ;;7.0;IHS PATIENT REGISTRATION;**2**;MAR 28, 2003
  ;
- ;This report is used for checking blank community, blank mailing
- ;address city, and it they don't match.  Also checks if these fields
- ;contain "unknown" anything.
+ ; This report is used for checking blank community, blank mailing
+ ; address city, and it they don't match.  Also checks if these fields
+ ; contain "unknown" anything.
+ ;
  ;
  S AGALL=""
  S (AGCNT1,AGCNT2,AGCNT3)=0
@@ -20,6 +21,7 @@ AGCMATCH ; IHS/ASDS/SDH-Patient Registration ;
  D ^DIR K DIR
  Q:$D(DIRUT)!$D(DIROUT)!$D(DTOUT)
  S AGALL=Y
+ ;
  D ^%ZIS
  Q:POP
  S AGBM=IOSL-4
@@ -35,49 +37,59 @@ AGCMATCH ; IHS/ASDS/SDH-Patient Registration ;
  .F  S AG2=$O(^DPT("B",AG1,AG2)) Q:'AG2!AGFLAG1  D
  ..S AGWFLG=""
  ..S AGEFLG=0,AGERROR=0
- ..D AGCHECK                  ;checks if they have HRN
- ..I $D(HRN),HRN["T" Q        ;check if temp numbers are included
+ ..D AGCHECK                                    ;checks if they have HRN
+ ..I $D(HRN),HRN["T" Q             ;check if temp numbers are included
  ..I AGFLAG=0 Q
  ..S AGNAME=$P($G(^DPT(AG2,0)),U)
- ..I AGNAME'=AG1 Q                     ;makes sure names match
- ..S AGCOMM=$P($G(^AUPNPAT(AG2,11)),U,18)  ;current community
- ..S AGADDR=$P($G(^DPT(AG2,.11)),U,4)      ;mailing address city
- ..I AGALL="C" D                           ;if complete
+ ..I AGNAME'=AG1 Q                               ;makes sure names match
+ ..S AGCOMM=$P($G(^AUPNPAT(AG2,11)),U,18)             ;current community
+ ..S AGADDR=$P($G(^DPT(AG2,.11)),U,4)              ;mailing address city
+ ..;
+ ..I AGALL="C" D                                            ;if complete
  ...I AGCOMM=""!(AGADDR="")!(AGCOMM["UNK")!(AGCOMM["OTH")!(AGCOMM'=AGADDR) D  Q
  ....I AGCOMM'="",AGADDR'="",AGCOMM'=AGADDR S AGERROR=3,AGEFLG=1
  ....I AGCOMM=""!(AGADDR="") S AGERROR=1,AGEFLG=AGEFLG+1
  ....I AGCOMM["UNK"!(AGCOMM["OTH")!(AGADDR["UNK")!(AGADDR["OTH") S AGERROR=2,AGEFLG=AGEFLG+1
- ....I AGEFLG>1 D ERRCHK     ;if there is more than one error
+ ....I AGEFLG>1 D ERRCHK                ;if there is more than one error
  ....D SAVE
- ..I AGALL="B",((AGCOMM="")!(AGADDR="")) D  Q   ;blank
+ ..;
+ ..I AGALL="B",((AGCOMM="")!(AGADDR="")) D  Q                    ;blank
  ...S AGERROR=1
  ...D SAVE
+ ..;
  ..;if unknowns
  ..I AGALL="U",(AGCOMM["UNK"!(AGCOMM["OTH")!(AGADDR["UNK")!(AGADDR["OTH")) D  Q
  ...S AGERROR=2
  ...D SAVE
+ ..;
  ..;blanks&unknowns
  ..I AGALL="A" D
  ...I (AGCOMM="")!(AGADDR="")!(AGCOMM["UNK")!(AGCOMM["OTH")!(AGADDR["UNK")!(AGADDR["OTH") D  Q
  ....I AGCOMM=""!(AGADDR="") S AGERROR=1
  ....I AGCOMM["UNK"!(AGCOMM["OTH")!(AGADDR["UNK")!(AGADDR["OTH") S AGERROR=2
  ....D SAVE
+ ;
  D WRITE
- D ^%ZISC
+ ; D ^%ZIS("C")  ; IHS/SD/EFG  AG*7*2  #12
+ D ^%ZISC  ; IHS/SD/EFG  AG*7*2  #12
  K AGNAME,AG2,AGCOMM,AGADDR,AGFLAG1,AGPAGE,AGWFLG
  K AGCNT1,AGCNT2,AGCNT3,TOT
  Q
-ERRCHK ;if more than one error sets priority error
+ ;
+ERRCHK ;  if more than one error sets priority error 
  I AGADDR="" S AGERROR=1 Q
  I AGCOMM["UNK"!(AGCOMM["OTH")!(AGADDR["UNK")!(AGADDR["OTH") S AGERROR=2 Q
  I AGCOMM]"",AGADDR]"",AGCOMM'=AGADDR S AGERROR=3
  Q
+ ;
 SAVE ;
+ ;
  I HRN="" S HRN="NO HRN"
- S AGINACT=$P($G(^AUPNPAT(AG2,41,AGDUZ2,0)),U,3)  ;inactive/deleted
- S AGDOD=$P($G(^DPT(AG2,.35)),U)                  ;date of death
+ S AGINACT=$P($G(^AUPNPAT(AG2,41,AGDUZ2,0)),U,3)       ;inactive/deleted
+ S AGDOD=$P($G(^DPT(AG2,.35)),U)                          ;date of death
  I $G(AGINACT)'=""!($G(AGDOD)'="") S AGADD="I"
  E  S AGADD="A"
+ ;
  I AGCOMM="" S AGCOMM="AANONE"
  S ^AGTMP($J,AGERROR,AGCOMM,AGADD,AGNAME,HRN)=AGADDR
  I AGERROR=1 S AGCNT1=AGCNT1+1
@@ -85,8 +97,8 @@ SAVE ;
  I AGERROR=3 S AGCNT3=AGCNT3+1
  S AGWFLG=1
  Q
-WRITE ;writes record to temp global if condition is met.  Also checks
- ;for active/inactive status of patient; checks for new page/header.
+WRITE ;writes record to temp global if condition is met.  Also checks for
+ ;active/inactive status of patient; checks for new page/header.
  ;
  D HDR
  S (AGER,AGHRN,AGNM,AGADD,AGCOM,AGADDR)=""
@@ -102,6 +114,7 @@ WRITE ;writes record to temp global if condition is met.  Also checks
  .....S AGADDR=$P(AGREC,U)
  .....I AGCOM["AANONE" S AGCOMM=""
  .....E  S AGCOMM=AGCOM
+ .....;
  .....W ?3,AGNM
  .....W ?27,AGADD
  .....W ?31,AGHRN
@@ -121,9 +134,13 @@ WRITE ;writes record to temp global if condition is met.  Also checks
  .S DIR("A")="ENTER RETURN TO CONTINUE"
  .D ^DIR
  K ^AGTMP($J)
+ ;
  Q
+ ;
 HDR ;
+ ;
  S TOT=0
+ ;
  D NOW^%DTC
  D YX^%DTC
  S DATE=$P(Y,"@")
@@ -131,9 +148,11 @@ HDR ;
  S X=DATE_"         COMMUNITY/CITY MISMATCH REPORT         Page "_AGPAGE
  D CTR^AG
  W !,X
+ ;
  S X=$P(^AUTTLOC(DUZ(2),0),U,2)
  D CTR^AG
  W !,X
+ ;
  I AGALL="C" S AGALL="BUM"
  I AGALL="A" S AGALL="BU"
  I AGPAGE=1 D
@@ -141,20 +160,24 @@ HDR ;
  .I AGALL["B" D  ;blanks
  ..W !?10,"BLANKS",?20,$J(+$G(AGCNT1),10)
  ..S TOT=TOT+AGCNT1
- .I AGALL["U" D                                 ;unknowns
+ .;
+ .I AGALL["U" D                                                ;unknowns
  ..W !?10,"UNKNOWNS",?20,$J(+$G(AGCNT2),10)
  ..S TOT=TOT+AGCNT2
- .I AGALL["M" D                                 ;mismatches
+ .;
+ .I AGALL["M" D                                              ;mismatches
  ..W !?10,"MISMATCHES",?20,$J(+$G(AGCNT3),10)
  ..S TOT=TOT+AGCNT3
+ .;
  .W !?10,"TOTAL:  ",?20,$J(TOT,10)
+ ;
  W !!?3,"NAME",?26,"A/I",?31,"HRN",?40,"MAIL.ADDR-CITY",?60,"CURRENT COMM",!
  F AG=1:1:80 W "="
  W !
  S AGPAGE=AGPAGE+1
  Q
-AGCHECK ;
- ;looks that they have an HRN
+AGCHECK ;---------------------------------------------------------------------
+ ; looks that they have an HRN
  S AGFLAG=0
  S AGDUZ2=0
  F  S AGDUZ2=$O(^AUPNPAT(AG2,41,AGDUZ2)) Q:AGDUZ2=""  D  Q:AGFLAG

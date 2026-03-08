@@ -1,5 +1,5 @@
-APCDEFC1 ; IHS/CMI/LAB - APCD Auto Print PCC Encounter Form Compute ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDEFC1 ;cmi/sitka/maw - APCD Auto Print PCC Encounter Form Compute [ 09/04/00  9:21 AM ]
+ ;;2.0;IHS RPMS PCC/Data Entry;**3**;MAR 09, 1999
  ;
  ;This routine will compute the automated PCC encounter form for
  ;a particular visit.  The visit IEN needs to be passed in for it
@@ -67,8 +67,3 @@ VNT ;EP--  v narrative text to external
  .. S APCDNT(APCDNT,APCDVDA)=$G(^UTILITY($J,"W",APCDUDA,APCDVDA,0))
  Q
  ;
-VIF ;EP -- infant feeding choice
- S APCDTVDF=$G(APCDTREC)
- S APCDINF=$$EXTSET^XBFUNC(9000010.44,.01,$P(APCDTREC,U,1))
- S APCDINF(APCDINF)=""
- Q

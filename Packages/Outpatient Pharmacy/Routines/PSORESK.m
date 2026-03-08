@@ -1,5 +1,5 @@
-PSORESK ;BIR/SAB-return to stock ;14-Nov-2017 14:48;DU
- ;;7.0;OUTPATIENT PHARMACY;**15,9,27,40,47,55,85,130,1002,1006,1007,185,184,196,148,201,259,261,1014,1015,1018,1022**;DEC 1997;Build 20
+PSORESK ;BIR/SAB-return to stock ;22-Aug-2023 14:23;DU
+ ;;7.0;OUTPATIENT PHARMACY;**15,9,27,40,47,55,85,130,1002,1006,1007,185,184,196,148,201,259,261,1014,1015,1018,1022,1034**;DEC 1997;Build 37
  ;
  ; Modified - IHS/CIA/PLS - 03/31/04 - Lines BC1+35 and PAR+30
  ;                          12/07/04 - New RXLKUP  entry point
@@ -10,6 +10,8 @@ PSORESK ;BIR/SAB-return to stock ;14-Nov-2017 14:48;DU
  ;            IHS/MSC/PB    03/26/13 - Added lines BC1+43 and BC1+44 to update expiration date to the issue date
  ;            IHS/MSC/MGH   01/07/14 - Added call to $$CHECK^PSORESK1
  ;            IHS/MSC/PLS   10/02/17 - Added logic to set STATUS to active if expiration date exceeds today
+ ;                          04/21/23 - Added pattern match to RXLKUP
+ ;                          08/22/23 - Updated $$CHECK logic
  ;REF/IA
  ;^PSDRUG/221
  ;^PS(59.7/694
@@ -72,10 +74,12 @@ BC1 ;
  .;MSC/IHS/PB - 3/1/13 Added the next two lines to update the expiration date to the issue date if the rts is an original
  .;IHS/MSC/MGH - 01/07/13 - Change the call to get expiration date
  .S ISDT=$P(^PSRX(RXP,0),"^",13)
- .I $G(ISDT)'="" D NOW^%DTC S DA=RXP,DIE="^PSRX(",DR="26////"_$$CHECK^PSORESK1(RXP)_";31///@;32.1///"_% D ^DIE K DIE,DR,DA   ;Q:$D(Y)
- .D NOW^%DTC S DA=RXP,DA=RXP,DIE="^PSRX(",DR="31///@;32.1///"_% D ^DIE K DIE,DR,DA Q:$D(Y)
+ .N APSPCHKD  ;P1034
+ .S APSPCHKD=$$CHECK^PSORESK1(RXP)
+ .I $G(ISDT)'="" D NOW^%DTC S DA=RXP,DIE="^PSRX(",DR="26////"_+APSPCHKD_";31///@;32.1///"_% D ^DIE K DIE,DR,DA   ;Q:$D(Y)
+ .E  D NOW^%DTC S DA=RXP,DA=RXP,DIE="^PSRX(",DR="31///@;32.1///"_% D ^DIE K DIE,DR,DA Q:$D(Y)
  .D ACT^PSORESK1 S DA=$O(^PS(52.5,"B",RXP,0)) I DA S DIK="^PS(52.5," D ^DIK
- .I $$GET1^DIQ(52,RXP,26,"I")>$G(DT) D  ;IHS/MSC/PLS - 10/2/2017 P1022
+ .I $$GET1^DIQ(52,RXP,26,"I")>$G(DT),'$P(APSPCHKD,U,2) D  ;IHS/MSC/PLS - 10/2/2017 P1022, 8/22/2023 P1034
  ..N STATUS
  ..S STATUS=+$P($G(^PSRX(RXP,"STA")),U)
  ..Q:STATUS=0  ;Already active
@@ -141,9 +145,10 @@ PAR S:$G(XTYPE)']"" XTYPE=1 S TYPE=0 F YY=0:0 S YY=$O(^PSRX(RXP,XTYPE,YY)) Q:'YY
  D:XTYPE'="P" NPF D ACT^PSORESK1
  N ISDT
  S ISDT=$P(^PSRX(RXP,0),"^",13)
+ S APSPCHKD=$$CHECK^PSORESK1(RXP)  ;p1034
  I $G(ISDT)'="" D
- .S DA=RXP,DIE="^PSRX(",DR="26///"_$$CHECK^PSORESK1(RXP) D ^DIE K DIE,DR,DA   ;IHS/MSC/MGH - 01/07/14 - Change the expiration date if necessary
- I $$GET1^DIQ(52,RXP,26,"I")>$G(DT) D  ;IHS/MSC/PLS - 10/2/2017 P1022
+ .S DA=RXP,DIE="^PSRX(",DR="26///"_+APSPCHKD D ^DIE K DIE,DR,DA   ;IHS/MSC/MGH - 01/07/14 - Change the expiration date if necessary
+ I $$GET1^DIQ(52,RXP,26,"I")>$G(DT),'$P(APSPCHKD,U,2) D  ;IHS/MSC/PLS - 10/2/2017 P1022, 8/22/2023 P1034
  .N STATUS
  .S STATUS=+$P($G(^PSRX(RXP,"STA")),U)
  .Q:STATUS=0  ;Already active
@@ -182,7 +187,9 @@ NPF N PSOY I $G(TYPE)-1>0,+$P(^PSRX(RXP,1,TYPE-1,0),"^") D
  ; IHS/MSC/PLS - 04/06/12 - Added parameter and condition
  ; Perform lookup given partial or full prescription number.
  ; Screen allows non-deleted scripts and scripts for user selected division.
+ ; IHS/MSC/PLS - 04/21/2023 - Added pattern match
 RXLKUP(X) ; EP
+ I X?1A.E Q 0  ;p1034
  N DIC,Y
  I $$GET^XPAR("ALL","APSP ALLOW RTS FROM ANY RX DIV") D
  .S DIC("S")="I $P($G(^(""STA"")),U)'=13"

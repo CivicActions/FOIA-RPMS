@@ -1,9 +1,10 @@
-ORCDPS2 ;SLC/MKB-Pharmacy dialog utilities ;25-Mar-2013 09:41;DU
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,116,125,131,243,1010,1011**;Dec 17, 1997;Build 2
+ORCDPS2 ;SLC/MKB-Pharmacy dialog utilities ;17-Mar-2020 11:10;DU
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**94,116,125,131,243,1010,1011,1019**;Dec 17, 1997;Build 2
  ;
  ; Modified - IHS/MSC/PLS - 02/15/2012 - Line RTE+5
  ; Modified - IHS/MSC/MGH - 02/25/2013 - Line CHDOSE+3
  ; Modified - IHS/MSC/MGH - 08/30/2012 - Patch 1011 to modified pt instructions
+ ; Modified - IHS/MSC/MGH - 12/04/2019 - Patch 1019 CHDOSE+9 check for liquids
 COMPLEX() ; -- Single or complex?
  N X,Y,DIR,DUOUT,DTOUT,COMPLX
  S COMPLX=$S($O(ORDIALOG(PROMPT,"?"),-1)>1:1,$L($G(ORDIALOG($$PTR("DURATION"),1))):1,1:0)
@@ -45,11 +46,35 @@ D1 ; -- Entry from ORCMED,NF^ORCDPS to build list
  Q
  ;
 CHDOSE ; -- Kill dependent values if inst ORI of dose changes
- N X,PROMPTS,P,NAME,DOSE,DD S X=$G(ORDIALOG(PROMPT,ORI))
+ N X,PROMPTS,P,NAME,DOSE,DD,OI,POI,OILIQ,OIUNIT,ERR
+ S X=$G(ORDIALOG(PROMPT,ORI))
  ;IHS/MSC/MGH Removed forcing to uppercase for dispense drug
  ;S X=$$UP^XLFSTR(X),ORDIALOG(PROMPT,ORI)=X ;force uppercase
+ I X,X'?1.N.E1.A.E K DONE W $C(7),!,"Enter the amount of this drug that the patient is to receive as a dose,",!,"NOT as the number of units per dose."
+ ;IHS/MSC/MGH 1019 Check for leading/trailing zeros
  S ORDIALOG(PROMPT,ORI)=X
- I X,X'?1.N.E1.A.E K DONE W $C(7),!,"Enter the amount of this drug that the patient is to receive as a dose,",!,"NOT as the number of units per dose." Q
+ D ZEROS^APSPLIQ(.ERR,X)
+ I $D(ERR)>1 D
+ .N LOOP
+ .F LOOP=1:1:ERR  W !,$G(ERR(LOOP))
+ .W !,"Dosage will not be saved/changed"
+ .S ORDIALOG($$PTR("INSTRUCTIONS"),ORI)=""
+ ;IHS/MSC/MGH check for liquids
+ S OILIQ=0,OIUNIT=0
+ I +$G(ORQDLG) D
+ .S DG=$$GET1^DIQ(101.41,ORQDLG,5)
+ .I DG="OUTPATIENT MEDICATIONS" D
+ ..S OI=$G(ORDIALOG($$PTR("ORDERABLE ITEM"),1))
+ ..S POI=+$P($G(^ORD(101.43,+OI,0)),U,2)
+ ..S OILIQ=$$LIQUID^APSPLIQ(POI)
+ ..I +OILIQ D
+ ...S OIUNIT=$$PARSE^APSPLIQ(X)
+ ...I +OIUNIT D
+ ....W !,"Dosage units for Oral Liquids must be standard metric units." S X=""
+ ....W !,"Dosage will not be saved/changed"
+ ....S ORDIALOG($$PTR("INSTRUCTIONS"),ORI)=""
+ I +ERR!(+OIUNIT) K DONE
+ ;End mods
  I $L(X)>60,'$D(ORDIALOG(PROMPT,"LIST","B",X)) K DONE W $C(7),!,"Instructions may not be longer than 60 characters." Q
  I $G(ORESET)'=X D  ;kill dependent values if new/changed dose
  . S PROMPTS="STRENGTH^DRUG NAME^DOSE^DISPENSE DRUG^DAYS SUPPLY^QUANTITY^REFILLS"

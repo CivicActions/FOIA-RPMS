@@ -1,6 +1,7 @@
 ABMRSTI1 ; IHS/SD/SDR - Split Claim Billing (part 2); 
- ;;2.6;IHS 3P BILLING SYSTEM;**22**;NOV 12, 2009;Build 418
+ ;;2.6;IHS 3P BILLING SYSTEM;**22,32**;NOV 12, 2009;Build 621
  ;IHS/SD/SDR 2.6*22 HEAT335246 - New routine
+ ;IHS/SD/SDR 2.6*32 CR9764 Added check for Visit file E&M field
  ;
  Q
 SPLTCHK ;EP
@@ -71,6 +72,12 @@ VSTDISP ;EP
  ...I ABMVFILE["VCPT" D
  ....S ABMREC=$$GET1^DIQ(81,$P(@ABMVFILE@(ABMVIEN,0),U),".01","E")
  ....S ABMREC=ABMREC_U_$E($P($$CPT^ABMCVAPI($P(@ABMVFILE@(ABMVIEN,0),U),$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,2)),U,3),1,60)
+ ...;
+ ...;start new abm*2.6*32 IHS/SD/SDR CR9764
+ ...I ABMVFILE["VSIT" D
+ ....S ABMREC=$$GET1^DIQ(81,$P($G(^AUPNVSIT(ABMVIEN,0)),U,17),".01","E")
+ ....S ABMREC=ABMREC_U_$E($P($$CPT^ABMCVAPI($P($G(^AUPNVSIT(ABMVIEN,0)),U,17),$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,2)),U,3),1,60)
+ ...;end new abm*2.6*32 IHS/SD/SDR CR9764
  ...;
  ...W ?15,$P(ABMREC,U)  ;cpt/rx#
  ...W ?29,$E($P(ABMREC,U,2),1,50)  ;description

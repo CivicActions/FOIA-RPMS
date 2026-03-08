@@ -1,6 +1,10 @@
-BGOVIMM2 ;IHS/BAO/TMD  BGO - IMMUNIZATION mgt;20-Jan-2015 11:20;PLS
- ;;1.1;BGO COMPONENTS;**1,3,4,6,10,11,12,13,14**;Mar 20, 2007;Build 16
+BGOVIMM2 ;IHS/BAO/TMD  BGO - IMMUNIZATION mgt;22-Mar-2023 08:08;PLS
+ ;;1.1;BGO COMPONENTS;**1,3,4,6,10,11,12,13,14,31,33**;Mar 20, 2007;Build 16
  ;---------------------------------------------
+ ;
+ ; 11-02-2021 MIR Feature 80418
+ ;            GETCONT+6 was changed to exclude non-active contraindications
+ ;
  ; Get case data
 GETCASE(RET,DFN) ;EP
  K RET
@@ -60,7 +64,7 @@ LOT(RET,IMM) ;EP
  ..Q:'$L(X)
  ..Q:$P(X,U,3)=1
  ..;IHS/MSC/MGH P14 Facility specific lot
- ..Q:(($P(X,U,14))&($P(X,U,14)'=$G(DUZ(2)))) ""
+ ..Q:(($P(X,U,14))&($P(X,U,14)'=$G(DUZ(2))))
  ..S NAME=$P(X,U)
  ..S MANUFAC=$P(X,U,2)
  ..S:MANUFAC MANUFAC=$P($G(^AUTTIMAN(MANUFAC,0)),U)
@@ -119,7 +123,7 @@ GETCONT(RET,DUMMY) ;EP
  S (X,CNT)=0
  F  S X=$O(^BICONT(X)) Q:'X  D
  .S Y=$P($G(^BICONT(X,0)),U)
- .S:$L(Y) CNT=CNT+1,@RET@(CNT)=X_U_Y
+ .S:$L(Y)&$P(^BICONT(X,0),U,3) CNT=CNT+1,@RET@(CNT)=X_U_Y
  Q
  ; Return immunization profile
 PROFILE(RET,DFN) ;EP
@@ -209,4 +213,22 @@ GETELIG(RET,DFN) ;Return active eligibility codes
  ..S CNT=CNT+1
  ..S NODE=$G(^BIELIG(IEN,0))
  ..S @RET@(CNT)=IEN_U_$P(NODE,U,1)_U_$P(NODE,U,2)_U_$P(NODE,U,4)
+ Q
+ ; Set user Immunization History preferences into XPAR
+IMMHPREF(RET,VAL) ;-
+ N ENT
+ S VAL="IMMH PREFS"
+ S:$D(VAL)'=11 VAL(1,0)=""
+ S ENT="USR.'"_+DUZ
+ D EN^XPAR("USR","BGO IMM HISTORICAL DISPLAY",1,.VAL,.RET)
+ Q
+ ; RPC: Get Immunization History preferences parameter value
+GETIMMHP(DATA,PARAM,ENT,INST,USR) ;
+ N TMP,X
+ S ENT=$S($L($G(ENT)):ENT,1:"USR.`"_$G(USR,DUZ))
+ D GETWP^XPAR(.TMP,ENT,PARAM,.INST,.ERR)
+ I $G(ERR) K TMP S TMP=ERR
+ E  S TMP=""
+ S DATA=$$TMPGBL^BGOUTL
+ M @DATA=TMP
  Q

@@ -1,9 +1,12 @@
-PSBOST ;BIRMINGHAM/TEJ-UNABLE TO SCAN SUMMARY REPORT;Mar 2004 ; 29 Aug 2008  3:29 PM
- ;;3.0;BAR CODE MED ADMIN;**28**;Mar 2004;Build 9
+PSBOST ;BIRMINGHAM/TEJ-UNABLE TO SCAN SUMMARY REPORT;26-Apr-2023 08:53;DU
+ ;;3.0;BAR CODE MED ADMIN;**28,1033**;Mar 2004;Build 34
  ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
  ;
  ; Reference/IA
  ; ^NURSF(211.4/1409
+ ;
+ ; Modified - IHS/MSC/PLS - 01/03/23 - Ref to DISCHARGE and CHKDIV
+ ;            IHS/MSC/MIR - 03/01/23 - Line NURSE+10
  ;
  ; Entry Point -  GUI Report used by PSB MAN SCAN FAILURE key holders to produce
  ;                total per BCMA scanning and scanning failures from the BCMA SCANNING FAILURE LOG File (#53.77).
@@ -30,7 +33,8 @@ FACILITY ;Entire Facility Option
  S PSBX1=$$FMADD^XLFDT(PSBDTST,,,,-.1) F  S PSBX1=$O(^PSB(53.77,"ASFDT",PSBX1)) Q:(PSBX1>PSBDTSP)!(+PSBX1=0)  D
  .S PSBX2="" F  S PSBX2=$O(^PSB(53.77,"ASFDT",PSBX1,PSBX2)) Q:PSBX2=""  D
  ..S PSBWRD=$P($P($G(^PSB(53.77,PSBX2,0)),U,3),"$",1)_"$"
- ..I PSBWRD'["*UNIDENTIFIABLE PATIENT*",'$D(PSBWARD(PSBWRD)) Q  ;Filter to users institution
+ ..;I PSBWRD'["*UNIDENTIFIABLE PATIENT*",'$D(PSBWARD(PSBWRD)) Q  ;Filter to users institution ;JTC - commented out to modify below
+ ..I PSBWRD'["*UNIDENTIFIABLE PATIENT*",'$D(PSBWARD(PSBWRD)),'$$CHKDIV^PSBOSF() Q  ;Filter to users institution ; added Division Check JTC
  ..S PSB05=$P($G(^PSB(53.77,PSBX2,0)),U,5)
  ..I PSB05="MUAS" S PSBTMUAS=PSBTMUAS+1
  ..I PSB05="MKEY" S PSBTMKEY=PSBTMKEY+1
@@ -55,11 +59,13 @@ NURSE ;Nurse Unit Option
  S PSBX1=$$FMADD^XLFDT(PSBDTST,,,,-.1) F  S PSBX1=$O(^PSB(53.77,"ASFDT",PSBX1)) Q:(PSBX1>PSBDTSP)!(+PSBX1=0)  D
  .S PSBX2="" F  S PSBX2=$O(^PSB(53.77,"ASFDT",PSBX1,PSBX2)) Q:PSBX2=""  D
  ..S PSBWRD=$P($P($G(^PSB(53.77,PSBX2,0)),U,3),"$",1) I PSBWRD="" S PSBWRD=" "
- ..I PSBWRD'["*UNIDENTIFIABLE PATIENT*",'$D(PSBWARD(PSBWRD_"$")) Q  ;Filter to users institution
+ ..;I PSBWRD'["*UNIDENTIFIABLE PATIENT*",'$D(PSBWARD(PSBWRD_"$")) Q  ;Filter to users institution ;JTC - commented out to modify below
+ ..I PSBWRD'["*UNIDENTIFIABLE PATIENT*",'$D(PSBWARD(PSBWRD_"$")),'$$CHKDIV^PSBOSF() Q  ;Filter to users institution ; JTC - added Division
  ..S PSB05=$P($G(^PSB(53.77,PSBX2,0)),U,5) I $G(PSB05)="" S PSB05=" "
  ..D  ;Set Nurse Location
  ...I PSBWRD["*UNIDENTIFIABLE PATIENT*" S PSBNULO=PSBWRD Q
- ...S PSBNULO=$G(PSBWARD(PSBWRD_"$")) I PSBNULO="" S PSBNULO=" "
+ ...;S PSBNULO=$G(PSBWARD(PSBWRD_"$")) I PSBNULO="" S PSBNULO=" "
+ ...S PSBNULO=$G(PSBWARD(PSBWRD_"$")) I PSBNULO="" S PSBNULO=PSBWRD I PSBNULO="" S PSBNULO=" "  ; 2019.7.16 JTC - added Hospital Location
  ..I PSB05="MUAS" S PSBNU(PSBNULO,PSB05)=$G(PSBNU(PSBNULO,PSB05))+1
  ..I PSB05="MKEY" S PSBNU(PSBNULO,PSB05)=$G(PSBNU(PSBNULO,PSB05))+1
  ..I PSB05="MMME" S PSBNU(PSBNULO,PSB05)=$G(PSBNU(PSBNULO,PSB05))+1
@@ -201,7 +207,8 @@ NURLOC(X) ;Nursing Location Name
  I X["*UNIDENTIFIABLE PATIENT*" Q X
  N PSBNURLC
  S PSBNURLC=$G(^NURSF(211.4,X,0))
- I PSBNURLC="" Q PSBNURLC
+ ;I PSBNURLC="" Q PSBNURLC  ;JTC - commented out to modify below
+ I PSBNURLC="" S:$$CHKDIV^PSBOSF(X_"$") PSBNURLC=X Q PSBNURLC  ; 2019.7.16 JTC - adding printing of Hospital Location if no ward
  S PSBNURLC=$P($G(^SC(PSBNURLC,0)),"^",1)
  Q PSBNURLC
  ;

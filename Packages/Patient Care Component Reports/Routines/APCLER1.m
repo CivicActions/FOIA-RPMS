@@ -1,5 +1,5 @@
-APCLER1 ; IHS/CMI/LAB - APC visit counts by selected vars ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLER1 ; IHS/OHPRD/TMJ - APC visit counts by selected vars ; [ 01/10/05  8:45 PM ]
+ ;;3.0;IHS PCC REPORTS;**5,11,15,16**;FEB 05, 1997
  ;
 START ; 
  I '$G(DUZ(2)) W $C(7),$C(7),!!,"SITE NOT SET IN DUZ(2) - NOTIFY SITE MANAGER!!",!! Q
@@ -53,9 +53,6 @@ PRV ;get provider which the patient should have been seen prior
  S DIC("A")="Which Provider: ",DIC="^VA(200,",DIC(0)="AEMQ" D ^DIC K DIC,DA G:X="^" PROV K DIC,DA G:Y<0 PRV
  S APCLPROV=+Y
 ZIS ;call to XBDBQUE
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G PROV
  S XBRP="^APCLER1P",XBRC="^APCLER11",XBRX="XIT^APCLER1",XBNS="APCL"
  D ^XBDBQUE
  D XIT

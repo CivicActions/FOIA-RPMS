@@ -1,5 +1,5 @@
 AMHLEAR1 ; IHS/CMI/LAB - ACTIVITY RECORD FORM DATA ENTRY CREATE RECORD ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+ ;;3.0;IHS BEHAVIORAL HEALTH;**4**;JAN 27, 2003
  ;
  ;
  ;loop and get patients until AMHNUM
@@ -31,7 +31,6 @@ PAUSE ;
  S DIR(0)="EO",DIR("A")="Press enter to continue...." D ^DIR K DIR S:$D(DUOUT) DIRUT=1
  Q
 DEL ;
- I $$IINTAKE^AMHLEDEL(AMHR) W !!,"This visit has an Initial Intake with Updates, it can not be deleted",!,"until the update documents have been deleted." D PAUSE Q
  S AMHRDEL=AMHR
  D EN^AMHLEDEL
  D PAUSE

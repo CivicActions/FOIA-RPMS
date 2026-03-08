@@ -1,0 +1,45 @@
+AZZZEOB5 ; IHS/ADC/GTH - PROCESS EOBRS (6/6) - SUMMARY/ERROR REPORT ; [ 09/17/97   9:12 AM ]
+ ;;3.0;CONTRACT HEALTH MGMT SYSTEM;**10**;SEP 17, 1997
+ ;
+ S ACHSIO=IO,(ACHSISAO,ACHSSUM)=0
+ D HOME^%ZIS,NOW^ACHS,LINES^ACHSFU
+ S ACHSIO=IO,ACHS("R")=$O(^ACHSPCC(0)),ACHS("SITE")=$$LOC^ACHS,ACHSEOBD=$P($G(^ACHSF(DUZ(2),17,0)),U,3)
+ U IO(0)
+ W !
+ D EN^XBVIDEO("IORVON")
+ W "THESE REPORTS WILL ONLY INCLUDE THOSE DOCUMENTS",!,"FROM THE LAST EOBR PROCESSING RUN."
+ D EN^XBVIDEO("IORVOFF")
+ W !
+MODE ;
+ KILL DIR
+ S DIR(0)="SO^1:Print EOBR Processing Summary Report;2:Print EOBR Processing Error Documents;3:Print EOBR Documents"
+ S DIR("A")="          Select"
+ S DIR("?",1)="Press (1) to print a summary of transactions processed"
+ S DIR("?",2)="Press (2) to print EOBRs that have processing errors/warnings"
+ S DIR("?")="Press (3) to print a range of EOBRs from LAST EOBR PROCESSING"
+ D ^DIR
+ KILL DIR
+ G K:$D(DUOUT)!$D(DIRUT)!$D(DTOUT)!('Y)
+ S ACHSRPT=+Y
+ I ACHSRPT=1,'$O(^ACHSEOBR(0)) W !!,*7,"NO EOBRS OR ERRORS/WARNINGS RECORDED",!! D RTRN^ACHS G K
+ I ACHSRPT=2,'$O(^ACHSEOBR("ER",0)) W !!,*7,!,"NO EOBR ERRORS/WARNINGS RECORDED.",!! D RTRN^ACHS G K
+ I ACHSRPT=3 D ^AZZZEOB7 G K
+DEV ;
+ S %=$$PB^ACHS
+ I %=U!$D(DTOUT)!$D(DUOUT) D K Q
+ I %="B" D VIEWR^XBLM("START^AZZZEOB6"),EN^XBVK("VALM"),K Q
+ S %ZIS="OPQ"
+ D ^%ZIS
+ I POP S IOP=$I D ^%ZIS G K
+ G:'$D(IO("Q")) START^AZZZEOB6
+ KILL IO("Q")
+ I $D(IO("S"))!($E(IOST)'="P") W *7,!,"Please queue to system printers." D ^%ZISC G DEV
+ S ZTRTN="START^AZZZEOB6",ZTDESC="CHS EOBR Processing Report, for "_$$LOC^ACHS_"."
+ F %="ACHSRPT","ACHSEOBD","ACHSISAO","ACHSSUM" S ZTSAVE(%)=""
+ D ^%ZTLOAD
+ G:'$D(ZTSK) DEV
+K ;EP - Kill vars, do ERPT, quit.
+ KILL ZTSK
+ D ERPT^ACHS,EN^XBVK("ACHS"),^ACHSVAR
+ Q
+ ;

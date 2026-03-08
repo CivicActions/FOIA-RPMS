@@ -1,18 +1,42 @@
-RADEM2 ;HISC/CAH,FPT,GJC-Display Patient Demographics (short) ;10/20/94  09:18
- ;;5.0;Radiology/Nuclear Medicine;**31**;Mar 16, 1998
+RADEM2 ;HISC/CAH,FPT,GJC IHS/OIT/BT - Display Patient Demographics (short) ;11/11/2022  09:18
+ ;;5.0;Radiology/Nuclear Medicine;**31,132,1009,1010**;Mar 16, 1998;Build 11
+ ;ICR#   Type  Description
+ ;-----  ----  -------------------------------------
+ ;1120   SUP   EN6^GMRVUTL
+ ;
 PAT ;Q:'$D(^DPT(RADFN,0))  S Y=^(0),RANME=$P(Y,"^"),RASEX=$P(Y,"^",2),RASSN=$$SSN^RAUTL,RADOB=$P(Y,"^",3),X1=DT,X2=RADOB D ^%DTC S RAGE=X\365.25
- Q:'$D(^DPT(RADFN,0))  S Y=^(0),RANME=$P(Y,"^"),RASEX=$P(Y,"^",2),RASSN=$$SSN^RAUTL,RADOB=$P(Y,"^",3),X1=DT,X2=RADOB D ^%DTC D DEM^VADPT S RAGE=VADM(4)  ;IHS/ITSC/CLS 02/08/2004 use IHS printable age
+ Q:'$D(^DPT(RADFN,0))  S Y=^(0)
+ S RASEX=$P(Y,"^",2),RASSN=$$SSN^RAUTL,RADOB=$P(Y,"^",3),X1=DT,X2=RADOB D ^%DTC D DEM^VADPT S RAGE=VADM(4)  ;IHS/ITSC/CLS 02/08/2004 use IHS printable age
+ S RANME=$$GETPREF^AUPNSOGI(RADFN,"E",1)
  ;S:$E(DT,4,7)=$E(RADOB,4,7) RAGE=RAGE+1 ; today is birthday  ;IHS/ITSC/CLS 02/08/2004
  S Y=RADOB D D^RAUTL S RADOB=Y
  N RAVETELI S RAVETELI=$$VETELI(RADFN)
  S RAVET=$P(RAVETELI,"^"),RAELIG=$P(RAVETELI,"^",2)
  I $D(^DPT(RADFN,.1)),^(.1)]"" D ^RASERV
 DIS W @IOF,!,"           ***********    Patient Demographics   ***********",!
- W !?2,"Name         : ",$E(RANME,1,20) W:$D(RAWARD) ?37,"Currently is an inpatient."
- W !?2,"Pt ID        : ",RASSN W:$D(RAWARD) ?39,"Ward/Service: ",$E(RAWARD_"/"_RASER,1,25)
- W !?2,"Date of Birth: ",RADOB," (",RAGE,")" W:$D(RABED) ?39,"Bedsection  : ",RABED
- W !?2,"Veteran      : ",RAVET,?39,"Eligibility : ",$E(RAELIG,1,25)
- W !?2,"Sex          : ",$S(RASEX="M":"MALE",RASEX="F":"FEMALE",1:"Unknown") I $D(^RADPT(RADFN,1)) W !?2,"Narrative    : ",^(1)
+ W !?2,"Name         : ",RANME
+ W !?2,"Pt ID        : ",RASSN W:$D(RAWARD) ?37,"Currently is an inpatient."
+ W !?2,"Date of Birth: ",RADOB," (",RAGE,")" W:$D(RAWARD) ?39,"Ward/Service: ",$E(RAWARD_"/"_RASER,1,25)
+ W !?2,"Veteran      : ",RAVET W:$D(RABED) ?39,"Bedsection  : ",RABED
+ W !?2,"Sex          : ",$S(RASEX="M":"MALE",RASEX="F":"FEMALE",1:"Unknown"),?39,"Eligibility : ",$E(RAELIG,1,25)
+ I $D(^RADPT(RADFN,1)) W !?2,"Narrative    : ",^(1)
+ ;RTW Add height and weight *** BEGIN ***
+ ;IHS/CMI/LAB - 03/18/21 - PATCH 1009, CR #11437 BEGIN MODS
+ D  ;
+ .N RAHDVITL,RAHDX,DFN,GMRVSTR,X,Y
+ .F RAHDVITL="HT","WT" D
+ .. S DFN=RADFN,GMRVSTR=RAHDVITL
+ .. ;D EN6^GMRVUTL S RAHDX=$G(X)  ;IHS/CMI/LAB - original line
+ .. S RAHDX=$$LASTITEM^APCLAPIU(DFN,GMRVSTR,"MEASUREMENT",,,"A")  ;IHS/CMI/LAB - new line to get v measurements
+ .. ;W !?2,$E(RAHDVITL),"eight       : ",$P(RAHDX,U,8)   ;IHS/CMI/LAB - original line
+ .. W !?2,$E(RAHDVITL),"eight       : ",$P(RAHDX,U,3)    ;IHS/CMI/LAB - new line
+ .. ;I $P(RAHDX,U,8)]"" W $S(RAHDVITL="HT":"""",RAHDVITL="WT":" lbs",1:"")  ;IHS/CMI/LAB - original line
+ .. I $P(RAHDX,U,3)]"" W $S(RAHDVITL="HT":"""",RAHDVITL="WT":" lbs",1:"")   ;IHS/CMI/LAB  - new line piece 3 rather than piece 8
+ .. S Y=$P(RAHDX,U,1) I Y>0 D D^RAUTL W " on ",Y
+ .. Q
+ . Q
+ ;IHS/CMI/LAB - 03/18/21 - PATCH 1009, CR #11437 END MODS
+ ;RTW Add height and weight *** END ***
  W !?2,"Other Allergies:",!?7,"'V' denotes verified allergy   'N' denotes non-verified allergy",!
  S DFN=RADFN D ALLERGY^RADEM I '$D(GMRAL) W !?20,"** No allergies on file. **" G ALER
  F I=1:1 Q:'$D(PI(I))  W:I#2 !?2,PI(I) W:I#2=0 ?40,PI(I)

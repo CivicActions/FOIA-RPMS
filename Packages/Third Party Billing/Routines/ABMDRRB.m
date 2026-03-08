@@ -1,5 +1,5 @@
 ABMDRRB ;IHS/ASDST/LSL - MEDICARE B CLAIM SPLIT FOR RAILROAD  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;
  ; IHS/ASDS/LSL - 10/01/01 - V2.4 Patch 9 - NOIS HQW-0701-100066
  ;     This routine will go back to visit date 7/1/01 and split already
@@ -42,7 +42,8 @@ ONE ;
 CLAIM ;
  ; one claim
  S ABMINS=+$P(^ABMDCLM(DUZ(2),ABMCLM,0),"^",8)
- Q:$P($G(^AUTNINS(ABMINS,2)),U)'="R"
+ ;Q:$P($G(^AUTNINS(ABMINS,2)),U)'="R"  ;abm*2.6*10 HEAT73780
+ Q:$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABMINS,".211","I"),1,"I")'="R"  ;abm*2.6*10 HEAT73780
  Q:$P(^ABMDCLM(DUZ(2),ABMCLM,0),"^",7)=999
  D MAIN(ABMCLM)
  W "."

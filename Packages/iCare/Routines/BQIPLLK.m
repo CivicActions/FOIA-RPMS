@@ -1,5 +1,5 @@
 BQIPLLK ;VNGT/HS/KJH-Panel Lock/Unlock Functions ; 23 Feb 2006  5:08 PM
- ;;2.3;ICARE MANAGEMENT SYSTEM;;Apr 18, 2012;Build 59
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**4,5**;Mar 01, 2021;Build 20
  ;
  Q
  ;
@@ -83,7 +83,7 @@ UNLOCK(DATA,OWNR,PLIEN) ; EP -- BQI UNLOCK PANEL
  ; or
  ;   BMXSEC - if $D(ERROR) when filing or M error encountered
  ;            
- N UID,X,BQII
+ NEW UID,X,BQII
  S UID=$S($G(ZTSK):"Z"_ZTSK,1:$J)
  S DATA=$NA(^TMP("BQIPLLK",UID))
  K ^TMP("BQIPLLK",UID)
@@ -92,33 +92,41 @@ UNLOCK(DATA,OWNR,PLIEN) ; EP -- BQI UNLOCK PANEL
  ;
  ; Create header record
  S BQII=0,^TMP("BQIPLLK",UID,BQII)="I00010RESULT"_$C(30)
+ I +$G(PLIEN)=0 S RESULT=1 G FIN
+ I $G(^BQICARE(OWNR,1,PLIEN,0))="" S RESULT=1 G FIN
  ;
- N DA,IENS,RESULT,USER,ERROR
+ NEW DA,IENS,RESULT,USER,ERROR
  S DA=PLIEN,DA(1)=OWNR,IENS=$$IENS^DILF(.DA)
+ S BQIUPD(90505.01,IENS,3.4)="@"
+ D FILE^DIE("","BQIUPD","ERROR") K ERROR
  ;
  ; Get 'LAST LOCKED BY' from the panel.
  S USER=$$GET1^DIQ(90505.01,IENS,.16,"I")
  ;
  ; If 'LAST LOCKED BY' is this DUZ then delete it from the panel.
  I USER=DUZ D
- . N BQINEW
+ . NEW BQINEW,DA,IENS
+ . ;K BQINEW
+ . S DA=PLIEN,DA(1)=OWNR,IENS=$$IENS^DILF(.DA)
  . S BQINEW(90505.01,IENS,.16)="@"
  . D FILE^DIE("","BQINEW","ERROR")
  . I $D(ERROR) S BMXSEC="RPC Call Failed: Error encountered while updating user last locked." Q
  . Q
  ;
+ ;I $G(BMXSEC)'="" Q
  ; Unlock and set RESULT
  S RESULT=1
  L -^BQICARE(OWNR,1,PLIEN,0)
  ;
- ; Report results
+FIN ; Report results
  S BQII=BQII+1,^TMP("BQIPLLK",UID,BQII)=RESULT_$C(30)
  S BQII=BQII+1,^TMP("BQIPLLK",UID,BQII)=$C(31)
+ K ERROR
  Q
  ;
 ERR ;
  D ^%ZTER
- N Y,ERRDTM
+ NEW Y,ERRDTM
  S Y=$$NOW^XLFDT() X ^DD("DD") S ERRDTM=Y
  S BMXSEC="Recording that an error occurred at "_ERRDTM
  Q

@@ -1,6 +1,5 @@
-DDSWP ;SFISC/MKO-WP ;1:05 PM  23 Aug 1999 [ 04/02/2003   8:25 AM ]
- ;;22.0;VA FileMan;**1001**;APR 1, 2003
- ;;22.0;VA FileMan;**8**;Mar 30, 1999
+DDSWP ;SFISC/MKO-WP ;08:05 AM  26 Jul 1995
+ ;;21.0;VA FileMan;**11**;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 EDIT ;Edit the word processing field
  N I

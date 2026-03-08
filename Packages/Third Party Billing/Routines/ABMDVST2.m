@@ -1,5 +1,6 @@
-ABMDVST2 ; IHS/ASDST/DMJ - PCC CLAIM STUFF - PART 3 (PROVIDER) ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDVST2 ; IHS/ASDST/DMJ - PCC CLAIM STUFF - PART 3 (PROVIDER) ;  [ 10/30/2003  4:11 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**4,9**;APR 05, 2002
+ ;;Y2K/OK - IHS/ADC/JLG 12-18-97
  ;Original;TMD;03/26/96 12:12 PM
  ;This routine loops thru the
  ;the V Provider file 3 times.  First it looks for a valid MD.  Then
@@ -11,7 +12,7 @@ ABMDVST2 ; IHS/ASDST/DMJ - PCC CLAIM STUFF - PART 3 (PROVIDER) ;
  ;IHS/DSD/LSL - 03/24/98 -  Undefined error on a global.
  ;Global AUPNPRV should be AUPNVPRV
  ;
- ;IHS/SD/SDR - v2.5 p9 - IM16620
+ ;IHS/SD/SDR - v.25 p9 - IM16620
  ;   Removed code to make provider rendering
  ;
  Q:ABMIDONE
@@ -77,11 +78,13 @@ PRV2 K DIC,DD,DO
  N ABMNOFIL
  I ABMAT D
  .S X=ABMAT,ABMPCAT="A"
+ .;I $G(ABMP("EXP"))=22!($G(ABMP("EXP"))=23) S ABMPCAT="R"  ;abm*2.5*9 IM16620
  .D PRVST
  E  I $L(ABMAT)>1 D
  .S X=$P(ABMAT,U,2)
  .Q:'X
  .S ABMPCAT="A"
+ .;I $G(ABMP("EXP"))=22!($G(ABMP("EXP"))=23) S ABMPCAT="R"  ;abm*2.5*9 IM16620
  .I $D(^ABMDCLM(DUZ(2),ABMP("CDFN"),41,"C",ABMPCAT)) D  Q
  ..S ABMNOFIL=1
  .D FILE
@@ -143,11 +146,11 @@ PRVST2 S X=$P(^AUPNVPRV(X,0),U)
 FILE Q:$$UBILPRV($$DOCLASS(X))
  I ABM("DOCFILE")=6 D
  .I $G(^DIC(16,X,"A3")) S X=^("A3") Q
- .S ABMR("PNAME")=$P(^DIC(16,X,0),U)
+ .S ABMR("PNAME")=$P(^DIC(16,X,0),"^",1)
  .S X=$O(^VA(200,"B",ABMR("PNAME"),0))
  Q:'X
  Q:$D(^ABMDCLM(DUZ(2),ABMP("CDFN"),41,"B",X))
- S DIC("P")=$P(^DD(9002274.3,41,0),U,2)
+ I '$D(@(DIC_"0)")) S @(DIC_"0)")="^9002274.3041P"
  S DIC("DR")=".02////"_ABMPCAT
  K DD,DO D FILE^DICN
  S ABMN=ABMN+1

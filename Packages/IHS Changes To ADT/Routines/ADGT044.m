@@ -1,4 +1,4 @@
-ADGT044 ; ;04/08/09
+ADGT044 ; ;07/21/08
  D DE G BEGIN
 DE S DIE="^ADGDS(D0,""DS"",",DIC=DIE,DP=9009012.01,DL=2,DIEL=1,DU="" K DG,DE,DB Q:$O(^ADGDS(D0,"DS",DA,""))=""
  I $D(^(2)) S %Z=^(2) S %=$P(%Z,U,6) S:%]"" DE(1)=%

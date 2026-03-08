@@ -1,5 +1,5 @@
-BARADJRC ; IHS/SD/LSL - data values for BARADJRA ;
- ;;1.8;IHS ACCOUNTS RECEIVABLE;;OCT 26, 2005
+BARADJRC ; IHS/SD/LSL - data values for BARADJRA ; 
+ ;;1.7;IHS ACCOUNTS RECEIVABLE;**4**;MAY 02, 2003
  ;
  ; IHS/SD/LSL - 10/07/2003 - V1.7 Patch 4
  ;      Contains $T values for BARADJRA in regards to PENDING

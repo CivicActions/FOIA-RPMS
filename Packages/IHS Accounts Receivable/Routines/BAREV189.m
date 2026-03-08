@@ -118,7 +118,7 @@ POST ;EP; CHECK AND CORRECT ZISH PARAMETER ENTRY
  .S BARREC=$$GET1^DIQ(9888888.93,BAR_",",.03)
  .Q:BARREC="ufmstest"
  .S BARREC=$$GET1^DIQ(9888888.93,BAR_",",.02)
- .Q:BARREC="quovadx-ie.DOMAIN.NAME"
+ .Q:BARREC="quovadx-ie.ihs.gov"
  .D BMES^XPDUTL("Updating "_BARS_" entry")
  .D UP(BAR,BARS)
  Q
@@ -132,7 +132,7 @@ UP(BAR,X) ;
  K DIC,DIE,DA,DR,DIR,DD,DO,DINUM
  S DIE="^%ZIB(9888888.93,"
  S DA=+Y
- S TARGETIP="quovadx-ie.DOMAIN.NAME"
+ S TARGETIP="quovadx-ie.ihs.gov"
  S DR=".02///^S X=TARGETIP"
  D ^DIE
  K DIC,DIE,DA,DR,DIR

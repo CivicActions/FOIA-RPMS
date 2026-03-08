@@ -1,5 +1,5 @@
 AUPNCIX ; IHS/CMI/LAB - CREATE COMPOUND "AQ" INDICIES LAB&MEAS ; 08 May 2014  5:24 PM
- ;;2.0;IHS PCC SUITE;**2,10,11**;MAY 14, 2009;Build 58
+ ;;2.0;IHS PCC SUITE;**31**;MAY 14, 2009;Build 10
  ;; MODIFIED TO SUPPORT Q-MAN 1.3 BY GIS/OHPRD MAY 24,1991
  ; The old compound index "BA" is no longer created and will be killed
  ;
@@ -92,10 +92,12 @@ VXAMR(V,RETVAL) ;PEP - send back list of allowable result values
  K @RETVAL
  I $E(V)'?.N S V=$O(^AUTTEXAM("B",V,0))
  I 'V Q ""
- S C=$P($G(^AUTTEXAM(V,0)),U,2)
+ S C=$P($G(^AUTTEXAM(V,0)),U,2)  ;exam code
  I C="" Q ""
  S S=0
- F Y="A","N","PR","PAP","PA","PO","L","M","H","RF","PS" S X=Y D VXAM04C I $D(X) S S=S+1,@RETVAL@(S)=X_U_$$EXTSET^XBFUNC(9000010.13,.04,X)
+ F Y="A","N","PR","PAP","PA","PO","L","M","H","RF","PS","NAP","AP" S X=Y D VXAM04C I $D(X) D
+ .I X="AP" S S=S+1,@RETVAL@(S)=X_U_"ACUTE POSITIVE" Q   ;XBFUNC DOES NOT WORK WITH THIS ONE DUE TO PAP
+ .S S=S+1,@RETVAL@(S)=X_U_$$EXTSET^XBFUNC(9000010.13,.04,X)
  Q C
  ;
 VXAM04 ;EP - called from input tx on .04 field of V EXAM
@@ -103,7 +105,11 @@ VXAM04 ;EP - called from input tx on .04 field of V EXAM
  Q:'$G(DA)
  NEW C S C=$P(^AUTTEXAM($P(^AUPNVXAM(DA,0),U),0),U,2)
 VXAM04C ;
- I X="RF" Q  ;referral good for all exam types
+ I X="RF",C=44 K X Q   ;referral good for all exam types except 44
+ I X="RF",C=51 K X Q   ;referral not okay for code 51 ;IHS/CMI/LAB aum*24*4
+ I X="RF" Q    ;referral good  - PATCH 24
+ I X="N",C=51 K X Q  ;IHS/CIM/LAB aum*24*4 N not valid for 51
+ I X="AP"!(X="NAP"),C'=44 K X Q
  I X="PS",(C'=38&(C'=39)) K X Q
  I C=38!(C=39),X'="PS" K X Q
  I X="PA",C'=34 K X Q
@@ -112,21 +118,47 @@ VXAM04C ;
  I X="A",C=34 K X Q
  I X="A",C=35 K X Q
  I X="A",C=36 K X Q
- I X="PO",(C'=35&(C'=36)&(C'=99)) K X Q  ;TAKE OUT 99
- I X="L",(C'=42&(C'=43)) K X Q
- I X="M",(C'=42&(C'=43)) K X Q
- I X="H",(C'=42&(C'=43)) K X Q
+ I X="A",C=44 K X Q
+ I X="A",C=45 K X Q   ;IHS/CMI/LAB aum*24*1
+ I X="A",C=46 K X Q   ;IHS/CMI/LAB aum*24*1
+ I X="A",C=47 K X Q   ;IHS/CMI/LAB aum*24*1
+ I X="A",C=48 K X Q   ;IHS/CMI/LAB aum*24*1
+ I X="A",C=49 K X Q   ;IHS/CMI/LAB aum*24*1
+ I X="A",C=50 K X Q   ;IHS/CMI/LAB aum*24*1
+ I X="PO",'$$VE(C) K X Q  ;   ;IHS/CMI/LAB aum*24*1
+ I X="L",(C'=42&(C'=43)&(C'=51)) K X Q
+ I X="M",(C'=42&(C'=43)&(C'=51)) K X Q
+ I X="H",(C'=42&(C'=43)&(C'=51)) K X Q
  I C=42!(C=43),X'="L",X'="M",X'="H" K X Q
  Q
-VXAM04H ;EP
- D EN^DDIOL("RF (Referral Needed) is a valid choice for all exam types","","!")
+VE(%) ;   ;IHS/CMI/LAB aum*24*1
+ I %=35 Q 1
+ I %=36 Q 1
+ I %=99 Q 1
+ I %=45 Q 1
+ I %=46 Q 1
+ I %=47 Q 1
+ I %=48 Q 1
+ I %=49 Q 1
+ I %=50 Q 1
+ I %=51 Q 1   ;IHS/CMI/LAB aum*24*4
+ Q ""
+VXAM04H ;EP    ;IHS/CMI/LAB aum*24*1 updated help text for SDOH and Unhealthy Drug
+ ;IHS/CMI/LAB aum*24.*4 updated help text for code 51
+ D EN^DDIOL("RF (Referral Needed) is a valid choice for all exam types except ","","!")
+ D EN^DDIOL("  ASQ- Suicide Screening and Pressure Injury Exam","","!")
+ D EN^DDIOL("AP (Acute Positive) and NAP (Non-Acute Positive) are valid only","","!")
+ D EN^DDIOL("for ASQ - Suicide Screening","","!")
  D EN^DDIOL("N is a valid for all exam types, except VTE/Newborn Hearing/Suicide Assmt ","","!")
- ;D EN^DDIOL("and Suicide Assessment","","!")
+ D EN^DDIOL("and Pressure Injury Exam","","!")
  D EN^DDIOL("PR, PAP, PA are only valid for Intimate Partner Violence exam type","","!")
  D EN^DDIOL("A is not valid for Intimate Partner Violence/Alcohol Screening/Depression ","","!")
- D EN^DDIOL("Screening/VTE Risk Assessment/Suicide Risk Assessment/Newborn Hearing exam types","","!")
- D EN^DDIOL("PO is valid for Depression Screening and Alcohol Screening and BIMS exam types","","!")
- D EN^DDIOL("L, M and H are only valid for VTE Risk Assessment/Suicide Risk Assessment exams","","!")
+ D EN^DDIOL("Screening/VTE Risk Assessment/Suicide Risk Assessment/Newborn Hearing/","","!")
+ D EN^DDIOL("ASQ - Suicide Screening/SDOH or Unhealthy Drug Screen exam types","","!")
+ D EN^DDIOL("PO is valid for Depression Screening, Alcohol Screening, BIMS, SDOH,","","!")
+ D EN^DDIOL("Unhealthy Drug Screen and Pressure Injury exam types","","!")
+ D EN^DDIOL("L, M and H are valid for VTE Risk Assessment/Suicide Risk Assessment exams","","!")
+ D EN^DDIOL("and Pressure Injury Exam","","!")
  D EN^DDIOL("PS (Pass) is only valid for Newborn Hearing Right and Left","","!")
  Q
 INPH ;EP - called from help 9000024

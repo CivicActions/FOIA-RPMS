@@ -1,5 +1,5 @@
 BGP8DU ; IHS/CMI/LAB - gpra utility calls ;
- ;;18.1;IHS CLINICAL REPORTING;;MAY 25, 2018;Build 66
+ ;;18.0;IHS CLINICAL REPORTING;**1**;NOV 21, 2017;Build 62
  ;
  ;
 WH(P,BDATE,EDATE,T,F) ;EP
@@ -26,13 +26,12 @@ WH(P,BDATE,EDATE,T,F) ;EP
  I F=3 S D=$P(^BWPCD(G,0),U,12) Q D
  I F=4 S D=$P(^BWPCD(G,0),U,12) Q $$FMTE^XLFDT(D)
  Q ""
-PLTAXND(P,A,E,Z)  ;EP - is dx on problem list as NOT DELETED
+PLTAXND(P,A,E)  ;EP - is dx on problem list as NOT DELETED
   ;P is dfn
   ;a is taxonomy name
   I $G(P)="" Q ""
   I $G(A)="" Q ""
   S E=$G(E)
-  S Z=$G(Z)  ;skip inactive if =1
   NEW T S T=$O(^ATXAX("B",A,0))
   I 'T Q ""  ;bad taxonomy??
   NEW X,Y,I,D
@@ -40,7 +39,6 @@ PLTAXND(P,A,E,Z)  ;EP - is dx on problem list as NOT DELETED
   F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(I)  D
   .Q:'$D(^AUPNPROB(X,0))
   .Q:$P(^AUPNPROB(X,0),U,12)="D"
-  .I Z Q:$P(^AUPNPROB(X,0),U,12)="I"
   .S Y=$P(^AUPNPROB(X,0),U)
   .I E,$P(^AUPNPROB(X,0),U,13)>E Q  ;if there is a doo and it is after report period skip
   .I $P(^AUPNPROB(X,0),U,13)="",E,$P(^AUPNPROB(X,0),U,8)>E Q  ;entered after report period, skip
@@ -50,17 +48,14 @@ PLTAXND(P,A,E,Z)  ;EP - is dx on problem list as NOT DELETED
   .S I=1_U_"Problem List: "_$$VAL^XBDIQ1(9000011,X,.01)_U_D
   .Q
   Q I
-IPLSNOND(P,T,E,Z) ;EP - any problem list entry with a SNOMED in T
+IPLSNOND(P,T,E) ;EP - any problem list entry with a SNOMED in T
  ;LOOP PROBLEM LIST
  NEW G,X,Y
  S (X,G)=""
- S E=$G(E)
- S Z=$G(Z)
  F  S X=$O(^AUPNPROB("APCT",P,X)) Q:X=""!(G)  D
  .S Y=0 F  S Y=$O(^AUPNPROB("APCT",P,X,Y)) Q:Y'=+Y!(G)  D
  ..Q:'$D(^AUPNPROB(Y,0))
  ..Q:$P(^AUPNPROB(Y,0),U,12)="D"  ;deleted
- ..I Z Q:$P(^AUPNPROB(Y,0),U,12)="I"
  ..Q:'$D(^XTMP("BGPSNOMEDSUBSET",$J,T,X))
  ..I E,$P(^AUPNPROB(Y,0),U,13)>E Q  ;if there is a doo and it is after report period skip
  ..I $P(^AUPNPROB(Y,0),U,13)="",E,$P(^AUPNPROB(Y,0),U,8)>E Q  ;entered after report period, skip
@@ -68,14 +63,13 @@ IPLSNOND(P,T,E,Z) ;EP - any problem list entry with a SNOMED in T
  ..I 'D S D=$P(^AUPNPROB(Y,0),U,3)
  ..S G=1_U_"Problem List: "_X_U_D  ;$$CONCPT^AUPNVUTL(X)
  Q G
-PLTAXID(P,A,B,E,Z)  ;EP - is dx on problem list as either active or inactive?
+PLTAXID(P,A,B,E)  ;EP - is dx on problem list as either active or inactive?
  ;P is dfn
  ;a is taxonomy name
  I $G(P)="" Q ""
  I $G(A)="" Q ""
  S E=$G(E)
  S B=$G(B)
- S Z=$G(Z)
  NEW T S T=$O(^ATXAX("B",A,0))
  I 'T Q ""  ;bad taxonomy??
  NEW X,Y,I,D,M,O
@@ -88,7 +82,6 @@ PLTAXID(P,A,B,E,Z)  ;EP - is dx on problem list as either active or inactive?
  .S O=$P(^AUPNPROB(X,0),U,13)
  .S M=$P(^AUPNPROB(X,0),U,3)
  .S D=$P(^AUPNPROB(X,0),U,8)
- .I Z,D>E Q
  .I D'<B,D'>E G CHK
  .I O,O'<B,O'>E G CHK
  .I M,M'<B,M'>E G CHK
@@ -98,12 +91,11 @@ CHK .;
  .S I=1_U_"Problem List: "_$$VAL^XBDIQ1(9000011,X,.01)_U_$S(O="":M,1:O)_U_X
  .Q
   Q I
-IPLSNOID(P,T,B,E,Z) ;EP - any problem list entry with a SNOMED in T
+IPLSNOID(P,T,B,E) ;EP - any problem list entry with a SNOMED in T
  ;LOOP PROBLEM LIST
  NEW X,G,Y,O,M
  S B=$G(B)
  S E=$G(E)
- S Z=$G(Z)  ;must not be added after E
  S (X,G)=""
  F  S X=$O(^AUPNPROB("APCT",P,X)) Q:X=""!(G)  D
  .S Y=0 F  S Y=$O(^AUPNPROB("APCT",P,X,Y)) Q:Y'=+Y!(G)  D
@@ -114,7 +106,6 @@ IPLSNOID(P,T,B,E,Z) ;EP - any problem list entry with a SNOMED in T
  ..S O=$P(^AUPNPROB(Y,0),U,13)
  ..S M=$P(^AUPNPROB(Y,0),U,3)
  ..S D=$P(^AUPNPROB(Y,0),U,8)
- ..I Z,D>E Q
  ..I D'<B,D'>E G S
  ..I O,O'<B,O'>E G S
  ..I M,M'<B,M'>E G S

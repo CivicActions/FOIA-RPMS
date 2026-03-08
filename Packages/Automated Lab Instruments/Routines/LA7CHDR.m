@@ -1,5 +1,5 @@
 LA7CHDR ;VA/DALOI/JMC - LAB HDR ORU (Observation Result) message builder ; 22-Oct-2013 09:22 ; MAW
- ;;5.2;AUTOMATED LAB INSTRUMENTS;**68,1033**;NOV 1, 1997
+ ;;5.2;AUTOMATED LAB INSTRUMENTS;**68,1033,1047**;NOV 1, 1997;Build 21
  ;
  ; Reference to variable DIQUIET supported by DBIA #2098
  ;
@@ -217,14 +217,17 @@ MSH(FS,ECH,SITE) ;return the msh segment
  S MSH(10)="RPMS-HL-"_$R(100000)
  S MSH(11)="T"
  S MSH(12)=$P($G(^BLRRLMU(SITE,0)),U,2)
- S MSH(15)="NE"
- S MSH(16)="NE"
+ S MSH(15)=$P(MSHAA,U,3)  ;maw 01242020 2015 chit
+ S MSH(16)=$P(MSHAA,U,4)  ;maw 01242020 2015 chit
+ ;S MSH(15)="NE"
+ ;S MSH(16)="NE"
  I $G(LA7INPT) D
  . S MSH(15)="AL"
  . S MSH(16)="NE"
  S MSH(21)=$P(MSHA,U,13)_CS_$P(MSHA,U,14)_CS_$P(MSHAA,U)_CS_$P(MSHAA,U,2)
  ;lets make this dynamic below as it is for LRI inpatient
- I $G(LA7INPT) S MSH(21)="LRI_Common_Component^Profile Component^2.16.840.1.113883.9.16^ISO~LRI_NG_Component^Profile Component^2.16.840.1.113883.9.13^ISO~LRI_RU_Component^Profile Component^2.16.840.1.113883.9.14^ISO"
+ ;maw 01212020 2015 chit below no longer valid
+ ;I $G(LA7INPT) S MSH(21)="LRI_Common_Component^Profile Component^2.16.840.1.113883.9.16^ISO~LRI_NG_Component^Profile Component^2.16.840.1.113883.9.13^ISO~LRI_RU_Component^Profile Component^2.16.840.1.113883.9.14^ISO"
  F J=2:1:25 S $P(MSH,FS,J)=MSH(J)
  Q MSH
  ;

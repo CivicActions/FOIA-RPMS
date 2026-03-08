@@ -1,5 +1,5 @@
 ABSP5B1 ; IHS/OIT/CASSevern/Pieran ran 1/19/2011 - Handling of outgoing NCPDP Billing "B1" and Reversal "B2" Claims for 5.1
- ;;1.0;PHARMACY POINT OF SALE;**42**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**42**;JUN 21, 2001;Build 131
  ;
  ; This routine will replace the ABSPOSCF for 5.1, so that we no
  ; longer need to use the formats file.
@@ -7,10 +7,10 @@ ABSP5B1 ; IHS/OIT/CASSevern/Pieran ran 1/19/2011 - Handling of outgoing NCPDP Bi
  ; format it and place it in the CLAIM file ^ABSPC(CLAIMIEN
  ; The ABSP() Array is already set up in: GETINFO^ABSPOSCC before we get here.
  ;INPUT = ACTION
- ;		  "CLAIMHD" = Set up only the claim header for creating ^ABSPC entry
- ;		  "CLAIMRST" = Set up Rest of Claim info and fill in ^ABSPC entry
- ;		  "OUTHD"	= Create the actual Output HEADER Record
- ;		  "OUTRST"  = Create the actual Output Rest of the Record.
+ ;  "CLAIMHD" = Set up only the claim header for creating ^ABSPC entry
+ ;  "CLAIMRST" = Set up Rest of Claim info and fill in ^ABSPC entry
+ ;  "OUTHD" = Create the actual Output HEADER Record
+ ;  "OUTRST" = Create the actual Output Rest of the Record.
 EN(ACTION,MEDN,IEN) ;EP
  N INSARRAY,DO,SPECIAL,SUPRESF
  S RECORD=$G(RECORD)
@@ -77,7 +77,7 @@ HEADER ;Header
 102APD S RECORD=RECORD_$G(ABSP(9002313.02,MEDN,FIELD,"I"))
  Q
  ;TRANSACTION CODE "B1" for Billing
-103GET S ABSP("X")="B1"	
+103GET S ABSP("X")="B1"
  Q
 103FMT S ABSP("X")=$$ANFF^ABSPECFM(ABSP("X"),2)
  Q
@@ -85,7 +85,7 @@ HEADER ;Header
  Q
 103APD S RECORD=RECORD_$G(ABSP(9002313.02,MEDN,FIELD,"I"))
  Q
- ;PCN #	
+ ;PCN #
 104GET I '$D(SPECIAL(104)) S ABSP("X")=$G(INSARRAY(9002313.4,DO,100.17))
  ELSE  X SPECIAL(104)
  Q
@@ -95,7 +95,7 @@ HEADER ;Header
  Q
 104APD S RECORD=RECORD_$G(ABSP(9002313.02,MEDN,FIELD,"I"))
  Q
- ;Transaction count	
+ ;Transaction count
 109GET I '$D(SPECIAL(109)) S ABSP("X")=$G(ABSP("Transaction Count"))
  ELSE  X SPECIAL(109)
  Q
@@ -212,9 +212,9 @@ INSURANCE ;INSURANCE Segment
  Q
  ;Eligibility Clarification Code
 309GET I '$D(SPECIAL(309)) S ABSP("X")=$G(ABSP("Eligibility Clarification Code"))
- ELSE  X SPECIAL(309)	
+ ELSE  X SPECIAL(309)
  Q
-309FMT S:ABSP("X")'="" ABSP("X")="C9"_$$NFF^ABSPECFM($G(ABSP("X")),1)	
+309FMT S:ABSP("X")'="" ABSP("X")="C9"_$$NFF^ABSPECFM($G(ABSP("X")),1)
  Q
 309SET S $P(^ABSPC(ABSP(9002313.02),300),U,9)=ABSP("X")
  Q
@@ -268,7 +268,7 @@ PATIENT ;PATIENT Segment
  Q
 331SET S $P(^ABSPC(ABSP(9002313.02),330),U,1)=ABSP("X")
  Q
- ;Patient ID	
+ ;Patient ID
 332GET I '$D(SPECIAL(332))	S ABSP("X")=$G(ABSP("Patient","ID"))
  ELSE  X SPECIAL(332)
  Q
@@ -278,8 +278,8 @@ PATIENT ;PATIENT Segment
  Q
  ;Date of Birth
 304GET I '$D(SPECIAL(304))	D
- . S ABSP("X")=$G(ABSP("Patient","DOB"))
- . S ABSP("X")=$$DTF1^ABSPECFM(ABSP("X"))
+ .S ABSP("X")=$G(ABSP("Patient","DOB"))
+ .S ABSP("X")=$$DTF1^ABSPECFM(ABSP("X"))
  ELSE  X SPECIAL(304)
  Q
 304FMT S:ABSP("X")'="" ABSP("X")="C4"_$$NFF^ABSPECFM($G(ABSP("X")),8)

@@ -1,5 +1,6 @@
-ABMDF14 ; IHS/ASDST/DMJ - Set HCFA-1500 Y2K Print Array ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDF14 ; IHS/ASDST/DMJ - Set HCFA-1500 Y2K Print Array ;  [ 11/14/2003  8:08 AM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**3,9,10,12**;APR 05, 2002
+ ;;Y2K/OK - IHS/ADC/LSL 4-21-97
  ;Original;TMD;
  ;
  ; IHS/DSD/LSL 03/21/98  - Modified logic in 
@@ -46,6 +47,14 @@ HCFA ;
  D EMG^ABMDF14E
  F ABMS("I")=36:1:47 K ABMF(ABMS("I"))
  F ABMS("I")=37:2:47 D  Q:$G(ABM("QUIT"))
+ .;start old code abm*2.5*10 IM20197
+ .;I $D(ABMU) D ABMU Q
+ .;S ABMS=$O(ABMR(ABMS))
+ .;I 'ABMS S ABM("QUIT")=1 Q
+ .;S ABMS(ABMS)=ABMR(ABMS)
+ .;D PROC^ABMDF14E
+ .;K ABMR(ABMS)
+ .;end old code start new code IM20197
  .I $D(ABMR) D
  ..S ABMS=0
  ..F  S ABMS=$O(ABMS(ABMS)) Q:+ABMS=0  D
@@ -57,16 +66,21 @@ HCFA ;
  ..S ABMLN=$O(ABMR(ABMLN))
  ..I 'ABMLN S ABM("QUIT")=1 Q
  ..S ABMPRT=0
- ..I (($O(ABMR(ABMLN,9),-1))+(ABMS("I")))>49 Q
+ ..;I (($O(ABMR(ABMLN,9),-1))+(ABMS("I")))>47 Q  ;abm*2.5*12 IM24880
+ ..I (($O(ABMR(ABMLN,9),-1))+(ABMS("I")))>49 Q  ;abm*2.5*12 IM24880
  ..S ABMLCNT=0
- ..F  S ABMPRT=$O(ABMR(ABMLN,ABMPRT)) Q:+ABMPRT=0  D
+ ..;F  S ABMPRT=$O(ABMR(ABMLN,ABMPRT)) Q:+ABMPRT=0!(ABMS("I")=47)!(ABMLCNT>2)  D  ;abm*2.5*12 IM24880
+ ..F  S ABMPRT=$O(ABMR(ABMLN,ABMPRT)) Q:+ABMPRT=0  D  ;abm*2.5*12 IM24880
  ...I +$O(ABMR(ABMLN,ABMPRT))'=0,($G(ABMF(ABMS("I")-1))=""),(ABMS("I")#2=1),ABMS("I")=37 S ABMS("I")=ABMS("I")-1
  ...M ABMF(ABMS("I"))=ABMR(ABMLN,ABMPRT)
  ...S ABMLCNT=ABMLCNT+1
  ...S ABMS("I")=ABMS("I")+1
  ...K ABMR(ABMLN,ABMPRT)
  ..K ABMR(ABMLN)
- I ABMS("I")>47,(+$O(ABMR(0))'=0) D ^ABMDF14X G HCFA
+ ;end new code IM20197
+ ;I ABMS("I")=47,+$O(ABMR(ABMS)) D ^ABMDF14X G HCFA  ;IHS/SD/SDR 7/13/06
+ ;I ABMS("I")=47,(+$O(ABMR(0))'=0) D ^ABMDF14X G HCFA  ;IHS/SD/SDR 7/13/06  ;abm*2.5*13 NO IM
+ I ABMS("I")>47,(+$O(ABMR(0))'=0) D ^ABMDF14X G HCFA  ;IHS/SD/SDR 7/13/06  ;abm*2.5*13 NO IM
  S $P(ABMF(49),U,7)=$P(ABMR("TOT"),U)
  S $P(ABMF(49),U,8)=$P(ABMR("TOT"),U,2)
  S $P(ABMF(49),U,9)=$P(ABMR("TOT"),U,3)
@@ -77,6 +91,8 @@ HCFA ;
 ENT ;EP for setting up export array
  K ABMP("INS"),ABMP("CDFN")
  D ^ABMDF14A,^ABMDF14B,^ABMDF14C,^ABMDF14D
+ ;I +$O(ABMR("")) S ABMR("MORE")=""  ;abm*2.5*9 IM16876
+ ;start new code abm*2.5*9 IM16876
  I +$O(ABMR("")) S ABMR("MORE")="",ABMP("MORE")=""
  ;payment so flag to write (cont.)
  K ABMTEST,ABMTEST1
@@ -85,6 +101,7 @@ ENT ;EP for setting up export array
  I ($E(ABMTEST,1,$L(ABMTEST)-1))=($E(ABMTEST1,1,$L(ABMTEST1)-1)) D
  .I $D(^ABMDBILL(DUZ(2),$O(^ABMDBILL(DUZ(2),"B",ABMTEST1,"")),3,0)) S ABMP("PTOT")=1
  K ABM("LTOT")
+ ;end new code abm*2.5*9 IM16876
  I $$MPP^ABMUTLP(ABMP("BDFN")) D
  .S $P(ABMF(11),"^",2)="NONE"
  .S $P(ABMF(13),"^",4,6)=""

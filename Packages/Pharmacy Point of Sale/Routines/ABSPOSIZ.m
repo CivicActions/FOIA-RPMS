@@ -1,5 +1,5 @@
 ABSPOSIZ ; IHS/FCS/DRS - Filing with .51,.59 ;    [ 11/04/2002  2:01 PM ]
- ;;1.0;PHARMACY POINT OF SALE;**3,6,23,34,48**;JUN 01, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3,6,23,34,48,52**;JUN 01, 2001;Build 131
  Q
  ; Locking:
  ; 1. Locking this routine's code.
@@ -226,10 +226,13 @@ NEW59(N) ; send N = desired IEN in file 9002313.59
  Q IEN(1)
 CLEAR59(N)         ;
  ; deletes all values except the value in the .01 field
- N FN,X,FLAGS,FDA,MSG,FIELD
+ N FN,X,FLAGS,FDA,MSG,FIELD,FTYPE
  S FN=9002313.59,X=N_",",FLAGS=""
  S FIELD=.01 ; $O will skip past this field
+ ; /IHS/OIT/RAM ; 2 DEC 19 ; FOUND BUG THANKS TO FILEMAN CALL LOGGING; CAN'T USE DBS CALLS BELOW ON COMPUTED FIELDS.
  F  S FIELD=$O(^DD(FN,FIELD)) Q:'FIELD  D
+ . S FTYPE=$P($G(^DD(FN,FIELD,0)),"^",2)  ; /IHS/OIT/RAM ; 2 DEC 19 ; LET'S GRAB THE FIELD TYPE
+ . Q:FTYPE["C"  ; /IHS/OIT/RAM ; 2 DEC 19 ; AND EXIT THIS ITERATION IF IT'S A COMPUTED FIELD.
  . ; Erase every field except RESULT TEXT, RESUBMIT AFTER REVERSAL
  . I FIELD=202!(FIELD=1.12) D
  . . ;S FDA(FN,X,FIELD)=$E("[Previously: "_$$GET1^DIQ(FN,X,FIELD)_"]",1,200)

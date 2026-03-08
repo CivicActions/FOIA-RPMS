@@ -1,11 +1,7 @@
-DGRPTX19 ; ;10/15/12
+DGRPTX19 ; ;02/09/12
+ S X=DG(DQ),DIC=DIE;;;;;;Build 21
+ X ^DD(2,.32103,1,1,1.3) I X S X=DIV S Y(2)=";"_$S($D(^DD(2,.3212,0)):$P(^(0),U,3),1:""),Y(1)=$S($D(^DPT(D0,.321)):^(.321),1:"") S X=$P($P(Y(2),";"_$P(Y(1),U,12)_":",2),";",1) S DIU=X K Y S X=DIV S X="" X ^DD(2,.32103,1,1,1.4)
  S X=DG(DQ),DIC=DIE
- X ^DD(2,.301,1,1,1.3) I X S X=DIV S Y(1)=$S($D(^DPT(D0,.3)):^(.3),1:"") S X=$P(Y(1),U,2),X=X S DIU=X K Y S X="" X ^DD(2,.301,1,1,1.4)
- S X=DG(DQ),DIC=DIE
- X ^DD(2,.301,1,2,1.3) I X S X=DIV S Y(1)=$S($D(^DPT(D0,.3)):^(.3),1:"") S X=$P(Y(1),U,12),X=X S DIU=X K Y S X="" X ^DD(2,.301,1,2,1.4)
+ X ^DD(2,.32103,1,2,1.3) I X S X=DIV S Y(1)=$S($D(^DPT(D0,.321)):^(.321),1:"") S X=$P(Y(1),U,11) S DIU=X K Y S X=DIV S X="" X ^DD(2,.32103,1,2,1.4)
  S X=DG(DQ),DIC=DIE
  D AUTOUPD^DGENA2(DA)
- S X=DG(DQ),DIC=DIE
- I ($T(AVAFC^VAFCDD01)'="") S VAFCF=".301;" D AVAFC^VAFCDD01(DA)
- S X=DG(DQ),DIC=DIE
- D:($T(ADGRU^DGRUDD01)'="") ADGRU^DGRUDD01(DA)

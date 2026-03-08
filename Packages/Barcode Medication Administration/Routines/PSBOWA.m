@@ -1,7 +1,8 @@
-PSBOWA ;BIRMINGHAM/EFC-WARD ADMINISTRATION TIMES ;29-May-2012 14:21;PLS
- ;;3.0;BAR CODE MED ADMIN;**9,1005,32,1010,56,1015**;23-May-2012 13:30;Build 62
+PSBOWA ;BIRMINGHAM/EFC-WARD ADMINISTRATION TIMES ;31-Mar-2023 08:13;DU
+ ;;3.0;BAR CODE MED ADMIN;**9,1005,32,1010,56,1015,1033**;23-May-2012 13:30;Build 34
  ;Per VHA Directive 2004-038 (or future revisions regarding same), this routine should not be modified.
  ;Modified - IHS/MSC/PLS - 02/22/07 - Line EN+11
+ ;                       - 03/31/23 - Lines EN+32,EN+92
  ;
  ; Reference/IA
  ; ^DPT/10035
@@ -38,7 +39,9 @@ EN ;
  .....S (PSBCADM,PSBYES,PSBODD)=0
  .....S PSBFREQ=$$GETFREQ^PSBVDLU1(DFN,PSBONX)
  .....S:$$PSBDCHK1^PSBVT1(PSBSCH) PSBYES=1
- .....F I=1:1 Q:$P(PSBSCH,"-",I)=""  I ($P(PSBSCH,"-",I)?2N)!($P(PSBSCH,"-",I)?4N) S PSBYES=1
+ .....;IHS/MSC/PLS - p1033
+ .....;F I=1:1 Q:$P(PSBSCH,"-",I)=""  I ($P(PSBSCH,"-",I)?2N)!($P(PSBSCH,"-",I)?4N) S PSBYES=1
+ .....F I=1:1 Q:$P($TR(PSBSCH,",","-"),"-",I)=""  I ($P($TR(PSBSCH,",","-"),"-",I)?2N)!($P($TR(PSBSCH,",","-"),"-",I)?4N) S PSBYES=1
  .....I PSBYES,PSBADST="",PSBSCHT'="O",PSBSCHT'="OC",PSBSCHT'="P" D  Q
  ......D ERROR^PSBMLU(PSBONX,PSBOITX,DFN,"Admin times required",PSBSCH)
  .....I "PCS"'[PSBIVT,PSBONX'["U" Q
@@ -96,7 +99,9 @@ EN ;
  ...S (PSBCADM,PSBYES,PSBODD)=0
  ...S PSBFREQ=$$GETFREQ^PSBVDLU1(DFN,PSBONX)
  ...S:$$PSBDCHK1^PSBVT1(PSBSCH) PSBYES=1
- ...F I=1:1 Q:$P(PSBSCH,"-",I)=""  I ($P(PSBSCH,"-",I)?2N)!($P(PSBSCH,"-",I)?4N) S PSBYES=1
+ ...;IHS/MSC/PLS - p1033
+ ...;F I=1:1 Q:$P(PSBSCH,"-",I)=""  I ($P(PSBSCH,"-",I)?2N)!($P(PSBSCH,"-",I)?4N) S PSBYES=1
+ ...F I=1:1 Q:$P($TR(PSBSCH,",","-"),"-",I)=""  I ($P($TR(PSBSCH,",","-"),"-",I)?2N)!($P($TR(PSBSCH,",","-"),"-",I)?4N) S PSBYES=1
  ...I PSBYES,PSBADST="",PSBSCHT'="O",PSBSCHT'="OC",PSBSCHT'="P" D  Q
  ....D ERROR^PSBMLU(PSBONX,PSBOITX,DFN,"Admin times required",PSBSCH)
  ...I "PCS"'[PSBIVT,PSBONX'["U" Q

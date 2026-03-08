@@ -1,5 +1,6 @@
-DIARCALC ;SFISC/TKW,WISC/CAP-ARCHIVING Variables Doc / Misc Calc. ;10/7/95  07:29
- ;;22.0;VA FileMan;;Mar 30, 1999
+DIARCALC ;SFISC/TKW,WISC/CAP-ARCHIVING Variables Doc / Misc Calc. ;11/3/92  4:19 PM [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
  ;COMPUTE BOUNDARIES
@@ -30,7 +31,7 @@ NEW ;SET UP INITIAL ARCHIVAL ACTIVITY
  I $D(DIARF0) S Z=Z_";31////"_DIARF0
  S DINUM=X,DIC("DR")=Z
  S DIC="^DIAR(1.11,",DIC(0)="EF"
- K DO D FILE^DICN S DIARC=+Y K DR
+ D FILE^DICN S DIARC=+Y K DR
  Q
  ;
 CK S DIART=%_U_%2_U_A D CK^DIP12

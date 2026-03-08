@@ -1,21 +1,24 @@
-ABMDVST4 ; IHS/ASDST/DMJ - PCC Visit Stuff - PART 5 (HOSPITALIZATION) ; 
- ;;2.6;IHS Third Party Billing System;**2,4,21**;NOV 12, 2009;Build 379
+ABMDVST4 ; IHS/SD/SDR - PCC Visit Stuff - PART 5 (HOSPITALIZATION) ; 
+ ;;2.6;IHS Third Party Billing System;**2,4,21,29,31,34,36,37**;NOV 12, 2009;Build 739
  ;Original;TMD;03/26/96 12:32 PM
+ ;IHS/SD/SDR 2.5*5 5/17/2004 Modified to put default for admission source/admission type/discharge status if outpatient
+ ;IHS/SD/SDR 2.5*6 7/12/04 IM14030 Fix so discharge status will default correctly
+ ;IHS/SD/SDR 2.5*8 task 6 Added code to get patient weight from V Measurement file
+ ;IHS/SD/SDR 2.5*9 IM13294 Admission/Discharge hour populated for outpatient visits
+ ;IHS/SD/SDR 2.5*10 IM19717/IM20374 Removed "CLEAN" of 27 multiple
+ ;IHS/SD/SDR 2.5*10 IM21006 Added code to increment discharge hour by 1 for NC Medicaid for Outpt visits
+ ;IHS/SD/SDR 2.5*10 IM21382 Made Service Category R act like A
  ;
- ;IHS/SD/SDR v2.5 p5 - 5/17/2004 - Modified to put default for
- ;   admission source/admission type/discharge status if outpatient
- ;IHS/SD/SDR v2.5 p6 - 7/12/04 - IM14030 - Fix so discharge status will
- ;     default correctly
- ;IHS/SD/SDR - v2.5 p8 - task 6 - Added code to get patient weight from V Measurement file
- ;IHS/SD/SDR - v2.5 p9 - IM13294 - Admission/Discharge hour populated for outpatient visits
- ;IHS/SD/SDR - v2.5 p10 - IM19717/IM20374 - Removed "CLEAN" of 27 multiple
- ;IHS/SD/SDR - v2.5 p10 - IM21006 - Added code to increment discharge
- ;  hour by 1 for NC Medicaid for Outpt visits
- ;IHS/SD/SDR - v2.5 p10 - IM21382 - Made Service Category R act like A
- ;
- ;IHS/SD/SDR - 2.6*2 - 3PMS10003A - modified to call ABMFEAPI
- ;IHS/SD/SDR - 2.6*4 - HEAT15806 - fix for admit date/time missing; caused by ABMFEAPI change
- ;IHS/SD/SDR - 2.6*21 - HEAT161981 - Made change to lookup discharge status as '01' not as '1'
+ ;IHS/SD/SDR 2.6*2 3PMS10003A modified to call ABMFEAPI
+ ;IHS/SD/SDR 2.6*4 HEAT15806 fix for admit date/time missing; caused by ABMFEAPI change
+ ;IHS/SD/SDR 2.6*21 HEAT161981 Made change to lookup discharge status as '01' not as '1'
+ ;IHS/SD/SDR 2.6*29 CR10686 Fix for CPT being used as CPT IEN
+ ;IHS/SD/SDR 2.6*29 CR10910 Fixes <SUBSCR>OP+55^ABMDVST4 when Add Zero Fees is being used
+ ;IHS/SD/SDR 2.6*31 CR11832 put default admit type, admit source when SERVCAT is 'T' or 'M' and the export mode is 28 or 31
+ ;IHS/SD/SDR 2.6*34 ADO60692 CR8337 Made change to populate modifier for outpatient.
+ ;IHS/SD/SDR 2.6*36 ADO76302 Remove inpatient codes that are added automatically; the claim should only contain whatever was coded on the visit w/o any additions
+ ;IHS/SD/SDR 2.6*36 ADO76171 Updated to pull the 3rd modifier from the V CPT file if populated; it's available with bjpc*2.0*26
+ ;IHS/SD/SDR 2.6*37 ADO80643 fix modifier IEN being stored instead of actual modifier
  ;
  ;ABMP("DDT") is the discharge date from the V HOSPITALIZATION FILE
  ;ABMP("HDATE") is the most recent hospitalizaiton date evaluated by
@@ -46,10 +49,20 @@ ABMDVST4 ; IHS/ASDST/DMJ - PCC Visit Stuff - PART 5 (HOSPITALIZATION) ;
  ;In this rtn need the serv cat for child visit not the H visit
  N SERVCAT
  S SERVCAT=$P(ABMCHV0,U,7)
+ ;start new abm*2.6*31 IHS/SD/SDR CR11832
+ ;if service category is telecommunications or telemedicine, default admit type=2; admit source=1
+ I (("^T^M^"[("^"_SERVCAT_"^"))&("^28^31^"[("^"_ABMP("EXP")_"^"))) D
+ .S DIE="^ABMDCLM(DUZ(2),"
+ .S DA=ABMP("CDFN")
+ .S DR=".51///2;.52///1"
+ .D ^DIE
+ ;end new abm*2.6*31 IHS/SD/SDR CR11832
  I "HOS"[SERVCAT,'$D(ABMP("DDT")) D HOSP Q
- ; I need to compare the current date with discharge date.
- I "ID"[SERVCAT,$D(ABMP("DDT")),ABMCHVDT<ABMP("DDT") D MIDDAY^ABMDVSTH Q
- I "ID"[SERVCAT,$D(ABMP("DDT")),ABMCHVDT=ABMP("DDT") D DISCHRG^ABMDVSTH Q
+ ; I need to compare the current dt with discharge dt
+ ;start old abm*2.6*36 IHS/SD/SDR ADO76302
+ ;I "ID"[SERVCAT,$D(ABMP("DDT")),ABMCHVDT<ABMP("DDT") D MIDDAY^ABMDVSTH Q
+ ;I "ID"[SERVCAT,$D(ABMP("DDT")),ABMCHVDT=ABMP("DDT") D DISCHRG^ABMDVSTH Q
+ ;end old abm*2.6*36 IHS/SD/SDR ADO76302
  I "AR"[SERVCAT D OP
  Q
  ;
@@ -60,8 +73,8 @@ HOSP ;
  .S ABMI(0)=^AUPNVINP(ABMDA,0)
  .;ABMI("ATYPE") is 3P code
  .;ABMI("DSTAT") discharge status
- .;S ABMI("ATYPE")=2,ABMI("DSTAT")=1,ABMI("ASRC")=2  ;abm*2.6*21 IHS/SD/SDR HEAT161981
- .S ABMI("ATYPE")=2,ABMI("DSTAT")="01",ABMI("ASRC")=2  ;abm*2.6*21 IHS/SD/SDR HEAT161981
+ .;S ABMI("ATYPE")=2,ABMI("DSTAT")="01",ABMI("ASRC")=2  ;abm*2.6*21 IHS/SD/SDR HEAT161981  ;abm*2.6*30 IHS/SD/SDR CR10215
+ .S ABMI("ATYPE")=2,ABMI("DSTAT")="",ABMI("ASRC")=2  ;remove discharge status for inpatient  ;abm*2.6*30 IHS/SD/SDR CR10215
  .I $P(ABMI(0),U,4)]"",$P($G(^DIC(45.7,$P(ABMI(0),U,4),9999999)),U)="07" S ABMI("ATYPE")=4
  .;2 is transfer, 4-7 is death, 1 & 3 are discharge, 
  .I $P(ABMI(0),U,6)]"",$D(^DIC(42.2,$P(ABMI(0),U,6),9999999)) S ABMI("DSTAT")=$S($P(^(9999999),U)=2:2,$P(^(9999999),U)>3&($P(^(9999999),U)<8):20,1:1)
@@ -76,14 +89,15 @@ HOSP ;
  .S ABMI("ATYPE")=$O(^ABMDCODE("AC","T",ABMI("ATYPE"),""))
  .;2nd subscript is A or N
  .S ABMI("ASRC")=$O(^ABMDCODE("AC",ABM("ASRC"),ABMI("ASRC"),""))
- .S ABMI("DSTAT")=$O(^ABMDCODE("AC","P",ABMI("DSTAT"),""))
+ .;S ABMI("DSTAT")=$O(^ABMDCODE("AC","P",ABMI("DSTAT"),""))  ;abm*2.6*30 IHS/SD/SDR CR10215
  .;DDT is date of discharge
  .S (ABMP("DDT"),ABMI("DDT"))=$P($P(ABMI(0),U),".")
  .;DHR discharge hour
  .S ABMI("DHR")=$E($P($P(ABMI(0),U,1),".",2),1,2)
  .S ABMI("DHR")=$S(ABMI("DHR")="":12,ABMI("DHR")>-1&(ABMI("DHR")<24):ABMI("DHR"),1:12)
  .S DIE="^ABMDCLM(DUZ(2),",DA=ABMP("CDFN")
- .S DR=".63////"_ABMI("DDT")_";.64////"_ABMI("DHR")_";.59////"_$P(ABMI(0),U,12)_";.51////"_ABMI("ATYPE")_";.52////"_ABMI("ASRC")_";.53////"_ABMI("DSTAT")
+ .;S DR=".63////"_ABMI("DDT")_";.64////"_ABMI("DHR")_";.59////"_$P(ABMI(0),U,12)_";.51////"_ABMI("ATYPE")_";.52////"_ABMI("ASRC")_";.53////"_ABMI("DSTAT")  ;abm*2.6*30 IHS/SD/SDR CR10215
+ .S DR=".63////"_ABMI("DDT")_";.64////"_ABMI("DHR")_";.59////"_$P(ABMI(0),U,12)_";.51////"_ABMI("ATYPE")_";.52////"_ABMI("ASRC")  ;abm*2.6*30 IHS/SD/SDR CR10215
  .D ^DIE
  .K DA,DIE,DR
  .;ADT is the date from the visit file - admission date
@@ -103,10 +117,7 @@ HOSP ;
  .;Node 25 contains the revenue code subfile
  .;The CLEAN subrtn prevents dupes in subfiles
  .S DIC="^ABMDCLM(DUZ(2),"_DA(1)_",25,"
- .;S DIC(0)="LE",X=120,DIC("DR")=".02////"_ABMI("COVD")_";.03////"_$P($G(^ABMDFEE(ABMP("FEE"),31,X,0)),U,2)  ;abm*2.6*2 3PMS10003A
  .S DIC(0)="LE",X=120,DIC("DR")=".02////"_ABMI("COVD")_";.03////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),31,X,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
- .;Q:(+$G(X)&($P($G(^ABMDFEE(ABMP("FEE"),31,X,0)),U,2)=0)&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y"))  ;abm*2.6*2 3PMS10003A
- .;Q:(+$G(X)&($P($$ONE^ABMFEAPI(ABMP("FEE"),31,X,ABMP("VDT")),U)=0)&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y"))  ;abm*2.6*2 3PMS10003A  ;abm*2.6*4 HEAT15806
  .S ABMSRC="02|"_ABMDA_"|CPT"
  .S DIC("DR")=DIC("DR")_";.17////"_ABMSRC
  .;K DD,DO D FILE^DICN  ;abm*2.6*4 HEAT15806
@@ -118,18 +129,17 @@ HOSP ;
  .S DA(1)=ABMP("CDFN"),DIC="^ABMDCLM(DUZ(2),"_DA(1)_",27,",DIC(0)="LE"
  .D CLEAN(27)
  .;note:uncommented above line during patch 10 testing
- .S X=$$CPT^ABMDVSTH("INI")
- .;Q:($P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2)=0&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y"))  ;abm*2.6*2 3PMS10003A
- .;Q:($P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)=0&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y"))  ;abm*2.6*2 3PMS10003A  ;abm*2.6*4 HEAT15806
- .;S DIC("DR")=".03////1;.04////"_$P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2)  ;abm*2.6*2 3PMS10003A
- .S DIC("DR")=".03////1;.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
- .;Next line set correspond diagnosis if only 1 POV
- .I $D(ABMP("CORRSDIAG")) S DIC("DR")=DIC("DR")_";.06////1"
- .S DIC("DR")=DIC("DR")_";.07////"_ABMCHVDT
- .S DIC("DR")=DIC("DR")_";.17////"_ABMSRC
- .;K DD,DO D FILE^DICN  ;abm*2.6*4 HEAT15806
- .I ($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)="Y") K DD,DO D FILE^DICN  ;abm*2.6*4 HEAT15806
- .I (($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y")&(+$G(X)&($P($$ONE^ABMFEAPI(ABMP("FEE"),31,X,ABMP("VDT")),U)'=0))) K DD,DO D FILE^DICN  ;abm*2.6*4 HEAT15806
+ .;start old abm*2.6*36 IHS/SD/SDR ADO76302
+ .;S X=$$CPT^ABMDVSTH("INI")
+ .;S DIC("DR")=".03////1;.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
+ .;;Next line set correspond diagnosis if only 1 POV
+ .;I $D(ABMP("CORRSDIAG")) S DIC("DR")=DIC("DR")_";.06////1"
+ .;S DIC("DR")=DIC("DR")_";.07////"_ABMCHVDT
+ .;S DIC("DR")=DIC("DR")_";.17////"_ABMSRC
+ .;;K DD,DO D FILE^DICN  ;abm*2.6*4 HEAT15806
+ .;I ($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)="Y") K DD,DO D FILE^DICN  ;abm*2.6*4 HEAT15806
+ .;I (($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y")&(+$G(X)&($P($$ONE^ABMFEAPI(ABMP("FEE"),31,X,ABMP("VDT")),U)'=0))) K DD,DO D FILE^DICN  ;abm*2.6*4 HEAT15806
+ .;end old abm*2.6*36 IHS/SD/SDR ADO76302
  .S ABMP("COVD",ABMCHVDT)=""
  .S DIE="^ABMDCLM(DUZ(2),",DA=ABMP("CDFN")
  .S DR=".61////"_ABMI("ADT")_";.62////"_ABMI("AHR")_";.71////"_ABMI("ADT")_";.72////"_ABMI("DDT")_";.54////90;.55////"_ABMI("ADT")_";.56////"_ABMI("DDT") D ^DIE
@@ -176,7 +186,8 @@ OP ; Outpatient
  .;If the CPT code is not in the range it is not the code for visit
  .I +AUPNCPT(N)<ABMCPTTB("OUT","L") Q
  .I +AUPNCPT(N)>ABMCPTTB("OUT","H") Q
- .S ABMX=+AUPNCPT(N)
+ .;S ABMX=+AUPNCPT(N)  ;abm*2.6*29 IHS/SD/SDR CR10686
+ .S ABMX=$P(AUPNCPT(N),U,3)  ;abm*2.6*29 IHS/SD/SDR CR10686
  .S ABMSRC=$P($P(AUPNCPT(N),U,4),".",2)_"|"_$P(AUPNCPT(N),U,5)_"|CPT"
  ;If the CPT code is not in the V file, the provider is an MD, the
  ;clinic is not pharmacy, and the Auto Set Level of Svc parameter is
@@ -189,9 +200,28 @@ OP ; Outpatient
  D CLEAN(27)
  S X=ABMX
  ;Q:($P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2)&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y"))  ;abm*2.6*2 3PMS10003A
- Q:($P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y"))  ;abm*2.6*2 3PMS10003A
+ ;Q:($P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y"))  ;abm*2.6*2 3PMS10003A  ;abm*2.6*29 IHS/SD/SDR CR10910
+ ;I ((+$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)'=0)!((+$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)=0)&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y"))) Q  ;abm*2.6*29 CR10910 ;abm*2.6*34 ADO60692
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60692
+ S ABMP("CPTFEE")=+$P($$ONE^ABMFEAPI(ABMP("FEE"),10,X,ABMP("VDT")),U)
+ I ((ABMP("CPTFEE")=0)&($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),1,ABMP("VTYP"),1)),U,14)'="Y")) Q
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60692
  ;S DIC("DR")=".03////1;.04////"_$P($G(^ABMDFEE(ABMP("FEE"),19,X,0)),U,2)  ;abm*2.6*2 3PMS10003A
- S DIC("DR")=".03////1;.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A
+ ;S DIC("DR")=".03////1;.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,X,ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A  ;abm*2.6*29 IHS/SD/SDR CR10686
+ ;Note: the below code only does the V CPT file entry units; it will default to '1' if nothing entered or it gets here for another V-file
+ S ABMQTY=$S((($P(AUPNCPT(N),U,4)["18")&($$GET1^DIQ($P(AUPNCPT(N),U,4),$P(AUPNCPT(N),U,5),".16","E")'=0)):$$GET1^DIQ($P(AUPNCPT(N),U,4),$P(AUPNCPT(N),U,5),".16","E"),1:1)  ;abm*2.6*29 IHS/SD/SDR CR10910
+ S DIC("DR")=".03////"_ABMQTY_";.04////"_$P($$ONE^ABMFEAPI(ABMP("FEE"),19,+AUPNCPT(N),ABMP("VDT")),U)  ;abm*2.6*2 3PMS10003A  ;abm*2.6*29 IHS/SD/SDR CR10686, CR10910
+ ;start old abm*2.6*37 IHS/SD/SDR ADO80643
+ ;I $P(AUPNCPT(N),U,6)'="" S DIC("DR")=DIC("DR")_";.05////"_$P(AUPNCPT(N),U,6) ;abm*2.6*34 IHS/SD/SDR ADO60692
+ ;I $P(AUPNCPT(N),U,7)'="" S DIC("DR")=DIC("DR")_";.08////"_$P(AUPNCPT(N),U,7) ;abm*2.6*34 IHS/SD/SDR ADO60692
+ ;end old start new abm*2.6*37 IHS/SD/SDR ADO80643
+ I $P(AUPNCPT(N),U,6)'="" S DIC("DR")=DIC("DR")_";.05////"_$P(^DIC(81.3,$P(AUPNCPT(N),U,6),0),U)
+ I $P(AUPNCPT(N),U,7)'="" S DIC("DR")=DIC("DR")_";.08////"_$P(^DIC(81.3,$P(AUPNCPT(N),U,7),0),U)
+ ;end new abm*2.6*37 IHS/SD/SDR ADO80643
+ ;start new abm*2.6*36 IHS/SD/SDR ADO76171
+ I $P(AUPNCPT(N),U,4)["18" D
+ .S DIC("DR")=DIC("DR")_";.09////"_$$GET1^DIQ(9000010.18,$P(AUPNCPT(N),U,5),".1","E")
+ ;end new abm*2.6*36 IHS/SD/SDR ADO76171
  ;Next line set correspond diagnosis if only 1 POV
  I $D(ABMP("CORRSDIAG")) S DIC("DR")=DIC("DR")_";.06////1"
  S DIC("DR")=DIC("DR")_";.07////"_ABMCHVDT

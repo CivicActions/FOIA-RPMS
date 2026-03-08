@@ -1,17 +1,9 @@
-DINITPST ;SFISC/MKO-POST INIT FOR DINIT ;9:31 AM  23 Mar 1999
- ;;22.0;VA FileMan;;Mar 30, 1999
+DINITPST ;SFISC/MKO-POST INIT FOR DINIT ;12/21/94  12:47 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
+ ;Deleted unneeded Dialog file entry
  N %,%Y,C,D,D0,DI,DIV,DQ
- ;
- ;Delete ^DIPT("EX") index (also done in patch DI*21*8 in DIPOST)
- K ^DIPT("EX")
- ;
- ;Delete test Dialog entries 10001,99000,99001,99002
- N DIALOG
- F DIALOG=10001,99000,99001,99002 D
- . N DIK,DA
- . Q:$D(^DI(.84,DIALOG,0))[0
- . S DIK="^DI(.84,",DA=DIALOG D ^DIK
  ;
  ;Delete templates .001 and .002
  I $D(^DIE(.001)) D

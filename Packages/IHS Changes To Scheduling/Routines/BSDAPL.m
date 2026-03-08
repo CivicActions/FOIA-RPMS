@@ -1,5 +1,5 @@
 BSDAPL ; IHS/ANMC/LJF - APPTS PRINTED LIST ;  [ 11/02/2004  11:42 AM ]
- ;;5.3;PIMS;**1001,1003**;MAY 28, 2004
+ ;;5.3;PIMS;**1001,1003,1022**;MAY 28, 2004;Build 18
  ;IHS/ITSC/WAR 08/24/2004 PATCH 1001 rewrote print on paper to work correctly
  ;IHS/ITSC/LJF 10/25/2004 PATCH 1001 screen out cancelled appointments
  ;             06/10/2005 PATCH 1003 resending routine - some sites have bad copy
@@ -111,15 +111,24 @@ GETAPP ; -- for clinic, get appts & chart requests for date
  .. I BSDSRT="T" S SORT=TERM                     ;or terminal digit
  .. ;
  .. ; set display line
- .. S LINE=$J(HRCN,6)_"  "_$E($$GET1^DIQ(2,PAT,.01),1,18)    ;pat
- .. S LINE=$$PAD(LINE,28)_$$GET1^DIQ(44,BSDCLN,1)         ;cln abbrev
- .. S LINE=$$PAD(LINE,37)_$E($$FMTE^XLFDT($P(NODE,U,7)),1,18)    ;appt made on
- .. S LINE=$$PAD(LINE,57)_$$GET1^DIQ(200,+$P(NODE,U,6),1)  ;appt made by
- .. S LINE=$$PAD(LINE,62)_$E($$FMTE^XLFDT($P(NODE2,U,13)),1,18)  ;printed
+ .. ;202307 77892 maw p1022 PPN
+ .. N PRF
+ .. S PRF=$$GETPREF^AUPNSOGI(PAT,"E",1)
+ .. S LINE=$J(HRCN,6)_" "_$E($G(PRF),1,32)    ;pat
+ .. S LINE=$$PAD(LINE,40)_$$GET1^DIQ(44,BSDCLN,1)         ;cln abbrev
+ .. S LINE=$$PAD(LINE,50)_$$DTS^BSDU3($P(NODE,U,7))    ;appt made on
+ .. S LINE=$$PAD(LINE,65)_$$GET1^DIQ(200,+$P(NODE,U,6),1)  ;appt made by
+ .. S LINE=$$PAD(LINE,69)_$$DTS^BSDU3($P($P(NODE2,U,13),"."))  ;printed
+ .. ;S LINE=$J(HRCN,6)_"  "_$E($$GET1^DIQ(2,PAT,.01),1,18)    ;pat
+ .. ;S LINE=$$PAD(LINE,28)_$$GET1^DIQ(44,BSDCLN,1)         ;cln abbrev
+ .. ;S LINE=$$PAD(LINE,37)_$E($$FMTE^XLFDT($P(NODE,U,7)),1,18)    ;appt made on
+ .. ;S LINE=$$PAD(LINE,57)_$$GET1^DIQ(200,+$P(NODE,U,6),1)  ;appt made by
+ .. ;S LINE=$$PAD(LINE,62)_$E($$FMTE^XLFDT($P(NODE2,U,13)),1,18)  ;printed
  .. ;
  .. ; include on file room list?
  .. I $$GET1^DIQ(44,BSDCLN,2502.5)="NO" D
- ... S LINE=$$PAD(LINE,62)_" **don't print**"
+ ... S LINE=$$PAD(LINE,62)_"don't print"
+ ... ;S LINE=$$PAD(LINE,62)_" **don't print**"
  ... S BSDCNT=BSDCNT+1
  .. ;
  .. ; else, count if not printed yet

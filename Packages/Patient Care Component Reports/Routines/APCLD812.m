@@ -1,5 +1,5 @@
-APCLD812 ; IHS/CMI/LAB - 2008 DIABETES AUDIT ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLD812 ;IHS/CMI/LAB - 2008 DIABETES AUDIT;     
+ ;;3.0;IHS PCC REPORTS;**21**;FEB 05, 1997
  ;
  ;cmi/anch/maw 9/12/2008 code set versioning in DEPDX
  ;
@@ -251,7 +251,7 @@ DEPDX(P,BDATE,EDATE) ;EP
  .S I=$P($G(^AMHPPROB(X,0)),U)
  .S I=$P($G(^AMHPROB(I,0)),U,5)
  .Q:I=""
- .S I=+$$CODEN^ICDCODE(I,80)
+ .S I=$O(^ICD9("AB",I,0))
  .Q:I=""
  .Q:'$$ICD^ATXCHK(I,T,9)
  .;S G="Yes - BH Problem List "_$P(^ICD9(I,0),U)  ;cmi/anch/maw orig line
@@ -337,3 +337,17 @@ LOINC(A,B) ;
  S %=$P($G(^LAB(95.3,A,0)),U)_"-"_$P($G(^LAB(95.3,A,0)),U,15)
  I $D(^ATXAX(B,21,"B",%)) Q 1
  Q ""
+PLCODE(P,A) ;EP
+ I $G(P)="" Q ""
+ I $G(A)="" Q ""
+ N T S T=$O(^ICD9("AB",A,0))
+ I 'T Q ""
+ N X,Y,I S (X,Y,I)=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(I)  I $D(^AUPNPROB(X,0)) S Y=$P(^AUPNPROB(X,0),U) I $$ICD^ATXCHK(Y,T,9) S I=1
+ Q I
+PLTAX(P,A) ;EP - is DX on problem list 1 or 0
+ I $G(P)="" Q ""
+ I $G(A)="" Q ""
+ N T S T=$O(^ATXAX("B",A,0))
+ I 'T Q ""
+ N X,Y,I S (X,Y,I)=0 F  S X=$O(^AUPNPROB("AC",P,X)) Q:X'=+X!(I)  I $D(^AUPNPROB(X,0)) S Y=$P(^AUPNPROB(X,0),U) I $$ICD^ATXCHK(Y,T,9) S I=1
+ Q I

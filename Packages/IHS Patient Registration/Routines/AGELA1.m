@@ -1,5 +1,7 @@
-AGELA1 ; IHS/ASDS/EFG - Eligibility Display (CONT) ;   
- ;;7.1;PATIENT REGISTRATION;;AUG 25,2005
+AGELA1 ; IHS/ASDS/EFG - Eligibility Display (CONT) ;   [ 06/13/2003  11:31 AM ]
+ ;;7.0;IHS PATIENT REGISTRATION;**1,2**;MAR 28, 2003
+ ;
+ ; IHS/SD/SDR - 7/16/2002 - Split lines for readability
  ;
 MCD S AGEL=""
  F AGEL("I")=1:1 S AGEL=$O(^AUPNMCD("C",AGELP("PH"),AGEL)) Q:'+AGEL  D
@@ -20,21 +22,24 @@ MCD S AGEL=""
  ..S $P(AGELP(+AGEL(0)),U,3)=AGEL("DT")
  ..D DT
  ..W ?62,AGEL("DT")
- ..I $P(^AUPNMCD(AGEL,11,AGEL("NUM"),0),U,2)]"" S AGEL("DT")=$P(^AUPNMCD(AGEL,11,AGEL("NUM"),0),U,2) D DT W ?71,"/",AGEL("DT")
+ ..I $P(^(0),U,2)]"" S AGEL("DT")=$P(^(0),U,2) D DT W ?71,"/",AGEL("DT")
  Q
+ ;
 PRVT S AGEL=""
  F AGEL("I")=1:1 S AGEL=$O(^AUPNPRVT("C",AGELP("PH"),AGEL)) Q:'+AGEL  S AGEL(1)=$O(^(AGEL,"")) D
  .I '$D(^AUPNPRVT(AGEL,0)) K ^AUPNPRVT("C",AGELP("PH"),AGEL) Q
- .S AGEL(0)=$G(^AUPNPRVT(AGEL,0))
- .S AGEL(10)=$G(^AUPNPRVT(AGEL,11,AGEL(1),0))
+ .S AGEL(0)=^AUPNPRVT(AGEL,0),AGEL(10)=^AUPNPRVT(AGEL,11,AGEL(1),0)
  .S AGEL(2)=$G(^AUPNPRVT(AGEL,11,AGEL(1),2))
  .S AGELP("PI")=AGEL
- .;# and member name
- .W !,AGEL("I")+12,") "
- .W:$P(AGEL(0),U)'="" $E($P($G(^DPT($P(AGEL(0),U),0)),U),1,17)
- .;new person code
+ .;
+ .; # and member name
+ .W !,AGEL("I")+14,") "
+ .W $E($P(^DPT($P(AGEL(0),U),0),U),1,17)
+ .;
+ .; new person code
  .W:$P(AGEL(10),U,12)]"" ?22,$P(AGEL(10),U,12)
- .;member #
+ .;
+ .; member #
  .I $P($G(AGEL(2)),U)="",($G(AGEL)=$G(AGELP("PHPAT"))) D
  ..S DIE="^AUPNPRVT("_AGEL_",11,"
  ..S DA=AGEL(1)
@@ -42,18 +47,35 @@ PRVT S AGEL=""
  ..D ^DIE
  ..S AGEL(2)=$G(^AUPNPRVT(AGEL,11,AGEL(1),2))
  .W:$P(AGEL(2),U)]"" ?26,$E($P(AGEL(2),U),1,13)
- .;hrn
+ .;
+ .; hrn
  .I $D(DUZ(2)),$D(^AUPNPAT(AGEL(0),41,DUZ(2),0)) D
  ..W ?42,$P(^AUPNPAT(AGEL(0),41,DUZ(2),0),U,2)
- .S AGELP(+AGEL(0))=(AGEL("I")+12)_U_AGEL(1)
- .;relationship
+ .S AGELP(+AGEL(0))=(AGEL("I")+14)_U_AGEL(1)
+ .;
+ .; relationship
  .W ?50
  .S AGREL=$P(AGEL(10),U,5)
+ . ; BEGIN REMOVAL OF OLD HARDCODE  IHS/SD/EFG  AG*7*2 #2
+ .;I AGREL'=""  D
+ ..;I ",7,8,11,12,14,24,27,31,34,36,37,38,39,40,41,"[(","_AGREL_",") D
+ ...;S AGFLAG=0
+ ...;F AGLOOP=1:1 D  Q:AGFLAG
+ ....;S AGGET=$P($T(AGRELS+AGLOOP),";",3)
+ ....;Q:AGGET'=AGREL
+ ....;S AGREL=$P($T(AGRELS+AGLOOP),";",4),AGFLAG=1
+ ..;E  S AGREL=$S($P($G(^AUTTRLSH(AGREL,0)),U,1)'="":$P(^AUTTRLSH(AGREL,0),U,1),1:"SELF")
+ .;E  S AGREL=""
+ .;W AGREL
+ . ; END REMOVAL OF OLD HARDCODE  IHS/SD/EFG  AG*7*2 #2
+ . ; NEW CODE TO REPLACE CODE FROM ABOVE  IHS/SD/EFG  AG*7*2 #2
  .I AGREL'=""  D
- ..S AGREL=$S($P($G(^AUTTRLSH(AGREL,0)),U)'="":$P(^AUTTRLSH(AGREL,0),U),1:"SELF")
+ ..S AGREL=$S($P($G(^AUTTRLSH(AGREL,0)),U,1)'="":$P(^AUTTRLSH(AGREL,0),U,1),1:"SELF")
  .E  S AGREL=""
  .W $E(AGREL,1,9)
- .;from/thru
+ . ; END NEW CODE TO REPLACE CODE FROM ABOVE  IHS/SD/EFG  AG*7*2 #2
+ .;
+ .; from/thru
  .S AGEL("DT")=$P(AGEL(10),U,6)
  .D DT
  .W ?60,AGEL("DT")
@@ -61,6 +83,24 @@ PRVT S AGEL=""
  .D DT
  .I AGEL("DT")]"" W "-",AGEL("DT")
  Q
+ ;
 DT ;
- I AGEL("DT")]"" S AGEL("DT")=$$FMTE^XLFDT(AGEL("DT"),5)
+ I AGEL("DT")]"" S AGEL("DT")=$$FMTE^XLFDT(AGEL("DT"),5)  ;Y2000
  Q
+ ;
+AGRELS ;
+ ;;7;GRNDFATHER
+ ;;8;GRNDMOTHER
+ ;;11;FTR-IN-LAW
+ ;;12;MTR-IN-LAW
+ ;;14;DTR-IN-LAW
+ ;;24;SCH TEACHER
+ ;;27;SIG OTHER
+ ;;31;COM-LAW SP
+ ;;34;NAT CHILD
+ ;;36;FOSTR CHLD
+ ;;37;WARD/COURT
+ ;;38;DEP-HANDIC
+ ;;39;ORG DONOR
+ ;;40;CAD DONOR
+ ;;41;INJ PLNTFF

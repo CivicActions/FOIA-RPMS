@@ -1,5 +1,5 @@
-BISCAN ;IHS/CMI/MWR - SCAN PATIENT DB FOR <36 MTHS, ADD TO IMM DB; MAY 10, 2010
- ;;8.5;IMMUNIZATION;;SEP 01,2011
+BISCAN ;IHS/CMI/MWR - SCAN PATIENT DB FOR <36 MTHS ADD TO IMM DB; MAY 10, 2010
+ ;;8.5;IMMUNIZATION;**29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  SCAN PATIENT DATABASE FOR PATIENTS <36 MTHS NOT IN IMM DB.
  ;;  PATCH 1: Correct Age Range in report from 1-36 to 0-35.  REVIEW+9
@@ -95,8 +95,9 @@ SCAN(BICC,BIPOP) ;EP
  .Q:$$INELIG^BIUTL1(BIDFN)
  .;**********
  .;
+ .;V8.5 PATCH 29 - FID-107546 Tdap age check
  .;---> Quit if patient is not less than 36 months.
- .Q:($$AGE^BIUTL1(BIDFN,2,$G(DT))>35)
+ .Q:($P($$AGE^BIUTL1(BIDFN,2,$G(DT)),U,2)>35)
  .;---> Quit if patient is deceased.
  .Q:$$DECEASED^BIUTL1(BIDFN)
  .;---> Quit If patient does not have one of the selected Current Communities.

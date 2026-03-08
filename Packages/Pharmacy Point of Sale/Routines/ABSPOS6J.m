@@ -1,5 +1,5 @@
 ABSPOS6J ; IHS/FCS/DRS - user screen subrous ; 
- ;;1.0;PHARMACY POINT OF SALE;**49**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**49,54**;JUN 01, 2001;Build 131
  Q
 HEADER ; protocol ABSP P1 HEADER ; edit header  (EV  "Edit view screen")
  ; first, ask "All users or just one user or one patient?"
@@ -58,10 +58,11 @@ HDRA ; display for which one patient?
  S DIC=2,DIC(0)="AEMQZ",DIC("A")="Prescriptions for which patient? "
  S DIC("S")="I $D(^ABSPT(""AC"",Y))"
  D ^DIC W !
- S DUZ(2)=ABSPDUZ2 ; Restore original DUZ(2) ; ABSP*1.0T7*7
+ I $G(ABSPDUZ2) S DUZ(2)=ABSPDUZ2 ; Restore original DUZ(2) ; ABSP*1.0T7*7 ;ABSP*1.0*54
  G HDR9:$G(DUOUT)!$G(DTOUT),HDRA:(Y<1)  S PAT=+Y
  W !,"Enter the number of DAYS to go back to find"
- W !,"Point of Sale activity for ",$P(Y(0),U),"."
+ ;W !,"Point of Sale activity for ",$P(Y(0),U),"."
+ W !,"Point of Sale activity for ",$P(Y(0),U)_$$PPN1^ABSPUTL(+Y),"."  ; IHS/GDIT/AEF 3240110 - ABSP*1.0*54 FID 77888
  W ! S X=^TMP("ABSPOS",$J,"PATIENT TIME")
  ; /IHS/OIT/RAM ; 16 OCT 2017 ; CR#09828 Changes the amount of time we can back-bill payers; change
  ;     1 year limit to a new field in the ABSP SETUP file with that parameter. Default is now 6 years.

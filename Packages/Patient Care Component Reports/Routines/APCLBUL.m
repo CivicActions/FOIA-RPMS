@@ -1,5 +1,5 @@
-APCLBUL ; IHS/CMI/LAB - Routine to create bulletin ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLBUL ; IHS/CMI/LAB - Routine to create bulletin ; [ 11/03/00 1:24 PM ]
+ ;;3.0;IHS PCC REPORTS;**8**;FEB 05, 1997
  ;;
  ;;Here's how to make this work:
  ;;

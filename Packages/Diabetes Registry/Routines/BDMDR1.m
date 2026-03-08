@@ -1,5 +1,5 @@
 BDMDR1 ; IHS/CMI/LAB - patients w/o dm on problem list ;
- ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,3,8,10**;JUN 14, 2007;Build 12
+ ;;2.0;DIABETES MANAGEMENT SYSTEM;**2,3,8,10,13,19**;JUN 14, 2007;Build 159
  ;
  ;
 START ;
@@ -55,7 +55,7 @@ DATE ;
  Q
 ZIS ;
  S BDMTEMP=""
- S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="P" KILL DA D ^DIR KILL DIR
+ S DIR(0)="S^P:PRINT the List;B:BROWSE the List on the Screen",DIR("A")="Output Type",DIR("B")="B" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) D EXIT Q
  S BDMTEMP=Y
  ;call to XBDBQUE
@@ -147,6 +147,7 @@ DMPROB(P) ;is DM on problem list 1=yes 0=no
  .Q
  Q G
 PRINT ;EP - called from xbdbque
+ D LOG^BUSAAPI("O","P","P",$S($G(XQY0)]"":$P(XQY0,U),1:"BDMDR1"),"DM RPT NO DM ON PL")
  S BDMIOSL=$S($G(BDMGUI):55,1:IOSL)
  S BDM80D="-------------------------------------------------------------------------------"
  S BDMPG=0 D HEAD

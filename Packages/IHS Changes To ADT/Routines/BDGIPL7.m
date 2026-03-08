@@ -1,5 +1,5 @@
 BDGIPL7 ; IHS/ANMC/LJF - CURR INPTS W/INSURANCE ; 
- ;;5.3;PIMS;**1007,1009,1010**;FEB 27, 2007
+ ;;5.3;PIMS;**1007,1009,1010,1022**;MAY 28, 2004;Build 18
  ;
  ;
  ;cmi/anch/maw 2/22/2007 added code in PRINT to not close device if multiple copies PATCH 1007 item 1007.39
@@ -121,7 +121,12 @@ INITC ;-- init variables for coverage type and list array
 LINE ; set up dislay line for patient
  NEW LINE,BDGCOV,ADM
  S LINE=$S($E(IOST,1,2)="P-":$$SP(5),1:$J(BDGCNT,3)_") ")
- S LINE=$$PAD(LINE,5)_$E($$GET1^DIQ(2,DFN,.01),1,18)            ;name
+ ;97822 maw p1022 PPN
+ S PPN=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S LINE=$$PAD(LINE,5)_PPN
+ D SET(LINE,.VALMCNT,BDGCNT,DFN)
+ S LINE=""
+ ;S LINE=$$PAD(LINE,5)_$E($$GET1^DIQ(2,DFN,.01),1,18)            ;name
  S LINE=$$PAD(LINE,25)_$$HRCND^BDGF2($$HRCN^BDGF2(DFN,DUZ(2)))  ;chart#
  S LINE=$$PAD(LINE,35)_$G(^DPT(DFN,.101))                       ;room
  S LINE=$$PAD(LINE,43)_$$GET1^DIQ(45.7,+$G(^DPT(DFN,.103)),99)  ;srv

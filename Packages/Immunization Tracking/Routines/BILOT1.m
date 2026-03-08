@@ -1,9 +1,9 @@
 BILOT1 ;IHS/CMI/MWR - EDIT LOT NUMBERS.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**2**;MAY 15,2012
+ ;;8.5;IMMUNIZATION;**21,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
+ ;;BIB PROTOTYPE; JAN 31,2015
  ;;  EDIT LOT NUMBER FIELDS.
- ;   PATCH 2: Display number of Lots in list.  INIT+50
- ;
+ ;;  PATCH 21: Multiple changes for DTS Lot Number verification.
  ;
  ;----------
 INIT ;EP
@@ -17,7 +17,6 @@ INIT ;EP
  N BIENT,BILINE,BITMP S BIENT=0,BILINE=0
  ;---> BICOLL=Order of Listing (see linelabel CHGORDR below.
  S:'$G(BICOLL) BICOLL=1
- ;---> Exclude inactive lots unless BIINACT=1.  vvv83
  S:'$G(BIINACT) BIINACT=0
  ;
  N BIIEN S BIIEN=0
@@ -25,13 +24,16 @@ INIT ;EP
  .I '$D(^AUTTIML(BIIEN,0)) K ^AUTTIML(BIIEN) Q
  .N BIACT,BIEXP,BILOT,BIVNAM,BIUNSD,Y,X,Z
  .S Y=^AUTTIML(BIIEN,0),BILOT=$P(Y,U),BIACT=+$P(Y,U,3)
- .S BIUNSD=$P(Y,U,12) S:BIUNSD="" BIUNSD="NA"
+ .S BIUNSD=$P(Y,U,12)
+ .S:BIUNSD="" BIUNSD="NA"
  .;---> Quit if excluding Inactive Lots.
  .Q:('BIINACT&BIACT=1)
  .S:BILOT="" BILOT="UNKNOWN"
  .;---> If no Exp Date, set Exp Date=last in list.
- .S BIEXP=+$P(Y,U,9) S:'BIEXP BIEXP=9999999
- .S BIVNAM=+$P(Y,U,4),BIVNAM=$$VNAME^BIUTL2(BIVNAM)
+ .S BIEXP=+$P(Y,U,9)
+ .S:'BIEXP BIEXP=9999999
+ .S BIVNAM=+$P(Y,U,4)
+ .S BIVNAM=$$VNAME^BIUTL2(BIVNAM)
  .D
  ..I BICOLL=2 S W=BIEXP,X=BIVNAM,Y=BIUNSD,Z=BILOT Q  ;vvv83
  ..I BICOLL=3 S W=BILOT,X=BIVNAM,Y=BIEXP,Z=BIUNSD Q
@@ -41,15 +43,27 @@ INIT ;EP
  ..           S W=BIUNSD,X=BIVNAM,Y=BIEXP,Z=BILOT Q
  .S BITMP(BIACT,W,X,Y,Z,BIIEN)=BIIEN
  ;
- N N S N="" F  S N=$O(BITMP(N)) Q:(N="")  D
+ N N
+ S N=""
+ F  S N=$O(BITMP(N)) Q:(N="")  D
  .;---> Place a linefeed between Active and Inactive.
  .I N D WRITE(.BILINE,,,BIENT)
  .;
- .N M S M="" F  S M=$O(BITMP(N,M)) Q:(M="")  D
- ..N L S L="" F  S L=$O(BITMP(N,M,L)) Q:(L="")  D
- ...N K S K="" F  S K=$O(BITMP(N,M,L,K)) Q:(K="")  D
- ....N J S J="" F  S J=$O(BITMP(N,M,L,K,J)) Q:(J="")  D
- .....N P S P="" F  S P=$O(BITMP(N,M,L,K,J,P)) Q:(P="")  D
+ .N M
+ .S M=""
+ .F  S M=$O(BITMP(N,M)) Q:(M="")  D
+ ..N L
+ ..S L=""
+ ..F  S L=$O(BITMP(N,M,L)) Q:(L="")  D
+ ...N K
+ ...S K=""
+ ...F  S K=$O(BITMP(N,M,L,K)) Q:(K="")  D
+ ....N J
+ ....S J=""
+ ....F  S J=$O(BITMP(N,M,L,K,J)) Q:(J="")  D
+ .....N P
+ .....S P=""
+ .....F  S P=$O(BITMP(N,M,L,K,J,P)) Q:(P="")  D
  ......D LINE(BITMP(N,M,L,K,J,P),.BILINE,.BIENT)
  ;
  ;---> Finish up Listmanager List Count.
@@ -58,8 +72,9 @@ INIT ;EP
  .;
  .;********** PATCH 2, v8.5, MAY 15,2012, IHS/CMI/MWR
  .;---> Display number of Lots in list.
- .;S VALMSG="Scroll down to view more. Type ?? for more actions"
- .N Y S Y=VALMCNT S:$G(BIINACT) Y=Y-1
+ .N Y
+ .S Y=VALMCNT
+ .S:$G(BIINACT) Y=Y-1
  .S VALMSG=Y_" Lots: Scroll down to view more, or type ??."
  .;**********
  Q
@@ -150,6 +165,7 @@ EDITLOT(BINEW) ;EP
  ;            3) Use BI local array to send data to FDIE^BIFMAN.
  ;
  ;---> If BINEW, add a new Lot Number and quit.
+ ;
  I $G(BINEW) D EDITSCR(,1) D RESET Q
  ;
  ;---> Call the Listmanager Generic Selector of items displayed.
@@ -159,7 +175,8 @@ EDITLOT(BINEW) ;EP
  ;---> Check that a Listman Item was passed.
  I '$D(VALMY) D ERRCD^BIUTL2(406,,1) D RESET Q
  ;---> Now set Y=Item# selected from the list.
- N Y S Y=$O(VALMY(0))
+ N Y
+ S Y=$O(VALMY(0))
  I '$G(Y) D ERRCD^BIUTL2(406,,1) D RESET Q
  I $G(BILOT(Y))="" D ERRCD^BIUTL2(511,,1) D RESET Q
  D EDITSCR(+BILOT(Y))
@@ -168,13 +185,17 @@ EDITLOT(BINEW) ;EP
  Q
  ;
  ;
+ ;
+ ;********** BARCODE PROTO, v8.5, JAN 31,2015, IHS/CMI/MWR
+ ;---> Add parameter to pass scanned values for adding new Lot Numbers.
  ;----------
-EDITSCR(BILOT,BINEW) ;EP
+EDITSCR(BILOT,BINEW,BIB) ;EP
  ;---> Add or edit the fields of a Lot Number.
  ;---> (Make this an RPC in the future?)
  ;---> Parameters:
  ;     1 - BILOT (opt) Lot Number IEN.
  ;     2 - BINEW (opt) 1=new lot number being added; 0=edit.
+ ;     3 - BIB   (opt) Array of scanned values for Lot#, Exp Date, NDC.
  ;
  ;---> If this is an edit, check that IEN of Lot Number.
  I '$G(BINEW),$G(^AUTTIML(+$G(BILOT),0))="" D ERRCD^BIUTL2(511,,1) Q
@@ -184,7 +205,7 @@ EDITSCR(BILOT,BINEW) ;EP
  .N Y S Y=^AUTTIML(BILOT,0)
  .S BI("AS")=$P(Y,U,1)     ;Full Lot Number Text.
  .S BI("A")=$P(BI("AS"),"*")      ;Lot Number Text.
- .S BI("S")=$P(BI("AS"),"*",2)      ;Lot Number Text.
+ .S BI("S")=$P(BI("AS"),"*",2)      ;Sub-Lot Number Text.
  .S BI("B")=$P(Y,U,4)      ;Vaccine.
  .S BI("C")=+$P(Y,U,3)     ;Status Active/Inactive.
  .S BI("D")=$P(Y,U,9)      ;Expiration Date.
@@ -197,7 +218,19 @@ EDITSCR(BILOT,BINEW) ;EP
  .S BI("O")=$P(Y,U,17)     ;NDC Code.
  ;
  ;---> Call Screenman to build BI local array of data by user.
+ ;
  N BISAVE
+ ;---> Save Lot and Manufacturer for BILOT2.
+ N BISLOT,BISMAN
+ S BISLOT=$G(BI("A")),BISMAN=$G(BI("M"))
+ ;
+ ;********** BARCODE PROTO, v8.5, JAN 31,2015, IHS/CMI/MWR
+ ;---> Parse parameter of scanned values for adding new Lot Numbers.
+ I $G(BINEW),$D(BIB) D
+ .S BI("A")=$G(BIB("A")),BI("D")=$G(BIB("D")),BI("O")=$G(BIB("O"))
+ ;**********
+ ;
+ ;
  N DR S DR="[BI FORM-LOT NUMBER EDIT]"
  D DDS^BIFMAN(9999999.41,DR,$G(BILOT),"S",.BISAVE,.BIPOP)
  ;
@@ -222,13 +255,14 @@ EDITSCR(BILOT,BINEW) ;EP
  ;
  ;---> If this is a new Lot Number and it already exists (not a sub-lot),
  ;---> then display error and quit.
- I $G(BINEW),$D(^AUTTIML("B",BI("AS"))) D  Q
- .D CLEAR^VALM1,FULL^VALM1,TITLE^BIUTL5("EDIT LOT NUMBER FIELDS")
- .W !!?23,"This Lot Number already exists!"
- .W !!?18,"Please exit and select it from the list."
- .W !!!!?5,"NOTE: It It may be Inactive. Try displaying Inactive Lot Numbers"
- .W !?11,"as well as Active ones.",!
- .D DIRZ^BIUTL3()
+ I $G(BINEW),$D(^AUTTIML("B",BI("AS"))) D LOTERR^BILOT2 Q
+ ;
+ ;
+ ;********** PATCH 21, v8.5, APR 01,2021, IHS/CMI/MWR
+ ;********** V8.5 PATCH 29 - FID-105110 Remove COVID lot check
+ ;REMOVE CODE LOT CHECK
+ ;---> Check for Covid Lot and valid Lot Number.
+ ;Q:$$DTSCHK^BILOT2(BI("A"),BI("B"),BI("M"),$G(BINEW),BISLOT,BISMAN)
  ;
  ;
  ;---> Add/update the Lot Number.
@@ -345,8 +379,7 @@ VACINA1 ;EP
 VACINA2 ;EP
  ;---> Called from Fields 3 on Form BI FORM-LOT NUMBER EDIT.
  ;---> If no vaccine was selected, send user back to Field 2 (vaccine).
- I '$G(BI("B")) S DDSBR=2 D  Q
- .;D HLP^DDSUTL("Select  the Vaccine that corresponds to this Lot Number.")
+ I '$G(BI("B")) S DDSBR=2 Q
  ;
  N BIT S BIT="Select whether this Lot Number should be Active or Inactive."
  S BIT=BIT_"  Note that users will not be able to select an Inactive Lot "
@@ -460,22 +493,4 @@ PRINTX(BILINL,BITAB) ;EP
  Q:$G(BILINL)=""
  N I,T,X S T="" S:'$D(BITAB) BITAB=5 F I=1:1:BITAB S T=T_" "
  F I=1:1 S X=$T(@BILINL+I) Q:X'[";;"  W !,T,$P(X,";;",2)
- Q
- ;
- ;
- ;----------
-NULLACT ;EP
- ;---> Activate all Lot Numbers that have a Status=null.
- ;---> Call by postinit for Imm v8.5.
- ;
- D ^XBKVAR
- W !!?5,"Checking Lot Numbers for null Status..."
- N M,N S M=0,N=0
- F  S N=$O(^AUTTIML(N)) Q:'N  D
- .Q:'$D(^AUTTIML(N,0))
- .;---> Quit if this lot number has a Status .
- .Q:($P(^AUTTIML(N,0),"^",3)'="")
- .;---> Okay, Status must be null, so set it to Active.
- .S $P(^AUTTIML(N,0),"^",3)=0,M=M+1
- W !!?5,"Done.  ",M," Lot Numbers have been fixed." D DIRZ^BIUTL3()
  Q

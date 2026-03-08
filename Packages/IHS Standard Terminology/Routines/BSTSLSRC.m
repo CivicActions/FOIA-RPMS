@@ -1,5 +1,5 @@
 BSTSLSRC ;GDIT/HS/BEE BSTS - New local Search ; 15 Nov 2012  4:26 PM
- ;;2.0;IHS STANDARD TERMINOLOGY;;Dec 01, 2016;Build 62
+ ;;2.0;IHS STANDARD TERMINOLOGY;**4**;Dec 01, 2016;Build 10
  Q
  ;
 SRC(OUT,IN) ;Input
@@ -55,6 +55,10 @@ SRC(OUT,IN) ;Input
  . S CONC=$P(RES,U) Q:CONC=""
  . S CIEN=$$CIEN^BSTSLKP(CONC,NMID) Q:CIEN=""
  . ;
+ . ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Inactive concepts - Do not include
+ . ;Do not include inactive terms in weighting
+ . I $$GET1^DIQ(9002318.4,CIEN_","_",",.16,"I") Q
+ . ;
  . ;Quit if out of date
  . ;BSTS*1.0*4;Change to out of date checking
  . ;Allow out of date concepts since server is probably offline
@@ -104,6 +108,10 @@ MATCH(WT,VAL,TIEN,NMID,SEARCH,STYPE) ;Perform matching checks/weighting
  ;
  NEW TERM,TYPE,CPT,ENT,DESC,FILTER,CIEN
  ;
+ ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Inactive concepts
+ ;Do not include inactive terms in weighting
+ I $$GET1^DIQ(9002318.3,TIEN_","_",",.13,"I") Q
+ ;
  ;Get the type - skip FSN for SNOMED
  S TYPE=$$GET1^DIQ(9002318.3,TIEN_",",.09,"I") Q:TYPE=""
  I TYPE="F",NMID=36 Q
@@ -123,9 +131,15 @@ MATCH(WT,VAL,TIEN,NMID,SEARCH,STYPE) ;Perform matching checks/weighting
  ;Put greatest weight on exact match
  I SEARCH=TERM S WT=WT+500000000
  ;
+ ;Get the concept pointer
+ S CIEN=$$GET1^DIQ(9002318.3,TIEN_",",.03,"I")
+ ;
+ ;GDIT/HS/BEE;12/1/2022;FEATURE#76919;Inactive concepts - Do not include
+ ;Do not include inactive terms in weighting
+ I CIEN,$$GET1^DIQ(9002318.4,CIEN_","_",",.16,"I") Q
+ ;
  ;BSTS*1.0*6;SRCH Common Terms weighting
- S CIEN=$$GET1^DIQ(9002318.3,TIEN_",",.03,"I") I CIEN]"" D
- . I $O(^BSTS(9002318.4,"E",INMID,"SRCH Common Terms",CIEN,""))]"" S WT=WT+50000000
+ I CIEN]"" I $O(^BSTS(9002318.4,"E",INMID,"SRCH Common Terms",CIEN,""))]"" S WT=WT+50000000
  ;
  ;Look for starting match - Heavily weight starting matches with search string
  I STYPE="F",(TYPE="P"!(TYPE="F")),SEARCH=$E(TERM,1,$L(SEARCH)) S WT=WT+500000

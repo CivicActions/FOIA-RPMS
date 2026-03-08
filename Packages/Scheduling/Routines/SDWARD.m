@@ -1,5 +1,5 @@
 SDWARD ;ALB/GRR - LIST INPATIENTS WITH PENDING APPTS ; 14 NOV 84
- ;;5.3;Scheduling;**406,1015**;Aug 13, 1993;Build 21
+ ;;5.3;Scheduling;**406,1015,1022**;MAY 28, 2004;Build 18
  ;IHS/ANMC/LJF  5/17/2001 added call to list mgr if displaying to screen
  ;                        
  S %DT(0)=-DT,%DT="AXE",%DT("A")="LIST PATIENTS WITH PENDING APPOINTMENTS ADMITTED ON DATE: " D ^%DT K %DT Q:Y<0  S SDY=Y D:'$D(DT) DT^SDUTL
@@ -35,7 +35,13 @@ PRT D:$Y+2>IOSL HED
  Q
  ;
 PN D:$Y+2>IOSL HED
- D PID^VADPT6 W !,$E($P(^DPT(DFN,0),"^",1),1,25),?29,VA("PID") K VA("BID"),VA("PID") I $D(^DPT(DFN,.1)) W ?43,$P(^(.1),"^",1)
+ ;202307 77894 maw p1022 PPN
+ D PID^VADPT6
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ W !,$G(PRF)
+ W !,?32,VA("PID") K VA("BID"),VA("PID") I $D(^DPT(DFN,.1)) W ?43,$P(^(.1),"^",1)
+ ;D PID^VADPT6 W !,$E($P(^DPT(DFN,0),"^",1),1,25),?29,VA("PID") K VA("BID"),VA("PID") I $D(^DPT(DFN,.1)) W ?43,$P(^(.1),"^",1)
  Q
  ;
 HED W @IOF,!,"PATIENTS ADMITTED ",SDPY," WHO HAVE PENDING APPOINTMENTS",?66,HY,!,"PATIENT NAME",?32,"PT ID",?43,"WARD"

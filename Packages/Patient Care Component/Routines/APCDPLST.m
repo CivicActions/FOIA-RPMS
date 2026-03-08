@@ -1,5 +1,5 @@
 APCDPLST ;IHS/CMI/LAB - UPDATE ICD CODE FROM BSTS
- ;;2.0;IHS PCC SUITE;**16**;MAY 14, 2009;Build 9
+ ;;2.0;IHS PCC SUITE;**16,23**;MAY 14, 2009;Build 17
  ;; ;
  ;
  W !!,"This option is used to update the Status field on Problem List"
@@ -23,7 +23,7 @@ APCDPLST ;IHS/CMI/LAB - UPDATE ICD CODE FROM BSTS
  W !,?2,"- Update all Routine/Admin:  this will loop through the problems on"
  W !?2,"  the IPL and for any problem whose Concept ID is defaulted to Routine/Admin "
  W !?2,"  in DTS, change to Routine/Admin on IPL.  Problems on the IPL with a status "
- W !?2,"  of Inactive will be skipped and the status will not be changed."
+ W !?2,"  of Inactive or Chronic will be skipped and the status will not be changed."
  S DIR(0)="Y",DIR("A")="Do you wish to continue",DIR("B")="N" KILL DA D ^DIR KILL DIR
  I $D(DIRUT) Q
  I 'Y Q
@@ -78,7 +78,7 @@ QUEUE ;EP
  .I APCDPLT="C"!(APCDPLT="A"),APCDDEF="A" D CS Q  ;IF WANT TO CHANGE CHRONICS AND THIS IS CHRONIC CHANGE IT
  .;I APCDPLT="S"!(APCDPLT="A"),APCDDEF="S",APCDCS'="A" D CS Q  ;IF WANT TO CHANGE SUBACUTES AND THIS IS SUBACUTE CHANGE IT EXCEPT IF IT IS CHRONIC
  .I APCDPLT="O"!(APCDPLT="A"),APCDDEF="O",APCDCS'="A" D CS Q  ;IF WANT TO CHANGE SOCIAL AND THIS IS SOCIAL CHANGE IT EXCEPT IF IT IS CHRONIC
- .I APCDPLT="R"!(APCDPLT="A"),APCDDEF="R" D CS Q  ;IF WANT TO CHANGE ROUTINE/ADMIN AND THIS IS ROUTINE/ADMIN CHANGE IT EXCEPT IF IT IS CHRONIC
+ .I APCDPLT="R"!(APCDPLT="A"),APCDDEF="R",APCDCS'="A" D CS Q  ;IF WANT TO CHANGE ROUTINE/ADMIN AND THIS IS ROUTINE/ADMIN CHANGE IT EXCEPT IF IT IS CHRONIC
  Q
 CS ;update status .12 and update PROBLEM entry and the change log
  S APCDOLDS=APCDCS

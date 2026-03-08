@@ -1,8 +1,7 @@
-LR7OB69 ;slc/dcm/JAH - Get Lab order data from 69 - 68 - 63 ;8/10/04
- ;;5.2;LAB SERVICE;**1003,1031**;NOV 01, 1997
+LR7OB69 ;slc/dcm/JAH - Get Lab order data from 69 - 68 - 63 ; 01-Apr-2022 08:20 ; MKK
+ ;;5.2;LAB SERVICE;**1003,1018,121,187,224,373,1031,1051**;NOV 01, 1997;Build 19
  ;
- ;;VA LR Patche(s): 121,187,224,291,373**
- ;
+ ; MSC/MKK - LR*5.2*1051 - 01-Apr-2022 - Item 76199 - Prevent <UNDEDINFED> error from occurring.
  ;
 69(ODT,SN) ;Get data from file 69
  ;ODT=Order Date subscript in file 69
@@ -53,5 +52,16 @@ LR7OB69 ;slc/dcm/JAH - Get Lab order data from 69 - 68 - 63 ;8/10/04
  . S ^TMP("LRX",$J,69,"N",IFN)=X
  S Y10=$O(^LRO(69,ODT,1,SN,4,0)),Y10=$S(Y10:$P(^(Y10,0),"^"),1:"")
  S ^TMP("LRX",$J,69)=Y1_"^"_Y2_"^"_Y3_"^"_Y4_"^"_Y5_"^"_Y6_"^"_Y7_"^"_Y8_"^"_Y9_"^"_Y10_"^"_Y11_"^"_Y12
- S IFN=0 F  S IFN=$O(^TMP("LRX",$J,69,IFN)) Q:IFN<1  S X=^TMP("LRX",$J,69,IFN) S X1=$P(X,"^",3),X2=$P(X,"^",4),X3=$P(X,"^",5) K TSTY D EN^LR7OU1(+X,$P(^LAB(60,+X,0),"^",5)) D 68^LR7OB68(IFN,X1,X2,X3,+X)
+ ; S IFN=0 F  S IFN=$O(^TMP("LRX",$J,69,IFN)) Q:IFN<1  S X=^TMP("LRX",$J,69,IFN) S X1=$P(X,"^",3),X2=$P(X,"^",4),X3=$P(X,"^",5) K TSTY D EN^LR7OU1(+X,$P(^LAB(60,+X,0),"^",5)) D 68^LR7OB68(IFN,X1,X2,X3,+X)
+ ;
+ ; ----- BEGIN IHS/MSC/MKK - LR*5.2*1051 - 76199 - 01-Apr-2022
+ ; Rewrite code so that if any of the X* variables do not exist, then
+ ; no Errors are thrown.
+ S IFN=0 F  S IFN=$O(^TMP("LRX",$J,69,IFN)) Q:IFN<1  D
+ . S X=$G(^TMP("LRX",$J,69,IFN))
+ . S X1=$P(X,"^",3),X2=$P(X,"^",4),X3=$P(X,"^",5)
+ . K TSTY
+ . D:+$G(X) EN^LR7OU1(+X,$P(^LAB(60,+X,0),"^",5))
+ . I +$G(X1),$L(X2),$L(X3),+X D 68^LR7OB68(IFN,X1,X2,X3,+X)
+ ; ----- END IHS/MSC/MKK - LR*5.2*1051
  Q

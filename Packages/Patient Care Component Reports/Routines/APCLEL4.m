@@ -1,5 +1,5 @@
-APCLEL4 ; IHS/CMI/LAB - patients with elder care assessment ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLEL4 ;IHS/CMI/LAB - patients with elder care assessment [ 03/23/01  11:28 AM ]
+ ;;3.0;IHS PCC REPORTS;**8,9**;FEB 05, 1997
  ;
  ;
 START ;
@@ -18,9 +18,6 @@ DATE ;get visit date range for functional assessment
  S APCLBD=$$FMADD^XLFDT(APCLED,-365)
  ;
 ZIS ;call to XBDBQUE
-DEMO ;
- D DEMOCHK^APCLUTL(.APCLDEMO)
- I APCLDEMO=-1 G DATE
  S XBRP="PRINT^APCLEL4",XBRC="PROC^APCLEL4",XBRX="EXIT^APCLEL4",XBNS="APCL"
  D ^XBDBQUE
  D EXIT
@@ -37,7 +34,6 @@ PROC ;EP - called from XBDBQUE
  S APCLADL=0,APCLIADL=0
  S DFN=0 F  S DFN=$O(^AUPNPAT(DFN)) Q:DFN'=+DFN  D
  .Q:$$DOD^AUPNPAT(DFN)]""
- .Q:$$DEMO^APCLUTL(DFN,$G(APCLDEMO))
  .;has pt had functional assessment
  .S X=$$FA(DFN,APCLBD,APCLED)
  .I X="" Q

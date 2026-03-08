@@ -1,6 +1,9 @@
 BARRTBS1 ; IHS/SD/TPF - TREASURY DEPOSIT/BATCH STATISTICAL LISTING RPT ;08/20/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**19**;OCT 26, 2005
- ; IHS/SD/PKD 1.8*19 7/30/10  Cut and copied from BARRTBSL which became too large for SAC 
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**19,35,39**;OCT 26, 2005;Build 231
+ ;IHS/SD/PKD 1.8*19 7/30/10 Cut and copied from BARRTBSL which became too large for SAC 
+ ;IHS/SD/SDR 1.8*35 ADO76628 Added check for filename for RTSK tasked report options
+ ;IHS/SD/SDR 1.8*39 ADO106475 Added Check#, A/R Account to item lines; Removed ALLOWANCE TOTAL
+ ;   and TDN TOTAL per Therea.
  ;
 PRINT ;EP - PRINT REPORT
  N BAREQUAL,SORTSUB,BATCHNM,BARITMDA,DATA,ITEMTDN
@@ -24,6 +27,7 @@ PRINT ;EP - PRINT REPORT
  .I $Y>(IOSL-11) W ! K DIR S DIR(0)="E" D:'$D(ZTQUEUED)&(IO=IO(0)&'$D(IO("S"))) ^DIR S ESC=X=U Q:ESC  D TOPHDR
  .W !!,$S(SORTTYP="TDN":"TDN/IPAC: ",1:"ALLOWANCE CATEGORY: ")
  .W SORTSUB
+ .W !  ;bar*1.8*39 IHS/SD/SDR ADO106475
  .S (ALORTDN1,ALORTDN2,ALORTDN3,ALORTDN4,ALORTDN5,ALORTDN6,ALORTDN7)=0
  .S BATCHNM=""
  .F  S BATCHNM=$O(^XTMP("BARRTBSL",$J,SORTSUB,BATCHNM)) Q:BATCHNM=""!ESC  D
@@ -34,10 +38,17 @@ PRINT ;EP - PRINT REPORT
  ...I $Y>(IOSL-4) W ! K DIR S DIR(0)="E" D:'$D(ZTQUEUED)&(IO=IO(0)&'$D(IO("S"))) ^DIR S ESC=X=U Q:ESC  D TOPHDR
  ...I CNT=1 D  Q:ESC
  ....I $Y>(IOSL-7) W ! K DIR S DIR(0)="E" D:'$D(ZTQUEUED)&(IO=IO(0)&'$D(IO("S"))) ^DIR S ESC=X=U Q:ESC  D TOPHDR
- ....W !,"COLLECTION ID: "_$P(DATA,U)
- ....W !,$P(BATCHNM,"-",2,999)_"-"_" "_$P(DATA,U,10)
- ....I $P(DATA,U,2)["~" W ?20,"TDN: ",$TR($P(DATA,U,2),"~")
+ ....;W !,"COLLECTION ID: "_$P(DATA,U)  ;bar*1.8*39 IHS/SD/SDR ADO106475
+ ....W "  COLLECTION ID: "_$P(DATA,U)  ;bar*1.8*39 IHS/SD/SDR ADO106475
+ ....;W !,$P(BATCHNM,"-",2,999)_"-"_" "_$P(DATA,U,10)   ;bar*1.8*39 IHS/SD/SDR ADO106475
+ ....W " "_$P(BATCHNM,"-",2,999)_"-"_" "_$P(DATA,U,10)   ;bar*1.8*39 IHS/SD/SDR ADO106475
+ ....;I $P(DATA,U,2)["~" W ?20,"TDN: ",$TR($P(DATA,U,2),"~")  ;bar*1.8*39 IHS/SD/SDR ADO106475
  ...W !,"ITEM "_BARITMDA_": ",$TR($P(DATA,U,2),"~")
+ ...;start new bar*1.8*39 IHS/SD/SDR ADO106475
+ ...I ("^1^2^"[("^"_BARSORT_"^")) D
+ ....W "  CHK: ",$P(DATA,U,12)  ;can be 50 chars
+ ....W "  A/R ACCT: "_$P(DATA,U,13)  ;A/R Acct
+ ...;end new bar*1.8*39 IHS/SD/SDR ADO106475
  ...W !,$J($P(DATA,U,3),10,2)
  ...W ?12,$J($P(DATA,U,4),10,2)
  ...W ?24,$J($P(DATA,U,5),10,2)
@@ -65,10 +76,12 @@ PRINT ;EP - PRINT REPORT
  ..W !,$J(BAT1TOT,10,2),?12,$J(BAT2TOT,10,2),?24,$J(BAT3TOT,10,2),$J(BAT4TOT,10,2),?46,$J(BAT5TOT,10,2),?58,$J(BAT6TOT,10,2),?70,$J(BAT7TOT,10,2)
  ..W !!
  .Q:ESC
- .W !,$S(SORTTYP="ALLOW":"ALLOWANCE",1:"TDN")," TOTAL: "
- .W !,"----------",?12,"----------",?24,"----------",?34,"----------",?46,"----------",?58,"----------",?70,"----------"
- .W !,$J(ALORTDN1,10,2),?12,$J(ALORTDN2,10,2),?24,$J(ALORTDN3,10,2),?34,$J(ALORTDN4,10,2),?46,$J(ALORTDN5,10,2),?58,$J(ALORTDN6,10,2),?70,$J(ALORTDN7,10,2)
- .W !!
+ .;start old bar*1.8*39 IHS/SD/SDR ADO106475
+ .;W !,$S(SORTTYP="ALLOW":"ALLOWANCE",1:"TDN")," TOTAL: "
+ .;W !,"----------",?12,"----------",?24,"----------",?34,"----------",?46,"----------",?58,"----------",?70,"----------"
+ .;W !,$J(ALORTDN1,10,2),?12,$J(ALORTDN2,10,2),?24,$J(ALORTDN3,10,2),?34,$J(ALORTDN4,10,2),?46,$J(ALORTDN5,10,2),?58,$J(ALORTDN6,10,2),?70,$J(ALORTDN7,10,2)
+ .;W !!
+ .;end old bar*1.8*39 IHS/SD/SDR ADO106475
  .S GRND1TOT=GRND1TOT+ALORTDN1
  .S GRND2TOT=GRND2TOT+ALORTDN2
  .S GRND3TOT=GRND3TOT+ALORTDN3
@@ -155,21 +168,23 @@ PRINTNI ;EP - PRINT REPORT
  ....W !,$J(BAT1TOT,10,2),?12,$J(BAT2TOT,10,2),?24,$J(BAT3TOT,10,2),$J(BAT4TOT,10,2),?46,$J(BAT5TOT,10,2),?58,$J(BAT6TOT,10,2),?70,$J(BAT7TOT,10,2)
  ....W !!
  ...Q:ESC
- ..W !,$S(BARSORT=3:"TDN",1:"ALLOWANCE")," TOTAL: "
- ..W !,"----------",?12,"----------",?24,"----------",?34,"----------",?46,"----------",?58,"----------",?70,"----------"
- ..I BARSORT=4  D
- ...W !,$J(AL1,10,2),?12,$J(AL2,10,2),?24,$J(AL3,10,2),?34,$J(AL4,10,2),?46,$J(AL5,10,2),?58,$J(AL6,10,2),?70,$J(AL7,10,2)
- ..I BARSORT=3  D
- ...W !,$J(TDN1,10,2),?12,$J(TDN2,10,2),?24,$J(TDN3,10,2),?34,$J(TDN4,10,2),?46,$J(TDN5,10,2),?58,$J(TDN6,10,2),?70,$J(TDN7,10,2)
- ..W !!
- .Q:ESC
- .W !,$S(BARSORT=3:"ALLOWANCE",1:"TDN")," TOTAL: "
- .W !,"----------",?12,"----------",?24,"----------",?34,"----------",?46,"----------",?58,"----------",?70,"----------"
- .I BARSORT=3  D
- ..W !,$J(AL1,10,2),?12,$J(AL2,10,2),?24,$J(AL3,10,2),?34,$J(AL4,10,2),?46,$J(AL5,10,2),?58,$J(AL6,10,2),?70,$J(AL7,10,2)
- .I BARSORT=4  D
- ..W !,$J(TDN1,10,2),?12,$J(TDN2,10,2),?24,$J(TDN3,10,2),?34,$J(TDN4,10,2),?46,$J(TDN5,10,2),?58,$J(TDN6,10,2),?70,$J(TDN7,10,2)
- .W !!
+ ..;start old bar*1.8*39 IHS/SD/SDR ADO106475
+ ..;W !,$S(BARSORT=3:"TDN",1:"ALLOWANCE")," TOTAL: "
+ ..;W !,"----------",?12,"----------",?24,"----------",?34,"----------",?46,"----------",?58,"----------",?70,"----------"
+ ..;I BARSORT=4  D
+ ..;.W !,$J(AL1,10,2),?12,$J(AL2,10,2),?24,$J(AL3,10,2),?34,$J(AL4,10,2),?46,$J(AL5,10,2),?58,$J(AL6,10,2),?70,$J(AL7,10,2)
+ ..;I BARSORT=3  D
+ ..;.W !,$J(TDN1,10,2),?12,$J(TDN2,10,2),?24,$J(TDN3,10,2),?34,$J(TDN4,10,2),?46,$J(TDN5,10,2),?58,$J(TDN6,10,2),?70,$J(TDN7,10,2)
+ ..;W !!
+ .;Q:ESC
+ .;W !,$S(BARSORT=3:"ALLOWANCE",1:"TDN")," TOTAL: "
+ .;W !,"----------",?12,"----------",?24,"----------",?34,"----------",?46,"----------",?58,"----------",?70,"----------"
+ .;I BARSORT=3  D
+ .;.W !,$J(AL1,10,2),?12,$J(AL2,10,2),?24,$J(AL3,10,2),?34,$J(AL4,10,2),?46,$J(AL5,10,2),?58,$J(AL6,10,2),?70,$J(AL7,10,2)
+ .;I BARSORT=4  D
+ .;.W !,$J(TDN1,10,2),?12,$J(TDN2,10,2),?24,$J(TDN3,10,2),?34,$J(TDN4,10,2),?46,$J(TDN5,10,2),?58,$J(TDN6,10,2),?70,$J(TDN7,10,2)
+ .;W !!
+ .;end old bar*1.8*39 IHS/SD/SDR
  .I BARSORT=3  D
  ..S GRND1TOT=GRND1TOT+AL1
  ..S GRND2TOT=GRND2TOT+AL2
@@ -194,6 +209,7 @@ PRINTNI ;EP - PRINT REPORT
  Q
  ;
 TOPHDR ;EP - TOP HEADER
+ I $D(BARFILN) D OPEN^%ZISH("FILE",BARPTH,BARFILN,"W") U IO  ;bar*1.8*35 IHS/SD/SDR ADO76628
  W @IOF
  S PAGE=PAGE+1
  W !,"DATE: ",NOW W ?IOM-10,"PAGE ",PAGE
@@ -215,31 +231,31 @@ ITEMHDR ;EP - ITEM HEADER
  ;W !,"BATCH DATE"
  ;IHS/SD/AR PATCH 19 06/04/2010
  I (BARSORT=1)!(BARSORT=2)  D
- . W !?3,"ITEM"
- . W ?13,"COLLECTIONS"
- . W ?30,"UNALLOCATED"
- . W ?49,"REFUNDED"
- . W ?62,"ITEM"
- . ;W !,"-SEQ-BS"
- . W !?3,"TOTAL"
- . W ?13,"PROCESSED"
- . W ?29,"TRUE      TOTAL"
- . W ?49,"FROM ITEM"
- . W ?62,"TRANSFER"
- . W ?73,"BALANCE"
+ .W !?3,"ITEM"
+ .W ?13,"COLLECTIONS"
+ .W ?30,"UNALLOCATED"
+ .W ?49,"REFUNDED"
+ .W ?62,"ITEM"
+ .;W !,"-SEQ-BS"
+ .W !?3,"TOTAL"
+ .W ?13,"PROCESSED"
+ .W ?29,"TRUE      TOTAL"
+ .W ?49,"FROM ITEM"
+ .W ?62,"TRANSFER"
+ .W ?73,"BALANCE"
  I (BARSORT=3)!(BARSORT=4)  D
- . W !?3,"BATCH"
- . W ?13,"COLLECTIONS"
- . W ?30,"UNALLOCATED"
- . W ?49,"REFUNDED"
- . W ?62,"BATCH"
- . ;W !,"-SEQ-BS"
- . W !?3,"TOTAL"
- . W ?13,"PROCESSED"
- . W ?29,"TRUE      TOTAL"
- . W ?49,"FROM BATCH"
- . W ?62,"TRANSFER"
- . W ?73,"BALANCE"
+ .W !?3,"BATCH"
+ .W ?13,"COLLECTIONS"
+ .W ?30,"UNALLOCATED"
+ .W ?49,"REFUNDED"
+ .W ?62,"BATCH"
+ .;W !,"-SEQ-BS"
+ .W !?3,"TOTAL"
+ .W ?13,"PROCESSED"
+ .W ?29,"TRUE      TOTAL"
+ .W ?49,"FROM BATCH"
+ .W ?62,"TRANSFER"
+ .W ?73,"BALANCE"
  W !,BAREQUAL
  Q
  ;

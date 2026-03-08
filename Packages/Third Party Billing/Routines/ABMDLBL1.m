@@ -1,5 +1,5 @@
-ABMDLBL1 ; IHS/ASDST/DMJ - Print Insurer Labels - PART 2 ; 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDLBL1 ; IHS/ASDST/DMJ - Print Insurer Labels - PART 2 ; [ 06/23/2003  4:57 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**4**;APR 05, 2002
  ;Original;TMD;
  ;
 BADDR ;EP for setting Mailing Address array

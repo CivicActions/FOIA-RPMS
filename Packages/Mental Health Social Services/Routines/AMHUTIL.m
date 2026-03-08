@@ -1,5 +1,5 @@
-AMHUTIL ; IHS/CMI/LAB - UTILITIES ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**4**;JUN 18, 2010;Build 28
+AMHUTIL ; IHS/CMI/LAB - UTILITIES ; 29 Jul 2021  1:51 PM
+ ;;4.0;IHS BEHAVIORAL HEALTH;**4,11,12**;JUN 02, 2010;Build 46
  ;
 GUIPL(P,R,Z) ;EP - called from GUI for patient lookup
  I '$G(P) Q 0
@@ -29,6 +29,14 @@ SSN(P) ;EP
  I '$D(^DPT(P,0)) Q ""
  Q $S($L($P(^DPT(P,0),U,9))=9:$J("XXX-XX-"_$E($P(^DPT(P,0),U,9),6,9),11),1:$J($P(^DPT(P,0),U,9),11))
  ;
+PFLAG(P) ;EP - write patient flag if there is one
+ NEW F,Z
+ S F=$$PRF^AMHGUVF(P,.Z)
+ I 'F Q
+ D EN^DDIOL("PATIENT FLAG",,"?2")
+ S F=0
+ F  S F=$O(Z(F)) Q:F'=+F  D EN^DDIOL(Z(F),,"!?2")
+ Q
 ALLOWVI(P,V) ;EP - is user P allowed to see VISIT V
  ;P - DUZ, user internal entry number
  I '$G(P) Q 0
@@ -228,7 +236,7 @@ ICDN(CIM) ;EP
  I $T(ICDDX^ICDEX)="" S Y=$E($P($$ICDDX^ICDCODE(X),U,4),1,25)
  I $T(ICDDX^ICDEX)]"" S Y=$E($P($$ICDDX^ICDEX(X),U,4),1,25)
  Q Y
-DATE(D) ;EP - return YYYYMMDD from internal fm format
+DATE(D) ;EP
  I $G(D)="" Q ""
  Q ($E(D,1,3)+1700)_$E(D,4,7)
 UIDV(REC) ;EP - generate unique ID for visit
@@ -247,7 +255,7 @@ POSTDA ;EP - called from screeNMAN
  I X=1!(X=2)!(X=4) D PUT^DDSVAL(DIE,.DA,.17,"",,"I")
  I X=3!(X=5) D PUT^DDSVAL(DIE,.DA,.16,"",,"I")
  Q
-CHART(V) ;EP - returns ASUFAC_HRN
+CHART(V) ;EP
  NEW L,%,C,S,P,Z
  S %=""
  I '$D(^AMHREC(V,0)) Q %
@@ -268,7 +276,7 @@ GETCHART(L) ;
  S %=S_C
  Q %
  ;
-PRIMPROV(V,F) ;EP - primary provider in many different formats
+PRIMPROV(V,F) ;EP
  I 'V Q ""
  I '$D(^AMHREC(V)) Q ""
  NEW %,Y,P,Z
@@ -301,7 +309,7 @@ PROV ;EP
  .S %="",I=F D @I S $P(APCLV(C),U)=%
  .Q
  Q
-METHOD(SFIEN) ;EP - called from export
+METHOD(SFIEN) ;EP
  I '$G(SFIEN) Q ""
  NEW X,Y,Z,C,D,A,B
  S C=0,D=0
@@ -310,7 +318,7 @@ METHOD(SFIEN) ;EP - called from export
  .I C=1 S $P(Y,U)=$P(^AMHPSUIC(SFIEN,11,X,0),U)
  .I C=2 S $P(Y,U,2)=$P(^AMHPSUIC(SFIEN,11,X,0),U)
  .I $P(^AMHPSUIC(SFIEN,11,X,0),U)=8,$P(^AMHPSUIC(SFIEN,11,X,0),U,2)]"" S $P(Y,U,3)=$S($P(Y,U,3)]"":" ",1:""),$P(Y,U,3)=$P(Y,U,3)_$P(^AMHPSUIC(SFIEN,11,X,0),U,2)
- .I $P(^AMHPSUIC(SFIEN,11,X,0),U)=7 D
+ .I $P(^AMHPSUIC(SFIEN,11,X,0),U)=7!($P(^AMHPSUIC(SFIEN,11,X,0),U)=9) D
  ..S A=0 F  S A=$O(^AMHPSUIC(SFIEN,11,X,11,A)) Q:A'=+A  D
  ...S D=D+1 Q:D>2  S P=D+3 S Z=$P(^AMHPSUIC(SFIEN,11,X,11,A,0),U,1) I Z S Z=$P(^AMHTSDRG(Z,0),U),$P(Y,U,P)=Z
  .Q
@@ -331,21 +339,21 @@ CONTRIB(SFIEN) ;EP
  .S C=C+1,Z=$P(^AMHPSUIC(SFIEN,13,X,0),U) I Z S Z=$P(^AMHTSCF(Z,0),U) S $P(Y,U,C)=Z
  .Q
  Q Y
-REFCHK ;EP - called from screenman to check placement disp and referred to
+REFCHK ;EP
  NEW A,B
  S A=$$GET^DDSVAL(DIE,DA,.17)
  S B=$$GET^DDSVAL(DIE,DA,.18)
  I A]"",B="" D EN^DDIOL("If Placement Disposition is entered, Referred to is Required.") S DDSBR="1^1^2.2" Q
  I A="",B]"" D EN^DDIOL("If Referred to is entered, Placement Disposition is Required.") S DDSBR="19^2^1" Q
  Q
-REFED ;EP - called from screenman to check placement disp and referred to
+REFED ;EP
  NEW A,B
  S A=$$GET^DDSVAL(DIE,DA,.17)
  S B=$$GET^DDSVAL(DIE,DA,.18)
  I A]"",B="" D EN^DDIOL("If Placement Disposition is entered, Referred to is Required.") S DDSBR="1^1^2.2" Q
  I A="",B]"" D EN^DDIOL("If Referred to is entered, Placement Disposition is Required.") S DDSBR="29^2^1" Q
  Q
-LISTAT ;EP - called from executable help from activity type
+LISTAT ;EP
  NEW A,B,C
  S A=0 F  S A=$O(^AMHTACT("AC",A)) Q:A=""  D
  .S B=0 F  S B=$O(^AMHTACT("AC",A,B)) Q:B'=+B  D

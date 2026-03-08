@@ -1,5 +1,5 @@
-RAREG2 ;HISC/CAH,FPT,DAD,SS AISC/MJK,RMO-Register Patient ; 06 Oct 2013  11:04 AM
- ;;5.0;Radiology/Nuclear Medicine;**13,18,93,99,1003,1005**;Nov 01, 2010;Build 13
+RAREG2 ;HISC/CAH,FPT,DAD,SS AISC/MJK,RMO IHS/OIT/NST - Register Patient ;20 Jun 2025 1:05 PM
+ ;;5.0;Radiology/Nuclear Medicine;**13,18,93,99,153,1003,1005,1007,1009,1013**;Mar 16, 1998;Build 13
  ;last modif. JULY 5,00 by SS 
  ; 07/15/2008 BAY/KAM rem call 249750 RA*5*93 Correct DIK Calls
  ; 06/04/09 rvd - display pregnancy screen and pregnancy screen comment only in Add Exams to Last visit option.
@@ -28,15 +28,16 @@ EXAMLOOP ; register the exam
  ;
  S DA=RADFN,RACN="N",DIE("NO^")="OUTOK",DR="[RA REGISTER]",DIE="^RADPT(" D ^DIE K DIE("NO^"),DE,DQ
  ;
- ;IHS/BJI/DAY - Patch 1005 - Default Pregnancy Status to Unknown
+ ;IHS/BJI/DAY - Patch 1007 - Default Pregnancy Status to Unknown
+ ;IHS/OIT/NST - Patch 1013 - Change age range 8-64 years old
  ;Controlled by site parameter
  I +$G(RAMDIV),$P($G(^RA(79,+RAMDIV,9999999)),"^",2)=1 D
  .I $G(RADFN)="" Q
  .I $G(RADTI)="" Q
  .I $G(RACNI)="" Q
  .I $$PTSEX^RAUTL8(RADFN)="M" Q
- .I $$PTAGE^RAUTL8(RADFN,"")>55 Q
- .I $$PTAGE^RAUTL8(RADFN,"")<12 Q
+ .I $$PTAGE^RAUTL8(RADFN,"")>64 Q
+ .I $$PTAGE^RAUTL8(RADFN,"")<8 Q
  .I '$D(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0)) Q
  .I $P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),U,32)]"" Q
  .S $P(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0),U,32)="u"
@@ -68,7 +69,7 @@ EXAMLOOP ; register the exam
  .W:$P(RA3,U,32)'="" !,"    PREGNANCY SCREEN: ",$S($P(RA3,U,32)="y":"Patient answered yes",$P(RA3,U,32)="n":"Patient answered no",$P(RA3,U,32)="u":"Patient is unable to answer or is unsure",1:"")
  .W:$P(RA3,U,32)'="n"&$L(RAPCOMM) !,"    PREGNANCY SCREEN COMMENT: ",RAPCOMM
  .N RAPTAGE S RAPTAGE=$$PTAGE^RAUTL8(RADFN,"")
- .Q:RAPTAGE<12!(RAPTAGE>55)
+ .Q:RAPTAGE<8!(RAPTAGE>64)  ;IHS/OIT/NST - Patch 1013 - Change age range from 12-55 to 8-64 years old
  .I $P(RA3,U,32)'="" D
  ..N RAFDA
  ..S RAFDA(70.03,RACNI_","_RADTI_","_RADFN_",",32)=$P(RA3,U,32)
@@ -130,11 +131,17 @@ MEMSET(RAX,RAY,RAZ) ; Set 'MEMBER OF SET' field on the exam node
  S DIE="^RADPT("_RAX_",""DT"","_RAY_",""P"","
  S DA(2)=RAX,DA(1)=RAY,DA=RAZ,DR="25///"_$S($P($G(^RAMIS(71,+RAPROC,0)),"^",18)="Y":2,1:1) D ^DIE ;2=combined report, 1=separate reports
  Q
-SET17(RAX,RAY,RAZ) ; Set piece 17 on exam node
+SET17(RAX,RAY,RAZ) ; quad slash piece 17 on exam node
+ ;note: the value stuffed in will not be passed through
+ ;the REPORT TEXT input transform (nat'l code did not
+ ;export the field with an input transform) updated for
+ ;RA5P153 changed 3x slash to 4x slash 3x slash can cause
+ ;the wrong rpt to be tied to our study
+ ;
  Q:$G(^RADPT(RAX,"DT",RAY,"P",RAZ,0))']""
  N D,D0,DA,DI,DIC,DIE,DQ,DR,X,Y
  S DIE="^RADPT("_RAX_",""DT"","_RAY_",""P"","
- S DA(2)=RAX,DA(1)=RAY,DA=RAZ,DR="17///"_RA17 D ^DIE
+ S DA(2)=RAX,DA(1)=RAY,DA=RAZ,DR="17////"_RA17 D ^DIE
  Q
 UOSM ; called from RAREG1
  ; update order status and send OE v3.0 message

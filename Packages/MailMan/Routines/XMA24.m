@@ -1,0 +1,3 @@
+XMA24 ;(WASH ISC)/AML/LL- * OBSOLETE * ;05/06/99  15:41
+ ;;7.1;MailMan;**31,50**;Jun 02, 1994
+ Q

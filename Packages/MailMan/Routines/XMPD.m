@@ -1,0 +1,3 @@
+XMPD ;(WASH ISC)/CAP-***OBSOLETE** ; 4/19/88  4:23 PM ;
+ ;;7.1;Mailman;**1003**;OCT 27, 1998
+ ;;7.1;MailMan;;Jun 02, 1994

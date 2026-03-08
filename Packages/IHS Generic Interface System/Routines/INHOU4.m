@@ -1,5 +1,5 @@
-INHOU4 ;DP; 25 Jun 97 10:42;Mark transaction complete. 
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHOU4 ;ihs/cmi/maw - Mark transaction complete. 
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  ;
  Q
@@ -56,7 +56,7 @@ LOOP(INREQLST,DWLRF) ;Loop to process transactions selected by user
 EXIT Q
  ;
 COMP ;Successful processing
- D ULOG^INHU(UIF,"C","Marked complete by user "_$P(^DIC(3,DUZ,0),U))
+ D ULOG^INHU(UIF,"C","Marked complete by user "_$P(^VA(200,DUZ,0),U))
  Q
  ;
 DISP(INLIST1,INLIST2) ; Display results of all items selected

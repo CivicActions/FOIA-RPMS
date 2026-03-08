@@ -1,25 +1,19 @@
 %ZTMS4 ;SEA/RDS-TaskMan: Submanager, Part 6 (Setup, Cleanup) ;10 Feb 2003 3:01 pm
- ;;8.0;KERNEL;**136,275,425**;JUL 10, 1995;Build 18
+ ;;8.0;KERNEL;**136,275**;JUL 10, 1995
  ;
 RESTORE ;RUN--restore saved variables
  ;prepare for restore, Call w/ task locked.
  N %ZTTV,DT,IO,IOBS,IOHG,IOM,ION,IOPAR,IOS,IOSL,IOST,IOT,IOUPAR,IOXY,POP,U,XY,ZTDTH,ZTIO,ZTQUEUED,ZTRTN
  ;
  ;restore from old node
- ;K ^%ZTSK(ZTSK,0,"ZTSK"),^("ZT3")
- ;S ZT3=""
- ;F ZT=0:0 S ZT3=$O(^%ZTSK(ZTSK,0,ZT3)) Q:ZT3=""  I +ZT3'=ZT3 S:$D(^(ZT3))#2 @ZT3=^(ZT3) I $D(^(ZT3))>9 S %X="^%ZTSK(ZTSK,0,ZT3,",%Y=ZT3_$E("(",ZT3'["(") D %XY^%RCR
+ K ^%ZTSK(ZTSK,0,"ZTSK"),^("ZT3")
+ S ZT3=""
+ F ZT=0:0 S ZT3=$O(^%ZTSK(ZTSK,0,ZT3)) Q:ZT3=""  I +ZT3'=ZT3 S:$D(^(ZT3))#2 @ZT3=^(ZT3) I $D(^(ZT3))>9 S %X="^%ZTSK(ZTSK,0,ZT3,",%Y=ZT3_$E("(",ZT3'["(") D %XY^%RCR
  ;
 A ;restore from new node
  K ^%ZTSK(ZTSK,.3,"ZTSK"),^("ZT3")
  S ZT3=""
- ;F  S ZT3=$O(^%ZTSK(ZTSK,.3,ZT3)) Q:ZT3=""  I +ZT3'=ZT3 S:$D(^(ZT3))#2 @ZT3=^(ZT3) I $D(^(ZT3))>9 S %X="^%ZTSK(ZTSK,.3,ZT3,",%Y=ZT3_$E("(",ZT3'["(") D %XY^%RCR
- F  S ZT3=$O(^%ZTSK(ZTSK,.3,ZT3)) Q:ZT3=""  D:+ZT3'=ZT3
- . I ZT3'["(" M:$D(^(ZT3)) @ZT3=^(ZT3) Q
- . S ZT4=$L(ZT3)
- . I $E(ZT3,ZT4)="(" M @($E(ZT3,1,ZT4-1))=^(ZT3) Q
- . M @($E(ZT3,1,ZT4-1)_")")=^(ZT3)
- . Q
+ F ZT=0:0 S ZT3=$O(^%ZTSK(ZTSK,.3,ZT3)) Q:ZT3=""  I +ZT3'=ZT3 S:$D(^(ZT3))#2 @ZT3=^(ZT3) I $D(^(ZT3))>9 S %X="^%ZTSK(ZTSK,.3,ZT3,",%Y=ZT3_$E("(",ZT3'["(") D %XY^%RCR
  ;
  ;cleanup
  K %A,%B,%C,%X,%Y,%Z,ZT,ZT3

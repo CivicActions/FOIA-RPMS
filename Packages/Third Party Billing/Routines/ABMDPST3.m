@@ -1,5 +1,6 @@
 ABMDPST3 ; IHS/SD/SDR - Pending Claims Status Report ; JUN 29, 2005
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**31**;NOV 12, 2009;Build 615
+ ;IHS/SD/SDR 2.6*31 CR10341 Removed a blank line to make it print cleaner and space for longer descriptions (it was wrapping)
  ;
 PRINT ;EP for printing data
  K ABM("LOC TEMP"),ABM("PSU TEMP"),ABM("VT TEMP")
@@ -24,9 +25,12 @@ PRINT ;EP for printing data
  .....I $G(ABM("PSU TEMP"))'=ABM("PSU") W !?6,"Status Updater: ",$G(ABM("PSU")) S ABM("PSU TEMP")=ABM("PSU")
  .....I ABMY("SORT")="V" I $G(ABM("SORT TEMP"))'=ABM("SORT") D:$G(ABM("SORT TEMP"))'="" SUBHDR W !?5,"Visit Type: "_$P(^ABMDVTYP(ABM("SORT"),0),U) S ABM("SORT TEMP")=ABM("SORT")
  .....I ABMY("SORT")="C" I $G(ABM("SORT TEMP"))'=ABM("SORT") D:$G(ABM("SORT TEMP"))'="" SUBHDR W !?5,"    Clinic: "_$G(ABM("SORT")) S ABM("SORT TEMP")=ABM("SORT")
- .....I $G(ABM("ACTIVE INS TEMP"))'=$G(ABM("I")) W !?11,"Active Insurer: ",$P($G(^AUTNINS(ABM("I"),0)),U) S ABM("ACTIVE INS TEMP")=ABM("I")
- .....W !!,?2,$G(ABM("REASON"))
- .....W ?60,ABM("ST",ABM("LOC NAME"),ABM("PSUIEN"),ABM("SORT"),ABM("I"),ABM("REASON")),!
+ .....;I $G(ABM("ACTIVE INS TEMP"))'=$G(ABM("I")) W !?11,"Active Insurer: ",$P($G(^AUTNINS(ABM("I"),0)),U) S ABM("ACTIVE INS TEMP")=ABM("I")  ;abm*2.6*31 IHS/SD/SDR CR10341
+ .....I $G(ABM("ACTIVE INS TEMP"))'=$G(ABM("I")) W !!?11,"Active Insurer: ",$P($G(^AUTNINS(ABM("I"),0)),U) S ABM("ACTIVE INS TEMP")=ABM("I")  ;abm*2.6*31 IHS/SD/SDR CR10341
+ .....;W !!,?2,$G(ABM("REASON"))  ;abm*2.6*31 IHS/SD/SDR CR10341
+ .....W !,?2,$G(ABM("REASON"))  ;abm*2.6*31 IHS/SD/SDR CR10341
+ .....;W ?60,ABM("ST",ABM("LOC NAME"),ABM("PSUIEN"),ABM("SORT"),ABM("I"),ABM("REASON")),!  ;abm*2.6*31 IHS/SD/SDR CR10341
+ .....W ?70,ABM("ST",ABM("LOC NAME"),ABM("PSUIEN"),ABM("SORT"),ABM("I"),ABM("REASON"))  ;abm*2.6*31 IHS/SD/SDR CR10341
  .....S ABM("SUBCNT")=$G(ABM("SUBCNT"))+$G(ABM("ST",ABM("LOC NAME"),ABM("PSUIEN"),ABM("SORT"),ABM("I"),ABM("REASON")))
  .....S ABM("TOTALCNT")=$G(ABM("TOTALCNT"))+$G(ABM("ST",ABM("LOC NAME"),ABM("PSUIEN"),ABM("SORT"),ABM("I"),ABM("REASON")))
  D SUBHDR
@@ -36,20 +40,29 @@ PRINT ;EP for printing data
  ;
 HD D PAZ^ABMDRUTL Q:$D(DTOUT)!$D(DUOUT)!$D(DIROUT)
 HDB S ABM("PG")=ABM("PG")+1,ABM("I")="" D WHD^ABMDRHD
- W !,?60,"Number of"
- W !?2,"Reason",?60,"Claims"
+ ;start old abm*2.6*31 IHS/SD/SDR CR10341
+ ;W !,?60,"Number of"
+ ;W !?2,"Reason",?60,"Claims"
+ ;end old start new abm*2.6*31 IHS/SD/SDR CR10341
+ W !,?68,"Number of"
+ W !?2,"Reason",?68,"Claims"
+ ;end new abm*2.6*31 IHS/SD/SDR CR10341
  W !,"-------------------------------------------------------------------------------"
  Q
  ;
 SUBHDR Q:'ABM("SUBCNT")
- W !?27,"------"
- W !?16,"Subtotal:",?60,ABM("SUBCNT"),!
+ ;W !?27,"------"  ;abm*2.6*31 IHS/SD/SDR CR10341
+ W !?70,"------"  ;abm*2.6*31 IHS/SD/SDR CR10341
+ ;W !?16,"Subtotal:",?60,ABM("SUBCNT"),!  ;abm*2.6*31 IHS/SD/SDR CR10341
+ W !?16,"Subtotal:",?70,ABM("SUBCNT"),!  ;abm*2.6*31 IHS/SD/SDR CR10341
  S ABM("SUBCNT")=0
  Q
  ;
 TOTHDR Q:'ABM("TOTALCNT")
- W !?27,"------"
- W !?19,"Total:",?60,ABM("TOTALCNT")
+ ;W !?27,"------"  ;abm*2.6*31 IHS/SD/SDR CR10341
+ W !?70,"------"  ;abm*2.6*31 IHS/SD/SDR CR10341
+ ;W !?19,"Total:",?60,ABM("TOTALCNT")  ;abm*2.6*31 IHS/SD/SDR CR10341
+ W !?19,"Total:",?70,ABM("TOTALCNT"),!  ;abm*2.6*31 IHS/SD/SDR CR10341
  S ABM("TOTALCNT")=0
  Q
 XIT ;EXIT POINT

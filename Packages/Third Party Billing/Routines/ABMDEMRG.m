@@ -1,20 +1,23 @@
 ABMDEMRG ; IHS/ASDST/DMJ - MERGE CLAIMS ; 
- ;;2.6;IHS 3P BILLING SYSTEM;**9,11,19,21**;NOV 12, 2009;Build 379
+ ;;2.6;IHS 3P BILLING SYSTEM;**9,11,19,21,33,37,38**;NOV 12, 2009;Build 756
  ;
  ;IHS/DSD/DMJ - 9/14/1999 - NOIS NDA-1198-180003 Patch 3 #14
  ;       By-passed $$NXNM and allowed duplicate claim numbers
  ;
- ; IHS/SD/SDR v2.5 p10 - IM20059 - Data was getting overwritten when merging;
+ ;IHS/SD/SDR 2.5*10 IM20059 - Data was getting overwritten when merging;
  ;   changed so minimal data will be lost
- ; IHS/SD/SDR - v2.5 p12 - UFMS - If user isn't logged into cashiering session they can't do
+ ;IHS/SD/SDR 2.5*12 UFMS - If user isn't logged into cashiering session they can't do
  ;   this option; also added so if claims are deleted they will be added to cashiering session
- ; IHS/SD/SDR - v2.5 p13 - IM26006 - Fix for UNDEF error on page 9D of CE
- ; IHS/SD/SDR - v2.5 p13 - IM26259 - Fix <UNDEF>DEL+16^ABMDEMRG when capturing deleted claims
+ ;IHS/SD/SDR 2.5*13 IM26006 - Fix for UNDEF error on page 9D of CE
+ ;IHS/SD/SDR 2.5*13 IM26259 - Fix <UNDEF>DEL+16^ABMDEMRG when capturing deleted claims
  ;   in cashiering session (variable was being overwritten)
  ;
- ;IHS/SD/SDR - 2.6*19 - HEAT155799 - If user cancels claim it will now move into the 3P Cancelled Claim file with
+ ;IHS/SD/SDR 2.6*19 HEAT155799 - If user cancels claim it will now move into the 3P Cancelled Claim file with
  ;   cancellation reason Cancelled due to Merged Claim automatically populated on claim.
- ;IHS/SD/SDR - 2.6*21 - HEAT242626 - Made it so claims that are already billed can't be merged.
+ ;IHS/SD/SDR 2.6*21 HEAT242626 - Made it so claims that are already billed can't be merged.
+ ;IHS/SD/SDR 2.6*33 ADO60185 CR12178 Added preferred name to display
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
+ ;IHS/SD/SDR 2.6*38 ADO99134 Removed SSN from display
  ;
 START ;START HERE
  ;start new code abm*2.6*9 NOHEAT - ensure UFMS is setup
@@ -32,8 +35,14 @@ START ;START HERE
  F ABMI=1:1 D  Q:$G(ABM("F1"))
  .S DIC("A")="Enter "_ABMI_$S(ABMI=1:"st",ABMI=2:"nd",ABMI=3:"rd",1:"th")_" claim: "
  .W !
+ .S DIC("W")="S Z=$P($G(^ABMDCLM(DUZ(2),+Y,0)),""^"") D DICW^ABMDEMRG"  ;abm*2.6*37 IHS/SD/SDR ADO81491
  .D ^DIC
  .I +Y<0 S ABM("F1")=1 Q
+ .;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ .S ABMPDFN=$P($G(^ABMDCLM(DUZ(2),+Y,0)),U)
+ .;I $$GETPREF^AUPNSOGI(ABMPDFN,"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .;.W !?5,"Preferred Name: ",$$EN^ABMVDF("RVN"),$$GETPREF^AUPNSOGI(ABMPDFN,""),$$EN^ABMVDF("RVF")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .;end new abm*2.6*33 IHS/SD/SDR ADO60185
  .;start new abm*2.6*21 IHS/SD/SDR HEAT242626
  .I ("^F^E^P^"'[("^"_$P($G(^ABMDCLM(DUZ(2),+Y,0)),U,4)_"^")!($D(^ABMDCLM(DUZ(2),+Y,65,0)))) D  Q
  ..W !,"Claim has already been billed or has active bills associated with it"
@@ -48,6 +57,12 @@ START ;START HERE
  I '$D(ABMDL("CLM")) K ABM Q
  K DIC,ABMI
  W !,"PATIENT: ",$P($G(^DPT(ABM("PDFN"),0)),U)
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ ;I $$GETPREF^AUPNSOGI(ABM("PDFN"),"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ I $$GETPREF^AUPNSOGI(ABM("PDFN"),"I",1)'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .;W "  "_$$EN^ABMVDF("RVN"),"* - ",$$GETPREF^AUPNSOGI(ABM("PDFN"),""),$$EN^ABMVDF("RVF")  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ .W " - ",$$GETPREF^AUPNSOGI(ABM("PDFN"),"I",1)_"*"  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  W !?3,"CLAIM #s: "
  S I=0,ABM("TOT")=0
  F  S I=$O(ABMDL("CLM",I)) Q:'I  D
@@ -338,3 +353,12 @@ MULT ;merge multiples into array by subfile to be stored on "master" claim when 
  .M ABMDCLM(ABMMULT,ABM(ABMMULT))=^ABMDCLM(DUZ(2),ABMDL("CLM",I),ABMMULT,ABMIEN)
  .S ABM(ABMMULT)=$G(ABM(ABMMULT))+1
  Q
+ ;start new abm*2.6*37 IHS/SD/SDR ADO81491
+DICW ;
+ W $S($$GETPREF^AUPNSOGI(Z,"I",1)'="":"-"_$$GETPREF^AUPNSOGI(Z,"I",1)_"*",1:"")
+ W " "_$P(^DPT(Z,0),U,2)
+ W " "_$E($P(^(0),U,3),4,5)_"-"_$E($P(^(0),U,3),6,7)_"-"_(1700+$E($P(^(0),U,3),1,3))
+ ;W " "_$J("XXX-XX-"_$E($P(^(0),U,9),6,9),11)  ;abm*2.6*38 IHS/SD/SDR ADO99134
+ W " "_$P($G(^AUPNPAT(Z,41,DUZ(2),0)),U,2)
+ Q
+ ;end new abm*2.6*37 IHS/SD/SDR ADO81491

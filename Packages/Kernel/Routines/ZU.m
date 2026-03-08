@@ -1,59 +1,57 @@
-ZU ;SF/RWF - For Cache and Open M! ;06/13/2006
- ;;8.0;KERNEL;**34,94,118,162,170,225,419**;Jul 10, 1995;Build 5
- ;TIE ALL TERMINALS EXCEPT CONSOLE TO THIS ROUTINE!
-EN N $ES,$ETRAP S $ETRAP="D ERR^ZU Q:$QUIT -9 Q"
- D:+$G(^%ZTSCH("LOGRSRC")) LOGRSRC^%ZOSV("$LOGIN$")
+ZU ;SFISC/RWF - For MSM-NT and MSM-UNIX, TIE all User terminals to this routine!! ;06/20/2000  11:31 [ 04/02/2003   8:29 AM ]
+ ;;8.0;KERNEL;**1002,1003,1004,1005,1006,1007**;APR 1, 2003
+ ;;8.0;KERNEL;**13,42,49,94,107,162**;Jul 10, 1995
+ ;FOR MSM-NT and MSM-UNIX v4.3 or greater
+EN N $ESTACK S $ECODE="",$ETRAP="D ERR^ZU Q:$QUIT 0 Q" ;,ZUGUI2=$$GUI()
  ;The next line keeps sign-on users from taking the last slot
  ;It can be commented out if not needed.
- I $$AVJ^%ZOSV()<3 W $C(7),!!,"** TROUBLE ** - NO AVALIABLE JOBS ** CALL IRM NOW! **" G HALT
- ;Only call ShareLic for Telnet connections.
- I ($I["|TNT|")!($I["TNA") D SHARELIC^%ZOSV(0)
- G ^XUS
+JOBCHK X ^%ZOSF("AVJ") I Y<3 W $C(7),!!,"** TROUBLE ** - ** CALL IRM NOW! **" G HALT
+ D:+$G(^%ZTSCH("LOGRSRC")) LOGRSRC^%ZOSV("$LOGIN$")
+ ;Bump up the partition size, Task partition size if file 14.7
+ D GETENV^%ZOSV S Y=$P(Y,"^",4),%=$O(^%ZIS(14.7,"B",Y,0)),Y=$G(^%ZIS(14.7,+%,0)),%K=$P(Y,"^",5) I %K>0 D INT^%PARTSIZ
+ G ^XUS ;G ^XUSG:$G(ZUGUI1),^XUS
  ;
+G ;Entry point for GUI device.
+ S ZUGUI1=1 G EN
  ;
-ERR ;Come here on error
- ; Try and handle stack overflow errors specifically
- I $ZE["STACK" S $ET="Q:$ST>"_($ST-8)_"  D ERR2^ZU" Q
-ERR2 ;
- S $ET="D UNWIND^ZU" L  ;Backup trap (419)
+ERR ;Come here on error.
+ I $ZE["STKOVR" S $ET="Q:$ST>"_($ST-8)_"  D ERR2^ZU" Q
+ERR2 S $ETRAP="D UNWIND^ZU" L  B 0 ;Unlock, Turn off break
  Q:$ECODE["<PROG>"
- ;
- D ^%ZTER K %ZT ; Capture symbol table first!
- ;
- I $G(IO)]"",$D(IO(1,IO)),$E($G(IOST))="P" D
- . U IO
- . W @$S($D(IOF):IOF,1:"#")
- I $G(IO(0))]"" D
- . U IO(0)
- . W !!,"RECORDING THAT AN ERROR OCCURRED ---"
- . W !!?15,"Sorry 'bout that"
- . W !,*7
- . W !?10,"$STACK=",$STACK,"  $ECODE=",$ECODE
- . W !?10,"$ZERROR=",$ZERROR
- ;
- I $G(DUZ)'>0 G HALT
- X ^%ZOSF("PROGMODE") Q:Y
- S $ET="D HALT^ZU" ;419
- I $ZE'["<INTERRUPT>" S XUERF="" G ^XUSCLEAN ;419
-CTRLC I $D(IO)=11 U IO(0) W !,"--Interrupt Acknowledged",!
+ I $G(IO)]"",$D(IO(1,IO)),$E($G(IOST))="P" U IO W @$S($D(IOF):IOF,1:"#")
+ I $G(IO(0))]"" U IO(0) W !!,"RECORDING THAT AN ERROR OCCURRED ---",!!?15,"Sorry 'bout that",!,*7,!?10,"$STACK=",$STACK,", $ECODE=",$ECODE,!?10,"$ZERROR=",$ZERROR
+ D ^%ZTER
+ I $EC'["<INRPT>" S XUERF="",$EC="" G ^XUSCLEAN
+CTRLC I $D(IO)=11 U IO(0) C:IO'=IO(0) IO S IO=IO(0)
+ W !,"--Interrupt Acknowledged",!
  D KILL1^XUSCLEAN ;Clean up symbol table
- S $ECODE=",U55,"
+ S $ECODE=",U<<POP>>,"
  Q
  ;
 UNWIND ;Unwind the stack
- Q:$ESTACK>1  G CTRLC2:$ECODE["U55"
+ Q:$ESTACK>1  G CONT:$ECODE["<<HALT>>",CTRLC2:$ECODE["<<POP>>"
  S $ECODE=""
  Q
  ;
 CTRLC2 S $ECODE="" G:$G(^XUTL("XQ",$J,"T"))<2 ^XUSCLEAN
- S ^XUTL("XQ",$J,"T")=1,XQY=^(1),XQY0=$P(XQY,"^",2,99)
- G:$P(XQY0,"^",4)'="M" HALT
+ S ^XUTL("XQ",$J,"T")=1,XQY=$G(^(1)),XQY0=$P(XQY,"^",2,99)
+ G:$P(XQY0,"^",4)'="M" CTRLC2
  S XQPSM=$P(XQY,"^",1),XQY=+XQPSM,XQPSM=$P(XQPSM,XQY,2,3)
  G:'XQY ^XUSCLEAN
- S $ECODE="",$ETRAP="D ERR^ZU"
- G M1^XQ
+ S $ECODE="",$ETRAP="S %ZTER11S=$STACK D ERR^ZU Q:$QUIT 0 Q" G M1^XQ
  ;
-HALT S $ECODE="" I $D(^XUTL("XQ",$J)) D BYE^XUSCLEAN
+HALT I $D(^XUTL("XQ",$J)) D:$D(DUZ)#2 BYE^XUSCLEAN
  D:+$G(^%ZTSCH("LOGRSRC")) LOGRSRC^%ZOSV("$LOGOUT$")
+ I '$ESTACK G CONT
+ S $ETRAP="D UNWIND^ZU" ;Set new trap
+ S $ECODE=",U<<HALT>>," ;Cause error to unwind stack
+ Q
+CONT ;
+ S $ECODE="",$ETRAP=""
  HALT
  ;
+GUI() ;Test if under GUI
+ Q "" ;Just say No.
+ S $ZT="GUIX",X="" G:$PD'=1 GUIX
+ S X=$G(^$DI($PD,"PLATFORM"))
+GUIX Q X

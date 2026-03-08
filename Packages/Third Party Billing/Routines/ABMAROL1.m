@@ -1,5 +1,11 @@
 ABMAROL1 ; IHS/ASDST/DMJ - A/R ROLL OVER ; 
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,34,37**;NOV 12, 2009;Build 739
+ ;IHS/SD/SDR 2.6*34 ADO60709 Updated eligibility checker during rollback to pass Visit DFN of the primary
+ ;   visit so it will do all the eligibility checks.  It was skipping anything that needed visit data because
+ ;   it didn't have a visit to use.
+ ;IHS/SD/SDR 2.6*37 ADO77131 Changed so it will actually check cancelled claim file before writing message;
+ ;   Also put check if a Pharmacy POS bill since it won't have a claim.
+ ;
 START(X,Y,Z,ZZ) ;EP - FROM A/R
  ;X:BILL INTERNAL ENTRY NUMBER^VISIT LOCATION, Y:TOTAL PAYMENT AMT
  ;Z = Bill Name (passed by 1.1, but not 1.0)
@@ -13,7 +19,7 @@ START(X,Y,Z,ZZ) ;EP - FROM A/R
  ;sources exist and the user holds the 3PB key, they are asked if
  ;the calim should be re-opened for future billing.  Otherwise the 
  ;claim is automatically reopened.         
- S ABMP("BDFN")=+X           ; 3P Bill File IEN
+ S ABMP("BDFN")=+X           ;3P Bill File IEN
  S ABMP("BILL")=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),"^",1),ABM("AMT")=Y
  D FILE
  D SET
@@ -21,7 +27,9 @@ START(X,Y,Z,ZZ) ;EP - FROM A/R
  Q
 REST ;DO REST
  S ABMP("CDFN")=+ABMP("BILL")
- I '$D(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)) W !,"CLAIM #",ABMP("CDFN")," HAS BEEN CANCELLED.",! Q
+ ;I '$D(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)) W !,"CLAIM #",ABMP("CDFN")," HAS BEEN CANCELLED.",! Q  ;abm*2.6*37 IHS/SD/SDR ADO77131
+ I $D(^ABMCCLMS(DUZ(2),ABMP("CDFN"),0)) W !,"CLAIM #",ABMP("CDFN")," HAS BEEN CANCELLED.",! Q  ;abm*2.6*37 IHS/SD/SDR ADO77131
+ I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),0)),U,7)=901 W !,"Billed Pharmacy POS so no claim exists" Q  ;abm*2.6*37 IHS/SD/SDR ADO77131
  N I S I=0,DA=0 F  S I=$O(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I)) Q:'I  D
  .I $P(^ABMDBILL(DUZ(2),ABMP("BDFN"),13,I,0),"^",3)="I",$P(^(0),"^",1)=$P(^ABMDBILL(DUZ(2),ABMP("BDFN"),0),"^",8) S DA=I
  I DA S DA(1)=ABMP("CDFN"),DIE="^ABMDCLM(DUZ(2),"_DA(1)_",13,",DR=".03////C" D ^DIE K DR
@@ -31,7 +39,11 @@ REST ;DO REST
 UNBILL ;LOOK FOR UNBILLED SOURCES
  W !!,"CHECKING FOR UNBILLED SOURCES.",!
  S (ABM("HIT"),ABM("CNT"))=0
- D ELG^ABMDLCK("",.ABML,ABMP("PDFN"),ABMP("VDT"))
+ ;D ELG^ABMDLCK("",.ABML,ABMP("PDFN"),ABMP("VDT"))  ;abm*2.6*34 IHS/SD/SDR ADO60709
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60709
+ S ABMVDFN=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),11,"AC","P",0))
+ D ELG^ABMDLCK($S($G(ABMVDFN)'=0:ABMVDFN,1:""),.ABML,ABMP("PDFN"),ABMP("VDT"))
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60709
  N I S I=0 F  S I=$O(ABML(I)) Q:'I  D
  .N J S J=0 F  S J=$O(ABML(I,J)) Q:'J  D
  ..S ABM("PRI")=I,ABM("INS")=J
@@ -40,7 +52,8 @@ UNBILL ;LOOK FOR UNBILLED SOURCES
  .S ABM("X")=$O(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,"C",ABM,0))
  .I "PIFL"[$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABM("X"),0),U,3) D
  ..S ABM("INSCO")=$P(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABM("X"),0),"^",1)
- ..Q:$P($G(^AUTNINS(ABM("INSCO"),2)),U)="I"  Q:$P($G(^(1)),U,7)=4
+ ..;Q:$P($G(^AUTNINS(ABM("INSCO"),2)),U)="I"  Q:$P($G(^(1)),U,7)=4  ;abm*2.6*10 HEAT73780
+ ..Q:$$GET1^DIQ(9999999.181,$$GET1^DIQ(9999999.18,ABM("INSCO"),".211","I"),1,"I")="I"  Q:$P($G(^(1)),U,7)=4  ;abm*2.6*10 HEAT73780
  ..W:ABM("CNT") ! S ABM("CNT")=ABM("CNT")+1
  ..W ?18,"[",ABM("CNT"),"]  ",$P(^AUTNINS(ABM("INSCO"),0),U) S ABM(ABM("CNT"))=ABM("X")
  I ABM("CNT")=0 D  K ABM,ABMP Q

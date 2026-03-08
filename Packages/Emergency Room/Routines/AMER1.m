@@ -1,12 +1,14 @@
 AMER1 ; IHS/ANMC/GIS - ER ADMISSION QUESTIONS ;  
- ;;3.0;ER VISIT SYSTEM;**8**;MAR 03, 2009;Build 23
+ ;;3.0;ER VISIT SYSTEM;**8,15,16**;MAR 03, 2009;Build 14
  ;
  Q
 QA1 D QA1^AMER1A ; PATIENT NAME
  Q
  ;
 QA2 ; DATE AND TIME OF ADMISSION TO ER
- I $D(^TMP("AMER",$J,1,2)) S Y=^(2) X ^DD("DD") S DIR("B")=Y
+ NEW AMEROTIM,AMERNTIM
+ S AMEROTIM=""
+ I $D(^TMP("AMER",$J,1,2)) S (AMEROTIM,Y)=^(2) X ^DD("DD") S DIR("B")=Y
  E  S DIR("B")=$S($D(AMERBCH):"",1:"NOW")
  S DIR(0)="D^::ER",DIR("A")="*Date and time of admission to ER",DIR("?")="Enter date and time in the usual Fileman format (e.g. 1/1/2000@1PM)" D ^DIR K DIR
  D NOW^%DTC
@@ -15,6 +17,8 @@ QA2 ; DATE AND TIME OF ADMISSION TO ER
  D OUT^AMER
  Q:$D(AMERQUIT)
  D APPNTMNT^AMERBSDU(AMERDFN,1,Y)
+ S AMERNTIM=Y
+ D UPDTVTIM(AMERDFN,AMEROTIM,AMERNTIM)
  ;
  Q
  ;
@@ -29,6 +33,18 @@ QA3 ; PRESENTING COMPLAINT
  Q
  ;
 QA4 ; FULL REG EDIT
+ ;
+ ;GDIT/HS/BEE;FEATURE#119442;AMER*3.0*16;Remove ability to call REG
+ NEW AMERA
+ D ENP^XBDIQ1(2,DFN,".111;.114:.116;.1219;.131;.132","AMERA(")
+ W !!?5,"Date of Last Registration Update: ",$$GET1^DIQ(9000001,DFN,.03)
+ W !!,AMERA(.111),!,AMERA(.114),$S($G(AMERA(.114))]"":", ",1:""),AMERA(.115),"  ",AMERA(.116)
+ W !,AMERA(.131),$S($G(AMERA(.131))]"":" (home)  ",1:""),AMERA(.132),$S($G(AMERA(.132))]"":" (work)",1:"")
+ I AMERA(.1219)]"" W !,AMERA(.1219),$S($G(AMERA(.1219))]"":" (msg)",1:""),!!
+ W !!,"Please use the BPRM application to change any patient demographic information",!
+ Q
+ ;
+ ;Old code
  N SDSEX
  S SDFN=AMERDFN,SDAMTYP="P"
  D ^BSDREG
@@ -66,7 +82,9 @@ QA10 ; MODE OF TRANSPORT TO HOSPITAL
  S DIC="^AMER(3,",DIC("S")="I $P(^(0),U,2)="_$$CAT^AMER0("MODE OF TRANSPORT"),DIC(0)="AEQ"
  D ^DIC K DIC
  D OUT^AMER I $D(AMERQUIT) Q
- I Y'["AMBULANCE",X'?1."^" S AMERRUN=99 K ^TMP("AMER",$J,1,11),^(12),^(13),^(14)
+ ;GDIT/HS/BEE;FEATURE#110347;AMER*3.0*16;TRAUMA REGISTRY
+ ;I Y'["AMBULANCE",X'?1."^" S AMERRUN=99 K ^TMP("AMER",$J,1,11),^(12),^(13),^(14)
+ I Y'["AMBULANCE",X'?1."^" S AMERRUN=36 K ^TMP("AMER",$J,1,11),^(12),^(13),^(14)
  Q
  ; 
 QA11 ; AMBULANCE NUMBER
@@ -84,8 +102,10 @@ QA14 ; AMBULANCE COMPANY
  S DIC="^AMER(3,",DIC("S")="I $P(^(0),U,2)="_$$CAT^AMER0("AMBULANCE COMPANY"),DIC(0)="AEQ"
  D ^DIC K DIC
  D OUT^AMER I $D(AMERQUIT) Q
- I '$D(AMERDOA) S AMERRUN=20 Q
- S AMERRUN=99
+ I '$D(AMERDOA) S AMERRUN=36 Q
+ ;GDIT/HS/BEE;FEATURE#110347;AMER*3.0*16;TRAUMA REGISTRY
+ ;S AMERRUN=99
+ S AMERRUN=36
  Q
  ;
 QAXX ; TEXT CAPTURE
@@ -121,3 +141,39 @@ READ(TYPE,PROMPT,DEFAULT,HELP,SCREEN,DIRA) ; EP; calls reader, returns response
  I $D(DIRA(1)) S Y=0 F  S Y=$O(DIRA(Y)) Q:Y=""  S DIR("A",Y)=DIRA(Y)
  D ^DIR
  Q Y
+ ;
+ ;GDIT/HS/BEE;AMER*3.0*15;FEATURE#97912;04/29/2024;Update PCC date/time and synch BEDD admission date/time
+UPDTVTIM(DFN,AMEROTIM,AMERNTIM) ; EP - Update PCC/BEDD of current ED patient (not-discharged)
+ ;
+ ;Input:
+ ; DFN - Patient DFN
+ ; AMEROTIM - Original date/time of ED visit
+ ; AMERNTIM - New date/time of ED visit
+ ;
+ ; Array APCDCVDT must be passed as follows:
+ ;
+ ;  APCDCVDT("VISIT DFN")=DFN of VISIT entry being changed.
+ ;  APCDCVDT("VISIT DATE/TIME")=date and time to be changed to in
+ ;                              internal FileMan form.
+ ;  APCDCVDT("TALK")=any value including NULL
+ ;
+ NEW AMERPCC,X,Y
+ ;
+ K APCDCVDT
+ S AMERPCC=$$GET1^DIQ(9009081,DFN_",",1.1,"I") Q:AMERPCC<1
+ ;
+ S APCDCVDT("VISIT DFN")=AMERPCC
+ S APCDCVDT("VISIT DATE/TIME")=AMERNTIM
+ S APCDCVDT("TALK")=""
+ ;
+ ;Update PCC date/time
+ D START^APCDCVDT
+ ;
+ ;Update BEDD if in use
+ I $T(VDTM^BEDDSYNC)]"" D VDTM^BEDDSYNC(AMERPCC,AMEROTIM,AMERNTIM)
+ ;
+ K APCDCVDT
+ Q
+ ;
+VAR NEW %,AMERBCH,AMERDFN,AMERDOA,AMEREFLG,AMEROPT,AMERQUIT,AMERRUN,DIROUT,DLAYGO,DUOUT
+ Q

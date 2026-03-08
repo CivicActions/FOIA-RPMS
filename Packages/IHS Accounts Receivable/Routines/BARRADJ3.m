@@ -1,5 +1,6 @@
 BARRADJ3 ; IHS/SD/LSL - TRANSACTION/ADJUSTMENT REPORT ;08/20/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,7**;MAY 26, 2008
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**6,7,31**;OCT 26, 2005;Build 90
+ ;;BAR*1.8.*31 IHS.OIT.FCJ MVD HD FROM BARRADJ2 BECAUSE OF RTN SZ
  Q
  ; MODIFIED XTMP FILE NAME TO TMP TO MEET SAC REQUIREMENTS;MRS:BAR*1.8*7 IM29892
  ; *********************************************************************
@@ -7,7 +8,8 @@ SUMM ; EP
  S BAR("COL")="W !,?57,""Amount"",?68,""Transaction"""
  S BAR("COL",0)="W !?33,""Bill Count"",?57,""Billed"",?71,""Amount"""
  S BAR("HD",0)="SUMMARY Transaction"_$P(BAR("HD",0),"Transaction",2,99)
- D HDB^BARRADJ2
+ ;D HDB^BARRADJ2  ;BAR*1.8.*31 IHS.OIT.FCJ MVD BECAUSE OF RTN SZ
+ D HDB  ;BAR*1.8.*31 IHS.OIT.FCJ MVD BECAUSE OF RTN SZ
  S BARDASH="---------- ----------"
  S BAREQUAL="========== =========="
  ;
@@ -70,7 +72,8 @@ SORT ;
  ;
 ACCT ;
  Q:$G(BAR("F1"))
- I $Y>(IOSL-5) D HD^BARRADJ2 Q:$G(BAR("F1"))
+ ;I $Y>(IOSL-5) D HD^BARRADJ2 Q:$G(BAR("F1"))  ;BAR*1.8.*31 IHS.OIT.FCJ MVD BECAUSE OF RTN SZ
+ I $Y>(IOSL-5) D HD Q:$G(BAR("F1"))    ;BAR*1.8.*31 IHS.OIT.FCJ MVD BECAUSE OF RTN SZ
  I BAR("OL")'=BAR("L") W ! D HD1 W !
  E  I BAR("OTRANS")'=BAR("TRANS") W ! D HD2 W !
  E  I BAR("OADJCAT")'=BAR("ADJCAT") W ! D HD3 W !
@@ -96,6 +99,21 @@ ACCT ;
  S BAR("0TOTH")=BAR("0TOTH")+BAR("0TOTG")
  Q
  ; *********************************************************************
+HD ;EP;BAR*1.8.*31 IHS.OIT.FCJ MVD FR BARRADJ2 BECAUSE OF RTN SZ
+ D PAZ^BARRUTL
+ I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) S BAR("F1")=1 Q
+HDB ; EP
+ ; Page and column header
+ S BAR("PG")=BAR("PG")+1
+ S BAR("I")=""
+ D WHD^BARRHD                   ; Report header
+ X BAR("COL")
+ X BAR("COL",0)
+ I $G(BAR("COL",1))]"" X BAR("COL",1) ;P.OTT
+ S $P(BAR("DASH"),"=",$S($D(BAR(132)):132,1:80))=""
+ W !,BAR("DASH")
+ Q
+ ;BAR*1.8.*31 IHS.OIT.FCJ END OF MOVE
  ;
 HD1 ;     
  W !?10,"Visit Location.......: ",BAR("L")

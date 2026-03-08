@@ -1,7 +1,9 @@
-PSSPOIM1 ;BIR/RTR,WRT-Manual create of Orderable Item continued ;05-Jun-2013 22:13;PLS
- ;;1.0;PHARMACY DATA MANAGEMENT;**29,38,47,141,1015**;9/30/97;Build 62
+PSSPOIM1 ;BIR/RTR,WRT-Manual create of Orderable Item continued ;28-Dec-2022 08:49;DU
+ ;;1.0;PHARMACY DATA MANAGEMENT;**29,38,47,141,1015,1023,1032**;9/30/97;Build 26
  ;
  ;Modified - IHS/MSC/PLS - 06/05/13 - Line IMMUN+2
+ ;         - IHS/MSC/MGH - 05/12/17 - Changes from patch 166 brought in for EPCS
+ ;         - IHS/MSC/PLS - 03/13/18 - Line EN+12
 CHK S PSNO=0 I $G(PSMAN) W !!,"Matching ",PSNAME,!,"   to",!,SPHOLD," ",$P($G(^PS(50.606,+DOSEPTR,0)),"^"),!
  I '$G(PSMAN) S PSMC=$P($G(^PS(50.7,PSSP,0)),"^") W !!,"Matching ",PSNAME,!,"   to",!,PSMC," ",$P($G(^PS(50.606,+$P(^PS(50.7,PSSP,0),"^",2),0)),"^"),!
  K DIR S DIR(0)="Y",DIR("B")="YES",DIR("A")="Is this OK" D ^DIR
@@ -32,12 +34,24 @@ MAIL I DONEFLAG W !!!,?3,"You are finished matching to the Orderable Item File!"
 OTHER W @IOF W !,"There are other Dispense Drugs with the same VA Generic Name and same Dose",!,"Form already matched to orderable items. Choose a number to match, or enter",!,"'^' to enter a new one.",!!?6,"Disp. drug -> ",PSNAME,! Q
 EN(PSVAR) ;
  W !?3,"Now editing Orderable Item:",!?3,$P(^PS(50.7,PSVAR,0),"^"),"   ",$P($G(^PS(50.606,+$P(^(0),"^",2),0)),"^")
- W ! K DIE N MFLG S PSBEFORE=$P(^PS(50.7,PSVAR,0),"^",4),PSAFTER=0,PSINORDE=""
- S PSSOTH=$P($G(^PS(59.7,1,40.2)),"^"),DIE="^PS(50.7,",DR="5;6;.04;.05;.06;.07;.08;7;S:'$G(PSSOTH) Y=""@1"";7.1;@1",DA=PSVAR
- D ^DIE S PSAFTER=$P(^PS(50.7,PSVAR,0),"^",4) K DIE,PSSOTH
+ ;W ! K DIE N MFLG S PSBEFORE=$P(^PS(50.7,PSVAR,0),"^",4),PSAFTER=0,PSINORDE=""
+ ;IHS/MSC/MGH - changes from patch 166 added for EPCS
+ W ! K DIE N MFLG S PSBEFORE=$P(^PS(50.7,PSVAR,0),"^",4),PSBEFRE1=+$P(^PS(50.7,PSVAR,0),"^",2),PSAFTER=0,PSINORDE=""
+ ;S PSSOTH=$P($G(^PS(59.7,1,40.2)),"^"),DIE="^PS(50.7,",DR="5;6;.04;.05;.06;.07;.08;7;S:'$G(PSSOTH) Y=""@1"";7.1;@1",DA=PSVAR
+ S DIE="^PS(50.7,",DA=PSVAR,DR="5;6" D ^DIE K DIE I $D(DTOUT)!($D(Y)>10) Q
+ K DIR S DIR(0)="DO",DIR("A")="INACTIVE DATE" D  D ^DIR K DIR I $G(Y)["^"!($D(DTOUT))!($G(DUOUT)) Q
+ .I $G(PSBEFORE) S Y=PSBEFORE D DD^%DT S DIR("B")=$G(Y)
+ I $G(PSBEFORE),'$G(Y) W ?40,"Inactive Date deleted!"
+ S PSSDTENT=$G(Y) I $G(Y) D DD^%DT W ?40,$G(Y)
+ S PSSOTH=$P($G(^PS(59.7,1,40.2)),"^"),DIE="^PS(50.7,"
+ ;IHS/MSC/PLS - 03/13/2018 - 12/28/2022 P1032
+ S DR=".05;@1;D SETF^PSSPOIMO;.06;D DFR^PSSPOIMO(PSBEFRE1);10//YES;I X=""Y"" S Y=""@2"";S:$G(DUOUT) Y=""@3"";D PDCHK^PSSPOIMO S:PSSFG Y=""@1"";S:$G(DUOUT) Y=""@3"";@2;K DIE(""NO^""),DIRUT;D MRSEL^PSSPOIMO;.07;.08;7;S:'$G(PSSOTH) Y=""@3"";7.1;@3"
+ ;S DR="05;@1;D SETF^PSSPOIMO;.06;.07;.08;7;S:'$G(PSSOTH) Y=""@3"";7.1;@3"
+ D ^DIE S PSAFTER=$P(^PS(50.7,PSVAR,0),"^",4) K DIE,PSSOTH,^TMP("PSJMR",$J),^TMP("PSSDMR",$J) ;I $D(PSSOU),'$G(PSSOU) D MRSEL^PSSPOIMO K ^TMP("PSJMR",$J)
  S:PSBEFORE&('PSAFTER) PSINORDE="D" S:PSAFTER PSINORDE="I"
+ ;END CHANGES
  I PSINORDE'="" D REST^PSSPOIDT(PSVAR)
- K PSBEFORE,PSAFTER,PSINORDE
+ K PSBEFORE,PSBEFRE1,PSAFTER,PSINORDE
 IMMUN ;PSS*1*141 FOR 'IMMUNIZATIONS DOCUMENTATION BY BCMA'
  I $O(^PSDRUG("AOC",PSVAR,"IM000"))'["IM" G SYN ;ASK WHEN APPROPRIATE
  ;W ! S DIE="^PS(50.7,",DA=PSVAR,DR=9 D ^DIE K DIE  ;IHS/MSC/PLS - Commented out per IHS

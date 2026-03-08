@@ -1,20 +1,17 @@
-DIQ1 ;SFISC/XAK-INQUIRY WITH COMPUTED FIELDS ;6:09 AM  24 Nov 2003
- ;;22.0;VA FileMan;**19,64,76,133**;Mar 30, 1999
+DIQ1 ;SFISC/XAK-INQUIRY WITH COMPUTED FIELDS ;10/26/94  15:36 [ 09/09/1998  12:03 PM ]
+ ;;21.0;VA Fileman;**1007**;SEP 8, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
  ;
-A S DIDQ=DD S:'$D(DICMX) DICMX="W !,O,"": "",X"
- N W,DD,D,Z
- F W=0:0 S W=$O(^DD(DIDQ,W)) Q:W'>0  I $D(^(W,0))#2 S Z=^(0),C=$P(Z,U,2),O=$P(Z,U)_" (c)" I C["C" X $P(Z,U,5,99) I X]"" D  Q:'S
- .N Y S Y=X
- .I C["p",Y S Y=$$CP(C,Y)
- .E  I C["D" X ^DD("DD")
- .D W2^DIQ
- K DIDQ,DICMX Q
- ;
-CP(C,X) ;
- S:C["p" C=+$P(C,"p",2) I C,$D(^DIC(C,0,"GL")),$D(@(^("GL")_"0)")),$D(^(X,0)) S X=$$EXTERNAL^DIDU(C,.01,"",$P(^(0),U))
- Q X
- ;
+ S DIDQ=DD S:'$D(DICMX) DICMX="W !,O,"": "",X" N DD,D
+A F DIQX=0:0 S DIQX=$O(^DD(DIDQ,DIQX)) Q:DIQX'>0  I $D(^(DIQX,0))#2 S Z=^(0),C=$P(Z,U,2),O=$P(Z,U)_" (c)" I C["C" X $P(Z,U,5,99) I X]"" S Y=X D W Q:'S
+ K DIDQ,DIQX,Z,DICMX Q
+W I C["O",$D(^(2)) X ^(2)
+ I C["D" S %=$E(Y,4,5)*3,Y=$S(%:$E("JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC",%-2,%)_" ",1:"")_$S($E(Y,6,7):$J(+$E(Y,6,7),2)_", ",1:"")_($E(Y,1,3)+1700)_$S(Y[".":"  "_$E(Y_0,9,10)_":"_$E(Y_"000",11,12),1:"")
+ I $X>40!($L(O)+$L(Y)>36) S O=$E(O,1,253-$L(Y))
+ S O=O_": "_Y I  D LF^DIQ Q:'S
+ W:$X ?40 W O Q
+ Q
 EN ;
  Q:'$D(DIC)!($D(DA)[0)!($D(DR)[0)  S DIL=0,(DA(0),D0)=DA,DIQ0=""
  I $D(DIQ)#2 G Q:DIQ["^"!($E(DIQ,1,2)="DI") S:DIQ'["(" DIQ=DIQ_"("
@@ -24,7 +21,7 @@ EN ;
  I DIC S DIC=$S($D(^DIC(DIC,0,"GL")):^("GL"),1:"") G:DIC="" Q
 L G Q:'$D(@(DIC_"0)")) S DI=+$P(^(0),U,2) G Q:'$D(^(DA,0))
  N DII F DII=1:1 S DIQ1=$P(DR,";",DII) Q:DIQ1=""  D C:DIQ1[":",F:DIQ1>0
-Q Q:DIL  K %,I,J,X,Y,C,DA(0),DRS,DIL,DI,DIQ1 K:DIQ0]"" @DIQ0 K:$D(DIQ0) DIQ0
+Q Q:DIL  K %,I,J,X,Y,C,DA(0),DRS,DIL,DI,DIQ1,@DIQ0
  Q
  ;
 C S DIQ2=$P(DIQ1,":",2)

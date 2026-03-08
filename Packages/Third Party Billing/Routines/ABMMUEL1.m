@@ -1,10 +1,10 @@
 ABMMUEL1 ;IHS/SD/SDR - Meaningful Use Report - count patients/eligibility ;
- ;;2.6;IHS 3P BILLING SYSTEM;**12,15,21**;NOV 12, 2009;Build 379
- ;IHS/SD/SDR - 2.6*15 - HEAT188495 - Fixed policy holder so it will print all the time; defaulted to policy number from policy holder file the
- ;  same way Reg does
- ;IHS/SD/SDR - 2.6*15 - HEAT188548 - Formatted visit/admit date/time for VISIT section
- ;IHS/SD/SDR - 2.6*21 - HEAT204790 - Added code to stop error <SUBSCR>WRTELIG+55^ABMMUEL1.  Occurs when Private Insurance Eligible entry doesn't
+ ;;2.6;IHS 3P BILLING SYSTEM;**12,15,21,32**;NOV 12, 2009;Build 621
+ ;IHS/SD/SDR 2.6*15 HEAT188495 Fixed policy holder so it will print all the time; defaulted to policy number from policy holder file the same way Reg does
+ ;IHS/SD/SDR 2.6*15 HEAT188548 Formatted visit/admit date/time for VISIT section
+ ;IHS/SD/SDR 2.6*21 HEAT204790 Added code to stop error <SUBSCR>WRTELIG+55^ABMMUEL1.  Occurs when Private Insurance Eligible entry doesn't
  ;   have a coinsiding Policy Holder entry.
+ ;IHS/SD/SDR 2.6*32 CR9862 Added to print MBI if there is one, default to HICN.
  ;
 WRTPTS ;^TMP($J,"ABM-MURPT","PTS",ABMP("PDFN"))
  W !!!,"PATIENTS PATIENTS PATIENTS PATIENTS PATIENTS"
@@ -41,7 +41,20 @@ WRTELIG ;
  F  S ABMP("PDFN")=$O(^TMP($J,"ABM-MURPT","MCR",ABMP("PDFN"))) Q:'ABMP("PDFN")  D
  .S ABMP("MDFN")=0
  .F  S ABMP("MDFN")=$O(^TMP($J,"ABM-MURPT","MCR",ABMP("PDFN"),ABMP("MDFN"))) Q:'ABMP("MDFN")  D
- ..W !?3,ABMP("PDFN"),?15,$P($G(^DPT(ABMP("PDFN"),0)),U),?50,$P($G(^AUPNMCR(ABMP("PDFN"),0)),U,3)
+ ..;W !?3,ABMP("PDFN"),?15,$P($G(^DPT(ABMP("PDFN"),0)),U),?50,$P($G(^AUPNMCR(ABMP("PDFN"),0)),U,3)  ;abm*2.6*32 IHS/SD/SDR CR9862
+ ..;start new abm*2.6*32 IHS/SD/SDR CR9862
+ ..K ABMMBI,ABMPNUM
+ ..S ABMMBI=""
+ ..S ABMMBI=$$HISTMBI^AUPNMBI(ABMP("PDFN"),.ABMMBI)
+ ..S ABMMBI=+$O(ABMMBI(999999999),-1)
+ ..S:(ABMMBI'=0) ABMPNUM=$P(ABMMBI(ABMMBI),U)
+ ..I $G(ABMPNUM)="" D
+ ...S ABMSUFX=$P($G(^AUPNMCR(ABMP("PDFN"),0)),U,4),ABMHIC=$P($G(^(0)),U,3)
+ ...S ABMSUFX=$P($G(^AUTTMCS(+ABMSUFX,0)),U)
+ ...S ABMPNUM=ABMHIC_ABMSUFX
+ ...K ABMSUFX,ABMHIC
+ ..W !?3,ABMP("PDFN"),?15,$P($G(^DPT(ABMP("PDFN"),0)),U),?50,$S($G(ABMPNUM)'="":ABMPNUM,1:"<NO MBI/HICN>")
+ ..;end new abm*2.6*32 IHS/SD/SDR CR9862
  ;
  ;^TMP($J,"ABM-MURPT","RR",ABMP("PDFN"),ABMP("MDFN"))
  W !!!,"RAILROAD RAILROAD RAILROAD RAILROAD RAILROAD RAILROAD RAILROAD RAILROAD "
@@ -51,7 +64,20 @@ WRTELIG ;
  .S ABMP("MDFN")=0
  .F  S ABMP("MDFN")=$O(^TMP($J,"ABM-MURPT","RR",ABMP("PDFN"),ABMP("MDFN"))) Q:'ABMP("MDFN")  D
  ..;W !?3,ABMP("PDFN"),?15,$P($G(^DPT(ABMP("PDFN"),0)),U),?50,$P($G(^AUPNRRE(ABMP("PDFN"),0)),U,3)  ;abm*2.6*12 HEAT120278
- ..W !?3,ABMP("PDFN"),?15,$P($G(^DPT(ABMP("PDFN"),0)),U),?50,$P($G(^AUTTRRP($P($G(^AUPNRRE(ABMP("PDFN"),0)),U,3),0)),U)_$P($G(^AUPNRRE(ABMP("PDFN"),0)),U,4)  ;abm*2.6*12 HEAT120278
+ ..;W !?3,ABMP("PDFN"),?15,$P($G(^DPT(ABMP("PDFN"),0)),U),?50,$P($G(^AUTTRRP($P($G(^AUPNRRE(ABMP("PDFN"),0)),U,3),0)),U)_$P($G(^AUPNRRE(ABMP("PDFN"),0)),U,4)  ;abm*2.6*12 HEAT120278  ;abm*2.6*32 IHS/SD/SDR CR9862
+ ..;start new abm*2.6*32 IHS/SD/SDR CR9862
+ ..K ABMMBI,ABMPNUM
+ ..S ABMMBI=""
+ ..S ABMMBI=$$HISTMBI^AUPNMBI(ABMP("PDFN"),.ABMMBI)
+ ..S ABMMBI=+$O(ABMMBI(999999999),-1)
+ ..S:(ABMMBI'=0) ABMPNUM=$P(ABMMBI(ABMMBI),U)
+ ..I $G(ABMPNUM)="" D
+ ...S ABMPRFX=$P($G(^AUPNRRE(ABMP("PDFN"),0)),U,3),ABMHIC=$P($G(^(0)),U,4)
+ ...S ABMPRFX=$P($G(^AUTTRRP(+ABMPRFX,0)),U)
+ ...S ABMPNUM=ABMPRFX_ABMHIC
+ ...K ABMPRFX,ABMHIC
+ ..W !?3,ABMP("PDFN"),?15,$P($G(^DPT(ABMP("PDFN"),0)),U),?50,$S($G(ABMPNUM)'="":ABMPNUM,1:"<NO MBI/HICN>")
+ ..;end new abm*2.6*32 IHS/SD/SDR CR9862
  ;
  ;start new abm*2.6*11 VMBP#9 RQMT_103
  ;^TMP($J,"ABM-MURPT","VMBP",ABMP("PDFN"),ABMP("MDFN"))

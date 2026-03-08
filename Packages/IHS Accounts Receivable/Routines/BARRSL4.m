@@ -1,5 +1,5 @@
 BARRSL4 ; IHS/SD/LSL - Selective Report Parameters-PART 2 ; 12/19/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**23,24**;OCT 26,2005;Build 69
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**23,24,29,30**;OCT 26,2005;Build 55
  ; CODE EXTENSION OF BARRSL1
  ;
  ; IHS/SD/POTT 12/12 ADDED SELECTION OF CODING DX VERSION ICD-9 / ICD-10 - BAR1.8*23
@@ -7,6 +7,8 @@ BARRSL4 ; IHS/SD/LSL - Selective Report Parameters-PART 2 ; 12/19/2008
  ; IHS/SD/POTT 07/13 DO NOT ALLOW SELECT ICD10 WHEN INFRASTRUCTURE NOT PRESENT - BAR1.8*23
  ; IHS/SD/POTT HEAT150941 02/09/14 Allow ALL DX9/10 - BAR1.8*24
  ;                        if no DX selected: show ALL DX of ALL available coding systems - BAR1.8*24
+ ;IHS/SD/CPC - 20191202 CR10586 BAR*1.8*29
+ ;IHS/SD/CPC - 20200718 CR9476 BAR*1.8*30
  ;*******************************************************************************
  Q
 TRANTYP ; EP
@@ -191,14 +193,17 @@ RTYP ; EP
  K DIR,BARY("RTYP")
  S DIR(0)="SO^1:Detail;2:Summary;3:Detail and Summary"
  ; BAR*1.8*19 IHS/SD/PKD 6/01/10
- I BAR("OPT")="CXL" S DIR(0)="SO^1:Detail;2:Summary"
+ ;I BAR("OPT")="CXL" S DIR(0)="SO^1:Detail;2:Summary"
+ I BAR("OPT")="CXL" S DIR(0)="SO^1:Detail;2:Summary;3:Detail and Summary (XML)"     ;IHS/SD/CPC - BAR*1.8*30 CR9476
  S DIR("A")="Select TYPE of REPORT desired"
  S DIR("B")=1
  D ^DIR
  K DIR
  I $D(DUOUT)!$D(DTOUT) S BARDONE=1 Q
+ I BAR("OPT")="CXL",(Y=3) S BAR("XML")=1,Y=1        ;IHS/SD/CPC - BAR*1.8*30 CR9476
  S BARY("RTYP")=Y
  S BARY("RTYP","NM")=Y(0)
+ ;S BARDONE2=1  ;IHS/SD/CPC - 20191202 CR10586 Removed BAR*1.8*29
  Q
  ; *********************
 DSVC ; EP

@@ -1,5 +1,6 @@
-DDXPLIB ;SFISC/DPC-EXPORT LIBRARY ;1/25/93  13:05
- ;;22.0;VA FileMan;;Mar 30, 1999
+DDXPLIB ;SFISC/DPC-EXPORT LIBRARY ;1/25/93  13:05 [ 09/10/1998  11:17 AM ]
+ ;;21.0;VA Fileman;**1007**;SEP 08, 1998
+ ;;21.0;VA FileMan;;Dec 28, 1994
  ;Per VHA Directive 10-93-142, this routine should not be modified.
 FLDNM(DDXPXTNO) ;
  N %D,%I,FLD,NAMELST,NAME

@@ -1,5 +1,5 @@
 APCLV1 ; IHS/CMI/LAB - visit entry utilities/get codes ;
- ;;2.0;IHS PCC SUITE;**10**;MAY 14, 2009;Build 88
+ ;;2.0;IHS PCC SUITE;**10,26**;MAY 14, 2009;Build 48
  ;
  ;IHS/TUCSON/LAB - patch 1 modified subroutine FACTX to check
  ;for existence of AUTTLOC( node 3/4/97
@@ -345,12 +345,12 @@ APCWL ;EP
  I '$D(^AUPNVPRV("AD",V)) Q ""  ; no provider
  I $P(R,U,3)="" Q ""
  I $P(R,U,7)="" Q ""
- I "AOS"'[$P(R,U,7) Q ""  ;no A, O S
+ I "AOSM"'[$P(R,U,7) Q ""  ;no A, O S - ADDED M PATCH 26
  I "CVS"[$P(R,U,3) Q ""  ;no contract, state or VA
  S P=$P(R,U,5)
  I 'P Q ""  ;no patient
  I '$D(^DPT(P,0)) Q ""  ;no patient
- I $P(^DPT(P,0),U)["DEMO,PATIENT" Q ""  ;no demo,patient visits
+ ;I $P(^DPT(P,0),U)["DEMO,PATIENT" Q ""  ;no demo,patient visits
  S L=$P(R,U,6)
  I L="" Q ""  ;no location
  I '$D(^AUTTLOC(L,0)) Q ""  ;location invalid

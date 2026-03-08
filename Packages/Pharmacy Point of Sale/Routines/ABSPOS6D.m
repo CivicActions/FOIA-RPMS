@@ -1,8 +1,8 @@
 ABSPOS6D ; IHS/FCS/DRS - user screen subrous ;   
- ;;1.0;PHARMACY POINT OF SALE;**14,18,37,38,40,41,46**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**14,18,37,38,40,41,46,52,57**;JUN 01, 2001;Build 131
  ;----------------------------------------------------------------------
- ;IHS/SD/RLT - 8/24/06 - Patch 18
- ;  Changed code so rejected reversals can be resubmitted.
+ ;IHS/SD/RLT 8/24/06 1.0*18 Changed code so rejected reversals can be resubmitted
+ ;IHS/SD/SDR 1.0*57 ADO74084 Added are you sure prompt in RES option
  Q
 PRINTALL ; protocol ABSP P1 PRINT ALL ; print all patients' results
  N IO I '$$DEVICE G PRINT99
@@ -17,10 +17,10 @@ PRINTHDR ; print a header
  W !
  Q
 PRINTA(A) ; print line A
- ; How could you tell whether this is a patient line or a prescription
- ; line?  And which patient or prescription is represented?
- ; Look at @DISPLINE(n)=patname or patname^rxi
- ; Look at @VALMIDX@(n,patien), @VALMIDX@(n,patien,rxien)
+ ;How could you tell whether this is a patient line or a prescription
+ ;line?  And which patient or prescription is represented?
+ ;Look at @DISPLINE(n)=patname or patname^rxi
+ ;Look at @VALMIDX@(n,patien), @VALMIDX@(n,patien,rxien)
  I '$D(IOM) N IOM S IOM=80
  N X D
  .I $D(@VALMAR@(A,0)) S X=@VALMAR@(A,0)
@@ -46,28 +46,28 @@ PRINT99 ; joined here from PRINTALL,CLAIMLOG
  D ANY^ABSPOS2A ;PRESSANY^ABSPOSU5()
 PRINT999 S VALMBCK="R" ;$S(VALMCC:"",1:"R")
  Q
-MAKERXI ; IEN(*)=line numbers  we want to convert to prescription numbers
- ; builds RXI(*)="" or maybe data, ignore whatever you get on right side
+MAKERXI ;IEN(*)=line numbers  we want to convert to prescription numbers
+ ;builds RXI(*)="" or maybe data, ignore whatever you get on right side
  S IEN="" F  S IEN=$O(IEN(IEN)) Q:IEN=""  D MRXI
  Q
 MRXI S RXI=$P(@DISPLINE@(IEN),U,2)
- I RXI S RXI(RXI)="" Q  ; a prescription detail line; take just the one
- ; else it's a patient line - take all of this patient's prescrip's
+ I RXI S RXI(RXI)="" Q  ;a prescription detail line; take just the one
+ ;else it's a patient line - take all of this patient's prescrip's
  N PAT S PAT=$P(@DISPLINE@(IEN),U)
  M RXI=@DISP@(PAT) ; merge in all of the patient's prescriptions
- Q  ; with RXI(*) array set up
+ Q  ;with RXI(*) array set up
 CLAIMLOG ; protocol ABSP P1 CLAIM LOG
  W !,"Enter the line numbers for which you wish to print claim logs.",!
  N IEN D SELECPAT(.IEN) ; select prescription(s) or patients
  I $D(IEN)<10 G PRINT99
  N IO I '$$DEVICE G PRINT99
  U $P D:IO=$P FULL^VALM1 U IO
- N RXI D MAKERXI ; IEN(*) -> converted to RXI(*)
- ; now RXI(*) is the array of RXI's we want to print logs for
+ N RXI D MAKERXI  ;IEN(*) -> converted to RXI(*)
+ ;now RXI(*) is the array of RXI's we want to print logs for
  S RXI="" F  S RXI=$O(RXI(RXI)) Q:RXI=""  D CLAIMLOG^ABSPOS6M(RXI,IO)
  ;D BYE^ABSPOSU5
  G PRINT9
-RECEIPT ; protocol ABSP P1 RECEIPT ; print receipts
+RECEIPT ;protocol ABSP P1 RECEIPT ; print receipts
  W !,"Enter the line numbers for which you wish to print ",$$NAME^ABSPOS6E(3),".",!
  N IEN D SELECPAT(.IEN) ; select prescription(s) or patients
  I $D(IEN)<10 G PRINT99
@@ -77,23 +77,23 @@ RECEIPT ; protocol ABSP P1 RECEIPT ; print receipts
  D RECEIPTS^ABSPOS6E(.RXI,IO)
  D BYE^ABSPOSU5
  G PRINT9
-REVERSE ; protocol ABSP P1 REVERSE CLAIM ; reverse selected claims
+REVERSE ;protocol ABSP P1 REVERSE CLAIM ; reverse selected claims
  W "Select the line(s) with the paid claim(s) you wish to REVERSE.",!
  N IEN D SELECPAT(.IEN) ; select which ones to reverse
  N RXI D MAKERXI ; IEN(*) -> converted to RXI(*)
  D FULL^VALM1
  N REVTOTAL,REVELECT,ERRCOUNT S (REVTOTAL,REVELECT,ERRCOUNT)=0
  S RXI="" F  S RXI=$O(RXI(RXI)) Q:RXI=""  D
- . N X S X=$$REVERS59(RXI,0)
- . I X D
- . . S REVTOTAL=REVTOTAL+1
- . . I X>.5 S REVELECT=REVELECT+1
- . E  D
- . . W "Cannot reverse ",RXI,! S ERRCOUNT=ERRCOUNT+1
+ .N X S X=$$REVERS59(RXI,0)
+ .I X D
+ ..S REVTOTAL=REVTOTAL+1
+ ..I X>.5 S REVELECT=REVELECT+1
+ .E  D
+ ..W "Cannot reverse ",RXI,! S ERRCOUNT=ERRCOUNT+1
  W REVTOTAL," claim reversal",$S(REVTOTAL'=1:"s",1:"")," in progress.",!
  I ERRCOUNT D
- . W "Some claim(s) could not be reversed because only paper claims",!
- . W "and Payable electronic claims can be reversed.",!
+ .W "Some claim(s) could not be reversed because only paper claims",!
+ .W "and Payable electronic claims can be reversed.",!
  I REVELECT D TASK^ABSPOSQ1 ; task up a packetizer
  D ANY^ABSPOS2A ;D PRESSANY^ABSPOSU5()
  N NODISPLY S NODISPLY=1 D UPD^ABSPOS6A
@@ -101,11 +101,10 @@ REVERSE ; protocol ABSP P1 REVERSE CLAIM ; reverse selected claims
  ;S VALMBCK=""
  Q
 REVERS59(IEN59,WANTQ2)    ;EP - called here from ABSPOSRB too
- ; IEN59 as usual; $G(WANT2Q)=TRUE if you want packetizer started
- ; Returns 0 if no, no reversal, it's unreversable
- ; Returns 0.5 if it's a paper claim that was reversed
- ; Returns IEN of reversal claim if electronic claim submitted for
- ;   reversal.
+ ;IEN59 as usual; $G(WANT2Q)=TRUE if you want packetizer started
+ ;Returns 0 if no, no reversal, it's unreversable
+ ;Returns 0.5 if it's a paper claim that was reversed
+ ;Returns IEN of reversal claim if electronic claim submitted for reversal.
  N OLDSLOT S OLDSLOT=$$GETSLOT^ABSPOSL
  D SETSLOT^ABSPOSL(IEN59)
  D LOG^ABSPOSL("Reversal - begin")
@@ -117,20 +116,20 @@ REVERS59(IEN59,WANTQ2)    ;EP - called here from ABSPOSRB too
  I RESULT'="PAPER",RESULT'="E PAYABLE",RESULT'="E DUPLICATE",RESULT'="E REVERSAL REJECTED",RESULT'="E CAPTURED" Q:$Q 0 Q
  ;IHS/SD/RLT - 8/24/06 - Patch 18 - end
  I RESULT="PAPER REVERSAL"!(RESULT="E REVERSAL ACCEPTED") Q:$Q 0 Q
- ; Okay, reversal is permitted
- D  ; stamp new starting time
- . N DIE,DR,DA S DIE=9002313.59,DA=IEN59,DR="15///NOW;7///NOW" D ^DIE
+ ;Okay, reversal is permitted
+ D  ;stamp new starting time
+ .N DIE,DR,DA S DIE=9002313.59,DA=IEN59,DR="15///NOW;7///NOW" D ^DIE
  D LOG59A^ABSPOSQB ; and log contents of 9002313.59
  D PREVISLY^ABSPOSIZ(IEN59) ; bracket result text with [Previously: ]
  I RESULT="PAPER" D  Q:$Q 0.5 Q
- . D REVERSP(IEN59) ; reverse the paper claim
- . D RELSLOT^ABSPOSL,SETSLOT^ABSPOSL(OLDSLOT)
+ .D REVERSP(IEN59) ; reverse the paper claim
+ .D RELSLOT^ABSPOSL,SETSLOT^ABSPOSL(OLDSLOT)
  ; Here, reversal of electronic claim:
  N CLAIMIEN S CLAIMIEN=$P(^ABSPT(IEN59,0),U,4) ; the claim
  N POS S POS=$P(^ABSPT(IEN59,0),U,9) ; and position therein
  N REV S REV=$$REVERSE^ABSPECA8(CLAIMIEN,POS) ; construct reversal
  D  ;S $P(^ABSPT(IEN59,4),U)=REV ; mark claim with reversal
- . N DIE,DR,DA S DIE=9002313.59,DA=IEN59,DR="401////"_REV D ^DIE
+ .N DIE,DR,DA S DIE=9002313.59,DA=IEN59,DR="401////"_REV D ^DIE
  D LOG^ABSPOSL("Reversal claim `"_REV_" "_$P(^ABSPC(REV,0),U))
  N ABSBRXI S ABSBRXI=IEN59 D SETSTAT^ABSPOSU(30) ; waiting to packetize
  I $G(WANTQ2) D TASK^ABSPOSQ1
@@ -149,6 +148,26 @@ RESUBMIT ; protocol ABSP P1 RESUBMIT ; resubmit a claim shown on your screen
  N IEN D SELECPAT(.IEN) ; gives IEN(*)
  N RXI D MAKERXI ; IEN(*) -> converted to RXI(*)
  D FULL^VALM1
+ N RX,RTS,DELETED
+ ;ZW RXI
+ ;N IEN59 S IEN59="" F  S IEN59=$O(RXI(IEN59)) Q:IEN59=""  D
+ ;.S RX=$$GET1^DIQ(9002313.59,IEN59,1.11,"I")
+ ;.S RTS=$$GET1^DIQ(52,RX,32.1,"I") ; /IHS/OIT/RAM ; P52 ; CHECK FOR PRESCRIPTION RETURN TO STOCK
+ ;.S DELETED=$D(^PSRX(RX,"D"))#2 ; /IHS/OIT/RAM/ ; Let's see if the prescription is marked for deletion.
+ ;.; W IEN59,*9,RX,*9,RTS,*9,DELETED,!
+ ;.I DELETED W "That prescription is marked as Deleted. Cannot resubmit.",! K RXI(IEN59) Q
+ ;.I RTS W "That prescription is marked as Returned to Stock. Cannot resubmit.",! K RXI(IEN59) Q
+ ;
+ ;start new absp*1.0*57 IHS/SD/SDR ADO74084
+ D CLEAR^VALM1
+ U 0 W !!,"You selected the following for resubmission:"
+ N IEN59 S IEN59=""
+ F  S IEN59=$O(RXI(IEN59)) Q:IEN59=""  D
+ .W !?3,IEN59_" "_$E($$GET1^DIQ(52,$$GET1^DIQ(9002313.59,IEN59,"1.1199","I"),6,"E"),1,40),?60,$$GET1^DIQ(9002313.59,IEN59,4.0099,"E")
+ S ABSPANS=$$YESNO^ABSPOSU3("ARE YOU SURE (YES/NO)","",0,DTIME)
+ U 0 W !
+ I +$G(ABSPANS)=0 K RXI
+ ;end new absp*1.0*57 IHS/SD/SDR ADO74084
  ;
  ;OIT/CAS/RCS 081913 Patch 46 If claim is paid ask if ok to resubmit,delete from list if not
  N IEN59 S IEN59="" F  S IEN59=$O(RXI(IEN59)) Q:IEN59=""  D
@@ -180,33 +199,33 @@ RESUBMIT ; protocol ABSP P1 RESUBMIT ; resubmit a claim shown on your screen
  S VALMBCK="R"
  Q
 RESUB1(IEN59,MIN)        ;EP - from ABSPOSU
- ; resubmit one entry in .59 ; caller responsible for
- ; starting up  D TASK^ABSPOSIZ
- ; Also called here from ABSPOSU, for reverse-and-resubmit action
+ ;resubmit one entry in .59 ;caller responsible for
+ ;starting up  D TASK^ABSPOSIZ
+ ;Also called here from ABSPOSU, for reverse-and-resubmit action
  ;Kill pointers of previous submissions and reversals
  N DIE,DR,DA S DIE=9002313.59,DA=IEN59
  S DR="" N I F I=3,4,401:1:403,301:1:302,801:1:803 D
- . S:DR]"" DR=DR_";" S DR=DR_I_"///@"
- . S DR=DR_";15///NOW;7///NOW" ; stamp new starting time, too
+ .S:DR]"" DR=DR_";" S DR=DR_I_"///@"
+ .S DR=DR_";15///NOW;7///NOW" ; stamp new starting time, too
  ;S DR=DR_";6///"_DUZ ;IHS/OIT/CNI/SCR 033010 - update 'Updated By User' for CPR report patch 38
  S DR=DR_";6///`"_DUZ ;IHS/OIT/CNI/RAN 091710 - corrected 'Updated By User' input to properly use INTERNAL value patch 40
  I '$G(MIN) D  ; ABSP*1.0T7*11 this whole block
- . F I=10,11,1.05:.01:1.08,1.13,601:1:603,701:1:703 S DR=DR_";"_I_"///@"
- . ;IHS/OIT/SCR 11/20/08 delete new 'incentive amount submitted' field also
- . ;I '$P($G(^ABSPT(DA,5)),U,6) F I=501:1:505 S DR=DR_";"_I_"///@"
- . I '$P($G(^ABSPT(DA,5)),U,6) F I=501,502,503,505,507 S DR=DR_";"_I_"///@"
+ .F I=10,11,1.05:.01:1.08,1.13,601:1:603,701:1:703 S DR=DR_";"_I_"///@"
+ .;IHS/OIT/SCR 11/20/08 delete new 'incentive amount submitted' field also
+ .;I '$P($G(^ABSPT(DA,5)),U,6) F I=501:1:505 S DR=DR_";"_I_"///@"
+ .I '$P($G(^ABSPT(DA,5)),U,6) F I=501,502,503,505,507 S DR=DR_";"_I_"///@"
  D ^DIE
  D PREVISLY^ABSPOSIZ(IEN59) ; bracket result text with "[Previously: ]"
- ; Reset status
+ ;Reset status
  N ABSBRXI S ABSBRXI=IEN59 D SETSTAT^ABSPOSU(0)
  Q
 DEVICE() ;EP - device selection for POS
- ; want to provide a convenient default
+ ;want to provide a convenient default
  N DEFAULT S DEFAULT="HOME"
  N DEVICE S DEVICE=$$DEVICE^ABSPOSU8(DEFAULT)
  I 'DEVICE Q ""
  Q DEVICE
-CANCEL ; protocol ABSP P1 CANCEL CLAIM 
+CANCEL ;protocol ABSP P1 CANCEL CLAIM 
  N LINE
  W !,"Select prescription to cancel by line number.  Hurry!"
  D SELECPAT(.LINE)
@@ -214,23 +233,23 @@ CANCEL ; protocol ABSP P1 CANCEL CLAIM
  S LINE="" F  S LINE=$O(LINE(LINE)) Q:LINE=""  D
  .N PAT,RXI S PAT=$P(@DISPLINE@(LINE),U),RXI=$P(@DISPLINE@(LINE),U,2)
  .I RXI D CANC5^ABSPOS6L Q
- .; else patient was selected; cancel all of this patient's claims
+ .;else patient was selected; cancel all of this patient's claims
  .S RXI="" F  S RXI=$O(@DISP@(PAT,RXI)) Q:RXI=""  D CANC5^ABSPOS6L
  W !,"Cancellation requests made." H 1
 CAN99 D ANY^ABSPOS2A ;D PRESSANY^ABSPOSU5()
  N NODISPLY DO UPD^ABSPOS6A S VALMBCK="R"
  Q
 DISMISS ; protocol ABSP P1 DISMISS ; dismiss a patient from my screen
- ; This is to remove a patient from the display before the usual
- ; time window has expired.  Do it by:
- ; 1. Set @DISMISS nodes to 15 minutes from now, so as to keep
- ;    the patient and prescription off our screen until then.
- ; 2. Zero out the time of last update in @DISP so that the
- ;    winnowing thinks the entry is too old to keep around.
- ; This functionality is provided with the intent to support
- ; dismissing an entire patient's record after all processing
- ; has been completed.  Unusual usage may not have the results
- ; you presume it might have.
+ ;This is to remove a patient from the display before the usual
+ ;time window has expired.  Do it by:
+ ;1. Set @DISMISS nodes to 15 minutes from now, so as to keep
+ ;   the patient and prescription off our screen until then.
+ ;2. Zero out the time of last update in @DISP so that the
+ ;   winnowing thinks the entry is too old to keep around.
+ ;This functionality is provided with the intent to support
+ ;dismissing an entire patient's record after all processing
+ ;has been completed.  Unusual usage may not have the results
+ ;you presume it might have.
 DIS0 N IEN,TIME,X,%,%I,%H D NOW^%DTC
  S TIME=$$TADD^ABSPOSUD(%,^TMP("ABSPOS",$J,"TIME"))
  D SELECPAT(.IEN)

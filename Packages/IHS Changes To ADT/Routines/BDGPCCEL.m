@@ -1,5 +1,5 @@
 BDGPCCEL ; IHS/ANMC/LJF - CODE PCC VISIT LISTING ;  [ 08/12/2002  10:14 AM ]
- ;;5.3;PIMS;**1005,1006,1010**;MAY 28, 2004
+ ;;5.3;PIMS;**1005,1006,1010,1022**;MAY 28, 2004;Build 18
  ;IHS/OIT/LJF 03/16/2006 PATCH 1005 added HF & PED mnemonic choices
  ;                                  drops into ADD mode if nothing to MODIFY
  ;            04/06/2006 patch 1005 added trigger to stuff date coded in NICE
@@ -18,7 +18,11 @@ HDR ; -- header code
  NEW X,Y,VH
  S VALMHDR(1)=$$SP(15)_$$CONF^BDGF
  ;
- S X=$$GET1^DIQ(2,DFN,.01)_$$SP(5)_"#"_$$HRCN^BDGF2(DFN,DUZ(2))
+ ;202307 77894 maw p1022 PPN
+ N PRF
+ S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ S X=$G(PRF)_$$SP(5)_"#"_$$HRCN^BDGF2(DFN,DUZ(2))
+ ;S X=$$GET1^DIQ(2,DFN,.01)_$$SP(5)_"#"_$$HRCN^BDGF2(DFN,DUZ(2))
  S VALMHDR(2)=$$SP(79-$L(X)\2)_X
  ;
  S VH=$O(^AUPNVINP("AD",BDGV,0)) Q:'VH

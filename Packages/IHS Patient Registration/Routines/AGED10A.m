@@ -1,8 +1,13 @@
 AGED10A ; VNGT/HS/BEE - EDIT PG 10 - ETHNICITY/RACE/LANGUAGE/MIGRANT/HOMELESS/INTERNET/HOUSEHOLD INFO ; MAR 19, 2010   
- ;;7.1;PATIENT REGISTRATION;**7,8,9,10,11**;AUG 25, 2005;Build 1
+ ;;7.1;PATIENT REGISTRATION;**7,8,9,10,11,15**;AUG 25, 2005;Build 1
  ;IHS/OIT/NKD AG*7.1*11 MU2 MULTIPLE RACES
  ;IHS/OIT/NKD AG*7.1*11 MU2 PREFERRED METHOD
  ;IHS/OIT/NKD AG*7.1*11 MU2 PHR FIELDS
+ ;IHS/OIT/NKD AG*7.1*15 PAGE 11
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC
+ ;IHS/OIT/NKD AG*7.1*15 MU3 MULTIPLE ETHNICITIES
+ ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
+ ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
  ;
 VAR N AG,AGI,AGY,CLLST,DFOUT,DIR,DIROUT,DLOUT,DQOUT,DTOUT,DUOUT,DIRUT,DOTS,MYERRS,MYVARS,ROUTID,Y
  ;
@@ -52,6 +57,7 @@ END ;
  I $D(AGXTERN)!$D(DIROUT)!$D(DTOUT)!$D(DFOUT) D KILL Q
  I $D(DUOUT) D KILL G ^AGED11A
  D KILL
+ G ^AGED14  ;IHS/OIT/NKD AG*7.1*15 PAGE 11
  Q
  ;
  ;Variable clean up
@@ -103,9 +109,16 @@ DRAW ;EP
  . ;
  . ;Special code for Ethnicity
  . I AG=1 D  Q
- .. N ETHNIC S ETHNIC=$O(^DPT(DFN,.06,0))
- .. I ETHNIC S ETHNIC=$$GET1^DIQ(2.06,ETHNIC_","_DFN_",",".01","E")
- .. W $E($G(ETHNIC),1,25)
+ .. ;IHS/OIT/NKD AG*7.1*15 - MULTIPLE ETHNICITIES - START OLD CODE
+ .. ;N ETHNIC S ETHNIC=$O(^DPT(DFN,.06,0))
+ .. ;I ETHNIC S ETHNIC=$$GET1^DIQ(2.06,ETHNIC_","_DFN_",",".01","E")
+ .. ;W $E($G(ETHNIC),1,25)
+ .. ;IHS/OIT/NKD AG*7.1*15 - END OLD CODE - START NEW CODE
+ .. N ETHNIC S ETHNIC=$$ETHN^AGUTL(DFN)
+ .. Q:+ETHNIC<1
+ .. ;IF MORE THAN ONE ETHNICITY IN MULTIPLE, DISPLAY "MORE THAN ONE ETHNICITY"
+ .. W $S(+ETHNIC>1:"MORE THAN ONE ETHNICITY",1:$P(ETHNIC,"^",2))
+ .. ;IHS/OIT/NKD AG*7.1*15 - END NEW CODE
  . ;
  . ;Display Race
  . ;IHS/OIT/NKD AG*7.1*11 MU2 - CHANGED DISPLAY TO USE MULTIPLE FIELD - START NEW CODE
@@ -188,45 +201,51 @@ DRAW ;EP
  . ;I AG=12,AGOPT(22)="Y" W ?40,"/  ",$$GET1^DIQ(9000001,DFN_",",8701,"E") ;IHS/OIT/NKD AG*7.1*11 PHR FIELDS
  . I AG=14,AGOPT(22)="Y" W ?40,"/  ",$$GET1^DIQ(9000001,DFN_",",8701,"E")
  ;
- W !,AGLINE("-")
+ ;W !,AGLINE("-") ;IHS/OIT/NKD AG*7.1*15 DISPLAY CLEANUP
+ W !,AGLINE("EQ")
  ;
  ;Error Checking/Display
  D FETCHERR^AGEDERR(AG("PG"),.MYERRS)
  S MYVARS("DFN")=DFN,MYVARS("FINDCALL")="",MYVARS("SELECTION")=$G(AGSELECT),MYVARS("SITE")=DUZ(2)
  D EDITCHEK^AGEDERR(.MYERRS,.MYVARS,1)
+ W !,AGLINE("-")  ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
+ D VERIF^AGUTILS  ;IHS/OIT/NKD AG*7.1*15 LAST UPDATED
  Q
  ;
 READ ;EP
- S DIR("?")="Enter free text"
- S DIR("?",1)="You may enter the item number of the field you wish to edit,"
- S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
- S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
- S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
- S DIR(0)="FO"
- D ^DIR
- Q:$D(DTOUT)
- S:Y="/.,"!(Y="^^") DFOUT=1
- S:Y="" DLOUT=""
- S:Y="^" (DUOUT,Y)=""
- S:Y?1"?".E!(Y["^") (DQOUT,Y)=""
- Q:Y="P"
- I $E(Y,1)="p" S $E(Y,1)="P"
- I $E(Y,1)="P" D
- . S AG("ED")=+$P($E(Y,2,99),".")
- . I AG("ED")<1!(AG("ED")>10) D
- .. W *7,!!,"Use only pages 1 through 10."
- .. H 2
- .. K AG("ED")
- .. S AG("ERR")=""
- . I $D(AG("ED"))  D
- .. I AG("ED")>0&(AG("ED")<11)  D
- ... I AG("ED")=4 S AG("ED")="4A"
- ... I AG("ED")=5 S AG("ED")="BEA"
- ... I AG("ED")=6 S AG("ED")=13
- ... I AG("ED")=8 S AG("ED")=11
- ... I AG("ED")=7 S AG("ED")=8
- ... I AG("ED")=9 S AG("ED")="11A"
- ... I AG("ED")=10 S AG("ED")="10A"
+ ;IHS/OIT/NKD AG*7.1*15 REPLACED PAGING LOGIC - START OLD CODE
+ ;S DIR("?")="Enter free text"
+ ;S DIR("?",1)="You may enter the item number of the field you wish to edit,"
+ ;S DIR("?",2)="OR you can enter 'P#' where P stands for 'page' and '#' stands for"
+ ;S DIR("?",3)="the page you wish to jump to, OR enter '^' to go back one page"
+ ;S DIR("?",4)="OR, enter '^^' to exit the edit screens, OR RETURN to go to the next screen."
+ ;S DIR(0)="FO"
+ ;D ^DIR
+ ;Q:$D(DTOUT)
+ ;S:Y="/.,"!(Y="^^") DFOUT=1
+ ;S:Y="" DLOUT=""
+ ;S:Y="^" (DUOUT,Y)=""
+ ;S:Y?1"?".E!(Y["^") (DQOUT,Y)=""
+ ;Q:Y="P"
+ ;I $E(Y,1)="p" S $E(Y,1)="P"
+ ;I $E(Y,1)="P" D
+ ;. S AG("ED")=+$P($E(Y,2,99),".")
+ ;. I AG("ED")<1!(AG("ED")>10) D
+ ;.. W *7,!!,"Use only pages 1 through 10."
+ ;.. H 2
+ ;.. K AG("ED")
+ ;.. S AG("ERR")=""
+ ;. I $D(AG("ED"))  D
+ ;.. I AG("ED")>0&(AG("ED")<11)  D
+ ;... I AG("ED")=4 S AG("ED")="4A"
+ ;... I AG("ED")=5 S AG("ED")="BEA"
+ ;... I AG("ED")=6 S AG("ED")=13
+ ;... I AG("ED")=8 S AG("ED")=11
+ ;... I AG("ED")=7 S AG("ED")=8
+ ;... I AG("ED")=9 S AG("ED")="11A"
+ ;... I AG("ED")=10 S AG("ED")="10A"
+ ;IHS/OIT/NKD AG*7.1*15 - END OLD CODE
+ D EDREAD^AGUTL2  ;IHS/OIT/NKD AG*7.1*15
  Q
  ;
 MIG ;EP - EDIT Migrant Worker prompts

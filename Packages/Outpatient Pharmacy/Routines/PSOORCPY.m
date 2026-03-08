@@ -1,11 +1,12 @@
-PSOORCPY ;BIR/SAB-copy orders from backdoor ;29-May-2012 14:56;PLS
- ;;7.0;OUTPATIENT PHARMACY;**10,21,27,32,46,100,117,1001,1006,1009,148,1015**;DEC 1997;Build 62
+PSOORCPY ;BIR/SAB-copy orders from backdoor ;29-Jan-2024 14:48;DU
+ ;;7.0;OUTPATIENT PHARMACY;**10,21,27,32,46,100,117,1001,1006,1009,148,1015,1035**;DEC 1997;Build 39
  ;External references LK^ORX2 and ULK^ORX2 supported by DBIA 867
  ;External reference to ^PSDRUG supported by DBIA 221
  ;External references L, UL, PSOL, and PSOUL^PSSLOCK supported by DBIA 2789
  ; Modified - IHS/CIA/PLS - 11/01/04 - Line PSOORCPY+19
  ;            IHS/MSC/PLS - 09/17/07 - Added support for CLININD and CLININD2
  ;                          12/09/10 - Line PSOORCPY+43
+ ;                          01/29/24 - +29,+30 FID: 93724
  ;I '$D(^XUSEC("PSORPH",DUZ)) S VALMSG="Invalid Action Selection!",VALMBCK="" Q
  I $$LMREJ^PSOREJU1($P(PSOLST(ORN),"^",2),,.VALMSG,.VALMBCK) Q
  I $G(PSOBEDT) W $C(7),$C(7) S VALMSG="Invalid Action at this time !",VALMBCK="" Q
@@ -26,8 +27,8 @@ PSOORCPY ;BIR/SAB-copy orders from backdoor ;29-May-2012 14:56;PLS
  .S PSORXED("AWP")=$P($G(^PSRX(PSORXED("IRXN"),9999999)),U,6)
  .S PSORXED("BST")=$P($G(^PSRX(PSORXED("IRXN"),9999999)),U,7)
  .S PSORXED("CM")=$P($G(^PSRX(PSORXED("IRXN"),9999999)),U,2)
- .S PSORXED("CLININD")=$P($G(^PSRX(PSORXED("IRXN")=999999921)),U,1)
- .S PSORXED("CLININD2")=$P($G(^PSRX(PSORXED("IRXN")=999999921)),U,2)
+ .S PSORXED("CLININD")=$P($G(^PSRX(PSORXED("IRXN"),999999921)),U,1)  ;p1035
+ .S PSORXED("CLININD2")=$P($G(^PSRX(PSORXED("IRXN"),999999921)),U,2) ;p1035
  F I=0:0 S I=$O(^PSRX(PSORXED("IRXN"),6,I)) Q:'I  S DOSE=^PSRX(PSORXED("IRXN"),6,I,0) D
  .Q:$P(DOSE,"^")']""!($P(DOSE,"^",8)']"")
  .S PSORXED("ENT")=PSORXED("ENT")+1

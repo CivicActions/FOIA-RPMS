@@ -1,5 +1,5 @@
-APSPCSM ; IHS/MSC/PLS - CONTROLLED SUBSTANCE MANAGEMENT REPORT ;24-May-2013 08:49;PLS
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1007,1008,1011,1013,1015**;Sep 23, 2004;Build 74
+APSPCSM ; IHS/MSC/PLS - CONTROLLED SUBSTANCE MANAGEMENT REPORT ;24-Sep-2019 16:35;MGH
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1007,1008,1011,1013,1015,1023,1024**;Sep 23, 2004;Build 68
  ;
  ; IHS/MSC/PLS - 12/29/2008 - Line OUT+4 - Fixed variable name
  ;               04/21/2009 - Line FIND+10 - Fixed issue with external vs internal value
@@ -7,10 +7,11 @@ APSPCSM ; IHS/MSC/PLS - CONTROLLED SUBSTANCE MANAGEMENT REPORT ;24-May-2013 08:4
  ;               05/16/2011 - Added Remaining Refills to data store
  ;               09/16/2011 - Added ENTSK EP
  ;               06/29/2012 - Added CMOP field
+ ;               09/01/2017 - Added Report type for provider
 EN ;EP
  N APSPBD,APSPED,APSPBDF,APSPEDF,APSPDIV,APSPRTYP,APSPQ,APSPDSUB,APSPDCLS
  N APSPDCT,APSPDCTN,APSPDRG,APSPDET,APSPSORT,STATS,APSPDOSE,APSPXML,APSPPRV
- N APSPETOT,APSPPAT,APSPRTOT,APSPCMOP
+ N APSPETOT,APSPPAT,APSPRTOT,APSPCMOP,APSPERX,APSPTEST
  S APSPDIV="",APSPDRG="",APSPQ=0,APSPDSUB=0,APSPDOSE=0,APSPXML=0,APSPPRV=""
  S APSPETOT=1,APSPPAT=""
  W @IOF
@@ -33,10 +34,13 @@ EN ;EP
  .S APSPDSUB=1  ;$$DIR^APSPUTIL("Y","Secondary sort by drug name",,,.APSPQ)
  .S APSPDCT(1)="2",APSPDCT(2)="2345",APSPDCT(3)="345"
  .S APSPDCTN(1)="C-II",APSPDCTN(2)="C-II through C-V",APSPDCTN(3)="C-III through C-V"
- S APSPRTYP=+$$DIR^APSPUTIL("S^1:Summary;2:Detail","Report Type",2,,.APSPQ)
+ S APSPRTYP=+$$DIR^APSPUTIL("S^1:Summary;2:Detail;3:EPCS Provider","Report Type",2,,.APSPQ)
  Q:APSPQ
- S APSPDET=APSPRTYP>1
- S APSPSORT=+$$DIR^APSPUTIL("S^1:Drug Name;2:Fill Date;"_$S(APSPDET:"3:Drug Schedule/Drug Name;4:Patient;5:Prescriber",1:""),"Sort report by",$S(APSPDET:3,1:""),,.APSPQ)
+ I APSPRTYP=2!(APSPRTYP=3) S APSPDET=1
+ E  S APSPDET=0
+ I APSPRTYP'=3 D
+ .S APSPSORT=+$$DIR^APSPUTIL("S^1:Drug Name;2:Fill Date;"_$S(APSPDET:"3:Drug Schedule/Drug Name;4:Patient;5:Prescriber",1:""),"Sort report by",$S(APSPDET:3,1:""),,.APSPQ)
+ E  S APSPSORT=5                    ;Provider type is sorted by provider
  Q:APSPQ
  S APSPPAT="*"
  I APSPSORT=4 D
@@ -55,6 +59,8 @@ EN ;EP
  ..S APSPPRV="*"
  .E  D  Q:APSPQ
  ..S APSPPRV=+$$DIR^APSPUTIL("52,4","Select Prescriber: ",,,.APSPQ)
+ .S APSPERX=$$DIR^APSPUTIL("Y","EPCS orders only","Yes",,.APSPQ)
+ .Q:APSPQ
  Q:APSPQ
  S APSPXML=+$$DIR^APSPUTIL("S^1:Standard Report;2:Data Export","Output Mode",1,,.APSPQ)
  Q:APSPQ
@@ -65,6 +71,8 @@ EN ;EP
  Q:APSPQ
  ;IHS/MSC/MGH 1016 added CMOP
  S APSPCMOP=$$DIRYN^APSPUTIL("Do you want CMOP fills included","Yes","Enter a 'YES' or 'NO' to include or not include CMOP fills in your search",.APSPQ)
+ Q:APSPQ
+ S APSPTEST=$$DIR^APSPUTIL("Y","Include TEST Patients","No",,.APSPQ)
  Q:APSPQ
  D DEV
  Q
@@ -86,13 +94,14 @@ OUT ;EP
  Q
  ;
 FIND(SDT,EDT,XREF,DCLS) ;EP
- N RXIEN,ACTIEN,RTSDT,FILLDT,A0,FDTLP,IEN,CMOP
+ N RXIEN,ACTIEN,RTSDT,FILLDT,A0,FDTLP,IEN,CMOP,RXNUM
  S FDTLP=SDT-.01
  S CMOP=""
  F  S FDTLP=$O(^PSRX(XREF,FDTLP)) Q:'FDTLP!(FDTLP>EDT)  D
  .S RXIEN=0
  .F  S RXIEN=$O(^PSRX(XREF,FDTLP,RXIEN)) Q:'RXIEN  D
  ..Q:'$$PATVRY(RXIEN,APSPPAT)  ;check patient
+ ..Q:+$$NOTESTPT(RXIEN,APSPTEST)  ;check test patients
  ..;Q:'$$DIVVRY(RXIEN,APSPDIV)  ;check division  ;patch 1008
  ..Q:'$P(^PSRX(RXIEN,0),U,6)   ; Prescription must have a drug
  ..Q:'$$DCVRY(APSPDCLS,RXIEN)  ;Quit if Drug Class search and drug doesn't match class
@@ -100,13 +109,16 @@ FIND(SDT,EDT,XREF,DCLS) ;EP
  ..;Q:$$GET1^DIQ(52,RXIEN,100,"I")=5   ; Quit if Suspended status
  ..S IEN="" F  S IEN=$O(^PSRX(XREF,FDTLP,RXIEN,IEN)) Q:IEN=""  D
  ...Q:'IEN&($$GET1^DIQ(52,RXIEN,32.1,"I"))  ; Quit if original fill and a return to stock date exists
+ ...Q:(APSPRTYP=3)&(+IEN)   ;EPCS IHS/GDIT/MSC/MGH no refills on EPCS report
  ...Q:'$$DIVVRY(RXIEN,APSPDIV,XREF,IEN)  ;check division
- ...Q:'$$DSPRDT(RXIEN,XREF,IEN)  ;check for release date
- ...Q:'$$PRVVRY(RXIEN,APSPPRV,XREF,IEN)  ;check provider
+ ...S RXNUM=$$GET1^DIQ(52,RXIEN,.01)   ;Get number
+ ...;IHS/GDIT/MSC/MGH added code to include all RXs for provider report - not just internal fills
+ ...Q:'$$DSPRDT(RXIEN,XREF,IEN)&(APSPRTYP'=3)     ;check for release date if its an internal RX
+ ...Q:'$$PRVVRY(RXIEN,APSPPRV,XREF,IEN)           ;check provider
  ...;IHS/MSC/MGH 06/29/2012
  ...I XREF="AD" S CMOP=$$CMOP(RXIEN,IEN)
  ...I CMOP=""!(CMOP="M") D SET(FDTLP,RXIEN,XREF,IEN,CMOP)
- ...I CMOP="C"&APSPCMOP D SET(FDTLP,RXIEN,XREF,IEN,CMOP)
+ ...I CMOP="C"&(APSPCMOP) D SET(FDTLP,RXIEN,XREF,IEN,CMOP)
  Q
  ;
  ; Calculate statistics
@@ -138,8 +150,8 @@ SORT ;EP -
  Q
  ; Set data into ^TMP global for output
 SET(FDT,RX,XREF,SIEN,CMOP) ;EP
- N LSTDSPDT,NODE0,NODE2,NODE3,DIV,DCLS,RTSDATE,DRUG,RDT,RIFLG,FTYPE
- N PNM,DFN,DAYS,OPRV,PHRM,QTY,OPRVNM,NXT
+ N LSTDSPDT,NODE0,NODE2,NODE3,DIV,DCLS,RTSDATE,DRUG,RDT,RIFLG,FTYPE,SGNDT,ORIEN,PICKUP,DIGSIG
+ N PNM,DFN,DAYS,OPRV,PHRM,QTY,OPRVNM,NXT,STRING,PHMI,NATURE,AUTO,DEA,DRGNM,SIGSTAT,HARDCPY,BACK
  S FTYPE=$S(XREF="ADP":"P",SIEN:"R",1:"F")
  S NXT=$O(^TMP($J,"DATA",$C(1)),-1)
  S NXT=NXT+1
@@ -149,6 +161,16 @@ SET(FDT,RX,XREF,SIEN,CMOP) ;EP
  S DRUG=$P(NODE0,U,6)
  S DFN=$P(NODE0,U,2)
  S PNM=$$GET1^DIQ(2,DFN,.01)
+ S ORIEN=$$GET1^DIQ(52,RX,39.3)
+ S SGNDT=$P($G(^OR(100,+ORIEN,8,1,0)),U,6)
+ S NATURE=$P($G(^OR(100,+ORIEN,8,1,0)),U,12)
+ S SIGSTAT=$P($G(^OR(100,+ORIEN,8,1,0)),U,4)
+ Q:(APSPRTYP=3)&($G(APSPERX)=1)&(SIGSTAT'=7)
+ S NATURE=$$GET1^DIQ(100.02,NATURE,.01)
+ S PICKUP=$$VALUE^ORCSAVE2(+ORIEN,"PICKUP")
+ I PICKUP="P" S NATURE="PRINTED"
+ S NATURE=$S(NATURE="ELECTRONICALLY ENTERED":"ELEC",NATURE="TELEPHONED":"TELE",NATURE="SERVICE CORRECTION":"SERVICE",1:NATURE)
+ I SGNDT="" S SGNDT=FDT       ;Drugs entered from the pharmacy
  S DRGNM=$P(^PSDRUG(DRUG,0),U)
  S DCLS=+$P(^PSDRUG(DRUG,0),U,3)
  S DCLS=$$CVTDCLS(DCLS)
@@ -160,11 +182,31 @@ SET(FDT,RX,XREF,SIEN,CMOP) ;EP
  S DAYS=$$GET1^DIQ($S(FTYPE="P":52.2,FTYPE="R":52.1,1:52),$S("PR"[FTYPE:SIEN_","_RX_",",1:RX),$S(FTYPE="P":.041,FTYPE="R":1.1,1:8))
  S OPRV=$$GET1^DIQ($S(FTYPE="P":52.2,FTYPE="R":52.1,1:52),$S("PR"[FTYPE:SIEN_","_RX_",",1:RX),$S(FTYPE="P":6,FTYPE="R":15,1:4),"I")
  S OPRVNM=$$GET1^DIQ(200,OPRV,.01)
+ S DEA=$$GET1^DIQ(200,OPRV,53.2)
  S:'$L(OPRVNM) OPRVNM="NONAME"
+ S OPRVNM=OPRVNM_"|"_DEA
  S PHRM=$$GET1^DIQ($S(FTYPE="P":52.2,FTYPE="R":52.1,1:52),$S("PR"[FTYPE:SIEN_","_RX_",",1:RX),$S(FTYPE="P":.05,FTYPE="R":4,1:23),"I")
- ;                1            2             3                  4             5            6       7         8         9       10      11         12          13          14        15          16           17
- ;Format: Prescription IEN^Fill Date^Xref ("AD" or "ADP")^Fill SubIEN^Prescription Number^QTY^Drug Class^Drug Name^Fill Type^RI Flg^Drug IEN^RX Division^Days Supply^Prescriber^Pharmacist^RemainingRefills^CMOP
- S ^TMP($J,"DATA",NXT)=RXIEN_U_FDT_U_XREF_U_SIEN_U_$P(NODE0,U)_U_QTY_U_DCLS_U_DRGNM_U_FTYPE_U_RIFLG_U_DRUG_U_DIV_U_DAYS_U_OPRV_U_PHRM_U_+$$RMNRFL^APSPFUNC(RXIEN,FDT)_U_CMOP
+ ;Get pharmacy
+ S AUTO=$$GET1^DIQ(52,RX,9999999.23,"I")
+ S PHMI=$$GET1^DIQ(52,RX,9999999.24)
+ I PHMI=""&(AUTO=1) S PHMI="Outside RX"
+ I PHMI=""&(+AUTO=0) S PHMI="Internal"
+ ;Patch 1024 Get EPCS data
+ S DIGSIG=$$GET1^DIQ(52,RX,310,"I")
+ I '+DIGSIG S DIGSIG=""
+ S HARDCPY=$$GET1^DIQ(52,RX,9999999.42,"I")
+ I PHMI="Outside RX" S HARDCPY=1
+ I '+HARDCPY S HARDCPY=""
+ S BACK=$$GET1^DIQ(52,RX,311,"I")
+ I '+BACK S BACK=""
+ ;                1            2             3                  4             5            6       7
+ ;Format: Prescription IEN^Fill Date^Xref ("AD" or "ADP")^Fill SubIEN^Prescription Number^QTY^Drug Class
+ ;   8         9       10      11         12          13          14        15          16             17      18       19      20       21     22     23
+ ;^Drug Name^Fill Type^RI Flg^Drug IEN^RX Division^Days Supply^Prescriber^Pharmacist^RemainingRefills^CMOP^SIGNED DATE^PHARMACY^NATURE^DIGSIG^HARDCPY^BACK
+ S STRING=""
+ S STRING=RXIEN_U_FDT_U_XREF_U_SIEN_U_$P(NODE0,U)_U_QTY_U_DCLS_U_DRGNM_U_FTYPE_U_RIFLG_U_DRUG_U_DIV
+ S STRING=STRING_U_DAYS_U_OPRV_U_PHRM_U_+$$RMNRFL^APSPFUNC(RXIEN,FDT)_U_CMOP_U_SGNDT_U_PHMI_U_NATURE_U_DIGSIG_U_HARDCPY_U_BACK
+ S ^TMP($J,"DATA",NXT)=STRING
  S DRGNM=$$UP^XLFSTR(DRGNM)  ;P1013
  S ^TMP($J,"XREF",DIV,"FDT",FDT,DRGNM,NXT)=""
  S ^TMP($J,"XREF",DIV,"DRUG",DRGNM,FDT,NXT)=""
@@ -173,6 +215,8 @@ SET(FDT,RX,XREF,SIEN,CMOP) ;EP
  S ^TMP($J,"XREF",DIV,"DCLS",DCLS,DRGNM,FDT,NXT)=""
  S ^TMP($J,"XREF",DIV,"PAT",PNM,FDT,DRGNM,NXT)=""
  S ^TMP($J,"XREF",DIV,"PRV",OPRVNM,DRGNM,FDT,NXT)=""
+ ;IHS/GDIT/MSC/MGH for EPCS
+ I SDT'="" S ^TMP($J,"XREF",DIV,"D-PRV",OPRVNM,SGNDT,DRGNM,PNM,NXT)=""
  S ^TMP($J,"XREF","RX",RX,FTYPE,SIEN)=NXT
  Q
  ; Return boolean flag indicating prescription drug matches selected report drug class
@@ -201,6 +245,17 @@ PATVRY(RX,PAT) ;EP
  Q:PAT="*" 1
  Q +$P($G(^PSRX(RX,0)),U,2)=PAT
  ;
+NOTESTPT(RX,TEST) ;Quit if test pts not wanted
+ N IND,SSN,NAME,TSTPT
+ I TEST=1 Q 0
+ S TSTPT=0
+ I TEST=0 D
+ .S PAT=+$P($G(^PSRX(RX,0)),U,2)
+ .S IND=$$GET1^DIQ(2,PAT,.6)
+ .S SSN=$$GET1^DIQ(2,PAT,.09)
+ .S NAME=$$GET1^DIQ(2,PAT,.01)
+ .I (IND="YES")!(SSN?5"0".E)!(NAME?1"DEMO,PATIENT".E)!(NAME?1"DEMO,GIMC".E) S TSTPT=1
+ Q TSTPT
 CVTDCLS(DCLS) ; EP
  Q:DCLS=2 "C-II"
  Q:DCLS=3 "C-III"
@@ -211,7 +266,7 @@ CVTDCLS(DCLS) ; EP
 ENTSK ;EP-
  N APSPBD,APSPBDF,APSPDCLS,APSPDCTN,APSPDET,APSPDIV,APSPDOSE
  N APSPDRG,APSPDSUB,APSPED,APSPEDF,APSPETOT,APSPPAT,APSPPRV,APSPQ
- N APSPRTYP,APSPSORT,APSPXML,APSPCMOP
+ N APSPRTYP,APSPSORT,APSPXML,APSPCMOP,APSPTEST
  N LP,X
  S APSPBD=$$FMADD^XLFDT(DT,-1)
  S APSPBDF=$P($TR($$FMTE^XLFDT(APSPBD,"5Z"),"@"," "),":",1,2)
@@ -235,6 +290,7 @@ ENTSK ;EP-
  S APSPSORT=3
  S APSPXML=0
  S APSPCMOP=1
+ S APSPTEST=0
  D OUT^APSPCSM
  Q
  ; IHS/MSC/PLS - 09/16/2011

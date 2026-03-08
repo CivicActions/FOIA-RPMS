@@ -1,17 +1,26 @@
-ABME5L12 ; IHS/ASDST/DMJ - Header 
- ;;2.6;IHS Third Party Billing System;**6,8,9,10,11,22,23,25**;NOV 12, 2009;Build 444
+ABME5L12 ; IHS/SD/SDR - Header 
+ ;;2.6;IHS Third Party Billing System;**6,8,9,10,11,22,23,25,28,29,32,33,37,40**;NOV 12, 2009;Build 785
  ;Header Segments
  ;IHS/SD/SDR 2.6*22 HEAT335246 check new parameter for itemized but with the flat rate on first line, zeros for the rest
  ;IHS/SD/AML 2.6*23 HEAT247169 if the subfile is 43 and there's a NDC print segments LIN and CTP for medication
  ;IHS/SD/SDR 2.6*25 CR10008 commented out code that writes purchased service provider loop; piece 19 of array is used for something else, and we don't
  ;   capture the purchased service provider at this time anyway.
+ ;IHS/SD/SDR 2.6*28 CR10551 Added NDC for 25(rev) and 27 (medical); also but IMMUNIZATION LOT/BATCH NUMBER segments back in
+ ;IHS/SD/SDR 2.6*29 CR10404 made check new field in 3P Insurer 4 multiple to require CLIA; stop REF*F4 from printing if no CLIA number to print
+ ;IHS/SD/SDR 2.6*32 CR10210 Removed ALL INCLUSIVE PRINT NDC prompt
+ ;IHS/SD/SDR 2.6*33 ADO60186 Added code for ordering provider DEA number if med is a controlled substance (determined in ABMERGR2)
+ ;IHS/SD/SDR 2.6*37 ADO89299 Updated to use DEA# from service line (not ordering provider)
+ ;IHS/SD/SDR 2.6*40 ADO108243 Removed hardcoding for OKLAHOMA MEDICAID to print date range for DTP*472. Switched to use
+ ;   insurer/visit type parameter so any insurer can do it. Medi-Cal needed the same ability.
  ;
 EP ;START HERE
  S ABMLXCNT=0
  K ABM
  D ^ABMEHGRV
- S ABMITMZ=$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),"^",12)  ;abm*2.6*22 IHS/SD/SDR HEAT335246
- I +ABMITMZ&($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")&(+$G(ABMP("FLAT"))'=0) D START^ABMEHGR4  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;start old abm*2.6*32 IHS/SD/SDR CR10210
+ ;S ABMITMZ=$P($G(^ABMNINS(DUZ(2),ABMP("INS"),1,ABMP("VTYP"),0)),"^",12)  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;I +ABMITMZ&($P($G(^ABMNINS(DUZ(2),ABMP("INS"),0)),U,14)="Y")&(+$G(ABMP("FLAT"))'=0) D START^ABMEHGR4  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;end old abm*2.6*32 IHS/SD/SDR CR10210
  S ABMI=0
  F  S ABMI=$O(ABMRV(ABMI)) Q:'+ABMI  D
  .S ABMJ=-1
@@ -33,11 +42,24 @@ LOOP ;
  .D EP^ABME5SV5
  .D WR^ABMUTL8("SV5")
  ;PWK segment goes here
- I $P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
- .I $P(ABMRV(ABMI,ABMJ,ABMK),U,27)'="",($P($P(ABMRV(ABMI,ABMJ,ABMK),U,10),".")'=$P($P(ABMRV(ABMI,ABMJ,ABMK),U,27),".")) D EP^ABME5DTP(472,"RD8",$P(ABMRV(ABMI,ABMJ,ABMK),U,10),$P(ABMRV(ABMI,ABMJ,ABMK),U,27))
- .E  D EP^ABME5DTP(472,"D8",$P(ABMRV(ABMI,ABMJ,ABMK),U,10))
- I '$P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
- .D EP^ABME5DTP(472,"D8",$P(ABMB7,U))
+ ;start old abm*2.6*40 IHS/SD/SDR ADO108243
+ ;I $P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
+ ;.I $P(ABMRV(ABMI,ABMJ,ABMK),U,27)'="",($P($P(ABMRV(ABMI,ABMJ,ABMK),U,10),".")'=$P($P(ABMRV(ABMI,ABMJ,ABMK),U,27),".")) D EP^ABME5DTP(472,"RD8",$P(ABMRV(ABMI,ABMJ,ABMK),U,10),$P(ABMRV(ABMI,ABMJ,ABMK),U,27))
+ ;.E  D EP^ABME5DTP(472,"D8",$P(ABMRV(ABMI,ABMJ,ABMK),U,10))
+ ;I '$P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
+ ;.D EP^ABME5DTP(472,"D8",$P(ABMB7,U))
+ ;end old start new abm*2.6*40 IHS/SD/SDR ADO108243
+ I $P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),0)),U,16)="R" D
+ .I $P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
+ ..D EP^ABME5DTP("472","RD8",$P(ABMRV(ABMI,ABMJ,ABMK),U,10),$S($P(ABMRV(ABMI,ABMJ,ABMK),U,27):$P(ABMRV(ABMI,ABMJ,ABMK),U,27),1:$P(ABMRV(ABMI,ABMJ,ABMK),U,10)))
+ .I '$P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
+ ..D EP^ABME5DTP(472,"RD8",$P(ABMB7,U),$P(ABMB7,U,2))
+ I $P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),0)),U,16)'="R" D
+ .I $P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
+ ..D EP^ABME5DTP("472","D8",$P(ABMRV(ABMI,ABMJ,ABMK),U,10))
+ .I '$P(ABMRV(ABMI,ABMJ,ABMK),U,10) D
+ ..D EP^ABME5DTP(472,"D8",$P(ABMB7,U))
+ ..;end new abm*2.6*40 IHS/SD/SDR ADO108243
  D WR^ABMUTL8("DTP")
  I $P(ABMRV(ABMI,ABMJ,ABMK),U,32)'="" D
  .D EP^ABME5DTP(471,"D8",$P(ABMRV(ABMI,ABMJ,ABMK),U,32))
@@ -62,7 +84,7 @@ LOOP ;
  ;start new code abm*2.6*8 HEAT31238
  ;mammography cert number
  ;I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>77050)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<77060)) D  ;abm*2.6*10 HEAT65066
- ;I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>77050)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<77060))!$P(ABMRV(ABMI,ABMJ,ABMK),U,2)=76083!($P(ABMRV(ABMI,ABMJ,ABMK),U,2)=76092)!($P(ABMRV(ABMI,ABMJ,ABMK),U,2)="G0202") D  ;abm*2.6*10 HEAT65066  ;abm*2.6*11 IHS/SD/AML HEAT95824
+ ;I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>77050)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<77060))!$P(ABMRV(ABMI,ABMJ,ABMK),U,2)=76083!($P(ABMRV(ABMI,ABMJ,ABMK),U,2)=76092)!($P(ABMRV(ABMI,ABMJ,ABMK),U,2)="G0202") D  ;abm*2.6*10 ;abm*2.6*11 IHS/SD/AML HEAT95824
  I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>77050)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<77060))!($P(ABMRV(ABMI,ABMJ,ABMK),U,2)=76083)!($P(ABMRV(ABMI,ABMJ,ABMK),U,2)=76092)!($P(ABMRV(ABMI,ABMJ,ABMK),U,2)="G0202") D  ;abm*2.6*11 IHS/SD/AML HEAT95824
  .Q:ABMP("CLIN")=72  ;don't write if clinic is mammography; cert# already written for claim
  .Q:$P($G(^ABMDPARM(ABMP("LDFN"),1,5)),U,4)=""  ;no cert#
@@ -70,8 +92,15 @@ LOOP ;
  .D WR^ABMUTL8("REF")
  ;end new code HEAT31238
  ;I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000))!($E($P(ABMRV(ABMI,ABMJ,ABMK),U,2))="G0107") D  ;abm*2.6*8 HEAT40295
- I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000))!($E($P(ABMRV(ABMI,ABMJ,ABMK),U,2))="G") D  ;abm*2.6*8 HEAT40295
- .Q:ABMI'=37  ;abm*2.6*10 HEAT73027
+ ;I (($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999)&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000))!($E($P(ABMRV(ABMI,ABMJ,ABMK),U,2))="G") D  ;abm*2.6*8 HEAT40295  ;abm*2.6*29 IHS/SD/SDR CR10404
+ ;start new abm*2.6*29 IHS/SD/SDR CR10404
+ S ABMP("CPTIEN")=+$$CPT^ABMCVAPI($P(ABMRV(ABMI,ABMJ,ABMK),U,2),ABMP("VDT"))
+ S ABMP("CLIAREQ")=0
+ D CLIANUM^ABMDEMLB(ABMP("CPTIEN"))
+ I ($P(ABMRV(ABMI,ABMJ,ABMK),U,2)>79999&($P(ABMRV(ABMI,ABMJ,ABMK),U,2)<90000))!(ABMP("CLIAREQ")=1) D
+ .;end new abm*2.6*29 IHS/SD/SDR CR10404
+ .;Q:ABMI'=37  ;abm*2.6*10 HEAT73027  ;abm*2.6*29 IHS/SD/SDR CR10404
+ .I ABMI'=37&(ABMI'=43) Q  ;abm*2.6*10 HEAT73027  ;abm*2.6*29 IHS/SD/SDR CR10404
  .;Q:($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),ABMI,ABMJ,0)),U,13)="")  ;abm*2.6*10 HEAT72789  ;abm*2.6*11 HEAT85498
  .S ABMCLIA="SV"
  .I $G(ABMOUTLB)'=1 D
@@ -82,18 +111,25 @@ LOOP ;
  ..Q:$G(ABMR("REF",30))=""  ;abm*2.6*9 HEAT64640
  ..D WR^ABMUTL8("REF")
  .I $G(ABMOUTLB)=1 D  ;if reference lab
+ ..I ($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),ABMI,ABMJ,0)),U,14)="")&($P($G(ABMB9),U,23)="") Q  ;if both are blank skip segment  ;abm*2.6*29 CR10404
  ..;I $P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),ABMI,ABMJ,0)),U,14)'="",($P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),ABMI,ABMJ,0)),U,14)=($P($G(ABMB9),U,23))) Q  ;abm*2.6*10 HEAT72789
  ..D EP^ABME5REF("F4",1,1)
  ..D WR^ABMUTL8("REF")
  ;D EP^ABME5REF("BT")  ;immunization batch number
  ;D WR^ABMUTL8("REF")
+ ;start new abm*2.6*28 IHS/SD/SDR CR10551
+ I $P($G(ABMRV(ABMI,ABMJ,ABMK)),U,37)'="" D
+ .D EP^ABME5REF("BT")  ;immunization batch number
+ .D WR^ABMUTL8("REF")
+ ;end new abm*2.6*28 IHS/SD/SDR CR10551
  ;Loop 2410 - Drug Identification
  S ABMLOOP=2410
  I ABMI=23 D
  .I $P($P(ABMRV(ABMI,ABMJ,ABMK),U,9)," ")'="" D
  ..D EP^ABME5LIN
  ..D WR^ABMUTL8("LIN")
- .I +$P(ABMRV(ABMI,ABMJ,ABMK),U,5)!($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),0)),U,14)="Y") D  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ .;I +$P(ABMRV(ABMI,ABMJ,ABMK),U,5)!($P($G(^ABMNINS(ABMP("LDFN"),ABMP("INS"),0)),U,14)="Y") D  ;abm*2.6*22 IHS/SD/SDR HEAT335246  ;abm*2.6*32 IHS/SD/SDR CR10210
+ .I +$P(ABMRV(ABMI,ABMJ,ABMK),U,5) D  ;abm*2.6*22 IHS/SD/SDR HEAT335246  ;abm*2.6*32 IHS/SD/SDR CR10210
  ..D EP^ABME5CTP
  ..D WR^ABMUTL8("CTP")
  .;I $P(ABMRV(ABMI,ABMJ,ABMK),U,13)'="" D  ;abm*2.6*10 HEAT78446
@@ -103,7 +139,8 @@ LOOP ;
  ..D WR^ABMUTL8("REF")
  ;start new abm*2.6*23 IHS/SD/AML HEAT247169
  ;add NDC for page 8H
- I ABMI=43 D
+ ;I ABMI=43 D  ;abm*2.6*28 IHS/SD/SDR CR10551
+ I "^25^27^43^"[("^"_ABMI_"^") D  ;abm*2.6*28 IHS/SD/SDR CR10551
  .I $P(ABMRV(ABMI,ABMJ,ABMK),U,19)'="" D
  ..D EP^ABME5LIN
  ..D WR^ABMUTL8("LIN")
@@ -179,6 +216,12 @@ LOOP ;
  .D WR^ABMUTL8("N4")
  .;D EP^ABME5REF("EI",9999999.06,DUZ(2))
  .;D WR^ABMUTL8("REF")
+ .;start new abm*2.6*33 IHS/SD/SDR ADO60186
+ .I +$G(ABMRVCSB(ABMI,ABMJ,ABMK))=1 D
+ ..;D EP^ABME5REF("G2",200,$P(ABMRV(ABMI,ABMJ,ABMK),U,21))  ;abm*2.6*37 IHS/SD/SDR ADO89299
+ ..I $P($G(ABMRV(ABMI,ABMJ,ABMK)),U,41)'="" D EP^ABME5REF("G2",0,$P(ABMRV(ABMI,ABMJ,ABMK),U,41))  ;abm*2.6*37 IHS/SD/SDR ADO89299
+ ..D WR^ABMUTL8("REF")
+ .;end new abm*2.6*33 IHS/SD/SDR ADO60186
  .K ABMLOOP
  ;
  ; Loop 2420F Referring Provider Name

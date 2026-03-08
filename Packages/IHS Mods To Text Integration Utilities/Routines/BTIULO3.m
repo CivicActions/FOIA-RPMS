@@ -1,36 +1,63 @@
-BTIULO3 ; IHS/ITSC/LJF - VISIT OBJECTS FOR EHR ;01-Jun-2010 09:18;MGH
- ;;1.0;TEXT INTEGRATION UTILITIES;**1004,1006**;NOV 04, 2004
+BTIULO3 ; IHS/ITSC/LJF - VISIT OBJECTS FOR EHR ;2-Jun-2025 09:18
+ ;;1.0;TEXT INTEGRATION UTILITIES;**1004,1006,1030**;NOV 10, 2004;Build 40
  ;Added calls for EHR 1.1 visit creation
  ;Patch 1006 - updated error return if visit not found
+ ;Patch 1030 IHS/MSC/MIR ADRSMDTL added
  ;
-VIMM(TARGET) ; returns immunizations given for current vuecentric visit context
+VIMM(TARGET,PARA) ; returns immunizations given for current vuecentric visit context
  I $T(GETVAR^CIAVMEVT)="" S @TARGET@(1,0)="Invalid context variables" Q "~@"_$NA(@TARGET)
- NEW VST,I,CNT,RESULT,X
- S CNT=0
- S VST=$$GETVAR^CIAVMEVT("ENCOUNTER.ID.ALTERNATEVISITID",,"CONTEXT.ENCOUNTER")
+ NEW VST,I,CNT,RESULT,X,DETAIL
+ S CNT=0,DETAIL=+$G(PARA)
+ S VST=$$GETVAR^CIAVMEVT("ENCOUNTER.ID.ALTERNATEVISITID",,"CONTEXT.ENCOUNTER")  ;694973
  I VST="" S @TARGET@(1,0)="Invalid visit" Q "~@"_$NA(@TARGET)
  S X="BEHOENCX" X ^%ZOSF("TEST") I $T S VST=+$$VSTR2VIS^BEHOENCX(DFN,VST) I VST<1 S @TARGET@(1,0)="Invalid visit" Q "~@"_$NA(@TARGET)
- ;S X="CIAVCXEN" X ^%ZOSF("TEST") I $T S VST=+$$VSTR2VIS^CIAVCXEN(DFN,VST) I VST<1 Q
- D GETIMM(.RESULT,VST)
+ D GETIMM(.RESULT,VST,DETAIL)
  ;
  K @TARGET
  S I=0 F  S I=$O(RESULT(I)) Q:'I  D
  .S CNT=CNT+1
  .S @TARGET@(CNT,0)=RESULT(I)
- I 'CNT S @TARGET@(1,0)="No Immunizations Found"
+ I 'CNT D
+ . I DETAIL S CNT=CNT+1,@TARGET@(CNT,0)="VISIT IMMUNIZATION DETAIL",CNT=CNT+1,@TARGET@(CNT,0)=""
+ . S @TARGET@(CNT+1,0)="No Immunizations Found"
  Q "~@"_$NA(@TARGET)
  ;
-GETIMM(RETURN,VIEN) ;return every immunization for current visit
- ; VISIT=Visit IEN
+GETIMM(RETURN,VIEN,EXT) ;return every immunization for current visit
+ ; VIEN=Visit IEN ; EXT=Extended (1/0)
  ;
- NEW IEN,CNT,SERIES
- K RETURN
+ NEW IEN,CNT,IMM,SERIES,FLNM
+ K RETURN S EXT=$G(EXT),FLNM=9000010.11,CNT=0
  ;
+ Q:'$D(^AUPNVIMM("AD",VIEN))
+ I EXT D
+ . S CNT=CNT+1,RESULT(CNT)="VISIT IMMUNIZATION DETAIL"
+ . S CNT=CNT+1,RESULT(CNT)=""
+ . S CNT=CNT+1,RESULT(CNT)=$J("LOT",21)
+ . S CNT=CNT+1,RESULT(CNT)=$J("MANUFACTURE",29)
+ . S CNT=CNT+1,RESULT(CNT)="IMM"_$J("NDC",18)
+ . S CNT=CNT+1,RESULT(CNT)="SERIES"_$J("",12)_"EXP DATE"_$J("",14)_"VOL   SITE"_$J("VIS DATE",23)
  S IEN=0 F  S IEN=$O(^AUPNVIMM("AD",VIEN,IEN)) Q:'IEN  D
- . S CNT=$G(CNT)+1
- . S SERIES=$$GET1^DIQ(9000010.11,IEN,.04)
- . S RETURN(CNT)=$$GET1^DIQ(9000010.11,IEN,.01)_$S(SERIES]"":" ("_SERIES_")",1:"")
+ . S CNT=CNT+1
+ . S IMM=$$GET1^DIQ(FLNM,IEN,.01)
+ . S SERIES=$$GET1^DIQ(FLNM,IEN,.04)
+ . S RETURN(CNT)=IMM_$S(SERIES]"":" ("_SERIES_")",1:"") Q:'EXT
+ . N LOT,VOL,SITE,VISDT,NDC,MANU,EXPDT,KEY,ARR
+ . S KEY=IEN_","
+ . D GETS^DIQ(FLNM,IEN,".05;.11;.09;.12",,"ARR")
+ . S VOL=ARR(FLNM,KEY,.11),SITE=ARR(FLNM,KEY,.09),VISDT=ARR(FLNM,KEY,.12)
+ . S LOT=ARR(FLNM,KEY,.05),(NDC,MANU,EXPDT)=""
+ . I LOT]"" N LOTIN,KEY1,ARR1 S LOTIN=$$GET1^DIQ(FLNM,IEN,.05,"I"),KEY1=LOTIN_"," D
+ ..D GETS^DIQ(9999999.41,LOTIN,".17;.02;.09",,"ARR1")
+ ..S NDC=ARR1(9999999.41,KEY1,.17),MANU=ARR1(9999999.41,KEY1,.02),EXPDT=ARR1(9999999.41,KEY1,.09)
+ . S RETURN(CNT)=$E(IMM,1,17)_$J("",18-$L($E(IMM,1,17)))_$E(LOT,1,21)_$J("",22-$L($E(LOT,1,21)))
+ . S RETURN(CNT)=RETURN(CNT)_VOL_$S(VOL:"ml",1:"")_$J("",$S(VOL:4-$L(VOL),1:6))
+ . S RETURN(CNT)=RETURN(CNT)_$E(SITE,1,18)_$J("",19-$L($E(SITE,1,18)))_VISDT
+ . S CNT=CNT+1,RETURN(CNT)=""
+ . I SERIES]""!(MANU]"") S RETURN(CNT)=$E(SERIES,1,17)_$J("",18-$L($E(SERIES,1,17)))_MANU
+ . S CNT=CNT+1,RETURN(CNT)=$S(NDC]"":$J("",18)_NDC,1:"")
+ . S CNT=CNT+1,RETURN(CNT)=$S(EXPDT]"":$J("",18)_EXPDT,1:"")
  Q
+ ;
 VLAB(TARGET) ; returns resulted labs for current vuecentric visit context
  I $T(GETVAR^CIAVMEVT)="" S @TARGET@(1,0)="Invalid context variables" Q "~@"_$NA(@TARGET)
  NEW VST,I,X,CNT,RESULT
@@ -126,3 +153,41 @@ PAD(DATA,LENGTH) ; pad length of data
  ;
 SP(NUM) ; pad spaces
  Q $$PAD(" ",NUM)
+ ;
+ADRSMDTL(DFN,TARGET) ; Returns a list of all Allergies and Symptom entered for patient
+ N RXN,LP,LP2,LBL,CNT,Y,INIEN,REASON,X1,CAUSE
+ N GMRA,GMRAL,X,ALLRG,ADR,TIUY,Y,Z,CNT,UNI,NN,RESULT
+ K @TARGET,RESULT S (NN,CNT)=0
+ S GMRA="0^0^111" D EN1^GMRADPT
+ S CNT=CNT+1,@TARGET@(CNT,0)="ALLERGY WITH SYMPTOM",CNT=CNT+1,@TARGET@(CNT,0)=""
+ I $D(GMRAL)'>9 S CNT=CNT+1 D  Q
+ . I $D(GMRAL),GMRAL=0 S @TARGET@(CNT,0)="Patient has answered NKA"
+ . E  S @TARGET@(CNT,0)="No Allergy Assessment"
+ S CNT=CNT+1,@TARGET@(CNT,0)="Causative Agent"_$J("Sign/Symptom (if known)",38)
+ S ADR=0 F  S ADR=$O(GMRAL(ADR)) Q:ADR=""  D
+ . K RXN D EN1^GMRAOR2(ADR,"RXN")
+ . S UNI=""  ; Removed 6/2/25 by Fay Struble'request ;$$UNI^BEHOARCV(ADR)    ;Get the UNI code for this agent if its GMR type
+ . I $L(UNI) S CAUSE=$P(RXN,U)_"; UNII: "_UNI
+ . E  S CAUSE=$P(RXN,U)
+ . S NN=NN+1,RESULT(NN)=$P(CAUSE,U)
+ . D:$D(RXN("S",1)) SYM
+ . S NN=NN+1
+ . S RESULT(NN)=""
+ D OUT
+ Q
+SYM ;Add symptoms
+ N MM,REC,DT,REC S MM=0
+ F LP=1:1 Q:'$D(RXN("S",LP))  D
+ . S MM=MM+1,REC=RXN("S",LP) I REC["Src: " N REC1 S REC1=$P($P(REC,"Src: ",2)," ",2,5),REC=$P(REC,"Src: ")_REC1
+ . I REC["(" N AI,I S AI=0 D  I '$P($G(^GMR(120.8,ADR,10,AI,0)),U,4) S REC=$P(REC," (")_$P(REC,")",2)
+ . . F I=1:1:LP S AI=$O(^GMR(120.8,ADR,10,AI))
+ . S RESULT(NN,MM)=REC
+ Q
+OUT ; Put RESULT to TARGET
+ S NN=0 F  S NN=$O(RESULT(NN)) Q:'NN  D
+ . S CNT=CNT+1,@TARGET@(CNT,0)=RESULT(NN)
+ . S MM=0 F  S MM=$O(RESULT(NN,MM)) Q:'MM  S:MM>1 CNT=CNT+1 D
+ . . S $E(@TARGET@(CNT,0),31)=RESULT(NN,MM) Q:$L(@TARGET@(CNT,0))'>80
+ . . N REC S REC=@TARGET@(CNT,0) F I=81:-1 I $E(REC,I)=" " D  Q
+ . . . S @TARGET@(CNT,0)=$E(REC,1,I-1),CNT=CNT+1,$E(@TARGET@(CNT,0),31)=$E(REC,I+1,$L(REC))
+ Q

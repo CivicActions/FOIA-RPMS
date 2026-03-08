@@ -1,5 +1,5 @@
-APCD3MG ; IHS/CMI/LAB - install and generate HL7 messages to 3M ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCD3MG ; IHS/CMI/TUCSON - install and generate HL7 messages to 3M ; [ 01/16/01  1:42 PM ]
+ ;;2.0;IHS RPMS/PCC Data Entry;**3,4**;MAR 09, 1999
  ;
  ;
 OK3M(V) ;EP - check visit for 3M

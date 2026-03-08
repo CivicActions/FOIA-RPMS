@@ -1,5 +1,5 @@
 ABSPOSCB ; IHS/FCS/DRS - VMEDS(*) prep for ABSP(*) ;    [ 09/12/2002  10:07 AM ]
- ;;1.0;PHARMACY POINT OF SALE;**3**;JUN 21, 2001;Build 38
+ ;;1.0;PHARMACY POINT OF SALE;**3**;JUN 21, 2001;Build 131
  ;----------------------------------------------------------------------
  ;----------------------------------------------------------------------
  ; Called from ABSPOSCA from ABSPOSQG from ABSPOSQ2

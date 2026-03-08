@@ -1,6 +1,7 @@
-BMCPXSTF ; IHS/PHXAO/TMJ - Stuff CPT if Site Parameters Request stuffing ;   
- ;;4.0;REFERRED CARE INFO SYSTEM;;JAN 09, 2006
- ;IHS/ITSC/FCJ Killed DIADD var, was not allowing entry on the Prc Nar
+BMCPXSTF ; IHS/PHXAO/TMJ - Stuff CPT if Site Parameters Request stuffing ;   [ 01/09/2004  1:34 PM ]
+ ;;2.0;REFERRED CARE INFO SYSTEM;**2**;Jan 20, 2004
+ ;;2.0*2 1.9.04 IHS/ITSC/FCJ Killed DIADD var, was not allowing
+ ;       entry on the Proc Nar
  ;
  ;This routine stuffs the CPT Procedure Code if the 27th Piece
  ;of the RCIS SITE PARAMETERS FILE request these fields to be automatically stuffed.
@@ -19,7 +20,8 @@ STUFFPX ;Adds PX  as 00999 if Site Parameters = Yes
  I X="" W !!,"Error has ocurred..Cannot Add a 00099 CPT Code to RCIS PROCEDURE File - Call Developer On This Error!!!"
  S BMCPXIEN=+Y
 PXDIE ;Prompt for CPT Type & Provider Narrative
- K DIADD
+ ;BMC*2.0*2 1.9.04 IHS/ITSC/FCJ Killed DIADD var
+ K DIADD ;BMC*2.0*2 1.9.04
  W !!
  I BMCPXIEN'="" D
  . S BMCLOOK=1
@@ -29,6 +31,7 @@ PXDIE ;Prompt for CPT Type & Provider Narrative
  . K BMCLOOK
  . S:'$G(BMCPX) BMCQ=1
  . K BMCPX
+ . Q
  Q
  ;
 ANOTHER ;Ask if User wants to enter Another Dx
@@ -45,3 +48,5 @@ ANOTHER ;Ask if User wants to enter Another Dx
 XIT ;Exit this Loop - go back to BMCADD1
  ;
  Q
+ ;
+ ;

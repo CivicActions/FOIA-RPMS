@@ -1,9 +1,130 @@
 BILOT2 ;IHS/CMI/MWR - EDIT LOT NUMBERS.; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**3**;SEP 10,2012
+ ;;8.5;IMMUNIZATION;**21,29,30**;OCT 24,2011;Build 125
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  EDIT VACCINE FIELDS: CURRENT LOT, ACTIVE, VIS DATE DEFAULT.
  ;   PATCH 2: Make Display Inactives a separate Action.  CHGORDR+11
  ;   PATCH 3: Correct leftover prompt from Inactive question. DISPLYI+7
+ ;;  PATCH 21: Multiple changes for DTS Lot Number verification.
+ ;
+ ;
+ ;----------
+DTSCHK(BILOT,BIVAC,BIMAN,BINEW,BISLOT,BISMAN) ;EP
+ ;V8.5 PATCH 29 - FID-105110 Remove COVID lot check
+ Q 0
+ ;---> Check DTS Server for Valid IHS COVID Lot Number.
+ ;---> Returns a value of 1 if this Lot should NOT be added; 0=yes,add.
+ ;---> Parameters:
+ ;     1 - BILOT  (req) Text of the Lot Number.
+ ;     2 - BIVAC  (req) Vaccine IEN.
+ ;     3 - BIMAN  (req) Manufacturer IEN.
+ ;     4 - BINEW  (opt) BINEW=1 means this was an Add (first time).
+ ;     5 - BISLOT (opt) Original Lot Number text saved before edit screen.
+ ;     6 - BISMAN (opt) Original Manufacturer pointer saved before edit screen.
+ ;
+ ;
+ ;---> Quit if this is NOT a COVID Vaccine.
+ Q:($$IMMVG^BIUTL2(BIVAC,2)'=21) 0
+ ;--->Quit if required BYIM version not loaded:
+ Q:($T(CVDDA^BYIMCOVD)="") 0
+ ;---> Quit if COVID state is zero (not set up to transmit).
+ Q:'$$CVDDA^BYIMCOVD 0
+ ;---> Comment out above to test NO COVID State.
+ ;
+ ;
+ N BIQUIT,BIPRMPT S BIQUIT=0,BIPRMPT="     Press <enter> to continue."
+ N BIRES,BIRET,Y,Z
+ ;---> Get MVX and Manufacturer name.
+ N BIMVX S BIMVX=$$MNAME^BIUTL2(BIMAN,1)
+ N BIMVXN S BIMVXN=$$MNAME^BIUTL2(BIMAN,2)
+ ;
+ ;---> Call DTS.
+ S BIRES=$$CHKLOT^BIAPIDTS(.BIRET,$$CODE^BIUTL2(BIVAC),BILOT)
+ ;
+ ;---> Reset curson to top left of Help/Command Area.
+ W $C(27,91)_((18))_$C(59)_((1))_$C(72)
+ ;
+ ;
+ ;---> Uncomment to test failed DTS call.
+ ;S BIRES=0
+ ;
+ ;---> DTS connection down and Lot Number not found in local database.
+ I BIRES=0 D  Q BIQUIT
+ .S Z="   Unable to verify this Lot Number against the IHS lot distribution list."
+ .D WR(Z),WR(" ")
+ .;---> If this is an edit and no change in Lot Number or Manufacturer,
+ .;---> quit & save other changes, if any.
+ .I 'BINEW,BILOT=BISLOT,BIMAN=BISMAN D DIRZ^BIUTL3(,BIPRMPT) Q
+ .;---> Either new or changes to Lot Number and/or Manufacturer.
+ .D SAVEYN(BILOT,BIVAC,BIMVX,BINEW,BIPRMPT,.BIQUIT)
+ ;
+ ;
+ ;---> Lot Number found and Manufacturer matches.
+ I $P(BIRET,U),($P(BIRET,U,2)=BIMVX) D  Q 0
+ .S Z="   Lot Number "_BILOT_" for "_BIMVXN_" is a valid COVID lot number"
+ .D WR(Z)
+ .S Z="   on the IHS lot distribution list."
+ .D WR(Z),WR(" ")
+ .D DIRZ^BIUTL3(,BIPRMPT,,,,1)
+ ;
+ ;
+ ;---> Lot Number found but Manufacturer does not match.
+ I $P(BIRET,U),BIMVX'=$P(BIRET,U,2) D  Q BIQUIT
+ .S Z="   The Manufacturer "_BIMVXN_" you have entered for lot number "_BILOT
+ .D WR(Z)
+ .S Z="   does *NOT* match the one ("_$P(BIRET,U,2)
+ .S Z=Z_") on the IHS lot distribution list."
+ .D WR(Z),WR(" ")
+ .I 'BINEW,BILOT=BISLOT,BIMAN=BISMAN D DIRZ^BIUTL3(,BIPRMPT) Q
+ .D SAVEYN(BILOT,BIVAC,BIMVX,BINEW,BIPRMPT,.BIQUIT)
+ ;
+ ;
+ ;---> Lot Number not found.
+ S Z="   Lot "_BILOT_" for "_BIMVXN_" is *NOT* a valid IHS COVID lot number"
+ D WR(Z)
+ S Z="   on the IHS lot distribution list."
+ D WR(Z)
+ I 'BINEW,BILOT=BISLOT,BIMAN=BISMAN D DIRZ^BIUTL3(,BIPRMPT) Q 0
+ S Z="   Please verify the lot number you entered is correct."
+ D WR(Z),WR(" ",1)
+ D SAVEYN(BILOT,BIVAC,BIMVX,BINEW,BIPRMPT,.BIQUIT)
+ Q BIQUIT
+ ;
+ ;---> Delete a bunch of bogus lot numbers.
+ ;S DIK="^AUTTIML(" F DA=107:1:115 D ^DIK
+ ;
+SAVEYN(BILOT,BIVAC,BIMVX,BINEW,BIPRMPT,BIQUIT) ;EP
+ ;---> Save Yes or No?
+ ;
+ N Z S Z="   Do you still wish to "_$S($G(BINEW):"add ",1:"save changes for ")
+ S Z=Z_BILOT_" for "_$$VNAME^BIUTL2(BIVAC)_" (CVX "_$$CODE^BIUTL2(BIVAC)_")?"
+ D WR(Z)
+ N DIR
+ S DIR("?")="       Enter NO to return to the Lot Number table with NO changes."
+ S DIR("?",1)="       Enter YES to add add "_BILOT_" for "_$$VNAME^BIUTL2(BIVAC)_"."
+ S DIR(0)="YA",DIR("A")="     Enter Yes or No: "
+ D ^DIR D  D DIRZ^BIUTL3(,BIPRMPT)
+ .N DIR
+ .I '$G(Y) W !!?3,"No changes made, returning to Lot Number Table." S BIQUIT=1 Q
+ .W "   Changes saved."
+ .W !!?3,"Do you believe IHS was the source of this Lot of COVID vaccine?"
+ .S DIR("?",1)="       Enter YES if IHS supplied this Lot of vaccine,"
+ .S DIR("?")="       Enter NO if it came from another source."
+ .S DIR(0)="YA",DIR("A")="     Enter Yes or No: "
+ .D ^DIR
+ .W "   Source is ",$S(Y:"",1:"not "),"IHS."
+ .N BIMSG,X,Z
+ .S BIMSG="We believe that IHS is "_$S(Y:"",1:"NOT ")
+ .S BIMSG=BIMSG_"the source of this Lot of COVID vaccine."
+ .;---> Send alert message via DTS. If DUZ undefined, send ADAM.
+ .S X=$$LOG^BIAPIDTS($$CODE^BIUTL2(BIVAC),BILOT,BIMVX,BIMSG,$S($G(DUZ):DUZ,1:1))
+ .;
+ .;---> Remove negation to test failed Alert Message.
+ .;---> Instruction below not used at this time.
+ .;I '$P(X,U) D DIRZ^BIUTL3(,BIPRMPT) D
+ .;.S Z="   Message alert error: "_X D WR(Z)
+ .;.S Z="   Please submit a support ticket to enable lot verification." D WR(Z)
+ ;
+ Q
  ;
  ;
  ;----------
@@ -78,9 +199,6 @@ CHGORDR ;EP
  D ^DIR
  S:(Y>0) BICOLL=Y
  ;
- ;********** PATCH 2, v8.5, MAY 15,2012, IHS/CMI/MWR
- ;---> Make Display Inactives a separate Action.
- ;I Y="^" D RESET^BILOT1 Q
  D RESET^BILOT1
  Q
  ;
@@ -92,14 +210,35 @@ DISPLYI ;EP
  ;
  D FULL^VALM1,TITLE^BIUTL5("DISPLAY INACTIVE LOT NUMBERS YES/NO")
  W !!,"   Do you wish to include INACTIVE Lots in this display?"
- ;********** PATCH 3, v8.5, SEP 10,2012, IHS/CMI/MWR
- ;---> Remove leftover "NO" prompt by N DIR.
  N DIR
- ;**********
  S DIR("?")="     Enter YES to include INACTIVE Lots."
  S DIR(0)="Y",DIR("A")="   Enter Yes or No",DIR("B")="NO"
  D ^DIR
  S BIINACT=$S(Y>0:1,1:0)
  D RESET^BILOT1
  Q
- ;**********
+ ;
+ ;
+ ;----------
+WR(Z,X) ;EP
+ ;---> Write linefeed, Z, padded to a total of 80 characters.
+ ;---> Parameters:
+ ;     1 - Z  (req) Data to be padded.
+ ;     2 - X  (opt) If X=1, no linefeed.
+ S:Z="" Z=" "
+ W:('$G(X)=1) !
+ W $$PAD^BIUTL5(Z,80)
+ Q
+ ;=====
+ ;
+LOTERR ;EP;
+ ;V8.5 PATCH 29 - FID-105110 Remove COVID lot check
+ D CLEAR^VALM1,FULL^VALM1,TITLE^BIUTL5("EDIT LOT NUMBER FIELDS")
+ W !!?23,"This Lot Number already exists!"
+ W !!?18,"Please exit and select it from the list."
+ W !!!!?5,"NOTE: It may be Inactive. Try displaying Inactive Lot Numbers"
+ W !?11,"as well as Active ones.",!
+ D DIRZ^BIUTL3()
+ Q
+ ;=====
+ ;

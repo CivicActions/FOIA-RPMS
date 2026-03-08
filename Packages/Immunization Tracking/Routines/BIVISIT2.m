@@ -1,18 +1,31 @@
 BIVISIT2 ;IHS/CMI/MWR - DELETE VISITS; MAY 10, 2010
- ;;8.5;IMMUNIZATION;**5**;JUL 01,2013
+ ;;8.5;IMMUNIZATION;**22**;NOV 01,2021;Build 4
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
+ ;;BIB PROTOTYPE; JAN 31,2015
  ;;  CODE TO DELETE V FILE VISITS, TRIGGER EVENT FOR DELETE IMM.
  ;;  PATCH 5: TRIGADD EP moved from rtn BIVISIT for Rsize.  TRIGADD+0
+ ;;  PATCH 19: New "e"/"d" flag to mark deletion  DELETE, DELETE+62
+ ;;  PATCH 2x: ICE
  ;
+ ;
+ ;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ ;---> New "e"/"d" flag to mark deletion as a result of an edit vs a deletion.
  ;
  ;----------
-DELETE(BIDA,BIVTYPE,BIERR) ;EP
+DELETE(BIDA,BIVTYPE,BIEDDL,BIERR) ;EP
  ;---> Delete a V IMMUNIZATION File entry.
  ;---> Called exclusively by ^BIRPC3.
  ;---> Parameters:
  ;     1 - BIDA    (req) IEN of V File entry to be deleted.
  ;     2 - BIVTYPE (req) "I"=Immunization Visit, "S"=Skin Text Visit.
- ;     3 - BIERR   (ret) Text of Error Code if any, otherwise null.
+ ;     3 - BIEDDL  (opt) "e"=result of an edit, "d" or ""=result of a deletion.
+ ;     4 - BIERR   (ret) Text of Error Code if any, otherwise null.
+ ;
+ ;
+ ;********** BARCODE PROTO, v8.5, JAN 31,2015, IHS/CMI/MWR
+ ;---> Quit (no follow-up delete if added by barcode scan.
+ Q:$G(BISCANA)
+ ;**********
  ;
  ;---> If DA not passed, set Error Code and quit.
  I '$G(BIDA) D ERRCD^BIUTL2(404,.BIERR) Q
@@ -44,11 +57,13 @@ DELETE(BIDA,BIVTYPE,BIERR) ;EP
  ;
  D:BIVTYPE="I"
  .N BINODE S BINODE=@BIGBL
- .;---> Create an entry in BI PATIENT CONTRAINDICATION DELETED File.
+ .;---> Create an entry in BI V IMMUNIZATIONS DELETED File.
  .N BIERR,BIIEN,BIFLD
  .S BIFLD(.01)=$P(BINODE,U,1)
  .S BIFLD(.02)=$P(BINODE,U,2)
  .S BIFLD(.03)=$P(BINODE,U,3)
+ .;---> NOTE: Older V IMM's with no STID will be left blank (merely a deletion).
+ .S BIFLD(.18)=$P(BINODE,U,18)
  .S BIFLD(2.01)=+$G(DUZ)
  .D NOW^%DTC S BIFLD(2.02)=%
  .D UPDATE^BIFMAN(9002084.118,.BIIEN,.BIFLD,.BIERR)
@@ -59,6 +74,12 @@ DELETE(BIDA,BIVTYPE,BIERR) ;EP
  ..D ERRCD^BIUTL2(450,.BIERR) S BIERR=BI31_BIERR
  .;---> Now copy the rest of the Imm data.
  .S ^BIVIMMD(+BIIEN(1),0)=^AUPNVIMM(BIDA,0)
+ .;
+ .;********** PATCH 19, v8.5, JUN 01,2020, IHS/CMI/MWR
+ .;---> New "e"/"d" flag to mark deletion as a result of an edit vs a deletion.
+ .S $P(^BIVIMMD(+BIIEN(1),0),U,19)=$S(BIEDDL="e":"e",1:"d")
+ .;**********
+ .;
  .S:($D(^AUPNVIMM(BIDA,1))) ^BIVIMMD(+BIIEN(1),1)=^AUPNVIMM(BIDA,1)
  .S:($D(^AUPNVIMM(BIDA,12))) ^BIVIMMD(+BIIEN(1),12)=^AUPNVIMM(BIDA,12)
  ;
@@ -215,3 +236,18 @@ TRIGADD ;EP
  ;
  Q
  ;**********
+ ;
+ ;********** PATCH 22?, v8.5, JUL 01,2021, IHS/CMI/MWR
+ ;----------
+ASTID(BIIEN) ;PEP - Generate a unique State ID.
+ ;---> Generate a unique State ID, based on V Imm IEN and $H.
+ ;---> Parameters:
+ ;     1 - BIIEN  (req) IEN of V File entry just created.
+ ;
+ Q:'$G(BIIEN) ""
+ N BIASUFAC,BIID
+ S BIASUFAC=$P($G(^AUTTLOC(+$G(^AUTTSITE(1,0)),0)),U,10)
+ I (BIASUFAC="")!($L(BIASUFAC)'=6) S BIASUFAC="UNKNWN"
+ N Z S Z=BIADFN
+ S BIID=BIASUFAC_$E($H,9,11)_$E("0000000",1,7-$L(Z))_$S($L(Z)<8:Z,1:$E(Z,$L(Z)-6,$L(Z)))
+ Q BIID

@@ -1,0 +1,137 @@
+BQICMUT6 ;GDIT/HS/ALA-Care Mgmt & Def Details APIs ; 12 Jan 2024  5:55 PM
+ ;;2.9;ICARE MANAGEMENT SYSTEM;**6,7**;Mar 01, 2021;Build 14
+ ;
+LAY(TYPE,RIEN,FIELD,RESULT) ;EP
+ S RESULT=""
+ I TYPE="RFD" D
+ . S FILE=90001
+ . I FIELD="DATI" S RESULT=1_U_$$GET1^DIQ(FILE,RIEN,".01","I")
+ . I FIELD="ABDOS" D DAT(1106)
+ . I FIELD="AEDOS" D DAT(1108)
+ . I FIELD="EBDOS" D DAT(1105)
+ . I FIELD="EEDOS" D DAT(1107)
+ . I FIELD="DATL" D DAT(".17")
+ . I FIELD="DATC" D DAT(".26")
+ . I FIELD="DATM" D DAT(".27")
+ . I FIELD="CHSD" D DAT(1113)
+ . I FIELD="APRD" D DAT(1305)
+ . I FIELD="COND" D DAT(1307)
+ . I FIELD="SNOM" D
+ .. NEW VRF,IN,ID
+ .. S VRF=$P($G(^BMCREF(RIEN,13)),"^",3) I VRF="" Q
+ .. S ID=$P($G(^AUPNVREF(VRF,0)),"^",1) I ID="" Q
+ .. S IN=$O(^BSTS(9002318.4,"C",36,ID,"")) I IN="" Q
+ .. S RESULT=1_U_$G(^BSTS(9002318.4,IN,1))_" ("_ID_")"
+ . I FIELD?.N!(FIELD?1".".N) D  Q
+ .. S RESULT=1_U_$$GET1^DIQ(FILE,RIEN,FIELD,"E")
+ . I RESULT="" S RESULT=0
+ ;
+ I TYPE="CD" D
+ . S FILE=123
+ . I FIELD="RDATE" S RESULT=1_U_$$GET1^DIQ(FILE,RIEN,3,"I")
+ . I FIELD="REAS" D
+ .. NEW TEXT,RN
+ .. S TEXT="",RN=0
+ .. F  S RN=$O(^GMR(123,RIEN,20,RN)) Q:'RN  S TEXT=TEXT_^GMR(123,RIEN,20,RN,0)_$C(10)_$C(13)
+ .. S RESULT=1_U_$$TKO^BQIUL1(TEXT,$C(10)_$C(13))
+ . I FIELD="SNOM" D
+ .. NEW ID,IN
+ .. S ID=$$GET1^DIQ(123,RIEN_",",9999999.01,"E") I ID="" Q
+ .. S IN=$O(^BSTS(9002318.4,"C",36,ID,"")) I IN="" Q
+ .. S RESULT=1_U_$G(^BSTS(9002318.4,IN,1))_" ("_ID_")"
+ . I FIELD="PDXN" D
+ .. S ID=$$GET1^DIQ(123,RIEN_",",30.1,"E") I ID="" Q
+ .. S RESULT=1_U_$$GET1^DIQ(123,RIEN_",",30,"E")_" ("_ID_")"
+ . I FIELD="RNOTEH" D
+ .. NEW TIUDA
+ .. S TIUDA=$$GET1^DIQ(123,RIEN_",",16,"I") I TIUDA="" S RESULT="" Q
+ .. I $G(^TIU(8925,TIUDA,0))="" S RESULT="" Q
+ .. S RESULT="1^N:"_TIUDA
+ . I FIELD="RNOTE" D
+ .. S TIUDA=$$GET1^DIQ(123,RIEN_",",16,"I") I TIUDA="" S RESULT="" Q
+ .. I $G(^TIU(8925,TIUDA,0))="" S RESULT="" Q
+ .. S RESULT=1_U_$P($G(^TIU(8925,TIUDA,12)),"^",1)
+ . I FIELD=5!(FIELD=6) D  Q
+ .. NEW TXT
+ .. S TXT=$$GET1^DIQ(FILE,RIEN,FIELD,"E") I TXT="" Q
+ .. I TXT[" - " S TXT=$P(TXT," - ",2)
+ .. S RESULT=1_U_TXT
+ . I FIELD?.N!(FIELD?1".".N) D  Q
+ .. S RESULT=1_U_$$GET1^DIQ(FILE,RIEN,FIELD,"E")
+ . I RESULT="" S RESULT=0
+ ;
+ Q
+ ;
+DAT(FNBR) ;EP
+ NEW DVAL
+ S DVAL=$$GET1^DIQ(FILE,RIEN,FNBR,"I")
+ S RESULT=""
+ I DVAL'="" S RESULT=1_U_DVAL
+ Q
+ ;
+REF(RDFN,FILE,TIEN) ;EP - Last Refusal
+ S RREF=FILE,VAL=0
+ ; check for refusal
+ I $O(^AUPNPREF("AA",RDFN,RREF,""))'="" D
+ . S BDT="",STOP=0
+ . S BDT=$O(^AUPNPREF("AA",RDFN,RREF,TIEN,BDT)) Q:BDT=""
+ . S IEN="" F  S IEN=$O(^AUPNPREF("AA",RDFN,RREF,TIEN,BDT,IEN)) Q:IEN=""  D
+ .. S RFDTM=$P(^AUPNPREF(IEN,0),U,3)
+ .. S VAL="1^"_RFDTM_"^Refusal"
+ Q VAL
+ ;
+PLAY(TYPE,DFN,FIELD,RESULT) ;EP - Patient layout column
+ I TYPE="SU" D
+ . S RESULT=""
+ . I FIELD="SCRN" D
+ .. S TIEN=$O(^AUTTEXAM("C",44,"")) I TIEN="" Q
+ .. S RES=$$EXAM^BQITUTL(DFN,TIEN)
+ .. S REF=$$REF(DFN,9999999.15,TIEN)
+ .. I RES=0,REF=0 S RESULT="" Q
+ .. I RES'=0,REF=0 D
+ ... S ERES=$$GET1^DIQ(9000010.13,$P(RES,"^",5)_",",.04,"E")
+ ... S RESULT="1^"_ERES_" ("_$$FMTMDY^BQIUL1($P(RES,"^",2))_")"
+ .. I RES=0,REF'=0 D
+ ... S RESULT="1^"_$P(REF,"^",3)_" ("_$$FMTMDY^BQIUL1($P(REF,"^",2))_")"
+ .. I RES'=0,REF'=0 D
+ ... I $P(RES,"^",2)>$P(REF,"^",2) D
+ .... S ERES=$$GET1^DIQ(9000010.13,$P(RES,"^",5)_",",.04,"E")
+ .... S RESULT="1^"_ERES_" ("_$$FMTMDY^BQIUL1($P(RES,"^",2))_")"
+ ... I $P(REF,"^",2)>$P(RES,"^",2) D
+ .... S RESULT="1^"_$P(REF,"^",3)_" ("_$$FMTMDY^BQIUL1($P(REF,"^",2))_")"
+ ... ;What if refusal and exam on same day?
+ . I FIELD="RISK" D
+ .. S TIEN=$O(^AUTTEXAM("C",43,"")) I TIEN="" Q
+ .. S RES=$$EXAM^BQITUTL(DFN,TIEN)
+ .. S REF=$$REF(DFN,9999999.15,TIEN)
+ .. I RES=0,REF=0 S RESULT="" Q
+ .. I RES'=0,REF=0 D
+ ... S ERES=$$GET1^DIQ(9000010.13,$P(RES,"^",5)_",",.04,"E")
+ ... S RESULT="1^"_ERES_" ("_$$FMTMDY^BQIUL1($P(RES,"^",2))_")"
+ .. I RES=0,REF'=0 D
+ ... S RESULT="1^"_$P(REF,"^",3)_" ("_$$FMTMDY^BQIUL1($P(REF,"^",2))_")"
+ . I FIELD="DEPR" D
+ .. S TIEN=$O(^AUTTEXAM("C",36,"")) I TIEN="" Q
+ .. S RES=$$EXAM^BQITUTL(DFN,TIEN)
+ .. S REF=$$REF(DFN,9999999.15,TIEN)
+ .. I RES=0,REF=0 S RESULT="" Q
+ .. I RES'=0,REF=0 D
+ ... S ERES=$$GET1^DIQ(9000010.13,$P(RES,"^",5)_",",.04,"E")
+ ... S RESULT="1^"_ERES_" ("_$$FMTMDY^BQIUL1($P(RES,"^",2))_")"
+ .. I RES=0,REF'=0 D
+ ... S RESULT="1^"_$P(REF,"^",3)_" ("_$$FMTMDY^BQIUL1($P(REF,"^",2))_")"
+ . I FIELD="SUD" D
+ .. S RES=$$DXN^BQIRGHOP(DFN)
+ .. I RES'="" S RESULT=1_U_RES
+ . I FIELD["SI-"!(FIELD["DEP-") D
+ .. S FIELD=$P(FIELD,"_",2)
+ .. S EIN="",RESULT="",QFL=0 F  S EIN=$O(^AUTTEDT("C",FIELD,EIN)) Q:EIN=""  D  Q:QFL
+ ... I $P(^AUTTEDT(EIN,0),"^",5)=1 Q
+ ... S RVDT="" F  S RVDT=$O(^AUPNVPED("AA",DFN,RVDT)) Q:RVDT=""  D  Q:QFL
+ .... S RIEN="" F  S RIEN=$O(^AUPNVPED("AA",DFN,RVDT,RIEN)) Q:RIEN=""  D  Q:QFL
+ ..... I $P($G(^AUPNVPED(RIEN,0)),"^",1)'=EIN Q
+ ..... S RESULT=1_"^"_$$FMTMDY^BQIUL1((9999999-RVDT))_" ("_FIELD_")",QFL=1
+ . I FIELD?.N!(FIELD?1".".N) D  Q
+ .. S RESULT=1_U_$$GET1^DIQ(FILE,RIEN,FIELD,"E")
+ . I RESULT="" S RESULT=0
+ Q

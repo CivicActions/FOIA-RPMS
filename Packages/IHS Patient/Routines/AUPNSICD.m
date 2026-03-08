@@ -1,5 +1,5 @@
 AUPNSICD ; IHS/CMI/LAB - Screen Purpose of Visit/ICD9 codes 24-MAY-1993 ; 05 Nov 2014  10:46 AM
- ;;2.0;IHS PCC SUITE;**2,10,11,15**;MAY 14, 2009;Build 11
+ ;;2.0;IHS PCC SUITE;**2,10,11,15,25**;MAY 14, 2009;Build 37
  ;IHS/TUCSON/LAB - added checks for filegram and CHS, do not
  ;execute screen if in chs or filegrams 03/18/96 PATCH 4
  I $$CHK(Y)
@@ -70,6 +70,7 @@ CHKDX1 ;CODING SYSTEM 1 - ICD9
  ;
 CSEX ; IF 'USE WITH SEX' FIELD HAS A VALUE CHECK THAT VALUE AGAINST AUPNSEX
  I '$D(AUPNSEX) Q 1
+ I $D(APCDTPCC) Q 1   ;PATCH 25
  I $P(%,U,11)]"",$P(%,U,11)'=AUPNSEX Q 0
  Q 1
  ;
@@ -82,6 +83,7 @@ CHKDX30 ;coding system 30 - ICD10
  ;
 CSEX30 ; IF 'USE WITH SEX' FIELD HAS A VALUE CHECK THAT VALUE AGAINST AUPNSEX
  I '$D(AUPNSEX) Q 1
+ I $D(APCDTPCC) Q 1  ;PATCH 25
  I $P(%,U,11)]"",$P(%,U,11)'=AUPNSEX Q 0
  Q 1
 CPT ;EP - screen on CPT from V CPT .01 and V Procedure
@@ -91,7 +93,7 @@ CPT ;EP - screen on CPT from V CPT .01 and V Procedure
  Q
  ;
 CHKCPT(Y) ;check CPT for valid date, inactive flag
- I $D(APCDOVR) Q 1  ;override for something
+ I $D(APCDOVRR) Q 1  ;override for something
  I $D(DIFGLINE) Q 1  ;if in MFI accept all cpt codes
  I $D(ACHSDIEN) Q 1  ;if in CHS link accept all cpt codes
  I $G(DUZ("AG"))'="I" Q 1  ;if not an IHS facility accept all cpt codes

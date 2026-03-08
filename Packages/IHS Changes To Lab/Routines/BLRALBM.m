@@ -1,5 +1,7 @@
-BLRALBM ;DAOU/ALA-Build Micro result [ 11/18/2002  1:33 PM ]
- ;;5.2;LR;**1013,1015**;NOV 18, 2002
+BLRALBM ;VA/DAOU/ALA-Build Micro result ; 27-Apr-2023 06:45 ; MKK
+ ;;5.2;IHS LABORATORY;**1013,1015,1054**;NOV 01, 1997;Build 20
+ ;
+ ; MSC/MKK - LR*5.2*1054 - Item 96796 - Do not allow selection of tests with INACTIVATION DATE set
  ;
 EN ;
  S LRPATLOC=$S($D(LRLLOC):LRLLOC,1:""),LRLOC=LRPATLOC
@@ -9,7 +11,9 @@ EN ;
  Q:'$L(X)
  D ^DIC S LRAA=+Y,LRAN=+$P(LRACC," ",3),LRCMNT=$G(^LR(LRDFN,"MI",LRIDT,99)),LRPG=0
  I '$D(LRONESPC) S LRONESPC="",DIC="^LAB(61,",DIC("A")="Select SPECIMEN/SOURCE: ANY//",DIC(0)="AEMOQ" D ^DIC S:Y>0 LRONESPC=+Y K DIC("A")
- I '$D(LRONETST) S LRONETST="",DIC="^LAB(60,",DIC(0)="AEOQ",DIC("S")="I $P(^(0),U,4)=""MI"")"_$S('$D(LRLABKY):",""BO""[$P(^(0),U,3)",1:""),D="E" D IX^DIC Q:Y<1  I Y>0 S LRONETST=+Y
+ ; I '$D(LRONETST) S LRONETST="",DIC="^LAB(60,",DIC(0)="AEOQ",DIC("S")="I $P(^(0),U,4)=""MI"")"_$S('$D(LRLABKY):",""BO""[$P(^(0),U,3)",1:""),D="E" D IX^DIC Q:Y<1  I Y>0 S LRONETST=+Y
+ ; IHS/MSC/MKK - LR*5.2*1054 - Following line modified so that user cannot select tests with INACTIVATION DATE set.  Also use ^DIC not IX^DIC.
+ I '$D(LRONETST) S LRONETST="",DIC="^LAB(60,",DIC(0)="AEOQ",DIC("S")="I $P(^(0),U,4)=""MI"""_$S('$D(LRLABKY):",""BO""[$P(^(0),U,3)",1:""),D="E" S DIC("S")=DIC("S")_",+$G(^(.3))=0"  D ^DIC Q:Y<1  I Y>0 S LRONETST=+Y
  S LRSPEC=$P(LRLLT,U,5) I LRONESPC'="",LRSPEC'=LRONESPC Q
  D RPT
  K %,A8,A,AB,B,B1,B2,B3,C,IA,LR1PASS,LR2ORMOR,LRABCNT,LRACNT,LRADM

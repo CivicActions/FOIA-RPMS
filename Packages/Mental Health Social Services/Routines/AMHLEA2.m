@@ -1,5 +1,5 @@
-AMHLEA2 ; IHS/CMI/LAB - ADD NEW CHR ACTIVITY RECORDS ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHLEA2 ; IHS/CMI/LAB - ADD NEW CHR ACTIVITY RECORDS ; [ 09/08/03  6:17 PM ]
+ ;;3.0;IHS BEHAVIORAL HEALTH;**1,5,8**;JAN 27, 2003
  ;
  ;add new records
  ;get all items for a record, check record, file record
@@ -58,7 +58,6 @@ EXIT ;
  D EN^XBVK("AMH")
  Q
 DEL ;EP
- I $$IINTAKE^AMHLEDEL(AMHR) W !!,"This visit has an Initial Intake with Updates, it can not be deleted",!,"until the update documents have been deleted." D PAUSE Q
  S AMHVDLT=$P(^AMHREC(AMHR,0),U,16)
  S AMHRDEL=AMHR
  D EN^AMHLEDEL

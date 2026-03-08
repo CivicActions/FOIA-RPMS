@@ -1,5 +1,5 @@
-RAHLO ;HIRMFO/GJC-Process data set from the bridge program ; 20 Apr 2011  7:01 PM
- ;;5.0;Radiology/Nuclear Medicine;**4,8,27,55,66,84,94,1003**;Nov 01, 2010;Build 3
+RAHLO ;HIRMFO/GJC-Process data set from the bridge program ; Jun 02, 2020@09:33:35
+ ;;5.0;Radiology/Nuclear Medicine;**4,8,27,55,66,84,94,106,144,162,165,1007,1009**;Mar 16, 1998;Build 21
  ; 09/07/2005 Remedy call 108405 - KAM Allow Radiology to accept dx codes from Talk Technology
  ;
  ;Integration Agreements
@@ -10,17 +10,26 @@ EN1 ; Check the validity of the following data globals:
  ; Example: '^TMP("RARPT-REC",$J,RASUB,' where RASUB is a
  ; record in file 772.
  ;**************** Validates (if data present): ************************
- ; ^TMP("RARPT-REC",$J,RASUB,"RACNI")=case ien
- ; ^TMP("RARPT-REC",$J,RASUB,"RADATE")=date reported/entered/verified
- ; ^TMP("RARPT-REC",$J,RASUB,"RADFN")=patient ien
- ; ^TMP("RARPT-REC",$J,RASUB,"RADTI")=inverted exam date/time
+ ; ^TMP("RARPT-REC",$J,RASUB,"RACNI")=Case IEN
+ ; ^TMP("RARPT-REC",$J,RASUB,"RADATE")=Date reported/entered/verified
+ ; ^TMP("RARPT-REC",$J,RASUB,"RADFN")=Patient IEN
+ ; ^TMP("RARPT-REC",$J,RASUB,"RAHRN")=Patient HRNO
+ ; ^TMP("RARPT-REC",$J,RASUB,"RADTI")=Inverted Exam Date/Time
  ; ^TMP("RARPT-REC",$J,RASUB,"RADX",#)=Dx codes (could be more than 1)
  ; ^TMP("RARPT-REC",$J,RASUB,"RAESIG")=Verifier's E-Sig (if present)
  ; ^TMP("RARPT-REC",$J,RASUB,"RAHIST")=Additional Clinical History
  ; ^TMP("RARPT-REC",$J,RASUB,"RAIMP",#)=Impression Text
  ; ^TMP("RARPT-REC",$J,RASUB,"RALONGCN")=Long Case Number
  ; ^TMP("RARPT-REC",$J,RASUB,"RASSN")=Patient SSN
- ; ^TMP("RARPT-REC",$J,RASUB,"RASTAT")=A, F or R (amend, final or prelim)
+ ; ^TMP("RARPT-REC",$J,RASUB,"RASTAT")=A, C, F or R
+ ;    Note: we use 'F' for final and 'P' for preliminary as RESULT
+ ;          STATUS values for both the v2.3 & v2.4 HL7 interfaces.
+ ;          BUT: we use 'C' ('corrected') for the v2.4 interface &
+ ;                      'A' ('amended') for the v2.3 interface.
+ ; 
+ ;    Note: VAQ - added w/P106 study released back to VAMC
+ ;                for interpretation
+ ;
  ; ^TMP("RARPT-REC",$J,RASUB,"RATXT",#)=Report Text
  ; ^TMP("RARPT-REC",$J,RASUB,"VENDOR")=vendor
  ; ^TMP("RARPT-REC",$J,RASUB,"RAVERF")=Verifier ien
@@ -35,30 +44,49 @@ EN1 ; Check the validity of the following data globals:
  I '$D(^TMP("RARPT-REC",$J,RASUB,"RADFN")) S RAERR="Internal Patient ID Missing" Q
  I '$D(^TMP("RARPT-REC",$J,RASUB,"RADTI")) S RAERR="Missing Exam Date" Q
  I '$D(^TMP("RARPT-REC",$J,RASUB,"RALONGCN")) S RAERR="Missing Exam Date and/or Case Number" Q
- I '$D(^TMP("RARPT-REC",$J,RASUB,"RASSN")) S RAERR="Missing Patient ID" Q
+ ;
+ ;IHS/CMI/DAY - Patch 1007 - Allow reports w/o an SSN
+ ;I '$D(^TMP("RARPT-REC",$J,RASUB,"RASSN")) S RAERR="Missing Patient ID" Q
+ ;End Patch
+ ;
  D CHECK ; check the validity of our data.
 XIT ; Kill and quit
- K A,B,DFN,K,RACNI,RADX,RADENDUM,RADFN,RADTI,RADUZ,RAIMGTY,RALONGCN,RAMDIV,RAMDV,RAMLC,RAQUIET,RARPT,RARPTSTS,RASSN,RAVLDT,X,Y,RATRANSC
+ K A,B,DFN,K,RACNI,RADX,RADENDUM,RADFN,RADTI,RADUZ,RAIMGTY,RALONGCN,RAMDIV,RAMDV,RAMLC
+ K RAQUIET,RARPT,RARPTSTS,RASSN,RAVLDT,X,Y,Z,RATRANSC,RAERRCHK,RAOR,RAPURGE,RARPTI,RASIUID
+ K RASN,RASSNVAL,RAST32,RASTAT,RASTI,RAZDAYCS,RAZDTE,RAZORD,RAZORD1,RAZPROC,RAZRXAM,RAZXAM
  Q
 CHECK ; Check if our data is valid.
  S RACNI=$G(^TMP("RARPT-REC",$J,RASUB,"RACNI"))
  S RADATE=$G(^TMP("RARPT-REC",$J,RASUB,"RADATE"))
  S RADFN=$G(^TMP("RARPT-REC",$J,RASUB,"RADFN"))
+ S RAHRN=$G(^TMP("RARPT-REC",$J,RASUB,"RAHRN"))  ;cmi/maw patch 1009 20210518 CR8758
  S RADTI=$G(^TMP("RARPT-REC",$J,RASUB,"RADTI"))
  S RALONGCN=$G(^TMP("RARPT-REC",$J,RASUB,"RALONGCN"))
  S RASSN=$G(^TMP("RARPT-REC",$J,RASUB,"RASSN"))
  ;
- ;IHS/BJI/DAY - Patch 1003 - Limit incoming provider field to IEN
+ ;IHS/CMI/DAY - Patch 1007 - Allow reports w/o and SSN
+ I +RASSN=0 S RASSN=""
+ I +RASSN=999999999 S RASSN=""
+ ;End Patch
+ ;
+ ;IHS/CMI/DAY - Patch 1007 - Limit incoming Verifier to IEN
  ;S (RAVERF,RADUZ)=$G(^TMP("RARPT-REC",$J,RASUB,"RAVERF"))
  S (RAVERF,RADUZ)=+$G(^TMP("RARPT-REC",$J,RASUB,"RAVERF"))
  I RAVERF=0 S (RAVERF,RADUZ)=""
- ;End patch
+ ;End Patch
  ;
  S RATRANSC=$G(^TMP("RARPT-REC",$J,RASUB,"RATRANSCRIPT"))
- S RASTAT=$G(^TMP("RARPT-REC",$J,RASUB,"RASTAT")) I RASTAT="A" S RADENDUM=""
+ S RASTAT=$G(^TMP("RARPT-REC",$J,RASUB,"RASTAT")) I RASTAT="A"!(RASTAT="C") S RADENDUM=""
  I $D(^TMP("RARPT-REC",$J,RASUB,"RAESIG")) S RAESIG=$G(^("RAESIG"))
  I $D(^TMP("RARPT-REC",$J,RASUB,"RAIMP")) D IMPTXT^RAHLO2
  I RADATE']"" S RAERR="Missing report date" Q
+ ;cmi/maw patch 1009 20210518 CR8758 lets try to get RADFN from HRN
+ I $G(RADFN)="" D
+ . Q:$G(RALONGCN)=""  ;try to match case with chart number patient
+ . S RADFN=$O(^RADPT("ADC",RALONGCN,0))  ;this is the pointer to the patient number
+ . Q:'$G(RADFN)
+ . I $$HRN^AUPNPAT(RADFN,DUZ(2))'=$G(RAHRN) S RADFN="" Q
+ ;cmi/maw end of patch
  I RADFN']"" S RAERR="Missing Internal Patient ID" Q
  I RACNI']"" S RAERR="Missing Case Number" Q
  I RADTI']"" S RAERR="Missing Exam Date" Q
@@ -67,10 +95,10 @@ CHECK ; Check if our data is valid.
  K VA,VADM,VAERR S DFN=RADFN D DEM^VADPT
  I VADM(1)']"" S RAERR="Unknown Internal patient identifier" K VA,VADM,VAERR Q
  ;
- ;IHS/BJI/DAY - Patch 1003 - Don't abort if no incoming SSN (infants)
+ ;IHS/CMI/DAY - Patch 1007 - Allow reports w/o and SSN
  ;I RASSN'=$P(VADM(2),"^") S RAERR="Internal patient identifier and SSN don't match" K VA,VADM,VAERR Q
- I RASSN]"",RASSN'=$P(VADM(2),"^") S RAERR="Internal patient identifier and SSN don't match" K VA,VADM,VAERR Q
- ;End patch
+ I RASSN]"",RASSN'=$P(VADM(2),"^") S RAERR="Internal patient identifer and SSN don't match" D ^%ZTER K VA,VADM,VAERR Q
+ ;End Patch
  ;
  I '$D(^RADPT(RADFN,"DT",RADTI,"P",RACNI,0))!(RALONGCN']"") D  Q
  . S RAERR="Invalid Exam Date and/or Case Number"
@@ -96,7 +124,12 @@ CHECK ; Check if our data is valid.
  I '$G(RATELE),+$G(^TMP("RARPT-REC",$J,RASUB,"RARESIDENT"))!(+$G(^("RASTAFF"))) D  Q:$G(RAERR)]""
  . S X1=+$G(^TMP("RARPT-REC",$J,RASUB,"RARESIDENT"))
  . I X1 D
- .. I '$D(^VA(200,"ARC","R",X1)),'$D(^VA(200,"ARC","S",X1)) S X2=1
+ .. ;
+ .. ;IHS/CMI/DAY - Patch 1007 - Allow residents as verifiers
+ .. ;I '$D(^VA(200,"ARC","S",X1)) S X2=1
+ .. I '$D(^VA(200,"ARC","S",X1)),'$D(^VA(200,"ARC","R",X1)) S X2=1
+ .. ;End Patch
+ .. ;
  .. I $P($G(^VA(200,X1,"RA")),"^",3),$P(^("RA"),"^",3)'>$$DT^XLFDT S X2=X2+2
  .. I X2=1 S X3=$E($P($G(^VA(200,X1,0)),"^"),1,20)_" is not class'd as Resident or Staff"
  .. I X2=2 S X3=$P($G(^VA(200,X1,0)),"^")_"'s INACTIVE DATE is past"
@@ -104,12 +137,7 @@ CHECK ; Check if our data is valid.
  .. I X3]"" S RAERR=X3
  . S X2=0,X3="" S X1=+$G(^TMP("RARPT-REC",$J,RASUB,"RASTAFF"))
  . I X1 D
- .. ;
- .. ;IHS/BJI/DAY - Patch 1003 - Allow residents as verifiers
- .. ;I '$D(^VA(200,"ARC","S",X1)) S X2=1
- .. I '$D(^VA(200,"ARC","S",X1)),'$D(^VA(200,"ARC","R",X1)) S X2=1
- .. ;End patch
- .. ;
+ .. I '$D(^VA(200,"ARC","S",X1)) S X2=1
  .. I $P($G(^VA(200,X1,"RA")),"^",3),$P(^("RA"),"^",3)'>$$DT^XLFDT S X2=X2+2
  .. I X2=1 S X3=$E($P($G(^VA(200,X1,0)),"^"),1,20)_" is not class'd as staff"
  .. I X2=2 S X3=$P($G(^VA(200,X1,0)),"^")_"'s INACTIVE DATE is past"
@@ -141,8 +169,23 @@ CHECK ; Check if our data is valid.
  ;
  I $G(RATELE),$L($G(RATELEPI)),RATELEPI'?10N S RAERR="Incorrect Teleradiologist's NPI: "_RATELEPI Q
  D RPTSTAT^RAHLO3 ; determine the status of the report
+ Q:$D(RAERR)#2  ;P162 added error chk
  ;
- ;new w/P94
- D FILE^RAHLO1:'($D(RAERR)#2)
+ ;new w/P106
+ I RARPT,($T(EN^RARPTUT)'=""),(RASTAT="VAQ") D EN^RARPTUT QUIT  ;p162 removed $D(RAERR)#2
+ ;
+ ;new w/P162
+ I $G(RARPT)>0 D  Q:$D(RAERR)#2
+ .L +^RARPT(RARPT):5
+ .I '$T S RAERR="Lock of report record: "_RARPT_" failed."
+ .Q
+ ;p165 - Need to unlock the report if accession is locked.
+ L +^RADPT(RADFN,"DT",RADTI):60
+ I '$T S RAERR="Lock of study accession: "_$S(RALONGCN'="":RALONGCN,1:"N/A")_" failed." D  Q
+ .I $G(RARPT)>0 L -^RARPT(RARPT)
+ .Q
+ D FILE^RAHLO1
+ ;unlock the report & study unconditionally
+ L -^RARPT(RARPT) L -^RADPT(RADFN,"DT",RADTI)
  Q
  ;

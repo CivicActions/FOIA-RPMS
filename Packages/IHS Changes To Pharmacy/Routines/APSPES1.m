@@ -1,13 +1,16 @@
-APSPES1 ;IHS/MSC/PLS - SureScripts HL7 interface  ;01-Apr-2014 11:28;DU
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1008,1009,1011,1013,1014,1016,1017**;Sep 23, 2004;Build 40
+APSPES1 ;IHS/MSC/PLS - SureScripts HL7 interface  ;26-May-2021 12:43;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1008,1009,1011,1013,1014,1016,1017,1023,1024,1025,1028**;Sep 23, 2004;Build 50
  ;====================================================================
  ;Patch 1016 added AL1 segment and RXC segment
+ ;Patch 1023 AACK,ARSP and CACK calls moved to APSPES11
  Q
  ; Build NewRx HL7 segments
-NEWRX(RXIEN) ;EP
+ ; Input: RXIEN - File 52 IEN
+ ;        RTMID - ResponseToMessageID
+NEWRX(RXIEN,RTMID) ;EP
  N HLPM,HLST,ERR,ARY,HLECH,HLFS,APPARMS
- N RX0,RX2,DFN,LN,HL1
- S LN=0
+ N RX0,RX2,DFN,LN,HL1,HL
+ S LN=0,RTMID=""
  S HLPM("MESSAGE TYPE")="OMP"
  S HLPM("EVENT")="O09"
  S HLPM("VERSION")=2.5
@@ -29,7 +32,8 @@ NEWRX(RXIEN) ;EP
  S DFN=$P(RX0,U,2)
  ;Create segments
  ;
- D PID(DFN),ORCNW("NW",1),RXO(1),RXR,RXC,DG1,AL1
+ D PID(DFN),ORCNW("NW",1),RXO(1,"NW"),RXR,ZCS(RX0,RXIEN),ZSL(RXIEN)
+ D RXC,DG1^APSPES5(.HLST,.ARY),AL1^APSPES5(.HLST,.ARY),OBX^APSPES5(.HLST,.ARY)
  ; Define sending and receiving parameters
  S APPARMS("SENDING APPLICATION")="APSP RPMS"
  S APPARMS("ACCEPT ACK TYPE")="AL"  ;Commit ACK type
@@ -47,12 +51,18 @@ NEWRX(RXIEN) ;EP
  .S ARY("COM")="eRx request failed"
  .S ARY("TYPE")="F"
  .D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
+ .D ERX^APSPCSA(RXIEN,"UN")   ;Add call to update log for EPCS
  E  D  ; Update activity log
+ .N LACT,ACT
  .S ARY("REASON")="X"
  .S ARY("RX REF")=0
- .S ARY("TYPE")="T"
- .S ARY("COM")="eRx request sent to "_$$PHMINFO^APSPES2(RXIEN)
+ .S LACT=$$LASTACT^APSPFNC6(RXIEN,"X")
+ .S ACT=$S(LACT="F":"X",1:"T")
+ .S ARY("TYPE")=ACT
+ .S ARY("COM")="eRx request sent to "_$$PHMINFO^APSPES2A(RXIEN)
  .D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
+ .S RTMID=$$GET1^DIQ(778,$G(HLST("IEN")),.01)
+ .D ERX^APSPCSA(RXIEN,"TO")  ;Add call to update log for EPCS
  Q
  ;
  ; Build ACK response
@@ -63,75 +73,21 @@ ACKRES ;
  Q
  ;
 AACK ; EP - Application ACK call back - called when AA, AE or AR is received.
- N DATA,RXIEN,AACK,ARY,RET
- Q:'$G(HLMSGIEN)
- S RXIEN=$$RXIEN^APSPES2(HLMSGIEN)
- S AACK=$G(^HLB(HLSMGIEN,4))
- I $P(AACK,U,3)'["|AA|" D
- .S MSG(1)="HL7 Message "_^HLB(HLMSGIEN,1)_^HLB(HLMSGIEN,2)
- .S MSG(2)=" "
- .S MSG(3)="did not receive a valid NEWRX acknowledgement."
- .S MSG(4)=AACK
- .S WHO("G.APSP EPRESCRIBING")=""
- .D BULL^APSPES2("HL7 ERROR","APSP eRx Interface",.WHO,.MSG)
- E  D
- .Q:'RXIEN
- .S ARY("REASON")="X"
- .S ARY("RX REF")=0
- .S ARY("TYPE")="U"
- .S ARY("COM")="eRx update: Received acknowledgement from SureScripts"
- .D UPTLOG^APSPFNC2(.RET,+RXIEN,0,.ARY)
+ ;IHS/MSC/MGH Moved for size
+ D AACK^APSPES11
  Q
  ;
 CACK ; EP - Commit ACK callback - called when CA, CE or CR is received.
- N CACK
- S CACK=$G(^HLB(HLMSGIEN,4))
- I $P(CACK,"^",3)'["|CA|" D
- .S MSG(1)="HL7 Message "_^HLB(HLMSGIEN,1)_^HLB(HLMSGIEN,2)
- .S MSG(2)=" "
- .S MSG(3)="did not receive a valid NEWRX acknowledgement."
- .S MSG(4)=CACK
- .S WHO("G.APSP EPRESCRIBING")=""
- .D BULL^APSPES2("HL7 ERROR","APSP eRx Interface",.WHO,.MSG)
+ ;IHS/MSC/MGH Moved for size
+ D CACK^APSPES11
  Q
  ;
 ARSP ; EP - callback for ORP/O10 event
- N AACK,MSG,WHO,OPRV,ARY,RET,RXIEN,DATA,HLMSTATE,MSA
- N SEGIEN,SEGMSA,MSGIEN,SEGERR,ERRTXT,TXT
- S MSGIEN=0,TXT=0
- D PARSE^APSPES2(.DATA,HLMSGIEN,.HLMSTATE)
- S SEGIEN=$$FSEGIEN(.DATA,"MSA")
- I 'SEGIEN D  Q
- .D BADORP^APSPES4
- M SEGMSA=DATA(SEGIEN)
- S MSGIEN=+$P($$GET^HLOPRS(.SEGMSA,2)," ",2)
- S AACK=$$GET^HLOPRS(.SEGMSA,1)
- S TXT=$$GET^HLOPRS(.SEGMSA,3)
- I AACK'="AA" D
- .S SEGIEN=$$FSEGIEN(.DATA,"ERR")
- .M SEGERR=DATA(SEGIEN)
- .S ERRTXT=$$GET^HLOPRS(.SEGERR,8)
- S RXIEN=$$RXIEN^APSPES2(MSGIEN)
- S OPRV=$$OPRV^APSPES2(MSGIEN)
- S ARY("REASON")="X"
- S ARY("RX REF")=0
- S ARY("USER")=OPRV
- I AACK'="AA" D  Q
- .D BADORP^APSPES4
- .I RXIEN D
- ..S ARY("TYPE")="F"
- ..S ARY("COM")=$S($L($G(ERRTXT)):ERRTXT,1:"ERROR: eRx did not transmit.")
- ..D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
- ..D NOTIF^APSPES4(RXIEN,"ERROR: eRx did not transmit.",$S($L($G(ERRTXT)):ERRTXT,1:"Transmission was not accepted"))
- Q:'RXIEN
- S ARY("TYPE")="U"
- S ARY("COM")=$S(TXT'="":TXT,1:"eRx update: Prescription delivered to pharmacy.")
- D UPTLOG^APSPFNC2(.RET,RXIEN,0,.ARY)
+ D ARSP^APSPES11
  Q
 ARSPRE ;Refill request call back for ERROR
- D ARSP
+ D ARSP^APSPES11
  Q
- ;
 ERR ;
  Q
  ; Create MSH segment
@@ -142,7 +98,7 @@ PID(DFN) ;EP
  Q:'$G(DFN)
  N PID,SGM,X,LP,VAL,FLD,HLQ,SSN
  S HLQ=""
- S PID=$$EN^VAFHLPID(DFN,"3,5,7,8,11P,13,19,",1)
+ S PID=$$EN^VAFHLPID(DFN,"3,5,7,8,11P,13,14,19,",1)
  D SET(.ARY,"PID",0)
  D SET(.ARY,$$HRCNF^BDGF2(DFN,DUZ(2)),3,1)  ; Patient HRN
  D SET(.ARY,"MR",3,5)  ; Medical Record
@@ -153,7 +109,10 @@ PID(DFN) ;EP
  D SET(.ARY,$P(PID,HLFS,9),8)  ; Gender
  S FLD=$P(PID,HLFS,12)  ; Patient Address
  F LP=1:1:$L(FLD,$E(HLECH)) S VAL=$P(FLD,$E(HLECH),LP) D
+ .S VAL=$$TRIM^XLFSTR(VAL)
  .D SET(.ARY,VAL,11,LP)
+ ;IHS/MSC/MGH - 1/23/2018
+ D SET(.ARY,$P(PID,HLFS,14),13)  ;Patient phone
  ;IHS/MSC/PLS - 10/25/2013
  S SSN=$P(PID,HLFS,20)
  I SSN="" D
@@ -165,7 +124,7 @@ PID(DFN) ;EP
  Q
  ; Create ORC segment
 ORCNW(OCC,ADD) ;EP
- N ORC,INST,NM,LP,VAL,IMMSUP,IMMNPI,ORDER,RRIEN,SSNUM,HLO,HLOIEN,HLB7
+ N ORC,INST,NM,LP,VAL,IMMSUP,IMMNPI,ORDER,RRIEN,SSNUM,HLO,HLOIEN,HLB7,RELATES,DIG,EARLY
  S ADD=$G(ADD,1)
  D SET(.ARY,"ORC",0)
  D SET(.ARY,OCC,1)
@@ -175,24 +134,26 @@ ORCNW(OCC,ADD) ;EP
  D ORC7
  D SET(.ARY,$$HLDATE^HLFNC($P(RX0,U,13),"DT"),9)   ;Issue Date
  D SET(.ARY,+$P(RX0,U,16),10,1)  ;Entered By IEN
- S NM=$$HLNAME^HLFNC($$GET1^DIQ(200,$P(RX0,U,16),.01),HLECH)
- F LP=1:1:$L(NM,$E(HLECH)) S VAL=$P(NM,$E(HLECH),LP) D
- .D SET(.ARY,VAL,10,LP+1)
+ I +$P(RX0,U,16)>.5 D
+ .S NM=$$HLNAME^HLFNC($$GET1^DIQ(200,$P(RX0,U,16),.01),HLECH)
+ .F LP=1:1:$L(NM,$E(HLECH)) S VAL=$P(NM,$E(HLECH),LP) D
+ ..D SET(.ARY,VAL,10,LP+1)
  S IMMSUP=$$GET1^DIQ(49,$$GET1^DIQ(200,+$P(RX0,U,4),29,"I"),2,"I")
  S IMMNPI=$$GET1^DIQ(200,+IMMSUP,41.99) ; Immediate Supervisor NPI
  D SET(.ARY,IMMNPI,11)
  S NM=$$HLNAME^HLFNC($$GET1^DIQ(200,IMMSUP,.01),HLECH)
  F LP=1:1:$L(NM,$E(HLECH)) S VAL=$P(NM,$E(HLECH),LP) D
  .D SET(.ARY,VAL,11,LP+1)  ;Immediate Supervisor (Chief of service)
+ D SET(.ARY,$$PRVDEA^APSPES9(IMMSUP),11,10)  ; SUP DEA Patch 1023
  D SET(.ARY,$$SPI(+$P(RX0,U,4)),12)
  S NM=$$HLNAME^HLFNC($$GET1^DIQ(200,$P(RX0,U,4),.01),HLECH)
  F LP=1:1:$L(NM,$E(HLECH)) S VAL=$P(NM,$E(HLECH),LP) D
  .D SET(.ARY,VAL,12,LP+1)  ;Provider
  D SET(.ARY,$$PRVDEA^APSPES9(+$P(RX0,U,4)),12,10)  ; DEA
+ D SET(.ARY,$$DETOX^APSPES9(RXIEN,$P(RX0,U,4),$P(RX0,U,6)),12,13)  ;IHS/MSC/MGH Patch 1023 Detox
  D SET(.ARY,+$P(RX0,U,5),13,1)
  D SET(.ARY,$$GET1^DIQ(44,+$P(RX0,U,5),.01),13,2)  ;Clinic
  D SET(.ARY,$$HLPHONE^HLFNC($$GET1^DIQ(44,+$P(RX0,U,5),99)),14)  ;Clinic Phone
- D SET(.ARY,$$HLDATE^HLFNC($P(RX2,U,13),"DT"),15)  ;Fill Date
  D:ADD SET(.ARY,"NW",16)
  S INST=+$$GETRINST($P(RX2,U,9))
  S:'INST INST=+$G(DUZ(2))
@@ -207,15 +168,22 @@ ORCNW(OCC,ADD) ;EP
  D SET(.ARY,$E($$GET1^DIQ(4,INST,1.04,"I"),1,5),24,5)  ; Institution 5 digit Zip Code
  ;Code added to return Surescripts number if a new order following a deny
  S ORDER=$$GET1^DIQ(52,RXIEN,39.3)
+ ;IHS/MSC/MGH add documentation for digitally signed
+ S DIG=$$DIG^APSPFUNC(ORDER,RXIEN)  ;EPCS PATCH
+ D SET(.ARY,DIG,30,1)
+ S EARLY=$$VALUE^ORCSAVE2(ORDER,"EARLIEST")
+ I +EARLY D SET(.ARY,$$HLDATE^HLFNC(EARLY,"DT"),15)
+ E  D SET(.ARY,$$HLDATE^HLFNC($P(RX2,U,13),"DT"),15)  ;Fill Date
  S RRIEN=$$VALUE^ORCSAVE2(ORDER,"SSRREQIEN")
- I +RRIEN D
+ I +$G(RRIEN) D
  .S HLB7=""
  .S SSNUM=$$GET1^DIQ(9009033.91,RRIEN,.1)
  .S HLO=$$GET1^DIQ(9009033.91,RRIEN,.01)         ;Message ID
- .S HLOIEN=$O(^HLB("B",HLO,""))
- .I +HLOIEN S HLB7=$P($G(^HLB(HLOIEN,0)),U,7)
+ .S RELATES=$$GET1^DIQ(9009033.91,RRIEN,10)
+ .;S HLOIEN=$O(^HLB("B",HLO,""))
+ .;I +HLOIEN S HLB7=RELATES_":"_$P($G(^HLB(HLOIEN,0)),U,7)  ;add relates
  .D SET(.ARY,SSNUM,3,1)
- .D SET(.ARY,HLB7,3,2)
+ .D SET(.ARY,RELATES,3,2)
  S:ADD ORC=$$ADDSEG^HLOAPI(.HLST,.ARY)
  Q
  ; ORC-7 Dosing Support
@@ -234,7 +202,6 @@ ORC7 ;
  .S CONJ=$P(D,U,6)
  .S CONJ=$S(CONJ="T":"S",1:"A")
  .D SET(.ARY,CONJ,7,9,1,CMP)
- .;D SET(.ARY,"S",7,9,1,CMP)  ; Conjunction
  Q
  ; Create ORC Refill Request segment
  ; Input: IORC = Incoming ORC segment
@@ -248,8 +215,8 @@ ORCRF(IORC) ;EP
  S ORC=$$ADDSEG^HLOAPI(.HLST,.ARY)
  Q
  ; Create RXO segment
-RXO(ADD) ;EP
- N DSF,PHM,DNAME,X,FRM,DRG,NDC,RXNORM,DIEN,TYP,NIEN,TTY,APP,FOUND
+RXO(ADD,OCC) ;EP
+ N DSF,PHM,DNAME,X,FRM,DRG,NDC,RXNORM,DIEN,TYP,NIEN,TTY,APP,FOUND,QUANT
  S TYP=""
  D SET(.ARY,"RXO",0)
  S NDC=$TR($P(RX2,U,7),"-","")
@@ -268,9 +235,12 @@ RXO(ADD) ;EP
  D SET(.ARY,$$GDFMTXT(DSF),5,2)  ; Dosage Form Code Text
  D SET(.ARY,"X12DE1330",5,3)  ; Dosage Form Coding System
  D SET(.ARY,$$GETPRC(),6,2)  ; Provider Comments
- D SET(.ARY,$$GETSIG(),7,2)  ; SIG
+ D GETSIG^APSPES21(.ARY,OCC)
+ ;D SET(.ARY,$$GETSIG(),7,2)  ; SIG
  D SET(.ARY,$$SUBST(RXIEN),9)  ; Substitution (Default to allow)  N=Not authorized, G=Allowed Generic, T=Allow therapeutic
- D SET(.ARY,$P(RX0,U,7),11)  ; Quantity
+ ;IHS/MSC/MGH EPCS only send significant digits
+ S QUANT=$$DIGIT^APSPFUNC($P(RX0,U,7))
+ D SET(.ARY,QUANT,11)  ; Quantity
  S DRG=$P(RX0,U,6)
  D SET(.ARY,$$QTYQUAL(DRG),12,1)  ; Quantity Qualifier
  D SET(.ARY,$$QTYTXT(DRG),12,2)  ; Quantity  Qualifier Code Text
@@ -278,7 +248,7 @@ RXO(ADD) ;EP
  D SET(.ARY,+$P(RX0,U,9),13)  ; Number of refills
  D SET(.ARY,"",18)  ; Strength ;
  D SET(.ARY,$$SUNITS(),19)  ; Strength Units
- ;IHS/MGH/MGH added supplies and compounds patch 1016
+ ;IHS/MSC/MGH added supplies and compounds patch 1016
  I $P($G(^PSDRUG(DIEN,999999935)),U,1)=1 S TYP="C"
  I $E($P($G(^PSDRUG(DIEN,0)),U,2),1,2)="XA"!($P($G(^PSDRUG(DIEN,0)),U,3)["S") S TYP="P"
  D SET(.ARY,TYP,27,1)        ;Supply or compound code
@@ -299,6 +269,8 @@ RXO(ADD) ;EP
  .D SET(.ARY,"D3",32,3)  ; Pharmacy NCPDP Provider ID
  .D SET(.ARY,$$GET1^DIQ(9009033.9,PHM,.04),32,4)  ; Pharmacy NPI
  .D SET(.ARY,"HPI",32,6)
+ .D SET(.ARY,$$GET1^DIQ(9009033.9,PHM,6.2),32,7)  ;Pharmacy Version number
+ .D SET(.ARY,$$GET1^DIQ(9009033.9,PHM,.03),32,10)  ;Store number
  .D SET(.ARY,$$GET1^DIQ(9009033.9,PHM,1.1),33,1)  ; Pharmacy Address
  .D SET(.ARY,$$GET1^DIQ(9009033.9,PHM,1.2),33,2) ; Address second line
  .D SET(.ARY,$$GET1^DIQ(9009033.9,PHM,1.3),33,3)  ; Pharmacy City
@@ -309,6 +281,23 @@ RXO(ADD) ;EP
  .D SET(.ARY,"PH",36,3)   ; Phone
  .S:ADD PHM=$$ADDSEG^HLOAPI(.HLST,.ARY)
  Q
+ZCS(RX0,RXIEN) ; IHS/MSC/MGH EPCS Get drug class
+ N DRG,DRCL,GHB,FIRST
+ S DRG=$P(RX0,U,6)
+ S DRCL=+$P($G(^PSDRUG(DRG,0)),U,3)
+ I $E(DRCL,1,1)>0&($E(DRCL,1,1)<6) D
+ .N ZCS,ACLS
+ .S FIRST=$E(DRCL,1,1)
+ .S ACLS=$S(FIRST=1:"C48672",FIRST=2:"C48675",FIRST=3:"C48676",FIRST=4:"C48677",FIRST=5:"C48679",1:"C38046")
+ .S GHB=$$GHB^APSPES11(RXIEN)
+ .D SET(.ARY,"ZCS",0)
+ .D SET(.ARY,ACLS,1)
+ .I GHB'="" D SET(.ARY,GHB,2)
+ .S ZCS=$$ADDSEG^HLOAPI(.HLST,.ARY)
+ Q
+ZSL(RXIEN) ;Send service level if provider can
+ D ZSL^APSPES5(RXIEN)
+ Q
  ; Create RXR segment
 RXR ;EP
  D RXR^APSPES4
@@ -317,12 +306,15 @@ RXC ; Create RXC segment
  D RXC^APSPES4
  Q
  ; Create DG1 segment
-DG1 ;EP -
- D DG1^APSPES4
+DG1(HLST,ARY) ;EP -
+ D DG1^APSPES5(.HLST,.ARY)
  Q
  ; Create AL1 segment
-AL1 ;EP -
- D AL1^APSPES4
+AL1(HLST,ARY) ;EP -
+ D AL1^APSPES5(.HLST,.ARY)
+ Q
+OBX(HLST,ARY) ;EP
+ D OBX^APSPES5(.HLST,.ARY)
  Q
  ; Create MSA segment
 MSA ;EP
@@ -409,19 +401,21 @@ FSEGIEN(SRC,SEG,START) ;
  F  S LP=$O(SRC(LP)) Q:'LP  D  Q:RES
  .I $G(SRC(LP,"SEGMENT TYPE"))=SEG S RES=LP
  Q RES
- ; Return SIG as a single string
-GETSIG() ;EP
- N LP,RET
- S RET=""
- S LP=0 F  S LP=$O(^PSRX(RXIEN,"SIG1",LP)) Q:'LP  D
- .S RET=RET_^PSRX(RXIEN,"SIG1",LP,0)
- Q RET
+ ; Set sig to accomodate several components in one field for very large SIGs
+GETSIG(ARY,OCC) ;EP
+ D GETSIG^APSPES21(.ARY,OCC)
+ Q
  ; Return Provider Comments as a single string
 GETPRC() ;EP -
- N LP,RET
+ N LP,RET,NODE
  S RET=""
  S LP=0 F  S LP=$O(^PSRX(RXIEN,"PRC",LP)) Q:'LP  D
- .S RET=RET_^PSRX(RXIEN,"PRC",LP,0)
+ .S NODE=$G(^PSRX(RXIEN,"PRC",LP,0))
+ .I ($E(NODE,1,1)'=" ")&($E(NODE,$L(NODE),$L(NODE))'=" ") S NODE=NODE_" "
+ .S RET=RET_NODE
+ ;EPCS trim spaces
+ S RET=$$TRIM^XLFSTR(RET,"L")
+ S RET=$$TRIM^XLFSTR(RET,"R")
  Q RET
  ; Return SPI number for user
 SPI(USR) ; EP -

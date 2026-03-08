@@ -1,5 +1,7 @@
 ADEATT4 ; IHS/HQT/MJL  - ATTENDING DDS STMNT PT 4 ;11:42 AM  [ 03/24/1999   9:04 AM ]
- ;;6.0;ADE;;APRIL 1999
+ ;;6.0;ADE;**38,39**;MAR 25, 1999;Build 7
+ ;;IHS/OIT/GAB 11.2022 File 3,6,16 Changes - ADE Patch 38
+ ;;IHS/OIT/GAB 10.2023 SSN Fraud Prevention ACT - ADE Patch 39
  ;------->INIT
 INIT U IO K ADELIN S $P(ADELIN,"=",79)="",ADEPAG=0
  ;------->D HEADER
@@ -52,7 +54,8 @@ PROV S ADETITL="Dentist Name" W !! D LINE
  W !,$P(ADENOD,U,12) ;"DDS ADDRESS"
  ;W !,"DDS CITY",?30,"STATE",?40,"ZIP"
  W !,$P(ADENOD,U,13),?30,$P(^DIC(5,$P(ADENOD,U,14),0),U,2),?40,$P(ADENOD,U,15)
- W !,"Dentist SSN: ",$P(^DIC(16,ADERDNMD,0),U,9) ;"DDS SSN"
+ ;W !,"Dentist SSN: ",$P(^DIC(16,ADERDNMD,0),U,9) ;"DDS SSN"
+ ;IHS/OIT/GAB Patch **38** File 3,6,16 Changes; PATCH **39** SSN Reduction Act: comment out SSN printout in above line
  Q
 PROC S ADETITL="Treatment Provided" W ! D LINE
  W !,"Tooth",?10,"Description of Service",?35,"Date",?45,"Procedure",?60,"Fee" S ADETITL="" W ! D LINE

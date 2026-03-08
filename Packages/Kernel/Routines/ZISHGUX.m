@@ -1,5 +1,5 @@
-%ZISH ;ISF/AC,RWF - GT.M for UNIX Host file Control ;01/04/2005  08:13
- ;;8.0;KERNEL;**275,306**;Jul 10, 1995;
+%ZISH ;ISF/AC,RWF - GT.M for UNIX Host file Control ;02/03/2004  08:13
+ ;;8.0;KERNEL;**275**;Jul 10, 1995;
  ; for GT.M for Unix/VMS, version 4.3
  ;
 OPENERR ;
@@ -35,24 +35,24 @@ CLOSE(X) ;SR. Close HFS device not opened by %ZIS.
  D HOME^%ZIS
  Q
 DEL(%ZX1,%ZX2) ;ef,SR. Del fl(s)
- ;S Y=$$DEL^%ZISH("dir path",$NA(array))
- N %ZISH,%ZISHLGR,%ZX,X,%ZXDEL
- S %ZX1=$$DEFDIR($G(%ZX1)),%ZXDEL=1,%ZISH=""
- F  S %ZISH=$O(@%ZX2@(%ZISH)) Q:%ZISH=""  D
- . N $ETRAP,$ESTACK S $ETRAP="D DELERR^%ZISH"
- . I %ZISH["*" S %ZXDEL=0 Q  ; Wild card not allowed.
- . S %ZX=$ZSEARCH(%ZX1_%ZISH)
- . Q:%ZX']""           ; File doesn't exist - not an error, just quit.
- . O %ZX:READONLY:0
- . I '$T S %ZXDEL=0 Q  ; Can't open it.
- . C %ZX:DELETE
- . I $ZSEARCH(%ZX)]"" S %ZXDEL=0 ; Delete was not successful.
- Q %ZXDEL
+ ;S Y=$$DEL^ZISH("/dir/",namevalue)
+ ;Rtn 0=Err, 1=Ok
+ N %ZISH,%ZISHLGR,%ZXIT,%ZX,X
+ N $ETRAP,$ESTACK S $ETRAP="D DELERR^%ZISH"
+ S %ZX1=$$DEFDIR($G(%ZX1))
+ ;Get fls to act on
+ ;No '*' allowed
+ S %ZISH="" F  S %ZISH=$O(@%ZX2@(%ZISH)) Q:'%ZISH  I %ZISH["*" S %ZXIT=1 Q
+ Q:$D(%ZXIT) 0
+ S %ZISH="",%ZXIT=0
+ F  S %ZISH=$O(@%ZX2@(%ZISH)) Q:%ZISH=""  S %ZX=$ZPARSE(%ZISH,,%ZX1) D  Q:%ZXIT
+ . S X=$ZSEARCH("") ;Flush $ZSEARCH context
+ . S %ZX=$ZSEARCH(%ZX)
+ . I %ZX]"" O %ZX:readonly:0 S:'$T %ZXIT=1 Q:%ZXIT  C %ZX:DELETE
+ Q '%ZXIT
+ ;
 DELERR ;Trap any $ETRAP error, unwind and return.
- S $ETRAP="D UNWIND^%ZTER"
- S %ZXDEL=0
- D UNWIND^%ZTER
- Q
+ Q:$ESTACK>1  S $ECODE="" Q:'$QUIT  Q 0
  ;
 LIST(%ZX1,%ZX2,%ZX3) ;ef,SR. Set local array holding fl names
  ;S Y=$$LIST^ZISH("/dir/","list_root","return_root")

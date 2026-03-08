@@ -1,10 +1,17 @@
-ABMDE1 ; IHS/ASDST/DMJ - CLAIM IDENTIFIERS-SCRN 1 ;   
- ;;2.6;IHS 3P BILLING SYSTEM**9,10,22**;;NOV 12, 2009;Build 418
+ABMDE1 ; IHS/SD/SDR - CLAIM IDENTIFIERS-SCRN 1 ;   
+ ;;2.6;IHS 3P BILLING SYSTEM;**9,10,22,31,33,34,37**;NOV 12, 2009;Build 739
  ;
- ; IHS/SD/SDR - v2.5 p8 - task 8 - Added code to check when VT changes to check for replacement insurer
- ; IHS/SD/SDR - v2.5 p11 - IM22787 - Fix for replacement insurer
- ; IHS/SD/SDR - 2.6*9 - HEAT28364 - changed replacement insurer to use LDFN not DUZ(2)
- ;IHS/SD/SDR 2.6*22 HEAT335246 - Added AUTO-SPLIT tag to claim number if AUTO-SPLIT claim
+ ;IHS/SD/SDR v2.5 p8 task 8 Added code to check when VT changes to check for replacement insurer
+ ;IHS/SD/SDR v2.5 p11 IM22787 Fix for replacement insurer
+ ;
+ ;IHS/SD/SDR 2.6*9 HEAT28364 changed replacement insurer to use LDFN not DUZ(2)
+ ;IHS/SD/SDR 2.6*22 HEAT335246 Added AUTO-SPLIT tag to claim number if AUTO-SPLIT claim
+ ;IHS/SD/SDR 2.6*33 ADO60185/CR11502 Added preferred name to header if populated for the patient
+ ;IHS/SD/SDR 2.6*34 ADO60694/CR7384 Added add/edit/delete if bill type is changed
+ ;IHS/SD/SDR 2.6*37 ADO81491 Updated preferred name PPN to use XPAR site parameter
+ ;IHS/SD/SDR 2.6*37 ADO78452 Bill Type will now only change when:
+ ;  1. bill type itself is edited
+ ;  2. if there's a bill type set up for the visit type and the visit type is edited (it updates the bill type automatically)
  ;
 OPT K ABM,ABMV,ABME
  S ABMP("OPT")="EVNJBQ"
@@ -32,6 +39,7 @@ EDIT ; Entry of Claim Identifiers
  D ^DIE
  ;edited visit type-check if it should mimic a different insurer/vt
  I DR[".07" D TPICHECK
+ I DR[".12" D DRGCK  ;abm*2.6*34 IHS/SD/SDR ADO60694
  K DR
  G OPT
  ;
@@ -98,21 +106,35 @@ S2 ;
  S $P(ABM("D"),"~",(80-$L(ABM("PG"))/2)+1)=""
  W ABM("D"),ABM("PG"),ABM("D"),!
  W "Patient: ",$P(^DPT(ABMP("PDFN"),0),U)
+ ;I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"")'="" W "*"  ;indicating there is a preferred name  ;abm*2.6*33 IHS/SD/SDR ADO60185  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"I",1)'="" W " - "_$$GETPREF^AUPNSOGI(ABMP("PDFN"),"I",1)_"*"  ;include PPN after name  ;abm*2.6*37 IHS/SD/SDR ADO81491
  ;
 HRN ;
  I ABMP("LDFN")]"" D
  . W " ",$S($D(^AUPNPAT(ABMP("PDFN"),41,ABMP("LDFN"),0)):" [HRN:"_$P(^(0),U,2)_"]",1:" [no HRN]")
  ;W ?59,"Claim Number: ",ABMP("CDFN"),!  ;abm*2.6*10 ICD10 008
- I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)="S" W ?53,"SPLIT Claim Number: ",ABMP("CDFN"),!  ;abm*2.6*10 ICD10 008
- I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)="A" W ?53,"AUTOSPLIT Claim#: ",ABMP("CDFN"),!  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;start old abm*2.6*33 IHS/SD/SDR ADO60185
+ ;I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)="S" W ?53,"SPLIT Claim Number: ",ABMP("CDFN"),!  ;abm*2.6*10 ICD10 008
+ ;I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)="A" W ?53,"AUTOSPLIT Claim#: ",ABMP("CDFN"),!  ;abm*2.6*22 IHS/SD/SDR HEAT335246
+ ;end old start new abm*2.6*33 IHS/SD/SDR ADO60185
+ I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)="S" W ?53,"SPLT Claim: ",ABMP("CDFN"),!
+ I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)="A" W ?53,"AUTOSPLT Claim: ",ABMP("CDFN"),!
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  ;I $P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)'="S" W ?59,"Claim Number: ",ABMP("CDFN"),!  ;abm*2.6*10 ICD10 008  ;abm*2.6*22 HEAT335246
- I "^A^S^"'[("^"_$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)_"^") W ?59,"Claim Number: ",ABMP("CDFN"),!  ;abm*2.6*10 ICD10 008  ;abm*2.6*22 HEAT335246
+ ;I "^A^S^"'[("^"_$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)_"^") W ?59,"Claim Number: ",ABMP("CDFN"),!  ;abm*2.6*10 ICD10 008  ;abm*2.6*22 HEAT335246  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ I "^A^S^"'[("^"_$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,22)_"^") W ?60,"Claim: ",ABMP("CDFN"),!
+ ;I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;.W ?3,"Preferred Name: ",$$EN^ABMVDF("RVN"),$$GETPREF^AUPNSOGI(ABMP("PDFN"),""),$$EN^ABMVDF("RVF"),!  ;actually write the preferred name in header  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  I +ABMZ("PG")=8 D
  .W "Mode of Export: ",$P($G(^ABMDEXP(ABMP(ABMZ("PG")),0)),U),!
  S ABM("D")=""
  S ABM("TITL")=" ("_ABMZ("TITL")_") "
  S $P(ABM("D"),".",(80-$L(ABM("TITL"))/2)+1)=""
- W ABM("D"),ABM("TITL"),ABM("D"),!
+ ;W ABM("D"),ABM("TITL"),ABM("D"),!   ;abm*2.6*31 IHS/SD/SDR CR11832
+ W ABM("D"),ABM("TITL"),ABM("D")   ;abm*2.6*31 IHS/SD/SDR CR11832
+ I ABM("TITL")'["CLAIM SUMMARY" W !  ;abm*2.6*31 IHS/SD/SDR CR11832
  Q
  ;
 S3 ;
@@ -130,7 +152,17 @@ S4 ;
  W ABM("D"),ABM("PG"),ABM("D"),!
  ;W "Patient: ",$P(^DPT(ABMP("PDFN"),0),U),?59,"Claim Number: ",ABMP("CDFN"),!  ;abm*2.6*10 ICD10 008
  W "Patient: ",$P(^DPT(ABMP("PDFN"),0),U)  ;abm*2.6*10 ICD10 008
- W ?59,"Claim Number: ",ABMP("CDFN"),!  ;abm*2.6*10 ICD10 008
+ ;W ?59,"Claim Number: ",ABMP("CDFN"),!  ;abm*2.6*10 ICD10 008  ;abm*2.6*33 IHS/SD/SDR ADO60185
+ ;start new abm*2.6*33 IHS/SD/SDR ADO60185
+ ;I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"")'="" W "*"  ;indicating there is a preferred name  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"I",1)'="" W "*"  ;indicating there is a preferred name  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"I",1)'="" W " - "_$$GETPREF^AUPNSOGI(ABMP("PDFN"),"I",1)_"*"  ;include PPN after name  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ I ABMP("LDFN")]"" D
+ .W " ",$S($D(^AUPNPAT(ABMP("PDFN"),41,ABMP("LDFN"),0)):" [HRN:"_$P(^(0),U,2)_"]",1:" [no HRN]")
+ W ?59,"Claim: ",ABMP("CDFN"),!
+ ;I $$GETPREF^AUPNSOGI(ABMP("PDFN"),"")'="" D  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;.W ?5,$$EN^ABMVDF("RVN"),"PREFERRED NAME: ",$$GETPREF^AUPNSOGI(ABMP("PDFN"),""),$$EN^ABMVDF("RVF"),!  ;actually write preferred name in hdr  ;abm*2.6*37 IHS/SD/SDR ADO81491
+ ;end new abm*2.6*33 IHS/SD/SDR ADO60185
  S ABM("D")=""
  S ABM("TITL")=" (PAGE "_ABMZ("PG")_" - "_ABMZ("TITL")_") "
  S $P(ABM("D"),".",(80-$L(ABM("TITL"))/2)+1)=""
@@ -168,7 +200,16 @@ TPICHECK ;EP
  ..;S DR=".011////"_$P($G(^ABMNINS(DUZ(2),ABMINS,1,ABMDVTCK,12,ABMVIEN,0)),U,3)  ;abm*2.6*9 HEAT28364
  ..S DR=".011////"_$P($G(^ABMNINS(ABMP("LDFN"),ABMINS,1,ABMDVTCK,12,ABMVIEN,0)),U,3)  ;abm*2.6*9 HEAT28364
  ..D ^DIE
+ S ABMT("BTYP")=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,12)  ;abm*2.6*37 IHS/SD/SDR ADO78452
  D ^ABMDEVAR
+ ;start new abm*2.6*37 IHS/SD/SDR ADO78452
+ ;the bill type should remain whatever it was prior to visit type being edited unless there is something
+ ;set up in the BILL TYPE field for the insurer/visit type
+ S DIE="^ABMDCLM(DUZ(2),"
+ S DA=ABMP("CDFN")
+ S DR=".12////"_ABMT("BTYP")
+ D ^DIE
+ ;end new abm*2.6*37 IHS/SD/SDR ADO78452
  Q
 RMVRPLC ; if there's a replacement, is it the active insurer
  I ABMP("INS")=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),13,ABMINSI,0)),U,11) D
@@ -184,3 +225,25 @@ RMVRPLC ; if there's a replacement, is it the active insurer
  S DR=".011////@"
  D ^DIE
  Q
+ ;start new abm*2.6*34 IHS/SD/SDR ADO60694
+DRGCK  ;
+ ;if BILL type changes, check if DRG should/shouldn't be populated
+ S ABMP("BTYP")=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),0)),U,12)  ;refresh ABMP("BTYP") variable
+ D PAGE^ABMDEVAR
+ I ("^11^12^18^"[("^"_$E(ABMP("BTYP"),1,2)_"^")) D
+ .I +$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),5)),U,13)'=0 Q  ;there's already a DRG so leave it
+ .I +$G(ABMVDFN)=0 Q  ;there's no visit to check
+ .I +$P($G(^AUPNVSIT(ABMVDFN,0)),U,34)=0 Q  ;there's no DRG to put on the claim
+ .N DA,DIE,X,Y
+ .S DIE="^ABMDCLM(DUZ(2),"
+ .S DA=ABMP("CDFN")
+ .S DR=".513///`"_$P($G(^AUPNVSIT(ABMVDFN,0)),U,34)
+ .D ^DIE
+ I ("^11^12^18^"'[("^"_$E(ABMP("BTYP"),1,2)_"^")) D
+ .N DA,DIE,X,Y
+ .S DIE="^ABMDCLM(DUZ(2),"
+ .S DA=ABMP("CDFN")
+ .S DR=".513////@"
+ .D ^DIE
+ Q
+ ;end new abm*2.6*34 IHS/SD/SDR ADO60694

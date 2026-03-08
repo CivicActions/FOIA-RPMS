@@ -1,5 +1,5 @@
-AMHSC2 ; IHS/CMI/LAB - SPECIAL X-REF ROUTINES - ;
- ;;4.0;IHS BEHAVIORAL HEALTH;;MAY 14, 2010
+AMHSC2 ; IHS/OIT/MJL - SPECIAL X-REF ROUTINES - ; 
+ ;;3.0;IHS BEHAVIORAL HEALTH;**6**;JAN 27, 2003
  ;
  ; AMHGREF  - Primary Global Reference
  ; AMHSBJGR - Subject Global Reference - Used if all of the entries are to be used under this node -- don't need to check a date

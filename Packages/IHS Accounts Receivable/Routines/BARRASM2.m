@@ -1,15 +1,18 @@
 BARRASM2 ; IHS/SD/LSL - Age Summary Report by Fiscal Year ; 09/15/2008
- ;;1.8;IHS ACCOUNTS RECEIVABLE;**7,28**;OCT 26, 2005;Build 92
+ ;;1.8;IHS ACCOUNTS RECEIVABLE;**7,28,30,31**;OCT 26, 2005;Build 90
  ;New routine MRS:BAR*1.8*7 TO131 REQ_2
  ;IHS/SD/AML 1.8*28 CR8351 HEAT296731 Changed USM UAGE call to use 3P Approval Date, not Billed Date
  ;IHS/SD/SDR 1.8*28 CR8350 HEAT295594 Changed prompt for FY to prompt for a range of FYs and print as one report.
  ;   Thanks to Jonathan Hubbard, Portland, for the code.  Note, it is not the original code he provided.  Had to
  ;   modify some to allow for prompts not being answered, and to allow a single FY to still be selected.
  ;IHS/SD/AML 1.8*28 CR8351 HEAT296731 Made change so last day of fiscal year will be included by making end date 0930.999999
+ ;IHS/SD/CPC ;BAR*1.8*30 CR4976/11205 Add counts
+ ;BAR*1.8*31;OIT.IHS.FCJ CR#6369 SET NEW EP
  Q
  ; *********************************************************************
 EN ; EP
  K BARY,BAR
+ K ^TMP($J,"BAR-ASMFY")     ;BAR*1.8*30 CR4976/11205
  D:'$D(BARUSR) INIT^BARUTL   ;Set up basic A/R Variables
  N BARA
  ;S BARA=$$GETFY  ;bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594
@@ -23,19 +26,29 @@ EN ; EP
  S BAR("LOC")=$$GET1^DIQ(90052.06,DUZ(2),16)   ; BILLING or VISIT
  I BAR("LOC")="" S BAR("LOC")="VISIT"
  D ASK^BARRASMA
+ Q:'+$G(BARY("STCR"))!$D(DTOUT)!$D(DUOUT)!$D(DIROUT)   ;BAR*1.8*30 CR4976/11205
  W !!,"This report is designed to be session logged or sent to a ",!     ;IHS/DIT/CPC - 20180502 CR8350
  W "host file server device with no pauses between reports or full",!   ;IHS/DIT/CPC - 20180502 CR8350
  W "screens of information so please take appropriate steps to ",!    ;IHS/DIT/CPC - 20180502 CR8350
  W "allow viewing of the entire report.",!    ;IHS/DIT/CPC - 20180502 CR8350
  D EOP^BARUTL(0) ;-PAUSE IHS/DIT/CPC - 20180502 CR8350
  I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) Q  ;bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594
+ I $G(BARY("RTYP"))=3,($G(BARY("STCR"))=5) D ASKDELIM^BARRASMA     ;BAR*1.8*30 CR4976/11205
  M BARTBARY=BARY
  M BARTBAR=BAR
- D ^%ZIS
- Q:POP
- U IO
+ ;S BARQ("RC")="COMPUTE^BARRASM"      ; Build tmp global with data
+ S BARQ("RP")="START^BARRASM2"       ; Print reports from tmp global
+ S BARQ("NS")="BAR"                  ; Namespace for variables
+ S BARQ("RX")="POUT^BARRUTL"         ; Clean-up routine
+ D ^BARDBQUE                         ; Double queuing
+ D PAZ^BARRUTL                       ; Press return to continue
+ ;D ^%ZIS
+ ;Q:POP
+ ;U IO
  ;S IOSL=999999  ;bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594 ;IHS/DIT/CPC - 20180502 CR8350
  ;
+ Q
+START ;EP
  S BARI=0
  F  S BARI=$O(BARA(BARI)) Q:'BARI  D
  .Q:BARI=""
@@ -50,14 +63,20 @@ EN ; EP
  .I $D(DTOUT)!$D(DUOUT)!$D(DIROUT) Q
  .K BAR("LINE")   ;IHS/DIT/CPC - 20180502 CR8350
  .S $P(BAR("LINE"),"-",10)=""  ;IHS/DIT/CPC - 20180502 CR8350
- .W !!,BAR("LINE")_"Searching FY "_$P(BARP("UAGE"),U)_" "_BAR("LINE"),!!   ;IHS/DIT/CPC - 20180502 CR8350
+ .;W !!,BAR("LINE")_"Searching FY "_$P(BARP("UAGE"),U)_" "_BAR("LINE"),!!   ;IHS/DIT/CPC - 20180502 CR8350
  .D SETHDR^BARRASM                    ;Build header array
  .D COMPUTE^BARRASM      ;Build tmp global with data
- .D PRINT^BARRASMB       ;Print reports from tmp global
+ .;D PRINT^BARRASMB       ;Print reports from tmp global      ;BAR*1.8*30 CR4976/11205 start
+ .I '(($G(BARDELIM)="CSV")!($G(BARDELIM)="XML")) D
+ ..I $G(BARY("RTYP"))=3,($G(BARY("STCR"))=5) D PRINT^BARRASMD    ;BAR*1.8*30 CR4976/11205 
+ ..I $G(BARY("RTYP"))'=3!($G(BARY("STCR"))'=5) D PRINT^BARRASMB       ;Print reports from tmp global ;BAR*1.8*30 CR4976/11205
  .M BARY=BARTBARY
  .M BAR=BARTBAR
- D ^%ZISC,HOME^%ZIS
+ I $G(BARDELIM)="CSV" D DELIM^BARRASME
+ I $G(BARDELIM)="XML" D DELIM^BARRASME
+ ;D ^%ZISC,HOME^%ZIS
  ;end new bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594
+ K ^TMP($J,"BAR-DEMFY"),^TMP($J,"BAR-ASMC"),^TMP($J,"BAR-ASMC"),^TMP($J,"BAR-ASMT"),^TMP($J,"BAR-DEMO")    ;BAR*1.8*30 CR4976/11205 END
  Q
  ; *********************************************************************
 GETFY ;FIND FISCAL YEAR FOR REPORT  ;removed function  ;bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594
@@ -101,6 +120,7 @@ GETFY ;FIND FISCAL YEAR FOR REPORT  ;removed function  ;bar*1.8*28 IHS/SD/SDR CR
  ;S BARA=BARFY_U_(BARFY-1700-1)_"1001"_U_(BARFY-1700)_"0930"  ;Build DT-type string
  ;Q BARA
  ;end old start new bar*1.8*28 IHS/SD/SDR CR8350 HEAT295594
+FYSET ;EP ;BAR*1.8*31 OIT.IHS.FCJSET NEW EP - CR#6369
  F BARCFY=BARSFY:1:BAREFY  D
  .S BARZ=BARCFY
  .S:$L(BARZ)=1 BARZ="0"_BARZ

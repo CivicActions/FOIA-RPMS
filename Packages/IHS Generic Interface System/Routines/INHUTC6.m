@@ -1,5 +1,5 @@
-INHUTC6 ;KN,bar; 13 Aug 97 09:18; Interface Message/Error Search 
- ;;3.01;BHL IHS Interfaces with GIS;;JUL 01, 2001
+INHUTC6 ;ihs/cmi/maw - Interface Message/Error Search 
+ ;;3.01;IHS Generic Interface System;**17**;FEB 20, 2002;Build 3
  ;COPYRIGHT 1991-2000 SAIC
  ;
  ; MODULE NAME: Interface Message/Error Search Part III (INHUTC6) 
@@ -95,7 +95,7 @@ LOCK(INGLB,INDA,INMODE,INTIME,INOPT,INCLR) ; lock file entry
  ;   TRUE   =  success
  ;   FAILSE =  faild
  ; Parameters:
- ;         INGLB  =  file number or global base ref ie; "^DIC(3,"
+ ;         INGLB  =  file number or global base ref ie; "^VA(200,"
  ;   INDA   =  entry in criteria file to lock (req)
  ;   INMODE =  1 to lock and 0 to unlock 0 is default
  ;         INTIME =  timeout value, defaults to DTIME or 5 sec if

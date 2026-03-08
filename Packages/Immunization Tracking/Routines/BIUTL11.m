@@ -1,13 +1,15 @@
 BIUTL11 ;IHS/CMI/MWR - UTIL: PATIENT INFO; AUG 10,2010
- ;;8.5;IMMUNIZATION;**9**;OCT 01,2014
+ ;;8.5;IMMUNIZATION;**23,26**;OCT 24,2011;Build 33
  ;;* MICHAEL REMILLARD, DDS * CIMARRON MEDICAL INFORMATICS, FOR IHS *
  ;;  UTILITY: PATIENT FUNCTIONS: CONTRAS, INPATIENT, HIDOSE.
  ;;  PATCH 1: Correct typo "Q", so that unmatched CVX returns 0 (zero),
  ;;           not "Q".  LASTIMM+17
  ;;  PATCH 3: Append date to Hx of Chickenpox Reason.  CONTRA+45
- ;;  PATCH 5: Unused call, was never a P.E.P..  CONTR+0
  ;;  PATCH 8: For Hx of Chicken Pox, do NOT contraindicate Zoster (CVX=121). CONTRA+62
  ;;  PATCH 9: Add GOTDOSE call: check if patient received a dose.  GOTDOSE+0
+ ;;  PATCH 17: Do not contraindicate Flu for Anaphylactic Egg Allergy.  CONTRA+68
+ ;;  PATCH 22: Changes ensure any Contra blocks the vaccine.   CONTRA+57
+ ;;  PATCH 23: Uncomment check intro in p22.  CONTRA+60
  ;
  ;
  ;----------
@@ -29,7 +31,7 @@ CONTRA(BIDFN,A,BIREF,BIDATE) ;EP
  ;---> Quit if there are no contraindications for this patient.
  Q:'$D(^BIPC("B",BIDFN))
  ;
- N N,U S N=0,U="^"
+ N N,U,Z,% S N=0,U="^"
  F  S N=$O(^BIPC("B",BIDFN,N)) Q:'N  D
  .;---> If bad xref, kill it and quit.
  .I '$D(^BIPC(N,0)) K ^BIPC("B",BIDFN,N) Q
@@ -65,9 +67,13 @@ CONTRA(BIDFN,A,BIREF,BIDATE) ;EP
  .;
  .;---> Quit if the Reason for this contraindication is one that
  .;---> still allows forecasting of the vaccine.  For example,
- .;---> if the reason is "Patient Refusal", then the vaccine should
- .;---> still be forecast as due.
+ .;---> if the reason is "Patient Refusal", then still forecast
+ .;
+ .;********** PATCH 22, v8.5, OCT 24,2011, IHS/CMI/MWR
+ .;********** PATCH 23, v8.5, OCT 24,2011, ihs/cmi/maw - uncommented from p22
+ .;---> Contra Reason NO LONGER required.  (Refusals no longer used.)
  .I X Q:$P($G(^BICONT(X,0)),U,2)
+ .;**********
  .;
  .;---> For this Vaccine IEN contraindication, get Related Contraindcated CVX Codes.
  .;---> (Call below also sets A(CVX) of THIS Vaccine IEN in the A(CVX) array.)
@@ -78,7 +84,11 @@ CONTRA(BIDFN,A,BIREF,BIDATE) ;EP
  .;---> do NOT contraindicate Zoster (CVX=121).
  .I $P(BIPC,U,2)=132,$P(BIPC,U,3)=12 K A(121)
  .;**********
- ;
+ .;
+ .;********** PATCH 17, v8.5, MAR 01,2019, IHS/CMI/MWR
+ .;---> If the vaccine is a Flu (CVX=88) and Reason is Anaphylactic Egg Allergy,
+ .;---> do NOT contraindicate Flu (CVX=88).
+ .I $D(A(88)),$P(BIPC,U,3)=20 K A(88)
  Q
  ;
  ;
@@ -108,14 +118,6 @@ CONTRHL7(BIVAC,A) ;EP
  ;---> Now piece out Contraindicated HL7 Codes (comma delimited)
  ;---> and set in A() array as subscripts.
  N I,Y F I=1:1 S Y=$P(X,",",I) Q:'Y  S A(Y)=""
- Q
- ;
- ;
- ;----------
-CONTR(BIDFN,BIVAC) ;EP
- ;
- ;********** PATCH 5, v8.5, JUL 01,2013, IHS/CMI/MWR
- ;---> REMOVED. Was never a P.E.P.
  Q
  ;
  ;
@@ -337,7 +339,7 @@ LASTIMM(BIDFN,BICVXS,BIQDT,BIALL) ;PEP - Return latest date patient received CVX
  F I=1:1 S BICVX=$P(BICVXS,",",I) Q:BICVX=""  D
  .S BIIEN=$$HL7TX^BIUTL2(BICVX)
  .;---> Quit if CVX Code does not exist in Vaccine Table (or=OTHER).
- .Q:('BIIEN!(BIIEN=137)) 0
+ .Q:('BIIEN!(BIIEN=137))
  .N N S N=0
  .F  S N=$O(^AUPNVIMM("AC",BIDFN,N)) Q:'N  D
  ..N X,Y S X=$G(^AUPNVIMM(N,0))
@@ -397,8 +399,6 @@ LASTCPT(BIDFN,BICPTS,BIQDT,BIALL) ;EP
  ;
  ;----------
 MOTHMAID(DFN) ;EP
- ;---> CodeChange for v7.1 - IHS/CMI/MWR 12/01/2000:
- ;---> This is a new call added.
  ;---> Return patient's mother's maiden name.
  ;---> Parameters:
  ;     1 - DFN  (req) Patient's IEN (DFN).
@@ -407,8 +407,6 @@ MOTHMAID(DFN) ;EP
  Q $P($G(^DPT(DFN,.24)),U,3)
  ;
  ;
- ;********** PATCH 9, v8.5, OCT 01,2014, IHS/CMI/MWR
- ;---> Call to limit export of imms to specific vaccines within a date range.
  ;----------
 GOTDOSE(BIDFN,BIVIEN,BIRDT) ;EP
  ;---> Return 1 if patient received one or more doses of the input vaccine

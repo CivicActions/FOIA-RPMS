@@ -1,6 +1,7 @@
-ORWOR1 ; slc/dcm - PKI RPC functions
- ;;3.0;ORDER ENTRY/RESULTS REPORTING;**132,141,163**;Dec 17, 1997
-SIG(RET,ID,X1,X2,X3,X4,ORX5,X6) ;Store the signature.
+ORWOR1 ; slc/dcm - PKI RPC functions;31-Jul-2018 14:09;DU
+ ;;3.0;ORDER ENTRY/RESULTS REPORTING;**132,141,163,1017**;Dec 17, 1997;Build 48
+SIG(RET,ID,X1,X2,X3,X4,ORX5,X6,X7) ;Store the signature.
+ ;Modified - 05/15/17 - IHS/MSC/MGH Changed for EPCS SIG+10
  ;ID = orifn;action
  ;X1 = Hash
  ;X2 = Length of the array
@@ -8,18 +9,60 @@ SIG(RET,ID,X1,X2,X3,X4,ORX5,X6) ;Store the signature.
  ;X4 = Provider DUZ
  ;ORX5 = Array for the sig
  ;X6 = CRLURL
- N Y1,ORIFN,ACT
+ ;X7 = DFN
+ ;IHS/MSC/MGH  Changes for EPCS from CPRS 29
+ ;N Y1,ORIFN,ACT
+ ;S Y1=$$STORESIG^XUSSPKI(X1,X2,.ORX5,X4,X3)
+ ;I +Y1>0,$L($G(X6)) S Y1=$$CRLURL^XUSSPKI(X6)
+ ;I +Y1>0 D
+ ;. S ORIFN=+ID,ACT=$P(ID,";",2)
+ ;. S $P(^OR(100,ORIFN,8,+ACT,2),"^",3)=X1
+ ;S RET=Y1
+ N ORHINFO,ORDINFO,OROUT,ORADD,ORIFN
+ ;gets patient/user specific info used in hash on GUI
+ K ORDFDA
+ S ORIFN=+ID
+ D HASHINFO^ORDEA(.ORHINFO,X7,X4)
+ ;get order specific info used in hash on GUI
+ D ORDHINFO^ORDEA(.ORDINFO,+ID,X1,.ORHINFO)
+ ;look for existing entries in 101.52
+ S ORADD=1
+ I $D(^ORPA(101.52,"B",+ID)) D
+ .N ORI S ORI=0 F  S ORI=$O(^ORPA(101.52,"B",+ID,ORI)) Q:'ORI  D
+ ..;if existing entry is not one that originated from backdoor and it's hash matches the current hash set flag to not add new record
+ ..I ($L($P($G(^ORPA(101.52,ORI,0)),U,2))=0),$P($G(^ORPA(101.52,ORI,0)),U,3)=X1 D
+ ...S ORADD=0
+ ...;keep record that this was called but matched for 60 days
+ ...S ^XTMP("OR DUP ARCHIVE","HMATCH",+ID,ORI,$$NOW^XLFDT)=""
+ ...S ^XTMP("OR DUP ARCHIVE",0)=$$FMADD^XLFDT($$NOW^XLFDT,60)_U_$$NOW^XLFDT
+ ..;if existing entry is not one that originated from backdoor but it does not match the current hash delete it
+ ..I ($L($P($G(^ORPA(101.52,ORI,0)),U,2))=0),$P($G(^ORPA(101.52,ORI,0)),U,3)'=X1 D
+ ...;keep deleted archive entry in xtmp for 60 days
+ ...M ^XTMP("OR DUP ARCHIVE","HUNMATCH",+ID,ORI,$$NOW^XLFDT)=^ORPA(101.52,ORI)
+ ...S ^XTMP("OR DUP ARCHIVE",0)=$$FMADD^XLFDT($$NOW^XLFDT,60)_U_$$NOW^XLFDT
+ ...N DA,DIK
+ ...S DA=ORI,DIK="^ORPA(101.52," D ^DIK
+ ..;if it is from backdoor then update that record with the hash and set flag to not add new record
+ ..I $L($P($G(^ORPA(101.52,ORI,0)),U,2))>0 S $P(^ORPA(101.52,ORI,0),U,3)=X1 S ORADD=0
+ I ORADD D
+ .S ORDFDA(101.52,"+1,",9999999.01)=$$NOW^XLFDT
+ .D UPDATE^DIE("","ORDFDA","OROUT","ERROR") K ORDFDA
+ I $D(ERROR) D EDIT^APSPCSA(+ORIFN,"AF")
+ E  D EDIT^APSPCSA(+ORIFN,"AS")
+ ;END changes
  S Y1=$$STORESIG^XUSSPKI(X1,X2,.ORX5,X4,X3)
- I +Y1>0,$L($G(X6)) S Y1=$$CRLURL^XUSSPKI(X6)
  I +Y1>0 D
  . S ORIFN=+ID,ACT=$P(ID,";",2)
  . S $P(^OR(100,ORIFN,8,+ACT,2),"^",3)=X1
- S RET=Y1
+ . ;IHS/MSC/MGH Add audit data
+ . D EDIT^APSPCSA(ORIFN,"DS")
+ E  D EDIT^APSPCSA(ORIFN,"DF")
+ S RET=1
  Q
 CRLURL(RET,X1) ;Store the URL's
  S RET=$$CRLURL^XUSSPKI(X1)
  Q
-VERIFY(RET,ORDER,DFN)       ;Verify PKI Data
+VERIFY(RET,ORDER,DFN) ;Verify PKI Data
  ;DBIA #3750
  ;ORDER = ORIFN;ACTION - NOTE: if no ACTION then 1 (new order) is assumed
  ;Returned values: "1" if digital signature verifies
@@ -45,30 +88,30 @@ VERIFY(RET,ORDER,DFN)       ;Verify PKI Data
  I RET="OK" S RET=1 Q
  I $E(RET,1,7)="-898020" S RET=$E(RET,2,99)
  Q
-CHKDIG(REQ,ORDER)       ;Check if Digital Signature is required
+CHKDIG(REQ,ORDER) ;Check if Digital Signature is required
  N IFN,ACTION
  S REQ=0,IFN=+ORDER,ACTION=$P(ORDER,";",2)
  I +$P($G(^OR(100,+IFN,8,+ACTION,2)),U,5) S REQ=1
  Q
-GETDTEXT(TEXT,ORDER)    ;Get External Text
+GETDTEXT(TEXT,ORDER) ;Get External Text
  N IFN,ACTION
  S IFN=+ORDER,ACTION=$P(ORDER,";",2),I=0
  F  S I=$O(^OR(100,+IFN,8,+ACTION,.2,I)) Q:'I  S TEXT(I)=^(I,0)
  Q
-GETDSIG(SIG,ORDER)      ;Get Digital Signature
+GETDSIG(SIG,ORDER) ;Get Digital Signature
  N IFN,ACTION
  S SIG=0,IFN=+ORDER,ACTION=$P(ORDER,";",2)
  I +$P($G(^OR(100,+IFN,8,+ACTION,2)),U,3) S SIG=$P(^(2),"^",3)
  Q
-GETDEA(Y,ORUSER)        ;Get user DEA
+GETDEA(Y,ORUSER) ;Get user DEA
  S Y=$$DEA^XUSER(,$G(ORUSER))
  Q
-GETDSCH(Y,ORDER)       ;Check if Drug Schedule
+GETDSCH(Y,ORDER) ;Check if Drug Schedule
  N IFN,ACTION
  S IFN=+ORDER,ACTION=$P(ORDER,";",2)
  S Y=$P($G(^OR(100,+IFN,8,+ACTION,2)),U,4)
  Q
-SETDTEXT(Y,ORDER,ORDEA,ORSIGNER)        ;Set Digital Text data into file 100 & return the array
+SETDTEXT(Y,ORDER,ORDEA,ORSIGNER) ;Set Digital Text data into file 100 & return the array
  ;ORDER = ORIFN;ACTION
  ;ORDEA = Schedule of Drug (2-5)
  ;ORSIGNER = DUZ of signer
@@ -83,7 +126,7 @@ SETDTEXT(Y,ORDER,ORDEA,ORSIGNER)        ;Set Digital Text data into file 100 & r
  F I=1:1:ORSET S (Y(I),^OR(100,IFN,8,ACT,.2,I,0))=ORSET(I)
  S ^OR(100,IFN,8,ACT,.2,0)="^^"_ORSET_"^"_ORSET_"^"_DT_"^",Y=ORSET
  Q
-GETDATA(Y,ORDER,DFN)    ;Get PKI Data
+GETDATA(Y,ORDER,DFN) ;Get PKI Data
  ;DBIA #3750
  ;On error: Y = -1^Error message
  ;Else: Y = 1^ Order # ^ Nature of order ^ Order Status ^ Date Signed

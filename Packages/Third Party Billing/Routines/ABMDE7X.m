@@ -1,9 +1,10 @@
-ABMDE7X ; IHS/ASDST/DMJ - Edit Page 7 - ERROR CHK ;  
- ;;2.6;IHS 3P BILLING SYSTEM;**10,14**;NOV 12, 2009;Build 238
+ABMDE7X ; IHS/SD/SDR - Edit Page 7 - ERROR CHK ;  
+ ;;2.6;IHS 3P BILLING SYSTEM;**10,14,30**;NOV 12, 2009;Build 585
  ;
- ; IHS/ASDS/SDH - 04/04/01 - V2.4 Patch 9 - NOIS XAA-0700-200102
- ;     Modified to resolved <UNDEF>ERR+9^ABMDE7X.  Thanks to Jim Gray for coding change
- ;IHS/SD/SDR - 2.6*14 - ICD10 - admit dx error checks (245 and 246) if wrong code set is used.
+ ;IHS/ASDS/SDH 04/04/01 2.4*9 NOIS XAA-0700-200102 Modified to resolved <UNDEF>ERR+9^ABMDE7X.  Thanks to Jim Gray for coding change
+ ;IHS/SD/SDR 2.6*14 ICD10 admit dx error checks (245 and 246) if wrong code set is used.
+ ;
+ ;IHS/SD/SDR 2.6*30 CR10215 Added check for 257 - discharge status contains 'expired'
  ;
  ; *********************************************************************
  ;
@@ -26,6 +27,12 @@ UB92 I $P(ABMX("C6"),U,2)="" S ABME(16)=""
  I $P(ABMX("C5"),U,1)="" S ABME(17)=""
  I $P(ABMX("C5"),U,2)="" S ABME(18)=""
  I $P(ABMX("C5"),U,3)="" S ABME(21)=""
+ ;start new abm*2.6*30 IHS/SD/SDR CR10215
+ I "^28^31^"[("^"_ABMP("EXP")_"^") D
+ .S ABMDSCST=$P($G(^ABMDCLM(DUZ(2),ABMP("CDFN"),5)),U,3)
+ .S:(ABMDSCST'="") ABMDSCST=$$UPC^ABMERUTL($P($G(^ABMDCODE(ABMDSCST,0)),U,3))  ;discharge status
+ .I ABMDSCST["EXPIRED" S ABME(257)=""
+ ;end new abm*2.6*30 IHS/SD/SDR CR10215
  I $P(ABMX("C5"),U,9)="" S ABME(143)=""
  I $P(ABMX("C6"),U,4)="" S ABME(20)=""
  ;I $P(ABMX("C5"),U,8)="" S ABME(146)=""  ;abm*2.6*10

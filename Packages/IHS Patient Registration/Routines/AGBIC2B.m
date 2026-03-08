@@ -1,5 +1,5 @@
-AGBIC2B ; IHS/ASDS/EFG - ENTER CURRENT COMMUNITY ;  
- ;;7.1;PATIENT REGISTRATION;;AUG 25,2005
+AGBIC2B ; IHS/ASDS/EFG - ENTER CURRENT COMMUNITY ; JUL 11, 2023 
+ ;;7.1;PATIENT REGISTRATION;**17**;AUG 25,2005;Build 9
  ;
 L1 ;
  K AG("HSDA"),AG("PRVCM"),AG("COMM")
@@ -129,17 +129,23 @@ DEF1 ;
  . S AG("PRVDT")=Y
  Q
 EDCOM ;EP - Edit Communities.
-E1 ;
- K DIC("S")
- S DIC=9000001.51
- S DR=.01
- S X=DFN
- D ^DIC
- S DA=+Y
- S DIE="^AUPNPAT("
- S DR=5101
- S DR(2,9000001.51)=".01;.03;S $P(^AUPNPAT(DFN,51,D1,0),U,2)=$P(^AUPNPAT(DFN,51,D1,0),U)"
- D ^DIE
+ ;;IHS/OIT/JS AG*7.1*17 
+ ;removing the E1 tag - this is performed in EDCOM^AG2B already
+ ;per https://ihsgov.visualstudio.com/IHS%20HITSS/_workitems/edit/62335
+ ;
+ ;E1 ;
+ ;K DIC("S")
+ ;S DIC=9000001.51
+ ;S DR=.01
+ ;S X=DFN
+ ;s DIC("W")="W !,?$P(^(0),U,1)"
+ ;D ^DIC
+ ;S DA=+Y
+ ;S DIE="^AUPNPAT("
+ ;S DR=5101
+ ;S DR(2,9000001.51)=".01;S DIC(""S"")=""I AG(""DATE"")<=$P(^(88),U,2)"";.03;S $P(^AUPNPAT(DFN,51,D1,0),U,2)=$P(^AUPNPAT(DFN,51,D1,0),U)"
+ ;D ^DIE
+ ;
 E2 ;
  S AG("DRENT")=0
  S DR=.03

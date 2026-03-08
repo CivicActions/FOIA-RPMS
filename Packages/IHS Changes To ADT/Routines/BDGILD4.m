@@ -1,6 +1,5 @@
 BDGILD4 ; IHS/ANMC/LJF - ICU TRANSFERS ; 
- ;;5.3;PIMS;;APR 26, 2002
- ;
+ ;;5.3;PIMS;**1022**;MAY 28, 2004;Build 18
 EN ;EP; -- main entry point for BDG ILD ICU TRANSFERS
  ; Assumes BDGTYP,BDGBD,BDGED,BDGTYP are set
  ;
@@ -47,7 +46,13 @@ INIT ; -- init variables and list array
  .. ;
  .. ; build display lines
  .. S DFN=+^TMP("BDGILD4A",$J,DATE,IEN)
- .. S LINE=$E($$GET1^DIQ(2,DFN,.01),1,20)                             ;pat name
+ .. ;202307 77894 maw p1022 PPN
+ .. N PRF
+ .. S PRF=$$GETPREF^AUPNSOGI(DFN,"E",1)
+ .. S LINE=$G(PRF)
+ .. D SET(LINE,.VALMCNT)
+ .. S LINE=""
+ .. ;S LINE=$E($$GET1^DIQ(2,DFN,.01),1,20)                  ;pat name
  .. S LINE=$$PAD(LINE,23)_$J($$HRCN^BDGF2(DFN,DUZ(2)),6)              ;chart #
  .. ;
  .. I BDGTYP=1 D               ; transfers

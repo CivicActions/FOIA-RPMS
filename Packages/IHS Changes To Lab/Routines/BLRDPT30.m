@@ -1,5 +1,9 @@
-BLRDPT30 ; IHS/DIR/FJE - Current Inpatient Variables ;
- ;;5.2;BLR;;NOV 01, 1997
+BLRDPT30 ; IHS/MSC/MKK - Current Inpatient Variables ; 03-Jan-2023 @ 1150 ; MKK
+ ;;5.2;BLR;**1052**;NOV 01, 1997;Build 17
+ ;
+ ; IHS/MSC/MKK - LR*5.2*1052 - 03-Jan-2023 - Item 91401 - Dictionaries 3, 6, & 16 - Remove Remaining References
+ ;
+ ; Original Line 1: ; IHS/DIR/FJE - Current Inpatient Variables ;
  ;
  ;;MAS VERSION 5.0;
  ;
@@ -70,6 +74,7 @@ DIS ; check for ASIH discharges
  ;
 PROV ; -- get provider info
  S X=+Y,Y="^"
- I $D(^DIC(16,X,"A3")) S X=+^("A3") I $D(^VA(200,X,0)) S Y=X_"^"_$P(^(0),"^")
+ ; I $D(^DIC(16,X,"A3")) S X=+^("A3") I $D(^VA(200,X,0)) S Y=X_"^"_$P(^(0),"^")
+ I $D(^VA(200,X,0)) S Y=U_$P(^(0),"^")    ; IHS/MSC/MKK - LR*5.2*1052 - ^DIC(16 is obsolete.  File 200 does NOT have an "A3" X-Ref, so just use name.
  ;I $D(^DIC(3,X,0)) S X=+$P(^(0),"^",16) I $D(^DIC(16,X,0)) S Y=X_"^"_$P(^(0),"^")
  K X Q

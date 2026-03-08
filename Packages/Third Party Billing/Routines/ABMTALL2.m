@@ -1,5 +1,5 @@
 ABMTALL2 ; IHS/SD/SDR - Monthly tally report - 8/19/2005 1:28:34 PM
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ ;;2.6;IHS 3P BILLING SYSTEM;**10**;NOV 12, 2009;Build 43
  ;
 TRANS ;EP
  ; for checking Transaction File data parameters
@@ -99,7 +99,8 @@ TPBOUT ;
  ...S ABMVTYPS=ABMVTYP
  ...W $TR($TR($P($$MDT^ABMDUTL(ABMSTODT),"-",2,3)," "),"-"," ")_ABMTAB
  ...W $S(ABMCLMS="E":"EDIT Mode",ABMCLMS="R":"Claim Rejected",ABMCLMS="U":"Billed",ABMCLMS="C":"Claim Completed",ABMCLMS="F":"Flagged as Billable",ABMCLMS="X":"Cancelled",1:"Pending")_ABMTAB
- ...W $P($P($P(^DD(9999999.18,.21,0),U,3),";"_ABMITYP_":",2),";")_ABMTAB
+ ...;W $P($P($P(^DD(9999999.18,.21,0),U,3),";"_ABMITYP_":",2),";")_ABMTAB  ;abm*2.6*10 HEAT73780
+ ...W $$GET1^DIQ(9999999.18,ABMINS,".211","E")_ABMTAB  ;abm*2.6*10 HEAT73780
  ...W ABMINS_ABMTAB
  ...W $G(^TMP("ABM-TALLY",$J,ABMPKG,ABMVL,ABMCLN,ABMVTYP,ABMSTODT,ABMCLMS,ABMITYP,ABMINS))
  Q

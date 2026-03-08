@@ -1,5 +1,5 @@
 AMHRDV3 ; IHS/CMI/LAB - list IPV/DV screenings ;
- ;;4.0;IHS BEHAVIORAL HEALTH;**6**;JUN 02, 2010;Build 10
+ ;;4.0;IHS BEHAVIORAL HEALTH;**6,11**;JUN 02, 2010;Build 27
  ;
  ;
 INFORM ;
@@ -150,7 +150,7 @@ TEMP ;TEMPLATE OR LIST
 LIST1 ;
  S AMHRSORT=""
  W !
- S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN"
+ S DIR(0)="S^H:Health Record Number;N:Patient Name;P:Provider who screened;C:Clinic;R:Result of Exam;D:Date Screened;A:Age of Patient at Screening;G:Gender of Patient;T:Terminal Digit HRN;Q:Race;E:Ethnicity"
  S DIR("A")="How would you like the list to be sorted",DIR("B")="H"
  KILL DA D ^DIR KILL DIR
  I $D(DIRUT) G PRIMPRV
@@ -165,9 +165,16 @@ DEMO ;
  D DEMOCHK^AMHUTIL1(.AMHDEMO)
  I AMHDEMO=-1 G TEMP
 ZIS ;
- S XBRP="PRINT^AMHRDV3P",XBRC="PROC^AMHRDV31",XBRX="XIT^AMHRDV3",XBNS="AMHR"
+ S DIR(0)="S^P:PRINT Output;B:BROWSE Output on Screen",DIR("A")="Do you wish to ",DIR("B")="P" K DA D ^DIR K DIR
+ I $D(DIRUT) G XIT
+ I $G(Y)="B" D BROWSE,XIT Q
+ S XBRP="PRINT^AMHRDV3P",XBRC="PROC^AMHRDV31",XBRX="XIT^AMHRDV3",XBNS="AMH"
  D ^XBDBQUE
  D XIT
+ Q
+BROWSE ;
+ S XBRP="VIEWR^XBLM(""^AMHRDV3P"")"
+ S XBNS="AMH",XBRC="PROC^AMHRDV31",XBRX="XIT^AMHRDV3",XBIOP=0 D ^XBDBQUE
  Q
 XIT ;
  D EN^XBVK("AMHR")

@@ -1,5 +1,5 @@
-APCLD81E ; IHS/CMI/LAB - IHS Diabetes Audit 2008 ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCLD81E ; IHS/CMI/LAB - IHS Diabetes Audit 2008 ;     
+ ;;3.0;IHS PCC REPORTS;**21**;FEB 05, 1997
  ;
 BEGIN ;EP - called from option
  D TAXCHK^APCLD819

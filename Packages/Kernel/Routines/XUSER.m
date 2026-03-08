@@ -1,7 +1,8 @@
-XUSER ;SFISC/RWF - A common set of user functions ;11/07/2012  11:56
- ;;8.0;KERNEL;**75,97,99,150,226,267,288,330,370,373,580**;Jul 10, 1995;Build 47
+XUSER ;SFISC/RWF - A common set of user functions ;17-May-2019 12:27;DU
+ ;;8.0;KERNEL;**75,97,99,150,226,267,288,330,370,373,580,609,1019**;Jul 10, 1995;Build 25
  ;Per VHA Directive 2004-038, this routine should not be modified.
  ;Covered under DBIA #2343
+ ;IHS/MSC/MGH 02/15/18 - XU*8.0*1019 - Changes to DEA# auto removal
  Q
 LOOKUP(XUF) ;Do a user lookup
  ;Parameter, "Q" to NOT ask OK.
@@ -64,17 +65,22 @@ PROVIDER(XUDA,XUF) ;See if user qualifies as a CPRS provider
  ;Default:
  Q "0^NOT A PROVIDER"
  ;
-DEA(FG,IEN) ;sr. ef. Return users DEA # or Facility DEA_"-"_user VA# or null
+DEA(FG,IEN,PFLG) ;sr. ef. Return users DEA # or Facility DEA_"-"_user VA# or null
  ;ICR #2343
  ;If FG is 1: DEA# or VA#
+ ;Fee Basis, C&A providers only return DEA# or null - p609/REM
+ ;Add XDT=DEA expiration date. If XDT unpopulated, its expired. - p609/REM
+ ;PFLG indicates order came from backdoor pharmacy
  N DEA,VA,IN,N,N1,INN,XDT,FB
+ S PFLG=$G(PFLG)
  S IEN=$G(IEN,DUZ),INN=+DUZ(2)
  S N=$G(^VA(200,IEN,"PS")),N1=$G(^VA(200,IEN,"QAR"))
  S DEA=$P(N,U,2),VA=$P(N,U,3),XDT=$P(N1,U,9)
- ;I $P(N,U,6)=4!($P(N,U,6)=3) S FB=1 ;Fee Basis or C&A  provider -p609
- I $L(DEA),$S('$L($P(N1,U,9)):1,1:$P(N1,U,9)>DT) Q DEA
- ;I $L(DEA),$L(XDT),XDT'<DT Q DEA ;p609
- ;I $G(FB) Q "" ;p609
+ I $P(N,U,6)=4!($P(N,U,6)=3) S FB=1 ;Fee Basis or C&A  provider -p609
+ ;I $L(DEA),$S('$L($P(N1,U,9)):1,1:$P(N1,U,9)>DT) Q DEA
+ I $L(DEA),+PFLG,'$L(XDT) Q DEA  ;p1019 for backdoor orders
+ I $L(DEA),$L(XDT),XDT'<DT Q DEA ;p609
+ I $G(FB) Q "" ;p609
  I $G(FG) Q VA
  S IN=$P($G(^DIC(4,INN,"DEA")),U) ;Check signed-in Inst.
  I '$L(IN) D
@@ -98,18 +104,20 @@ DETOX(IEN) ;Return the Detox/Maintenance ID in file 200 - p580/REM
  ;I $L(DET),$S('$L($P(N1,U,9)):1,1:$P(N1,U,9)>DT) Q DTX
  Q ""
  ;
-SDEA(FG,IEN,PSDEA) ;validation for new DEA regulations p580-JC(CPRS)
+SDEA(FG,IEN,PSDEA,PFLG) ;validation for new DEA regulations p580-JC(CPRS)
  ;ICR #2343
- ;Returns: DEA#, Facility DEA_"-"_user VA#, 1, 2, or 4^expiration date 
+ ;Returns: DEA#, Facility DEA_"-"_user VA#, 1, 2, or 4^expiration date
  ;If FG is 1: DEA# or VA# - similar to $$DEA
  ;IEN is used to lookup user in file #200
  ;PSDEA is the DEA schedule
+ ;PFLG is to indicate the call came from the pharmacy package
  N DEA,N3,I,A,NALL,E,DA,XD,N,N1
- S FG=$G(FG),IEN=$G(IEN),PSDEA=$G(PSDEA)
- S DEA=$$DEA(FG,IEN) I DEA="" D  Q E
+ S FG=$G(FG),IEN=$G(IEN),PSDEA=$G(PSDEA),PFLG=$G(PFLG)
+ S DEA=$$DEA(FG,IEN,PFLG) I DEA="" D  Q E
  . S E=1
  . S N=$G(^VA(200,IEN,"PS")),N1=$G(^VA(200,IEN,"QAR"))
  . S DA=$P(N,U,2),XD=$P(N1,U,9)
+ . Q:+PFLG&(XD="")              ;p1019 for backdoor entry
  . I $L(DA),$L(XD),XD<DT S Y=XD X ^DD("DD") S E=4_"^"_Y
  I $G(PSDEA)="" Q 1
  I '$D(^VA(200,IEN,"PS3")) Q DEA
@@ -117,7 +125,8 @@ SDEA(FG,IEN,PSDEA) ;validation for new DEA regulations p580-JC(CPRS)
  S NALL=1 F I=1:1:6 S A(I)=$P(N3,"^",I) I A(I) S NALL=0
  I NALL D  Q 2
  . I $G(^VA(200,IEN,"PS"))="" Q
- . S $P(^("PS"),"^",2)="",$P(^("PS"),"^",3)=""
+ . ;IHS/MSC/MGH Patch 1019 commented out the auto-removal of credentialling fields
+ . ;S $P(^("PS"),"^",2)="",$P(^("PS"),"^",3)=""
  I PSDEA=2 Q $S('A(1):2,1:DEA)
  I PSDEA="2n" Q $S('A(2):2,1:DEA)
  I PSDEA=3 Q $S('A(3):2,1:DEA)
@@ -126,7 +135,7 @@ SDEA(FG,IEN,PSDEA) ;validation for new DEA regulations p580-JC(CPRS)
  I PSDEA=5 Q $S('A(6):2,1:DEA)
  Q DEA
  ;
-VDEA(RETURN,IEN)  ;ISP/RFR - Verify a provider is properly configured for ePCS
+VDEA(RETURN,IEN) ;ISP/RFR - Verify a provider is properly configured for ePCS
  ;PARAMETERS: IEN - Internal Entry Number in the NEW PERSON file (#200)
  ;            RETURN - Reference to an array in which text explaining
  ;                     deficiencies and listing prescribable schedules

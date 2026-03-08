@@ -1,5 +1,5 @@
-APSPFNC2 ;IHS/MSC/PLS - Prescription Creation Support ;07-Jul-2015 15:21;DU
- ;;7.0;IHS PHARMACY MODIFICATIONS;**1005,1006,1007,1008,1009,1011,1013,1015,1016,1017,1019**;Sep 23, 2004;Build 4
+APSPFNC2 ;IHS/MSC/PLS - Prescription Creation Support ;14-Oct-2020 10:52;DU
+ ;;7.0;IHS PHARMACY MODIFICATIONS;**1005,1006,1007,1008,1009,1011,1013,1015,1016,1017,1019,1023,1024,1026,1027**;Sep 23, 2004;Build 31
  ;=================================================================
  ; Create a verified prescription
 MAKEVRX(DATA,RXORD) ;
@@ -8,9 +8,9 @@ MAKEVRX(DATA,RXORD) ;
  Q
  ; Call Pharmacy Package
 CREATE(ORIEN,FORCE) ;
- N PSOX,NODE0,ORD,OR0,USER1,SIGOK,PSODRUG,PSONEW,PSOMAX,PSOMSG,PSODFN,PSOCOU
- N PSOCOUU,PSOCS,PSOFDR,PSONOOR,PSOPAR,PSORX,PSOSITE,RXFL,RXORD,SEG1,SPEED
- N TALK,ARY,RET,PRC,PSOINSFL,IEN,INSTIEN,EPHMFLG,RNWORDER,PICKUP,APSPPRIO
+ N PSOX,NODE0,ORD,OR0,USER1,SIGOK,PSODRUG,PSONEW,PSOMAX,PSOMSG,PSODFN,PSOCOU,DREN
+ N PSOCOUU,PSOCS,PSOFDR,PSONOOR,PSOPAR,PSORX,PSOSITE,RXFL,RXORD,SEG1,SPEED,DEA,PHI
+ N TALK,ARY,RET,PRC,PSOINSFL,IEN,INSTIEN,EPHMFLG,RNWORDER,PICKUP,APSPPRIO,OI,OID
  S FORCE=$G(FORCE,0)
  S IEN=0
  S ORIEN=+$G(ORIEN)
@@ -32,7 +32,7 @@ CREATE(ORIEN,FORCE) ;
  I 'FORCE Q:((EPHMFLG=1!(EPHMFLG=2))&'PSONEW("ELECTRONIC PHARMACY"))
  S PSODFN=+$P(OR0,U,2)
  S RNWORDER=$P(OR0,U,21)
- S APSPPRIO=""  ;P13 Set priority variable
+ S APSPPRIO=9  ;P13 Set priority variable
  S (OI,PSODRUG("OI"))=+$P(OR0,U,8),PSODRUG("OIN")=$P(^PS(50.7,$P(OR0,"^",8),0),"^"),OID=$P(OR0,"^",9)
  I $P($G(OR0),"^",9) S POERR=1,DREN=$P(OR0,"^",9) D DRG^PSOORDRG K POERR
  E  D DREN^PSOORNW2
@@ -40,7 +40,7 @@ CREATE(ORIEN,FORCE) ;
  .N DFN,POIN
  .S DFN=+$P(OR0,U,2)
  .S POIN=$$GET1^DIQ(50.7,$P(OR0,U,8),.01)
- .D NOTIF(DUZ,DFN,ORIEN,"Unable to generate "_POIN_" prescription for "_$$GET1^DIQ(2,DFN,.01),"Missing Drug")
+ .D NOTIF^APSPFNC6(DUZ,DFN,ORIEN,"Unable to generate "_POIN_" prescription for "_$$GET1^DIQ(2,DFN,.01),"Missing Drug")
  .D AFLOG(.RET,+OR0,0,"No available drug for "_POIN)
  ;
 DRG I $P($G(^PSDRUG(+$G(PSODRUG("IEN")),"CLOZ1")),"^")="PSOCLO1" D CLOZ^PSOORFI2
@@ -69,6 +69,7 @@ DRG I $P($G(^PSDRUG(+$G(PSODRUG("IEN")),"CLOZ1")),"^")="PSOCLO1" D CLOZ^PSOORFI2
  S PSONEW("CM")=$S($L($$VALUE^ORCSAVE2(+OR0,"CMF")):$$VALUE^ORCSAVE2(+OR0,"CMF"),1:"N")
  S PSONEW("CLININD")=$S($L($$VALUE^ORCSAVE2(+OR0,"CLININD")):$$VALUE^ORCSAVE2(+OR0,"CLININD"),1:"")
  S PSONEW("CLININD2")=$S($L($$VALUE^ORCSAVE2(+OR0,"CLININD2")):$$VALUE^ORCSAVE2(+OR0,"CLININD2"),1:"")
+ S PSONEW("EARLY")=$S($L($$VALUE^ORCSAVE2(+OR0,"EARLIEST")):$$VALUE^ORCSAVE2(+OR0,"EARLIEST"),1:"") ;P1023 for epcs
  S PSONEW("SNMDCNPTID")=$S($L($$VALUE^ORCSAVE2(+OR0,"SNMDCNPTID")):$$VALUE^ORCSAVE2(+OR0,"SNMDCNPTID"),1:"")
  S PSONEW("DSCMED")=$S($L($$VALUE^ORCSAVE2(+OR0,"DSCMED")):$$VALUE^ORCSAVE2(+OR0,"DSCMED"),1:"")  ;P1017
  S PSONEW("DAYS SUPPLY")=$P(OR0,U,22)
@@ -95,6 +96,10 @@ DRG I $P($G(^PSDRUG(+$G(PSODRUG("IEN")),"CLOZ1")),"^")="PSOCLO1" D CLOZ^PSOORFI2
  D SIG
  D GETPRVI
  ;
+ ;Add line for digitally signed controlled substances patch 1023
+ I $P(OR0,"^",24)=1 D CSLOG^APSPFNC8(.PSOCSP,.PSONEW)
+ ;IHS/MSC/MGH Patch 1024 Make sure patient has entry in file 55
+ D CHKP55^PSOPAT(OR0)
  D EN^PSON52(.PSONEW)
  S ARY("COM")="Autofinished RX for external fill"
  S ARY("REASON")="B"
@@ -105,7 +110,7 @@ DRG I $P($G(^PSDRUG(+$G(PSODRUG("IEN")),"CLOZ1")),"^")="PSOCLO1" D CLOZ^PSOORFI2
  D EN^PSOHLSN1(PSONEW("IRXN"),"OK","CM")
  D EN^APSPELRX(PSONEW("IRXN"),PSONEW("ELECTRONIC PHARMACY"))
  ;Handle renewed prescription
- D CHKRNW(PSONEW("IRXN"))
+ D CHKRNW^APSPFNC7(PSONEW("IRXN"))
  Q
  ;
  ; Find a site
@@ -132,19 +137,30 @@ INS1 ;
  Q
  ;
 SIG ;
+ N ORDER,SURE,TYPE,ACTION
  S SIG=0,PSOFINFL=1 F  S SIG=$O(^PS(52.41,ORD,"SIG",SIG)) Q:'SIG  D
  .S SIG(SIG)=^PS(52.41,ORD,"SIG",SIG,0)
  D EN^PSOFSIG(.PSONEW)
+ ;IHS/MSC/MGH Patch 1024 and patch 1027 added to get Surescripts sig
+ S ORDER=$$GET1^DIQ(52.41,ORD,.01,"I")
+ S SURE=$$VALUE^ORCSAVE2(ORDER,"SSRREQIEN")
+ S TYPE=$$GET1^DIQ(9009033.91,SURE,.12,"I")
+ S ACTION=$$GET1^DIQ(9009033.91,SURE,.08,"I")
+ I +SURE D
+ .I (TYPE="C"&(ACTION=1))!(TYPE="R"&((ACTION=1)!(ACTION=2))) D
+ ..K SIG
+ ..D WPVAL^ORWDXR(.SIG,ORDER,"SIG")
  S:$O(SIG(0)) SIGOK=1
  F D=0:0 S D=$O(^PS(52.41,ORD,"INS1",D)) Q:'D  D
- .S PSONEW("INS",D)=^PS(52.41,ORD,"INS1",D,0)
+ .S PSONEW("INS1",D)=^PS(52.41,ORD,"INS1",D,0)
  Q
  ; Update activity or label log and return success flag
  ; Input: RX - IEN to Prescription File (52)
  ;        TYPE - 0=Activity, 1=Label, 2=Reprint
  ;        ARY - Holds data for log type
-UPTLOG(DATA,RX,TYPE,ARY) ;EP
- N FDA,ERR,FN,IENS,USR
+UPTLOG(DATA,RX,TYPE,ARY,OCOM) ;EP
+ N FDA,ERR,FN,IENS,USR,CIEN
+ S OCOM=$G(OCOM(0))
  S IENS="+1,"_RX_","
  S USR=$S($G(ARY("USER")):ARY("USER"),1:DUZ)
  S DATA=0
@@ -157,6 +173,8 @@ UPTLOG(DATA,RX,TYPE,ARY) ;EP
  .S FDA(FN,IENS,.05)=$E($G(ARY("COM")),1,75)
  .S FDA(FN,IENS,9999999.01)=$G(ARY("DEV"))
  .S FDA(FN,IENS,9999999.02)=$G(ARY("TYPE"))
+ .I TYPE=2 D ERX^APSPCSA(+RX,"RE")
+ .I $G(TYPE)="" D ERX^APSPCSA(+RX,"PR")
  E  I $G(TYPE)=1 D  ;Print Label Log
  .S FN=52.032
  .S FDA(FN,IENS,.01)=$$NOW^XLFDT()
@@ -164,9 +182,29 @@ UPTLOG(DATA,RX,TYPE,ARY) ;EP
  .S FDA(FN,IENS,2)=$G(ARY("COM"))
  .S FDA(FN,IENS,3)=USR
  .S FDA(FN,IENS,5)=$G(ARY("DEV"))
- D UPDATE^DIE(,"FDA",,"ERR")
+ D UPDATE^DIE(,"FDA","CIEN","ERR")
  I '$D(ERR) S DATA=1
  E  S DATA="0^Unable to update log"
+ I $G(CIEN(1))&(OCOM>0) D OTHER(.OCOM,+RX,CIEN(1))
+ Q
+OTHER(OCOM,RXIEN,CIEN) ;Store the other comments
+ N ARY,AIEN,FDA,ERR,STR,CNT2,TCNT,ACNT
+ S CNT2=0,TCNT=0
+ F  S CNT2=$O(OCOM(CNT2)) Q:'+CNT2  D
+ .S STR=$G(OCOM(CNT2))
+ .D BRKCOM(STR,.ARY,.TCNT)
+ .S ACNT=0
+ .F  S ACNT=$O(ARY(ACNT)) Q:'+ACNT  D
+ ..S TCNT=TCNT+1
+ ..S FDA(52.34,"+"_TCNT_","_CIEN_","_RXIEN_",",.01)=$G(ARY(ACNT))
+ ..D UPDATE^DIE("","FDA","AIEN","ERR")
+ Q
+BRKCOM(STR,ARY,TCNT) ;EP-Wrap string into an array
+ K ARY
+ N TMP,LP
+ S TMP(0)=STR
+ D WRAP^DIKCU2(.TMP,100)
+ S LP="" F  S LP=$O(TMP(LP)) Q:LP=""  S ARY(LP+1)=TMP(LP)
  Q
  ;
  ; Log autofinish activity
@@ -220,7 +258,6 @@ DOSE(ORD) ;pending orders
  .S:$P(DOSE,"^",8) ROUTE=$P(^PS(51.2,$P(DOSE,"^",8),0),"^")
  .S PSONEW("SCHEDULE",I)=$P(DOSE,"^"),PSONEW("DURATION",I)=$P(DOSE,"^",2)
  .S PSONEW("DURATION",I)=$S($E(PSONEW("DURATION",I),1)'?.N:$E(PSONEW("DURATION",I),2,99)_$E(PSONEW("DURATION",I),1),1:PSONEW("DURATION",I))  ;IHS/MSC/MGH - P1013
- .;S DOENT=$G(DOENT)+1 S PSONEW("CONJUNCTION",I)=$S($P(DOSE,"^",6)="A":"AND",$P(DOSE,"^",6)="S":"THEN",$P(DOSE,"^",6)="X":"EXCEPT",1:"")  ;IHSMSC/PLS - P1015
  .S DOENT=$G(DOENT)+1 S PSONEW("CONJUNCTION",I)=$P(DOSE,"^",6)
  S PSONEW("ENT")=DOENT
  Q
@@ -249,10 +286,10 @@ PHMLST2(DATA,IEN) ;EP
  F  S IEN=$O(IEN(IEN)) Q:IEN=""  D ADDPHM(+IEN(IEN),,0)
  Q
 ADDPHM(IEN,DIST,NEWRX) ;
- N N0,N1,N2,N7,N8,I,ID,SPEC,SVL
+ N N0,N1,N2,N6,N7,N8,I,ID,SPEC,SVL
  S SPEC=""
  S NEWRX=$G(NEWRX,1)
- S N0=$G(^APSPOPHM(IEN,0)),N1=$G(^(1)),N2=$G(^(2)),N7=$G(^(7))
+ S N0=$G(^APSPOPHM(IEN,0)),N1=$G(^(1)),N2=$G(^(2)),N6=$G(^(6)),N7=$G(^(7))
  Q:'$L(N0)
  S SVL=$P(N0,U,5)
  I NEWRX Q:'(SVL#2)  ;P12 Only return NEWRX service level
@@ -262,13 +299,12 @@ ADDPHM(IEN,DIST,NEWRX) ;
  ;IHS/MSC/MGH Update for specialty IDs
  I $D(^APSPOPHM(IEN,8)) D
  .S I=0 F  S I=$O(^APSPOPHM(IEN,8,I)) Q:I=""   D
- ..S ID=$G(^APSPOPHM(IEN,8,I,0))
- ..S ID=$S(ID=1:"MAIL ORDER",ID=2:"FAX",ID=8:"RETAIL",ID=16:"SPECIALTY",ID=32:"LONG-TERM CARE",ID=64:"24 HOUR",1:"")
+ ..S ID=$$GET1^DIQ(9009033.76,+$G(^APSPOPHM(IEN,8,I,0)),.03)  ;Get Display Name
  ..I ID'="" D
  ...I SPEC="" S SPEC=ID
  ...E  S SPEC=SPEC_","_ID
- ; IEN^StoreName^Address1 Address2^City^State^Zip^PFAX^PPhone^Distance^Specialty
- S @DATA@(+DIST,CNT)=IEN_U_$P(N0,U,10)_U_$P(N1,U)_" "_$P(N1,U,2)_U_$P(N1,U,3)_U_$P(N1,U,4)_U_$P(N1,U,5)_U_$P(N2,U,2)_U_$P(N2,U)_U_$FN(DIST,"",2)_U_SPEC
+ ; IEN^StoreName^Address1 Address2^City^State^Zip^PFAX^PPhone^Distance^Specialty^ServiceLevel^Version
+ S @DATA@(+DIST,CNT)=IEN_U_$P(N0,U,10)_U_$P(N1,U)_" "_$P(N1,U,2)_U_$P(N1,U,3)_U_$P(N1,U,4)_U_$P(N1,U,5)_U_$P(N2,U,2)_U_$P(N2,U)_U_$FN(DIST,"",2)_U_SPEC_U_SVL_U_$P(N6,U,2)
  Q
  ; Return array of zipcodes for given zipcode
  ; Input: ARY - return array - pass by reference
@@ -288,17 +324,15 @@ GETZC(ARY,ZIP,R) ;EP
  ; Input: USR - IEN to New Person File
  ; Output:   0 = e-Prescribing is not available to user
  ;           1 = e-Prescribing is available to user
+ ;           2 = enabled because of XPAR parameter (SS 6.0)
 ERXUSER(DATA,USR) ; EP
- S DATA=1
- I $G(USR) D
- .S DATA=''$L($$SPI^APSPES1(USR))
- .S:'DATA DATA=+$$GET^XPAR($$ENT^CIAVMRPC("APSP AUTO RX ELECTRONIC",.ENT,USR),"APSP AUTO RX ELECTRONIC")
+ D ERXON^APSPFNC6(.DATA,USR)
  Q
  ; Returns availablity of Orderable Item to be e-prescribed
  ; Input: OIIEN - Orderable Item IEN
  ;          SCH - String of schedules - defaults to 2345
 ERXOI(DATA,OIIEN,SCH) ; EP
- N PSOI
+ N PSOI,DIEN
  S DATA=1,SCH=$G(SCH,"2345")
  I $G(OIIEN) D
  .S PSOI=+$P($G(^ORD(101.43,+OIIEN,0)),U,2)  ; Pharmacy Orderable Item IEN
@@ -319,53 +353,13 @@ DEACLS(DATA,ORD,CLS) ; EP -
  Q
  ; Check for schedule drugs
 ISSCH(DRUG,SCH) ;PEP - Returns boolean value
- N DS,RES
+ N DS,RES,I
  S RES=0
  S DS=+$P(^PSDRUG(DRUG,0),U,3)
- S RES=SCH[DS
+ F I=1:1:$L(DS) D  Q:+RES
+ .S RES=SCH[$E(DS,I)
+ ;S RES=SCH[DS
  Q RES
- ; Notify user of autofinish failure
- ; Input:  USR - User IEN
- ;         DFN - Patient IEN
- ;         ORIEN - Order IEN
- ;         MSG - Message text
- ;       ALRTD - Alert data
-NOTIF(USR,DFN,ORIEN,MSG,ALRTD) ;EP -
- N XQA,XQAID,XQADATA,XQAMSG
- S XQA(USR)=""
- S XQAMSG="Autofinish Failure:"_$G(MSG)
- S XQAID="OR"_","_DFN_","_99003
- S:$G(ORIEN) XQADATA=ORIEN_"@"_$G(ALRTD)
- D SETUP^XQALERT
- Q
- ; Check for renewed prescription
- ; Input: RXIEN- IEN to File 52
-CHKRNW(RXIEN) ;
- ;Check Placer ID of RXIEN
- ; Check Replaced Order # field value
- ;   Check Status of Replaced Order order
- ;     If RENEWED then set:
- ;       - Activity Log - RENEWED
- Q:'$G(RXIEN)
- N PLACER,ORGIEN,RENEWED,ORGPKGID,ORXNUM  ;,PSORENW,PSONEW
- N REA,DA,MSG,PSCAN
- S PLACER=$$GET1^DIQ(52,RXIEN,39.3)
- Q:'PLACER
- S ORGIEN=$$GET1^DIQ(100,PLACER,9,"I")
- Q:'ORGIEN  ;No renewed order
- S RENEWED=$$GET1^DIQ(100,ORGIEN,5,"I")=15
- Q:'RENEWED
- S ORGPKGID=+$$GET1^DIQ(100,ORGIEN,33,"I")
- Q:'ORGPKGID
- S ORXNUM=$$GET1^DIQ(52,ORGPKGID,.01)
- S REA="C",DA=ORGPKGID
- S MSG="Renewed/Updated from RPMS EHR"
- S PSCAN(ORXNUM)=DA_"^C"
- D CAN^PSOCAN
- D:RNWORDER
- .D SETDATA(RNWORDER,52,"39.5///"_"`"_RXIEN)
- .D SETDATA(RXIEN,52,"39.4///"_"`"_RNWORDER)
- Q
  ;
 SETDATA(DA,DIE,DR) ;
  D ^DIE

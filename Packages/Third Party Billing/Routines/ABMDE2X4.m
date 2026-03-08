@@ -1,5 +1,5 @@
-ABMDE2X4 ; IHS/ASDST/DMJ - PAGE 2 - INSURER ADDRESS ;  
- ;;2.6;IHS 3P BILLING SYSTEM;;NOV 12, 2009
+ABMDE2X4 ; IHS/ASDST/DMJ - PAGE 2 - INSURER ADDRESS ;  [ 01/24/2003  12:37 PM ]
+ ;;2.5;IHS 3P BILLING SYSTEM;**2,3**;APR 05, 2002
  ;
  ; IHS/SD/SDR - V2.5 P3 - 1/24/03 - NEA-0301-180044
  ;     Modified to display patient info when workers comp
@@ -11,6 +11,12 @@ ABMDE2X4 ; IHS/ASDST/DMJ - PAGE 2 - INSURER ADDRESS ;
 BADDR ;
  S ABMX("INS")=$P(ABMP("C0"),U,8)
  Q:'$D(^AUTNINS(ABMX("INS"),0))
+ ; start old code NEA-0301-180044
+ ;I "IN"[$P($G(^AUTNINS(ABMX("INS"),2)),U),$P(^(2),U)]"" G NONBEN
+ ; end old code NEA-0301-180044
+ ; start new code NEA-0301-180044
+ ;I "INW"[$P($G(^AUTNINS(ABMX("INS"),2)),U),$P(^(2),U)]"" G NONBEN
+ ; end new code NEA-0301-180044
  S $P(ABMV("X5"),U)=$S($P($G(^AUTNINS(ABMX("INS"),1)),U)]"":$P(^(1),U),1:$P(^(0),U))
  I $D(^AUTNINS(ABMX("INS"),1)) D
  . I '($P(^AUTNINS(ABMX("INS"),1),U,2)]"") S ABMFLAG=1 Q
@@ -50,7 +56,9 @@ XIT ;
 NONBEN ;
  S ABMV("X5")=$P(^DPT(ABMP("PDFN"),0),U)
  S $P(ABMV("X5"),U,4)=$P($G(^DPT(ABMP("PDFN"),.13)),U)
+ ;new code patch #1
  I '$D(^DPT(ABMP("PDFN"),.11)) S ABME(112)=""
+ ;end new code
  I $D(^DPT(ABMP("PDFN"),.11)) D
  . I '($P(^DPT(ABMP("PDFN"),.11),U)]"") S ABME(112)="" Q
  . I '($P(^DPT(ABMP("PDFN"),.11),U,4)]"") S ABME(112)="" Q

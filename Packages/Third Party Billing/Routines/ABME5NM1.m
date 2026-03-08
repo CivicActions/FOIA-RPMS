@@ -1,7 +1,8 @@
 ABME5NM1 ; IHS/ASDST/DMJ - 837 NM1 Segment 
- ;;2.6;IHS Third Party Billing System;**6,8,9,10,11,20**;NOV 12, 2009;Build 317
+ ;;2.6;IHS Third Party Billing System;**6,8,9,10,11,20,35**;NOV 12, 2009;Build 659
  ;Submitter Name
- ;IHS/SD/SDR 2.6*20 - HEAT270943 - Made change to default NM109 to the origanization/facility NPI if the provider doesn't have an NPI
+ ;IHS/SD/SDR 2.6*20 HEAT270943 Made change to default NM109 to the origanization/facility NPI if the provider doesn't have an NPI
+ ;IHS/SD/SDR 2.6*35 ADO60702 Updated to check new ambulance field (FT)
  ;
 EP(X,Y) ;EP - START HERE
  ;x=entity identifier
@@ -84,6 +85,7 @@ LOOP ;LOOP HERE
  ; Ambulance Drop Off Location
  I ABMEIC="45" D
  .S ABMR("NM1",40)=$$GET1^DIQ("9002274.4",ABMP("BDFN"),".127")
+ .I ABMR("NM1",40)="" S ABMR("NM1",40)=$P($G(^ABMDBILL(DUZ(2),ABMP("BDFN"),16)),U)  ;abm*2.6*35 IHS/SD/SDR ADO60702
  Q
  ;
 50 ;NM104 - Name First

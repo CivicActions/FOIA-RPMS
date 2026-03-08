@@ -1,5 +1,5 @@
 LRLABELE ;DALOI/JMC - Zebra Stripe 2.5x4 10 part label; 6/4/98
- ;;5.2T9;LR;**1018**;Nov 17, 2004
+ ;;5.2;LR;**1018**;Nov 18, 2004
  ;;5.2;LAB SERVICE;**218**;Sep 27, 1994
  ;
 EN ; Print 2.5x4 10 part label format

@@ -1,5 +1,5 @@
-APCDEFP1 ; IHS/CMI/LAB - APCD Auto Print PCC Encounter Form ;
- ;;2.0;IHS PCC SUITE;;MAY 14, 2009
+APCDEFP1 ;cmi/sitka/maw - APCD Auto Print PCC Encounter Form  [ 12/22/03  11:24 AM ]
+ ;;2.0;IHS RPMS PCC/Data Entry;**3,5,6,7,9**;MAR 09, 1999
  ;
  ;This routine will print out an automated PCC encounter form for
  ;a particular visit.  The visit IEN needs to be passed in for it
@@ -12,13 +12,10 @@ WVSK ;EP-- write out v skin test
  . S APCDTRES=$P(APCDSK(APCDTA),U)
  . S APCDTREA=$P(APCDSK(APCDTA),U,2)
  . S APCDTDTR=$P(APCDSK(APCDTA),U,3)
- . W !?3,"Skin Test: ",APCDTA
+ . W !,"Skin Test: ",APCDTA
  . W ?40,"Result: ",APCDTRES
- . W !?3,"Reading: ",APCDTREA
+ . W !,"Reading: ",APCDTREA
  . W ?40,"Date Read: ",APCDTDTR
- . I $P(APCDSK(APCDTA),U,4)]"" W !?3,"Test Reader: ",$P(APCDSK(APCDTA),U,4)
- . I $P(APCDSK(APCDTA),U,5)]""!($P(APCDSK(APCDTA),U,6)]"") D
- . . W !?3,"Injection Site: ",$P(APCDSK(APCDTA),U,5),?40,"Volume: ",$P(APCDSK(APCDTA),U,6)
  K APCDSK,APCDRES,APCDREA,APCDDTR,APCDTRES,APCDTA,APCDTREA,APCDTDTR
  W !,APCDLN
  Q
@@ -46,14 +43,12 @@ WVCPT ;EP -- write out v cpt
 WVPED ;EP-- write out v patient education
  W !,"Patient Education",!
  S APCDTA=0 F  S APCDTA=$O(APCDPED(APCDTA)) Q:APCDTA=""  D
- . W !?3,"Topic: ",APCDTA
+ . W !,"Topic: ",APCDTA
  . W ?45,"Level of Understanding: ",$P($G(APCDPED(APCDTA)),U)
- . W:$P($G(APCDPED(APCDTA)),U,5)]"" !?3,"Comment: ",$P(APCDPED(APCDTA),U,5)
- . W:$P($G(APCDPED(APCDTA)),U,8)]"" !?3,"Provider Narrative: ",$P(APCDPED(APCDTA),U,8)
- . I $P(APCDPED(APCDTA),U,6)]"" W !?3,"Goal Code: ",$P(APCDPED(APCDTA),U,6)
- . I $P(APCDPED(APCDTA),U,7)]"" W !?3,"Goal Comment: ",$P(APCDPED(APCDTA),U,7)
- . I $P(APCDPED(APCDTA),U,2)]""!($P(APCDPED(APCDTA),U,3)]"")!($P(APCDPED(APCDTA),U,4)]"") W !?3,"Ind/Group: ",$P(APCDPED(APCDTA),U,2),?40,"Length of Educ: ",$P(APCDPED(APCDTA),U,3),?65,"CPT: ",$P(APCDPED(APCDTA),U,4)
- . I $P(APCDPED(APCDTA),U,9)]"" W !?3,"Readiness to Learn: ",$P(APCDPED(APCDTA),U,9)
+ . W:$P($G(APCDPED(APCDTA)),U,5)]"" !,"Comment: ",$P(APCDPED(APCDTA),U,5)
+ . W:$P($G(APCDPED(APCDTA)),U,8)]"" !,"Provider Narrative: ",$P(APCDPED(APCDTA),U,8)
+ . I $P(APCDPED(APCDTA),U,6)]""!($P(APCDPED(APCDTA),U,7)]"") W !,"Behavior Code: ",$P(APCDPED(APCDTA),U,6),?40,"Objectives Met: ",$P(APCDPED(APCDTA),U,7)
+ . I $P(APCDPED(APCDTA),U,2)]""!($P(APCDPED(APCDTA),U,3)]"")!($P(APCDPED(APCDTA),U,9)]"") W !,"Ind/Group: ",$P(APCDPED(APCDTA),U,2),?40,"Length of Educ: ",$P(APCDPED(APCDTA),U,3),?65,"CPT: ",$P(APCDPED(APCDTA),U,9)
  . W !
  K APCDPED,APCDLOU,APCDTA
  W !,APCDLN
@@ -159,7 +154,3 @@ WVNT ;EP-- write out v narrative text
  W !,APCDLN
  Q
  ;
-WVIF ;EP -- write out v infant feeding
- Q:'$D(APCDINF)
- W !,"Infant Feeding Choice:  ",$G(APCDINF),!
- Q
